@@ -11,6 +11,23 @@ interface GlossaryContentProps {
   systemPages: NotionPage[];
 }
 
+function filterPages(pages: NotionPage[], searchQuery: string, selectedTags: string[]) {
+  return pages.filter(page => {
+    const title = page.properties.Title.title[0]?.plain_text.toLowerCase() || '';
+    const summary = page.properties['One-sentency summary']?.rich_text?.[0]?.plain_text?.toLowerCase() || '';
+    const pageTags = page.properties.Tags.multi_select.map(t => t.name);
+
+    // Text search filter
+    const matchesSearch =
+      searchQuery === '' || title.includes(searchQuery.toLowerCase()) || summary.includes(searchQuery.toLowerCase());
+
+    // Tag filter (match ANY selected tag)
+    const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => pageTags.includes(tag));
+
+    return matchesSearch && matchesTags;
+  });
+}
+
 export function GlossaryContent({ conceptPages, systemPages }: GlossaryContentProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -24,26 +41,8 @@ export function GlossaryContent({ conceptPages, systemPages }: GlossaryContentPr
     return Array.from(tagSet).sort();
   }, [conceptPages, systemPages]);
 
-  // Filter function
-  const filterPages = (pages: NotionPage[]) => {
-    return pages.filter(page => {
-      const title = page.properties.Title.title[0]?.plain_text.toLowerCase() || '';
-      const summary = page.properties['One-sentency summary']?.rich_text?.[0]?.plain_text?.toLowerCase() || '';
-      const pageTags = page.properties.Tags.multi_select.map(t => t.name);
-
-      // Text search filter
-      const matchesSearch =
-        searchQuery === '' || title.includes(searchQuery.toLowerCase()) || summary.includes(searchQuery.toLowerCase());
-
-      // Tag filter (match ANY selected tag)
-      const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => pageTags.includes(tag));
-
-      return matchesSearch && matchesTags;
-    });
-  };
-
-  const filteredConceptPages = filterPages(conceptPages);
-  const filteredSystemPages = filterPages(systemPages);
+  const filteredConceptPages = filterPages(conceptPages, searchQuery, selectedTags);
+  const filteredSystemPages = filterPages(systemPages, searchQuery, selectedTags);
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev => (prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]));

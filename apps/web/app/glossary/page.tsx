@@ -60,56 +60,56 @@ export const metadata: Metadata = {
   },
 };
 
+// Structured data for breadcrumbs and website
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': 'https://sodax.com/glossary',
+      url: 'https://sodax.com/glossary',
+      name: 'SODAX Knowledge Base - Concepts & System Components',
+      description:
+        'Comprehensive SODAX knowledge base with canonical explanations of cross-chain DeFi concepts and system components.',
+      isPartOf: { '@id': 'https://sodax.com/#website' },
+      breadcrumb: { '@id': 'https://sodax.com/glossary#breadcrumb' },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': 'https://sodax.com/glossary#breadcrumb',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: 'Home',
+          item: 'https://sodax.com',
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: 'Knowledge Base',
+        },
+      ],
+    },
+    {
+      '@type': 'CollectionPage',
+      '@id': 'https://sodax.com/glossary#collection',
+      name: 'SODAX Knowledge Base',
+      description: 'A comprehensive collection of SODAX concepts and system components.',
+      about: {
+        '@type': 'Thing',
+        name: 'Cross-chain DeFi',
+      },
+    },
+  ],
+};
+
 export default async function GlossaryPage() {
   const [allConceptPages, allSystemPages] = await Promise.all([getNotionPages('concepts'), getNotionPages('system')]);
 
   // Only show validated entries
   const conceptPages = allConceptPages.filter(p => p.properties?.Validated?.checkbox === true);
   const systemPages = allSystemPages.filter(p => p.properties?.Validated?.checkbox === true);
-
-  // Structured data for breadcrumbs and website
-  const structuredData = {
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'WebPage',
-        '@id': 'https://sodax.com/glossary',
-        url: 'https://sodax.com/glossary',
-        name: 'SODAX Knowledge Base - Concepts & System Components',
-        description:
-          'Comprehensive SODAX knowledge base with canonical explanations of cross-chain DeFi concepts and system components.',
-        isPartOf: { '@id': 'https://sodax.com/#website' },
-        breadcrumb: { '@id': 'https://sodax.com/glossary#breadcrumb' },
-      },
-      {
-        '@type': 'BreadcrumbList',
-        '@id': 'https://sodax.com/glossary#breadcrumb',
-        itemListElement: [
-          {
-            '@type': 'ListItem',
-            position: 1,
-            name: 'Home',
-            item: 'https://sodax.com',
-          },
-          {
-            '@type': 'ListItem',
-            position: 2,
-            name: 'Knowledge Base',
-          },
-        ],
-      },
-      {
-        '@type': 'CollectionPage',
-        '@id': 'https://sodax.com/glossary#collection',
-        name: 'SODAX Knowledge Base',
-        description: 'A comprehensive collection of SODAX concepts and system components.',
-        about: {
-          '@type': 'Thing',
-          name: 'Cross-chain DeFi',
-        },
-      },
-    ],
-  };
 
   return (
     <>
