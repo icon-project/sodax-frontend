@@ -243,7 +243,7 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
 
           {/* Sub-copy — hard hitting */}
           <p className="hero-subcopy mt-5 md:mt-7 text-white/90 font-[InterRegular] text-[clamp(1rem,2.5vw,1.35rem)] leading-relaxed max-w-[560px]">
-            Money now moves across networks, obeys code, and doesn&apos;t wait for banks.{' '}
+            Modern money moves across networks, obeys code, and doesn&apos;t wait for banks.{' '}
             <span className="text-yellow-soda font-[InterBold]">We built the infrastructure to use it.</span>
           </p>
 
