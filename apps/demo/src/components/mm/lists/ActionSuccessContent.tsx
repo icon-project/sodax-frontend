@@ -7,7 +7,8 @@ import { DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import type { ChainId, XToken } from '@sodax/types';
 import { chainIdToChainName } from '@/constants';
 import { getChainExplorerTxUrl } from '@/lib/utils';
-import { Check, Copy, ExternalLink } from 'lucide-react';
+import { useSodaxScanMessageUrl } from '@/hooks/useSodaxScanMessageUrl';
+import { Check, Copy, ExternalLink, Loader2 } from 'lucide-react';
 import { COPY_FEEDBACK_TIMEOUT_MS, TX_HASH_DISPLAY_LENGTH } from '../constants';
 
 export type ActionSuccessType = 'supply' | 'withdraw' | 'borrow' | 'repay';
@@ -29,8 +30,10 @@ interface ActionSuccessContentProps {
 export function ActionSuccessContent({ action, data, onClose }: ActionSuccessContentProps): ReactElement {
   // Tracks whether transaction hash was copied to clipboard (for UI feedback)
   const [copied, setCopied] = useState(false);
-  // Generate explorer URL for the transaction hash (e.g., BaseScan, Etherscan)
-  const txUrl = data.txHash ? getChainExplorerTxUrl(data.sourceChainId, data.txHash) : undefined;
+  // Prefer SodaxScan message URL; fall back to chain explorer when not available
+  const { url: sodaxScanUrl, isLoading: sodaxScanLoading } = useSodaxScanMessageUrl(data.txHash);
+  const explorerUrl = data.txHash ? getChainExplorerTxUrl(data.sourceChainId, data.txHash) : undefined;
+  const txUrl = sodaxScanUrl ?? explorerUrl;
 
   // Copy transaction hash to clipboard and show visual feedback
   const handleCopyHash = async (): Promise<void> => {
@@ -118,17 +121,23 @@ export function ActionSuccessContent({ action, data, onClose }: ActionSuccessCon
             </button>
           </div>
 
-          {txUrl && (
-            <a
-              href={txUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full rounded-lg bg-cream-grey/40 px-4 py-2.5 text-sm text-cherry-dark font-medium hover:bg-cherry/10 transition"
-            >
-              <ExternalLink className="w-4 h-4" />
-              View on explorer
-            </a>
-          )}
+          {(txUrl || sodaxScanLoading) &&
+            (sodaxScanLoading ? (
+              <div className="flex items-center justify-center gap-2 w-full rounded-lg bg-cream-grey/40 px-4 py-2.5 text-sm text-clay">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading link…
+              </div>
+            ) : txUrl ? (
+              <a
+                href={txUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full rounded-lg bg-cream-grey/40 px-4 py-2.5 text-sm text-cherry-dark font-medium hover:bg-cherry/10 transition"
+              >
+                <ExternalLink className="w-4 h-4" />
+                {sodaxScanUrl ? 'View on SodaxScan' : 'View on explorer'}
+              </a>
+            ) : null)}
         </div>
       )}
 
