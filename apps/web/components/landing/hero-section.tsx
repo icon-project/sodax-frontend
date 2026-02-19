@@ -203,9 +203,6 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
                 BETA
               </div>
             </div>
-            <div className="justify-center text-cream hidden lg:flex ml-8">
-              <span className="text-xs font-bold font-[InterRegular] leading-none">Infrastructure for modern money</span>
-            </div>
           </div>
           <div className="flex items-center gap-8">
             <ul className="hidden lg:flex gap-4 z-10">
@@ -233,21 +230,21 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
 
         {/* Hero Content */}
         <div className="flex flex-col w-full px-6 sm:px-8 md:px-16 lg:px-8 lg:max-w-316 z-10 mt-6 sm:mt-10 md:mt-14 lg:mt-16 flex-1 pb-8">
-          {/* Headline — Exaggerated Minimalism: giant type, dramatic entrance */}
+          {/* Headline — bold statement with Shrikhand accent */}
           <div className="hero-headline-enter">
-            <h1 className="hero-title-glow text-[clamp(3.5rem,12vw,10rem)] leading-[0.88] text-yellow-soda font-[InterBlack] tracking-[-0.03em] mix-blend-hard-light">
-              FRESH
+            <h1 className="hero-title-glow text-[clamp(2.8rem,9vw,7.5rem)] leading-[0.92] text-white font-[InterBlack] tracking-[-0.03em]">
+              Infrastructure for
               <br />
-              DEFI
+              <span className="text-yellow-soda font-[Shrikhand] tracking-normal">modern money</span>
             </h1>
             {/* Animated accent bar */}
             <div className="hero-accent-bar mt-4 md:mt-6 h-1 md:h-1.5 rounded-full bg-yellow-dark w-0" />
           </div>
 
-          {/* Sub-copy */}
-          <p className="hero-subcopy mt-5 md:mt-7 text-white font-[InterRegular] text-[clamp(1rem,2.5vw,1.35rem)] leading-relaxed max-w-[520px]">
-            Cross-chain swaps, savings & borrowing —{' '}
-            <span className="text-yellow-soda font-[InterBold]">across 11+ networks.</span>
+          {/* Sub-copy — hard hitting */}
+          <p className="hero-subcopy mt-5 md:mt-7 text-white/90 font-[InterRegular] text-[clamp(1rem,2.5vw,1.35rem)] leading-relaxed max-w-[560px]">
+            Money now moves across networks, obeys code, and doesn&apos;t wait for banks.{' '}
+            <span className="text-yellow-soda font-[InterBold]">We built the infrastructure to use it.</span>
           </p>
 
           {/* Pathway Cards — bold glassmorphism with glow */}
