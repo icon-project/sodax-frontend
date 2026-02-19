@@ -36,42 +36,52 @@ interface PathwayCardProps {
   description: string;
   href: string;
   isExternal?: boolean;
-  accentColor: string;
+  glowColor: string;
+  accentBg: string;
   index: number;
 }
 
-const PathwayCard = ({ icon, title, description, href, isExternal, accentColor, index }: PathwayCardProps) => {
-  const [isHovered, setIsHovered] = useState(false);
-
+const PathwayCard = ({ icon, title, description, href, isExternal, glowColor, accentBg, index }: PathwayCardProps) => {
   const content = (
     <div
-      className={`group relative flex flex-col gap-3 p-5 md:p-6 rounded-2xl cursor-pointer
-        border border-white/15 backdrop-blur-md
-        bg-white/[0.07] hover:bg-white/[0.14]
-        transition-all duration-250 ease-out
-        hover:border-white/30 hover:shadow-[0_8px_32px_rgba(0,0,0,0.15)]
-        hover:-translate-y-1
-        animate-fade-in-up`}
-      style={{ animationDelay: `${index * 100 + 200}ms` }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="hero-card group relative flex flex-col justify-between p-6 md:p-7 rounded-2xl cursor-pointer
+        border border-white/10
+        bg-white/[0.06] backdrop-blur-xl
+        transition-all duration-300 ease-out
+        hover:bg-white/[0.12] hover:border-white/25
+        hover:-translate-y-2 hover:scale-[1.03]
+        h-[180px] sm:h-[200px]"
+      style={{
+        animationDelay: `${index * 120 + 400}ms`,
+        // @ts-expect-error CSS custom property
+        '--card-glow': glowColor,
+      }}
     >
+      {/* Glow halo on hover */}
+      <div
+        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-xl"
+        style={{ background: glowColor, transform: 'scale(1.08)' }}
+      />
+
       <div className="flex items-start justify-between">
         <div
-          className={`flex items-center justify-center w-10 h-10 rounded-xl transition-colors duration-250 ${accentColor}`}
+          className={`flex items-center justify-center w-12 h-12 rounded-xl ${accentBg}
+            group-hover:scale-110 transition-transform duration-300`}
         >
           {icon}
         </div>
         <div
-          className={`flex items-center justify-center w-7 h-7 rounded-full transition-all duration-250
-            ${isHovered ? 'bg-yellow-dark text-espresso scale-100' : 'bg-white/10 text-white/50 scale-90'}`}
+          className="flex items-center justify-center w-8 h-8 rounded-full
+            bg-white/10 text-white/40
+            group-hover:bg-yellow-dark group-hover:text-espresso group-hover:scale-110
+            transition-all duration-300"
         >
-          {isExternal ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
+          {isExternal ? <ArrowUpRight className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
         </div>
       </div>
       <div>
-        <h3 className="text-white font-[InterBold] text-[15px] md:text-[16px] leading-tight mb-1">{title}</h3>
-        <p className="text-cherry-brighter font-[InterRegular] text-[12px] md:text-[13px] leading-[1.4]">
+        <h3 className="text-white font-[InterBold] text-[17px] md:text-[19px] leading-tight mb-1.5">{title}</h3>
+        <p className="text-cherry-brighter font-[InterRegular] text-[13px] md:text-[14px] leading-[1.4] opacity-80 group-hover:opacity-100 transition-opacity duration-300">
           {description}
         </p>
       </div>
@@ -95,33 +105,37 @@ const PathwayCard = ({ icon, title, description, href, isExternal, accentColor, 
 
 const pathways: Omit<PathwayCardProps, 'index'>[] = [
   {
-    icon: <Repeat className="w-5 h-5 text-yellow-dark" />,
+    icon: <Repeat className="w-6 h-6 text-yellow-dark" strokeWidth={2.5} />,
     title: 'Start trading',
     description: 'Swap assets at the best rates across 11+ chains',
     href: '/swap',
-    accentColor: 'bg-yellow-dark/20',
+    glowColor: 'rgba(236, 193, 0, 0.15)',
+    accentBg: 'bg-yellow-dark/20',
   },
   {
-    icon: <Handshake className="w-5 h-5 text-orange-sonic" />,
+    icon: <Handshake className="w-6 h-6 text-orange-sonic" strokeWidth={2.5} />,
     title: 'Partner with us',
     description: 'Integrate, co-build, or grow the ecosystem together',
     href: '/partners',
-    accentColor: 'bg-orange-sonic/20',
+    glowColor: 'rgba(255, 144, 72, 0.15)',
+    accentBg: 'bg-orange-sonic/20',
   },
   {
-    icon: <Users className="w-5 h-5 text-cherry-brighter" />,
+    icon: <Users className="w-6 h-6 text-cherry-brighter" strokeWidth={2.5} />,
     title: 'Join community',
     description: 'Connect with DeFi enthusiasts & stay in the loop',
     href: '/community',
-    accentColor: 'bg-cherry-brighter/20',
+    glowColor: 'rgba(227, 190, 187, 0.15)',
+    accentBg: 'bg-cherry-brighter/20',
   },
   {
-    icon: <Code className="w-5 h-5 text-cream" />,
+    icon: <Code className="w-6 h-6 text-cream" strokeWidth={2.5} />,
     title: 'Build on SODAX',
     description: 'Explore our SDK, docs & developer resources',
     href: 'https://docs.sodax.com',
     isExternal: true,
-    accentColor: 'bg-cream/20',
+    glowColor: 'rgba(234, 222, 212, 0.15)',
+    accentBg: 'bg-cream/20',
   },
 ];
 
@@ -153,7 +167,7 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
       <div className="min-h-svh flex flex-col items-center bg-cherry-soda relative overflow-hidden">
         {/* Decorative background elements */}
         <Image
-          className="mix-blend-screen absolute max-md:top-[48%] max-md:left-1/2 max-md:-translate-x-1/2 max-md:translate-y-[-50%] sm:-right-5 sm:bottom-10 lg:right-0 lg:bottom-0 w-60 h-90 sm:w-80 sm:h-120 lg:w-110 lg:h-165 opacity-40 lg:opacity-50"
+          className="mix-blend-screen absolute max-md:top-[48%] max-md:left-1/2 max-md:-translate-x-1/2 max-md:translate-y-[-50%] sm:-right-5 sm:bottom-10 lg:right-0 lg:bottom-0 w-60 h-90 sm:w-80 sm:h-120 lg:w-110 lg:h-165 opacity-30 lg:opacity-40"
           src="/girl.png"
           alt="background"
           width={541}
@@ -161,13 +175,17 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
           unoptimized
         />
         <Image
-          className="mix-blend-color-dodge absolute max-w-none w-[357px] h-[357px] sm:w-[701px] sm:h-[680px] top-[30px] left-[-135px] sm:top-[-50px] lg:left-[9.5%] md:left-[-30%]"
+          className="mix-blend-color-dodge absolute max-w-none w-[357px] h-[357px] sm:w-[701px] sm:h-[680px] top-[30px] left-[-135px] sm:top-[-50px] lg:left-[9.5%] md:left-[-30%] hero-float"
           src="/circle1.png"
           alt="background"
           width={701}
           height={650}
           ref={imgRef}
         />
+
+        {/* Ambient glow orbs */}
+        <div className="absolute top-[20%] left-[10%] w-64 h-64 rounded-full bg-yellow-soda/10 blur-3xl hero-pulse-slow" />
+        <div className="absolute bottom-[30%] right-[15%] w-48 h-48 rounded-full bg-orange-sonic/8 blur-3xl hero-pulse-slow" style={{ animationDelay: '2s' }} />
 
         {/* Menu Bar */}
         <div className="w-full flex justify-between items-center pt-10 z-20 md:px-16 px-8 lg:px-8 lg:max-w-[1264px]">
@@ -216,30 +234,33 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
         </div>
 
         {/* Hero Content */}
-        <div className="flex flex-col w-full px-6 sm:px-8 md:px-16 lg:px-8 lg:max-w-316 z-10 mt-8 sm:mt-12 md:mt-16 lg:mt-20 flex-1 pb-8">
-          {/* Headline */}
-          <div className="flex flex-col gap-2 md:gap-4 max-w-180 animate-fade-in-up" style={{ animationDelay: '0ms' }}>
-            <Label className="mix-blend-hard-light text-[48px] sm:text-[72px] md:text-[96px] lg:text-[112px] leading-[0.9] text-yellow-soda font-[InterBlack] tracking-tight">
-              FRESH DEFI
-            </Label>
-            <p className="text-white/90 font-[InterRegular] text-[15px] sm:text-[17px] md:text-[19px] leading-normal max-w-120">
-              Cross-chain swaps, savings & borrowing — across 11+ networks.{' '}
-              <span className="text-cherry-brighter">Find your path below.</span>
-            </p>
+        <div className="flex flex-col w-full px-6 sm:px-8 md:px-16 lg:px-8 lg:max-w-316 z-10 mt-6 sm:mt-10 md:mt-14 lg:mt-16 flex-1 pb-8">
+          {/* Headline — Exaggerated Minimalism: giant type, dramatic entrance */}
+          <div className="hero-headline-enter">
+            <h1 className="hero-title-glow text-[clamp(3.5rem,12vw,10rem)] leading-[0.88] text-yellow-soda font-[InterBlack] tracking-[-0.03em] mix-blend-hard-light">
+              FRESH
+              <br />
+              DEFI
+            </h1>
+            {/* Animated accent bar */}
+            <div className="hero-accent-bar mt-4 md:mt-6 h-1 md:h-1.5 rounded-full bg-yellow-dark w-0" />
           </div>
 
-          {/* Pathway Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mt-8 md:mt-10 lg:mt-12 max-w-220">
+          {/* Sub-copy */}
+          <p className="hero-subcopy mt-5 md:mt-7 text-white font-[InterRegular] text-[clamp(1rem,2.5vw,1.35rem)] leading-relaxed max-w-[520px]">
+            Cross-chain swaps, savings & borrowing —{' '}
+            <span className="text-yellow-soda font-[InterBold]">across 11+ networks.</span>
+          </p>
+
+          {/* Pathway Cards — bold glassmorphism with glow */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mt-8 md:mt-12 lg:mt-14">
             {pathways.map((pathway, i) => (
               <PathwayCard key={pathway.title} {...pathway} index={i} />
             ))}
           </div>
 
           {/* Chain Carousel */}
-          <div
-            className="flex items-center flex-wrap gap-4 mt-auto pt-8 md:pt-10 animate-fade-in-up"
-            style={{ animationDelay: '600ms' }}
-          >
+          <div className="flex items-center flex-wrap gap-4 mt-auto pt-8 md:pt-10 hero-chain-enter">
             <Label className="font-medium text-[18px] font-[Shrikhand] text-white">serving</Label>
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-linear-to-r from-cherry-soda to-transparent z-10" />
