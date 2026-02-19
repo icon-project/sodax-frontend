@@ -58,7 +58,7 @@ export const tabConfigs: TabConfig[] = [
 ];
 
 export const partnerTabConfigs: TabConfig[] = [
-  { value: 'home', type: 'migrate', label: 'Home', content: '', enabled: true, showIcon: false, href: '/partner' },
+  { value: 'home', type: 'migrate', label: 'Home', content: '', enabled: true, showIcon: false, href: '/partner-dashboard' },
 ];
 
 interface RouteTabsProps {
@@ -68,7 +68,7 @@ interface RouteTabsProps {
 
 export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.Element {
   const pathname = usePathname();
-  const isPartnerRoute = pathname.startsWith('/partner');
+  const isPartnerRoute = pathname.startsWith('/partner-dashboard');
   const usedTabs = isPartnerRoute ? partnerTabConfigs : tabConfigs;
 
   const lastSegment = pathname.split('/').filter(Boolean).pop() ?? '';

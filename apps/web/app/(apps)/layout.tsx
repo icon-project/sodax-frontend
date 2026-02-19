@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   const { setShouldTriggerAnimation } = useAppStore(state => state);
 
   const pathname = usePathname();
-  const isPartner = pathname.startsWith('/partner');
+  const isPartner = pathname.startsWith('/partner-dashboard');
 
   useLayoutEffect(() => {
     if (ref.current) {

@@ -17,7 +17,7 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
   const xAccounts = useXAccounts();
 
   const pathname = usePathname();
-  const isPartner = pathname.startsWith('/partner');
+  const isPartner = pathname.startsWith('/partner-dashboard');
 
   const connectedChains = Object.entries(xAccounts)
     .filter(([_, account]) => account?.address)

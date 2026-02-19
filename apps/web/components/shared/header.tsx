@@ -18,7 +18,7 @@ export function Header(): React.JSX.Element {
   const connectedWalletsCount = connectedChains.length;
 
   const pathname = usePathname();
-  const isPartner = pathname.startsWith('/partner');
+  const isPartner = pathname.startsWith('/partner-dashboard');
   const isMainApp = !isPartner;
   const partnerName = 'PARTNER PORTAL';
 
