@@ -30,113 +30,19 @@ const carouselItems = [
   { id: 11, src: '/coin/op.png', alt: 'OPTIMISM' },
 ];
 
-interface PathwayCardProps {
+/* --- Aurora action pills --- */
+interface AuroraPill {
   icon: React.ReactNode;
-  title: string;
-  description: string;
+  label: string;
   href: string;
   isExternal?: boolean;
-  glowColor: string;
-  accentBg: string;
-  index: number;
 }
 
-const PathwayCard = ({ icon, title, description, href, isExternal, glowColor, accentBg, index }: PathwayCardProps) => {
-  const content = (
-    <div
-      className="hero-card group relative flex flex-col justify-between p-6 md:p-7 rounded-2xl cursor-pointer
-        border border-white/10
-        bg-white/[0.06] backdrop-blur-xl
-        transition-all duration-300 ease-out
-        hover:bg-white/[0.12] hover:border-white/25
-        hover:-translate-y-2 hover:scale-[1.03]
-        h-[180px] sm:h-[200px]"
-      style={{
-        animationDelay: `${index * 120 + 400}ms`,
-        // @ts-expect-error CSS custom property
-        '--card-glow': glowColor,
-      }}
-    >
-      {/* Glow halo on hover */}
-      <div
-        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-xl"
-        style={{ background: glowColor, transform: 'scale(1.08)' }}
-      />
-
-      <div className="flex items-start justify-between">
-        <div
-          className={`flex items-center justify-center w-12 h-12 rounded-xl ${accentBg}
-            group-hover:scale-110 transition-transform duration-300`}
-        >
-          {icon}
-        </div>
-        <div
-          className="flex items-center justify-center w-8 h-8 rounded-full
-            bg-white/10 text-white/40
-            group-hover:bg-yellow-dark group-hover:text-espresso group-hover:scale-110
-            transition-all duration-300"
-        >
-          {isExternal ? <ArrowUpRight className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-        </div>
-      </div>
-      <div>
-        <h3 className="text-white font-[InterBold] text-[17px] md:text-[19px] leading-tight mb-1.5">{title}</h3>
-        <p className="text-cherry-brighter font-[InterRegular] text-[13px] md:text-[14px] leading-[1.4] opacity-80 group-hover:opacity-100 transition-opacity duration-300">
-          {description}
-        </p>
-      </div>
-    </div>
-  );
-
-  if (isExternal) {
-    return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-35">
-        {content}
-      </a>
-    );
-  }
-
-  return (
-    <Link href={href} className="flex-1 min-w-35">
-      {content}
-    </Link>
-  );
-};
-
-const pathways: Omit<PathwayCardProps, 'index'>[] = [
-  {
-    icon: <Repeat className="w-6 h-6 text-yellow-dark" strokeWidth={2.5} />,
-    title: 'Start trading',
-    description: 'Swap assets at the best rates across 11+ chains',
-    href: '/swap',
-    glowColor: 'rgba(236, 193, 0, 0.15)',
-    accentBg: 'bg-yellow-dark/20',
-  },
-  {
-    icon: <Handshake className="w-6 h-6 text-orange-sonic" strokeWidth={2.5} />,
-    title: 'Partner with us',
-    description: 'Integrate, co-build, or grow the ecosystem together',
-    href: '/partners',
-    glowColor: 'rgba(255, 144, 72, 0.15)',
-    accentBg: 'bg-orange-sonic/20',
-  },
-  {
-    icon: <Users className="w-6 h-6 text-cherry-brighter" strokeWidth={2.5} />,
-    title: 'Join community',
-    description: 'Connect with DeFi enthusiasts & stay in the loop',
-    href: '/community',
-    glowColor: 'rgba(227, 190, 187, 0.15)',
-    accentBg: 'bg-cherry-brighter/20',
-  },
-  {
-    icon: <Code className="w-6 h-6 text-cream" strokeWidth={2.5} />,
-    title: 'Build on SODAX',
-    description: 'Explore our SDK, docs & developer resources',
-    href: 'https://docs.sodax.com',
-    isExternal: true,
-    glowColor: 'rgba(234, 222, 212, 0.15)',
-    accentBg: 'bg-cream/20',
-  },
+const pills: AuroraPill[] = [
+  { icon: <Repeat className="w-4 h-4" />, label: 'Trade', href: '/swap' },
+  { icon: <Handshake className="w-4 h-4" />, label: 'Partner', href: '/partners' },
+  { icon: <Users className="w-4 h-4" />, label: 'Community', href: '/community' },
+  { icon: <Code className="w-4 h-4" />, label: 'Docs', href: 'https://docs.sodax.com', isExternal: true },
 ];
 
 const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactElement => {
@@ -150,7 +56,6 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
     if (!api) {
       return;
     }
-
     api.on('select', () => {});
   }, [api]);
 
@@ -165,9 +70,53 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
   return (
     <div className="hero-section">
       <div className="min-h-svh flex flex-col items-center bg-cherry-soda relative overflow-hidden">
-        {/* Decorative background elements */}
+        {/* ─── Aurora Gradient Mesh Background ─── */}
+        <div className="absolute inset-0 z-[1]" aria-hidden="true">
+          {/* Primary aurora blob */}
+          <div
+            className="absolute w-[130%] h-[130%] top-[-15%] left-[-15%] aurora-mesh-1"
+            style={{
+              background: 'radial-gradient(ellipse at 30% 50%, rgba(255,217,47,0.18) 0%, transparent 50%)',
+              filter: 'blur(60px) saturate(1.3)',
+            }}
+          />
+          {/* Secondary aurora blob */}
+          <div
+            className="absolute w-[120%] h-[120%] top-[-10%] left-[-10%] aurora-mesh-2"
+            style={{
+              background: 'radial-gradient(ellipse at 70% 40%, rgba(255,144,72,0.15) 0%, transparent 45%)',
+              filter: 'blur(80px) saturate(1.2)',
+            }}
+          />
+          {/* Tertiary aurora blob */}
+          <div
+            className="absolute w-[100%] h-[100%] aurora-mesh-3"
+            style={{
+              background: 'radial-gradient(ellipse at 50% 80%, rgba(165,92,85,0.25) 0%, transparent 50%)',
+              filter: 'blur(70px)',
+            }}
+          />
+          {/* Iridescent shimmer layer */}
+          <div
+            className="absolute inset-0 aurora-shimmer mix-blend-overlay"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,217,47,0.05) 0%, rgba(255,144,72,0.08) 25%, rgba(204,158,154,0.06) 50%, rgba(255,217,47,0.04) 75%, rgba(234,222,212,0.06) 100%)',
+              backgroundSize: '200% 200%',
+            }}
+          />
+        </div>
+
+        {/* Noise texture overlay for depth */}
+        <div
+          className="absolute inset-0 z-[2] pointer-events-none opacity-[0.035]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
+          }}
+        />
+
+        {/* Decorative background elements — toned down for aurora */}
         <Image
-          className="mix-blend-screen absolute max-md:top-[48%] max-md:left-1/2 max-md:-translate-x-1/2 max-md:translate-y-[-50%] sm:-right-5 sm:bottom-10 lg:right-0 lg:bottom-0 w-60 h-90 sm:w-80 sm:h-120 lg:w-110 lg:h-165 opacity-30 lg:opacity-40"
+          className="mix-blend-screen absolute max-md:top-[48%] max-md:left-1/2 max-md:-translate-x-1/2 max-md:translate-y-[-50%] sm:-right-5 sm:bottom-10 lg:right-0 lg:bottom-0 w-60 h-90 sm:w-80 sm:h-120 lg:w-110 lg:h-165 opacity-15"
           src="/girl.png"
           alt="background"
           width={541}
@@ -182,10 +131,6 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
           height={650}
           ref={imgRef}
         />
-
-        {/* Ambient glow orbs */}
-        <div className="absolute top-[20%] left-[10%] w-64 h-64 rounded-full bg-yellow-soda/10 blur-3xl hero-pulse-slow" />
-        <div className="absolute bottom-[30%] right-[15%] w-48 h-48 rounded-full bg-orange-sonic/8 blur-3xl hero-pulse-slow" style={{ animationDelay: '2s' }} />
 
         {/* Menu Bar */}
         <div className="w-full flex justify-between items-center pt-10 z-20 md:px-16 px-8 lg:px-8 lg:max-w-[1264px]">
@@ -228,37 +173,61 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
           </div>
         </div>
 
-        {/* Hero Content */}
-        <div className="flex flex-col w-full px-6 sm:px-8 md:px-16 lg:px-8 lg:max-w-316 z-10 mt-6 sm:mt-10 md:mt-14 lg:mt-16 flex-1 pb-8">
-          {/* Headline — bold statement with Shrikhand accent */}
-          <div className="hero-headline-enter">
-            <h1 className="hero-title-glow text-[clamp(2.8rem,9vw,7.5rem)] leading-[0.92] text-white font-[InterBlack] tracking-[-0.03em]">
+        {/* Hero Content — centered with aurora as canvas */}
+        <div className="flex flex-col items-center justify-center w-full px-6 sm:px-8 md:px-16 lg:px-8 lg:max-w-316 z-10 flex-1 pb-8 text-center">
+          {/* Headline */}
+          <div className="aurora-headline-enter">
+            <h1 className="aurora-title-glow text-[clamp(3rem,10vw,8.5rem)] leading-[0.88] text-white font-[InterBlack] tracking-[-0.04em]">
               Infrastructure for
               <br />
-              <span className="text-yellow-soda font-[Shrikhand] tracking-normal">modern money</span>
+              <span className="aurora-accent-text font-[Shrikhand] tracking-normal">modern money</span>
             </h1>
-            {/* Animated accent bar */}
-            <div className="hero-accent-bar mt-4 md:mt-6 h-1 md:h-1.5 rounded-full bg-yellow-dark w-0" />
           </div>
 
-          {/* Sub-copy — hard hitting */}
-          <p className="hero-subcopy mt-5 md:mt-7 text-white/90 font-[InterRegular] text-[clamp(1rem,2.5vw,1.35rem)] leading-relaxed max-w-[560px]">
+          {/* Sub-copy */}
+          <p className="aurora-subcopy mt-6 md:mt-8 text-white/85 font-[InterRegular] text-[clamp(1rem,2.5vw,1.4rem)] leading-relaxed max-w-[620px]">
             Modern money moves across networks, obeys code, and doesn&apos;t wait for banks.{' '}
             <span className="text-yellow-soda font-[InterBold]">We built the infrastructure to use it.</span>
           </p>
 
-          {/* Pathway Cards — bold glassmorphism with glow */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mt-8 md:mt-12 lg:mt-14">
-            {pathways.map((pathway, i) => (
-              <PathwayCard key={pathway.title} {...pathway} index={i} />
-            ))}
+          {/* Aurora action pills — floating, iridescent */}
+          <div className="flex flex-wrap justify-center gap-3 mt-8 md:mt-12">
+            {pills.map((pill, i) => {
+              const Tag = pill.isExternal ? 'a' : Link;
+              const tagProps = pill.isExternal
+                ? { href: pill.href, target: '_blank', rel: 'noopener noreferrer' }
+                : { href: pill.href };
+              return (
+                <Tag
+                  key={pill.label}
+                  {...(tagProps as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
+                  className="aurora-pill group flex items-center gap-2.5 px-5 py-3 rounded-full
+                    bg-white/[0.08] backdrop-blur-2xl border border-white/15
+                    hover:bg-white/[0.16] hover:border-white/30
+                    hover:shadow-[0_0_30px_rgba(255,217,47,0.12)]
+                    transition-all duration-400 ease-out cursor-pointer
+                    text-white font-[InterBold] text-[14px]"
+                  style={{ animationDelay: `${i * 120 + 600}ms` }}
+                >
+                  <span className="text-yellow-soda group-hover:scale-110 transition-transform duration-300">
+                    {pill.icon}
+                  </span>
+                  {pill.label}
+                  {pill.isExternal ? (
+                    <ArrowUpRight className="w-3.5 h-3.5 text-white/40 group-hover:text-yellow-soda transition-colors" />
+                  ) : (
+                    <ArrowRight className="w-3.5 h-3.5 text-white/40 group-hover:text-yellow-soda group-hover:translate-x-0.5 transition-all" />
+                  )}
+                </Tag>
+              );
+            })}
           </div>
 
           {/* Chain Carousel */}
-          <div className="flex items-center flex-wrap gap-4 mt-auto pt-8 md:pt-10 hero-chain-enter">
+          <div className="flex items-center flex-wrap gap-4 mt-auto pt-10 hero-chain-enter">
             <Label className="font-medium text-[18px] font-[Shrikhand] text-white">serving</Label>
             <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-linear-to-r from-cherry-soda to-transparent z-10" />
+              <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-linear-to-r from-cherry-soda/80 to-transparent z-10" />
               <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
                 <Carousel
                   ref={carouselRef}
@@ -291,7 +260,7 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
                   </CarouselContent>
                 </Carousel>
               </div>
-              <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-cherry-soda to-transparent z-10" />
+              <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-cherry-soda/80 to-transparent z-10" />
             </div>
           </div>
         </div>
