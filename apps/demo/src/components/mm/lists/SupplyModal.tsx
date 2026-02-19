@@ -18,7 +18,7 @@ import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 import type { MoneyMarketSupplyParams } from '@sodax/sdk';
 import { getMmErrorText } from '@/lib/utils';
-import { MmErrorBox } from './MmErrorBox';
+import { ErrorAlert } from '../ErrorAlert';
 import { useQueryClient } from '@tanstack/react-query';
 import { invalidateMmQueries } from '@/lib/invalidateMmQueries';
 import { extractTxHash } from '@/lib/extractTxHash';
@@ -66,7 +66,7 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
   // Debug: Log error state changes to help diagnose stuck "Supplying..." state
   useEffect(() => {
     if (error) {
-      console.log('[SupplyModal] Error state changed:', { error, isPending });
+      // console.log('[SupplyModal] Error state changed:', { error, isPending });
     }
   }, [error, isPending]);
 
@@ -127,7 +127,7 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
     } catch (err) {
       // Error is handled by React Query and displayed via the error prop
       // Log for debugging purposes
-      console.error('Supply failed:', err);
+      // console.error('Supply failed:', err);
       // Ensure error state is properly set - React Query should handle this automatically
       // but we reset to ensure UI state is clean if needed
     }
@@ -142,7 +142,7 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
         spokeProvider: sourceSpokeProvider,
       });
     } catch (err) {
-      console.error('Approve failed:', err);
+      // console.error('Approve failed:', err);
     }
   };
 
@@ -189,38 +189,61 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
           <DialogDescription className="text-center">Choose amount to supply.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2">
-          <Label htmlFor="amount">Amount</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              id="amount"
-              type="number"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              disabled={isBusy}
-            />
-            <span>{token.symbol}</span>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleMaxclick}
-              disabled={isBusy || !maxSupply || maxSupply === '0'}
-            >
-              Max
-            </Button>
+        <div className="space-y-4">
+          {/* Amount Input */}
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="amount"
+                type="number"
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+                disabled={isBusy}
+              />
+              <span>{token.symbol}</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleMaxclick}
+                disabled={isBusy || !maxSupply || maxSupply === '0'}
+              >
+                Max
+              </Button>
+            </div>
+
+            <div className="space-y-1">
+              {maxSupply && maxSupply !== '0' && (
+                <p className="text-xs text-muted-foreground">
+                  Max supply: {Number(maxSupply).toFixed(6)} {token.symbol}
+                </p>
+              )}
+              {/* Show validation messages only when user enters an amount */}
+              {amount &&
+                (() => {
+                  const amountNum = Number.parseFloat(amount.replace(',', '.'));
+                  if (Number.isNaN(amountNum) || amountNum <= 0) return null;
+
+                  if (maxSupply && maxSupply !== '0' && amountNum > Number.parseFloat(maxSupply)) {
+                    return (
+                      <ErrorAlert
+                        text={`Amount exceeds maximum supply: ${Number(maxSupply).toFixed(6)} ${token.symbol}`}
+                        variant="compact"
+                      />
+                    );
+                  }
+
+                  return null;
+                })()}
+            </div>
           </div>
-          {maxSupply && maxSupply !== '0' && (
-            <p className="text-xs text-muted-foreground">
-              Max supply: {Number(maxSupply).toFixed(6)} {token.symbol}
-            </p>
-          )}
         </div>
 
-        {error && <MmErrorBox text={getMmErrorText(error)} />}
-        {approveError && <MmErrorBox text={getMmErrorText(approveError)} />}
+        {error && <ErrorAlert text={getMmErrorText(error)} />}
+        {approveError && <ErrorAlert text={getMmErrorText(approveError)} />}
 
-        <DialogFooter className="sm:justify-start">
+        <DialogFooter className="sm:justify-start flex-col gap-2">
           {isWrongChain ? (
             <Button className="w-full" variant="cherry" onClick={handleSwitchChain} disabled={isBusy}>
               Switch Chain
@@ -253,9 +276,9 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
               type="button"
               variant="default"
               onClick={handleSupply}
-              disabled={!params || !sourceSpokeProvider}
+              disabled={!params || !sourceSpokeProvider || !amount}
             >
-              Supply
+              Supply {token.symbol}
             </Button>
           ) : null}
         </DialogFooter>

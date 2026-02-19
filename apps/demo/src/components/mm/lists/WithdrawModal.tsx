@@ -18,7 +18,7 @@ import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 import type { MoneyMarketWithdrawParams } from '@sodax/sdk';
 import { getMmErrorText } from '@/lib/utils';
-import { MmErrorBox } from './MmErrorBox';
+import { ErrorAlert } from '../ErrorAlert';
 import { useQueryClient } from '@tanstack/react-query';
 import { invalidateMmQueries } from '@/lib/invalidateMmQueries';
 import { extractTxHash } from '@/lib/extractTxHash';
@@ -85,22 +85,8 @@ export function WithdrawModal({
       ...(toAddress ? { toAddress } : {}),
     };
 
-    // Debug log for params creation
-    console.log('[WithdrawModal] Withdraw params created:', {
-      tokenAddress: token.address,
-      normalizedAmount,
-      parsedAmount: parsedAmount.toString(),
-      tokenDecimals: token.decimals,
-      selectedChainId,
-      tokenChainId: token.xChainId,
-      toAddress,
-      sourceAddress,
-      destAddress,
-      params: withdrawParams,
-    });
-
     return withdrawParams;
-  }, [token.address, token.decimals, token.xChainId, amount, destAddress, sourceAddress, selectedChainId]);
+  }, [token.address, token.decimals, token.xChainId, amount, destAddress, sourceAddress]);
 
   // Check if the chain is EVM - approval is only needed for EVM chains
   // Note: Withdraw actions don't require approval even on EVM chains (per SDK implementation)
@@ -135,12 +121,12 @@ export function WithdrawModal({
     // Withdraw actions don't require approval (per SDK implementation)
     // This should never be called for withdraw, but adding safeguard
     if (params.action === 'withdraw') {
-      console.warn('Approve should not be called for withdraw actions');
+      // console.warn('Approve should not be called for withdraw actions');
       return;
     }
     // Additional safeguard: don't call approve for non-EVM chains
     if (!isEvmChain) {
-      console.warn('Approve is not supported for non-EVM chains');
+      // console.warn('Approve is not supported for non-EVM chains');
       return;
     }
     try {
@@ -149,7 +135,7 @@ export function WithdrawModal({
         spokeProvider: sourceSpokeProvider,
       });
     } catch (err) {
-      console.error('Approve failed:', err);
+      // console.error('Approve failed:', err);
     }
   };
 
@@ -160,44 +146,42 @@ export function WithdrawModal({
       const normalizedAmount = amount.replace(',', '.');
 
       // Debug logs for withdrawal
-      console.log('[WithdrawModal] Starting withdrawal:', {
-        token: token.symbol,
-        tokenAddress: token.address,
-        amount: normalizedAmount,
-        amountParsed: params.amount.toString(),
-        maxWithdraw,
-        selectedChainId,
-        tokenChainId: token.xChainId,
-        sourceAddress,
-        destAddress,
-        toAddress: params.toAddress,
-        toChainId: params.toChainId,
-        chainType: sourceSpokeProvider?.chainConfig?.chain?.type,
-        isSameChain: selectedChainId === token.xChainId,
-        params: {
-          token: params.token,
-          amount: params.amount.toString(),
-          action: params.action,
-          toChainId: params.toChainId,
-          toAddress: params.toAddress,
-        },
-        spokeProviderChainId: sourceSpokeProvider?.chainConfig?.chain?.id,
-        spokeProviderChainType: sourceSpokeProvider?.chainConfig?.chain?.type,
-      });
+      // console.log('[WithdrawModal] Starting withdrawal:', {
+      //   token: token.symbol,
+      //   tokenAddress: token.address,
+      //   amount: normalizedAmount,
+      //   amountParsed: params.amount.toString(),
+      //   maxWithdraw,
+      //   selectedChainId,
+      //   tokenChainId: token.xChainId,
+      //   sourceAddress,
+      //   destAddress,
+      //   toAddress: params.toAddress,
+      //   toChainId: params.toChainId,
+      //   chainType: sourceSpokeProvider?.chainConfig?.chain?.type,
+      //   isSameChain: selectedChainId === token.xChainId,
+      //   params: {
+      //     token: params.token,
+      //     amount: params.amount.toString(),
+      //     action: params.action,
+      //     toChainId: params.toChainId,
+      //     toAddress: params.toAddress,
+      //   },
+      //   spokeProviderChainId: sourceSpokeProvider?.chainConfig?.chain?.id,
+      //   spokeProviderChainType: sourceSpokeProvider?.chainConfig?.chain?.type,
+      // });
 
-      console.log('[WithdrawModal] Calling SDK withdraw with:', {
-        params: JSON.stringify(params, (key, value) => (typeof value === 'bigint' ? value.toString() : value)),
-        spokeProviderType: sourceSpokeProvider?.chainConfig?.chain?.type,
-        spokeProviderChainId: sourceSpokeProvider?.chainConfig?.chain?.id,
-      });
+      // console.log('[WithdrawModal] Calling SDK withdraw with:', {
+      //   params: JSON.stringify(params, (key, value) => (typeof value === 'bigint' ? value.toString() : value)),
+      //   spokeProviderType: sourceSpokeProvider?.chainConfig?.chain?.type,
+      //   spokeProviderChainId: sourceSpokeProvider?.chainConfig?.chain?.id,
+      // });
 
       const result = await withdraw({
         params,
         spokeProvider: sourceSpokeProvider,
       });
       const txHash = extractTxHash(result);
-
-      console.log('[WithdrawModal] Withdrawal successful:', { txHash, result });
 
       invalidateMmQueries(queryClient, {
         mmChainIds: [selectedChainId],
@@ -221,28 +205,28 @@ export function WithdrawModal({
         onOpenChange(false);
       }
     } catch (err) {
-      console.error('[WithdrawModal] Withdraw failed:', {
-        error: err,
-        token: token.symbol,
-        tokenAddress: token.address,
-        amount: amount.replace(',', '.'),
-        amountParsed: params?.amount?.toString(),
-        maxWithdraw,
-        selectedChainId,
-        tokenChainId: token.xChainId,
-        sourceAddress,
-        destAddress,
-        chainType: sourceSpokeProvider?.chainConfig?.chain?.type,
-        params: params
-          ? {
-              token: params.token,
-              amount: params.amount.toString(),
-              action: params.action,
-              toChainId: params.toChainId,
-              toAddress: params.toAddress,
-            }
-          : null,
-      });
+      // console.error('[WithdrawModal] Withdraw failed:', {
+      //   error: err,
+      //   token: token.symbol,
+      //   tokenAddress: token.address,
+      //   amount: amount.replace(',', '.'),
+      //   amountParsed: params?.amount?.toString(),
+      //   maxWithdraw,
+      //   selectedChainId,
+      //   tokenChainId: token.xChainId,
+      //   sourceAddress,
+      //   destAddress,
+      //   chainType: sourceSpokeProvider?.chainConfig?.chain?.type,
+      //   params: params
+      //     ? {
+      //         token: params.token,
+      //         amount: params.amount.toString(),
+      //         action: params.action,
+      //         toChainId: params.toChainId,
+      //         toAddress: params.toAddress,
+      //       }
+      //     : null,
+      // });
     }
   };
   const handleMaxclick = () => {
@@ -279,46 +263,61 @@ export function WithdrawModal({
           <DialogDescription className="text-center">Choose amount to withdraw.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2">
-          <Label htmlFor="amount">Amount</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              id="amount"
-              type="number"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              disabled={isBusy}
-            />
-            <span>{token.symbol}</span>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleMaxclick}
-              disabled={isBusy || !maxWithdraw || maxWithdraw === '0'}
-            >
-              Max
-            </Button>
+        <div className="space-y-4">
+          {/* Amount Input */}
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="amount"
+                type="number"
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+                disabled={isBusy}
+              />
+              <span>{token.symbol}</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleMaxclick}
+                disabled={isBusy || !maxWithdraw || maxWithdraw === '0'}
+              >
+                Max
+              </Button>
+            </div>
+
+            <div className="space-y-1">
+              {maxWithdraw && maxWithdraw !== '0' && (
+                <p className="text-xs text-muted-foreground">
+                  Max withdraw: {Number(maxWithdraw).toFixed(6)} {token.symbol}
+                </p>
+              )}
+              {/* Show validation messages only when user enters an amount */}
+              {amount &&
+                (() => {
+                  const amountNum = Number.parseFloat(amount.replace(',', '.'));
+                  if (Number.isNaN(amountNum) || amountNum <= 0) return null;
+
+                  if (maxWithdraw && maxWithdraw !== '0' && amountNum > Number.parseFloat(maxWithdraw)) {
+                    return (
+                      <ErrorAlert
+                        text={`Amount exceeds maximum withdrawable: ${Number(maxWithdraw).toFixed(6)} ${token.symbol}`}
+                        variant="compact"
+                      />
+                    );
+                  }
+
+                  return null;
+                })()}
+            </div>
           </div>
-          {maxWithdraw && maxWithdraw !== '0' && (
-            <p className="text-xs text-muted-foreground">
-              Max withdraw: {Number(maxWithdraw).toFixed(6)} {token.symbol}
-            </p>
-          )}
-          {amount &&
-            maxWithdraw &&
-            maxWithdraw !== '0' &&
-            Number.parseFloat(amount.replace(',', '.')) > Number.parseFloat(maxWithdraw) && (
-              <p className="text-xs text-cherry-soda">
-                Amount exceeds maximum withdrawable: {Number(maxWithdraw).toFixed(6)} {token.symbol}
-              </p>
-            )}
         </div>
 
-        {error && <MmErrorBox text={getMmErrorText(error)} />}
-        {approveError && <MmErrorBox text={getMmErrorText(approveError)} />}
+        {error && <ErrorAlert text={getMmErrorText(error)} />}
+        {approveError && <ErrorAlert text={getMmErrorText(approveError)} />}
 
-        <DialogFooter className="sm:justify-start">
+        <DialogFooter className="sm:justify-start flex-col gap-2">
           {isWrongChain ? (
             <Button className="w-full" variant="cherry" onClick={handleSwitchChain} disabled={isBusy}>
               Switch Chain
@@ -364,7 +363,7 @@ export function WithdrawModal({
                   Number.parseFloat(amount.replace(',', '.')) > Number.parseFloat(maxWithdraw))
               }
             >
-              Withdraw
+              Withdraw {token.symbol}
             </Button>
           ) : null}
         </DialogFooter>

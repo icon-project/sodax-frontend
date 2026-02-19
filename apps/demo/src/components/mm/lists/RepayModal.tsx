@@ -3,10 +3,17 @@ import { useMMAllowance, useMMApprove, useRepay, useSpokeProvider } from '@sodax
 import type { ChainId, MoneyMarketRepayParams, XToken } from '@sodax/sdk';
 import { baseChainInfo } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { formatUnits, parseUnits } from 'viem';
 import { useQueryClient } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -18,8 +25,10 @@ import { invalidateMmQueries } from '@/lib/invalidateMmQueries';
 import { extractTxHash } from '@/lib/extractTxHash';
 import { ActionSuccessContent, type ActionSuccessData } from './ActionSuccessContent';
 import { Loader2 } from 'lucide-react';
-import { isValidEvmAddress, isErrorWithMessage } from '../typeGuards';
+import { isValidEvmAddress } from '../typeGuards';
 import { isAddress } from 'viem';
+import { ErrorAlert } from '../ErrorAlert';
+import { getMmErrorText } from '@/lib/utils';
 
 interface RepayModalProps {
   open: boolean;
@@ -51,6 +60,8 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
   const [step, setStep] = useState<'form' | 'success'>('form');
   // Stores success data (amount, token, txHash) when transaction completes, for displaying success screen
   const [successData, setSuccessData] = useState<ActionSuccessData | null>(null);
+  // Track when approve button is clicked to show "Approving..." immediately
+  const [isApprovingLocal, setIsApprovingLocal] = useState(false);
   const { selectedChainId: selectedMarketChainId } = useAppStore();
 
   const [fromChainId, setFromChainId] = useState(selectedMarketChainId);
@@ -138,7 +149,23 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
   // If allowance is unknown/loading, assume approval is needed (show Approve button).
   // Only show action button when we know allowance exists.
   const hasSourceAllowance = sourceAllowed === true;
-  const needsSourceApproval = sourceAllowed === false || sourceAllowed === undefined || isSourceAllowanceLoading;
+  // Track if we're in a transitional state (approving or checking allowance after approval)
+  // Use local state OR hook state to ensure immediate UI feedback
+  const isActuallyApproving = isApproving || isApprovingLocal;
+  
+  // Show approval needed if allowance is explicitly false or undefined
+  // Don't show approval needed while approving or refetching allowance (to prevent button flicker)
+  const needsSourceApproval = 
+    (sourceAllowed === false || (sourceAllowed === undefined && !isSourceAllowanceLoading)) && 
+    !isActuallyApproving;
+  const isInApprovalFlow = isActuallyApproving || (isSourceAllowanceLoading && !hasSourceAllowance && sourceAllowed !== false);
+  
+  // Reset local approving state when allowance is confirmed
+  useEffect(() => {
+    if (hasSourceAllowance && isApprovingLocal) {
+      setIsApprovingLocal(false);
+    }
+  }, [hasSourceAllowance, isApprovingLocal]);
 
   // Chain switching hook for the source chain
   const { isWrongChain: isWrongSourceChain, handleSwitchChain: handleSwitchToSource } = useEvmSwitchChain(fromChainId);
@@ -183,38 +210,37 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
         onOpenChange(false);
       }
     } catch (err: unknown) {
-      console.error('Repay failed:', err);
-      setError(getErrorMessage(err, 'Transaction failed. Please try again.'));
+      // console.error('Repay failed:', err);
+      setError(getMmErrorText(err) || 'Transaction failed. Please try again.');
     }
-  };
-
-  const getErrorMessage = (error: unknown, fallback = 'Approval failed'): string => {
-    if (error instanceof Error && error.message) return error.message;
-    if (typeof error === 'string') return error;
-    // Use type guard instead of type assertion
-    if (isErrorWithMessage(error)) {
-      return error.message;
-    }
-    return fallback;
   };
 
   const handleApproveSource = async (): Promise<void> => {
     setError(null);
     if (!sourceSpokeProvider || !sourceParams) return;
 
+    setIsApprovingLocal(true);
     try {
       await approve({
         params: sourceParams,
         spokeProvider: sourceSpokeProvider,
       });
     } catch (err: unknown) {
-      console.error('Source approval failed:', err);
-      setError(getErrorMessage(err));
+      // console.error('Source approval failed:', err);
+      setError(getMmErrorText(err) || 'Approval failed');
+      setIsApprovingLocal(false);
     }
+    // Note: isApprovingLocal will be reset when allowance refetch completes and hasSourceAllowance becomes true
   };
 
   const handleMax = () => {
-    setAmount(maxDebt);
+    // Format maxDebt to 6 decimal places to avoid floating point precision issues
+    const maxDebtNum = Number.parseFloat(maxDebt);
+    if (!Number.isNaN(maxDebtNum) && maxDebtNum > 0) {
+      setAmount(maxDebtNum.toFixed(6));
+    } else {
+      setAmount(maxDebt);
+    }
   };
 
   const isBusy = isPending || isApproving;
@@ -223,7 +249,9 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
   const isBalanceUnknown = isBalancesLoading || userBalance === undefined;
 
   // Check if user has any debt to repay (maxDebt > 0)
-  const hasDebt = maxDebt && maxDebt !== '0' && Number.parseFloat(maxDebt) > 0;
+  // Handle both '0' and '0.000000' formats
+  const maxDebtNum = maxDebt ? Number.parseFloat(maxDebt) : 0;
+  const hasDebt = !Number.isNaN(maxDebtNum) && maxDebtNum > 0;
 
   const handleOpenChangeInternal = (nextOpen: boolean): void => {
     onOpenChange(nextOpen);
@@ -232,6 +260,7 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
       setError(null);
       setStep('form');
       setSuccessData(null);
+      setIsApprovingLocal(false);
     }
   };
 
@@ -248,20 +277,16 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChangeInternal}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md border-cherry-grey/20">
         <DialogHeader>
-          <DialogTitle>Repay {token.symbol}</DialogTitle>
+          <DialogTitle className="text-center text-cherry-dark">Repay {token.symbol}</DialogTitle>
+          <DialogDescription className="text-center">
+            Repay debt from your collateral chain
+          </DialogDescription>
         </DialogHeader>
 
-        {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded text-sm">{error}</div>}
-
-        <div className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            From chain: <strong>{getChainName(fromChainId)}</strong>
-            <br />
-            To chain (debt): <strong>{getChainName(toChainId)}</strong>
-          </p>
-
+        <div className="space-y-4">
+          {/* From Chain (repay from) */}
           <div className="space-y-2">
             <Label>Repay from chain</Label>
             <ChainSelector
@@ -269,76 +294,132 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
               selectChainId={setFromChainId}
               allowedChains={repayableChains}
             />
-
             <p className="text-xs text-muted-foreground">
               Debt lives on: <strong>{getChainName(toChainId)}</strong> (cannot be changed)
             </p>
-            <p className="text-xs text-muted-foreground gap-2">
-              Your balance on the chain you want to repay: {isBalanceUnknown ? '—' : userBalance.toFixed(6)}
-              <span> {sourceToken?.symbol || token.symbol}</span>
+            <p className="text-xs text-muted-foreground">
+              Your balance: {isBalanceUnknown ? '—' : userBalance.toFixed(6)} {sourceToken?.symbol || token.symbol}
             </p>
           </div>
 
-          <Label>Amount</Label>
-          <div className="flex gap-2">
-            <Input
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              className={!isBusy && insufficientBalance ? 'border-red-500' : ''}
-              placeholder="0.0"
-              disabled={isBusy}
-            />
-            <Button variant="outline" onClick={handleMax} disabled={isBusy}>
-              Max
-            </Button>
+          {/* Amount Input */}
+          <div className="space-y-2">
+            <Label htmlFor="amount">Amount</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="amount"
+                type="number"
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+                className={!isBusy && insufficientBalance ? 'border-red-500' : ''}
+                placeholder="0.0"
+                disabled={isBusy}
+              />
+              <span>{token.symbol}</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleMax}
+                disabled={isBusy || !hasDebt}
+              >
+                Max
+              </Button>
+            </div>
+
+            <div className="space-y-1">
+              {hasDebt && (
+                <p className="text-xs text-muted-foreground">
+                  Max debt: {Number(maxDebt).toFixed(6)} {token.symbol}
+                </p>
+              )}
+              {/* Show validation messages only when user enters an amount */}
+              {amount &&
+                (() => {
+                  const amountNum = Number.parseFloat(amount.replace(',', '.'));
+                  if (Number.isNaN(amountNum) || amountNum <= 0) return null;
+
+                  if (!hasDebt) {
+                    return (
+                      <ErrorAlert text="No debt to repay" variant="compact" />
+                    );
+                  }
+
+                  if (!isBalanceUnknown && insufficientBalance) {
+                    return (
+                      <ErrorAlert
+                        text={`Insufficient balance. You have ${userBalance?.toFixed(6)} ${sourceToken?.symbol || token.symbol}, but need ${amountNum.toFixed(6)} ${sourceToken?.symbol || token.symbol}`}
+                        variant="compact"
+                      />
+                    );
+                  }
+
+                  const maxDebtNum = Number.parseFloat(maxDebt);
+                  if (!Number.isNaN(maxDebtNum) && amountNum > maxDebtNum) {
+                    return (
+                      <ErrorAlert
+                        text={`Amount exceeds maximum debt: ${Number(maxDebt).toFixed(6)} ${token.symbol}`}
+                        variant="compact"
+                      />
+                    );
+                  }
+
+                  return null;
+                })()}
+            </div>
           </div>
+        </div>
 
-          <p className="text-xs text-muted-foreground">
-            Max debt: {Number(maxDebt).toFixed(6)} {token.symbol}
-          </p>
+        {error && <ErrorAlert text={error} />}
 
-          {/* Gas fee warning - shown right before action button for maximum visibility */}
-          {!isWrongSourceChain && amount && !insufficientBalance && (
-            <p className="text-xs text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-950/30 p-2 rounded border border-amber-200 dark:border-amber-800">
+        {/* Gas fee warning - only show when user can actually repay */}
+        {!isWrongSourceChain &&
+          amount &&
+          !insufficientBalance &&
+          hasDebt &&
+          (() => {
+            const amountNum = Number.parseFloat(amount.replace(',', '.'));
+            const maxDebtNum = Number.parseFloat(maxDebt);
+            return (
+              !Number.isNaN(amountNum) && amountNum > 0 && (Number.isNaN(maxDebtNum) || amountNum <= maxDebtNum)
+            );
+          })() && (
+            <p className="text-xs text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-950/30 p-2 rounded-lg border border-amber-200 dark:border-amber-800">
               Make sure you have enough <strong>{getNativeTokenSymbol(fromChainId)}</strong> on{' '}
               <strong>{getChainName(fromChainId)}</strong> to cover gas fees for this transaction.
             </p>
           )}
 
-          {/* Show message when insufficient balance */}
-          {!isBusy && !isBalanceUnknown && insufficientBalance && amount && (
-            <div className="p-3 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30">
-              <p className="text-sm text-red-600 dark:text-red-400 font-medium">Cannot repay with current balance</p>
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
-                You have {userBalance?.toFixed(6)} {sourceToken?.symbol || token.symbol}, but need{' '}
-                {amountNum.toFixed(6)} {sourceToken?.symbol || token.symbol} to repay this amount.
-              </p>
-            </div>
-          )}
-
-          {/* Approval and repay flow on the source (repay) chain */}
+        <DialogFooter className="sm:justify-start flex-col gap-2">
           {isPending ? (
             <Button className="w-full" disabled>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               Repaying…
             </Button>
+          ) : isActuallyApproving ? (
+            <Button className="w-full" disabled>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Approving…
+            </Button>
           ) : isWrongSourceChain ? (
-            <Button className="w-full" onClick={handleSwitchToSource} disabled={isBusy}>
+            <Button className="w-full" variant="cherry" onClick={handleSwitchToSource} disabled={isBusy}>
               Switch to {getChainName(fromChainId)}
             </Button>
-          ) : insufficientBalance &&
-            amount ? // Don't show buttons when insufficient balance - show message above instead
-          null : needsSourceApproval ? (
+          ) : !hasDebt ? (
+            <Button className="w-full" variant="default" disabled>
+              No debt to repay
+            </Button>
+          ) : needsSourceApproval || (isSourceAllowanceLoading && !hasSourceAllowance) ? (
             <Button
               className="w-full"
               variant="cherry"
               onClick={handleApproveSource}
-              disabled={!sourceParams || isApproving || isBusy || !hasDebt}
+              disabled={!sourceParams || isBusy || (isSourceAllowanceLoading && !isApproving)}
             >
-              {isApproving ? (
+              {isSourceAllowanceLoading && !hasSourceAllowance && !isApproving ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Approving…
+                  Checking approval…
                 </>
               ) : (
                 `Approve ${sourceToken?.symbol || token.symbol} on ${getChainName(fromChainId)}`
@@ -347,13 +428,15 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
           ) : (
             <Button
               className="w-full"
+              type="button"
+              variant="default"
               onClick={handleRepay}
               disabled={!sourceParams || !hasSourceAllowance || isBalanceUnknown || !amount || isBusy || !hasDebt}
             >
-              Repay
+              Repay {token.symbol}
             </Button>
           )}
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

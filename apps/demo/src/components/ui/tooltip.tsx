@@ -5,7 +5,6 @@ import * as React from 'react';
 import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 
 import { cn } from '@/lib/utils';
-import { ArrowRightIcon } from '../icons/arrow-right-icon';
 
 type TooltipVariant = 'default' | 'soft';
 
@@ -56,11 +55,6 @@ function TooltipContent({
         {...props}
       >
         {children}
-        <ArrowRightIcon
-          className="absolute -bottom-6 left-1/2 -translate-x-1/2 rotate-270 z-50"
-          fill={isSoft ? '#fff7f5' : 'white'}
-          height={40}
-        />
       </TooltipPrimitive.Content>
     </TooltipPrimitive.Portal>
   );

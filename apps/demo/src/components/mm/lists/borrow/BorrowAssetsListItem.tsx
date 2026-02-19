@@ -88,14 +88,17 @@ export function BorrowAssetsListItem({
 
     // Fallback calculation if SDK returns 0 but user has collateral
     // This can happen due to rounding/precision issues with very small amounts
+    // NOTE: Should use currentLoanToValue (LTV), not currentLiquidationThreshold
+    // LTV is the max you can borrow, liquidation threshold is when you get liquidated
     if (availableBorrowsUSD === 0 && Number(userSummary.totalCollateralUSD) > 0) {
       const totalCollateralUSD = Number(userSummary.totalCollateralUSD);
       const totalBorrowsUSD = Number(userSummary.totalBorrowsUSD);
+      const currentLoanToValue = Number(userSummary.currentLoanToValue);
       const currentLiquidationThreshold = Number(userSummary.currentLiquidationThreshold);
 
-      // Calculate available borrow: (collateral * maxLTV) - currentBorrows
-      // Using liquidation threshold as max LTV (typically 80%)
-      const maxBorrowableUSD = totalCollateralUSD * currentLiquidationThreshold;
+      // Calculate available borrow: (collateral * LTV) - currentBorrows
+      // Use currentLoanToValue (LTV), not liquidation threshold
+      const maxBorrowableUSD = totalCollateralUSD * currentLoanToValue;
       availableBorrowsUSD = Math.max(0, maxBorrowableUSD - totalBorrowsUSD);
     }
 
@@ -103,12 +106,25 @@ export function BorrowAssetsListItem({
       const userLimitTokens = availableBorrowsUSD / priceUSD;
       const poolLimitTokens = Number(availableLiquidity);
 
-      maxBorrow = (Math.min(userLimitTokens, poolLimitTokens) * MAX_BORROW_SAFETY_MARGIN).toFixed(6);
+      const beforeSafetyMargin = Math.min(userLimitTokens, poolLimitTokens);
+      const afterSafetyMargin = beforeSafetyMargin * MAX_BORROW_SAFETY_MARGIN;
+      maxBorrow = afterSafetyMargin.toFixed(6);
     }
   }
 
   const canBorrow = !!availableLiquidity && Number.parseFloat(availableLiquidity) > 0;
-  const debtExact = metrics.userReserve ? formatUnits(metrics.userReserve.scaledVariableDebt, ATOKEN_DECIMALS) : '0';
+
+  // Calculate actual debt by applying variable borrow index (similar to how supply applies liquidity index)
+  // scaledVariableDebt needs to be multiplied by variableBorrowIndex to get the actual debt amount
+  let debtExact = '0';
+  if (metrics.userReserve && metrics.formattedReserve) {
+    const scaledDebt = metrics.userReserve.scaledVariableDebt;
+    const variableBorrowIndex = BigInt(metrics.formattedReserve.variableBorrowIndex || '1e27');
+    // Multiply scaled debt by borrow index and divide by ray precision (1e27)
+    const actualDebtRaw = (scaledDebt * variableBorrowIndex) / BigInt(1e27);
+    const tokenDecimals = Number(metrics.formattedReserve.decimals ?? 18);
+    debtExact = formatUnits(actualDebtRaw, tokenDecimals);
+  }
 
   const formatDecimalForDisplay = (value: string, maxDecimals: number): string => {
     if (value === '0') return '0';
@@ -127,18 +143,19 @@ export function BorrowAssetsListItem({
   };
 
   const debtNum = Number.parseFloat(debtExact);
-  const debtDisplay = debtExact === '0' ? '0' : formatDecimalForDisplay(debtExact, debtNum < 1 ? 8 : 4);
+  // Always display debt with 4 decimals, but show "0" when debt is zero or rounds to zero
+  const formattedDebt = Number.isNaN(debtNum) ? '0' : Number(debtExact).toFixed(4);
+  const debtDisplay = Number.parseFloat(formattedDebt) === 0 ? '0' : formattedDebt;
 
-  // Check if user has meaningful debt: balance exists AND formatted amount is greater than DUST_THRESHOLD
-  // This prevents enabling repay button for dust amounts that display as "0.0000"
+  // Check if user has meaningful debt: must have actual debt amount > 0
+  // Check if debt, when formatted to 4 decimals (same as display), is greater than 0
+  // This prevents enabling repay button when debt displays as "0.0000"
+  const debtDisplayNum = Number.parseFloat(debtDisplay);
   const hasDebt =
     metrics.userReserve &&
     metrics.userReserve.scaledVariableDebt > 0n &&
     Number.isFinite(debtNum) &&
-    // TEMP (testing): allow repaying dust-sized debts.
-    // Re-enable the DUST_THRESHOLD gate after testing.
-    // debtNum > DUST_THRESHOLD;
-    debtNum > 0;
+    debtDisplayNum > 0;
 
   return (
     <TableRow
@@ -198,7 +215,14 @@ export function BorrowAssetsListItem({
           <Button
             variant="cherry"
             size="sm"
-            onClick={() => onRepayClick(token, debtExact)}
+            onClick={() => {
+              // Prevent opening modal if there's no debt
+              if (!hasDebt) return;
+              // Format debt to 6 decimals to avoid floating point precision issues
+              const debtNum = Number.parseFloat(debtExact);
+              const formattedDebt = Number.isNaN(debtNum) || debtNum === 0 ? debtExact : debtNum.toFixed(6);
+              onRepayClick(token, formattedDebt);
+            }}
             disabled={!hasDebt}
             className="flex-1 min-w-[85px]"
           >

@@ -44,7 +44,7 @@ export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
  * Number of characters to show at the start and end of transaction hash for display.
  * Format: "0x1234...5678"
  */
-export const TX_HASH_DISPLAY_LENGTH = 4;
+export const TX_HASH_DISPLAY_LENGTH = 5;
 
 /**
  * Minimum safe health factor threshold.

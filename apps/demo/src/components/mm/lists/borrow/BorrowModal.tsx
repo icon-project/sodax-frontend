@@ -15,14 +15,7 @@ import { useEvmSwitchChain, useWalletProvider, useXAccount } from '@sodax/wallet
 import { useQueryClient } from '@tanstack/react-query';
 import { parseUnits } from 'viem';
 import type { MoneyMarketBorrowParams } from '@sodax/sdk';
-import {
-  useBorrow,
-  useSpokeProvider,
-  useReservesUsdFormat,
-  useUserFormattedSummary,
-  useAToken,
-  useUserReservesData,
-} from '@sodax/dapp-kit';
+import { useBorrow, useSpokeProvider, useReservesUsdFormat, useAToken, useUserReservesData } from '@sodax/dapp-kit';
 import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 import { getChainsWithThisToken, getMmErrorText, getTokenOnChain, getNativeTokenSymbol } from '@/lib/utils';
@@ -34,7 +27,7 @@ import { isUserReserveDataArray, isValidEvmAddress } from '../../typeGuards';
 import { isAddress } from 'viem';
 import { invalidateMmQueries } from '@/lib/invalidateMmQueries';
 import { extractTxHash } from '@/lib/extractTxHash';
-import { MmErrorBox } from '../MmErrorBox';
+import { ErrorAlert } from '../../ErrorAlert';
 import { getChainName } from '@/constants';
 import { ActionSuccessContent, type ActionSuccessData } from '../ActionSuccessContent';
 import { Loader2 } from 'lucide-react';
@@ -148,11 +141,16 @@ export function BorrowModal({
     let availableBorrowsUSD = Number(userSummary.availableBorrowsUSD);
 
     // Fallback calculation if SDK returns 0 but user has collateral
+    // NOTE: Should use currentLoanToValue (LTV), not currentLiquidationThreshold
+    // LTV is the max you can borrow, liquidation threshold is when you get liquidated
     if (availableBorrowsUSD === 0 && Number(userSummary.totalCollateralUSD) > 0) {
       const totalCollateralUSD = Number(userSummary.totalCollateralUSD);
       const totalBorrowsUSD = Number(userSummary.totalBorrowsUSD);
+      const currentLoanToValue = Number(userSummary.currentLoanToValue);
       const currentLiquidationThreshold = Number(userSummary.currentLiquidationThreshold);
-      const maxBorrowableUSD = totalCollateralUSD * currentLiquidationThreshold;
+
+      // Use LTV (not liquidation threshold) for max borrowable amount
+      const maxBorrowableUSD = totalCollateralUSD * currentLoanToValue;
       availableBorrowsUSD = Math.max(0, maxBorrowableUSD - totalBorrowsUSD);
     }
 
@@ -202,7 +200,8 @@ export function BorrowModal({
     }
 
     // Apply safety margin and format
-    const finalMaxBorrow = (calculatedMaxBorrow * MAX_BORROW_SAFETY_MARGIN).toFixed(6);
+    const afterSafetyMargin = calculatedMaxBorrow * MAX_BORROW_SAFETY_MARGIN;
+    const finalMaxBorrow = afterSafetyMargin.toFixed(6);
 
     return {
       maxBorrow: finalMaxBorrow !== '0' ? finalMaxBorrow : '0',
@@ -233,25 +232,30 @@ export function BorrowModal({
    * toChainId = where funds are delivered (cross-chain only).
    */
   const params: MoneyMarketBorrowParams | undefined = useMemo(() => {
-    if (!amount || !destinationToken) return undefined;
+    if (!amount || !destinationToken) {
+      return undefined;
+    }
 
     const normalizedAmount = amount.replace(',', '.');
 
-    // TEMPORARILY COMMENTED OUT: Validate minimum borrow amount
-    // const amountNum = Number.parseFloat(normalizedAmount);
-    // const minAmountNum = Number.parseFloat(minBorrowAmount);
-    // if (minAmountNum > 0 && amountNum < minAmountNum) {
-    //   return undefined; // Amount is below minimum
-    // }
-
     const amountNum = Number.parseFloat(normalizedAmount);
 
+    // CRITICAL: Reject zero or negative amounts
+    if (amountNum <= 0 || Number.isNaN(amountNum)) {
+      return undefined;
+    }
+
     // Validate maximum borrow amount (prevent borrowing more than available)
-    if (maxBorrow && maxBorrow !== '0') {
-      const maxBorrowNum = Number.parseFloat(maxBorrow);
-      if (amountNum > maxBorrowNum) {
-        return undefined; // Amount exceeds maximum borrowable
-      }
+    // Check if maxBorrow is effectively zero (e.g., '0.000000' parses to 0)
+    const maxBorrowNum = maxBorrow ? Number.parseFloat(maxBorrow) : 0;
+    const isMaxBorrowEffectivelyZero = maxBorrowNum <= 0 || Number.isNaN(maxBorrowNum);
+
+    if (isMaxBorrowEffectivelyZero) {
+      return undefined; // Cannot borrow when max borrow is zero
+    }
+
+    if (amountNum > maxBorrowNum) {
+      return undefined; // Amount exceeds maximum borrowable
     }
 
     const isSameChain = sourceChainId === destinationChainId;
@@ -260,9 +264,11 @@ export function BorrowModal({
     const crossChainParams =
       isSameChain || !destinationAddress ? {} : { toChainId: destinationChainId, toAddress: destinationAddress };
 
+    const parsedAmount = parseUnits(normalizedAmount, destinationToken.decimals);
+
     return {
       token: destinationToken.address, // Token on destination chain
-      amount: parseUnits(normalizedAmount, destinationToken.decimals),
+      amount: parsedAmount,
       action: 'borrow',
       ...crossChainParams,
     };
@@ -305,17 +311,27 @@ export function BorrowModal({
         onOpenChange(false);
       }
     } catch (err) {
-      console.error('Borrow failed:', err);
+      // console.error('Borrow failed:', err);
       // Log more details about the error
       if (err && typeof err === 'object' && 'data' in err) {
-        console.error('Borrow error details:', err.data);
+        // console.error('Borrow error details:', err.data);
       }
     }
   };
 
   const handleMaxClick = () => {
-    setAmount(maxBorrow);
+    const maxBorrowNum = Number.parseFloat(maxBorrow);
+    if (maxBorrowNum > 0 && !Number.isNaN(maxBorrowNum)) {
+      setAmount(maxBorrow);
+    }
   };
+
+  // Check if max borrow is effectively zero (even if formatted as '0.000000')
+  const isMaxBorrowEffectivelyZero = useMemo(() => {
+    if (!maxBorrow || maxBorrow === '0') return true;
+    const maxBorrowNum = Number.parseFloat(maxBorrow);
+    return maxBorrowNum <= 0 || Number.isNaN(maxBorrowNum);
+  }, [maxBorrow]);
 
   const handleOpenChangeInternal = (nextOpen: boolean) => {
     // Keep modal open while wallet modal is active for smoother UX transition
@@ -362,7 +378,8 @@ export function BorrowModal({
             <Label>Borrow from (collateral chain)</Label>
             <div className="p-2 bg-muted rounded-md">
               <p className="text-xs text-muted-foreground">
-                Debt will be created on <span className="text-sm font-medium">{getChainName(sourceChainId)}</span>
+                Debt will be created on{' '}
+                <span className="text-sm font-medium">{getChainName(sourceChainId) || sourceChainId}</span>
               </p>
             </div>
           </div>
@@ -378,7 +395,7 @@ export function BorrowModal({
             <p className="text-xs text-muted-foreground">
               {isSameChain
                 ? 'Same-chain borrow'
-                : `Cross-chain: Collateral on ${getChainName(sourceChainId)}, funds on ${getChainName(destinationChainId)}`}
+                : `Cross-chain: Collateral on ${getChainName(sourceChainId) || sourceChainId}, funds on ${getChainName(destinationChainId) || destinationChainId}`}
             </p>
           </div>
 
@@ -399,65 +416,77 @@ export function BorrowModal({
                 variant="outline"
                 size="sm"
                 onClick={handleMaxClick}
-                disabled={isBusy || !maxBorrow || maxBorrow === '0'}
+                disabled={isBusy || isMaxBorrowEffectivelyZero}
               >
                 Max
               </Button>
             </div>
 
             <div className="space-y-1">
-              {maxBorrow && maxBorrow !== '0' && (
+              {!isMaxBorrowEffectivelyZero && (
                 <p className="text-xs text-muted-foreground">
                   Max borrow: {Number(maxBorrow).toFixed(6)} {token.symbol}
                 </p>
               )}
-              {/* TEMPORARILY COMMENTED OUT: Min borrow display */}
-              {/* {minBorrowAmount !== '0' && (
-                <p className="text-xs text-muted-foreground">
-                  Min borrow: {minBorrowAmount} {token.symbol} (~${MIN_BORROW_USD} USD)
-                </p>
-              )} */}
-              {/* Show validation messages when button is disabled due to amount */}
-              {amount && (
-                <>
-                  {/* TEMPORARILY COMMENTED OUT: Min borrow validation */}
-                  {/* {minBorrowAmount !== '0' &&
-                    Number.parseFloat(amount.replace(',', '.')) < Number.parseFloat(minBorrowAmount) && (
-                      <p className="text-xs text-cherry-soda">
-                        Amount must be at least {minBorrowAmount} {token.symbol} (~${MIN_BORROW_USD} USD)
-                      </p>
-                    )} */}
-                  {maxBorrow &&
-                    maxBorrow !== '0' &&
-                    Number.parseFloat(amount.replace(',', '.')) > Number.parseFloat(maxBorrow) && (
-                      <p className="text-xs text-cherry-soda">
-                        Amount exceeds maximum borrowable: {Number(maxBorrow).toFixed(6)} {token.symbol}
-                      </p>
-                    )}
-                </>
-              )}
+              {/* Show validation messages only when user enters an amount */}
+              {amount &&
+                (() => {
+                  const amountNum = Number.parseFloat(amount.replace(',', '.'));
+                  if (Number.isNaN(amountNum) || amountNum <= 0) return null;
+
+                  if (isMaxBorrowEffectivelyZero) {
+                    return (
+                      <ErrorAlert
+                        text="Insufficient collateral to borrow this asset. Supply more collateral to borrow."
+                        variant="compact"
+                      />
+                    );
+                  }
+
+                  const maxBorrowNum = Number.parseFloat(maxBorrow);
+                  if (!Number.isNaN(maxBorrowNum) && amountNum > maxBorrowNum) {
+                    return (
+                      <ErrorAlert
+                        text={`Amount exceeds maximum borrowable: ${Number(maxBorrow).toFixed(6)} ${token.symbol}`}
+                        variant="compact"
+                      />
+                    );
+                  }
+
+                  return null;
+                })()}
             </div>
           </div>
         </div>
 
-        {error && <MmErrorBox text={getMmErrorText(error)} />}
+        {error && <ErrorAlert text={getMmErrorText(error)} />}
 
-        {/* Gas fee warning - shown right before action button for maximum visibility */}
-        {!isWrongChain && !isCrossChainMissingDestinationAddress && amount && (
-          <p className="text-xs text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-950/30 p-2 rounded-lg border border-amber-200 dark:border-amber-800">
-            Make sure you have enough <strong>{getNativeTokenSymbol(sourceChainId)}</strong> on{' '}
-            <strong>{getChainName(sourceChainId)}</strong> to cover gas fees for this transaction.
-          </p>
-        )}
+        {/* Gas fee warning - only show when user can actually borrow */}
+        {!isWrongChain &&
+          !isCrossChainMissingDestinationAddress &&
+          amount &&
+          !isMaxBorrowEffectivelyZero &&
+          (() => {
+            const amountNum = Number.parseFloat(amount.replace(',', '.'));
+            const maxBorrowNum = Number.parseFloat(maxBorrow);
+            return (
+              !Number.isNaN(amountNum) && amountNum > 0 && (Number.isNaN(maxBorrowNum) || amountNum <= maxBorrowNum)
+            );
+          })() && (
+            <p className="text-xs text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-950/30 p-2 rounded-lg border border-amber-200 dark:border-amber-800">
+              Make sure you have enough <strong>{getNativeTokenSymbol(sourceChainId)}</strong> on{' '}
+              <strong>{getChainName(sourceChainId) || sourceChainId}</strong> to cover gas fees for this transaction.
+            </p>
+          )}
 
         <DialogFooter className="sm:justify-start flex-col gap-2">
           {isWrongChain ? (
             <Button className="w-full" variant="cherry" onClick={handleSwitchChain} disabled={isBusy}>
-              Switch to {getChainName(sourceChainId)}
+              Switch to {getChainName(sourceChainId) || sourceChainId}
             </Button>
           ) : isCrossChainMissingDestinationAddress ? (
             <Button className="w-full" variant="cherry" onClick={openWalletModal}>
-              Connect Wallet on {getChainName(destinationChainId)}
+              Connect Wallet on {getChainName(destinationChainId) || destinationChainId}
             </Button>
           ) : isPending ? (
             <Button className="w-full" disabled>

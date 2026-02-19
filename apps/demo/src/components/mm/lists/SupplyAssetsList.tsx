@@ -60,17 +60,17 @@ export function SupplyAssetsList(): ReactElement {
 
   // // Debug: why Solana wallet balance not showing
   if (selectedChainId === 'solana') {
-    console.log('[SupplyAssetsList] Solana', {
-      selectedChainId,
-      address: address ?? null,
-      tokensCount: tokens.length,
-      tokenSymbols: tokens.map(t => t.symbol),
-      tokenAddresses: tokens.map(t => ({ symbol: t.symbol, address: t.address })),
-      balances: balances ?? null,
-      balancesKeys: balances ? Object.keys(balances) : [],
-      isBalancesLoading,
-      perToken: tokens.map(t => ({ symbol: t.symbol, balance: balances?.[t.address], keyUsed: t.address })),
-    });
+    // console.log('[SupplyAssetsList] Solana', {
+    //   selectedChainId,
+    //   address: address ?? null,
+    //   tokensCount: tokens.length,
+    //   tokenSymbols: tokens.map(t => t.symbol),
+    //   tokenAddresses: tokens.map(t => ({ symbol: t.symbol, address: t.address })),
+    //   balances: balances ?? null,
+    //   balancesKeys: balances ? Object.keys(balances) : [],
+    //   isBalancesLoading,
+    //   perToken: tokens.map(t => ({ symbol: t.symbol, balance: balances?.[t.address], keyUsed: t.address })),
+    // });
   }
 
   const {
@@ -138,7 +138,7 @@ export function SupplyAssetsList(): ReactElement {
                     <Info className="w-4 h-4 text-cherry-soda" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent>
+                <TooltipContent variant="soft" side="top" align="center" sideOffset={6}>
                   Indicates how close your account is to liquidation. Values below <strong>1</strong> are unsafe.
                 </TooltipContent>
               </Tooltip>
@@ -240,9 +240,9 @@ export function SupplyAssetsList(): ReactElement {
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent variant="soft" side="top" align="center" sideOffset={6}>
-                                    <strong>Supply APY</strong> (Annual Percentage Yield) is the effective annual return
-                                    you earn for supplying assets, accounting for compound interest. This is the actual
-                                    yield you'll receive over a year.
+                                    Annual Percentage Yield is the effective annual return you earn for supplying
+                                    assets, accounting for compound interest. This is the actual yield you'll receive
+                                    over a year.
                                   </TooltipContent>
                                 </Tooltip>
                               </div>
@@ -269,9 +269,9 @@ export function SupplyAssetsList(): ReactElement {
                                     </button>
                                   </TooltipTrigger>
                                   <TooltipContent variant="soft" side="top" align="center" sideOffset={6}>
-                                    <strong>Supply APR</strong> (Annual Percentage Rate) is the simple annual interest
-                                    rate you earn for supplying assets, without compounding. APY accounts for
-                                    compounding and is typically higher than APR.
+                                    Annual Percentage Rate is the simple annual interest rate you earn for supplying
+                                    assets, without compounding. APY accounts for compounding and is typically higher
+                                    than APR.
                                   </TooltipContent>
                                 </Tooltip>
                               </div>

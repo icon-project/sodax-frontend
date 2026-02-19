@@ -90,7 +90,7 @@ export function ActionSuccessContent({ action, data, onClose }: ActionSuccessCon
   const amountNumber = Number(data.amount);
 
   return (
-    <div className="flex flex-col gap-6 py-2">
+    <div className="flex flex-col gap-3 py-2">
       <DialogHeader className="pb-2">
         <DialogTitle className="text-cherry-dark text-center">{currentConfig.title}</DialogTitle>
       </DialogHeader>
@@ -123,7 +123,7 @@ export function ActionSuccessContent({ action, data, onClose }: ActionSuccessCon
 
           {(txUrl || sodaxScanLoading) &&
             (sodaxScanLoading ? (
-              <div className="flex items-center justify-center gap-2 w-full rounded-lg bg-cream-grey/40 px-4 py-2.5 text-sm text-clay">
+              <div className="flex items-center justify-center gap-2 w-full rounded-lg bg-cream-grey/40 px-4 py-2 text-sm text-clay">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Loading link…
               </div>
@@ -132,7 +132,7 @@ export function ActionSuccessContent({ action, data, onClose }: ActionSuccessCon
                 href={txUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full rounded-lg bg-cream-grey/40 px-4 py-2.5 text-sm text-cherry-dark font-medium hover:bg-cherry/10 transition"
+                className="flex items-center justify-center gap-2 w-full rounded-lg bg-cream-grey/40 px-4 py-2 text-sm text-cherry-dark font-medium hover:bg-cherry/10 transition"
               >
                 <ExternalLink className="w-4 h-4" />
                 {sodaxScanUrl ? 'View on SodaxScan' : 'View on explorer'}
@@ -141,7 +141,7 @@ export function ActionSuccessContent({ action, data, onClose }: ActionSuccessCon
         </div>
       )}
 
-      <DialogFooter className="pt-2">
+      <DialogFooter>
         <Button variant="cherry" onClick={onClose} className="w-full py-6 text-base">
           Close
         </Button>
