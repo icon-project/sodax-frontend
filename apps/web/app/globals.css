@@ -486,7 +486,7 @@ textarea[readonly] {
   animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* ── Hero: dramatic entrance animations ── */
+/* ── Hero: Storytelling scroll-driven animations ── */
 
 /* Giant headline — clips in from below with scale */
 @keyframes hero-headline-in {
@@ -565,23 +565,34 @@ textarea[readonly] {
   animation: hero-subcopy-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
 }
 
-/* Cards — dramatic staggered slide-up with scale bounce */
-@keyframes hero-card-in {
-  0% {
+/* Scroll prompt entrance */
+@keyframes story-scroll-enter {
+  from {
     opacity: 0;
-    transform: translateY(48px) scale(0.9);
+    transform: translateY(16px);
   }
-  70% {
-    transform: translateY(-4px) scale(1.02);
-  }
-  100% {
+  to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
-.hero-card {
-  animation: hero-card-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+.story-scroll-prompt {
+  animation: story-scroll-enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.2s both;
+}
+
+/* Bouncing chevron */
+@keyframes story-bounce-y {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+.story-bounce {
+  animation: story-bounce-y 2s ease-in-out infinite;
 }
 
 /* Chain carousel entrance */
@@ -630,12 +641,17 @@ textarea[readonly] {
   animation: hero-pulse-slow 6s ease-in-out infinite;
 }
 
+/* Story chapter dividers */
+.story-chapter + .story-chapter {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,
   .hero-headline-enter,
   .hero-subcopy,
-  .hero-card,
-  .hero-chain-enter {
+  .hero-chain-enter,
+  .story-scroll-prompt {
     animation: none;
     opacity: 1;
     transform: none;
@@ -647,7 +663,12 @@ textarea[readonly] {
     opacity: 1;
   }
   .hero-float,
-  .hero-pulse-slow {
+  .hero-pulse-slow,
+  .story-bounce {
     animation: none;
+  }
+  .story-chapter {
+    opacity: 1 !important;
+    transform: none !important;
   }
 }

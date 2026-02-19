@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAppStore } from '@/stores/app-store-provider';
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, Repeat, Handshake, Users, Code } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, ChevronDown } from 'lucide-react';
 
 const carouselItems = [
   { id: 1, src: '/coin/base.png', alt: 'BASE' },
@@ -30,114 +30,128 @@ const carouselItems = [
   { id: 11, src: '/coin/op.png', alt: 'OPTIMISM' },
 ];
 
-interface PathwayCardProps {
-  icon: React.ReactNode;
+/* --- Story chapters revealed on scroll --- */
+interface StoryChapter {
+  number: string;
   title: string;
-  description: string;
-  href: string;
-  isExternal?: boolean;
-  glowColor: string;
-  accentBg: string;
-  index: number;
+  body: string;
+  cta?: { label: string; href: string; isExternal?: boolean };
+  accentColor: string;
 }
 
-const PathwayCard = ({ icon, title, description, href, isExternal, glowColor, accentBg, index }: PathwayCardProps) => {
-  const content = (
-    <div
-      className="hero-card group relative flex flex-col justify-between p-6 md:p-7 rounded-2xl cursor-pointer
-        border border-white/10
-        bg-white/[0.06] backdrop-blur-xl
-        transition-all duration-300 ease-out
-        hover:bg-white/[0.12] hover:border-white/25
-        hover:-translate-y-2 hover:scale-[1.03]
-        h-[180px] sm:h-[200px]"
-      style={{
-        animationDelay: `${index * 120 + 400}ms`,
-        // @ts-expect-error CSS custom property
-        '--card-glow': glowColor,
-      }}
-    >
-      {/* Glow halo on hover */}
-      <div
-        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-xl"
-        style={{ background: glowColor, transform: 'scale(1.08)' }}
-      />
+const chapters: StoryChapter[] = [
+  {
+    number: '01',
+    title: 'Money evolved.',
+    body: 'It left the banks. It left the borders. It moves at the speed of code across networks no one controls.',
+    accentColor: 'text-yellow-soda',
+  },
+  {
+    number: '02',
+    title: 'But the infrastructure didn\u2019t.',
+    body: 'Fragmented chains. Broken bridges. Liquidity trapped in silos. Users stuck choosing between speed, cost, and safety.',
+    accentColor: 'text-orange-sonic',
+  },
+  {
+    number: '03',
+    title: 'Until now.',
+    body: 'SODAX connects 11+ chains into one interface. Swap, bridge, and build\u2014without worrying which network you\u2019re on.',
+    cta: { label: 'Start trading', href: '/swap' },
+    accentColor: 'text-cherry-brighter',
+  },
+  {
+    number: '04',
+    title: 'Build the future with us.',
+    body: 'Whether you\u2019re a trader, a partner, or a developer\u2014the infrastructure is ready.',
+    cta: { label: 'Explore docs', href: 'https://docs.sodax.com', isExternal: true },
+    accentColor: 'text-cream',
+  },
+];
 
-      <div className="flex items-start justify-between">
-        <div
-          className={`flex items-center justify-center w-12 h-12 rounded-xl ${accentBg}
-            group-hover:scale-110 transition-transform duration-300`}
-        >
-          {icon}
+/* --- Scroll-reveal hook --- */
+const useScrollReveal = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.unobserve(node);
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, isVisible };
+};
+
+/* --- Chapter Component --- */
+const ChapterBlock = ({ chapter, index }: { chapter: StoryChapter; index: number }) => {
+  const { ref, isVisible } = useScrollReveal();
+
+  return (
+    <div
+      ref={ref}
+      className={`story-chapter py-16 md:py-24 transition-all duration-700 ease-out
+        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-16'}`}
+      style={{ transitionDelay: `${index * 100}ms` }}
+    >
+      <div className="flex items-start gap-6 md:gap-10">
+        {/* Chapter number — vertical accent */}
+        <div className="flex flex-col items-center gap-3 pt-1">
+          <span className={`${chapter.accentColor} font-[Shrikhand] text-[28px] md:text-[36px] leading-none`}>
+            {chapter.number}
+          </span>
+          <div className={`w-px h-16 md:h-24 bg-current ${chapter.accentColor} opacity-20`} />
         </div>
-        <div
-          className="flex items-center justify-center w-8 h-8 rounded-full
-            bg-white/10 text-white/40
-            group-hover:bg-yellow-dark group-hover:text-espresso group-hover:scale-110
-            transition-all duration-300"
-        >
-          {isExternal ? <ArrowUpRight className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
+
+        {/* Chapter content */}
+        <div className="flex-1 max-w-xl">
+          <h2 className="text-white font-[InterBlack] text-[28px] md:text-[40px] lg:text-[48px] leading-[1.05] tracking-tight mb-4">
+            {chapter.title}
+          </h2>
+          <p className="text-white/70 font-[InterRegular] text-[16px] md:text-[18px] leading-relaxed mb-6">
+            {chapter.body}
+          </p>
+          {chapter.cta && (
+            chapter.cta.isExternal ? (
+              <a
+                href={chapter.cta.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full
+                  bg-yellow-dark text-espresso font-[InterBold] text-[14px]
+                  hover:bg-yellow-soda hover:scale-105 transition-all duration-300"
+              >
+                {chapter.cta.label}
+                <ArrowUpRight className="w-4 h-4" />
+              </a>
+            ) : (
+              <Link
+                href={chapter.cta.href}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full
+                  bg-yellow-dark text-espresso font-[InterBold] text-[14px]
+                  hover:bg-yellow-soda hover:scale-105 transition-all duration-300"
+              >
+                {chapter.cta.label}
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            )
+          )}
         </div>
-      </div>
-      <div>
-        <h3 className="text-white font-[InterBold] text-[17px] md:text-[19px] leading-tight mb-1.5">{title}</h3>
-        <p className="text-cherry-brighter font-[InterRegular] text-[13px] md:text-[14px] leading-[1.4] opacity-80 group-hover:opacity-100 transition-opacity duration-300">
-          {description}
-        </p>
       </div>
     </div>
   );
-
-  if (isExternal) {
-    return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-35">
-        {content}
-      </a>
-    );
-  }
-
-  return (
-    <Link href={href} className="flex-1 min-w-35">
-      {content}
-    </Link>
-  );
 };
-
-const pathways: Omit<PathwayCardProps, 'index'>[] = [
-  {
-    icon: <Repeat className="w-6 h-6 text-yellow-dark" strokeWidth={2.5} />,
-    title: 'Start trading',
-    description: 'Swap assets at the best rates across 11+ chains',
-    href: '/swap',
-    glowColor: 'rgba(236, 193, 0, 0.15)',
-    accentBg: 'bg-yellow-dark/20',
-  },
-  {
-    icon: <Handshake className="w-6 h-6 text-orange-sonic" strokeWidth={2.5} />,
-    title: 'Partner with us',
-    description: 'Integrate, co-build, or grow the ecosystem together',
-    href: '/partners',
-    glowColor: 'rgba(255, 144, 72, 0.15)',
-    accentBg: 'bg-orange-sonic/20',
-  },
-  {
-    icon: <Users className="w-6 h-6 text-cherry-brighter" strokeWidth={2.5} />,
-    title: 'Join community',
-    description: 'Connect with DeFi enthusiasts & stay in the loop',
-    href: '/community',
-    glowColor: 'rgba(227, 190, 187, 0.15)',
-    accentBg: 'bg-cherry-brighter/20',
-  },
-  {
-    icon: <Code className="w-6 h-6 text-cream" strokeWidth={2.5} />,
-    title: 'Build on SODAX',
-    description: 'Explore our SDK, docs & developer resources',
-    href: 'https://docs.sodax.com',
-    isExternal: true,
-    glowColor: 'rgba(234, 222, 212, 0.15)',
-    accentBg: 'bg-cream/20',
-  },
-];
 
 const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactElement => {
   const imgRef = useRef<HTMLImageElement>(null);
@@ -150,7 +164,6 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
     if (!api) {
       return;
     }
-
     api.on('select', () => {});
   }, [api]);
 
@@ -162,8 +175,13 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
     api?.plugins().autoplay.play();
   }, [api]);
 
+  const scrollToStory = () => {
+    document.getElementById('story-chapters')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="hero-section">
+      {/* ─── Opening Scene: Full viewport ─── */}
       <div className="min-h-svh flex flex-col items-center bg-cherry-soda relative overflow-hidden">
         {/* Decorative background elements */}
         <Image
@@ -185,7 +203,10 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
 
         {/* Ambient glow orbs */}
         <div className="absolute top-[20%] left-[10%] w-64 h-64 rounded-full bg-yellow-soda/10 blur-3xl hero-pulse-slow" />
-        <div className="absolute bottom-[30%] right-[15%] w-48 h-48 rounded-full bg-orange-sonic/8 blur-3xl hero-pulse-slow" style={{ animationDelay: '2s' }} />
+        <div
+          className="absolute bottom-[30%] right-[15%] w-48 h-48 rounded-full bg-orange-sonic/8 blur-3xl hero-pulse-slow"
+          style={{ animationDelay: '2s' }}
+        />
 
         {/* Menu Bar */}
         <div className="w-full flex justify-between items-center pt-10 z-20 md:px-16 px-8 lg:px-8 lg:max-w-[1264px]">
@@ -228,72 +249,89 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
           </div>
         </div>
 
-        {/* Hero Content */}
-        <div className="flex flex-col w-full px-6 sm:px-8 md:px-16 lg:px-8 lg:max-w-316 z-10 mt-6 sm:mt-10 md:mt-14 lg:mt-16 flex-1 pb-8">
-          {/* Headline — bold statement with Shrikhand accent */}
+        {/* Opening headline — massive, centered */}
+        <div className="flex flex-col items-center justify-center flex-1 z-10 px-6 text-center">
           <div className="hero-headline-enter">
-            <h1 className="hero-title-glow text-[clamp(2.8rem,9vw,7.5rem)] leading-[0.92] text-white font-[InterBlack] tracking-[-0.03em]">
+            <h1 className="hero-title-glow text-[clamp(3rem,10vw,8rem)] leading-[0.90] text-white font-[InterBlack] tracking-[-0.03em]">
               Infrastructure for
               <br />
               <span className="text-yellow-soda font-[Shrikhand] tracking-normal">modern money</span>
             </h1>
-            {/* Animated accent bar */}
-            <div className="hero-accent-bar mt-4 md:mt-6 h-1 md:h-1.5 rounded-full bg-yellow-dark w-0" />
+            <div className="flex justify-center mt-4 md:mt-6">
+              <div className="hero-accent-bar h-1 md:h-1.5 rounded-full bg-yellow-dark w-0" />
+            </div>
           </div>
 
-          {/* Sub-copy — hard hitting */}
-          <p className="hero-subcopy mt-5 md:mt-7 text-white/90 font-[InterRegular] text-[clamp(1rem,2.5vw,1.35rem)] leading-relaxed max-w-[560px]">
+          <p className="hero-subcopy mt-5 md:mt-7 text-white/90 font-[InterRegular] text-[clamp(1rem,2.5vw,1.35rem)] leading-relaxed max-w-[600px]">
             Modern money moves across networks, obeys code, and doesn&apos;t wait for banks.{' '}
             <span className="text-yellow-soda font-[InterBold]">We built the infrastructure to use it.</span>
           </p>
 
-          {/* Pathway Cards — bold glassmorphism with glow */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mt-8 md:mt-12 lg:mt-14">
-            {pathways.map((pathway, i) => (
-              <PathwayCard key={pathway.title} {...pathway} index={i} />
-            ))}
-          </div>
+          {/* Scroll prompt */}
+          <button
+            type="button"
+            onClick={scrollToStory}
+            className="story-scroll-prompt mt-12 flex flex-col items-center gap-2 text-white/40 hover:text-white/70 transition-colors cursor-pointer"
+          >
+            <span className="font-[InterRegular] text-[13px] tracking-wider uppercase">Read our story</span>
+            <ChevronDown className="w-5 h-5 story-bounce" />
+          </button>
+        </div>
 
-          {/* Chain Carousel */}
-          <div className="flex items-center flex-wrap gap-4 mt-auto pt-8 md:pt-10 hero-chain-enter">
-            <Label className="font-medium text-[18px] font-[Shrikhand] text-white">serving</Label>
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-linear-to-r from-cherry-soda to-transparent z-10" />
-              <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-                <Carousel
-                  ref={carouselRef}
-                  opts={{
-                    align: 'start',
-                    loop: true,
-                  }}
-                  plugins={[
-                    Autoplay({
-                      delay: 2000,
-                      stopOnInteraction: true,
-                    }),
-                  ]}
-                  setApi={setApi}
-                >
-                  <CarouselContent className="-ml-1 max-w-[160px] mix-blend-lighten">
-                    {carouselItems.map(item => (
-                      <CarouselItem key={item.id} className="basis-1/5 pl-0">
-                        <div className="p-1">
-                          <Image
-                            src={item.src}
-                            alt={item.alt}
-                            width={24}
-                            height={24}
-                            className="outline outline-2 outline-white rounded-full !w-[24px] h-6"
-                          />
-                        </div>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                </Carousel>
-              </div>
-              <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-cherry-soda to-transparent z-10" />
+        {/* Chain Carousel — anchored at bottom */}
+        <div className="flex items-center flex-wrap gap-4 pb-8 z-10 hero-chain-enter">
+          <Label className="font-medium text-[18px] font-[Shrikhand] text-white">serving</Label>
+          <div className="relative">
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-8 bg-linear-to-r from-cherry-soda to-transparent z-10" />
+            <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+              <Carousel
+                ref={carouselRef}
+                opts={{
+                  align: 'start',
+                  loop: true,
+                }}
+                plugins={[
+                  Autoplay({
+                    delay: 2000,
+                    stopOnInteraction: true,
+                  }),
+                ]}
+                setApi={setApi}
+              >
+                <CarouselContent className="-ml-1 max-w-[160px] mix-blend-lighten">
+                  {carouselItems.map(item => (
+                    <CarouselItem key={item.id} className="basis-1/5 pl-0">
+                      <div className="p-1">
+                        <Image
+                          src={item.src}
+                          alt={item.alt}
+                          width={24}
+                          height={24}
+                          className="outline outline-2 outline-white rounded-full !w-[24px] h-6"
+                        />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </Carousel>
             </div>
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-l from-cherry-soda to-transparent z-10" />
           </div>
+        </div>
+      </div>
+
+      {/* ─── Story Chapters: scroll-revealed narrative ─── */}
+      <div
+        id="story-chapters"
+        className="bg-cherry-soda relative"
+      >
+        {/* Parallax accent stripe */}
+        <div className="absolute left-6 sm:left-8 md:left-16 lg:left-[calc(50%-600px)] top-0 bottom-0 w-px bg-linear-to-b from-yellow-soda/20 via-orange-sonic/10 to-transparent" />
+
+        <div className="max-w-4xl mx-auto px-6 sm:px-8 md:px-16 lg:px-8">
+          {chapters.map((chapter, i) => (
+            <ChapterBlock key={chapter.number} chapter={chapter} index={i} />
+          ))}
         </div>
       </div>
     </div>
