@@ -203,10 +203,8 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
                 BETA
               </div>
             </div>
-            <div className="justify-center text-cream hidden lg:flex ml-8 gap-1">
-              <span className="text-xs font-bold font-[InterRegular] leading-none">Money, as it</span>
-              <span className="text-xs font-normal font-[Shrikhand] leading-none mt-[1px]">should</span>
-              <span className="text-xs font-bold font-[InterRegular] leading-none">be</span>
+            <div className="justify-center text-cream hidden lg:flex ml-8">
+              <span className="text-xs font-bold font-[InterRegular] leading-none">Infrastructure for modern money</span>
             </div>
           </div>
           <div className="flex items-center gap-8">
