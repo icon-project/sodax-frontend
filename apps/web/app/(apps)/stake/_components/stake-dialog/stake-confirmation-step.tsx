@@ -2,17 +2,19 @@ import type React from 'react';
 import type { XToken } from '@sodax/types';
 import { useStakeState } from '../../_stores/stake-store-provider';
 import CurrencyLogo from '@/components/shared/currency-logo';
-import { CircleArrowRight } from 'lucide-react';
+import { CircleArrowRight, ShieldAlertIcon } from 'lucide-react';
 import { formatUnits } from 'viem';
 import BigNumber from 'bignumber.js';
 interface StakeConfirmationStepProps {
   selectedToken: XToken;
   receivedXSodaAmount: string;
+  stakeError: { title: string; message: string } | null;
 }
 
 export default function StakeConfirmationStep({
   selectedToken,
   receivedXSodaAmount,
+  stakeError,
 }: StakeConfirmationStepProps): React.JSX.Element {
   const { stakeValue } = useStakeState();
 
@@ -24,14 +26,28 @@ export default function StakeConfirmationStep({
 
   return (
     <div className="flex flex-col items-center mt-4">
-      <div className="flex flex-col text-center">
-        <div className="text-espresso text-(length:--body-super-comfortable) font-['InterRegular'] leading-[1.4]">
-          Staking SODA
+      {stakeError ? (
+        <div className="flex flex-col text-center">
+          <div className="flex justify-center gap-1 w-full items-center">
+            <ShieldAlertIcon className="w-4 h-4 text-negative" />
+            <span className="font-['InterBold'] text-(length:--body-super-comfortable) leading-[1.4] text-negative">
+              {stakeError.title}
+            </span>
+          </div>
+          <div className="text-espresso text-(length:--body-small) font-medium font-['InterRegular'] text-center leading-[1.4]">
+            {stakeError.message}
+          </div>
         </div>
-        <div className="text-clay text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4] justify-center">
-          23.77% variable APR
+      ) : (
+        <div className="flex flex-col text-center">
+          <div className="text-espresso text-(length:--body-super-comfortable) font-['InterRegular'] leading-[1.4]">
+            Staking SODA
+          </div>
+          <div className="text-clay text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4] justify-center">
+            23.77% variable APR
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="w-60 pb-6 flex justify-between items-center mt-4">
         <div className="w-10 inline-flex flex-col justify-start items-center gap-2">

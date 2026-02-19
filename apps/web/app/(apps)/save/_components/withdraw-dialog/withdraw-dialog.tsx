@@ -29,6 +29,7 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
   const [withdrawValue, setWithdrawValue] = useState<number>(0);
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkBalance | null>(null);
   const [currentStep, setCurrentStep] = useState<number>(0);
+  const [withdrawError, setWithdrawError] = useState<{ title: string; message: string } | null>(null);
   const tokenSelectRef = useRef<HTMLDivElement>(null);
 
   const needsTokenSelection = (selectedItem?.networksWithFunds.length ?? 0) > 1;
@@ -64,7 +65,7 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
       ? aTokenBalancesMap.get(aTokenAddress as Address)
       : undefined;
 
-  const supplyBalance = aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, 18)).toFixed(4) : '0';
+  const supplyBalance = aTokenBalance !== undefined ? formatUnits(aTokenBalance, 18) : '0';
 
   useEffect(() => {
     if (open && selectedItem) {
@@ -116,6 +117,7 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
     setCurrentStep(needsTokenSelection ? 0 : 1);
     setWithdrawValue(0);
     setSelectedNetwork(null);
+    setWithdrawError(null);
     onOpenChange(false);
   };
 
@@ -197,7 +199,11 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
         )}
 
         {currentStep === 2 && selectedToken && (
-          <WithdrawConfirmationStep selectedToken={selectedToken} amount={withdrawValue.toString()} />
+          <WithdrawConfirmationStep
+            selectedToken={selectedToken}
+            amount={withdrawValue.toString()}
+            withdrawError={withdrawError}
+          />
         )}
 
         <WithdrawDialogFooter
@@ -214,6 +220,7 @@ export default function WithdrawDialog({ open, onOpenChange, selectedItem }: Wit
           isTokenSelection={isTokenSelection}
           count={selectedItem?.networksWithFunds.length ?? 0}
           totalBalance={selectedItem?.totalBalance}
+          onError={setWithdrawError}
         />
       </DialogContent>
     </Dialog>

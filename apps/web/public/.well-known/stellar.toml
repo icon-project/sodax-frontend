@@ -1,0 +1,23 @@
+[DOCUMENTATION]
+ORG_NAME = "Sodax"
+ORG_URL = "https://sodax.com"
+ORG_LOGO = "https://www.sodax.com/coin/soda.png"
+ORG_PHYSICAL_ADDRESS = "N/A"
+ORG_OFFICIAL_EMAIL = "hello@sodax.com"
+ORG_SUPPORT_EMAIL = "hello@sodax.com"
+ORG_GITHUB = "https://github.com/icon-project"
+ORG_TWITTER = "gosodax"
+
+[[CURRENCIES]]
+code = "SODA"
+issuer = "CAH5LKJC2ZB4RVUVEVL2QWJWNJLHQE2UF767ILLQ5EQ4O3OURR2XIUGM"
+is_asset_anchored = false
+desc = "SODA is the governance token of the Sodax ecosystem. It is used for protocol governance, incentives, and ecosystem coordination."
+image = "https://www.sodax.com/coin/soda.png"
+
+[[CURRENCIES]]
+code = "bnUSD"
+issuer = "CD6YBFFWMU2UJHX2NGRJ7RN76IJVTCC7MRA46DUBXNB7E6W7H7JRJ2CX"
+is_asset_anchored = false
+desc = "bnUSD is a cross-chain stablecoin minted through the Sodax money market, designed for capital efficiency and interoperability across multiple blockchains."
+image = "https://www.sodax.com/coin/bnusd.png"

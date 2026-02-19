@@ -46,9 +46,7 @@ export const useStakeState = () => {
   const currentUnstakeStep = useStakeStore(state => state.currentUnstakeStep);
   const isNetworkPickerOpened = useStakeStore(state => state.isNetworkPickerOpened);
   const walletProvider = useWalletProvider(selectedToken?.xChainId);
-  console.log('walletProvider', walletProvider);
   const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
-  console.log('spokeProvider', spokeProvider);
   const { data: stakingInfo, isLoading: isLoadingStakingInfo } = useStakingInfo(spokeProvider);
 
   // Get stake ratio when staking (converts SODA to xSODA)

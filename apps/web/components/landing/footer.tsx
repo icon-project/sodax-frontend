@@ -18,7 +18,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
     onTermsClick?.();
   };
   return (
-    <div className="h-140 flex flex-wrap-reverse sm:flex-wrap-reverse lg:justify-center mt-4 bg-almost-white footer pt-20">
+    <div className="h-140 flex flex-wrap-reverse sm:flex-wrap-reverse lg:justify-center bg-almost-white footer pt-20">
       <div className="p-4 pl-0 min-w-50 ml-8">
         <div className="flex items-center">
           <Image src="/symbol2.png" alt="SODAX Symbol" width={32} height={32} />

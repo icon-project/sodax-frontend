@@ -6,36 +6,52 @@ import { formatBalance } from '@/lib/utils';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import BigNumber from 'bignumber.js';
 import { ETHEREUM_MAINNET_CHAIN_ID } from '@sodax/types';
-import { TimerIcon } from 'lucide-react';
+import { ShieldAlertIcon, TimerIcon } from 'lucide-react';
 
 interface DepositConfirmationStepProps {
   selectedToken: XToken;
   apy: string;
+  depositError: { title: string; message: string } | null;
 }
 
 export default function DepositConfirmationStep({
   selectedToken,
   apy,
+  depositError,
 }: DepositConfirmationStepProps): React.JSX.Element {
   const { depositValue } = useSaveState();
   const { data: usdPrice } = useTokenPrice(selectedToken);
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col text-center">
-        <div className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] leading-[1.4]">
-          Earn {apy} APY
-        </div>
-        <div className="self-stretch text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4] justify-center">
-          {selectedToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID ? (
-            <span className="flex items-center gap-1 text-cherry-bright w-full justify-center">
-              <TimerIcon className="w-4 h-4 text-cherry-bright" />
-              Takes longer (~1m)
+      {depositError ? (
+        <div className="flex flex-col text-center">
+          <div className="flex justify-center gap-1 w-full items-center">
+            <ShieldAlertIcon className="w-4 h-4 text-negative" />
+            <span className="font-['InterBold'] text-(length:--body-super-comfortable) leading-[1.4] text-negative">
+              {depositError.title}
             </span>
-          ) : (
-            'Takes ~20 seconds'
-          )}
+          </div>
+          <div className="text-espresso text-(length:--body-small) font-medium font-['InterRegular'] text-center leading-[1.4] ">
+            {depositError.message}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-col text-center">
+          <div className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] leading-[1.4]">
+            Earn {apy} APY
+          </div>
+          <div className="self-stretch text-clay-light text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4] justify-center">
+            {selectedToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID ? (
+              <span className="flex items-center gap-1 text-cherry-bright w-full justify-center">
+                <TimerIcon className="w-4 h-4 text-cherry-bright" />
+                Takes longer (~1m)
+              </span>
+            ) : (
+              'Takes ~20 seconds'
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col items-center justify-center">
         <CurrencyLogo currency={selectedToken} />
