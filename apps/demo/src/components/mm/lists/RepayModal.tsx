@@ -35,15 +35,8 @@ interface RepayModalProps {
   onOpenChange: (open: boolean) => void;
   token: XToken;
   maxDebt: string;
-  /**
-   * If true, shows success screen within the same dialog instead of closing and calling onSuccess.
-   * This provides a smoother UX transition. If false, behaves like before (calls onSuccess and closes).
-   */
-  inlineSuccess?: boolean;
-  /**
-   * Called when transaction succeeds, only if inlineSuccess is false.
-   * If inlineSuccess is true, success is shown inline and this callback is not called.
-   */
+  //If true, shows success screen inline instead of closing and calling onSuccess.
+  inlineSuccess?: boolean; //Called on success. Only used when inlineSuccess is false.
   onSuccess?: (data: {
     amount: string;
     token: XToken;
@@ -115,7 +108,6 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
       token: sourceToken.address,
       amount: parseUnits(normalizedAmount, sourceToken.decimals),
       action: 'repay',
-      // toChainId = market chain where debt is recorded (where collateral is), NOT token.xChainId (where borrowed asset was delivered)
       toChainId: toChainId,
       toAddress: toAddress, // Address on the market chain (where debt lives)
     };
@@ -152,14 +144,14 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
   // Track if we're in a transitional state (approving or checking allowance after approval)
   // Use local state OR hook state to ensure immediate UI feedback
   const isActuallyApproving = isApproving || isApprovingLocal;
-  
+
   // Show approval needed if allowance is explicitly false or undefined
   // Don't show approval needed while approving or refetching allowance (to prevent button flicker)
-  const needsSourceApproval = 
-    (sourceAllowed === false || (sourceAllowed === undefined && !isSourceAllowanceLoading)) && 
-    !isActuallyApproving;
-  const isInApprovalFlow = isActuallyApproving || (isSourceAllowanceLoading && !hasSourceAllowance && sourceAllowed !== false);
-  
+  const needsSourceApproval =
+    (sourceAllowed === false || (sourceAllowed === undefined && !isSourceAllowanceLoading)) && !isActuallyApproving;
+  const isInApprovalFlow =
+    isActuallyApproving || (isSourceAllowanceLoading && !hasSourceAllowance && sourceAllowed !== false);
+
   // Reset local approving state when allowance is confirmed
   useEffect(() => {
     if (hasSourceAllowance && isApprovingLocal) {
@@ -280,9 +272,7 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
       <DialogContent className="sm:max-w-md border-cherry-grey/20">
         <DialogHeader>
           <DialogTitle className="text-center text-cherry-dark">Repay {token.symbol}</DialogTitle>
-          <DialogDescription className="text-center">
-            Repay debt from your collateral chain
-          </DialogDescription>
+          <DialogDescription className="text-center">Repay debt from your collateral chain</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -316,13 +306,7 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
                 disabled={isBusy}
               />
               <span>{token.symbol}</span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleMax}
-                disabled={isBusy || !hasDebt}
-              >
+              <Button type="button" variant="outline" size="sm" onClick={handleMax} disabled={isBusy || !hasDebt}>
                 Max
               </Button>
             </div>
@@ -340,9 +324,7 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
                   if (Number.isNaN(amountNum) || amountNum <= 0) return null;
 
                   if (!hasDebt) {
-                    return (
-                      <ErrorAlert text="No debt to repay" variant="compact" />
-                    );
+                    return <ErrorAlert text="No debt to repay" variant="compact" />;
                   }
 
                   if (!isBalanceUnknown && insufficientBalance) {
@@ -380,9 +362,7 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
           (() => {
             const amountNum = Number.parseFloat(amount.replace(',', '.'));
             const maxDebtNum = Number.parseFloat(maxDebt);
-            return (
-              !Number.isNaN(amountNum) && amountNum > 0 && (Number.isNaN(maxDebtNum) || amountNum <= maxDebtNum)
-            );
+            return !Number.isNaN(amountNum) && amountNum > 0 && (Number.isNaN(maxDebtNum) || amountNum <= maxDebtNum);
           })() && (
             <p className="text-xs text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-950/30 p-2 rounded-lg border border-amber-200 dark:border-amber-800">
               Make sure you have enough <strong>{getNativeTokenSymbol(fromChainId)}</strong> on{' '}

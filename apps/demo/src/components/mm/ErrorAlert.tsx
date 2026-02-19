@@ -1,4 +1,3 @@
-// apps/demo/src/components/mm/ErrorAlert.tsx
 // Displays error text in a consistent, well-aligned alert box inside money market modals.
 // Supports dark mode and provides consistent error styling across all money market actions.
 
@@ -13,7 +12,7 @@ interface ErrorAlertProps {
 
 export function ErrorAlert({ text, className, variant = 'default' }: ErrorAlertProps): ReactElement {
   const isCompact = variant === 'compact';
-  
+
   return (
     <div
       className={cn(
@@ -25,7 +24,7 @@ export function ErrorAlert({ text, className, variant = 'default' }: ErrorAlertP
     >
       <p
         className={cn(
-          'overflow-y-auto whitespace-pre-wrap break-words text-red-700 dark:text-red-400',
+          'overflow-y-auto whitespace-pre-wrap wrap-break-word text-red-700 dark:text-red-400',
           isCompact ? 'text-xs' : 'max-h-32 font-mono text-sm',
         )}
       >

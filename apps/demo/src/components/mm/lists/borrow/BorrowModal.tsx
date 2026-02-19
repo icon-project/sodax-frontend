@@ -36,13 +36,8 @@ interface BorrowModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   token: XToken;
-  /**
-   * If true, shows success screen inline instead of closing and calling onSuccess.
-   */
-  inlineSuccess?: boolean;
-  /**
-   * Called on success. Only used when inlineSuccess is false.
-   */
+  //If true, shows success screen inline instead of closing and calling onSuccess.
+  inlineSuccess?: boolean; //Called on success. Only used when inlineSuccess is false.
   onSuccess?: (data: {
     amount: string;
     token: XToken;
@@ -50,7 +45,7 @@ interface BorrowModalProps {
     destinationChainId: ChainId;
     txHash?: `0x${string}`;
   }) => void;
-  maxBorrow: string; //Initial max borrow amount (recalculated dynamically per destination chain).
+  maxBorrow: string;
   priceUSD: number; //User summary from the market chain (where collateral is).Used to recalculate max borrow based on user's borrowing capacity.
   userSummary?: FormatUserSummaryResponse;
 }
@@ -311,10 +306,10 @@ export function BorrowModal({
         onOpenChange(false);
       }
     } catch (err) {
-      // console.error('Borrow failed:', err);
+      console.error('Borrow failed:', err);
       // Log more details about the error
       if (err && typeof err === 'object' && 'data' in err) {
-        // console.error('Borrow error details:', err.data);
+        console.error('Borrow error details:', err.data);
       }
     }
   };

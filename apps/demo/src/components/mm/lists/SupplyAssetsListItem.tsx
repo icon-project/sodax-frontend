@@ -137,18 +137,6 @@ export function SupplyAssetsListItem({
             onClick={() => {
               // Use the exact calculated max withdraw instead of rounded formattedBalance
               const maxWithdrawValue = maxWithdrawExact;
-              // console.log(`[SupplyAssetsListItem] Withdraw button clicked for ${token.symbol}:`, {
-              //   token: token.symbol,
-              //   tokenAddress: token.address,
-              //   aTokenAddress,
-              //   aTokenBalanceRaw: aTokenBalance?.toString(),
-              //   formattedBalance,
-              //   maxWithdrawExact,
-              //   maxWithdrawValue,
-              //   maxWithdrawParsed:
-              //     maxWithdrawValue !== '0' ? parseUnits(maxWithdrawValue, token.decimals).toString() : '0',
-              //   tokenDecimals: token.decimals,
-              // });
               onWithdrawClick(token, maxWithdrawValue);
             }}
             disabled={!hasSupply}
@@ -156,15 +144,6 @@ export function SupplyAssetsListItem({
           >
             Withdraw
           </Button>
-          {/* <OldBorrowButton token={token} /> */}
-          {/* <Button
-          variant="cherry"
-          size="sm"
-          onClick={() => onRepayClick(token, formattedDebt ?? '0')}
-          disabled={!hasDebt}
-        >
-          Repay
-        </Button>{' '} */}
         </div>
       </TableCell>
     </TableRow>

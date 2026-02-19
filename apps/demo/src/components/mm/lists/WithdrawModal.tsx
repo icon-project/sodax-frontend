@@ -29,15 +29,8 @@ interface WithdrawModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   token: XToken; // token the user wants to RECEIVE (e.g. USDC on Avalanche)
-  /**
-   * If true, shows success screen within the same dialog instead of closing and calling onSuccess.
-   * This provides a smoother UX transition. If false, behaves like before (calls onSuccess and closes).
-   */
-  inlineSuccess?: boolean;
-  /**
-   * Called when transaction succeeds, only if inlineSuccess is false.
-   * If inlineSuccess is true, success is shown inline and this callback is not called.
-   */
+  //If true, shows success screen inline instead of closing and calling onSuccess.
+  inlineSuccess?: boolean; //Called on success. Only used when inlineSuccess is false.
   onSuccess?: (data: {
     amount: string;
     token: XToken;
@@ -135,7 +128,7 @@ export function WithdrawModal({
         spokeProvider: sourceSpokeProvider,
       });
     } catch (err) {
-      // console.error('Approve failed:', err);
+      console.error('Approve failed:', err);
     }
   };
 
@@ -144,38 +137,6 @@ export function WithdrawModal({
 
     try {
       const normalizedAmount = amount.replace(',', '.');
-
-      // Debug logs for withdrawal
-      // console.log('[WithdrawModal] Starting withdrawal:', {
-      //   token: token.symbol,
-      //   tokenAddress: token.address,
-      //   amount: normalizedAmount,
-      //   amountParsed: params.amount.toString(),
-      //   maxWithdraw,
-      //   selectedChainId,
-      //   tokenChainId: token.xChainId,
-      //   sourceAddress,
-      //   destAddress,
-      //   toAddress: params.toAddress,
-      //   toChainId: params.toChainId,
-      //   chainType: sourceSpokeProvider?.chainConfig?.chain?.type,
-      //   isSameChain: selectedChainId === token.xChainId,
-      //   params: {
-      //     token: params.token,
-      //     amount: params.amount.toString(),
-      //     action: params.action,
-      //     toChainId: params.toChainId,
-      //     toAddress: params.toAddress,
-      //   },
-      //   spokeProviderChainId: sourceSpokeProvider?.chainConfig?.chain?.id,
-      //   spokeProviderChainType: sourceSpokeProvider?.chainConfig?.chain?.type,
-      // });
-
-      // console.log('[WithdrawModal] Calling SDK withdraw with:', {
-      //   params: JSON.stringify(params, (key, value) => (typeof value === 'bigint' ? value.toString() : value)),
-      //   spokeProviderType: sourceSpokeProvider?.chainConfig?.chain?.type,
-      //   spokeProviderChainId: sourceSpokeProvider?.chainConfig?.chain?.id,
-      // });
 
       const result = await withdraw({
         params,
@@ -205,28 +166,7 @@ export function WithdrawModal({
         onOpenChange(false);
       }
     } catch (err) {
-      // console.error('[WithdrawModal] Withdraw failed:', {
-      //   error: err,
-      //   token: token.symbol,
-      //   tokenAddress: token.address,
-      //   amount: amount.replace(',', '.'),
-      //   amountParsed: params?.amount?.toString(),
-      //   maxWithdraw,
-      //   selectedChainId,
-      //   tokenChainId: token.xChainId,
-      //   sourceAddress,
-      //   destAddress,
-      //   chainType: sourceSpokeProvider?.chainConfig?.chain?.type,
-      //   params: params
-      //     ? {
-      //         token: params.token,
-      //         amount: params.amount.toString(),
-      //         action: params.action,
-      //         toChainId: params.toChainId,
-      //         toAddress: params.toAddress,
-      //       }
-      //     : null,
-      // });
+      console.error('Withdraw failed:', err);
     }
   };
   const handleMaxclick = () => {

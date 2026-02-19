@@ -1,4 +1,3 @@
-// apps/demo/src/lib/invalidateMmQueries.ts
 // Centralized React Query invalidation for Money Market actions (borrow/repay/supply/withdraw)
 // so UI refreshes immediately after successful transactions.
 
@@ -45,7 +44,7 @@ export function invalidateMmQueries(
   // Using prefix ['xBalances', chainId] matches all queries for that chain regardless of token list.
   if (balanceChainIds && balanceChainIds.length > 0) {
     for (const chainId of balanceChainIds) {
-      queryClient.invalidateQueries({ 
+      queryClient.invalidateQueries({
         queryKey: ['xBalances', chainId],
         exact: false, // Match all queries starting with ['xBalances', chainId]
       });
@@ -60,17 +59,16 @@ export function invalidateMmQueries(
     // Trigger refetch for invalidated balance queries (only active/mounted components)
     if (balanceChainIds && balanceChainIds.length > 0) {
       for (const chainId of balanceChainIds) {
-        queryClient.refetchQueries({ 
+        queryClient.refetchQueries({
           queryKey: ['xBalances', chainId],
           type: 'active',
         });
       }
     }
     // Refetch MM data queries
-    queryClient.refetchQueries({ 
+    queryClient.refetchQueries({
       queryKey: ['mm'],
       type: 'active',
     });
   }, 2000); // 2 second delay to allow transaction confirmation
 }
-

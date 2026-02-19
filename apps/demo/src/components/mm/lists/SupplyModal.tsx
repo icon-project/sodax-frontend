@@ -29,15 +29,8 @@ interface SupplyModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   token: XToken; // token the user wants to RECEIVE (e.g. USDC on Avalanche)
-  /**
-   * If true, shows success screen within the same dialog instead of closing and calling onSuccess.
-   * This provides a smoother UX transition. If false, behaves like before (calls onSuccess and closes).
-   */
-  inlineSuccess?: boolean;
-  /**
-   * Called when transaction succeeds, only if inlineSuccess is false.
-   * If inlineSuccess is true, success is shown inline and this callback is not called.
-   */
+  //If true, shows success screen inline instead of closing and calling onSuccess.
+  inlineSuccess?: boolean; //Called on success. Only used when inlineSuccess is false.
   onSuccess?: (data: {
     amount: string;
     token: XToken;
@@ -62,13 +55,6 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
   const sourceSpokeProvider = useSpokeProvider(selectedChainId, sourceWalletProvider);
 
   const { mutateAsync: supply, isPending, error, reset: resetSupply } = useSupply();
-
-  // Debug: Log error state changes to help diagnose stuck "Supplying..." state
-  useEffect(() => {
-    if (error) {
-      // console.log('[SupplyModal] Error state changed:', { error, isPending });
-    }
-  }, [error, isPending]);
 
   const params: MoneyMarketSupplyParams | undefined = useMemo(() => {
     if (!amount) return undefined;
@@ -142,7 +128,7 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
         spokeProvider: sourceSpokeProvider,
       });
     } catch (err) {
-      // console.error('Approve failed:', err);
+      console.error('Approve failed:', err);
     }
   };
 
@@ -164,7 +150,7 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
   // Button state machine: prioritize pending states to prevent flickering
   // When a transaction is pending, show that state regardless of allowance checks
   const isBusy = isApproving || isPending;
-  
+
   // Only check allowance when not busy (prevents flickering during transactions)
   // If allowance is unknown/loading and not busy, assume approval is needed
   const needsApproval = !isBusy && (hasAllowed === false || hasAllowed === undefined || isAllowanceLoading);

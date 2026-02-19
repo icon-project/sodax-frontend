@@ -1,4 +1,3 @@
-// apps/demo/src/components/mm/typeGuards.ts
 // Type guard functions for money market components - following best practices to avoid "as" type assertions
 
 import { isAddress, type Address } from 'viem';

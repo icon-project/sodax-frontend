@@ -8,9 +8,8 @@ import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import type { FormatReserveUSDResponse, FormatUserSummaryResponse, UserReserveData } from '@sodax/sdk';
 import { useAToken } from '@sodax/dapp-kit';
 import { Button } from '@/components/ui/button';
-import { DUST_THRESHOLD, MAX_BORROW_SAFETY_MARGIN, ATOKEN_DECIMALS, ZERO_ADDRESS } from '../../constants';
+import { DUST_THRESHOLD, MAX_BORROW_SAFETY_MARGIN, ZERO_ADDRESS } from '../../constants';
 import { isUserReserveDataArray, isValidEvmAddress } from '../../typeGuards';
-import { isAddress } from 'viem';
 
 interface BorrowAssetsListItemProps {
   token: XToken;
