@@ -193,22 +193,15 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
           {/* Aurora action pills — floating, iridescent */}
           <div className="flex flex-wrap justify-center gap-3 mt-8 md:mt-12">
             {pills.map((pill, i) => {
-              const Tag = pill.isExternal ? 'a' : Link;
-              const tagProps = pill.isExternal
-                ? { href: pill.href, target: '_blank', rel: 'noopener noreferrer' }
-                : { href: pill.href };
-              return (
-                <Tag
-                  key={pill.label}
-                  {...(tagProps as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
-                  className="aurora-pill group flex items-center gap-2.5 px-5 py-3 rounded-full
+              const pillClassName = `aurora-pill group flex items-center gap-2.5 px-5 py-3 rounded-full
                     bg-white/[0.08] backdrop-blur-2xl border border-white/15
                     hover:bg-white/[0.16] hover:border-white/30
                     hover:shadow-[0_0_30px_rgba(255,217,47,0.12)]
                     transition-all duration-400 ease-out cursor-pointer
-                    text-white font-[InterBold] text-[14px]"
-                  style={{ animationDelay: `${i * 120 + 600}ms` }}
-                >
+                    text-white font-[InterBold] text-[14px]`;
+              const pillStyle = { animationDelay: `${i * 120 + 600}ms` };
+              const pillContent = (
+                <>
                   <span className="text-yellow-soda group-hover:scale-110 transition-transform duration-300">
                     {pill.icon}
                   </span>
@@ -218,7 +211,33 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
                   ) : (
                     <ArrowRight className="w-3.5 h-3.5 text-white/40 group-hover:text-yellow-soda group-hover:translate-x-0.5 transition-all" />
                   )}
-                </Tag>
+                </>
+              );
+
+              if (pill.isExternal) {
+                return (
+                  <a
+                    key={pill.label}
+                    href={pill.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={pillClassName}
+                    style={pillStyle}
+                  >
+                    {pillContent}
+                  </a>
+                );
+              }
+
+              return (
+                <Link
+                  key={pill.label}
+                  href={pill.href}
+                  className={pillClassName}
+                  style={pillStyle}
+                >
+                  {pillContent}
+                </Link>
               );
             })}
           </div>
