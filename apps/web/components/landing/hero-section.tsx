@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAppStore } from '@/stores/app-store-provider';
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight, Repeat, Handshake, Users, Code } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Wallet, Building2, Blocks } from 'lucide-react';
 
 const carouselItems = [
   { id: 1, src: '/coin/base.png', alt: 'BASE' },
@@ -30,112 +30,62 @@ const carouselItems = [
   { id: 11, src: '/coin/op.png', alt: 'OPTIMISM' },
 ];
 
-interface PathwayCardProps {
+/* --- Role Definitions --- */
+interface RoleContent {
+  id: string;
+  tab: string;
   icon: React.ReactNode;
-  title: string;
+  headline: string;
   description: string;
-  href: string;
+  cta: string;
+  ctaHref: string;
   isExternal?: boolean;
-  glowColor: string;
-  accentBg: string;
-  index: number;
+  stats: { label: string; value: string }[];
 }
 
-const PathwayCard = ({ icon, title, description, href, isExternal, glowColor, accentBg, index }: PathwayCardProps) => {
-  const content = (
-    <div
-      className="hero-card group relative flex flex-col justify-between p-6 md:p-7 rounded-2xl cursor-pointer
-        border border-white/10
-        bg-white/[0.06] backdrop-blur-xl
-        transition-all duration-300 ease-out
-        hover:bg-white/[0.12] hover:border-white/25
-        hover:-translate-y-2 hover:scale-[1.03]
-        h-[180px] sm:h-[200px]"
-      style={{
-        animationDelay: `${index * 120 + 400}ms`,
-        // @ts-expect-error CSS custom property
-        '--card-glow': glowColor,
-      }}
-    >
-      {/* Glow halo on hover */}
-      <div
-        className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-xl"
-        style={{ background: glowColor, transform: 'scale(1.08)' }}
-      />
-
-      <div className="flex items-start justify-between">
-        <div
-          className={`flex items-center justify-center w-12 h-12 rounded-xl ${accentBg}
-            group-hover:scale-110 transition-transform duration-300`}
-        >
-          {icon}
-        </div>
-        <div
-          className="flex items-center justify-center w-8 h-8 rounded-full
-            bg-white/10 text-white/40
-            group-hover:bg-yellow-dark group-hover:text-espresso group-hover:scale-110
-            transition-all duration-300"
-        >
-          {isExternal ? <ArrowUpRight className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
-        </div>
-      </div>
-      <div>
-        <h3 className="text-white font-[InterBold] text-[17px] md:text-[19px] leading-tight mb-1.5">{title}</h3>
-        <p className="text-cherry-brighter font-[InterRegular] text-[13px] md:text-[14px] leading-[1.4] opacity-80 group-hover:opacity-100 transition-opacity duration-300">
-          {description}
-        </p>
-      </div>
-    </div>
-  );
-
-  if (isExternal) {
-    return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className="flex-1 min-w-35">
-        {content}
-      </a>
-    );
-  }
-
-  return (
-    <Link href={href} className="flex-1 min-w-35">
-      {content}
-    </Link>
-  );
-};
-
-const pathways: Omit<PathwayCardProps, 'index'>[] = [
+const roles: RoleContent[] = [
   {
-    icon: <Repeat className="w-6 h-6 text-yellow-dark" strokeWidth={2.5} />,
-    title: 'Start trading',
-    description: 'Swap assets at the best rates across 11+ chains',
-    href: '/swap',
-    glowColor: 'rgba(236, 193, 0, 0.15)',
-    accentBg: 'bg-yellow-dark/20',
+    id: 'trader',
+    tab: 'Trader',
+    icon: <Wallet className="w-5 h-5" />,
+    headline: 'Swap anything, anywhere.',
+    description: 'Access the best rates across 11+ chains with a single interface. No more hopping between DEXes.',
+    cta: 'Start trading',
+    ctaHref: '/swap',
+    stats: [
+      { label: 'Chains', value: '11+' },
+      { label: 'Protocols', value: '50+' },
+      { label: 'Assets', value: '1000+' },
+    ],
   },
   {
-    icon: <Handshake className="w-6 h-6 text-orange-sonic" strokeWidth={2.5} />,
-    title: 'Partner with us',
-    description: 'Integrate, co-build, or grow the ecosystem together',
-    href: '/partners',
-    glowColor: 'rgba(255, 144, 72, 0.15)',
-    accentBg: 'bg-orange-sonic/20',
+    id: 'partner',
+    tab: 'Partner',
+    icon: <Building2 className="w-5 h-5" />,
+    headline: 'Plug into cross-chain liquidity.',
+    description: 'Integrate our SDK, co-build solutions, or list your protocol. The infrastructure scales with you.',
+    cta: 'Explore partnerships',
+    ctaHref: '/partners',
+    stats: [
+      { label: 'Partners', value: '30+' },
+      { label: 'SDK installs', value: '5K+' },
+      { label: 'Uptime', value: '99.9%' },
+    ],
   },
   {
-    icon: <Users className="w-6 h-6 text-cherry-brighter" strokeWidth={2.5} />,
-    title: 'Join community',
-    description: 'Connect with DeFi enthusiasts & stay in the loop',
-    href: '/community',
-    glowColor: 'rgba(227, 190, 187, 0.15)',
-    accentBg: 'bg-cherry-brighter/20',
-  },
-  {
-    icon: <Code className="w-6 h-6 text-cream" strokeWidth={2.5} />,
-    title: 'Build on SODAX',
-    description: 'Explore our SDK, docs & developer resources',
-    href: 'https://docs.sodax.com',
+    id: 'developer',
+    tab: 'Developer',
+    icon: <Blocks className="w-5 h-5" />,
+    headline: 'Build without borders.',
+    description: 'TypeScript SDK, REST APIs, and a wallet kit that abstracts chain complexity. Ship faster.',
+    cta: 'Read the docs',
+    ctaHref: 'https://docs.sodax.com',
     isExternal: true,
-    glowColor: 'rgba(234, 222, 212, 0.15)',
-    accentBg: 'bg-cream/20',
+    stats: [
+      { label: 'Endpoints', value: '40+' },
+      { label: 'Avg latency', value: '<200ms' },
+      { label: 'OSS packages', value: '6' },
+    ],
   },
 ];
 
@@ -143,6 +93,7 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
   const imgRef = useRef<HTMLImageElement>(null);
   const carouselRef = useRef(null);
   const [api, setApi] = useState<CarouselApi>();
+  const [activeRole, setActiveRole] = useState(0);
   const router = useRouter();
   const { setShouldTriggerAnimation } = useAppStore(state => state);
 
@@ -150,7 +101,6 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
     if (!api) {
       return;
     }
-
     api.on('select', () => {});
   }, [api]);
 
@@ -162,12 +112,24 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
     api?.plugins().autoplay.play();
   }, [api]);
 
+  const current = roles[activeRole];
+
   return (
     <div className="hero-section">
       <div className="min-h-svh flex flex-col items-center bg-cherry-soda relative overflow-hidden">
+        {/* Subtle grid pattern overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.03] pointer-events-none z-[1]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+            backgroundSize: '60px 60px',
+          }}
+        />
+
         {/* Decorative background elements */}
         <Image
-          className="mix-blend-screen absolute max-md:top-[48%] max-md:left-1/2 max-md:-translate-x-1/2 max-md:translate-y-[-50%] sm:-right-5 sm:bottom-10 lg:right-0 lg:bottom-0 w-60 h-90 sm:w-80 sm:h-120 lg:w-110 lg:h-165 opacity-30 lg:opacity-40"
+          className="mix-blend-screen absolute max-md:top-[48%] max-md:left-1/2 max-md:-translate-x-1/2 max-md:translate-y-[-50%] sm:-right-5 sm:bottom-10 lg:right-0 lg:bottom-0 w-60 h-90 sm:w-80 sm:h-120 lg:w-110 lg:h-165 opacity-15 lg:opacity-20"
           src="/girl.png"
           alt="background"
           width={541}
@@ -182,10 +144,6 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
           height={650}
           ref={imgRef}
         />
-
-        {/* Ambient glow orbs */}
-        <div className="absolute top-[20%] left-[10%] w-64 h-64 rounded-full bg-yellow-soda/10 blur-3xl hero-pulse-slow" />
-        <div className="absolute bottom-[30%] right-[15%] w-48 h-48 rounded-full bg-orange-sonic/8 blur-3xl hero-pulse-slow" style={{ animationDelay: '2s' }} />
 
         {/* Menu Bar */}
         <div className="w-full flex justify-between items-center pt-10 z-20 md:px-16 px-8 lg:px-8 lg:max-w-[1264px]">
@@ -228,30 +186,100 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
           </div>
         </div>
 
-        {/* Hero Content */}
+        {/* Hero Content — Enterprise Gateway Layout */}
         <div className="flex flex-col w-full px-6 sm:px-8 md:px-16 lg:px-8 lg:max-w-316 z-10 mt-6 sm:mt-10 md:mt-14 lg:mt-16 flex-1 pb-8">
-          {/* Headline — bold statement with Shrikhand accent */}
+          {/* Headline */}
           <div className="hero-headline-enter">
             <h1 className="hero-title-glow text-[clamp(2.8rem,9vw,7.5rem)] leading-[0.92] text-white font-[InterBlack] tracking-[-0.03em]">
               Infrastructure for
               <br />
               <span className="text-yellow-soda font-[Shrikhand] tracking-normal">modern money</span>
             </h1>
-            {/* Animated accent bar */}
             <div className="hero-accent-bar mt-4 md:mt-6 h-1 md:h-1.5 rounded-full bg-yellow-dark w-0" />
           </div>
 
-          {/* Sub-copy — hard hitting */}
+          {/* Sub-copy */}
           <p className="hero-subcopy mt-5 md:mt-7 text-white/90 font-[InterRegular] text-[clamp(1rem,2.5vw,1.35rem)] leading-relaxed max-w-[560px]">
             Modern money moves across networks, obeys code, and doesn&apos;t wait for banks.{' '}
             <span className="text-yellow-soda font-[InterBold]">We built the infrastructure to use it.</span>
           </p>
 
-          {/* Pathway Cards — bold glassmorphism with glow */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5 mt-8 md:mt-12 lg:mt-14">
-            {pathways.map((pathway, i) => (
-              <PathwayCard key={pathway.title} {...pathway} index={i} />
-            ))}
+          {/* Role Selector — "I am a..." tabs */}
+          <div className="gateway-tabs mt-8 md:mt-12 lg:mt-14">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-white/50 font-[InterRegular] text-[13px] tracking-wide uppercase">I am a</span>
+            </div>
+            <div className="flex gap-2">
+              {roles.map((role, i) => (
+                <button
+                  key={role.id}
+                  type="button"
+                  onClick={() => setActiveRole(i)}
+                  className={`gateway-tab flex items-center gap-2 px-4 py-2.5 rounded-xl
+                    font-[InterBold] text-[14px] md:text-[15px]
+                    border transition-all duration-300 cursor-pointer
+                    ${
+                      activeRole === i
+                        ? 'bg-white/15 border-white/30 text-white shadow-[0_0_20px_rgba(255,217,47,0.15)]'
+                        : 'bg-white/[0.04] border-white/10 text-white/50 hover:bg-white/[0.08] hover:text-white/80'
+                    }`}
+                >
+                  <span className={activeRole === i ? 'text-yellow-soda' : 'text-white/40'}>{role.icon}</span>
+                  {role.tab}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Role Content Panel */}
+          <div
+            key={current.id}
+            className="gateway-panel mt-6 md:mt-8 p-6 md:p-8 rounded-2xl bg-white/[0.06] backdrop-blur-xl border border-white/10 max-w-2xl"
+          >
+            <div className="flex flex-col md:flex-row md:items-start gap-6">
+              {/* Left: copy */}
+              <div className="flex-1">
+                <h2 className="text-white font-[InterExtraBold] text-[22px] md:text-[26px] leading-tight mb-3">
+                  {current.headline}
+                </h2>
+                <p className="text-cherry-brighter font-[InterRegular] text-[14px] md:text-[15px] leading-relaxed mb-5">
+                  {current.description}
+                </p>
+                {current.isExternal ? (
+                  <a
+                    href={current.ctaHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-yellow-dark text-espresso font-[InterBold] text-[14px] hover:bg-yellow-soda hover:scale-105 transition-all duration-300"
+                  >
+                    {current.cta}
+                    <ArrowUpRight className="w-4 h-4" />
+                  </a>
+                ) : (
+                  <Link
+                    href={current.ctaHref}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-yellow-dark text-espresso font-[InterBold] text-[14px] hover:bg-yellow-soda hover:scale-105 transition-all duration-300"
+                  >
+                    {current.cta}
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                )}
+              </div>
+
+              {/* Right: stats */}
+              <div className="flex md:flex-col gap-4 md:gap-5 md:pl-6 md:border-l md:border-white/10">
+                {current.stats.map(stat => (
+                  <div key={stat.label} className="gateway-stat">
+                    <div className="text-yellow-soda font-[InterBlack] text-[24px] md:text-[28px] leading-none">
+                      {stat.value}
+                    </div>
+                    <div className="text-white/50 font-[InterRegular] text-[12px] mt-1 uppercase tracking-wider">
+                      {stat.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Chain Carousel */}

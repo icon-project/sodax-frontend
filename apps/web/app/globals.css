@@ -486,7 +486,7 @@ textarea[readonly] {
   animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* ── Hero: dramatic entrance animations ── */
+/* ── Hero: Enterprise Gateway animations ── */
 
 /* Giant headline — clips in from below with scale */
 @keyframes hero-headline-in {
@@ -565,23 +565,52 @@ textarea[readonly] {
   animation: hero-subcopy-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
 }
 
-/* Cards — dramatic staggered slide-up with scale bounce */
-@keyframes hero-card-in {
-  0% {
+/* Gateway tabs entrance */
+@keyframes gateway-tabs-in {
+  from {
     opacity: 0;
-    transform: translateY(48px) scale(0.9);
+    transform: translateY(20px);
   }
-  70% {
-    transform: translateY(-4px) scale(1.02);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  100% {
+}
+
+.gateway-tabs {
+  animation: gateway-tabs-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.7s both;
+}
+
+/* Gateway panel — crossfade on role switch */
+@keyframes gateway-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
 
-.hero-card {
-  animation: hero-card-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+.gateway-panel {
+  animation: gateway-panel-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Gateway stat counter feel */
+@keyframes gateway-stat-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gateway-stat {
+  animation: gateway-stat-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
 }
 
 /* Chain carousel entrance */
@@ -614,27 +643,13 @@ textarea[readonly] {
   animation: hero-float 8s ease-in-out infinite;
 }
 
-/* Ambient glow pulse */
-@keyframes hero-pulse-slow {
-  0%, 100% {
-    opacity: 0.4;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: scale(1.15);
-  }
-}
-
-.hero-pulse-slow {
-  animation: hero-pulse-slow 6s ease-in-out infinite;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,
   .hero-headline-enter,
   .hero-subcopy,
-  .hero-card,
+  .gateway-tabs,
+  .gateway-panel,
+  .gateway-stat,
   .hero-chain-enter {
     animation: none;
     opacity: 1;
@@ -646,8 +661,7 @@ textarea[readonly] {
     width: 120px;
     opacity: 1;
   }
-  .hero-float,
-  .hero-pulse-slow {
+  .hero-float {
     animation: none;
   }
 }
