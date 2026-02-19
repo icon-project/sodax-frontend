@@ -112,7 +112,7 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
     api?.plugins().autoplay.play();
   }, [api]);
 
-  const current = roles[activeRole];
+  const current = roles[activeRole] as RoleContent;
 
   return (
     <div className="hero-section">
