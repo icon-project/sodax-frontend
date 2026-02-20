@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/swap/_components/token-list.tsx
 import type React from 'react';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import type { SpokeChainId, XToken } from '@sodax/types';
@@ -43,6 +42,9 @@ export function TokenList({
   const [hoveredAsset, setHoveredAsset] = useState<string | null>(null);
   const shouldApplyHover = clickedAsset === null;
   const [backdropShow, setBackdropShow] = useState(false);
+
+  const ROW_HEIGHT = 112;
+  const VISIBLE_ROWS = 4;
 
   useEffect(() => {
     if (clickedAsset === null) {
@@ -229,7 +231,7 @@ export function TokenList({
     <>
       {backdropShow && (
         <div
-          className="rounded-[32px] fixed inset-0 z-[55]"
+          className="rounded-[32px] fixed inset-0 z-55"
           onClick={() => {
             setBackdropShow(false);
             setHoveredAsset(null);
@@ -240,17 +242,17 @@ export function TokenList({
 
       <ScrollAreaPrimitive.Root
         data-slot="scroll-area"
-        className={`mt-4 h-[calc(80vh-176px)] md:h-126 w-full content-stretch ${clickedAsset ? '' : ''}`}
+        style={{ height: ROW_HEIGHT * VISIBLE_ROWS }}
+        className="relative w-full content-stretch md:h-[416px]!"
       >
-        <div className="w-full h-16 left-0 top-0 absolute bg-gradient-to-b from-vibrant-white to-neutral-100/0 z-[100000] pointer-events-none" />
         <ScrollAreaPrimitive.Viewport
           data-slot="scroll-area-viewport"
           className="ring-ring/10 dark:ring-ring/20 dark:outline-ring/40 outline-ring/50 size-full rounded-[inherit] transition-[color,box-shadow] focus-visible:ring-4 focus-visible:outline-1 px-6"
         >
           <motion.div
             ref={assetsRef}
-            className={`h-[calc(80vh-176px)] md:h-126 pt-4 [flex-flow:wrap] box-border content-start flex items-start justify-center relative shrink-0 w-full flex-1 ${
-              isChainSelectorOpen ? 'blur filter opacity-20' : ''
+            className={`pt-4 [flex-flow:wrap] box-border content-start flex items-start justify-center relative shrink-0 w-full flex-1 md:grid md:grid-cols-5 md:content-start md:justify-items-center md:gap-x-4 md:gap-y-2 ${
+              isChainSelectorOpen ? 'blur filter opacity-15' : ''
             } ${isFiltered ? 'px-10' : 'px-0'}`}
             data-name="Assets"
             layout
@@ -261,9 +263,10 @@ export function TokenList({
             </AnimatePresence>
           </motion.div>
         </ScrollAreaPrimitive.Viewport>
-        <div className="w-full h-16 left-0 bottom-0 absolute bg-gradient-to-t from-vibrant-white to-neutral-100/0 z-[100000] pointer-events-none" />
         <ScrollBar />
         <ScrollAreaPrimitive.Corner />
+        <div className="absolute top-0 left-0 right-0 z-100000 h-20 w-full pointer-events-none bg-linear-to-b from-vibrant-white to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 z-100000 h-20 w-full pointer-events-none bg-linear-to-t from-vibrant-white to-transparent" />
       </ScrollAreaPrimitive.Root>
     </>
   );

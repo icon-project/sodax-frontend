@@ -158,7 +158,7 @@ export function TokenAsset({
    * Floating UI uses this as reference.
    */
   const assetRef = useRef<HTMLDivElement>(null);
-  const tileOpacity = isClickBlurred ? 0.4 : isHoverDimmed ? 0.5 : 1; // 0.4 is 40% opacity, 0.5 is 50%, 1 is 100%
+  const tileOpacity = isClickBlurred ? 0.4 : isHoverDimmed ? 0.8 : 1; // 0.4 is 40% opacity, 0.5 is 50%, 1 is 100%
 
   return (
     <>

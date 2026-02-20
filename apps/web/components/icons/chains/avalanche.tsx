@@ -6,7 +6,7 @@ export const AvalancheIcon = () => (
         <rect width="24" height="24" rx="6" ry="6" />
       </clipPath>
     </defs>
-    <g clip-path="url(#rounded-clip)">
+    <g clipPath="url(#rounded-clip)">
       <path fill="#E84142" d="M24 0H0v24h24z" />
       <path
         fill="#fff"

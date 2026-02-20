@@ -31,16 +31,16 @@ export function CurrencySearchPanel({
 
   return (
     <div
-      className={`mt-4 box-border content-stretch flex flex-col gap-2 items-center justify-start p-0 relative shrink-0 transition-all duration-200 h-12 ${
+      className={`my-4 box-border content-stretch flex flex-col gap-2 items-center justify-start p-0 relative shrink-0 transition-all duration-200 h-12 ${
         isUsdtClicked ? 'blur filter opacity-30' : ''
       }`}
     >
       <div className="w-full flex justify-center">
         <div
-          className={`w-60 sm:w-64 h-12 px-6 rounded-[32px] outline-4 outline-offset-[-4px] outline-cream-white inline-flex justify-between items-center transition-all duration-200
+          className={`w-60 sm:w-64 h-12 px-6 rounded-[32px] outline-4 -outline-offset-4 outline-cream-white inline-flex justify-between items-center transition-all duration-200
           }`}
         >
-          <div className="flex items-center">
+          <div className="flex items-center my-4">
             {isChainSelectorOpen ? (
               <LayoutGrid className="w-4 h-4 text-clay" />
             ) : (
@@ -54,7 +54,7 @@ export function CurrencySearchPanel({
                 value={searchQuery}
                 onChange={e => onSearchChange(e.target.value)}
                 readOnly={isChainSelectorOpen}
-                className="placeholder:!text-clay-light text-(length:--body-super-comfortable) p-2 border-none focus:border-none shadow-none focus:outline-none focus:ring-0 focus:shadow-none focus-visible:border-none focus-visible:ring-0 text-espresso focus-visible:text-espresso"
+                className="placeholder:text-clay-light! text-(length:--body-super-comfortable) p-2 border-none focus:border-none shadow-none focus:outline-none focus:ring-0 focus:shadow-none focus-visible:border-none focus-visible:ring-0 text-espresso focus-visible:text-espresso"
               />
             </div>
           </div>
@@ -97,7 +97,7 @@ export function CurrencySearchPanel({
                       onMouseEnter={() => setHoveredChain('all')}
                       onMouseLeave={() => setHoveredChain(null)}
                     >
-                      <div className="w-6 h-6  ring-4 ring-white rounded-[6px] shadow-[-4px_0px_4px_rgba(175,145,145,1)] flex justify-center items-center gap-1 flex-wrap content-center overflow-hidden bg-cream-white">
+                      <div className="w-6 h-6 ring-4 ring-white rounded-[6px] shadow-[-4px_0px_4px_rgba(175,145,145,1)] flex justify-center items-center gap-1 flex-wrap content-center overflow-hidden bg-cream-white">
                         <AllNetworkIcon />
                       </div>
                       <div className="justify-center text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold">

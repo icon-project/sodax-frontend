@@ -71,6 +71,7 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
     return (
       <DialogPortal data-slot="dialog-portal">
         <DialogOverlay />
+        <DialogTitle />
         <DialogPrimitive.Content
           ref={ref}
           data-slot="dialog-content"

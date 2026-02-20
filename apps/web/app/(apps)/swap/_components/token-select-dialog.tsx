@@ -127,12 +127,13 @@ export default function TokenSelectDialog({
     onClose();
   };
 
+  // Mobile view: keep w-[90%] h-[80vh]; desktop uses md:h-[600px] md:max-w-[480px].
   return (
     <Dialog open={isOpen} onOpenChange={handleDialogClose}>
       <DialogContent
         enableMotion
         hideCloseButton
-        className="block w-[90%] h-[80vh] md:h-170 md:max-w-[480px] py-12 bg-vibrant-white gap-0 shadow-none"
+        className="block w-[90%] h-[80vh] md:h-[600px] md:max-w-[480px] py-12 bg-vibrant-white gap-0 shadow-none"
       >
         <div className="relative flex justify-end h-4">
           <DialogClose asChild>
