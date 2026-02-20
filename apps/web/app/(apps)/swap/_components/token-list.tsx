@@ -22,6 +22,7 @@ interface TokenListProps {
   platformTokens: XToken[];
   selectedChainFilter: SpokeChainId | null;
   isFiltered: boolean;
+  isSearchActive: boolean;
 }
 
 export function TokenList({
@@ -37,6 +38,7 @@ export function TokenList({
   platformTokens,
   selectedChainFilter,
   isFiltered,
+  isSearchActive,
 }: TokenListProps): React.JSX.Element {
   const assetsRef = useRef<HTMLDivElement>(null);
   const [hoveredAsset, setHoveredAsset] = useState<string | null>(null);
@@ -108,16 +110,9 @@ export function TokenList({
   // --- Group by asset symbol only (no hold vs platform distinction in the UI) ---
   // Merge all visible tokens into one list, then group by symbol so we get one entry per symbol (e.g. USDC, ETH)
   // with a count of available options/chains. On click, user sees all chains for that symbol.
-  const allTokensMerged = useMemo(
-    () => [...holdTokens, ...platformTokens],
-    [holdTokens, platformTokens],
-  );
+  const allTokensMerged = useMemo(() => [...holdTokens, ...platformTokens], [holdTokens, platformTokens]);
 
-  const tokenGroupsBySymbol = useMemo(
-    () => getUniqueTokenSymbols(allTokensMerged),
-    [allTokensMerged],
-  );
-
+  const tokenGroupsBySymbol = useMemo(() => getUniqueTokenSymbols(allTokensMerged), [allTokensMerged]);
   // Sort groups: by total fiat value (groups with balance first), then by symbol for stable order.
   const sortedTokenGroups = useMemo(() => {
     if (!tokenPrices) {
@@ -145,6 +140,18 @@ export function TokenList({
       return (groupA.symbol ?? '').localeCompare(groupB.symbol ?? '', undefined, { sensitivity: 'base' });
     });
   }, [tokenGroupsBySymbol, allBalances, tokenPrices]);
+
+  // Center items when (search active or chain selected) and there are fewer than 5 items
+  const totalItems = sortedTokenGroups.length;
+  const gridStartByCount: Record<number, number> = {
+    1: 3,
+    2: 3,
+    3: 2,
+    4: 2,
+  };
+  const shouldCenter =
+    (isSearchActive || isFiltered) && totalItems > 0 && totalItems < 5;
+  const startColumn = shouldCenter ? gridStartByCount[totalItems] : undefined;
 
   const getTokenUniqueId = (token: XToken): string => {
     return `${token.symbol}-${token.xChainId}`;
@@ -276,7 +283,11 @@ export function TokenList({
             layout
           >
             <AnimatePresence mode="popLayout">
-              {sortedTokenGroups.map(({ symbol, tokens }) => renderAssetGroup(symbol, tokens))}
+              {sortedTokenGroups.map(({ symbol, tokens }, index) => (
+                <div key={symbol} style={index === 0 && startColumn ? { gridColumnStart: startColumn } : undefined}>
+                  {renderAssetGroup(symbol, tokens)}
+                </div>
+              ))}{' '}
             </AnimatePresence>
           </motion.div>
         </ScrollAreaPrimitive.Viewport>

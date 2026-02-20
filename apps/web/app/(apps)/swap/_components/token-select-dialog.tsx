@@ -180,6 +180,7 @@ export default function TokenSelectDialog({
                 onClickOutside={() => setClickedAsset(null)}
                 onClose={onClose}
                 isChainSelectorOpen={isChainSelectorOpen}
+                isSearchActive={searchQuery.length > 0}
               />
             </div>
           )}
@@ -202,6 +203,7 @@ export default function TokenSelectDialog({
               onClickOutside={() => setClickedAsset(null)}
               onClose={onClose}
               isChainSelectorOpen={isChainSelectorOpen}
+              isSearchActive={searchQuery.length > 0}
             />
           </div>
         </div>
