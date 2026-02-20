@@ -245,6 +245,9 @@ export function TokenList({
         style={{ height: ROW_HEIGHT * VISIBLE_ROWS }}
         className="relative w-full content-stretch md:h-[416px]!"
       >
+        <div className="absolute top-0 left-0 right-0 z-100000 h-20 w-full pointer-events-none bg-linear-to-b from-vibrant-white to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 z-100000 h-20 w-full pointer-events-none bg-linear-to-t from-vibrant-white to-transparent" />
+
         <ScrollAreaPrimitive.Viewport
           data-slot="scroll-area-viewport"
           className="ring-ring/10 dark:ring-ring/20 dark:outline-ring/40 outline-ring/50 size-full rounded-[inherit] transition-[color,box-shadow] focus-visible:ring-4 focus-visible:outline-1 px-6"
@@ -265,8 +268,6 @@ export function TokenList({
         </ScrollAreaPrimitive.Viewport>
         <ScrollBar />
         <ScrollAreaPrimitive.Corner />
-        <div className="absolute top-0 left-0 right-0 z-100000 h-20 w-full pointer-events-none bg-linear-to-b from-vibrant-white to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 z-100000 h-20 w-full pointer-events-none bg-linear-to-t from-vibrant-white to-transparent" />
       </ScrollAreaPrimitive.Root>
     </>
   );
