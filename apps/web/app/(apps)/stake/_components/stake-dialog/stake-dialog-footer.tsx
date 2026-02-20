@@ -54,7 +54,7 @@ export default function StakeDialogFooter({
     return {
       amount: stakeValue,
       account: address as `0x${string}`,
-      minReceive: parseUnits(receivedXSodaAmount, 18),
+      minReceive: parseUnits(receivedXSodaAmount, 18) as bigint,
       action: 'stake' as const,
     } satisfies StakeParams;
   }, [address, stakeValue, receivedXSodaAmount]);
@@ -72,6 +72,7 @@ export default function StakeDialogFooter({
     stakeOrderPayloadForApprove,
     spokeProvider as SpokeProvider,
   );
+  console.log('hasAllowed', hasAllowed);
 
   const { mutateAsync: approveStake, isPending: isApproving } = useStakeApprove(spokeProvider as SpokeProvider);
 
@@ -80,11 +81,11 @@ export default function StakeDialogFooter({
   }, [isPending, onPendingChange]);
 
   useEffect(() => {
-    if (hasAllowed) {
+    if (currentStakeStep === STAKE_STEP.STAKE_APPROVE && hasAllowed && !isWrongChain) {
       setCurrentStakeStep(STAKE_STEP.STAKE_CONFIRM);
       setIsApproved(true);
     }
-  }, [hasAllowed, setCurrentStakeStep]);
+  }, [hasAllowed, setCurrentStakeStep, currentStakeStep, isWrongChain]);
   const handleContinue = (): void => {
     if (currentStakeStep === STAKE_STEP.STAKE_TERMS) {
       setCurrentStakeStep(STAKE_STEP.STAKE_APPROVE);

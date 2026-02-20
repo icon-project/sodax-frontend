@@ -20,7 +20,7 @@ interface StakeDialogProps {
 
 export default function StakeDialog({ open, onOpenChange, selectedToken }: StakeDialogProps): React.JSX.Element {
   const { currentStakeStep, stakeValue } = useStakeState();
-  const { resetStakeState, setStakeTypedValue, setStakeValue } = useStakeActions();
+  const { resetStakeState, setStakeTypedValue } = useStakeActions();
   const [isStakePending, setIsStakePending] = useState<boolean>(false);
   const [isShaking, setIsShaking] = useState<boolean>(false);
   const [isStakeCompleted, setIsStakeCompleted] = useState<boolean>(false);
@@ -32,10 +32,9 @@ export default function StakeDialog({ open, onOpenChange, selectedToken }: Stake
     if (!stakeRatio || isLoadingStakeRatio) {
       return '0';
     }
-    const [xSodaShares] = stakeRatio;
-    const formatted = formatUnits((xSodaShares * 95n) / 100n, 18);
+    const [previewDepositAmount] = stakeRatio;
 
-    return formatted;
+    return formatUnits(previewDepositAmount, 18);
   }, [stakeRatio, isLoadingStakeRatio]);
 
   const handleClose = (): void => {
@@ -50,7 +49,6 @@ export default function StakeDialog({ open, onOpenChange, selectedToken }: Stake
     resetStakeState();
     if (isStakeCompleted) {
       setStakeTypedValue('');
-      setStakeValue(0n);
       setIsStakeCompleted(false);
     }
   };
