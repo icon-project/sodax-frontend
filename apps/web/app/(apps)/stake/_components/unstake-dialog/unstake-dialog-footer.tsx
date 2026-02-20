@@ -150,11 +150,11 @@ export default function UnstakeDialogFooter({
   }, [isPending, onPendingChange]);
 
   useEffect(() => {
-    if (hasAllowed) {
+    if (currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE && hasAllowed && !isWrongChain) {
       setCurrentUnstakeStep(UNSTAKE_STEP.UNSTAKE_CONFIRM);
       setIsApproved(true);
     }
-  }, [hasAllowed, setCurrentUnstakeStep]);
+  }, [hasAllowed, setCurrentUnstakeStep, currentUnstakeStep, isWrongChain]);
 
   const handleContinue = (): void => {
     if (currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE) {

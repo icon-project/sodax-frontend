@@ -1,5 +1,4 @@
 import { createStore } from 'zustand/vanilla';
-import { persist } from 'zustand/middleware';
 import type { XToken } from '@sodax/types';
 import BigNumber from 'bignumber.js';
 import { formatUnits } from 'viem';

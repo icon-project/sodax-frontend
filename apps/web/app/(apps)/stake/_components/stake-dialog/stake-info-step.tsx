@@ -1,14 +1,23 @@
-// apps/web/app/(apps)/stake/_components/stake-dialog/stake-info-step.tsx
-// Info step component showing staking information and benefits
-
 import type React from 'react';
 import type { XToken } from '@sodax/types';
+import { useStakingConfig } from '@sodax/dapp-kit';
 
 export default function StakeInfoStep({
   selectedToken,
 }: {
   selectedToken: XToken;
 }): React.JSX.Element {
+  const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
+  stakingConfig?.unstakingPeriod;
+  if (isLoadingStakingConfig) {
+    return <div>Loading staking config...</div>;
+  }
+  if (!stakingConfig) {
+    return <div>No staking config found</div>;
+  }
+  const unstakingPeriod = stakingConfig.unstakingPeriod;
+  const unstakingPeriodDays = Math.max(1, Math.floor(Number(unstakingPeriod) / 86400));
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
@@ -32,7 +41,7 @@ export default function StakeInfoStep({
 
         <div className="flex-1 pl-4 border-l-2 border-cream-white inline-flex flex-col justify-center items-start gap-1">
           <div className="md:w-40 h-4 justify-start text-espresso text-(length:--body-comfortable) font-bold font-['InterRegular'] leading-[1.4]">
-            180 day unstake
+            {unstakingPeriodDays} day unstake
           </div>
           <div className="self-stretch justify-start text-clay text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4]">
             Wait for full value, or exit early anytime.

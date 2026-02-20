@@ -92,7 +92,11 @@ export const useStakeState = () => {
 
   const stakeValueInXSoda: bigint = useMemo(() => {
     if (stakeMode === STAKE_MODE.STAKING) {
-      return BigInt(stakeRatio?.[0] || 0);
+      if (!stakeRatio) {
+        return 0n;
+      }
+      const [previewDepositAmount] = stakeRatio;
+      return previewDepositAmount;
     }
     return stakeValue;
   }, [stakeMode, stakeValue, stakeRatio]);
