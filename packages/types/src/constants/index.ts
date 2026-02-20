@@ -2785,6 +2785,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.XLM,
     spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies XToken[],
   [SUI_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.SUI,
