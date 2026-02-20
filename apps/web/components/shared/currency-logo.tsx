@@ -51,7 +51,7 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({
           priority
         />
       </div>
-      {!hideNetwork && !isGroup && (
+      {!hideNetwork && !isGroup && (tokenCount == null || tokenCount <= 1) && (
         <div
           data-property-1="Active"
           className="h-4 left-[30px] top-[30px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white inline-flex flex-col justify-center items-center overflow-hidden relative"
@@ -69,7 +69,8 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({
           )}
         </div>
       )}
-      {isGroup && tokenCount && (
+      {/* Show option count badge (e.g. USDC(12)) only when there are multiple options; hide for single option. */}
+      {tokenCount != null && tokenCount > 1 && (
         <div className="transition-opacity duration-200" style={{ opacity: isClicked ? 0 : 1 }}>
           <div
             className="absolute bg-white bottom-[4.17%] box-border content-stretch flex flex-col items-center justify-center p-0 rounded top-[62.5%] translate-x-[-50%] left-[95%] w-4 transition-transform duration-200"

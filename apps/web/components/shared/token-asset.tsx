@@ -5,7 +5,6 @@ import CurrencyLogo from '@/components/shared/currency-logo';
 import { motion } from 'motion/react';
 import NetworkIcon from '@/components/shared/network-icon';
 import { createPortal } from 'react-dom';
-import { ChevronDownIcon } from 'lucide-react';
 import { chainIdToChainName } from '@/providers/constants';
 import { useFloating, autoUpdate, offset, shift, limitShift } from '@floating-ui/react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -17,12 +16,14 @@ function NetworkPicker({
   tokenSymbol,
   onSelect,
   reference,
+  getFormattedBalanceForToken,
 }: {
   isClicked: boolean;
   tokens: XToken[];
   tokenSymbol: string;
   onSelect?: (token: XToken) => void;
   reference: HTMLElement | null;
+  getFormattedBalanceForToken?: (token: XToken) => string | undefined;
 }): React.JSX.Element | null {
   const [hoveredIcon, setHoveredIcon] = useState<number | null>(null);
   const [isSingle, setIsSingle] = useState(false);
@@ -73,7 +74,7 @@ function NetworkPicker({
   return createPortal(
     <div
       ref={refs.setFloating}
-      className="z-[53] pointer-events-auto"
+      className="z-53 pointer-events-auto"
       style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
     >
       <div
@@ -82,13 +83,24 @@ function NetworkPicker({
           isMobile && isSingle ? 'text-left ml-5' : 'text-center',
         )}
       >
-        {hoveredIcon !== null && tokens[hoveredIcon] ? (
-          <>
-            {tokenSymbol} <span className="font-bold">on {chainIdToChainName(tokens[hoveredIcon].xChainId)}</span>
-          </>
-        ) : (
-          'Choose a network'
-        )}
+        {hoveredIcon !== null && tokens[hoveredIcon]
+          ? (() => {
+              const hoveredToken = tokens[hoveredIcon];
+              const balance = hoveredToken && getFormattedBalanceForToken?.(hoveredToken);
+              if (balance) {
+                return (
+                  <>
+                    {balance} {tokenSymbol}
+                  </>
+                );
+              }
+              return (
+                <>
+                  {tokenSymbol} <span>on {chainIdToChainName(tokens[hoveredIcon].xChainId)}</span>
+                </>
+              );
+            })()
+          : 'Choose a network'}
       </div>
 
       <div className={cn('flex flex-wrap justify-center w-[140px]', isMobile && isSingle && 'ml-4')}>
@@ -133,6 +145,7 @@ interface TokenAssetProps {
   tokens?: XToken[];
   onChainClick?: (token: XToken) => void;
   isClicked?: boolean;
+  getFormattedBalanceForToken?: (token: XToken) => string | undefined;
 }
 
 export function TokenAsset({
@@ -151,6 +164,7 @@ export function TokenAsset({
   tokens,
   onChainClick,
   isClicked = false,
+  getFormattedBalanceForToken,
 }: TokenAssetProps): React.JSX.Element {
   /**
    * IMPORTANT:
@@ -174,7 +188,7 @@ export function TokenAsset({
           transition={{ duration: 0.2, ease: 'easeOut' }}
           whileHover={{ zIndex: 9999 }}
           className={cn(
-            'px-3 flex flex-col items-center justify-start cursor-pointer w-18 pb-4 transition-all',
+            'px-3 flex flex-col items-center justify-start cursor-pointer w-18 pb-3 transition-all',
             isClickBlurred && 'blur-sm',
             isClicked && isGroup && 'z-[9999]',
           )}
@@ -208,17 +222,26 @@ export function TokenAsset({
             )}
           >
             {name}
-            {tokenCount && tokenCount > 1 && <ChevronDownIcon className="w-2 h-2 text-clay ml-1" />}
           </div>
 
-          {isHoldToken && formattedBalance && (
-            <motion.p
-              className="text-clay !text-(length:--text-body-fine-print)"
-              animate={{ color: isHovered ? '#483534' : '#8e7e7d' }}
-              transition={{ duration: 0.3 }}
-            >
-              {formattedBalance}
-            </motion.p>
+          {/* Reserve space for balance so hover doesn't cause layout jump; only for single-asset tiles that have balance. */}
+          {!isGroup && isHoldToken && formattedBalance && (
+            <div className="flex items-center justify-center">
+              {isHovered ? (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.15 }}
+                  className="text-clay text-(length:--text-body-fine-print)!"
+                >
+                  {formattedBalance}
+                </motion.p>
+              ) : (
+                <span className="invisible text-(length:--text-body-fine-print)" aria-hidden>
+                  {formattedBalance}
+                </span>
+              )}
+            </div>
           )}
         </motion.div>
       </div>
@@ -230,6 +253,7 @@ export function TokenAsset({
           tokenSymbol={name}
           onSelect={onChainClick}
           reference={assetRef.current}
+          getFormattedBalanceForToken={getFormattedBalanceForToken}
         />
       )}
     </>

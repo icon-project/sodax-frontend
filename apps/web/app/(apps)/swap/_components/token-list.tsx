@@ -105,123 +105,135 @@ export function TokenList({
     };
   }, [clickedAsset, onClickOutside]);
 
-  const sortedHoldTokens = useMemo(() => {
+  // --- Group by asset symbol only (no hold vs platform distinction in the UI) ---
+  // Merge all visible tokens into one list, then group by symbol so we get one entry per symbol (e.g. USDC, ETH)
+  // with a count of available options/chains. On click, user sees all chains for that symbol.
+  const allTokensMerged = useMemo(
+    () => [...holdTokens, ...platformTokens],
+    [holdTokens, platformTokens],
+  );
+
+  const tokenGroupsBySymbol = useMemo(
+    () => getUniqueTokenSymbols(allTokensMerged),
+    [allTokensMerged],
+  );
+
+  // Sort groups: by total fiat value (groups with balance first), then by symbol for stable order.
+  const sortedTokenGroups = useMemo(() => {
     if (!tokenPrices) {
-      return [...holdTokens].sort((a, b) => {
-        const balanceA = getChainBalance(allBalances, a);
-        const balanceB = getChainBalance(allBalances, b);
-        if (balanceA < balanceB) return 1;
-        if (balanceA > balanceB) return -1;
-        return 0;
-      });
+      return [...tokenGroupsBySymbol].sort((a, b) =>
+        (a.symbol ?? '').localeCompare(b.symbol ?? '', undefined, { sensitivity: 'base' }),
+      );
     }
-
-    return [...holdTokens].sort((a, b) => {
-      const balanceA = getChainBalance(allBalances, a);
-      const balanceB = getChainBalance(allBalances, b);
-
-      // Convert balances to human-readable numbers
-      const balanceANumber = Number(formatUnits(balanceA, a.decimals));
-      const balanceBNumber = Number(formatUnits(balanceB, b.decimals));
-
-      // Get USD prices
-      const priceKeyA = `${a.symbol}-${a.xChainId}`;
-      const priceKeyB = `${b.symbol}-${b.xChainId}`;
-      const priceA = tokenPrices[priceKeyA] || 0;
-      const priceB = tokenPrices[priceKeyB] || 0;
-
-      // Calculate fiat values
-      const fiatValueA = balanceANumber * priceA;
-      const fiatValueB = balanceBNumber * priceB;
-
-      // Sort by fiat value in descending order
-      if (fiatValueA < fiatValueB) return 1;
-      if (fiatValueA > fiatValueB) return -1;
-      return 0;
+    return [...tokenGroupsBySymbol].sort((a, b) => {
+      const totalFiatA = a.tokens.reduce((sum, t) => {
+        const bal = getChainBalance(allBalances, t);
+        const priceKey = `${t.symbol}-${t.xChainId}`;
+        const price = tokenPrices[priceKey] ?? 0;
+        return sum + Number(formatUnits(bal, t.decimals)) * price;
+      }, 0);
+      const totalFiatB = b.tokens.reduce((sum, t) => {
+        const bal = getChainBalance(allBalances, t);
+        const priceKey = `${t.symbol}-${t.xChainId}`;
+        const price = tokenPrices[priceKey] ?? 0;
+        return sum + Number(formatUnits(bal, t.decimals)) * price;
+      }, 0);
+      if (totalFiatA > totalFiatB) return -1;
+      if (totalFiatA < totalFiatB) return 1;
+      return (a.symbol ?? '').localeCompare(b.symbol ?? '', undefined, { sensitivity: 'base' });
     });
-  }, [holdTokens, allBalances, tokenPrices]);
-
-  const uniqueTokenSymbols = getUniqueTokenSymbols(platformTokens);
+  }, [tokenGroupsBySymbol, allBalances, tokenPrices]);
 
   const getTokenUniqueId = (token: XToken): string => {
     return `${token.symbol}-${token.xChainId}`;
   };
 
-  const renderPlatformTokenSymbol = (symbol: string, tokens: XToken[]) => {
-    const tokenUniqueId = getTokenUniqueId(tokens[0] as XToken);
-    const assetUniqueId = tokens.length > 1 ? `${symbol}-group-${tokenUniqueId}` : tokenUniqueId;
-    const isHovered = shouldApplyHover && hoveredAsset === tokenUniqueId;
+  /**
+   * Renders one asset group by symbol (e.g. USDC(12)). Single token = one tile, click selects.
+   * Multiple tokens = one tile with count badge, click opens NetworkPicker to choose chain.
+   */
+  const renderAssetGroup = (symbol: string, tokens: XToken[]) => {
+    const firstToken = tokens[0];
+    if (!firstToken) return null;
 
+    const tokenUniqueId = getTokenUniqueId(firstToken);
+    const assetUniqueId = tokens.length > 1 ? `${symbol}-group-${tokenUniqueId}` : tokenUniqueId;
+    const isHovered = shouldApplyHover && hoveredAsset === assetUniqueId;
     const shouldBlurOtherAssets = clickedAsset !== null && clickedAsset !== assetUniqueId;
 
     const commonProps = {
       isClickBlurred: shouldBlurOtherAssets,
-      isHoverDimmed: shouldApplyHover && hoveredAsset !== null && hoveredAsset !== tokenUniqueId,
+      isHoverDimmed: shouldApplyHover && hoveredAsset !== null && hoveredAsset !== assetUniqueId,
       isHovered,
-      onMouseEnter: () => shouldApplyHover && setHoveredAsset(tokenUniqueId),
+      onMouseEnter: () => shouldApplyHover && setHoveredAsset(assetUniqueId),
       onMouseLeave: () => shouldApplyHover && setHoveredAsset(null),
     };
-    return tokens.length > 1 ? (
-      <TokenAsset
-        key={tokenUniqueId}
-        name={symbol}
-        isHoldToken={false}
-        isGroup={true}
-        tokenCount={tokens.length}
-        tokens={tokens}
-        onClick={(e?: React.MouseEvent) => {
-          if (e) {
-            onAssetClick(e, assetUniqueId);
-            setBackdropShow(true);
-          }
-        }}
-        onChainClick={handleChainClick}
-        isClicked={clickedAsset === assetUniqueId}
-        {...commonProps}
-      />
-    ) : (
-      <TokenAsset
-        key={tokenUniqueId}
-        name={symbol}
-        token={tokens[0]}
-        isHoldToken={false}
-        onClick={() => handleTokenAssetClick(tokens[0] || ({} as XToken))}
-        {...commonProps}
-      />
-    );
-  };
 
-  const renderHoldTokenSymbol = (token: XToken) => {
-    const tokenUniqueId = getTokenUniqueId(token);
-    const isHovered = shouldApplyHover && hoveredAsset === tokenUniqueId;
-    const shouldBlurOtherAssets = clickedAsset !== null && clickedAsset !== tokenUniqueId;
-    const commonProps = {
-      isClickBlurred: shouldBlurOtherAssets,
-      isHoverDimmed: shouldApplyHover && hoveredAsset !== null && hoveredAsset !== tokenUniqueId,
-      isHovered,
-      onMouseEnter: () => shouldApplyHover && setHoveredAsset(tokenUniqueId),
-      onMouseLeave: () => shouldApplyHover && setHoveredAsset(null),
-    };
-    const balance = getChainBalance(allBalances, token);
-    const isHoldToken = balance > 0n;
-
-    // Calculate formatted balance if token is held and prices are available
+    // Formatted balance for this group: sum balances across all chains for this symbol (when any token has balance).
     let formattedBalance: string | undefined;
-    if (isHoldToken && tokenPrices) {
-      const priceKey = `${token.symbol}-${token.xChainId}`;
-      const usdPrice = tokenPrices[priceKey] || 0;
-      const balanceString = formatUnits(balance, token.decimals);
-      formattedBalance = formatBalance(balanceString, usdPrice);
+    const totalHuman = tokens.reduce((sum, t) => {
+      const bal = getChainBalance(allBalances, t);
+      return sum + Number(formatUnits(bal, t.decimals));
+    }, 0);
+    const hasBalance = totalHuman > 0;
+    if (hasBalance && tokenPrices) {
+      const totalFiat = tokens.reduce((sum, t) => {
+        const bal = getChainBalance(allBalances, t);
+        const priceKey = `${t.symbol}-${t.xChainId}`;
+        const price = tokenPrices[priceKey] ?? 0;
+        return sum + Number(formatUnits(bal, t.decimals)) * price;
+      }, 0);
+      const effectivePrice = totalHuman > 0 ? totalFiat / totalHuman : 0;
+      formattedBalance = formatBalance(String(totalHuman), effectivePrice);
+    }
+
+    const isHoldToken = hasBalance;
+
+    // Per-token formatted balance for NetworkPicker hover (e.g. "123.45 USDC" when hovering Sonic).
+    const getFormattedBalanceForToken = (t: XToken): string | undefined => {
+      const bal = getChainBalance(allBalances, t);
+      if (bal <= 0n) return undefined;
+      if (!tokenPrices) return undefined;
+      const priceKey = `${t.symbol}-${t.xChainId}`;
+      const usdPrice = tokenPrices[priceKey] ?? 0;
+      const balanceString = formatUnits(bal, t.decimals);
+      return formatBalance(balanceString, usdPrice);
+    };
+
+    if (tokens.length > 1) {
+      return (
+        <TokenAsset
+          key={assetUniqueId}
+          name={symbol}
+          token={firstToken}
+          formattedBalance={formattedBalance}
+          isHoldToken={isHoldToken}
+          isGroup={true}
+          tokenCount={tokens.length}
+          tokens={tokens}
+          getFormattedBalanceForToken={getFormattedBalanceForToken}
+          onClick={(e?: React.MouseEvent) => {
+            if (e) {
+              onAssetClick(e, assetUniqueId);
+              setBackdropShow(true);
+            }
+          }}
+          onChainClick={handleChainClick}
+          isClicked={clickedAsset === assetUniqueId}
+          {...commonProps}
+        />
+      );
     }
 
     return (
       <TokenAsset
-        key={tokenUniqueId}
-        name={token.symbol}
-        token={token}
+        key={assetUniqueId}
+        name={symbol}
+        token={firstToken}
         formattedBalance={formattedBalance}
         isHoldToken={isHoldToken}
-        onClick={() => handleTokenAssetClick(token)}
+        tokenCount={1}
+        onClick={() => handleTokenAssetClick(firstToken)}
         {...commonProps}
       />
     );
@@ -245,8 +257,7 @@ export function TokenList({
         style={{ height: ROW_HEIGHT * VISIBLE_ROWS }}
         className="relative w-full content-stretch md:h-[416px]!"
       >
-        <div className="absolute top-0 left-0 right-0 z-100000 h-20 w-full pointer-events-none bg-linear-to-b from-vibrant-white to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 z-100000 h-20 w-full pointer-events-none bg-linear-to-t from-vibrant-white to-transparent" />
+        <div className="absolute top-0 left-0 right-0 z-100000 h-10 w-full pointer-events-none bg-linear-to-b from-vibrant-white to-transparent" />
 
         <ScrollAreaPrimitive.Viewport
           data-slot="scroll-area-viewport"
@@ -254,18 +265,19 @@ export function TokenList({
         >
           <motion.div
             ref={assetsRef}
-            className={`pt-4 [flex-flow:wrap] box-border content-start flex items-start justify-center relative shrink-0 w-full flex-1 md:grid md:grid-cols-5 md:content-start md:justify-items-center md:gap-x-4 md:gap-y-2 ${
+            className={`pt-3 [flex-flow:wrap] box-border content-start flex items-start justify-center relative shrink-0 w-full flex-1 md:grid md:grid-cols-5 md:content-start md:justify-items-center md:gap-x-4 md:gap-y-2 ${
               isChainSelectorOpen ? 'blur filter opacity-15' : ''
             } ${isFiltered ? 'px-10' : 'px-0'}`}
             data-name="Assets"
             layout
           >
             <AnimatePresence mode="popLayout">
-              {sortedHoldTokens.map(renderHoldTokenSymbol)}{' '}
-              {uniqueTokenSymbols.map(({ symbol, tokens }) => renderPlatformTokenSymbol(symbol, tokens))}
+              {sortedTokenGroups.map(({ symbol, tokens }) => renderAssetGroup(symbol, tokens))}
             </AnimatePresence>
           </motion.div>
         </ScrollAreaPrimitive.Viewport>
+        <div className="absolute bottom-0 left-0 right-0 z-100000 h-8 w-full pointer-events-none bg-linear-to-t from-vibrant-white to-transparent" />
+
         <ScrollBar />
         <ScrollAreaPrimitive.Corner />
       </ScrollAreaPrimitive.Root>
