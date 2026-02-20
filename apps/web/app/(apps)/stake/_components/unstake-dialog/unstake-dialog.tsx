@@ -22,7 +22,7 @@ interface UnstakeDialogProps {
 
 export default function UnstakeDialog({ open, onOpenChange, selectedToken }: UnstakeDialogProps): React.JSX.Element {
   const { currentUnstakeStep, stakeValue, unstakeMethod } = useStakeState();
-  const { resetUnstakeState, setStakeTypedValue, setStakeValue } = useStakeActions();
+  const { resetUnstakeState, setStakeTypedValue } = useStakeActions();
   const [isUnstakePending, setIsUnstakePending] = useState<boolean>(false);
   const [isShaking, setIsShaking] = useState<boolean>(false);
   const [isUnstakeCompleted, setIsUnstakeCompleted] = useState<boolean>(false);
@@ -68,7 +68,6 @@ export default function UnstakeDialog({ open, onOpenChange, selectedToken }: Uns
     resetUnstakeState();
     if (isUnstakeCompleted) {
       setStakeTypedValue('');
-      setStakeValue(0n);
       setIsUnstakeCompleted(false);
     }
   };

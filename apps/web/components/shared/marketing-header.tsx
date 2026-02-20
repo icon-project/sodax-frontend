@@ -33,7 +33,7 @@ export function MarketingHeader({ backLink, backText }: MarketingHeaderProps) {
   const backgroundClass = 'bg-cherry-soda';
 
   return (
-    <div className="h-[100px] absolute top-0 left-0 right-0 z-50 flex flex-col justify-start items-center w-full">
+    <div className="h-[120px] absolute top-0 left-0 right-0 z-50 flex flex-col justify-start items-center w-full">
       <div className={`w-full h-full absolute ${backgroundClass}`} />
       <div className="w-full flex justify-between items-center h-full z-20 md:px-16 px-8 lg:px-8 lg:max-w-[1264px]">
         <div className="flex items-center">

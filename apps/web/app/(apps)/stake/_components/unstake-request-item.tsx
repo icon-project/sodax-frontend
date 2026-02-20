@@ -29,8 +29,8 @@ export function UnstakeRequestItem({
   }, [request.request.startTime, stakingConfig]);
 
   const isReadyToClaim = useMemo((): boolean => {
-    return timeRemaining === 'Unstake complete';
-  }, [timeRemaining]);
+    return request.penalty === 0n;
+  }, [request.penalty]);
 
   const progressPercentage = useMemo((): number => {
     if (!request.request.amount || request.request.amount === 0n) {
@@ -107,10 +107,6 @@ export function UnstakeRequestItem({
               <>
                 <span className="text-espresso text-(length:--body-small) font-['InterBold'] leading-4">
                   {totalAmountFormatted} SODA
-                </span>
-                <span className="text-clay text-(length:--body-small) font-normal font-['InterRegular'] leading-4">
-                  {' '}
-                  SODA
                 </span>
               </>
             ) : (

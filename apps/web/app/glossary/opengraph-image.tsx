@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
 
-export const alt = 'SODAX Knowledge Base - Concepts & System Components';
+export const alt = 'SODAX Glossary - Concepts & System Components';
 export const size = {
   width: 1200,
   height: 630,
@@ -29,7 +29,7 @@ export default async function Image() {
       >
         <img
           src={`data:image/png;base64,${Buffer.from(linkPreviewImage).toString('base64')}`}
-          alt="SODAX Knowledge Base"
+          alt="SODAX Glossary"
           width={1200}
           height={630}
           style={{
@@ -76,7 +76,7 @@ export default async function Image() {
               textAlign: 'center',
             }}
           >
-            SODAX Knowledge Base
+            SODAX Glossary
           </div>
           <div
             style={{
