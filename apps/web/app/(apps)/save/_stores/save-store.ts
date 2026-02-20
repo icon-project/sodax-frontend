@@ -1,6 +1,5 @@
 // apps/web/app/(apps)/save/_stores/save-store.ts
 import { createStore } from 'zustand/vanilla';
-import { persist } from 'zustand/middleware';
 import type { XToken } from '@sodax/types';
 
 export enum DEPOSIT_STEP {
@@ -36,6 +35,7 @@ export type SaveActions = {
   setSelectedToken: (token: XToken | null) => void;
   resetSaveState: () => void;
   setSuppliedAssetCount: (count: number) => void;
+  reset: () => void;
 };
 
 export type SaveStore = SaveState & SaveActions;
@@ -55,44 +55,25 @@ export const defaultSaveState: SaveState = {
 };
 
 export const createSaveStore = (initState: SaveState = defaultSaveState) => {
-  return createStore<SaveStore>()(
-    persist(
-      (set, get) => ({
-        ...initState,
-        setDepositValue: (value: number) => set({ depositValue: value }),
-        setCurrentDepositStep: (step: DEPOSIT_STEP) => set({ currentDepositStep: step }),
-        setTotalDepositedUsdValue: (value: number) => set({ totalDepositedUsdValue: value }),
-        setIsSwitchingChain: (isSwitching: boolean) => set({ isSwitchingChain: isSwitching }),
-        setActiveAsset: (value: string) => set({ activeAsset: value }),
-        setScrollToCenter: (value: boolean) => set({ scrollToCenter: value }),
-        setIsNetworkPickerOpened: (value: boolean) => set({ isNetworkPickerOpened: value }),
-        setIsAssetListBlurred: (value: boolean) => set({ isAssetListBlurred: value }),
-        setIsShowDeposits: (value: boolean) => set({ isShowDeposits: value }),
-        setSelectedToken: (token: XToken | null) => set({ selectedToken: token }),
-        resetSaveState: () => {
-          set({
-            currentDepositStep: DEPOSIT_STEP.TERMS,
-            isSwitchingChain: false,
-          });
-        },
-        setSuppliedAssetCount: (count: number) => set({ suppliedAssetCount: count }), // <--- Add this
-      }),
-      {
-        name: 'sodax-save-store',
-        partialize: state => ({
-          depositValue: state.depositValue,
-        }),
-        merge: (persistedState, currentState) => {
-          const persisted = persistedState as Partial<SaveState> | null;
-          if (!persisted) {
-            return currentState;
-          }
-          return {
-            ...currentState,
-            ...persisted,
-          };
-        },
-      },
-    ),
-  );
+  return createStore<SaveStore>()((set, get) => ({
+    ...initState,
+    setDepositValue: (value: number) => set({ depositValue: value }),
+    setCurrentDepositStep: (step: DEPOSIT_STEP) => set({ currentDepositStep: step }),
+    setTotalDepositedUsdValue: (value: number) => set({ totalDepositedUsdValue: value }),
+    setIsSwitchingChain: (isSwitching: boolean) => set({ isSwitchingChain: isSwitching }),
+    setActiveAsset: (value: string) => set({ activeAsset: value }),
+    setScrollToCenter: (value: boolean) => set({ scrollToCenter: value }),
+    setIsNetworkPickerOpened: (value: boolean) => set({ isNetworkPickerOpened: value }),
+    setIsAssetListBlurred: (value: boolean) => set({ isAssetListBlurred: value }),
+    setIsShowDeposits: (value: boolean) => set({ isShowDeposits: value }),
+    setSelectedToken: (token: XToken | null) => set({ selectedToken: token }),
+    reset: () => set(defaultSaveState),
+    resetSaveState: () => {
+      set({
+        currentDepositStep: DEPOSIT_STEP.TERMS,
+        isSwitchingChain: false,
+      });
+    },
+    setSuppliedAssetCount: (count: number) => set({ suppliedAssetCount: count }),
+  }));
 };
