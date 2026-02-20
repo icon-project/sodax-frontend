@@ -167,7 +167,7 @@ export function NetworkPicker({
             >
               <NetworkIcon
                 id={token.xChainId}
-                className={hasBalance ? '!ring-[5px] shadow-[-5px_0px_5px_0px_rgba(175,145,145,1)]' : ''}
+                className={hasBalance ? 'ring-[5px]! shadow-[-5px_0px_5px_0px_rgba(175,145,145,1)]' : ''}
               />
             </motion.div>
           );

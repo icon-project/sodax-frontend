@@ -125,22 +125,24 @@ export function TokenList({
         (a.symbol ?? '').localeCompare(b.symbol ?? '', undefined, { sensitivity: 'base' }),
       );
     }
-    return [...tokenGroupsBySymbol].sort((a, b) => {
-      const totalFiatA = a.tokens.reduce((sum, t) => {
-        const bal = getChainBalance(allBalances, t);
-        const priceKey = `${t.symbol}-${t.xChainId}`;
-        const price = tokenPrices[priceKey] ?? 0;
-        return sum + Number(formatUnits(bal, t.decimals)) * price;
+    return [...tokenGroupsBySymbol].sort((groupA, groupB) => {
+      const totalFiatValueA = groupA.tokens.reduce((accumulatedFiat, token) => {
+        const tokenBalance = getChainBalance(allBalances, token);
+        const priceKey = `${token.symbol}-${token.xChainId}`;
+        const tokenPrice = tokenPrices[priceKey] ?? 0;
+        const humanReadableBalance = Number(formatUnits(tokenBalance, token.decimals));
+        return accumulatedFiat + humanReadableBalance * tokenPrice;
       }, 0);
-      const totalFiatB = b.tokens.reduce((sum, t) => {
-        const bal = getChainBalance(allBalances, t);
-        const priceKey = `${t.symbol}-${t.xChainId}`;
-        const price = tokenPrices[priceKey] ?? 0;
-        return sum + Number(formatUnits(bal, t.decimals)) * price;
+      const totalFiatValueB = groupB.tokens.reduce((accumulatedFiat, token) => {
+        const tokenBalance = getChainBalance(allBalances, token);
+        const priceKey = `${token.symbol}-${token.xChainId}`;
+        const tokenPrice = tokenPrices[priceKey] ?? 0;
+        const humanReadableBalance = Number(formatUnits(tokenBalance, token.decimals));
+        return accumulatedFiat + humanReadableBalance * tokenPrice;
       }, 0);
-      if (totalFiatA > totalFiatB) return -1;
-      if (totalFiatA < totalFiatB) return 1;
-      return (a.symbol ?? '').localeCompare(b.symbol ?? '', undefined, { sensitivity: 'base' });
+      if (totalFiatValueA > totalFiatValueB) return -1;
+      if (totalFiatValueA < totalFiatValueB) return 1;
+      return (groupA.symbol ?? '').localeCompare(groupB.symbol ?? '', undefined, { sensitivity: 'base' });
     });
   }, [tokenGroupsBySymbol, allBalances, tokenPrices]);
 
@@ -171,33 +173,35 @@ export function TokenList({
 
     // Formatted balance for this group: sum balances across all chains for this symbol (when any token has balance).
     let formattedBalance: string | undefined;
-    const totalHuman = tokens.reduce((sum, t) => {
-      const bal = getChainBalance(allBalances, t);
-      return sum + Number(formatUnits(bal, t.decimals));
+    const totalTokenBalance = tokens.reduce((accumulatedBalance, token) => {
+      const tokenBalance = getChainBalance(allBalances, token);
+      const humanReadableBalance = Number(formatUnits(tokenBalance, token.decimals));
+      return accumulatedBalance + humanReadableBalance;
     }, 0);
-    const hasBalance = totalHuman > 0;
+    const hasBalance = totalTokenBalance > 0;
     if (hasBalance && tokenPrices) {
-      const totalFiat = tokens.reduce((sum, t) => {
-        const bal = getChainBalance(allBalances, t);
-        const priceKey = `${t.symbol}-${t.xChainId}`;
-        const price = tokenPrices[priceKey] ?? 0;
-        return sum + Number(formatUnits(bal, t.decimals)) * price;
+      const totalFiatValue = tokens.reduce((accumulatedFiat, token) => {
+        const tokenBalance = getChainBalance(allBalances, token);
+        const priceKey = `${token.symbol}-${token.xChainId}`;
+        const tokenPrice = tokenPrices[priceKey] ?? 0;
+        const humanReadableBalance = Number(formatUnits(tokenBalance, token.decimals));
+        return accumulatedFiat + humanReadableBalance * tokenPrice;
       }, 0);
-      const effectivePrice = totalHuman > 0 ? totalFiat / totalHuman : 0;
-      formattedBalance = formatBalance(String(totalHuman), effectivePrice);
+      const averageTokenPrice = totalTokenBalance > 0 ? totalFiatValue / totalTokenBalance : 0;
+      formattedBalance = formatBalance(String(totalTokenBalance), averageTokenPrice);
     }
 
     const isHoldToken = hasBalance;
 
     // Per-token formatted balance for NetworkPicker hover (e.g. "123.45 USDC" when hovering Sonic).
-    const getFormattedBalanceForToken = (t: XToken): string | undefined => {
-      const bal = getChainBalance(allBalances, t);
-      if (bal <= 0n) return undefined;
+    const getFormattedBalanceForToken = (token: XToken): string | undefined => {
+      const tokenBalance = getChainBalance(allBalances, token);
+      if (tokenBalance <= 0n) return undefined;
       if (!tokenPrices) return undefined;
-      const priceKey = `${t.symbol}-${t.xChainId}`;
+      const priceKey = `${token.symbol}-${token.xChainId}`;
       const usdPrice = tokenPrices[priceKey] ?? 0;
-      const balanceString = formatUnits(bal, t.decimals);
-      return formatBalance(balanceString, usdPrice);
+      const humanReadableBalance = formatUnits(tokenBalance, token.decimals);
+      return formatBalance(humanReadableBalance, usdPrice);
     };
 
     if (tokens.length > 1) {

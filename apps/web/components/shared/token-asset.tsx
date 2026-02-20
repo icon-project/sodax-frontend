@@ -103,27 +103,30 @@ function NetworkPicker({
           : 'Choose a network'}
       </div>
 
-      <div className={cn('flex flex-wrap justify-center w-[140px]', isMobile && isSingle && 'ml-4')}>
-        {tokens.map((token, index) => (
-          <motion.div
-            key={token.xChainId}
-            className={cn(
-              'p-1.5 cursor-pointer',
-              hoveredIcon !== null && hoveredIcon !== index && 'opacity-60 grayscale-[0.5]',
-            )}
-            whileHover={{ scale: 1.3 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            onMouseEnter={() => setHoveredIcon(index)}
-            onMouseLeave={() => setHoveredIcon(null)}
-            onMouseDown={e => {
-              e.preventDefault();
-              e.stopPropagation();
-              onSelect?.(token);
-            }}
-          >
-            <NetworkIcon id={token.xChainId} />
-          </motion.div>
-        ))}
+      <div className={cn('flex flex-wrap justify-center gap-1 w-[140px]', isMobile && isSingle && 'ml-4')}>
+        {tokens.map((token, index) => {
+          const hasBalance = !!getFormattedBalanceForToken?.(token);
+          return (
+            <motion.div
+              key={token.xChainId}
+              className={cn(
+                'cursor-pointer p-2 flex items-center justify-center',
+                hoveredIcon !== null && hoveredIcon !== index && 'opacity-40 grayscale-[0.5]',
+              )}
+              whileHover={{ scale: 1.3 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              onMouseEnter={() => setHoveredIcon(index)}
+              onMouseLeave={() => setHoveredIcon(null)}
+              onMouseDown={e => {
+                e.preventDefault();
+                e.stopPropagation();
+                onSelect?.(token);
+              }}
+            >
+              <NetworkIcon id={token.xChainId} hasBalance={hasBalance} />
+            </motion.div>
+          );
+        })}
       </div>
     </div>,
     document.body,

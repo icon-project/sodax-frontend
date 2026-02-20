@@ -39,11 +39,18 @@ import {
 interface NetworkIconProps {
   id: string;
   className?: string;
+  hasBalance?: boolean;
 }
 
-export default function NetworkIcon({ id, className }: NetworkIconProps): React.JSX.Element {
+export default function NetworkIcon({ id, className, hasBalance = false }: NetworkIconProps): React.JSX.Element {
+  // Border: 6px when has balance, 2px otherwise.
+  const ringClass = hasBalance ? 'ring-[6px]' : 'ring-2';
+  // Shadow: stronger when has balance, normal otherwise.
+  const shadowClass = hasBalance
+    ? 'shadow-[-4px_0px_4px_0px_rgba(175,145,145,1)]'
+    : 'shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)]';
   return (
-    <div className={`ring-2 ring-white shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] rounded w-4 h-4 ${className}`}>
+    <div className={`${ringClass} ring-white ${shadowClass} rounded w-4 h-4 ${className || ''}`}>
       {id === ICON_MAINNET_CHAIN_ID && <IcxIcon />}
       {id === AVALANCHE_MAINNET_CHAIN_ID && <AvalancheIcon />}
       {id === BASE_MAINNET_CHAIN_ID && <BaseIcon />}
