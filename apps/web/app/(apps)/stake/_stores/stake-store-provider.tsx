@@ -95,7 +95,7 @@ export const useStakeState = () => {
       if (!stakeRatio) {
         return 0n;
       }
-      const [previewDepositAmount] = stakeRatio;
+      const [, previewDepositAmount] = stakeRatio;
       return previewDepositAmount;
     }
     return stakeValue;
