@@ -2649,7 +2649,7 @@ export const swapSupportedTokens = {
   [REDBELLY_MAINNET_CHAIN_ID]: [
     spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.RBNT,
     spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
-    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    // spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rETH,
@@ -2667,7 +2667,7 @@ export const swapSupportedTokens = {
     spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.KAIA,
     spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
-    spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    // spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const satisfies XToken[],
 } as const satisfies Record<SpokeChainId, readonly XToken[]>;
 
