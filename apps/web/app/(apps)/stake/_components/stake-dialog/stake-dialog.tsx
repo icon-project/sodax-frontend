@@ -32,7 +32,7 @@ export default function StakeDialog({ open, onOpenChange, selectedToken }: Stake
     if (!stakeRatio || isLoadingStakeRatio) {
       return '0';
     }
-    const [previewDepositAmount] = stakeRatio;
+    const [, previewDepositAmount] = stakeRatio;
 
     return formatUnits(previewDepositAmount, 18);
   }, [stakeRatio, isLoadingStakeRatio]);
