@@ -49,6 +49,7 @@ export type StakeActions = {
   setCurrentUnstakeStep: (step: UNSTAKE_STEP) => void;
   resetUnstakeState: () => void;
   setIsNetworkPickerOpened: (value: boolean) => void;
+  reset: () => void;
 };
 
 export type StakeStore = StakeState & StakeActions;
@@ -88,6 +89,7 @@ export const createStakeStore = (initState: StakeState = defaultStakeState) => {
     resetStakeState: () => set({ currentStakeStep: STAKE_STEP.STAKE_TERMS }),
     setUnstakeMethod: (method: UNSTAKE_METHOD) => set({ unstakeMethod: method }),
     setCurrentUnstakeStep: (step: UNSTAKE_STEP) => set({ currentUnstakeStep: step }),
+    reset: () => set(defaultStakeState),
     resetUnstakeState: () =>
       set({
         currentUnstakeStep: UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE,

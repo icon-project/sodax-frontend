@@ -37,7 +37,6 @@ export const useStakeStore = <T,>(selector: (store: StakeStore) => T): T => {
 
 export const useStakeState = () => {
   const stakeTypedValue = useStakeStore(state => state.stakeTypedValue);
-
   const currentStakeStep = useStakeStore(state => state.currentStakeStep);
   const totalStakedUsdValue = useStakeStore(state => state.totalStakedUsdValue);
   const selectedToken = useStakeStore(state => state.selectedToken);
@@ -48,7 +47,7 @@ export const useStakeState = () => {
   const walletProvider = useWalletProvider(selectedToken?.xChainId);
   const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
   const { data: stakingInfo, isLoading: isLoadingStakingInfo } = useStakingInfo(spokeProvider);
-
+  const reset = useStakeStore(state => state.reset);
   // Compute stakeValue from stakeTypedValue
   const stakeValue = useMemo((): bigint => {
     if (!stakeTypedValue || stakeTypedValue === '' || stakeTypedValue === '0') {
@@ -59,7 +58,7 @@ export const useStakeState = () => {
       return 0n;
     }
     // For staking, use selectedToken decimals; for unstaking, always 18 (xSODA)
-    const decimals = stakeMode === STAKE_MODE.STAKING ? selectedToken?.decimals ?? 18 : 18;
+    const decimals = stakeMode === STAKE_MODE.STAKING ? (selectedToken?.decimals ?? 18) : 18;
     try {
       return parseUnits(stakeTypedValue, decimals);
     } catch {
@@ -123,7 +122,6 @@ export const useStakeState = () => {
     stakeMode,
     unstakeMethod,
     currentUnstakeStep,
-
     userXSodaBalance,
     userXSodaValue,
     stakingInfo,
@@ -131,6 +129,7 @@ export const useStakeState = () => {
     totalUserXSodaBalance,
     totalUserXSodaValue,
     isNetworkPickerOpened,
+    reset,
   };
 };
 
@@ -146,7 +145,7 @@ export const useStakeActions = () => {
   const setCurrentUnstakeStep = useStakeStore(state => state.setCurrentUnstakeStep);
   const resetUnstakeState = useStakeStore(state => state.resetUnstakeState);
   const setIsNetworkPickerOpened = useStakeStore(state => state.setIsNetworkPickerOpened);
-
+  const reset = useStakeStore(state => state.reset);
   return {
     setStakeTypedValue,
     setStakeValueByPercent,
@@ -159,5 +158,6 @@ export const useStakeActions = () => {
     setCurrentUnstakeStep,
     resetUnstakeState,
     setIsNetworkPickerOpened,
+    reset,
   };
 };
