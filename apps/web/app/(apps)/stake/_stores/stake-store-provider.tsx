@@ -6,6 +6,7 @@ import { useStore } from 'zustand';
 import { type StakeStore, createStakeStore, STAKE_MODE } from './stake-store';
 import { useSpokeProvider, useStakingInfo, useStakeRatio, useConvertedAssets } from '@sodax/dapp-kit';
 import { useWalletProvider } from '@sodax/wallet-sdk-react';
+import { parseUnits } from 'viem';
 
 export type StakeStoreApi = ReturnType<typeof createStakeStore>;
 
@@ -35,7 +36,6 @@ export const useStakeStore = <T,>(selector: (store: StakeStore) => T): T => {
 };
 
 export const useStakeState = () => {
-  const stakeValue = useStakeStore(state => state.stakeValue);
   const stakeTypedValue = useStakeStore(state => state.stakeTypedValue);
 
   const currentStakeStep = useStakeStore(state => state.currentStakeStep);
@@ -48,6 +48,24 @@ export const useStakeState = () => {
   const walletProvider = useWalletProvider(selectedToken?.xChainId);
   const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
   const { data: stakingInfo, isLoading: isLoadingStakingInfo } = useStakingInfo(spokeProvider);
+
+  // Compute stakeValue from stakeTypedValue
+  const stakeValue = useMemo((): bigint => {
+    if (!stakeTypedValue || stakeTypedValue === '' || stakeTypedValue === '0') {
+      return 0n;
+    }
+    const numericValue = Number(stakeTypedValue);
+    if (Number.isNaN(numericValue)) {
+      return 0n;
+    }
+    // For staking, use selectedToken decimals; for unstaking, always 18 (xSODA)
+    const decimals = stakeMode === STAKE_MODE.STAKING ? selectedToken?.decimals ?? 18 : 18;
+    try {
+      return parseUnits(stakeTypedValue, decimals);
+    } catch {
+      return 0n;
+    }
+  }, [stakeTypedValue, stakeMode, selectedToken?.decimals]);
 
   // Get stake ratio when staking (converts SODA to xSODA)
   const { data: stakeRatio } = useStakeRatio(
@@ -117,7 +135,6 @@ export const useStakeState = () => {
 };
 
 export const useStakeActions = () => {
-  const setStakeValue = useStakeStore(state => state.setStakeValue);
   const setStakeTypedValue = useStakeStore(state => state.setStakeTypedValue);
   const setStakeValueByPercent = useStakeStore(state => state.setStakeValueByPercent);
   const setCurrentStakeStep = useStakeStore(state => state.setCurrentStakeStep);
@@ -131,7 +148,6 @@ export const useStakeActions = () => {
   const setIsNetworkPickerOpened = useStakeStore(state => state.setIsNetworkPickerOpened);
 
   return {
-    setStakeValue,
     setStakeTypedValue,
     setStakeValueByPercent,
     setCurrentStakeStep,
