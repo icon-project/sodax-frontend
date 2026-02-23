@@ -113,20 +113,15 @@ export function useAllChainXSodaBalances(chainIds: SpokeChainId[]): Map<SpokeCha
         }
 
         try {
-          // For Sonic (hub chain), use getStakingInfo directly with address
-          // For other chains, use getStakingInfoFromSpoke with raw spoke provider
           let result: Awaited<ReturnType<typeof sodax.staking.getStakingInfo>>;
-          if (query.chainId === SONIC_MAINNET_CHAIN_ID) {
-            result = await sodax.staking.getStakingInfo(query.address as Address);
-          } else {
-            const rawSpokeProvider = createRawSpokeProvider(query.chainId, query.address, rpcConfig);
 
-            if (!rawSpokeProvider) {
-              return { chainId: query.chainId, balance: 0n };
-            }
+          const rawSpokeProvider = createRawSpokeProvider(query.chainId, query.address, rpcConfig);
 
-            result = await sodax.staking.getStakingInfoFromSpoke(rawSpokeProvider);
+          if (!rawSpokeProvider) {
+            return { chainId: query.chainId, balance: 0n };
           }
+
+          result = await sodax.staking.getStakingInfoFromSpoke(rawSpokeProvider);
 
           if (!result.ok) {
             console.warn(`Failed to fetch xSODA balance for chain ${query.chainId}:`, result.error);
