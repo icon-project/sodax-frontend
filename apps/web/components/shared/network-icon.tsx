@@ -42,28 +42,47 @@ interface NetworkIconProps {
 }
 
 export default function NetworkIcon({ id, className, hasBalance = false }: NetworkIconProps): React.JSX.Element {
-  // Border: 6px when has balance, 2px otherwise.
-  const ringClass = hasBalance ? 'ring-[6px]' : 'ring-2';
+  // Thicker white ring so border is visible on blurry background (design: 6px when has balance, 4px default).
+  const ringClass = hasBalance ? 'ring-[6px]' : 'ring-4';
+  // Strong shadow per icon (drop-shadow + box-shadow); tight blur so they don't merge into a cloud.
+  const dropShadowClass = hasBalance
+    ? 'filter drop-shadow-[0_3px_8px_rgba(0,0,0,0.32)]'
+    : 'filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)]';
+  const boxShadowClass = hasBalance
+    ? 'shadow-[0_3px_8px_rgba(0,0,0,0.18)]'
+    : 'shadow-[0_3px_10px_rgba(0,0,0,0.2)]';
 
   return (
-    <div className={`${ringClass} ring-white rounded bg-white w-4 h-4 ${className}`}>
-      {id === ICON_MAINNET_CHAIN_ID && <IcxIcon />}
-      {id === AVALANCHE_MAINNET_CHAIN_ID && <AvalancheIcon />}
-      {id === BASE_MAINNET_CHAIN_ID && <BaseIcon />}
-      {id === BSC_MAINNET_CHAIN_ID && <BnbIcon />}
-      {id === POLYGON_MAINNET_CHAIN_ID && <PolygonIcon />}
-      {id === SOLANA_MAINNET_CHAIN_ID && <SolIcon />}
-      {id === STELLAR_MAINNET_CHAIN_ID && <StellarIcon />}
-      {id === SUI_MAINNET_CHAIN_ID && <SuiIcon />}
-      {id === INJECTIVE_MAINNET_CHAIN_ID && <InjectiveIcon />}
-      {id === SONIC_MAINNET_CHAIN_ID && <SonicIcon />}
-      {id === OPTIMISM_MAINNET_CHAIN_ID && <OptimismIcon />}
-      {id === ARBITRUM_MAINNET_CHAIN_ID && <ArbitrumIcon />}
-      {id === LIGHTLINK_MAINNET_CHAIN_ID && <LightLinkIcon />}
-      {id === HYPEREVM_MAINNET_CHAIN_ID && <HyperIcon />}
-      {id === ETHEREUM_MAINNET_CHAIN_ID && <EthereumIcon />}
-      {id === KAIA_MAINNET_CHAIN_ID && <KaiaIcon />}
-      {id === REDBELLY_MAINNET_CHAIN_ID && <RedbellyIcon />}
+    <div className={`flex items-center justify-center rounded ${dropShadowClass} ${className}`}>
+      <div
+        className={`
+        flex items-center justify-center
+        rounded bg-white
+        ${ringClass}
+        ring-white
+        w-4 h-4
+        ${boxShadowClass}
+      `}
+      >
+        {' '}
+        {id === ICON_MAINNET_CHAIN_ID && <IcxIcon />}
+        {id === AVALANCHE_MAINNET_CHAIN_ID && <AvalancheIcon />}
+        {id === BASE_MAINNET_CHAIN_ID && <BaseIcon />}
+        {id === BSC_MAINNET_CHAIN_ID && <BnbIcon />}
+        {id === POLYGON_MAINNET_CHAIN_ID && <PolygonIcon />}
+        {id === SOLANA_MAINNET_CHAIN_ID && <SolIcon />}
+        {id === STELLAR_MAINNET_CHAIN_ID && <StellarIcon />}
+        {id === SUI_MAINNET_CHAIN_ID && <SuiIcon />}
+        {id === INJECTIVE_MAINNET_CHAIN_ID && <InjectiveIcon />}
+        {id === SONIC_MAINNET_CHAIN_ID && <SonicIcon />}
+        {id === OPTIMISM_MAINNET_CHAIN_ID && <OptimismIcon />}
+        {id === ARBITRUM_MAINNET_CHAIN_ID && <ArbitrumIcon />}
+        {id === LIGHTLINK_MAINNET_CHAIN_ID && <LightLinkIcon />}
+        {id === HYPEREVM_MAINNET_CHAIN_ID && <HyperIcon />}
+        {id === ETHEREUM_MAINNET_CHAIN_ID && <EthereumIcon />}
+        {id === KAIA_MAINNET_CHAIN_ID && <KaiaIcon />}
+        {id === REDBELLY_MAINNET_CHAIN_ID && <RedbellyIcon />}
+      </div>
     </div>
   );
 }
