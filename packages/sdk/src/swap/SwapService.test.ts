@@ -15,7 +15,6 @@ import {
   SwapService,
   calculateFeeAmount,
   type SpokeProvider,
-  DEFAULT_DEADLINE_OFFSET,
   DEFAULT_RELAY_TX_TIMEOUT,
   type ConfigService,
 } from '../index.js';
@@ -47,7 +46,7 @@ import {
   createTestEvmHubProvider,
   createTestConfigService,
 } from '../shared/test-utils/testInstances.js';
-import { SONIC_MAINNET_CHAIN_ID, SOLANA_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
+import { SONIC_MAINNET_CHAIN_ID, SOLANA_MAINNET_CHAIN_ID } from '@sodax/types';
 import type { GetBlockReturnType } from 'viem';
 import { SolverApiService } from './SolverApiService.js';
 import { SpokeService } from '../shared/services/spoke/SpokeService.js';

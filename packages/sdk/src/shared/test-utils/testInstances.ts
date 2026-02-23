@@ -34,7 +34,6 @@ import {
   type EvmChainId,
   type EvmSpokeChainConfig,
   type SonicSpokeChainConfig,
-  type Hex,
 } from '@sodax/types';
 import type { SolverConfigParams } from '../types.js';
 
