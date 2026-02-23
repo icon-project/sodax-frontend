@@ -5,6 +5,7 @@ import { UNSTAKE_METHOD } from '../../_stores/stake-store';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { CircleArrowRight, ShieldAlertIcon } from 'lucide-react';
 import { formatTokenAmount } from '@/lib/utils';
+import { useStakingConfig } from '@sodax/dapp-kit';
 
 interface UnstakeConfirmationStepProps {
   selectedToken: XToken;
@@ -18,6 +19,13 @@ export default function UnstakeConfirmationStep({
   unstakeError,
 }: UnstakeConfirmationStepProps): React.JSX.Element {
   const { stakeValue, unstakeMethod } = useStakeState();
+  const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
+  if (isLoadingStakingConfig) {
+    return <div>Loading staking config...</div>;
+  }
+  if (!stakingConfig) {
+    return <div>No staking config found</div>;
+  }
 
   const xSodaToken = {
     ...selectedToken,
@@ -71,7 +79,7 @@ export default function UnstakeConfirmationStep({
             <CircleArrowRight className="w-4 h-4 text-clay-light" />
           </div>
           <div className="justify-start text-clay text-xs font-normal font-['InterRegular'] leading-4">
-            {unstakeMethod === UNSTAKE_METHOD.INSTANT ? '~10s' : '180 days'}
+            {unstakeMethod === UNSTAKE_METHOD.INSTANT ? '~10s' : `~${stakingConfig.unstakingPeriod} s`}
           </div>
         </div>
         <div className="w-10 inline-flex flex-col justify-start items-center gap-2">

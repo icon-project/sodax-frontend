@@ -21,7 +21,7 @@ import {
 import { useWalletProvider, useXAccount, useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import type { SpokeProvider, UnstakeParams, InstantUnstakeParams } from '@sodax/sdk';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Check, CheckIcon, FilePenLine, Loader2Icon } from 'lucide-react';
+import { ArrowLeft, Check, CheckIcon, FilePenLine, Loader2Icon } from 'lucide-react';
 import { chainIdToChainName } from '@/providers/constants';
 import BigNumber from 'bignumber.js';
 interface UnstakeDialogFooterProps {
@@ -168,6 +168,12 @@ export default function UnstakeDialogFooter({
     }
   };
 
+  const handleBack = (): void => {
+    if (currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE) {
+      setCurrentUnstakeStep(UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE);
+    }
+  };
+
   const handleApprove = async (): Promise<void> => {
     try {
       onError?.(null);
@@ -224,7 +230,9 @@ export default function UnstakeDialogFooter({
 
   return (
     <DialogFooter className="flex justify-between gap-2 overflow-hidden bottom-8 md:inset-x-12 inset-x-8 absolute">
-      {(isMobile ? currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE : true) && (
+      {(isMobile
+        ? currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE || currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE
+        : true) && (
         <Button
           variant="cherry"
           className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
@@ -234,10 +242,19 @@ export default function UnstakeDialogFooter({
                 ? 'w-10 h-10 rounded-full p-0 flex items-center justify-center'
                 : 'flex flex-1'
           }`}
-          onClick={handleContinue}
-          disabled={currentUnstakeStep !== UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE}
+          onClick={currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE ? handleBack : handleContinue}
+          disabled={
+            currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CONFIRM ||
+            (currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE && isApproving)
+          }
         >
-          {currentUnstakeStep !== UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE ? <Check className="w-5 h-5" /> : 'Continue'}
+          {currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE ? (
+            <ArrowLeft className="w-5 h-5" />
+          ) : currentUnstakeStep !== UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE ? (
+            <Check className="w-5 h-5" />
+          ) : (
+            'Continue'
+          )}
         </Button>
       )}
 
