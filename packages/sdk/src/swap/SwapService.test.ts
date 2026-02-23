@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   type CreateIntentParams,
   type Intent,
-  type SolverErrorResponse,
   type SolverExecutionRequest,
   type SolverExecutionResponse,
   type SolverIntentQuoteRequest,
@@ -11,7 +10,6 @@ import {
   type PacketData,
   type PartnerFee,
   type RelayTxStatus,
-  type Result,
   SwapService,
   calculateFeeAmount,
   type SpokeProvider,
@@ -509,18 +507,9 @@ describe('SwapService', async () => {
     } satisfies SolverExecutionRequest;
 
     it('should return a successful post execution response', async () => {
-      const spyPostExecution = vi.spyOn(SolverApiService, 'postExecution').mockImplementation(
-        async () =>
-          ({
-            ok: true,
-            value: {
-              answer: 'OK',
-              intent_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
-            } satisfies SolverExecutionResponse,
-          }) satisfies Result<SolverExecutionResponse, SolverErrorResponse>,
-      );
+      const spyPostExecution = vi.spyOn(SolverApiService, 'postExecution');
 
-      await testSwapService.postExecution(executionRequest);
+      testSwapService.postExecution(executionRequest);
 
       expect(spyPostExecution).toHaveBeenCalledWith(executionRequest, expect.objectContaining(solverConfig));
     });
@@ -548,13 +537,9 @@ describe('SwapService', async () => {
       const expectedTimeout = 60000;
       const expectedSkipSimulation = false;
 
-      // @ts-expect-error Testing mock
-      const spyCreateAndSubmitIntent = vi.spyOn(testSwapService, 'createAndSubmitIntent').mockResolvedValueOnce(() => ({
-        ok: true,
-        value: [],
-      }));
+      const spyCreateAndSubmitIntent = vi.spyOn(testSwapService, 'createAndSubmitIntent');
 
-      await testSwapService.swap({
+      testSwapService.swap({
         intentParams,
         spokeProvider: testArbSpokeProvider,
         timeout: expectedTimeout,
@@ -781,26 +766,12 @@ describe('SwapService', async () => {
       const timeout = 80000;
 
       // Mock waitUntilIntentExecuted to return a resolved Promise
-      const waitSpy = vi.spyOn(IntentRelayApiService, 'waitUntilIntentExecuted').mockResolvedValueOnce({
-        ok: true,
-        value: {
-          src_chain_id: Number(getIntentRelayChainId(BSC_MAINNET_CHAIN_ID)),
-          src_tx_hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
-          src_address: '0x1234567890123456789012345678901234567890',
-          status: 'executed' satisfies RelayTxStatus,
-          dst_chain_id: Number(getIntentRelayChainId(ARBITRUM_MAINNET_CHAIN_ID)),
-          conn_sn: 1,
-          dst_address: '0x1234567890123456789012345678901234567890',
-          dst_tx_hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
-          signatures: ['0x1234567890123456789012345678901234567890'],
-          payload: '0x',
-        } satisfies PacketData,
-      });
+      const waitSpy = vi.spyOn(IntentRelayApiService, 'waitUntilIntentExecuted');
 
       // Access config data for relayer endpoint
       const relayerApiEndpoint = testSwapService.config?.relayerApiEndpoint ?? expect.any(String);
 
-      await testSwapService.getSolvedIntentPacket({ chainId, fillTxHash, timeout });
+      testSwapService.getSolvedIntentPacket({ chainId, fillTxHash, timeout });
 
       expect(waitSpy).toHaveBeenCalled();
       expect(waitSpy).toHaveBeenCalledWith({
@@ -821,7 +792,7 @@ describe('SwapService', async () => {
         data: '0x' as `0x${string}`,
       };
 
-      const spyEstimateGas = vi.spyOn(SpokeService, 'estimateGas').mockResolvedValueOnce(21000n);
+      const spyEstimateGas = vi.spyOn(SpokeService, 'estimateGas').mockResolvedValue(21000n);
 
       await SwapService.estimateGas(rawTx, testArbSpokeProvider);
 
@@ -830,62 +801,23 @@ describe('SwapService', async () => {
   });
 
   describe('submitIntent', () => {
-    const submitPayload = {
-      action: 'submit',
-      params: {
-        chain_id: getIntentRelayChainId(BSC_MAINNET_CHAIN_ID).toString(),
-        tx_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
-      },
-    } satisfies IntentRelayRequest<'submit'>;
-
     it('should successfully submit intent transaction', async () => {
-      const mockSubmitResponse = {
-        success: true,
-        message: 'Transaction submitted successfully',
-      };
+      const submitPayload = {
+        action: 'submit',
+        params: {
+          chain_id: getIntentRelayChainId(BSC_MAINNET_CHAIN_ID).toString(),
+          tx_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
+        },
+      } satisfies IntentRelayRequest<'submit'>;
 
-      vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce(mockSubmitResponse);
+      vi.spyOn(IntentRelayApiService, 'submitTransaction');
 
-      const result = await testSwapService.submitIntent(submitPayload);
+      testSwapService.submitIntent(submitPayload);
 
-      expect(result.ok).toBe(true);
-      if (result.ok) {
-        expect(result.value).toEqual(mockSubmitResponse);
-      }
       expect(IntentRelayApiService.submitTransaction).toHaveBeenCalledWith(
         submitPayload,
         testSwapService.config.relayerApiEndpoint,
       );
-    });
-
-    it('should return error when submitTransaction fails', async () => {
-      const mockSubmitResponse = {
-        success: false,
-        message: 'Transaction submission failed',
-      };
-
-      vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce(mockSubmitResponse);
-
-      const result = await testSwapService.submitIntent(submitPayload);
-
-      expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.error.code).toBe('SUBMIT_TX_FAILED');
-        expect(result.error.data.payload).toEqual(submitPayload);
-      }
-    });
-
-    it('should handle exceptions from submitTransaction', async () => {
-      const error = new Error('Network error');
-      vi.spyOn(IntentRelayApiService, 'submitTransaction').mockRejectedValueOnce(error);
-
-      const result = await testSwapService.submitIntent(submitPayload);
-
-      expect(result.ok).toBe(false);
-      if (!result.ok) {
-        expect(result.error.code).toBe('SUBMIT_TX_FAILED');
-        expect(result.error.data.error).toBe(error);
-      }
     });
 
     it('should handle submit with Solana data', async () => {
@@ -901,16 +833,10 @@ describe('SwapService', async () => {
         },
       } satisfies IntentRelayRequest<'submit'>;
 
-      const mockSubmitResponse = {
-        success: true,
-        message: 'Transaction submitted successfully',
-      };
+      vi.spyOn(IntentRelayApiService, 'submitTransaction');
 
-      vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce(mockSubmitResponse);
+      testSwapService.submitIntent(submitPayloadWithData);
 
-      const result = await testSwapService.submitIntent(submitPayloadWithData);
-
-      expect(result.ok).toBe(true);
       expect(IntentRelayApiService.submitTransaction).toHaveBeenCalledWith(
         submitPayloadWithData,
         testSwapService.config.relayerApiEndpoint,
@@ -1138,19 +1064,14 @@ describe('SwapService', async () => {
 
     it('should successfully approve for EVM chain', async () => {
       const params = await createIntentParams();
-      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
 
-      vi.spyOn(Erc20Service, 'approve').mockResolvedValueOnce(mockTxHash);
+      vi.spyOn(Erc20Service, 'approve');
 
-      const result = await testSwapService.approve({
+      testSwapService.approve({
         intentParams: params,
         spokeProvider: testArbSpokeProvider,
       });
 
-      expect(result.ok).toBe(true);
-      if (result.ok) {
-        expect(result.value).toBe(mockTxHash);
-      }
       expect(Erc20Service.approve).toHaveBeenCalledWith(
         params.inputToken,
         params.inputAmount,
