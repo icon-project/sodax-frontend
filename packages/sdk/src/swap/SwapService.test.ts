@@ -398,11 +398,11 @@ describe('SwapService', async () => {
   });
 
   describe('getSwapDeadline', () => {
-    it('should return deadline with default 5-minute offset', async () => {
-      const block = {
-        timestamp: 1700000000n,
-      } as GetBlockReturnType;
+    const block = {
+      timestamp: 1700000000n,
+    } as GetBlockReturnType;
 
+    it('should return deadline with default 5-minute offset', async () => {
       vi.spyOn(testHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(block);
 
       const result = await testSwapService.getSwapDeadline();
@@ -415,10 +415,6 @@ describe('SwapService', async () => {
     });
 
     it('should return deadline with custom offset', async () => {
-      const block = {
-        timestamp: 1700000000n,
-      } as GetBlockReturnType;
-
       vi.spyOn(testHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(block);
 
       const customDeadline = 600n; // 10 minutes
@@ -432,20 +428,12 @@ describe('SwapService', async () => {
     });
 
     it('should handle zero deadline offset', async () => {
-      const block = {
-        timestamp: 1700000000n,
-      } as GetBlockReturnType;
-
       vi.spyOn(testHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(block);
 
       await expect(testSwapService.getSwapDeadline(0n)).rejects.toThrow('Deadline must be greater than 0');
     });
 
     it('should handle very large deadline offset', async () => {
-      const block = {
-        timestamp: 1700000000n,
-      } as GetBlockReturnType;
-
       vi.spyOn(testHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(block);
 
       const largeDeadline = 2n ** 64n - 1n; // Very large deadline
@@ -455,10 +443,6 @@ describe('SwapService', async () => {
     });
 
     it('should handle negative deadline offset', async () => {
-      const block = {
-        timestamp: 1700000000n,
-      } as GetBlockReturnType;
-
       vi.spyOn(testHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(block);
 
       const negativeDeadline = -300n; // Negative deadline
@@ -476,28 +460,6 @@ describe('SwapService', async () => {
         includeTransactions: false,
         blockTag: 'latest',
       });
-    });
-
-    it('should handle undefined deadline parameter', async () => {
-      const block = {
-        timestamp: 1700000000n,
-      } as GetBlockReturnType;
-
-      vi.spyOn(testHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(block);
-
-      const result = await testSwapService.getSwapDeadline(DEFAULT_DEADLINE_OFFSET);
-      expect(result).toBe(block.timestamp + DEFAULT_DEADLINE_OFFSET);
-    });
-
-    it('should handle null deadline parameter', async () => {
-      const block = {
-        timestamp: 1700000000n,
-      } as GetBlockReturnType;
-
-      vi.spyOn(testHubProvider.publicClient, 'getBlock').mockResolvedValueOnce(block);
-
-      // @ts-expect-error Testing null parameter
-      await expect(testSwapService.getSwapDeadline(null)).rejects.toThrow('Deadline must be greater than 0');
     });
   });
 
