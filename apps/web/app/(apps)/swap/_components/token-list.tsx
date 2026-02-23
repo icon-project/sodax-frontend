@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
 import { getUniqueTokenSymbols, getChainBalance, formatBalance } from '@/lib/utils';
 import { formatUnits } from 'viem';
+import { sortTokenGroupsForPicker } from '@/lib/token-picker-sort';
 
 interface TokenListProps {
   clickedAsset: string | null;
@@ -113,27 +114,11 @@ export function TokenList({
   const allTokensMerged = useMemo(() => [...holdTokens, ...platformTokens], [holdTokens, platformTokens]);
 
   const tokenGroupsBySymbol = useMemo(() => getUniqueTokenSymbols(allTokensMerged), [allTokensMerged]);
-  // Sort groups: by value (fiat when prices exist, else total balance) then symbol. Stable so order doesn't flip when tokenPrices loads.
-  const sortedTokenGroups = useMemo(() => {
-    const getGroupValue = (group: { symbol?: string; tokens: XToken[] }): number => {
-      return group.tokens.reduce((acc, token) => {
-        const balance = getChainBalance(allBalances, token);
-        const human = Number(formatUnits(balance, token.decimals));
-        if (tokenPrices) {
-          const price = tokenPrices[`${token.symbol}-${token.xChainId}`] ?? 0;
-          return acc + human * price;
-        }
-        return acc + human;
-      }, 0);
-    };
-    return [...tokenGroupsBySymbol].sort((groupA, groupB) => {
-      const valueA = getGroupValue(groupA);
-      const valueB = getGroupValue(groupB);
-      if (valueA > valueB) return -1;
-      if (valueA < valueB) return 1;
-      return (groupA.symbol ?? '').localeCompare(groupB.symbol ?? '', undefined, { sensitivity: 'base' });
-    });
-  }, [tokenGroupsBySymbol, allBalances, tokenPrices]);
+
+  const sortedTokenGroups = useMemo(
+    () => sortTokenGroupsForPicker(tokenGroupsBySymbol, allBalances),
+    [tokenGroupsBySymbol, allBalances],
+  );
 
   // Center items when (search active or chain selected) and there are fewer than 5 items
   const totalItems = sortedTokenGroups.length;
