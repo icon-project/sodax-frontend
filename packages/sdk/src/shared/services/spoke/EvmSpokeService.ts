@@ -1,17 +1,20 @@
-import { type Address, encodeFunctionData } from 'viem';
+import { type Address, createPublicClient, encodeFunctionData, http } from 'viem';
 import { erc20Abi, spokeAssetManagerAbi } from '../../abis/index.js';
 import type { EvmHubProvider } from '../../entities/index.js';
-import { connectionAbi, isEvmRawSpokeProvider } from '../../../index.js';
+import { connectionAbi, getEvmViemChain, isEvmRawSpokeProvider } from '../../../index.js';
 import type {
   DepositSimulationParams,
   EvmReturnType,
   EvmSpokeProviderType,
   EvmTransferToHubParams,
   GetAddressType,
+  Result,
   TxReturnType,
+  VerifyTxHashRawEvmConfig,
 } from '../../types.js';
 import {
   type EvmRawTransaction,
+  type EvmRawTransactionReceipt,
   type Hex,
   type HubAddress,
   type HubChainId,
@@ -240,5 +243,47 @@ export class EvmSpokeService {
     return spokeProvider.walletProvider.sendTransaction(rawTx) satisfies Promise<
       TxReturnType<EvmSpokeProviderType, false>
     > as Promise<TxReturnType<EvmSpokeProviderType, R>>;
+  }
+
+  public static async waitForTransactionReceipt(
+    params: VerifyTxHashRawEvmConfig,
+  ): Promise<Result<EvmRawTransactionReceipt, Error>> {
+    try {
+      const { txHash, chainId, rpcUrl, confirmations, pollingInterval, retryCount, retryDelay, timeout } = params;
+      const evmChain = getEvmViemChain(chainId);
+      const publicClient = createPublicClient({
+        chain: evmChain,
+        transport: http(rpcUrl ?? evmChain.rpcUrls.default.http[0]),
+      });
+
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash: txHash,
+        confirmations,
+        pollingInterval,
+        retryCount,
+        retryDelay,
+        timeout,
+      });
+
+      const response = {
+        ...receipt,
+        transactionIndex: receipt.transactionIndex.toString(),
+        blockNumber: receipt.blockNumber.toString(),
+        cumulativeGasUsed: receipt.cumulativeGasUsed.toString(),
+        gasUsed: receipt.gasUsed.toString(),
+        contractAddress: receipt.contractAddress?.toString() ?? null,
+        logs: receipt.logs.map(log => ({
+          ...log,
+          blockNumber: log.blockNumber.toString() as `0x${string}`,
+          logIndex: log.logIndex.toString() as `0x${string}`,
+          transactionIndex: log.transactionIndex.toString() as `0x${string}`,
+        })),
+        effectiveGasPrice: receipt.effectiveGasPrice.toString(),
+      };
+
+      return { ok: true, value: response };
+    } catch (error) {
+      return { ok: false, error: new Error(`Failed to get transaction receipt: ${JSON.stringify(error)}`) };
+    }
   }
 }

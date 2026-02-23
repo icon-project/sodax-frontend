@@ -1,4 +1,4 @@
-import type { TransactionReceipt } from 'viem';
+import type { Hash, TransactionReceipt } from 'viem';
 import type { InjectiveSpokeProvider } from './entities/injective/InjectiveSpokeProvider.js';
 import type {
   EvmRawSpokeProvider,
@@ -46,8 +46,10 @@ import type {
   SuiSpokeChainConfig,
   SolanaChainConfig,
   BaseSpokeChainConfig,
+  EvmChainId,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
+import type { Finality } from '@solana/web3.js';
 
 export type LegacybnUSDChainId = (typeof bnUSDLegacySpokeChainIds)[number];
 export type LegacybnUSDTokenAddress = (typeof bnUSDLegacyTokens)[number]['address'];
@@ -515,8 +517,50 @@ export type GetChainConfigType<T extends ChainType> = T extends 'EVM'
             ? InjectiveSpokeChainConfig
             : BaseSpokeChainConfig<T>;
 
-export type SonicAddressOrSpokeType = {
-  address: Address;
-} | {
-  spokeProvider: SonicSpokeProviderType;
+export type SonicAddressOrSpokeType =
+  | {
+      address: Address;
+    }
+  | {
+      spokeProvider: SonicSpokeProviderType;
+    };
+
+export type VerifyTxHashRawSolanaConfig = {
+  chainType: 'SOLANA';
+  rpcUrl: HttpUrl;
+  signature: string;
+  commitment: Finality;
+  timeoutMs: number;
+  pollingTimeout: number;
 };
+
+export type VerifyTxHashRawStellarConfig = {
+  txHash: string;
+  chainType: 'STELLAR';
+  sorobanRpcConfig: { sorobanRpcUrl: HttpUrl; customHeaders: Record<string, string> };
+  pollingTimeout: number;
+  maxAttempts: number;
+};
+
+export type VerifyTxHashRawEvmConfig = {
+  txHash: Hash;
+  chainType: 'EVM';
+  chainId: EvmChainId;
+  rpcUrl: HttpUrl | undefined;
+  confirmations?: number;
+  pollingInterval?: number;
+  retryCount?: number;
+  retryDelay?: number;
+  timeout?: number;
+};
+
+export type VerifyTxHashRawConfigType = Prettify<
+  (VerifyTxHashRawSolanaConfig | VerifyTxHashRawStellarConfig | VerifyTxHashRawEvmConfig) & { chainType: ChainType }
+>;
+export type VerifyTxHashRawConfig<T extends ChainType> = T extends 'SOLANA'
+  ? VerifyTxHashRawSolanaConfig
+  : T extends 'STELLAR'
+    ? VerifyTxHashRawStellarConfig
+    : T extends 'EVM'
+      ? VerifyTxHashRawEvmConfig
+      : VerifyTxHashRawConfigType;
