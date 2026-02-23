@@ -6,8 +6,12 @@ import Image from 'next/image';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export default function UnstakeMethodSelectionStep({
-  receivedSodaAmount,
-}: { receivedSodaAmount: string }): React.JSX.Element {
+  regularUnstakeAmount,
+  instantUnstakeAmount,
+}: {
+  regularUnstakeAmount: string;
+  instantUnstakeAmount: string;
+}): React.JSX.Element {
   const { unstakeMethod } = useStakeState();
   const { setUnstakeMethod } = useStakeActions();
 
@@ -49,7 +53,7 @@ export default function UnstakeMethodSelectionStep({
                 <Image src="/coin/soda.png" alt="SODA" width={16} height={16} />
               </div>
               <div className="flex justify-center gap-1">
-                <span className="text-espresso text-xs font-bold font-['InterRegular'] ">{receivedSodaAmount}</span>
+                <span className="text-espresso text-xs font-bold font-['InterRegular'] ">{regularUnstakeAmount}</span>
                 <span className="text-clay text-xs font-normal font-['InterRegular'] "> SODA</span>
               </div>
             </div>
@@ -79,7 +83,7 @@ export default function UnstakeMethodSelectionStep({
                 <Image src="/coin/soda.png" alt="SODA" width={16} height={16} />
               </div>
               <div className="flex justify-center gap-1">
-                <span className="text-espresso text-xs font-bold font-['InterRegular'] ">{receivedSodaAmount}</span>
+                <span className="text-espresso text-xs font-bold font-['InterRegular'] ">{instantUnstakeAmount}</span>
                 <span className="text-clay text-xs font-normal font-['InterRegular'] ">SODA</span>
               </div>
             </div>
