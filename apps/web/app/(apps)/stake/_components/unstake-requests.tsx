@@ -5,6 +5,10 @@ import { Fragment } from 'react';
 import { useStakeState } from '../_stores/stake-store-provider';
 import { useUnstakingInfoWithPenalty, useStakingConfig, useSpokeProvider } from '@sodax/dapp-kit';
 import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
+import NetworkIcon from '@/components/shared/network-icon';
+import { AVALANCHE_MAINNET_CHAIN_ID } from '@sodax/types';
+import { chainIdToChainName } from '@/providers/constants';
+import { Loader2 } from 'lucide-react';
 
 export function UnstakeRequests(): React.JSX.Element {
   const { selectedToken } = useStakeState();
@@ -21,28 +25,24 @@ export function UnstakeRequests(): React.JSX.Element {
 
   const requests = unstakingInfoWithPenalty?.requestsWithPenalty ?? [];
 
-  if (isLoadingUnstakingInfo && requests.length > 0) {
-    return (
-      <div className="w-full relative flex flex-col justify-start items-start gap-(--layout-space-normal)">
-        <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-bold font-['Inter'] leading-5">
-          Unstake Requests
-        </div>
-        <div className="w-full flex flex-col justify-start items-start gap-(--layout-space-normal)">
-          <div className="text-clay text-(length:--body-small) font-normal font-['Inter'] leading-4">Loading...</div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       {requests.length > 0 && (
         <div className="w-full relative flex flex-col justify-start items-start gap-(--layout-space-normal)">
-          <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-['InterBold'] leading-5">
-            Unstake Requests
+          <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-['InterBold'] leading-5 flex gap-2 items-center">
+            <div className="w-4 h-4 relative">
+              <NetworkIcon id={selectedToken?.xChainId || AVALANCHE_MAINNET_CHAIN_ID} />
+              <div className="w-2.5 h-2.5 left-[8px] top-[8px] absolute bg-green-500 rounded-full border-[1.50px] border-white" />
+            </div>
+            Unstaking to {chainIdToChainName(selectedToken?.xChainId || AVALANCHE_MAINNET_CHAIN_ID)}
           </div>
 
           <div className="w-full flex flex-col justify-start items-start gap-(--layout-space-normal)">
+            {isLoadingUnstakingInfo && (
+              <div className="w-full flex justify-center items-center">
+                <Loader2 className="w-4 h-4 animate-spin" />
+              </div>
+            )}
             {requests.map((request, index) => (
               <Fragment key={request.id.toString()}>
                 <UnstakeRequestItem request={request} stakingConfig={stakingConfig} spokeProvider={spokeProvider} />

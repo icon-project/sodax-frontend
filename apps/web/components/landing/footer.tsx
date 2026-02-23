@@ -76,6 +76,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           <FooterLink href="https://sodaxscan.com/" showArrow>
             SODAX Scan
           </FooterLink>
+          <FooterLink href="/glossary">Glossary</FooterLink>
           <FooterLink
             href="/SODAX.logos.and.token.zip"
             showArrowDown={true}

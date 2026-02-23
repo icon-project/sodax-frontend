@@ -9,12 +9,12 @@ import { GlossaryContent } from './glossary-content';
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-  title: 'SODAX Knowledge Base - Concepts & System Components | Cross-Chain DeFi Documentation',
+  title: 'SODAX Glossary - Concepts & System Components | Cross-Chain DeFi Documentation',
   description:
-    'Comprehensive SODAX knowledge base with canonical explanations of cross-chain DeFi concepts and system components. LLM-friendly documentation for building on SODAX.',
+    'Comprehensive SODAX glossary with canonical explanations of cross-chain DeFi concepts and system components. LLM-friendly documentation for building on SODAX.',
   keywords: [
     'SODAX',
-    'knowledge base',
+    'glossary',
     'DeFi concepts',
     'cross-chain',
     'system components',
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     'SODAX docs',
   ],
   openGraph: {
-    title: 'SODAX Knowledge Base - Cross-Chain DeFi Documentation',
+    title: 'SODAX Glossary - Cross-Chain DeFi Documentation',
     description:
       'Explore SODAX concepts and system components - canonical explanations of how modern money works across networks.',
     url: 'https://sodax.com/glossary',
@@ -33,13 +33,13 @@ export const metadata: Metadata = {
         url: '/og-knowledge-base.png',
         width: 1200,
         height: 630,
-        alt: 'SODAX Knowledge Base',
+        alt: 'SODAX Glossary',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'SODAX Knowledge Base - Cross-Chain DeFi Documentation',
+    title: 'SODAX Glossary - Cross-Chain DeFi Documentation',
     description:
       'Comprehensive documentation of SODAX concepts and system components for cross-chain DeFi development.',
     images: ['/og-knowledge-base.png'],
@@ -68,9 +68,9 @@ const structuredData = {
       '@type': 'WebPage',
       '@id': 'https://sodax.com/glossary',
       url: 'https://sodax.com/glossary',
-      name: 'SODAX Knowledge Base - Concepts & System Components',
+      name: 'SODAX Glossary - Concepts & System Components',
       description:
-        'Comprehensive SODAX knowledge base with canonical explanations of cross-chain DeFi concepts and system components.',
+        'Comprehensive SODAX glossary with canonical explanations of cross-chain DeFi concepts and system components.',
       isPartOf: { '@id': 'https://sodax.com/#website' },
       breadcrumb: { '@id': 'https://sodax.com/glossary#breadcrumb' },
     },
@@ -87,14 +87,14 @@ const structuredData = {
         {
           '@type': 'ListItem',
           position: 2,
-          name: 'Knowledge Base',
+          name: 'Glossary',
         },
       ],
     },
     {
       '@type': 'CollectionPage',
       '@id': 'https://sodax.com/glossary#collection',
-      name: 'SODAX Knowledge Base',
+      name: 'SODAX Glossary',
       description: 'A comprehensive collection of SODAX concepts and system components.',
       about: {
         '@type': 'Thing',
@@ -118,19 +118,18 @@ export default async function GlossaryPage() {
       <div className="min-h-screen bg-white flex flex-col w-full">
         <MarketingHeader backLink="/" backText="← home" />
 
-        <div className="bg-cream-white flex-1 flex flex-col items-start overflow-clip px-8 py-30 w-full -mb-4">
+        <div className="bg-cream-white flex-1 flex flex-col items-start overflow-clip px-8 pt-40 pb-30 w-full -mb-4">
           <div className="flex flex-col gap-6 items-center w-full max-w-236 mx-auto">
             {/* Header Section */}
             <div className="flex gap-2 items-center mb-8">
               <div className="relative w-8 h-8">
                 <Image src="/symbol2.png" alt="SODAX Symbol" width={32} height={32} />
               </div>
-              <h1 className="text-[32px] font-bold leading-[1.1] text-espresso">Knowledge Base</h1>
+              <h1 className="text-[32px] font-bold leading-[1.1] text-espresso">Glossary</h1>
             </div>
 
             <p className="text-[16px] leading-[1.4] text-espresso text-center mb-8 max-w-160">
-              Canonical explanations of SODAX concepts and system components. LLM-friendly, human-readable, always up to
-              date.
+              Canonical explanations of SODAX concepts and system components. Human-readable and always up to date.
             </p>
 
             <GlossaryContent conceptPages={conceptPages} systemPages={systemPages} />
