@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import type { UnstakeRequestWithPenalty, StakingConfig, SpokeProvider } from '@sodax/sdk';
 import { useClaim, useCancelUnstake } from '@sodax/dapp-kit';
 import { formatTokenAmount, getTimeRemaining } from '@/lib/utils';
@@ -32,17 +32,22 @@ export function UnstakeRequestItem({
     return request.penalty === 0n;
   }, [request.penalty]);
 
+  const [nowSeconds, setNowSeconds] = useState((): number => Math.floor(Date.now() / 1000));
+  useEffect((): (() => void) => {
+    const interval = setInterval(() => setNowSeconds(Math.floor(Date.now() / 1000)), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const progressPercentage = useMemo((): number => {
-    if (!request.request.amount || request.request.amount === 0n) {
-      return 0;
+    if (!stakingConfig || isReadyToClaim) {
+      return isReadyToClaim ? 100 : 0;
     }
-    // Calculate progress based on claimable amount vs total amount
-    // This shows progress for the remaining value (starting from initial claimable amount, not 0)
-    const totalAmount = Number(request.request.amount);
-    const claimableAmount = Number(request.claimableAmount);
-    const progress = Math.min(100, Math.max(0, (claimableAmount / totalAmount) * 100));
+    const start = Number(request.request.startTime);
+    const period = Number(stakingConfig.unstakingPeriod);
+    const elapsed = nowSeconds - start;
+    const progress = Math.min(100, Math.max(0, (elapsed / period) * 100));
     return progress;
-  }, [request.request.amount, request.claimableAmount]);
+  }, [request.request.startTime, stakingConfig, isReadyToClaim, nowSeconds]);
 
   const claimableAmountFormatted = formatTokenAmount(request.claimableAmount, 18, 4);
   const totalAmountFormatted = formatTokenAmount(request.request.amount, 18, 4);
@@ -96,7 +101,7 @@ export function UnstakeRequestItem({
       <div className="w-full flex flex-col justify-start items-start gap-1">
         <div className="inline-flex justify-start items-center gap-2">
           <div className="justify-center text-clay text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-5">
-            {timeRemaining}
+            {isReadyToClaim ? 'Unstake complete' : timeRemaining}
           </div>
           {isReadyToClaim ? null : <LoadingThreeDotsJumping />}
         </div>
