@@ -16,13 +16,14 @@ import {
   useInstantUnstakeAllowance,
   useSpokeProvider,
   useInstantUnstakeRatio,
+  useConvertedAssets,
 } from '@sodax/dapp-kit';
 import { useWalletProvider, useXAccount, useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import type { SpokeProvider, UnstakeParams, InstantUnstakeParams } from '@sodax/sdk';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Check, CheckIcon, FilePenLine, Loader2Icon } from 'lucide-react';
 import { chainIdToChainName } from '@/providers/constants';
-
+import BigNumber from 'bignumber.js';
 interface UnstakeDialogFooterProps {
   selectedToken: XToken | null;
   scaledUnstakeAmount: bigint | undefined;
@@ -54,6 +55,7 @@ export default function UnstakeDialogFooter({
 
   // Get estimates for instant unstake
   const { data: instantUnstakeRatio } = useInstantUnstakeRatio(scaledUnstakeAmount);
+  const { data: convertedAssets } = useConvertedAssets(scaledUnstakeAmount);
 
   // Calculate minAmount for instant unstake (95% of instantUnstakeRatio)
   const minUnstakeAmount = useMemo((): bigint | undefined => {
@@ -65,15 +67,19 @@ export default function UnstakeDialogFooter({
 
   // Calculate penalty percentage for instant unstake
   const penaltyPercentage = useMemo((): number | undefined => {
-    if (!scaledUnstakeAmount || !instantUnstakeRatio || unstakeMethod !== UNSTAKE_METHOD.INSTANT) {
+    if (!instantUnstakeRatio || !convertedAssets || unstakeMethod !== UNSTAKE_METHOD.INSTANT) {
       return undefined;
     }
     if (scaledUnstakeAmount === 0n) {
       return 0;
     }
-    const penalty = ((scaledUnstakeAmount - instantUnstakeRatio) * 10000n) / scaledUnstakeAmount;
-    return Number(penalty) / 100;
-  }, [scaledUnstakeAmount, instantUnstakeRatio, unstakeMethod]);
+    const penalty = new BigNumber(instantUnstakeRatio)
+      .minus(convertedAssets)
+      .dividedBy(convertedAssets)
+      .multipliedBy(100)
+      .toNumber();
+    return penalty;
+  }, [scaledUnstakeAmount, instantUnstakeRatio, convertedAssets, unstakeMethod]);
 
   // Regular unstake hooks
   const { mutateAsync: unstake, isPending: isUnstakingPending } = useUnstake(spokeProvider as SpokeProvider);
