@@ -139,9 +139,7 @@ export default function TokenSelectDialog({
           <DialogClose asChild>
             <Button
               variant="ghost"
-              className={`absolute -top-3 w-12 h-12 rounded-full transition-colors outline-none text-clay-light hover:text-clay ${
-                clickedAsset ? 'blur filter' : ''
-              }`}
+              className="absolute -top-3 w-12 h-12 rounded-full transition-colors outline-none text-clay-light hover:text-clay"
             >
               <XIcon className="w-4 h-4 pointer-events-none" />
             </Button>

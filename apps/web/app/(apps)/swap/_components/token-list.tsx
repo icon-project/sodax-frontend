@@ -113,30 +113,24 @@ export function TokenList({
   const allTokensMerged = useMemo(() => [...holdTokens, ...platformTokens], [holdTokens, platformTokens]);
 
   const tokenGroupsBySymbol = useMemo(() => getUniqueTokenSymbols(allTokensMerged), [allTokensMerged]);
-  // Sort groups: by total fiat value (groups with balance first), then by symbol for stable order.
+  // Sort groups: by value (fiat when prices exist, else total balance) then symbol. Stable so order doesn't flip when tokenPrices loads.
   const sortedTokenGroups = useMemo(() => {
-    if (!tokenPrices) {
-      return [...tokenGroupsBySymbol].sort((a, b) =>
-        (a.symbol ?? '').localeCompare(b.symbol ?? '', undefined, { sensitivity: 'base' }),
-      );
-    }
+    const getGroupValue = (group: { symbol?: string; tokens: XToken[] }): number => {
+      return group.tokens.reduce((acc, token) => {
+        const balance = getChainBalance(allBalances, token);
+        const human = Number(formatUnits(balance, token.decimals));
+        if (tokenPrices) {
+          const price = tokenPrices[`${token.symbol}-${token.xChainId}`] ?? 0;
+          return acc + human * price;
+        }
+        return acc + human;
+      }, 0);
+    };
     return [...tokenGroupsBySymbol].sort((groupA, groupB) => {
-      const totalFiatValueA = groupA.tokens.reduce((accumulatedFiat, token) => {
-        const tokenBalance = getChainBalance(allBalances, token);
-        const priceKey = `${token.symbol}-${token.xChainId}`;
-        const tokenPrice = tokenPrices[priceKey] ?? 0;
-        const humanReadableBalance = Number(formatUnits(tokenBalance, token.decimals));
-        return accumulatedFiat + humanReadableBalance * tokenPrice;
-      }, 0);
-      const totalFiatValueB = groupB.tokens.reduce((accumulatedFiat, token) => {
-        const tokenBalance = getChainBalance(allBalances, token);
-        const priceKey = `${token.symbol}-${token.xChainId}`;
-        const tokenPrice = tokenPrices[priceKey] ?? 0;
-        const humanReadableBalance = Number(formatUnits(tokenBalance, token.decimals));
-        return accumulatedFiat + humanReadableBalance * tokenPrice;
-      }, 0);
-      if (totalFiatValueA > totalFiatValueB) return -1;
-      if (totalFiatValueA < totalFiatValueB) return 1;
+      const valueA = getGroupValue(groupA);
+      const valueB = getGroupValue(groupB);
+      if (valueA > valueB) return -1;
+      if (valueA < valueB) return 1;
       return (groupA.symbol ?? '').localeCompare(groupB.symbol ?? '', undefined, { sensitivity: 'base' });
     });
   }, [tokenGroupsBySymbol, allBalances, tokenPrices]);
@@ -279,9 +273,8 @@ export function TokenList({
               isChainSelectorOpen ? 'blur filter opacity-15' : ''
             } ${isFiltered ? 'px-10' : 'px-0'}`}
             data-name="Assets"
-            layout
           >
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence mode="sync">
               {sortedTokenGroups.map(({ symbol, tokens }, index) => (
                 <div key={symbol} style={index === 0 && startColumn ? { gridColumnStart: startColumn } : undefined}>
                   {renderAssetGroup(symbol, tokens)}

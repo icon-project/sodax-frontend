@@ -31,9 +31,7 @@ export function CurrencySearchPanel({
 
   return (
     <div
-      className={`my-4 box-border content-stretch flex flex-col gap-2 items-center justify-start p-0 relative shrink-0 transition-all duration-200 h-12 ${
-        isUsdtClicked ? 'blur filter opacity-30' : ''
-      }`}
+      className="my-4 box-border content-stretch flex flex-col gap-2 items-center justify-start p-0 relative shrink-0 transition-all duration-200 h-12"
     >
       <div className="w-full flex justify-center">
         <div
