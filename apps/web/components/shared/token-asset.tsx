@@ -193,7 +193,7 @@ export function TokenAsset({
           className={cn(
             'px-3 flex flex-col items-center justify-start cursor-pointer w-18 pb-3 transition-all',
             isClickBlurred && 'blur-sm',
-            isClicked && isGroup && 'z-[9999]',
+            isClicked && isGroup && 'z-9999',
           )}
           data-name="Asset"
           onMouseEnter={onMouseEnter}
@@ -227,8 +227,8 @@ export function TokenAsset({
             {name}
           </div>
 
-          {/* Reserve space for balance so hover doesn't cause layout jump; only for single-asset tiles that have balance. */}
-          {!isGroup && isHoldToken && formattedBalance && (
+          {/* Single asset = one balance; group = total across chains. */}
+          {isHoldToken && formattedBalance && (
             <div className="flex items-center justify-center">
               {isHovered ? (
                 <motion.p

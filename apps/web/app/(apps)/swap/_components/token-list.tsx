@@ -149,8 +149,7 @@ export function TokenList({
     3: 2,
     4: 2,
   };
-  const shouldCenter =
-    (isSearchActive || isFiltered) && totalItems > 0 && totalItems < 5;
+  const shouldCenter = (isSearchActive || isFiltered) && totalItems > 0 && totalItems < 5;
   const startColumn = shouldCenter ? gridStartByCount[totalItems] : undefined;
 
   const getTokenUniqueId = (token: XToken): string => {
@@ -268,7 +267,7 @@ export function TokenList({
         style={{ height: ROW_HEIGHT * VISIBLE_ROWS }}
         className="relative w-full content-stretch md:h-[416px]!"
       >
-        <div className="absolute top-0 left-0 right-0 z-100000 h-10 w-full pointer-events-none bg-linear-to-b from-vibrant-white to-transparent" />
+        <div className="absolute top-0 left-0 right-0 z-100000 h-6 w-full pointer-events-none bg-linear-to-b from-vibrant-white to-transparent" />
 
         <ScrollAreaPrimitive.Viewport
           data-slot="scroll-area-viewport"
