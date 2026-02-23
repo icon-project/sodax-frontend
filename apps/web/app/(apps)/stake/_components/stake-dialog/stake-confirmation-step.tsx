@@ -17,7 +17,6 @@ export default function StakeConfirmationStep({
   stakeError,
 }: StakeConfirmationStepProps): React.JSX.Element {
   const { stakeValue } = useStakeState();
-  console.log('receivedXSodaAmount', receivedXSodaAmount);
   const xSodaToken = {
     ...selectedToken,
     symbol: 'xsoda',
