@@ -25,6 +25,7 @@ import {
   type SpokeProviderType,
 } from '@sodax/sdk';
 import type { Address } from '@sodax/types';
+import { parseUnits } from 'viem';
 
 /**
  * Helper function to create raw spoke provider for a chain
@@ -128,7 +129,10 @@ export function useAllChainXSodaBalances(chainIds: SpokeChainId[]): Map<SpokeCha
             return { chainId: query.chainId, balance: 0n };
           }
 
-          return { chainId: query.chainId, balance: result.value.userXSodaBalance };
+          return {
+            chainId: query.chainId,
+            balance: result.value.userXSodaBalance >= parseUnits('1', 16) ? result.value.userXSodaBalance : 0n,
+          };
         } catch (error) {
           console.warn(`Failed to fetch xSODA balance for chain ${query.chainId}:`, error);
           return { chainId: query.chainId, balance: 0n };
