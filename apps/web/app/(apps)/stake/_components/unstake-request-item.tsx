@@ -76,6 +76,10 @@ export function UnstakeRequestItem({
     });
   }, [request.request.startTime, stakingConfig]);
 
+  const chainName = useMemo((): string => {
+    return chainIdToChainName((selectedToken?.xChainId || 'sonic') as ChainId);
+  }, [selectedToken]);
+
   const handleClaim = async (): Promise<void> => {
     if (!spokeProvider) {
       return;
@@ -204,7 +208,7 @@ export function UnstakeRequestItem({
           <div className="inline-flex justify-start items-center gap-2 w-full">
             <Image src="/symbol_dark.png" alt="SODAX Symbol" width={16} height={16} className="mix-blend-multiply" />
             <DialogTitle className="mix-blend-multiply text-espresso font-['InterBold'] leading-snug text-(size:--body-super-comfortable) flex justify-between items-center w-full">
-              Switch Chain
+              Switch to {chainName} to claim
               <DialogClose asChild>
                 <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />
               </DialogClose>
@@ -212,13 +216,12 @@ export function UnstakeRequestItem({
           </div>
           <div className="flex flex-col gap-4">
             <p className="text-clay text-(length:--body-comfortable) font-normal font-['InterRegular'] leading-5">
-              Please switch to {chainIdToChainName((selectedToken?.xChainId || 'sonic') as ChainId)} to continue with
-              this action.
+              Your SODA is ready to claim on {chainName}.
             </p>
           </div>
           <DialogFooter className="flex justify-end gap-2">
             <Button type="button" variant="cherry" onClick={handleSwitchChainClick}>
-              Switch Chain
+              Switch to {chainName}
             </Button>
           </DialogFooter>
         </DialogContent>
