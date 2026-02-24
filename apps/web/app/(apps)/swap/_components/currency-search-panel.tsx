@@ -30,13 +30,11 @@ export function CurrencySearchPanel({
   const [hoveredChain, setHoveredChain] = useState<string | null>(null);
 
   return (
-    <div
-      className="my-4 box-border content-stretch flex flex-col gap-2 items-center justify-start p-0 relative shrink-0 transition-all duration-200 h-12"
-    >
+    <div className="my-4 box-border content-stretch flex flex-col gap-2 items-center justify-start p-0 relative shrink-0 transition-all duration-200 h-12">
       <div className="w-full flex justify-center">
         <div
           className={`w-60 sm:w-64 h-12 px-6 rounded-[32px] outline-4 -outline-offset-4 outline-cream-white inline-flex justify-between items-center transition-all duration-200
-          }`}
+          `}
         >
           <div className="flex items-center my-4">
             {isChainSelectorOpen ? (
