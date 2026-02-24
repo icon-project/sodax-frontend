@@ -7,7 +7,19 @@
     },
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": [
+        "NOTION_TOKEN",
+        "DATABASE_URI",
+        "BLOB_READ_WRITE_TOKEN",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "GOOGLE_OAUTH_CLIENT_ID",
+        "GOOGLE_OAUTH_CLIENT_SECRET",
+        "ALLOW_ADMIN_CREATION",
+        "SODAX_MONITOR_IP",
+        "SODAX_MONITOR_SECRET"
+      ]
     },
     "build:packages": {
       "dependsOn": ["^build"],

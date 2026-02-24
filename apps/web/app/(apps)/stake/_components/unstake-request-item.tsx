@@ -1,12 +1,19 @@
+// apps/web/app/(apps)/stake/_components/unstake-request-item.tsx
 import type React from 'react';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import type { UnstakeRequestWithPenalty, StakingConfig, SpokeProvider } from '@sodax/sdk';
 import { useClaim, useCancelUnstake } from '@sodax/dapp-kit';
 import { formatTokenAmount, getTimeRemaining } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import LoadingThreeDotsJumping from '@/components/shared/loading-three-dots-jumping';
-import { CircleCheck, MinusCircleIcon, XCircleIcon } from 'lucide-react';
-
+import { CircleCheck, MinusCircleIcon, XCircleIcon, XIcon } from 'lucide-react';
+import { useStakeState } from '../_stores/stake-store-provider';
+import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
+import { Dialog, DialogContent, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { chainIdToChainName } from '@/providers/constants';
+import type { ChainId } from '@sodax/types';
+import Image from 'next/image';
 interface UnstakeRequestItemProps {
   request: UnstakeRequestWithPenalty;
   stakingConfig: StakingConfig | undefined;
@@ -19,8 +26,10 @@ export function UnstakeRequestItem({
   spokeProvider,
 }: UnstakeRequestItemProps): React.JSX.Element {
   const { mutateAsync: claim, isPending: isClaiming } = useClaim(spokeProvider);
+  const { selectedToken } = useStakeState();
   const { mutateAsync: cancelUnstake, isPending: isCancellingUnstake } = useCancelUnstake(spokeProvider);
-
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedToken?.xChainId || 'sonic');
+  const [isSwitchChainDialogOpen, setIsSwitchChainDialogOpen] = useState<boolean>(false);
   const timeRemaining = useMemo((): string => {
     if (!stakingConfig) {
       return 'Loading...';
@@ -29,20 +38,25 @@ export function UnstakeRequestItem({
   }, [request.request.startTime, stakingConfig]);
 
   const isReadyToClaim = useMemo((): boolean => {
-    return timeRemaining === 'Unstake complete';
-  }, [timeRemaining]);
+    return request.penalty === 0n;
+  }, [request.penalty]);
+
+  const [nowSeconds, setNowSeconds] = useState((): number => Math.floor(Date.now() / 1000));
+  useEffect((): (() => void) => {
+    const interval = setInterval(() => setNowSeconds(Math.floor(Date.now() / 1000)), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const progressPercentage = useMemo((): number => {
-    if (!request.request.amount || request.request.amount === 0n) {
-      return 0;
+    if (!stakingConfig || isReadyToClaim) {
+      return isReadyToClaim ? 100 : 0;
     }
-    // Calculate progress based on claimable amount vs total amount
-    // This shows progress for the remaining value (starting from initial claimable amount, not 0)
-    const totalAmount = Number(request.request.amount);
-    const claimableAmount = Number(request.claimableAmount);
-    const progress = Math.min(100, Math.max(0, (claimableAmount / totalAmount) * 100));
+    const start = Number(request.request.startTime);
+    const period = Number(stakingConfig.unstakingPeriod);
+    const elapsed = nowSeconds - start;
+    const progress = Math.min(100, Math.max(0, (elapsed / period) * 100));
     return progress;
-  }, [request.request.amount, request.claimableAmount]);
+  }, [request.request.startTime, stakingConfig, isReadyToClaim, nowSeconds]);
 
   const claimableAmountFormatted = formatTokenAmount(request.claimableAmount, 18, 4);
   const totalAmountFormatted = formatTokenAmount(request.request.amount, 18, 4);
@@ -67,6 +81,11 @@ export function UnstakeRequestItem({
       return;
     }
 
+    if (isWrongChain) {
+      setIsSwitchChainDialogOpen(true);
+      return;
+    }
+
     try {
       await claim({
         requestId: request.id,
@@ -82,6 +101,11 @@ export function UnstakeRequestItem({
       return;
     }
 
+    if (isWrongChain) {
+      setIsSwitchChainDialogOpen(true);
+      return;
+    }
+
     try {
       await cancelUnstake({
         requestId: request.id,
@@ -91,12 +115,17 @@ export function UnstakeRequestItem({
     }
   };
 
+  const handleSwitchChainClick = (): void => {
+    handleSwitchChain();
+    setIsSwitchChainDialogOpen(false);
+  };
+
   return (
     <div className="w-full inline-flex flex-col justify-start items-start gap-4">
       <div className="w-full flex flex-col justify-start items-start gap-1">
         <div className="inline-flex justify-start items-center gap-2">
           <div className="justify-center text-clay text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-5">
-            {timeRemaining}
+            {isReadyToClaim ? 'Unstake complete' : timeRemaining}
           </div>
           {isReadyToClaim ? null : <LoadingThreeDotsJumping />}
         </div>
@@ -107,10 +136,6 @@ export function UnstakeRequestItem({
               <>
                 <span className="text-espresso text-(length:--body-small) font-['InterBold'] leading-4">
                   {totalAmountFormatted} SODA
-                </span>
-                <span className="text-clay text-(length:--body-small) font-normal font-['InterRegular'] leading-4">
-                  {' '}
-                  SODA
                 </span>
               </>
             ) : (
@@ -173,6 +198,31 @@ export function UnstakeRequestItem({
           </>
         )}
       </div>
+
+      <Dialog open={isSwitchChainDialogOpen} onOpenChange={setIsSwitchChainDialogOpen}>
+        <DialogContent className="w-full md:!max-w-[480px] p-8 md:p-12 gap-6 bg-vibrant-white" hideCloseButton>
+          <div className="inline-flex justify-start items-center gap-2 w-full">
+            <Image src="/symbol_dark.png" alt="SODAX Symbol" width={16} height={16} className="mix-blend-multiply" />
+            <DialogTitle className="mix-blend-multiply text-espresso font-['InterBold'] leading-snug text-(size:--body-super-comfortable) flex justify-between items-center w-full">
+              Switch Chain
+              <DialogClose asChild>
+                <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />
+              </DialogClose>
+            </DialogTitle>
+          </div>
+          <div className="flex flex-col gap-4">
+            <p className="text-clay text-(length:--body-comfortable) font-normal font-['InterRegular'] leading-5">
+              Please switch to {chainIdToChainName((selectedToken?.xChainId || 'sonic') as ChainId)} to continue with
+              this action.
+            </p>
+          </div>
+          <DialogFooter className="flex justify-end gap-2">
+            <Button type="button" variant="cherry" onClick={handleSwitchChainClick}>
+              Switch Chain
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

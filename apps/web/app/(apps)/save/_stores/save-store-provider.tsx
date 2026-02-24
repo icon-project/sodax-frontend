@@ -45,6 +45,7 @@ export const useSaveState = () => {
   const isShowDeposits = useSaveStore(state => state.isShowDeposits);
   const selectedToken = useSaveStore(state => state.selectedToken);
   const suppliedAssetCount = useSaveStore(state => state.suppliedAssetCount);
+  const reset = useSaveStore(state => state.reset);
   return {
     depositValue,
     currentDepositStep,
@@ -57,6 +58,7 @@ export const useSaveState = () => {
     isShowDeposits,
     selectedToken,
     suppliedAssetCount,
+    reset,
   };
 };
 
@@ -72,7 +74,7 @@ export const useSaveActions = () => {
   const setIsShowDeposits = useSaveStore(state => state.setIsShowDeposits);
   const setSelectedToken = useSaveStore(state => state.setSelectedToken);
   const resetSaveState = useSaveStore(state => state.resetSaveState);
-
+  const reset = useSaveStore(state => state.reset);
   return {
     setDepositValue,
     setCurrentDepositStep,
@@ -85,5 +87,6 @@ export const useSaveActions = () => {
     setIsShowDeposits,
     setSelectedToken,
     resetSaveState,
+    reset,
   };
 };

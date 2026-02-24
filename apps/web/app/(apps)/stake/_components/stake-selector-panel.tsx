@@ -1,5 +1,6 @@
+// apps/web/app/(apps)/stake/_components/stake-selector-panel.tsx
 import type React from 'react';
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useClickAway } from 'react-use';
 import { cn, formatTokenAmount } from '@/lib/utils';
 import { STAKE_MODE } from '../_stores/stake-store';
@@ -13,6 +14,7 @@ import { stakeModeVariants } from '@/constants/animation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { SodaAsset } from './soda-asset';
 import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
+import { useAllChainXSodaBalances } from '@/hooks/useAllChainXSodaBalances';
 
 export function StakeSelectorPanel(): React.JSX.Element {
   const assetRef = useRef<HTMLDivElement>(null);
@@ -52,6 +54,29 @@ export function StakeSelectorPanel(): React.JSX.Element {
     }
     return tokens;
   }, []);
+
+  const chainIds = useMemo(() => sodaTokens.map(token => token.xChainId), [sodaTokens]);
+  const allChainXSodaBalances = useAllChainXSodaBalances(chainIds);
+
+  // Pre-select network when user has an active xSODA position (balance > 0 on any chain)
+  useEffect(() => {
+    if (selectedToken !== null) return;
+
+    let bestToken: XToken | null = null;
+    let bestBalance = 0n;
+
+    for (const token of sodaTokens) {
+      const balance = allChainXSodaBalances.get(token.xChainId) ?? 0n;
+      if (balance > bestBalance) {
+        bestBalance = balance;
+        bestToken = token;
+      }
+    }
+
+    if (bestToken !== null && bestBalance > 0n) {
+      setSelectedToken(bestToken);
+    }
+  }, [sodaTokens, allChainXSodaBalances, selectedToken, setSelectedToken]);
 
   useClickAway(assetRef, event => {
     const target = event.target as HTMLElement;
