@@ -1,0 +1,2118 @@
+openapi: 3.0.0
+paths:
+  /api/transactions:
+    post:
+      operationId: TransactionController_create
+      summary: Create transaction
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransactionDto'
+            examples:
+              withdraw:
+                value:
+                  type: withdraw
+                  params:
+                    userAddress: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+                    amount: '10000'
+                    tokenId: '2904354:3119'
+                    withdrawTo: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+                    receipt:
+                      amount: '10000'
+                      isToken0: true
+                      fee: 30
+                      token0Address: '0xabc'
+                      token1Address: '0xabc'
+                      hookAddress: '0xabc'
+                      tickSpacing: 1000
+              initLP:
+                value:
+                  type: init-liquidity-pool
+                  params:
+                    userAddress: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+                    token0Id: '0:0'
+                    token1Id: '2904354:3119'
+                    amount0: '10000'
+                    amount1: '10000'
+                    initPrice: '1000'
+                    upperTick: '100'
+                    lowerTick: '-100'
+                    feeRate: 30
+                    tickSpacing: 1000
+                    receipt:
+                      amount: '10000'
+                      isToken0: true
+                      fee: 30
+                      token0Address: '0xabc'
+                      token1Address: '0xabc'
+                      hookAddress: '0xabc'
+                      tickSpacing: 1000
+              provideLiquidity:
+                value:
+                  type: provide-liquidity
+                  params:
+                    userAddress: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+                    token0Id: '0:0'
+                    token1Id: '2904354:3119'
+                    amount0: '10000'
+                    amount1: '10000'
+                    upperTick: '100'
+                    lowerTick: '-100'
+                    feeRate: 30
+                    tickSpacing: 10000
+                    hookSeq: 1
+                    receipt:
+                      amount: '10000'
+                      isToken0: true
+                      fee: 30
+                      token0Address: '0xabc'
+                      token1Address: '0xabc'
+                      hookAddress: '0xabc'
+                      tickSpacing: 1000
+              increaseLP:
+                value:
+                  type: increase-liquidity
+                  params:
+                    userAddress: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+                    nftId: '1'
+                    amount0: '10000'
+                    amount1: '10000'
+                    token0Id: '0:0'
+                    token1Id: '2904354:3119'
+                    receipt:
+                      amount: '10000'
+                      isToken0: true
+                      fee: 30
+                      token0Address: '0xabc'
+                      token1Address: '0xabc'
+                      hookAddress: '0xabc'
+                      tickSpacing: 1000
+              swap:
+                value:
+                  type: swap
+                  params:
+                    userAddress: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+                    tokens:
+                      - '0:0'
+                      - '2904354:3119'
+                    amountIn: '10000'
+                    amountOut: '10000'
+                    feeRates:
+                      - 3000
+                    isExactIn: true
+                    tickSpacings:
+                      - 10000
+                    hookSeqs:
+                      - 1
+                    receipt:
+                      amount: '10000'
+                      isToken0: true
+                      fee: 30
+                      token0Address: '0xabc'
+                      token1Address: '0xabc'
+                      hookAddress: '0xabc'
+                      tickSpacing: 1000
+              withdrawLiquidity:
+                value:
+                  type: withdraw-liquidity
+                  params:
+                    userAddress: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+                    liquidityValue: '10000'
+                    nftId: '1'
+                    amount0: '10000'
+                    amount1: '10000'
+                    token0Id: '0:0'
+                    token1Id: '2904354:3119'
+                    scVersion: v4
+                    receipt:
+                      amount: '10000'
+                      isToken0: true
+                      fee: 30
+                      token0Address: '0xabc'
+                      token1Address: '0xabc'
+                      hookAddress: '0xabc'
+                      tickSpacing: 1000
+              collectFee:
+                value:
+                  type: collect-fee
+                  params:
+                    userAddress: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+                    nftId: '1'
+                    amount0: '10000'
+                    amount1: '10000'
+                    token0Id: '0:0'
+                    token1Id: '2904354:3119'
+                    scVersion: v4
+                    receipt:
+                      amount: '10000'
+                      isToken0: true
+                      fee: 30
+                      token0Address: '0xabc'
+                      token1Address: '0xabc'
+                      hookAddress: '0xabc'
+                      tickSpacing: 1000
+              renewUtxo:
+                value:
+                  type: renew-utxo
+                  params:
+                    userAddress: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+                    txIdVouts:
+                      - txId1:vout1
+                      - txId2:vout2
+                      - txId3:vout3
+      responses:
+        '201':
+          description: ''
+      tags:
+        - transactions
+      security:
+        - bearer: []
+  /api/transactions/sign:
+    post:
+      operationId: TransactionController_signAndBroadcast
+      summary: Sign withdraw transaction
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignTransactionDto'
+      responses:
+        '201':
+          description: transaction has been successfully signed and broadcasted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponseDto'
+      tags:
+        - transactions
+      security:
+        - bearer: []
+  /api/transactions/mempool-fee:
+    get:
+      operationId: TransactionController_getMempoolFee
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+        - transactions
+  /api/transactions/max-spent:
+    post:
+      operationId: TransactionController_getMaxSpent
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransactionDto'
+      responses:
+        '201':
+          description: ''
+      tags:
+        - transactions
+  /api/transactions/receipt/{address}:
+    get:
+      operationId: TransactionController_getReceipt
+      parameters:
+        - name: address
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+        - transactions
+  /api/wallets:
+    get:
+      operationId: WalletController_paginate
+      summary: Get wallets
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: 'Page number (default: 1)'
+          schema:
+            example: 1
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: 'Number of items per page (default: 10)'
+          schema:
+            example: 10
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: 'Sort field and order. Use - prefix for descending. Example: -createdAt, createdAt'
+          schema:
+            example: '-createdAt'
+            type: string
+        - name: select
+          required: false
+          in: query
+          description: 'Fields to select (comma separated). Use + prefix to include hidden fields. Example: name,status,+holders'
+          schema:
+            type: string
+        - name: populate
+          required: false
+          in: query
+          description: 'Relations to populate (comma separated). Example: wallet,token'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Get wallets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponseDto'
+      tags:
+        - wallets
+    post:
+      operationId: WalletController_createWallet
+      summary: Create a new multi-signature wallet
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMultiSigWalletDto'
+      responses:
+        '201':
+          description: The wallet has been successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponseDto'
+      tags:
+        - wallets
+  /api/wallets/details/{userAddress}:
+    get:
+      operationId: WalletController_getDetails
+      summary: Check wallet existed
+      parameters:
+        - name: userAddress
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The wallet has been successfully checked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponseDto'
+      tags:
+        - wallets
+  /api/pools:
+    get:
+      operationId: PoolController_getPools
+      summary: Get pools
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+        - pools
+  /api/pools/simulate-migration:
+    post:
+      operationId: PoolController_simulateMigration
+      summary: Migrate pools
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MigratePoolDto'
+      responses:
+        '201':
+          description: ''
+      tags:
+        - pools
+  /api/tokens:
+    get:
+      operationId: TokenController_getTokens
+      summary: Get tokens
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: 'Page number (default: 1)'
+          schema:
+            example: 1
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: 'Number of items per page (default: 10)'
+          schema:
+            example: 10
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: 'Sort field and order. Use - prefix for descending. Example: -createdAt, createdAt'
+          schema:
+            example: '-createdAt'
+            type: string
+        - name: select
+          required: false
+          in: query
+          description: 'Fields to select (comma separated). Use + prefix to include hidden fields. Example: name,status,+holders'
+          schema:
+            type: string
+        - name: populate
+          required: false
+          in: query
+          description: 'Relations to populate (comma separated). Example: wallet,token'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Get tokens
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponseDto'
+      tags:
+        - tokens
+  /api/tokens/details:
+    get:
+      operationId: TokenController_getEtchedRune
+      summary: Get token details
+      parameters:
+        - name: select
+          required: false
+          in: query
+          description: 'Fields to select (comma separated). Use + prefix to include hidden fields. Example: name,status,+holders'
+          schema:
+            type: string
+        - name: populate
+          required: false
+          in: query
+          description: 'Relations to populate (comma separated). Example: wallet,token'
+          schema:
+            type: string
+        - name: sort
+          required: false
+          in: query
+          description: 'Sort field and order. Use - prefix for descending. Example: -createdAt'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: token details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponseDto'
+      tags:
+        - tokens
+  /api/histories:
+    get:
+      operationId: HistoryController_getHistory
+      summary: Get histories by address
+      description: If tokens_eq is true, return tokens with history items
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: 'Page number (default: 1)'
+          schema:
+            example: 1
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: 'Number of items per page (default: 10)'
+          schema:
+            example: 10
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: 'Sort field and order. Use - prefix for descending. Example: -createdAt, createdAt'
+          schema:
+            example: '-createdAt'
+            type: string
+        - name: select
+          required: false
+          in: query
+          description: 'Fields to select (comma separated). Use + prefix to include hidden fields. Example: name,status,+holders'
+          schema:
+            type: string
+        - name: populate
+          required: false
+          in: query
+          description: 'Relations to populate (comma separated). Example: wallet,token'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+        - histories
+  /api/positions:
+    get:
+      operationId: PositionController_paginate
+      summary: Get positions
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: 'Page number (default: 1)'
+          schema:
+            example: 1
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: 'Number of items per page (default: 10)'
+          schema:
+            example: 10
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: 'Sort field and order. Use - prefix for descending. Example: -createdAt, createdAt'
+          schema:
+            example: '-createdAt'
+            type: string
+        - name: select
+          required: false
+          in: query
+          description: 'Fields to select (comma separated). Use + prefix to include hidden fields. Example: name,status,+holders'
+          schema:
+            type: string
+        - name: populate
+          required: false
+          in: query
+          description: 'Relations to populate (comma separated). Example: wallet,token'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+        - positions
+  /api/etch/get-etch-address:
+    post:
+      operationId: EtchController_getEtchAddress
+      summary: Get etch address and fee
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FetchEtchAddressDto'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponseDto'
+      tags:
+        - etch
+  /api/etch/runes/details:
+    get:
+      operationId: EtchController_getEtchedRune
+      summary: Get etch rune by id
+      parameters:
+        - name: select
+          required: false
+          in: query
+          description: 'Fields to select (comma separated). Use + prefix to include hidden fields. Example: name,status,+holders'
+          schema:
+            type: string
+        - name: populate
+          required: false
+          in: query
+          description: 'Relations to populate (comma separated). Example: wallet,token'
+          schema:
+            type: string
+        - name: sort
+          required: false
+          in: query
+          description: 'Sort field and order. Use - prefix for descending. Example: -createdAt'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: etch rune
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponseDto'
+      tags:
+        - etch
+  /api/etch/runes:
+    get:
+      operationId: EtchController_getEtchedRunes
+      summary: Get etched runes
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: 'Page number (default: 1)'
+          schema:
+            example: 1
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: 'Number of items per page (default: 10)'
+          schema:
+            example: 10
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: 'Sort field and order. Use - prefix for descending. Example: -createdAt, createdAt'
+          schema:
+            example: '-createdAt'
+            type: string
+        - name: select
+          required: false
+          in: query
+          description: 'Fields to select (comma separated). Use + prefix to include hidden fields. Example: name,status,+holders'
+          schema:
+            type: string
+        - name: populate
+          required: false
+          in: query
+          description: 'Relations to populate (comma separated). Example: wallet,token'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: etched runes
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponseDto'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/EtchEntity'
+      tags:
+        - etch
+  /api/etch/commit-tx:
+    post:
+      operationId: EtchController_buildCommitTx
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EtchBuildCommitTxDto'
+      responses:
+        '201':
+          description: ''
+      tags:
+        - etch
+      security:
+        - bearer: []
+  /api/etch/submit-etching:
+    post:
+      operationId: EtchController_submitEtch
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitEtchDto'
+      responses:
+        '201':
+          description: ''
+      tags:
+        - etch
+      security:
+        - bearer: []
+  /api/etch/top-holders:
+    get:
+      operationId: EtchController_getTopHolders
+      parameters:
+        - name: runeId_eq
+          required: false
+          in: query
+          schema:
+            type: string
+        - name: balance_gte
+          required: false
+          in: query
+          schema:
+            type: number
+        - name: page
+          required: false
+          in: query
+          schema:
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          schema:
+            type: number
+      responses:
+        '200':
+          description: ''
+      tags:
+        - etch
+  /api/etch/build-get-reward-tx:
+    post:
+      operationId: EtchController_buildGetRewardTx
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EtchBuildGetRewardDto'
+      responses:
+        '201':
+          description: ''
+      tags:
+        - etch
+      security:
+        - bearer: []
+  /api/etch/sign-reward-tx:
+    post:
+      operationId: EtchController_signRewardTx
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EtchSignAndBroadcastRewardTxDto'
+      responses:
+        '201':
+          description: ''
+      tags:
+        - etch
+      security:
+        - bearer: []
+  /api/etch/rewards-amount:
+    get:
+      operationId: EtchController_getRewardsAmount
+      parameters:
+        - name: userAddress
+          required: true
+          in: query
+          schema:
+            type: string
+        - name: runeIds
+          required: true
+          in: query
+          description: separated by comma
+          schema:
+            example: 123:123,354:543
+            type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+        - etch
+  /api/vm-transactions:
+    get:
+      operationId: VMTransactionController_getVmTransaction
+      summary: Get vm transaction
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: 'Page number (default: 1)'
+          schema:
+            example: 1
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: 'Number of items per page (default: 10)'
+          schema:
+            example: 10
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: 'Sort field and order. Use - prefix for descending. Example: -createdAt, createdAt'
+          schema:
+            example: '-createdAt'
+            type: string
+        - name: select
+          required: false
+          in: query
+          description: 'Fields to select (comma separated). Use + prefix to include hidden fields. Example: name,status,+holders'
+          schema:
+            type: string
+        - name: populate
+          required: false
+          in: query
+          description: 'Relations to populate (comma separated). Example: wallet,token'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: vm transaction
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponseDto'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/VMTransactionEntity'
+      tags:
+        - vm-transactions
+    post:
+      operationId: VMTransactionController_create
+      summary: Create VM transaction
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MintDto'
+      responses:
+        '201':
+          description: ''
+      tags:
+        - vm-transactions
+      security:
+        - bearer: []
+  /api/vm-transactions/sign:
+    post:
+      operationId: VMTransactionController_signAndBroadcast
+      summary: Sign vm transaction
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignTransactionParamsDto'
+      responses:
+        '201':
+          description: transaction has been successfully signed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponseDto'
+      tags:
+        - vm-transactions
+      security:
+        - bearer: []
+  /api/vm-transactions/fee-rate:
+    get:
+      operationId: VMTransactionController_getFeeRate
+      summary: Get fee rate
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+        - vm-transactions
+  /api/vm-transactions/top-holders/{runeId}:
+    get:
+      operationId: VMTransactionController_getTopHolders
+      summary: Get top holders by rune id
+      parameters:
+        - name: runeId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+        - vm-transactions
+  /api/vm-transactions/confirmed-fee-rate/{runeId}:
+    get:
+      operationId: VMTransactionController_getFeeRateByRuneId
+      summary: Get fee rate by rune id
+      parameters:
+        - name: runeId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+        - vm-transactions
+  /api/vm-transactions/count-unconfirmed-requests:
+    get:
+      operationId: VMTransactionController_countUnconfirmedRequests
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+        - vm-transactions
+  /api/diamond-hand/request-claim-rewards:
+    post:
+      operationId: DiamondHandController_claimDiamondHandRewards
+      summary: Claim diamond hand rewards
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestClaimDiamondHandRewardsDto'
+      responses:
+        '201':
+          description: ''
+      tags:
+        - diamond-hand
+      security:
+        - bearer: []
+  /api/diamond-hand/sign:
+    post:
+      operationId: DiamondHandController_signAndBroadcastRewards
+      summary: Sign and broadcast diamond hand rewards
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignAndBroadcastRewardsDto'
+      responses:
+        '201':
+          description: ''
+      tags:
+        - diamond-hand
+      security:
+        - bearer: []
+  /api/diamond-hand/wallet-rewards:
+    get:
+      operationId: DiamondHandController_getWalletRewards
+      summary: Get wallet of diamond hand rewards
+      parameters:
+        - name: runeId
+          required: false
+          in: query
+          schema:
+            example: '0:0'
+            type: string
+        - name: userAddress
+          required: true
+          in: query
+          schema:
+            example: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+            type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+        - diamond-hand
+  /api/diamond-hand/list:
+    get:
+      operationId: DiamondHandController_getDiamondHandList
+      summary: Get diamond hand list
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: 'Page number (default: 1)'
+          schema:
+            example: 1
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: 'Number of items per page (default: 10)'
+          schema:
+            example: 10
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: 'Sort field and order. Use - prefix for descending. Example: -createdAt, createdAt'
+          schema:
+            example: '-createdAt'
+            type: string
+        - name: select
+          required: false
+          in: query
+          description: 'Fields to select (comma separated). Use + prefix to include hidden fields. Example: name,status,+holders'
+          schema:
+            type: string
+        - name: populate
+          required: false
+          in: query
+          description: 'Relations to populate (comma separated). Example: wallet,token'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+        - diamond-hand
+  /api/diamond-hand/all-users:
+    get:
+      operationId: DiamondHandController_getAllUsers
+      summary: Get all diamond hand users
+      parameters:
+        - name: runeId
+          required: true
+          in: query
+          schema:
+            example: '0:0'
+            type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+        - diamond-hand
+  /api/auth/authenticate:
+    post:
+      operationId: AuthController_authenticate
+      summary: Authenticate user with BIP322 signature verification
+      description: Authenticates a user by verifying their BIP322 signature and creates a wallet with JWT tokens
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthenticateDto'
+      responses:
+        '200':
+          description: User authenticated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseResponseDto'
+        '400':
+          description: Invalid signature, invalid address, or authentication failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: '4001'
+                  message:
+                    type: string
+                    example: auth.signatureVerificationFailed
+                  details:
+                    type: string
+                    example: BIP322 signature verification failed
+      tags:
+        - auth
+  /api/auth/refresh-token:
+    post:
+      operationId: AuthController_refreshToken
+      summary: Refresh access token using refresh token
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenDto'
+      responses:
+        '200':
+          description: New access token generated successfully
+        '400':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: '4006'
+                  message:
+                    type: string
+                    example: auth.invalidRefreshToken
+                  details:
+                    type: string
+                    example: Invalid or expired refresh token
+      tags:
+        - auth
+  /api/vm-blocks:
+    get:
+      operationId: VmBlockController_getVmBlock
+      summary: Get VM blocks
+      parameters:
+        - name: page
+          required: false
+          in: query
+          description: 'Page number (default: 1)'
+          schema:
+            example: 1
+            type: number
+        - name: pageSize
+          required: false
+          in: query
+          description: 'Number of items per page (default: 10)'
+          schema:
+            example: 10
+            type: number
+        - name: sort
+          required: false
+          in: query
+          description: 'Sort field and order. Use - prefix for descending. Example: -createdAt, createdAt'
+          schema:
+            example: '-createdAt'
+            type: string
+        - name: select
+          required: false
+          in: query
+          description: 'Fields to select (comma separated). Use + prefix to include hidden fields. Example: name,status,+holders'
+          schema:
+            type: string
+        - name: populate
+          required: false
+          in: query
+          description: 'Relations to populate (comma separated). Example: wallet,token'
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+        - VM Block
+  /api/vm-blocks/incoming:
+    get:
+      operationId: VmBlockController_getIncoming
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+        - VM Block
+  /api/vm-blocks/difficulty-adjustment:
+    get:
+      operationId: VmBlockController_getDifficultyAdjustment
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+        - VM Block
+  /api/medias/presigned-url:
+    post:
+      operationId: MediaController_presignedUrl
+      summary: Get presigned url
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PresignedUrlDto'
+      responses:
+        '200':
+          description: Presigned url
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BaseResponseDto'
+                  - properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RuneEtchMediaEntity'
+      tags:
+        - medias
+  /api/policy-signature:
+    post:
+      operationId: PolicySignatureController_create
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePolicySignatureDto'
+      responses:
+        '201':
+          description: ''
+      tags:
+        - policy-signature
+  /api/setting:
+    get:
+      operationId: SettingController_getSetting
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+        - Setting
+  /api/refund:
+    post:
+      operationId: RefundController_create
+      summary: Create refund transaction
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRefundDto'
+      responses:
+        '201':
+          description: ''
+      tags:
+        - Refund
+      security:
+        - bearer: []
+  /api/refund/sign:
+    post:
+      operationId: RefundController_signAndBroadcast
+      summary: Sign refund transaction
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BroadcastRefundDto'
+      responses:
+        '201':
+          description: ''
+      tags:
+        - Refund
+      security:
+        - bearer: []
+  /api/refund/calculate:
+    get:
+      operationId: RefundController_calculate
+      summary: calculate refund amount
+      parameters:
+        - name: type
+          required: true
+          in: query
+          schema:
+            enum:
+              - virtual_mint
+            type: string
+        - name: runeIds
+          required: false
+          in: query
+          description: require if refund type is "virtual_mint"
+          schema:
+            example: 123:345,456:123
+            type: string
+        - name: userAddress
+          required: true
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+        - Refund
+  /api/event-source/sse:
+    get:
+      operationId: EventSourceController_sse
+      parameters:
+        - name: userAddress
+          required: true
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+      tags:
+        - Event Source
+info:
+  title: Radfi API
+  description: Radfi Bitcoin Trading Platform API Documentation
+  version: '1.0'
+  contact: {}
+tags: []
+servers:
+  - url: https://staging.api.radfi.co
+    description: Staging
+components:
+  securitySchemes:
+    bearer:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http
+  schemas:
+    CreateTransactionDto:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - renew-utxo
+            - withdraw
+            - init-liquidity-pool
+            - provide-liquidity
+            - increase-liquidity
+            - swap
+            - withdraw-liquidity
+            - collect-fee
+            - claim-receipt
+        params:
+          type: object
+      required:
+        - type
+        - params
+    SignTransactionParamsDto:
+      type: object
+      properties:
+        userAddress:
+          type: string
+          example: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+        signedBase64Tx:
+          type: string
+      required:
+        - userAddress
+        - signedBase64Tx
+    SignTransactionDto:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - renew-utxo
+            - withdraw
+            - init-liquidity-pool
+            - provide-liquidity
+            - increase-liquidity
+            - swap
+            - withdraw-liquidity
+            - collect-fee
+            - claim-receipt
+          example: init-liquidity-pool
+        params:
+          $ref: '#/components/schemas/SignTransactionParamsDto'
+      required:
+        - type
+        - params
+    ResponseMetaData:
+      type: object
+      properties:
+        totalItems:
+          type: number
+          example: 1
+        currentPage:
+          type: number
+          example: 1
+        pageSize:
+          type: number
+          example: 1
+        totalPages:
+          type: number
+          example: 1
+      required:
+        - totalItems
+        - currentPage
+        - pageSize
+        - totalPages
+    BaseResponseDto:
+      type: object
+      properties:
+        code:
+          type: string
+          example: '1'
+        message:
+          type: string
+          example: common.success
+        data:
+          type: object
+        metaData:
+          $ref: '#/components/schemas/ResponseMetaData'
+      required:
+        - code
+        - message
+        - data
+        - metaData
+    WalletEntity:
+      type: object
+      properties:
+        tradingAddress:
+          type: string
+          example: 2N7rte4tLGLh4p7Rm9FnNV3XUVDKhEWjJt1
+        userAddress:
+          type: string
+          example: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+        userPublicKey:
+          type: string
+          example: 023328e4186c3ee776976947210772ba5b12e6d4336ff5c6d8ca991783d18f14fb
+        requiredSignNumber:
+          type: number
+          example: 2
+        pubKeysNum:
+          type: number
+          example: 3
+      required:
+        - tradingAddress
+        - userAddress
+        - userPublicKey
+        - requiredSignNumber
+        - pubKeysNum
+    CreateMultiSigWalletDto:
+      type: object
+      properties:
+        walletAddress:
+          type: string
+          example: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+        publicKey:
+          type: string
+          example: 023328e4186c3ee776976947210772ba5b12e6d4336ff5c6d8ca991783d18f14fb
+          description: Public key of wallet
+      required:
+        - walletAddress
+        - publicKey
+    ImportPendingTxDto:
+      type: object
+      properties:
+        externalAddress:
+          type: string
+          example: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+        txid:
+          type: string
+          example: 023328e4186c3ee776976947210772ba5b12e6d4336ff5c6d8ca991783d18f14fb
+          description: Tx id
+        receiverAddress:
+          type: string
+          example: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+          description: Receiver address
+      required:
+        - externalAddress
+        - txid
+        - receiverAddress
+    WalletUpdateDto:
+      type: object
+      properties:
+        userAddress:
+          type: string
+          example: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+        type:
+          type: string
+        isStandard:
+          type: boolean
+      required:
+        - userAddress
+        - type
+        - isStandard
+    WalletBulkUpdateDto:
+      type: object
+      properties:
+        wallets:
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletUpdateDto'
+      required:
+        - wallets
+    PoolMigrationDto:
+      type: object
+      properties:
+        token0Id:
+          type: string
+          description: The id of the token0
+        token1Id:
+          type: string
+          description: The id of the token1
+        fee:
+          type: number
+          description: The fee of the pool
+        scVersion:
+          type: string
+          description: The sc version
+      required:
+        - token0Id
+        - token1Id
+        - fee
+        - scVersion
+    MigratePoolDto:
+      type: object
+      properties:
+        payFeeAddress:
+          type: string
+          description: The address to pay the fee
+        pools:
+          description: List of pools to migrate, if not exist, will migrate all
+          type: array
+          items:
+            $ref: '#/components/schemas/PoolMigrationDto'
+        migrateVersion:
+          type: number
+          description: The migration version
+        type:
+          type: string
+          description: The additional data
+      required:
+        - payFeeAddress
+        - migrateVersion
+        - type
+    CompleteMigrationDto:
+      type: object
+      properties:
+        pools:
+          description: List of pools to migrate, if not exist, will migrate all
+          type: array
+          items:
+            $ref: '#/components/schemas/PoolMigrationDto'
+        migrateVersion:
+          type: number
+          description: The migration times
+      required:
+        - migrateVersion
+    TokenSocial:
+      type: object
+      properties: {}
+    TokenEntity:
+      type: object
+      properties:
+        symbol:
+          type: string
+        rune:
+          type: string
+        spacedRune:
+          type: string
+        decimals:
+          type: number
+        tokenAddress:
+          type: string
+        mainTokenAddress:
+          type: string
+        tokenAddressV4:
+          type: string
+        mainTokenAddressV4:
+          type: string
+        tokenId:
+          type: string
+        price:
+          type: number
+        priceInSats:
+          type: number
+        priceChange24h:
+          type: number
+        isTest:
+          type: boolean
+        updatedBy:
+          type: string
+        displayTicker:
+          type: string
+        supply:
+          type: string
+        premine:
+          type: string
+        social:
+          $ref: '#/components/schemas/TokenSocial'
+        volume24h:
+          type: number
+        volume24hInSats:
+          type: number
+        volume7d:
+          type: number
+        volume7dInSats:
+          type: number
+        volumeAllTime:
+          type: number
+        volumeAllTimeInSats:
+          type: number
+        marketCap:
+          type: number
+        marketCapInSats:
+          type: number
+        hasPool:
+          type: boolean
+      required:
+        - symbol
+        - rune
+        - spacedRune
+        - decimals
+        - tokenAddress
+        - mainTokenAddress
+        - tokenAddressV4
+        - mainTokenAddressV4
+        - tokenId
+        - price
+        - priceInSats
+        - priceChange24h
+        - isTest
+        - updatedBy
+        - displayTicker
+        - supply
+        - premine
+        - social
+        - volume24h
+        - volume24hInSats
+        - volume7d
+        - volume7dInSats
+        - volumeAllTime
+        - volumeAllTimeInSats
+        - marketCap
+        - marketCapInSats
+        - hasPool
+    TokenResponseDto:
+      type: object
+      properties:
+        code:
+          type: string
+          example: '1'
+        message:
+          type: string
+          example: common.success
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TokenEntity'
+        metaData:
+          $ref: '#/components/schemas/ResponseMetaData'
+      required:
+        - code
+        - message
+        - data
+        - metaData
+    TokenGetDto:
+      type: object
+      properties:
+        runes:
+          type: array
+          items:
+            type: string
+      required:
+        - runes
+    ImportExpiredTxsDto:
+      type: object
+      properties:
+        expiredTxs:
+          example: '0:0'
+          description: Token0 ID
+          type: array
+          items:
+            type: string
+      required:
+        - expiredTxs
+    BlackListActions:
+      type: object
+      properties:
+        withdraw:
+          type: boolean
+          description: Whether the user can withdraw
+          example: true
+        init-liquidity-pool:
+          type: boolean
+          description: Whether the user can init LP
+          example: true
+        provide-liquidity:
+          type: boolean
+          description: Whether the user can provide liquidity
+          example: true
+        increase-liquidity:
+          type: boolean
+          description: Whether the user can increase liquidity
+          example: true
+        swap:
+          type: boolean
+          description: Whether the user can swap
+          example: true
+        withdraw-liquidity:
+          type: boolean
+          description: Whether the user can withdraw liquidity
+          example: true
+        collect-fee:
+          type: boolean
+          description: Whether the user can collect fee
+          example: true
+        claim-diamond-hand-rewards:
+          type: boolean
+          description: Whether the user can claim diamond hand rewards
+          example: true
+      required:
+        - withdraw
+        - init-liquidity-pool
+        - provide-liquidity
+        - increase-liquidity
+        - swap
+        - withdraw-liquidity
+        - collect-fee
+        - claim-diamond-hand-rewards
+    BlackListCreateDto:
+      type: object
+      properties:
+        tradingAddress:
+          type: string
+          description: The trading address of the user
+          example: '0x1234567890'
+        actions:
+          description: The actions of the user
+          allOf:
+            - $ref: '#/components/schemas/BlackListActions'
+      required:
+        - tradingAddress
+        - actions
+    EtchEntity:
+      type: object
+      properties: {}
+    FetchEtchAddressDto:
+      type: object
+      properties:
+        runeName:
+          type: string
+          example: RUNE
+        inscriptionType:
+          type: string
+          example: text/plain
+        inscriptionContent:
+          type: string
+          example: Some inscription content
+      required:
+        - runeName
+        - inscriptionType
+        - inscriptionContent
+    EtchBuildCommitTxDto:
+      type: object
+      properties:
+        runeName:
+          type: string
+          example: RUNE
+        inscriptionType:
+          type: string
+          example: text/plain
+        inscriptionContent:
+          type: string
+          example: Some inscription content
+        userAddress:
+          type: string
+        feeTier:
+          type: number
+          example: 10000
+          description: Fee tier for the pool (5000 = 0.5%, 10000 = 1%, 20000 = 2%, etc.)
+          minimum: 5000
+          maximum: 100000
+        diamondHandRewardRate:
+          type: number
+          example: 0.5
+          description: Diamond hands share of the available 66.67% (0-1, e.g., 0.5 = 50% of 66.67% = 33.33% total)
+          minimum: 0
+          maximum: 1
+        blockWithdrawals:
+          type: boolean
+          description: Block withdrawals of this token from radFi (only internal transfers allowed)
+          default: false
+        addLpSatsRate:
+          type: number
+          example: 0.2
+          description: Percentage of raised funds to allocate to liquidity (0-1, e.g., 0.2 = 20% to LP, 80% to creator)
+          minimum: 0
+          maximum: 1
+      required:
+        - runeName
+        - inscriptionType
+        - inscriptionContent
+        - userAddress
+        - feeTier
+    EtchSocialDto:
+      type: object
+      properties:
+        x:
+          type: string
+          example: https://x.com/runeCreator
+        telegram:
+          type: string
+          example: https://t.me/runeCreator
+        website:
+          type: string
+          example: https://rune.com
+    SubmitEtchDto:
+      type: object
+      properties:
+        signedBase64Psbt:
+          type: string
+          example: base64psbt
+        runeName:
+          type: string
+          example: UNCOMMON•GOODS
+        inscriptionType:
+          type: string
+          example: text/plain
+        inscriptionContent:
+          type: string
+          example: Some inscription content
+        symbol:
+          type: string
+          example: R
+        creator:
+          type: string
+          example: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+        description:
+          type: string
+          example: Some description
+        displayTicker:
+          type: string
+          example: R
+        social:
+          $ref: '#/components/schemas/EtchSocialDto'
+      required:
+        - signedBase64Psbt
+        - runeName
+        - inscriptionType
+        - inscriptionContent
+        - symbol
+        - creator
+        - description
+    EtchBuildGetRewardDto:
+      type: object
+      properties:
+        runeId:
+          type: string
+        userAddress:
+          type: string
+      required:
+        - runeId
+        - userAddress
+    EtchSignAndBroadcastRewardTxDto:
+      type: object
+      properties:
+        signedBase64Tx:
+          type: string
+        userAddress:
+          type: string
+      required:
+        - signedBase64Tx
+        - userAddress
+    EtchUpdateDto:
+      type: object
+      properties:
+        social:
+          $ref: '#/components/schemas/EtchSocialDto'
+    VMTransactionEntity:
+      type: object
+      properties:
+        txId:
+          type: string
+        replaceTxId:
+          type: string
+        state:
+          type: string
+        runeId:
+          type: string
+        replacedRequestsCount:
+          type: number
+        requestsInMempoolCount:
+          type: number
+        requestsInBlocksCount:
+          type: number
+        satsPerNewRequest:
+          type: number
+        satsNewRequests:
+          type: number
+        satsPreviousRequests:
+          type: number
+        tradingAddress:
+          type: string
+        base64Tx:
+          type: string
+        timestamp:
+          type: number
+        transferBtcTxId:
+          type: string
+        transferBtcAt:
+          type: number
+        distributeRuneTxId:
+          type: string
+        distributeRuneAt:
+          type: number
+        refundTxId:
+          type: string
+        isRefundable:
+          type: boolean
+        vmDistributionId:
+          type: string
+      required:
+        - txId
+        - replaceTxId
+        - state
+        - runeId
+        - replacedRequestsCount
+        - requestsInMempoolCount
+        - requestsInBlocksCount
+        - satsPerNewRequest
+        - satsNewRequests
+        - satsPreviousRequests
+        - tradingAddress
+        - base64Tx
+        - timestamp
+        - transferBtcTxId
+        - transferBtcAt
+        - distributeRuneTxId
+        - distributeRuneAt
+        - refundTxId
+        - isRefundable
+        - vmDistributionId
+    MintDto:
+      type: object
+      properties:
+        userAddress:
+          type: string
+          example: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+        runeId:
+          type: string
+          example: '2904354:3119'
+        requestCount:
+          type: number
+          example: 10
+        satsNewRequests:
+          type: number
+          example: 1000
+      required:
+        - userAddress
+        - runeId
+        - requestCount
+        - satsNewRequests
+    RequestClaimDiamondHandRewardsDto:
+      type: object
+      properties:
+        userAddress:
+          type: string
+          example: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+        runeId:
+          type: string
+          example: '0:0'
+      required:
+        - userAddress
+        - runeId
+    SignAndBroadcastRewardsDto:
+      type: object
+      properties:
+        signedBase64Tx:
+          type: string
+          example: '0:0'
+        userAddress:
+          type: string
+          example: tb1qg5s9rdd9ddhacql3upd7ntzrexp3kn95v4hndm
+        runeId:
+          type: string
+          example: '0:0'
+      required:
+        - signedBase64Tx
+        - userAddress
+        - runeId
+    AuthenticateDto:
+      type: object
+      properties:
+        message:
+          type: string
+          description: The message that was signed
+          example: Sign this message to authenticate with the system
+        signature:
+          type: string
+          description: The BIP322 signature of the message
+          example: base64-encoded-signature
+        address:
+          type: string
+          description: The Bitcoin address that signed the message
+          example: bc1p...
+        publicKey:
+          type: string
+          description: The public key used for signing
+          example: 02a1b2c3d4e5f6...
+      required:
+        - message
+        - signature
+        - address
+        - publicKey
+    RefreshTokenDto:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+          description: Refresh token to generate new access token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      required:
+        - refreshToken
+    ISignedFields:
+      type: object
+      properties:
+        key:
+          type: string
+        Policy:
+          type: string
+        bucket:
+          type: string
+        X-Amz-Date:
+          type: string
+        Content-Type:
+          type: string
+        X-Amz-Algorithm:
+          type: string
+        X-Amz-Signature:
+          type: string
+        X-Amz-Credential:
+          type: string
+      required:
+        - key
+        - Policy
+        - bucket
+        - X-Amz-Date
+        - Content-Type
+        - X-Amz-Algorithm
+        - X-Amz-Signature
+        - X-Amz-Credential
+    ISignedUrl:
+      type: object
+      properties:
+        url:
+          type: string
+        fields:
+          $ref: '#/components/schemas/ISignedFields'
+      required:
+        - url
+        - fields
+    RuneEtchMediaEntity:
+      type: object
+      properties:
+        key:
+          type: string
+        url:
+          type: string
+        signedUrl:
+          $ref: '#/components/schemas/ISignedUrl'
+        fileName:
+          type: string
+        mimeType:
+          type: string
+        size:
+          type: number
+      required:
+        - key
+        - url
+        - signedUrl
+        - fileName
+        - mimeType
+        - size
+    ItemPresignedUrlDto:
+      type: object
+      properties:
+        filename:
+          type: string
+      required:
+        - filename
+    PresignedUrlDto:
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemPresignedUrlDto'
+        userAddress:
+          type: string
+      required:
+        - files
+        - userAddress
+    CreatePolicySignatureDto:
+      type: object
+      properties:
+        message:
+          type: string
+        userAddress:
+          type: string
+        signature:
+          type: string
+      required:
+        - message
+        - userAddress
+        - signature
+    SettingUpdateDto:
+      type: object
+      properties:
+        key:
+          type: string
+          enum:
+            - virtual_mint
+            - transaction
+            - pool
+        data:
+          type: object
+      required:
+        - key
+        - data
+    CreateRefundDto:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - virtual_mint
+        runeIds:
+          example:
+            - '123:345'
+            - '456:123'
+          description: require if refund type is "virtual_mint"
+          type: array
+          items:
+            type: string
+        userAddress:
+          type: string
+      required:
+        - type
+        - userAddress
+    BroadcastRefundDto:
+      type: object
+      properties:
+        base64Psbt:
+          type: string
+        userAddress:
+          type: string
+      required:
+        - base64Psbt
+        - userAddress
+    AdminCreateRefundDto:
+      type: object
+      properties:
+        runeIds:
+          type: array
+          items:
+            type: string
+        userAddresses:
+          type: array
+          items:
+            type: string
+        isBroadcast:
+          type: boolean
+        states:
+          type: array
+          items:
+            type: string
+      required:
+        - runeIds
+        - userAddresses
+        - isBroadcast
+        - states
+    EventSourceRegisterDto:
+      type: object
+      properties:
+        userAddress:
+          type: string
+      required:
+        - userAddress
