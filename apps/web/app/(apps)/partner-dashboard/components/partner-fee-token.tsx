@@ -16,7 +16,11 @@ export function PartnerFeeToken({ asset, onClaim }: PartnerFeeTokenProps) {
   const tokenAddress = asset.currency.address;
 
   if (!isAddress(tokenAddress)) {
-    throw new Error(`Invalid address type for currency: ${tokenAddress}`);
+    return (
+      <div className="rounded-xl py-4 text-sm text-negative p-4 sm:grid sm:grid-cols-[auto_1fr_auto] sm:items-center">
+        Invalid token address: {String(tokenAddress)}
+      </div>
+    );
   }
 
   const { isApproved, approve } = useFeeClaimApproval(tokenAddress);

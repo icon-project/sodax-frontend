@@ -10,7 +10,7 @@ import BigNumber from 'bignumber.js';
 
 import { getSupportedSolverTokens, supportedSpokeChains, moneyMarketSupportedTokens } from '@sodax/sdk';
 
-import type { Token, XToken, SpokeChainId, ChainId, EvmChainId } from '@sodax/types';
+import type { Token, XToken, SpokeChainId, ChainId, EvmChainId, Address } from '@sodax/types';
 import {
   INJECTIVE_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
@@ -33,6 +33,14 @@ export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, 
 export function shortenAddress(address: string, chars = 4): string {
   if (!address) return '';
   return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`;
+}
+
+/**
+ * Type guard to check if a value is an Address type.
+ * Uses viem's isAddress function for validation.
+ */
+export function isValidAddress(value: unknown): value is Address {
+  return typeof value === 'string' && isEvmAddress(value);
 }
 
 function isValidInjectiveAddress(addr: string): boolean {

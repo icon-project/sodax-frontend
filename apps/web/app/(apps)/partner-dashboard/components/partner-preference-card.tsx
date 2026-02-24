@@ -72,15 +72,10 @@ export function PartnerPreferencesCard(props: {
         },
 
         onError: (err: unknown) => {
-          let msg = 'Update failed';
+          const detail =
+            err instanceof BaseError ? err.shortMessage || err.message : err instanceof Error ? err.message : '';
 
-          if (err instanceof BaseError) {
-            msg = err.shortMessage || err.message;
-          } else if (err instanceof Error) {
-            msg = err.message;
-          }
-
-          toast.error(`Update failed: ${msg}`);
+          toast.error(detail ? `Update failed: ${detail}` : 'Update failed');
         },
       },
     );
@@ -94,7 +89,7 @@ export function PartnerPreferencesCard(props: {
   const getButtonLabel = () => {
     if (updateMutation.isPending) return 'Saving claim network…';
     if (!prefs) return 'Save claim network';
-    if (!hasChanged) return ' Network saved';
+    if (!hasChanged) return 'Network saved';
     return 'Save claim network';
   };
 
@@ -185,7 +180,7 @@ export function PartnerPreferencesCard(props: {
               )}
             </div>
           </div>
-          <p className="text-xs text-center text-clay-light mt-2"> EVM only • More chains soon</p>
+          <p className="text-xs text-center text-clay-light mt-2">EVM only • More chains soon</p>
         </div>
       </CardContent>
     </main>

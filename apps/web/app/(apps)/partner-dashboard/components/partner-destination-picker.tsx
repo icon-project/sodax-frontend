@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { XToken, SpokeChainId } from '@sodax/types';
 import { TokenAsset } from '@/components/shared/token-asset';
 
@@ -18,6 +18,11 @@ export function PartnerDestinationPicker({
   onOpenChange,
 }: PartnerDestinationPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Notify parent of open state in an effect so we never update parent during our setState.
+  useEffect(() => {
+    onOpenChange?.(isOpen);
+  }, [isOpen, onOpenChange]);
 
   if (availableTokens.length === 0) return null;
 
@@ -43,16 +48,11 @@ export function PartnerDestinationPicker({
         isClickBlurred={false}
         isHovered={false}
         onClick={() => {
-          setIsOpen(prev => {
-            const next = !prev;
-            onOpenChange?.(next); // SAME VALUE
-            return next;
-          });
+          setIsOpen(prev => !prev);
         }}
         onChainClick={token => {
           onChange(token);
           setIsOpen(false);
-          onOpenChange?.(false);
         }}
         onMouseEnter={() => {}}
         onMouseLeave={() => {}}

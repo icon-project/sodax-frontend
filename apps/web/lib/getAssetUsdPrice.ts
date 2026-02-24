@@ -65,6 +65,9 @@ export async function getAssetUsdPrice(assetSymbol: string): Promise<AssetUsdPri
 
 //currently just assets needed for partner dashboard
 function getCoingeckoIdFromSymbol(symbol: string): string {
+  // SODA must be handled before normalization; normalizeSymbol('SODA') strips to ''.
+  if (symbol.toUpperCase() === 'SODA') return 'sodax';
+
   const s = normalizeSymbol(symbol);
 
   switch (s) {

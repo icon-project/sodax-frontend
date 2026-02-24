@@ -7,6 +7,7 @@ import { useFeeClaimPreferences } from './useFeeClaimPreferences';
 import type { Address, XToken } from '@sodax/types';
 import type { PartnerFeeClaimAssetBalance } from '@sodax/sdk';
 import { MIN_PARTNER_CLAIM_USD_AMOUNT } from '@/constants/partner-claim';
+import { isValidAddress } from '@/lib/utils';
 import { FeeClaimAssetStatus } from '../utils/fee-claim';
 
 function normalizePartnerDisplaySymbol(symbol: string): string {
@@ -54,55 +55,60 @@ export function useFeeClaimAssets(address?: Address) {
   const assets = useMemo(() => {
     if (!balancesQuery.data) return [];
 
-    return Array.from(balancesQuery.data.values()).map(asset => {
-      const rawFormattedBalance = formatUnits(asset.balance, asset.decimal);
-      const hasPrefs = !!prefsQuery.data;
-      const displaySymbol = normalizePartnerDisplaySymbol(asset.symbol);
+    return Array.from(balancesQuery.data.values())
+      .map(asset => {
+        const address = asset.address;
+        if (!isValidAddress(address)) return null;
 
-      // --- Calculate USD Estimate ---
-      let usdEstimate: number | null = null;
-      const balanceNum = Number(rawFormattedBalance);
+        const rawFormattedBalance = formatUnits(asset.balance, asset.decimal);
+        const hasPrefs = !!prefsQuery.data;
+        const displaySymbol = normalizePartnerDisplaySymbol(asset.symbol);
 
-      if (asset.symbol.toLowerCase().includes('usd')) {
-        usdEstimate = balanceNum; // Stablecoins are 1:1
-      } else if (asset.usdPrice != null) {
-        usdEstimate = balanceNum * asset.usdPrice;
-      }
+        // --- Calculate USD Estimate ---
+        let usdEstimate: number | null = null;
+        const balanceNum = Number(rawFormattedBalance);
 
-      // --- Determine Status based on USD Value ---
-      let status: FeeClaimAssetStatus = FeeClaimAssetStatus.READY;
+        if (asset.symbol.toLowerCase().includes('usd')) {
+          usdEstimate = balanceNum; // Stablecoins are 1:1
+        } else if (asset.usdPrice != null) {
+          usdEstimate = balanceNum * asset.usdPrice;
+        }
 
-      if (asset.balance === 0n) {
-        status = FeeClaimAssetStatus.CLAIMED;
-      } else if (!hasPrefs) {
-        status = FeeClaimAssetStatus.NO_PREFS;
-      }
-      // Check against the $10 threshold
-      else if (usdEstimate !== null && usdEstimate < MIN_PARTNER_CLAIM_USD_AMOUNT) {
-        status = FeeClaimAssetStatus.BELOW_MIN;
-      }
-      // If price is unknown (null), you might want a fallback
-      // or let it be READY so users can try to claim anyway
-      else if (usdEstimate === null) {
-        status = FeeClaimAssetStatus.READY;
-      }
+        // --- Determine Status based on USD Value ---
+        let status: FeeClaimAssetStatus = FeeClaimAssetStatus.READY;
 
-      return {
-        sdkAsset: asset,
-        currency: {
-          symbol: displaySymbol,
-          name: asset.name,
-          address: asset.address as Address,
-          decimals: asset.decimal,
-          xChainId: asset.originalChain,
-        },
-        balance: asset.balance,
-        displayBalance: rawFormattedBalance ? Number(rawFormattedBalance).toFixed(4) : '0.0000',
-        status,
-        requiresApproval: true,
-        usdEstimate,
-      };
-    });
+        if (asset.balance === 0n) {
+          status = FeeClaimAssetStatus.CLAIMED;
+        } else if (!hasPrefs) {
+          status = FeeClaimAssetStatus.NO_PREFS;
+        }
+        // Check against the $10 threshold
+        else if (usdEstimate !== null && usdEstimate < MIN_PARTNER_CLAIM_USD_AMOUNT) {
+          status = FeeClaimAssetStatus.BELOW_MIN;
+        }
+        // If price is unknown (null), you might want a fallback
+        // or let it be READY so users can try to claim anyway
+        else if (usdEstimate === null) {
+          status = FeeClaimAssetStatus.READY;
+        }
+
+        return {
+          sdkAsset: asset,
+          currency: {
+            symbol: displaySymbol,
+            name: asset.name,
+            address,
+            decimals: asset.decimal,
+            xChainId: asset.originalChain,
+          },
+          balance: asset.balance,
+          displayBalance: rawFormattedBalance ? Number(rawFormattedBalance).toFixed(4) : '0.0000',
+          status,
+          requiresApproval: true,
+          usdEstimate,
+        };
+      })
+      .filter((a): a is NonNullable<typeof a> => a !== null);
   }, [balancesQuery.data, prefsQuery.data]);
 
   return {
