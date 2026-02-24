@@ -155,7 +155,7 @@ export default async function GlossaryDetailPage({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <div className="min-h-screen bg-cream-white flex flex-col w-full">
         <MarketingHeader backLink="/glossary" backText="← glossary" />
-        <div className="max-w-7xl mx-auto pt-25 w-full px-4">
+        <div className="max-w-7xl mx-auto pt-30 w-full px-4">
           <article className="py-8 flex-1 flex flex-col items-start overflow-clip w-full">
             {/* Breadcrumb */}
             <nav className="mb-6 text-sm text-clay" aria-label="Breadcrumb">

@@ -250,7 +250,7 @@ export default async function NewsArticlePage({
       />
       <div className="relative min-h-screen w-full bg-almost-white">
         <MarketingHeader backLink="/news" backText="← news" />
-        <div className="max-w-7xl mx-auto pt-25">
+        <div className="max-w-7xl mx-auto pt-30">
           {/* Article */}
           <article className="py-8" itemScope itemType="https://schema.org/NewsArticle">
             <div className="container mx-auto px-4 max-w-4xl">
