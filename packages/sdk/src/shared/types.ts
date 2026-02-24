@@ -529,17 +529,17 @@ export type VerifyTxHashRawSolanaConfig = {
   chainType: 'SOLANA';
   rpcUrl: HttpUrl;
   signature: string;
-  commitment: Finality;
-  timeoutMs: number;
-  pollingTimeout: number;
+  commitment?: Finality;
+  timeoutMs?: number;
+  pollingTimeout?: number;
 };
 
 export type VerifyTxHashRawStellarConfig = {
   txHash: string;
   chainType: 'STELLAR';
   sorobanRpcConfig: { sorobanRpcUrl: HttpUrl; customHeaders: Record<string, string> };
-  pollingTimeout: number;
-  maxAttempts: number;
+  pollingTimeout?: number;
+  maxAttempts?: number;
 };
 
 export type VerifyTxHashRawEvmConfig = {

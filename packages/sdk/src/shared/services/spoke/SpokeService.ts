@@ -561,10 +561,13 @@ export class SpokeService {
         return StellarSpokeService.waitForTransactionRaw(params);
       case 'EVM': {
         const result = await EvmSpokeService.waitForTransactionReceipt(params);
-        if (result.ok) {
-          return { ok: true, value: true };
+        if (!result.ok) {
+          return result;
         }
-        return result;
+        if (result.value.status && result.value.status !== '0x1') {
+          return { ok: false, error: new Error('Transaction reverted') };
+        }
+        return { ok: true, value: true };
       }
       default:
         return { ok: true, value: true };
