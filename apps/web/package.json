@@ -63,6 +63,7 @@
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.23.12",
     "icon-sdk-js": "catalog:",
+    "lightweight-charts": "^5.1.0",
     "lucide-react": "^0.476.0",
     "mongodb": "^7.0.0",
     "motion": "^12.23.24",

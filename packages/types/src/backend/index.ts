@@ -37,3 +37,25 @@ export interface IConfigApi {
   getHubAssets(): Promise<GetHubAssetsApiResponse>;
   getHubAssetsByChainId(chainId: SpokeChainId): Promise<GetHubAssetsByChainIdApiResponse>;
 }
+
+// AMM NFT Positions types
+export interface AMMNftPosition {
+  tokenId: string;
+  owner: string;
+  poolId200: string;
+  currency0: string;
+  currency1: string;
+}
+
+export interface PaginationResponse {
+  offset: number;
+  limit: number;
+  returned: number;
+  hasMore: boolean;
+  nextOffset: number;
+}
+
+export interface AMMNftPositionsResponse {
+  items: AMMNftPosition[];
+  pagination: PaginationResponse;
+}

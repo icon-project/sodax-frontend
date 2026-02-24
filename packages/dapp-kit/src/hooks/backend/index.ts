@@ -15,6 +15,9 @@ export { useBackendUserIntents } from './useBackendUserIntents';
 // Solver hooks
 export { useBackendOrderbook } from './useBackendOrderbook';
 
+// AMM hooks
+export { useBackendAMMNftPositions } from './useBackendAMMNftPositions';
+
 // Money Market hooks
 export { useBackendMoneyMarketPosition } from './useBackendMoneyMarketPosition';
 export { useBackendAllMoneyMarketAssets } from './useBackendAllMoneyMarketAssets';

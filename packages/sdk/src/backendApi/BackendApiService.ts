@@ -6,6 +6,7 @@
 
 import type {
   Address,
+  AMMNftPositionsResponse,
   GetAllConfigApiResponse,
   GetChainsApiResponse,
   GetHubAssetsApiResponse,
@@ -26,6 +27,8 @@ import {
   DEFAULT_BACKEND_API_TIMEOUT,
 } from '../shared/constants.js';
 import type { BackendApiConfig } from '../shared/types.js';
+
+export type { AMMNftPositionsResponse } from '@sodax/types';
 
 // Base types for API responses
 export interface ApiResponse<T = unknown> {
@@ -372,6 +375,28 @@ export class BackendApiService implements IConfigApi {
     const endpoint = `/moneymarket/borrowers?${queryString}`;
 
     return this.makeRequest<MoneyMarketBorrowers>(endpoint, { method: 'GET' });
+  }
+
+  // AMM endpoints
+  /**
+   * Get AMM NFT pool positions for a given owner
+   * @param params - Object containing owner address and optional pagination parameters
+   * @returns Promise<AMMNftPositionsResponse>
+   */
+  public async getAMMNftPositions(params: {
+    owner: string;
+    offset?: number;
+    limit?: number;
+  }): Promise<AMMNftPositionsResponse> {
+    const queryParams = new URLSearchParams();
+    queryParams.append('owner', params.owner);
+    if (params.offset !== undefined) queryParams.append('offset', params.offset.toString());
+    if (params.limit !== undefined) queryParams.append('limit', params.limit.toString());
+
+    const queryString = queryParams.toString();
+    const endpoint = `/amm/nft-positions?${queryString}`;
+
+    return this.makeRequest<AMMNftPositionsResponse>(endpoint, { method: 'GET' });
   }
 
   /**
