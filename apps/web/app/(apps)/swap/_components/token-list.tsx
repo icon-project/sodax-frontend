@@ -46,9 +46,6 @@ export function TokenList({
   const shouldApplyHover = clickedAsset === null;
   const [backdropShow, setBackdropShow] = useState(false);
 
-  const ROW_HEIGHT = 112;
-  const VISIBLE_ROWS = 4;
-
   useEffect(() => {
     if (clickedAsset === null) {
       setBackdropShow(false);
@@ -201,6 +198,7 @@ export function TokenList({
           tokenCount={tokens.length}
           tokens={tokens}
           getFormattedBalanceForToken={getFormattedBalanceForToken}
+          showBalanceRing={true}
           onClick={(e?: React.MouseEvent) => {
             if (e) {
               onAssetClick(e, assetUniqueId);
@@ -229,7 +227,7 @@ export function TokenList({
   };
 
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-col">
       {backdropShow && (
         <div
           className="rounded-[32px] fixed inset-0 z-55"
@@ -243,8 +241,7 @@ export function TokenList({
 
       <ScrollAreaPrimitive.Root
         data-slot="scroll-area"
-        style={{ height: ROW_HEIGHT * VISIBLE_ROWS }}
-        className={`relative w-full content-stretch md:h-[416px]! ${clickedAsset ? 'overflow-hidden' : ''}`}
+        className={`relative flex min-h-0 w-full flex-1 flex-col content-stretch md:flex-none md:h-[416px]! ${clickedAsset ? 'overflow-hidden' : ''}`}
       >
         <div className="absolute top-0 left-0 right-0 z-100000 h-6 w-full pointer-events-none bg-linear-to-b from-vibrant-white to-transparent" />
 
@@ -273,6 +270,6 @@ export function TokenList({
         <ScrollBar />
         <ScrollAreaPrimitive.Corner />
       </ScrollAreaPrimitive.Root>
-    </>
+    </div>
   );
 }

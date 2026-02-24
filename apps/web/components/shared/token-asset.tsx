@@ -17,6 +17,7 @@ function NetworkPicker({
   onSelect,
   reference,
   getFormattedBalanceForToken,
+  showBalanceRing = false,
 }: {
   isClicked: boolean;
   tokens: XToken[];
@@ -24,6 +25,8 @@ function NetworkPicker({
   onSelect?: (token: XToken) => void;
   reference: HTMLElement | null;
   getFormattedBalanceForToken?: (token: XToken) => string | undefined;
+  /** When true, show white ring on network icons only for chains where user has balance (swap "choose a network" only). */
+  showBalanceRing?: boolean;
 }): React.JSX.Element | null {
   const [hoveredIcon, setHoveredIcon] = useState<number | null>(null);
   const [isSingle, setIsSingle] = useState(false);
@@ -79,7 +82,7 @@ function NetworkPicker({
     >
       <div
         className={cn(
-          "font-['InterRegular'] text-(length:--body-small) font-medium text-espresso mb-2",
+          "font-['InterRegular'] text-(length:--body-small) font-medium text-espresso mb-2 min-h-6",
           isMobile && isSingle ? 'text-left ml-5' : 'text-center',
         )}
       >
@@ -103,15 +106,23 @@ function NetworkPicker({
           : 'Choose a network'}
       </div>
 
-      <div className={cn('flex flex-wrap justify-center gap-1 w-[140px]', isMobile && isSingle && 'ml-4')}>
+      <div
+        className={cn(
+          'flex flex-wrap justify-center network-picker-container w-[170px] gap-[2px]',
+
+          isMobile && isSingle && 'ml-4',
+        )}
+      >
         {tokens.map((token, index) => {
           const hasBalance = !!getFormattedBalanceForToken?.(token);
           return (
             <motion.div
               key={token.xChainId}
               className={cn(
-                'cursor-pointer p-2 flex items-center justify-center',
-                hoveredIcon !== null && hoveredIcon !== index && 'opacity-40 grayscale-[0.5]',
+                'relative flex shrink-0 w-7 h-7 items-center justify-center cursor-pointer rounded-full',
+                showBalanceRing ? 'p-0' : 'p-1.5',
+                hoveredIcon === index && 'z-50',
+                hoveredIcon !== null && hoveredIcon !== index && 'opacity-60 grayscale-[0.5]',
               )}
               whileHover={{ scale: 1.3 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
@@ -123,7 +134,11 @@ function NetworkPicker({
                 onSelect?.(token);
               }}
             >
-              <NetworkIcon id={token.xChainId} hasBalance={hasBalance} />
+              <NetworkIcon
+                id={token.xChainId}
+                hasBalance={showBalanceRing ? hasBalance : false}
+                swapPickerShadow={showBalanceRing}
+              />
             </motion.div>
           );
         })}
@@ -149,6 +164,8 @@ interface TokenAssetProps {
   onChainClick?: (token: XToken) => void;
   isClicked?: boolean;
   getFormattedBalanceForToken?: (token: XToken) => string | undefined;
+  /** When true, show white ring on network icons in "choose a network" picker only for chains with balance (swap only). */
+  showBalanceRing?: boolean;
 }
 
 export function TokenAsset({
@@ -168,6 +185,7 @@ export function TokenAsset({
   onChainClick,
   isClicked = false,
   getFormattedBalanceForToken,
+  showBalanceRing = false,
 }: TokenAssetProps): React.JSX.Element {
   /**
    * IMPORTANT:
@@ -256,6 +274,7 @@ export function TokenAsset({
           onSelect={onChainClick}
           reference={assetRef.current}
           getFormattedBalanceForToken={getFormattedBalanceForToken}
+          showBalanceRing={showBalanceRing}
         />
       )}
     </>

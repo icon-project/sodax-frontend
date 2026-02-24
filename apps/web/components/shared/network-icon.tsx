@@ -39,50 +39,71 @@ interface NetworkIconProps {
   id: string;
   className?: string;
   hasBalance?: boolean;
+  /** When true, use drop-shadow + box-shadow (swap network picker only). */
+  swapPickerShadow?: boolean;
 }
 
-export default function NetworkIcon({ id, className, hasBalance = false }: NetworkIconProps): React.JSX.Element {
-  // Thicker white ring so border is visible on blurry background (design: 6px when has balance, 4px default).
-  const ringClass = hasBalance ? 'ring-[6px]' : 'ring-4';
-  // Strong shadow per icon (drop-shadow + box-shadow); tight blur so they don't merge into a cloud.
-  const dropShadowClass = hasBalance
-    ? 'filter drop-shadow-[0_3px_8px_rgba(0,0,0,0.32)]'
-    : 'filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)]';
-  const boxShadowClass = hasBalance
-    ? 'shadow-[0_3px_8px_rgba(0,0,0,0.18)]'
-    : 'shadow-[0_3px_10px_rgba(0,0,0,0.2)]';
-
+function renderIcons(id: string): React.ReactNode {
   return (
-    <div className={`flex items-center justify-center rounded ${dropShadowClass} ${className}`}>
+    <>
+      {id === ICON_MAINNET_CHAIN_ID && <IcxIcon />}
+      {id === AVALANCHE_MAINNET_CHAIN_ID && <AvalancheIcon />}
+      {id === BASE_MAINNET_CHAIN_ID && <BaseIcon />}
+      {id === BSC_MAINNET_CHAIN_ID && <BnbIcon />}
+      {id === POLYGON_MAINNET_CHAIN_ID && <PolygonIcon />}
+      {id === SOLANA_MAINNET_CHAIN_ID && <SolIcon />}
+      {id === STELLAR_MAINNET_CHAIN_ID && <StellarIcon />}
+      {id === SUI_MAINNET_CHAIN_ID && <SuiIcon />}
+      {id === INJECTIVE_MAINNET_CHAIN_ID && <InjectiveIcon />}
+      {id === SONIC_MAINNET_CHAIN_ID && <SonicIcon />}
+      {id === OPTIMISM_MAINNET_CHAIN_ID && <OptimismIcon />}
+      {id === ARBITRUM_MAINNET_CHAIN_ID && <ArbitrumIcon />}
+      {id === LIGHTLINK_MAINNET_CHAIN_ID && <LightLinkIcon />}
+      {id === HYPEREVM_MAINNET_CHAIN_ID && <HyperIcon />}
+      {id === ETHEREUM_MAINNET_CHAIN_ID && <EthereumIcon />}
+      {id === KAIA_MAINNET_CHAIN_ID && <KaiaIcon />}
+      {id === REDBELLY_MAINNET_CHAIN_ID && <RedbellyIcon />}
+    </>
+  );
+}
+
+export default function NetworkIcon({
+  id,
+  className,
+  hasBalance = false,
+  swapPickerShadow = false,
+}: NetworkIconProps): React.JSX.Element {
+  // Same as main: always show border (ring-2). When wallet connected and we know there is balance, use thicker ring.
+  const ringClass = hasBalance ? 'ring-[6px] ring-white' : 'ring-2 ring-white';
+
+  if (swapPickerShadow) {
+    // Swap network picker only: drop-shadow + box-shadow so icons don't merge into a cloud.
+    // w-4 h-4 shrink-0 so layout matches stake (5 icons per row in 140px).
+    const dropShadowClass = hasBalance
+      ? 'filter drop-shadow-[0_3px_8px_rgba(0,0,0,0.32)]'
+      : 'filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)]';
+    const boxShadowClass = hasBalance
+      ? 'shadow-[0_3px_8px_rgba(0,0,0,0.18)]'
+      : 'shadow-[0_3px_10px_rgba(0,0,0,0.2)]';
+    return (
       <div
-        className={`
-        flex items-center justify-center
-        rounded bg-white
-        ${ringClass}
-        ring-white
-        w-4 h-4
-        ${boxShadowClass}
-      `}
+        className={`flex shrink-0 w-4 h-4 items-center justify-center rounded ${dropShadowClass} ${className}`}
       >
-        {' '}
-        {id === ICON_MAINNET_CHAIN_ID && <IcxIcon />}
-        {id === AVALANCHE_MAINNET_CHAIN_ID && <AvalancheIcon />}
-        {id === BASE_MAINNET_CHAIN_ID && <BaseIcon />}
-        {id === BSC_MAINNET_CHAIN_ID && <BnbIcon />}
-        {id === POLYGON_MAINNET_CHAIN_ID && <PolygonIcon />}
-        {id === SOLANA_MAINNET_CHAIN_ID && <SolIcon />}
-        {id === STELLAR_MAINNET_CHAIN_ID && <StellarIcon />}
-        {id === SUI_MAINNET_CHAIN_ID && <SuiIcon />}
-        {id === INJECTIVE_MAINNET_CHAIN_ID && <InjectiveIcon />}
-        {id === SONIC_MAINNET_CHAIN_ID && <SonicIcon />}
-        {id === OPTIMISM_MAINNET_CHAIN_ID && <OptimismIcon />}
-        {id === ARBITRUM_MAINNET_CHAIN_ID && <ArbitrumIcon />}
-        {id === LIGHTLINK_MAINNET_CHAIN_ID && <LightLinkIcon />}
-        {id === HYPEREVM_MAINNET_CHAIN_ID && <HyperIcon />}
-        {id === ETHEREUM_MAINNET_CHAIN_ID && <EthereumIcon />}
-        {id === KAIA_MAINNET_CHAIN_ID && <KaiaIcon />}
-        {id === REDBELLY_MAINNET_CHAIN_ID && <RedbellyIcon />}
+        <div
+          className={`flex items-center justify-center rounded bg-white ${ringClass} w-4 h-4 ${boxShadowClass}`}
+        >
+          {renderIcons(id)}
+        </div>
       </div>
+    );
+  }
+
+  const shadowClass = hasBalance
+    ? 'shadow-[-5px_0px_5px_0px_rgba(175,145,145,1)]'
+    : 'shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)]';
+  return (
+    <div className={`flex items-center justify-center rounded ${ringClass} ${shadowClass} w-4 h-4 ${className}`}>
+      {renderIcons(id)}
     </div>
   );
 }

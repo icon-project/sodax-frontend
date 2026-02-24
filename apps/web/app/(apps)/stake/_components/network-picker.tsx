@@ -98,7 +98,7 @@ export function NetworkPicker({
   return createPortal(
     <div
       ref={refs.setFloating}
-      className="z-[53] pointer-events-auto"
+      className="z-53 pointer-events-auto"
       style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
     >
       <div
@@ -147,7 +147,6 @@ export function NetworkPicker({
         {tokens.map((token, index) => {
           const balance = tokenBalances.get(token.xChainId) || 0n;
           const hasBalance = balance > 0n;
-
           return (
             <motion.div
               key={token.xChainId}
@@ -167,7 +166,7 @@ export function NetworkPicker({
             >
               <NetworkIcon
                 id={token.xChainId}
-                className={hasBalance ? 'ring-[5px]! shadow-[-5px_0px_5px_0px_rgba(175,145,145,1)]' : ''}
+                className={hasBalance ? 'ring-[5px]! ring-white shadow-[-5px_0px_5px_0px_rgba(175,145,145,1)]' : ''}
               />
             </motion.div>
           );
