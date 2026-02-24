@@ -378,7 +378,7 @@ export class StellarSpokeService {
     const defaultParams = {
       pollingTimeout: 750,
       maxAttempts: 40,
-    };
+    } as const;
     const { pollingTimeout, maxAttempts, sorobanRpcConfig, txHash } = { ...defaultParams, ...params };
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {

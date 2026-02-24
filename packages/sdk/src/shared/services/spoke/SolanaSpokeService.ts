@@ -337,7 +337,7 @@ export class SolanaSpokeService {
         commitment: 'finalized',
         timeoutMs: 60_000, // total time to wait
         pollingTimeout: 750, // 750ms retry interval
-      };
+      } as const;
       const { rpcUrl, signature, commitment, timeoutMs, pollingTimeout } = { ...defaultParams, ...params };
       const connection = new Connection(rpcUrl, commitment);
       const deadline = Date.now() + timeoutMs;

@@ -278,7 +278,7 @@ export class EvmSpokeService {
           logIndex: log.logIndex.toString() as `0x${string}`,
           transactionIndex: log.transactionIndex.toString() as `0x${string}`,
         })),
-        effectiveGasPrice: receipt.effectiveGasPrice.toString(),
+        effectiveGasPrice: receipt.effectiveGasPrice?.toString(),
       };
 
       return { ok: true, value: response };
