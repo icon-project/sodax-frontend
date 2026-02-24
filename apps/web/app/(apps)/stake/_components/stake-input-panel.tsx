@@ -19,7 +19,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 export function StakeInputPanel(): React.JSX.Element {
   const router = useRouter();
 
-  const { selectedToken, stakeValue, stakeTypedValue, stakeMode, userXSodaBalance } = useStakeState();
+  const { selectedToken, stakeValue, stakeTypedValue, stakeMode, userXSodaBalance, isLoadingStakingInfo } =
+    useStakeState();
   const { setStakeTypedValue } = useStakeActions();
 
   const openModal = useModalStore(state => state.openModal);
@@ -65,10 +66,10 @@ export function StakeInputPanel(): React.JSX.Element {
   }, [stakeMode, formattedBalance, formattedUserXSodaBalance]);
 
   useEffect(() => {
-    if (sliderMaxValue === 0) {
+    if (sliderMaxValue === 0 && !isLoadingStakingInfo && (!stakeTypedValue || stakeTypedValue === '0')) {
       setStakeTypedValue('0');
     }
-  }, [sliderMaxValue, setStakeTypedValue]);
+  }, [sliderMaxValue, setStakeTypedValue, isLoadingStakingInfo, stakeTypedValue]);
 
   const isSliderDisabled = useMemo(() => {
     return !selectedToken || !walletConnected || sliderMaxValue === 0;

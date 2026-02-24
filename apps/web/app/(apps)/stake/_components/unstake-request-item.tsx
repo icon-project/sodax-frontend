@@ -1,3 +1,4 @@
+// apps/web/app/(apps)/stake/_components/unstake-request-item.tsx
 import type React from 'react';
 import { useMemo, useState, useEffect } from 'react';
 import type { UnstakeRequestWithPenalty, StakingConfig, SpokeProvider } from '@sodax/sdk';
@@ -5,8 +6,14 @@ import { useClaim, useCancelUnstake } from '@sodax/dapp-kit';
 import { formatTokenAmount, getTimeRemaining } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import LoadingThreeDotsJumping from '@/components/shared/loading-three-dots-jumping';
-import { CircleCheck, MinusCircleIcon, XCircleIcon } from 'lucide-react';
-
+import { CircleCheck, MinusCircleIcon, XCircleIcon, XIcon } from 'lucide-react';
+import { useStakeState } from '../_stores/stake-store-provider';
+import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
+import { Dialog, DialogContent, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { chainIdToChainName } from '@/providers/constants';
+import type { ChainId } from '@sodax/types';
+import Image from 'next/image';
 interface UnstakeRequestItemProps {
   request: UnstakeRequestWithPenalty;
   stakingConfig: StakingConfig | undefined;
@@ -19,8 +26,10 @@ export function UnstakeRequestItem({
   spokeProvider,
 }: UnstakeRequestItemProps): React.JSX.Element {
   const { mutateAsync: claim, isPending: isClaiming } = useClaim(spokeProvider);
+  const { selectedToken } = useStakeState();
   const { mutateAsync: cancelUnstake, isPending: isCancellingUnstake } = useCancelUnstake(spokeProvider);
-
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedToken?.xChainId || 'sonic');
+  const [isSwitchChainDialogOpen, setIsSwitchChainDialogOpen] = useState<boolean>(false);
   const timeRemaining = useMemo((): string => {
     if (!stakingConfig) {
       return 'Loading...';
@@ -72,6 +81,11 @@ export function UnstakeRequestItem({
       return;
     }
 
+    if (isWrongChain) {
+      setIsSwitchChainDialogOpen(true);
+      return;
+    }
+
     try {
       await claim({
         requestId: request.id,
@@ -87,6 +101,11 @@ export function UnstakeRequestItem({
       return;
     }
 
+    if (isWrongChain) {
+      setIsSwitchChainDialogOpen(true);
+      return;
+    }
+
     try {
       await cancelUnstake({
         requestId: request.id,
@@ -94,6 +113,11 @@ export function UnstakeRequestItem({
     } catch (error) {
       console.error('Cancel unstake error:', error);
     }
+  };
+
+  const handleSwitchChainClick = (): void => {
+    handleSwitchChain();
+    setIsSwitchChainDialogOpen(false);
   };
 
   return (
@@ -174,6 +198,31 @@ export function UnstakeRequestItem({
           </>
         )}
       </div>
+
+      <Dialog open={isSwitchChainDialogOpen} onOpenChange={setIsSwitchChainDialogOpen}>
+        <DialogContent className="w-full md:!max-w-[480px] p-8 md:p-12 gap-6 bg-vibrant-white" hideCloseButton>
+          <div className="inline-flex justify-start items-center gap-2 w-full">
+            <Image src="/symbol_dark.png" alt="SODAX Symbol" width={16} height={16} className="mix-blend-multiply" />
+            <DialogTitle className="mix-blend-multiply text-espresso font-['InterBold'] leading-snug text-(size:--body-super-comfortable) flex justify-between items-center w-full">
+              Switch Chain
+              <DialogClose asChild>
+                <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />
+              </DialogClose>
+            </DialogTitle>
+          </div>
+          <div className="flex flex-col gap-4">
+            <p className="text-clay text-(length:--body-comfortable) font-normal font-['InterRegular'] leading-5">
+              Please switch to {chainIdToChainName((selectedToken?.xChainId || 'sonic') as ChainId)} to continue with
+              this action.
+            </p>
+          </div>
+          <DialogFooter className="flex justify-end gap-2">
+            <Button type="button" variant="cherry" onClick={handleSwitchChainClick}>
+              Switch Chain
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
