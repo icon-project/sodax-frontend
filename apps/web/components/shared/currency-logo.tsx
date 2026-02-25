@@ -78,15 +78,13 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({
               transform: `translateX(-50%) ${isHovered ? 'scale(1.2)' : 'scale(1)'}`,
             }}
           >
-            <div className="w-4 h-4 relative bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white inline-flex flex-col justify-center items-center">
-              <div className="w-3 h-4 left-[4px] top-0 absolute mix-blend-multiply bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white" />
-              <div className="left-[6px] top-[3px] absolute inline-flex justify-start items-center">
-                <div
-                  className={`justify-start text-espresso text-[8px] font-medium font-['InterRegular'] leading-[1.2] ${isHovered ? 'font-bold' : 'font-medium'}`}
-                >
-                  {tokenCount}
-                </div>
-              </div>
+            <div className="w-4 h-4 relative bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white flex items-center justify-center overflow-hidden">
+              <div className="w-3 h-4 left-[4px] top-0 absolute mix-blend-multiply bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white pointer-events-none" />
+              <span
+                className={`relative z-10 text-center text-espresso text-[8px] font-medium font-['InterRegular'] leading-none tabular-nums translate-x-0.5 ${isHovered ? 'font-bold' : 'font-medium'}`}
+              >
+                {tokenCount}
+              </span>
             </div>
           </div>
         </div>
