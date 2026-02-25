@@ -112,6 +112,7 @@ function NetworkPicker({
 
           isMobile && isSingle && 'ml-4',
         )}
+        onMouseLeave={() => setHoveredIcon(null)}
       >
         {tokens.map((token, index) => {
           const hasBalance = !!getFormattedBalanceForToken?.(token);
@@ -127,7 +128,6 @@ function NetworkPicker({
               whileHover={{ scale: 1.3 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
               onMouseEnter={() => setHoveredIcon(index)}
-              onMouseLeave={() => setHoveredIcon(null)}
               onMouseDown={e => {
                 e.preventDefault();
                 e.stopPropagation();
