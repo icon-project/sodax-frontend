@@ -5,6 +5,8 @@ import CurrencyLogo from '@/components/shared/currency-logo';
 import { CircleArrowRight, ShieldAlertIcon } from 'lucide-react';
 import { formatTokenAmount } from '@/lib/utils';
 import { parseUnits } from 'viem';
+import { cn } from '@/lib/utils';
+import { ETHEREUM_MAINNET_CHAIN_ID } from '@sodax/sdk';
 interface StakeConfirmationStepProps {
   selectedToken: XToken;
   receivedXSodaAmount: string;
@@ -62,9 +64,21 @@ export default function StakeConfirmationStep({
         </div>
         <div className="w-16 h-9 inline-flex flex-col justify-between items-center">
           <div className="w-4 h-4 relative overflow-hidden">
-            <CircleArrowRight className="w-4 h-4 text-clay-light" />
+            <CircleArrowRight
+              className={cn(
+                'w-4 h-4',
+                selectedToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID ? 'text-cherry-bright' : 'text-clay-light',
+              )}
+            />
           </div>
-          <div className="justify-start text-clay text-xs font-normal font-['InterRegular'] leading-4">~10s</div>
+          <div
+            className={cn(
+              "justify-start text-xs font-normal font-['InterRegular'] leading-4",
+              selectedToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID ? 'text-cherry-bright' : 'text-clay',
+            )}
+          >
+            {selectedToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID ? '~30s' : '~10s'}
+          </div>
         </div>
         <div className="w-10 inline-flex flex-col justify-start items-center gap-2">
           <CurrencyLogo currency={xSodaToken} />
