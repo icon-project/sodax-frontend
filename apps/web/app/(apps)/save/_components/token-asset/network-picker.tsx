@@ -21,7 +21,6 @@ export function NetworkPicker({
   onSelect?: (token: XToken) => void;
   reference: HTMLElement | null;
 }): React.JSX.Element | null {
-  const gridContainerRef = useRef<HTMLDivElement>(null);
   const [hoveredIcon, setHoveredIcon] = useState<number | null>(null);
   const [isSingle, setIsSingle] = useState(false);
   const hasScrolledRef = useRef(false);

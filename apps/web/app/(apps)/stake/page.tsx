@@ -40,12 +40,16 @@ export default function StakePage(): React.JSX.Element {
         <StakeSelectorPanel />
         <div
           className={cn(
-            'relative w-full rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius)',
-            'before:absolute before:inset-0 before:border-almost-white before:border-4 before:border-b-0 before:rounded-tl-(--layout-container-radius) before:rounded-tr-(--layout-container-radius) before:mix-blend-multiply before:pointer-events-none',
+            'relative w-full group rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius)',
             'transition-[filter] duration-300',
             isNetworkPickerOpened && 'blur-sm',
           )}
         >
+          {/* Border layer with multiply blend mode – matches Swap/Migrate hover expansion */}
+          <div
+            className="absolute inset-0 rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius) outline-almost-white pointer-events-none outline-2 outline-offset-2 group-hover:outline-4 group-hover:outline-offset-4 sm:outline-3 sm:outline-offset-[-3px] sm:group-hover:outline-5 sm:group-hover:outline-offset-[-5px] md:outline-4 md:outline-offset-[-4px] md:group-hover:outline-6 md:group-hover:outline-offset-[-6px]"
+            style={{ mixBlendMode: 'multiply' }}
+          />
           {isNetworkPickerOpened && <div className="inset-0 absolute w-full h-full bg-transparent-white z-20" />}
           <StakeInputPanel />
         </div>
