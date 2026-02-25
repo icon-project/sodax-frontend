@@ -23,16 +23,10 @@ export const PoolIcon = ({
     <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox="0 0 16 16" fill="none" {...props}>
       <title>Pool</title>
       <g style={{ mixBlendMode: isMobile ? undefined : ('multiply' as const) }}>
-        {/* Left drop */}
-        <path
-          d="M5.5 2C5.5 2 2 6.5 2 9C2 11.2091 3.567 13 5.5 13C7.433 13 9 11.2091 9 9C9 6.5 5.5 2 5.5 2Z"
-          fill={iconFill}
-        />
-        {/* Right drop */}
-        <path
-          d="M10.5 4C10.5 4 7.5 7.5 7.5 9.5C7.5 11.433 8.843 13 10.5 13C12.157 13 13.5 11.433 13.5 9.5C13.5 7.5 10.5 4 10.5 4Z"
-          fill={iconFill}
-        />
+        <path d="M8.00001 6.66667L6.66668 5.97232L6.66668 2L9.33334 2L9.33334 5.97232L8.00001 6.66667Z" fill={iconFill} />
+        <path d="M8.00001 9.33333L6.66668 10.0277L6.66668 14L9.33334 14L9.33334 10.0277L8.00001 9.33333Z" fill={iconFill} />
+        <rect x="15.3333" y="15.3334" width="14.6667" height="2.66667" transform="rotate(-180 15.3333 15.3334)" fill={iconFill} />
+        <rect x="15.3333" y="3.33337" width="14.6667" height="2.66667" transform="rotate(-180 15.3333 3.33337)" fill={iconFill} />
       </g>
     </svg>
   );

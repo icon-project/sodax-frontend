@@ -34,10 +34,13 @@ export const usePoolStore = <T,>(selector: (store: PoolStore) => T): T => {
 
 export const usePoolState = () => {
   const selectedChainId = usePoolStore(state => state.selectedChainId);
+  const selectedPoolIndex = usePoolStore(state => state.selectedPoolIndex);
   const minPrice = usePoolStore(state => state.minPrice);
   const maxPrice = usePoolStore(state => state.maxPrice);
   const token0Amount = usePoolStore(state => state.token0Amount);
   const token1Amount = usePoolStore(state => state.token1Amount);
+  const slippageTolerance = usePoolStore(state => state.slippageTolerance);
+  const positionIdToManage = usePoolStore(state => state.positionIdToManage);
   const currentStep = usePoolStore(state => state.currentStep);
   const isNetworkPickerOpened = usePoolStore(state => state.isNetworkPickerOpened);
   const isPositionExpanded = usePoolStore(state => state.isPositionExpanded);
@@ -48,10 +51,13 @@ export const usePoolState = () => {
   const reset = usePoolStore(state => state.reset);
   return {
     selectedChainId,
+    selectedPoolIndex,
     minPrice,
     maxPrice,
     token0Amount,
     token1Amount,
+    slippageTolerance,
+    positionIdToManage,
     currentStep,
     isNetworkPickerOpened,
     isPositionExpanded,
@@ -65,10 +71,13 @@ export const usePoolState = () => {
 
 export const usePoolActions = () => {
   const setSelectedChainId = usePoolStore(state => state.setSelectedChainId);
+  const setSelectedPoolIndex = usePoolStore(state => state.setSelectedPoolIndex);
   const setMinPrice = usePoolStore(state => state.setMinPrice);
   const setMaxPrice = usePoolStore(state => state.setMaxPrice);
   const setToken0Amount = usePoolStore(state => state.setToken0Amount);
   const setToken1Amount = usePoolStore(state => state.setToken1Amount);
+  const setSlippageTolerance = usePoolStore(state => state.setSlippageTolerance);
+  const setPositionIdToManage = usePoolStore(state => state.setPositionIdToManage);
   const setCurrentStep = usePoolStore(state => state.setCurrentStep);
   const setIsNetworkPickerOpened = usePoolStore(state => state.setIsNetworkPickerOpened);
   const setIsPositionExpanded = usePoolStore(state => state.setIsPositionExpanded);
@@ -80,10 +89,13 @@ export const usePoolActions = () => {
   const reset = usePoolStore(state => state.reset);
   return {
     setSelectedChainId,
+    setSelectedPoolIndex,
     setMinPrice,
     setMaxPrice,
     setToken0Amount,
     setToken1Amount,
+    setSlippageTolerance,
+    setPositionIdToManage,
     setCurrentStep,
     setIsNetworkPickerOpened,
     setIsPositionExpanded,

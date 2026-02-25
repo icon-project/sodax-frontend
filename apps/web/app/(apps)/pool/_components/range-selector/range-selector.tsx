@@ -2,7 +2,8 @@
 
 import type React from 'react';
 import { usePoolState, usePoolActions } from '../../_stores/pool-store-provider';
-import { MOCK_POOL_PAIR } from '../../_mocks';
+import { usePoolContext } from '../../_hooks/usePoolContext';
+import { getDisplayTokens } from '../../_utils/display-tokens';
 import { RangeInput } from './range-input';
 
 interface RangeSelectorProps {
@@ -12,29 +13,30 @@ interface RangeSelectorProps {
 export function RangeSelector({ disabled = false }: RangeSelectorProps): React.JSX.Element {
   const { minPrice, maxPrice } = usePoolState();
   const { setMinPrice, setMaxPrice } = usePoolActions();
+  const { poolData } = usePoolContext();
+  const { token0Symbol, token1Symbol } = getDisplayTokens(poolData);
 
-  const pair = MOCK_POOL_PAIR;
-  const pairLabel = `${pair.token0.symbol} per ${pair.token1.symbol}`;
+  const pairLabel = `${token0Symbol} per ${token1Symbol}`;
 
   return (
-    <div className="w-full flex flex-col gap-2">
-      <span className="font-['InterRegular'] text-(length:--body-small) text-clay font-medium">Set price range</span>
-      <div className="flex gap-2">
-        <RangeInput
-          label="Min price"
-          value={minPrice}
-          onChange={setMinPrice}
-          disabled={disabled}
-          tokenPairLabel={pairLabel}
-        />
-        <RangeInput
-          label="Max price"
-          value={maxPrice}
-          onChange={setMaxPrice}
-          disabled={disabled}
-          tokenPairLabel={pairLabel}
-        />
-      </div>
+    <div className="w-full flex items-center gap-3">
+      <span className="font-['InterRegular'] text-[10px] text-clay font-medium uppercase tracking-wider shrink-0">
+        Selected<br />range
+      </span>
+      <RangeInput
+        label="Min. price"
+        value={minPrice}
+        onChange={setMinPrice}
+        disabled={disabled}
+        tokenPairLabel={pairLabel}
+      />
+      <RangeInput
+        label="Max. price"
+        value={maxPrice}
+        onChange={setMaxPrice}
+        disabled={disabled}
+        tokenPairLabel={pairLabel}
+      />
     </div>
   );
 }

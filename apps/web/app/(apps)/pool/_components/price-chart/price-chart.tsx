@@ -2,10 +2,14 @@
 
 import type React from 'react';
 import type { IChartApi, ISeriesApi, IPriceLine, UTCTimestamp } from 'lightweight-charts';
-import { useEffect, useRef, useMemo, useCallback } from 'react';
-import { usePoolState } from '../../_stores/pool-store-provider';
-import { mockChartData, MOCK_CURRENT_PRICE } from '../../_mocks';
+import { useEffect, useRef, useMemo, useCallback, useState } from 'react';
+import { usePoolState, usePoolActions } from '../../_stores/pool-store-provider';
+import { usePoolContext } from '../../_hooks/usePoolContext';
+import { mockChartData } from '../../_mocks';
 import { TimePeriodSelector } from './time-period-selector';
+import { RangeHandle } from './range-handle';
+import { TickDistribution } from './tick-distribution';
+import { useTickLiquidityDistribution } from '@sodax/dapp-kit';
 
 export function PriceChart(): React.JSX.Element {
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -15,6 +19,29 @@ export function PriceChart(): React.JSX.Element {
   const maxPriceLineRef = useRef<IPriceLine | null>(null);
 
   const { chartPeriod, minPrice, maxPrice } = usePoolState();
+  const { setMinPrice, setMaxPrice } = usePoolActions();
+  const { poolData, selectedPoolKey } = usePoolContext();
+
+  // Fetch tick liquidity distribution for the selected pool
+  const { data: tickDistribution, isLoading: isTickLoading } = useTickLiquidityDistribution({
+    poolKey: selectedPoolKey,
+  });
+
+  // Handle Y positions for draggable range overlays
+  const [minHandleY, setMinHandleY] = useState<number | null>(null);
+  const [maxHandleY, setMaxHandleY] = useState<number | null>(null);
+  const [containerHeight, setContainerHeight] = useState(0);
+
+  // Use real price from pool data, fallback to 0
+  const currentPrice = poolData?.price ? Number(poolData.price.toSignificant(6)) : 0;
+
+  // Set default ±5% range when pool data first loads
+  useEffect(() => {
+    if (currentPrice > 0 && !minPrice && !maxPrice) {
+      setMinPrice((currentPrice * 0.95).toFixed(4));
+      setMaxPrice((currentPrice * 1.05).toFixed(4));
+    }
+  }, [currentPrice, minPrice, maxPrice, setMinPrice, setMaxPrice]);
 
   const chartData = useMemo(() => {
     const raw = mockChartData[chartPeriod] ?? mockChartData['1D'] ?? [];
@@ -23,19 +50,6 @@ export function PriceChart(): React.JSX.Element {
       value: point.value,
     }));
   }, [chartPeriod]);
-
-  // Compute price change for the selected period
-  const priceChange = useMemo(() => {
-    if (chartData.length < 2) return { absolute: 0, percentage: 0 };
-    const first = chartData[0];
-    const last = chartData[chartData.length - 1];
-    if (!first || !last) return { absolute: 0, percentage: 0 };
-    const absolute = last.value - first.value;
-    const percentage = first.value !== 0 ? (absolute / first.value) * 100 : 0;
-    return { absolute, percentage };
-  }, [chartData]);
-
-  const isPositive = priceChange.percentage >= 0;
 
   const initChart = useCallback(async () => {
     if (typeof window === 'undefined') return;
@@ -134,7 +148,7 @@ export function PriceChart(): React.JSX.Element {
     };
   }, [initChart]);
 
-  // Update price range lines when min/max change
+  // Update price range lines + force chart to include min/max in visible range
   useEffect(() => {
     const series = seriesRef.current;
     if (!series) return;
@@ -173,7 +187,118 @@ export function PriceChart(): React.JSX.Element {
         title: 'Max',
       });
     }
+
+    // Extend auto-scale to always include min/max prices with padding
+    // This ensures range handles are never off-screen
+    series.applyOptions({
+      autoscaleInfoProvider: ((
+        original: () => {
+          priceRange: { minValue: number; maxValue: number };
+          margins?: { above: number; below: number };
+        } | null,
+      ) => {
+        const res = original();
+        if (res !== null) {
+          if (!Number.isNaN(minVal) && minVal > 0) {
+            res.priceRange.minValue = Math.min(res.priceRange.minValue, minVal);
+          }
+          if (!Number.isNaN(maxVal) && maxVal > 0) {
+            res.priceRange.maxValue = Math.max(res.priceRange.maxValue, maxVal);
+          }
+          // Add 5% padding so handles aren't at the very edge
+          const range = res.priceRange.maxValue - res.priceRange.minValue;
+          const padding = range * 0.05;
+          res.priceRange.minValue -= padding;
+          res.priceRange.maxValue += padding;
+        }
+        return res;
+      }) as Parameters<typeof series.applyOptions>[0]['autoscaleInfoProvider'],
+    });
   }, [minPrice, maxPrice]);
+
+  // Sync store min/max prices → handle Y positions
+  const syncHandlePositions = useCallback(() => {
+    const series = seriesRef.current;
+    if (!series) return;
+
+    const minVal = Number.parseFloat(minPrice);
+    const maxVal = Number.parseFloat(maxPrice);
+
+    if (minPrice && !Number.isNaN(minVal) && minVal > 0) {
+      const y = series.priceToCoordinate(minVal);
+      setMinHandleY(y ?? null);
+    } else {
+      setMinHandleY(null);
+    }
+
+    if (maxPrice && !Number.isNaN(maxVal) && maxVal > 0) {
+      const y = series.priceToCoordinate(maxVal);
+      setMaxHandleY(y ?? null);
+    } else {
+      setMaxHandleY(null);
+    }
+  }, [minPrice, maxPrice]);
+
+  useEffect(() => {
+    syncHandlePositions();
+  }, [syncHandlePositions]);
+
+  // Also resync after chart init / data change (coordinates change when chart redraws)
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+
+    const handler = () => syncHandlePositions();
+    chart.timeScale().subscribeVisibleLogicalRangeChange(handler);
+    return () => {
+      chart.timeScale().unsubscribeVisibleLogicalRangeChange(handler);
+    };
+  }, [syncHandlePositions]);
+
+  // Drag handlers: convert Y coordinate back to price
+  const handleMinDrag = useCallback(
+    (y: number) => {
+      const series = seriesRef.current;
+      if (!series) return;
+      setMinHandleY(y);
+      const price = series.coordinateToPrice(y);
+      if (price != null && Number.isFinite(price as number)) {
+        setMinPrice((price as number).toFixed(4));
+      }
+    },
+    [setMinPrice],
+  );
+
+  const handleMaxDrag = useCallback(
+    (y: number) => {
+      const series = seriesRef.current;
+      if (!series) return;
+      setMaxHandleY(y);
+      const price = series.coordinateToPrice(y);
+      if (price != null && Number.isFinite(price as number)) {
+        setMaxPrice((price as number).toFixed(4));
+      }
+    },
+    [setMaxPrice],
+  );
+
+  const handleDragEnd = useCallback(() => {
+    // Resync to snap handles to exact price positions
+    syncHandlePositions();
+  }, [syncHandlePositions]);
+
+  // Compute percentage from current price
+  const minPercentage = useMemo(() => {
+    const minVal = Number.parseFloat(minPrice);
+    if (!minPrice || Number.isNaN(minVal) || currentPrice === 0) return '';
+    return (((minVal - currentPrice) / currentPrice) * 100).toFixed(2);
+  }, [minPrice, currentPrice]);
+
+  const maxPercentage = useMemo(() => {
+    const maxVal = Number.parseFloat(maxPrice);
+    if (!maxPrice || Number.isNaN(maxVal) || currentPrice === 0) return '';
+    return (((maxVal - currentPrice) / currentPrice) * 100).toFixed(2);
+  }, [maxPrice, currentPrice]);
 
   // Resize observer
   useEffect(() => {
@@ -185,6 +310,7 @@ export function PriceChart(): React.JSX.Element {
       if (!entry) return;
 
       const { width, height } = entry.contentRect;
+      setContainerHeight(height);
       if (chartRef.current && width > 0 && height > 0) {
         chartRef.current.applyOptions({ width, height });
       }
@@ -199,25 +325,47 @@ export function PriceChart(): React.JSX.Element {
 
   return (
     <div className="w-full flex flex-col gap-2">
-      {/* Header: current price + change */}
-      <div className="flex items-end justify-between">
-        <div className="flex items-baseline gap-2">
-          <span className="font-['InterRegular'] text-lg font-semibold text-espresso">
-            ${MOCK_CURRENT_PRICE.toFixed(6)}
-          </span>
-          <span
-            className={`font-['InterRegular'] text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-500'}`}
-          >
-            {isPositive ? '+' : ''}
-            {priceChange.absolute.toFixed(6)} ({isPositive ? '+' : ''}
-            {priceChange.percentage.toFixed(2)}%)
-          </span>
-        </div>
-        <TimePeriodSelector />
+      {/* Chart container with range handle overlays */}
+      <div className="relative w-full h-48 lg:h-72">
+        <div ref={chartContainerRef} className="absolute inset-0 right-8" />
+
+        {/* Tick liquidity distribution (right side) */}
+        <TickDistribution distribution={tickDistribution} containerHeight={containerHeight} isLoading={isTickLoading} />
+
+        {/* Current price bubble */}
+        {currentPrice > 0 && (
+          <div className="absolute right-9 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded-full bg-espresso z-10">
+            <span className="font-['InterRegular'] text-[11px] text-cream-white font-medium">
+              {currentPrice.toFixed(6)}
+            </span>
+          </div>
+        )}
+
+        {/* Draggable range handles */}
+        <RangeHandle
+          y={maxHandleY ?? 0}
+          percentage={maxPercentage}
+          variant="upper"
+          onDrag={handleMaxDrag}
+          onDragEnd={handleDragEnd}
+          containerHeight={containerHeight}
+          visible={maxHandleY != null && maxPercentage !== ''}
+        />
+        <RangeHandle
+          y={minHandleY ?? 0}
+          percentage={minPercentage}
+          variant="lower"
+          onDrag={handleMinDrag}
+          onDragEnd={handleDragEnd}
+          containerHeight={containerHeight}
+          visible={minHandleY != null && minPercentage !== ''}
+        />
       </div>
 
-      {/* Chart container */}
-      <div ref={chartContainerRef} className="w-full h-48" />
+      {/* Tools bar below chart */}
+      <div className="flex items-center justify-between">
+        <TimePeriodSelector />
+      </div>
     </div>
   );
 }

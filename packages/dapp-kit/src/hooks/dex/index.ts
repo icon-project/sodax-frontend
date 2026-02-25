@@ -15,3 +15,4 @@ export * from './useCreateSupplyLiquidityParams';
 export * from './useCreateDecreaseLiquidityParams';
 export * from './useCreateWithdrawParams';
 export * from './useClaimRewards';
+export * from './useTickLiquidityDistribution';

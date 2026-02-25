@@ -65,8 +65,11 @@ export default function PoolPage(): React.JSX.Element {
               {isNetworkPickerOpened && <div className="inset-0 absolute w-full h-full bg-transparent-white z-20" />}
               <PriceChart />
               <RangeSelector disabled={isInputDisabled} />
-              <TokenInputPair disabled={isInputDisabled} />
-              <ContinueButton />
+              {/* Bottom: token input pills + Continue */}
+              <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                <TokenInputPair disabled={isInputDisabled} />
+                <ContinueButton />
+              </div>
             </div>
           </div>
         </div>

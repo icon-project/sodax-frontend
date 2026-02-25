@@ -3,26 +3,21 @@
 import { useMemo } from 'react';
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { useGetUserHubWalletAddress, useBackendAMMNftPositions } from '@sodax/dapp-kit';
-import { spokeChainConfig } from '@sodax/sdk';
-import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
-import type { SpokeChainId, XToken } from '@sodax/types';
+import type { SpokeChainId, AMMNftPosition } from '@sodax/types';
 import { usePoolState } from '../_stores/pool-store-provider';
-import type { EnrichedPosition } from '../_mocks';
 
 /**
- * Fetches real AMM NFT positions from the backend API and enriches them
- * for display in the PositionOverview component.
+ * Fetches raw AMM NFT position identifiers from the backend API.
+ * Does NOT enrich with on-chain data — enrichment happens per-card
+ * via usePositionInfo in PositionCardWithData.
  *
  * Flow:
  * 1. Get spoke address from wallet for the selected chain
  * 2. Derive the hub wallet address (positions live on hub/Sonic)
- * 3. Fetch positions from /amm/nft-positions using the hub address
- * 4. Enrich raw API data into EnrichedPosition[] for the UI
- *
- * On-chain fields (amounts, prices, fees) are placeholders until AMMService exists.
+ * 3. Fetch position list from /amm/nft-positions using the hub address
  */
 export function usePoolPositions(): {
-  positions: EnrichedPosition[];
+  positions: AMMNftPosition[];
   isLoading: boolean;
   error: Error | null;
 } {
@@ -48,47 +43,10 @@ export function usePoolPositions(): {
       : undefined,
   );
 
-  // Build address→symbol lookup from hub chain token config
-  const hubTokenSymbols = useMemo(() => {
-    const map: Record<string, string> = {};
-    const sonicConfig = spokeChainConfig[SONIC_MAINNET_CHAIN_ID];
-    if (sonicConfig?.supportedTokens) {
-      for (const token of Object.values(sonicConfig.supportedTokens)) {
-        const xToken = token as XToken;
-        if (xToken?.address) {
-          map[xToken.address.toLowerCase()] = xToken.symbol;
-        }
-      }
-    }
-    return map;
-  }, []);
-
-  const positions = useMemo<EnrichedPosition[]>(() => {
+  const positions = useMemo<AMMNftPosition[]>(() => {
     if (!positionsData?.items) return [];
-
-    // Debug: log raw API response
-    console.log('[usePoolPositions] raw API data:', JSON.stringify(positionsData, null, 2));
-    console.log('[usePoolPositions] hubTokenSymbols:', hubTokenSymbols);
-
-    return positionsData.items.map(item => ({
-      tokenId: item.tokenId,
-      owner: item.owner,
-      poolId200: item.poolId200,
-      currency0: item.currency0,
-      currency1: item.currency1,
-      symbol0: hubTokenSymbols[item.currency0.toLowerCase()] ?? item.currency0,
-      symbol1: hubTokenSymbols[item.currency1.toLowerCase()] ?? item.currency1,
-      chainId: 'sonic' as const,
-      // Placeholder values — requires on-chain AMMService to read real data
-      amount0: '0',
-      amount1: '0',
-      valueUsd: 0,
-      earnedFeesUsd: 0,
-      priceLower: 0,
-      priceUpper: 0,
-      inRange: true,
-    }));
-  }, [positionsData, hubTokenSymbols]);
+    return positionsData.items;
+  }, [positionsData]);
 
   return {
     positions,

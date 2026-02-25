@@ -26,10 +26,18 @@ export interface EnrichedPosition {
   inRange: boolean;
   /** Chain where the position lives */
   chainId: ChainId;
-  /** Token 0 amount */
+  /** Token 0 amount (formatted string) */
   amount0: string;
-  /** Token 1 amount */
+  /** Token 1 amount (formatted string) */
   amount1: string;
+  /** Raw position liquidity (bigint as string for display) */
+  liquidity?: string;
+  /** Unclaimed fees for token 0 (formatted string) */
+  fees0?: string;
+  /** Unclaimed fees for token 1 (formatted string) */
+  fees1?: string;
+  /** Estimated APR as a decimal (e.g. 0.12 = 12%) */
+  estimatedApr?: number;
 }
 
 export const MOCK_POSITIONS: EnrichedPosition[] = [
@@ -56,8 +64,8 @@ export const MOCK_POSITIONS: EnrichedPosition[] = [
     currency1: '0x0000000000000000000000000000000000000002',
     valueUsd: 520.33,
     earnedFeesUsd: 0.0142,
-    priceLower: 0.6500,
-    priceUpper: 0.8000,
+    priceLower: 0.65,
+    priceUpper: 0.8,
     inRange: false,
     chainId: 'solana',
     amount0: '320.0',

@@ -389,7 +389,7 @@ export class BackendApiService implements IConfigApi {
     limit?: number;
   }): Promise<AMMNftPositionsResponse> {
     const queryParams = new URLSearchParams();
-    queryParams.append('owner', params.owner);
+    queryParams.append('owner', params.owner.toLowerCase());
     if (params.offset !== undefined) queryParams.append('offset', params.offset.toString());
     if (params.limit !== undefined) queryParams.append('limit', params.limit.toString());
 

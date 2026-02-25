@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { cn } from '@/lib/utils';
-import { Minus, Plus } from 'lucide-react';
+import { MinusCircle, PlusCircle } from 'lucide-react';
 
 interface RangeInputProps {
   label: string;
@@ -37,49 +37,52 @@ export function RangeInput({
   return (
     <div
       className={cn(
-        'flex-1 flex flex-col items-center gap-1 p-3 rounded-lg bg-almost-white mix-blend-multiply',
+        'flex items-center gap-2',
         disabled && 'opacity-50 pointer-events-none',
       )}
     >
-      <span className="font-['InterRegular'] text-[10px] text-clay font-medium uppercase tracking-wider">{label}</span>
+      {/* Vertical divider */}
+      <div className="w-px h-10 bg-clay/20 shrink-0" />
 
-      <div className="flex items-center gap-2 w-full">
-        <button
-          type="button"
-          onClick={handleDecrement}
-          className="w-6 h-6 flex items-center justify-center rounded-full bg-cream-white hover:bg-cherry-brighter transition-colors"
-        >
-          <Minus className="w-3 h-3 text-espresso" />
-        </button>
+      <div className="flex flex-col gap-0.5">
+        {/* Label row */}
+        <span className="font-['InterRegular'] text-[11px] text-clay leading-none">{label}</span>
 
-        <input
-          type="text"
-          inputMode="decimal"
-          value={value}
-          onChange={e => {
-            const v = e.target.value;
-            if (v === '' || /^\d*\.?\d*$/.test(v)) {
-              onChange(v);
-            }
-          }}
-          placeholder="0.0000"
-          className={cn(
-            'flex-1 text-center bg-transparent outline-none',
-            "font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso font-medium",
-            'placeholder:text-clay-light',
-          )}
-        />
-
-        <button
-          type="button"
-          onClick={handleIncrement}
-          className="w-6 h-6 flex items-center justify-center rounded-full bg-cream-white hover:bg-cherry-brighter transition-colors"
-        >
-          <Plus className="w-3 h-3 text-espresso" />
-        </button>
+        {/* Value row: value + buttons */}
+        <div className="flex items-center gap-1">
+          <input
+            type="text"
+            inputMode="decimal"
+            value={value}
+            onChange={e => {
+              const v = e.target.value;
+              if (v === '' || /^\d*\.?\d*$/.test(v)) {
+                onChange(v);
+              }
+            }}
+            placeholder="0.0000"
+            className={cn(
+              'w-16 bg-transparent outline-none',
+              "font-['InterRegular'] text-(length:--body-comfortable) text-espresso font-medium",
+              'placeholder:text-clay-light',
+            )}
+          />
+          <button
+            type="button"
+            onClick={handleDecrement}
+            className="shrink-0 text-clay hover:text-espresso transition-colors"
+          >
+            <MinusCircle className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handleIncrement}
+            className="shrink-0 text-clay hover:text-espresso transition-colors"
+          >
+            <PlusCircle className="w-4 h-4" />
+          </button>
+        </div>
       </div>
-
-      <span className="font-['InterRegular'] text-[10px] text-clay">{tokenPairLabel}</span>
     </div>
   );
 }

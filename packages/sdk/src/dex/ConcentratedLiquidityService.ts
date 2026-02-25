@@ -68,6 +68,21 @@ export type PoolRewardConfig = {
   lastActionTimestamp: bigint; // Timestamp of last position-affecting action
 };
 
+// Tick liquidity data for distribution charts
+export type TickLiquidityData = {
+  tick: number;
+  liquidityNet: bigint;
+  liquidityGross: bigint;
+  price: number; // human-readable price at this tick
+};
+
+export type TickLiquidityDistribution = {
+  ticks: TickLiquidityData[];
+  currentTick: number;
+  tickSpacing: number;
+  activeLiquidityByTick: { tick: number; activeLiquidity: bigint }[];
+};
+
 // APY range for concentrated liquidity positions
 export type ApyRange = {
   minApy: number; // APY when liquidity is spread across all ticks (wide range)
@@ -1797,6 +1812,122 @@ export class ClService {
    * @param tickSpacing - The tick spacing for the pool
    * @returns The nearest valid tick
    */
+  /**
+   * Fetch per-tick liquidity distribution around the current tick.
+   * Uses CLPoolManager's getPoolBitmapInfo + getPoolTickInfo to discover initialized
+   * ticks, then walks them to compute cumulative active liquidity.
+   *
+   * @param poolKey - The pool key
+   * @param publicClient - Viem public client
+   * @param tickRange - Number of ticks on each side of currentTick to scan (default 500)
+   */
+  public async getTickLiquidityDistribution(
+    poolKey: PoolKey<'CL'>,
+    publicClient: PublicClient<HttpTransport>,
+    tickRange = 500,
+  ): Promise<TickLiquidityDistribution> {
+    const poolId = getPoolId(poolKey);
+    const tickSpacing = poolKey.parameters.tickSpacing;
+
+    // 1. Get current pool state
+    const slot0 = await publicClient.readContract({
+      address: poolKey.poolManager,
+      abi: CLPoolManagerAbi,
+      functionName: 'getSlot0',
+      args: [poolId],
+    });
+    const [, currentTick] = slot0;
+
+    // 2. Calculate bitmap word range covering ±tickRange around currentTick
+    const minTick = currentTick - tickRange * tickSpacing;
+    const maxTick = currentTick + tickRange * tickSpacing;
+    const minWord = Math.floor(minTick / (tickSpacing * 256));
+    const maxWord = Math.floor(maxTick / (tickSpacing * 256));
+
+    // 3. Fetch all bitmap words in range
+    const wordIndices: number[] = [];
+    for (let w = minWord; w <= maxWord; w++) {
+      wordIndices.push(w);
+    }
+
+    const bitmaps = await Promise.all(
+      wordIndices.map(w =>
+        publicClient.readContract({
+          address: poolKey.poolManager,
+          abi: CLPoolManagerAbi,
+          functionName: 'getPoolBitmapInfo',
+          args: [poolId as `0x${string}`, w],
+        }),
+      ),
+    );
+
+    // 4. Parse bitmaps to find initialized tick indices
+    const initializedTicks: number[] = [];
+    for (let i = 0; i < wordIndices.length; i++) {
+      const wordIndex = wordIndices[i] as number;
+      const bitmap = bitmaps[i] as bigint;
+      if (bitmap === 0n) continue;
+
+      for (let bit = 0; bit < 256; bit++) {
+        if ((bitmap >> BigInt(bit)) & 1n) {
+          const tick = (wordIndex * 256 + bit) * tickSpacing;
+          initializedTicks.push(tick);
+        }
+      }
+    }
+
+    if (initializedTicks.length === 0) {
+      return { ticks: [], currentTick, tickSpacing, activeLiquidityByTick: [] };
+    }
+
+    // Sort ticks ascending
+    initializedTicks.sort((a, b) => a - b);
+
+    // 5. Fetch tick info for all initialized ticks
+    const tickInfos = await Promise.all(
+      initializedTicks.map(tick =>
+        publicClient.readContract({
+          address: poolKey.poolManager,
+          abi: CLPoolManagerAbi,
+          functionName: 'getPoolTickInfo',
+          args: [poolId as `0x${string}`, tick],
+        }),
+      ),
+    );
+
+    // 6. Get token info for price conversion
+    const [token0Info, token1Info] = await Promise.all([
+      this.getTokenInfo(poolKey.currency0, publicClient),
+      this.getTokenInfo(poolKey.currency1, publicClient),
+    ]);
+    const token0 = new Token(146, poolKey.currency0, token0Info.decimals, token0Info.symbol, token0Info.name);
+    const token1 = new Token(146, poolKey.currency1, token1Info.decimals, token1Info.symbol, token1Info.name);
+
+    // 7. Build tick data and compute active liquidity walk
+    const ticks: TickLiquidityData[] = [];
+    const activeLiquidityByTick: { tick: number; activeLiquidity: bigint }[] = [];
+    let runningLiquidity = 0n;
+
+    for (let i = 0; i < initializedTicks.length; i++) {
+      const tick = initializedTicks[i] as number;
+      const info = tickInfos[i] as { liquidityGross: bigint; liquidityNet: bigint; feeGrowthOutside0X128: bigint; feeGrowthOutside1X128: bigint };
+
+      const price = Number(tickToPrice(token0, token1, tick).toSignificant(8));
+
+      ticks.push({
+        tick,
+        liquidityNet: info.liquidityNet,
+        liquidityGross: info.liquidityGross,
+        price,
+      });
+
+      runningLiquidity += info.liquidityNet;
+      activeLiquidityByTick.push({ tick, activeLiquidity: runningLiquidity });
+    }
+
+    return { ticks, currentTick, tickSpacing, activeLiquidityByTick };
+  }
+
   public static priceToTick(price: number, token0: Token, token1: Token, tickSpacing: number): bigint {
     // Convert price to Price object
     const priceObj = new Price(

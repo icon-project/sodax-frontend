@@ -4,11 +4,12 @@ import type React from 'react';
 import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { ArrowRight } from 'lucide-react';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import { usePoolState, usePoolActions } from '../_stores/pool-store-provider';
-import { MOCK_POOL_PAIR } from '../_mocks';
-import { useXAccount, useXBalances, getXChainType } from '@sodax/wallet-sdk-react';
+import { usePoolContext } from '../_hooks/usePoolContext';
+import { getXChainType } from '@sodax/wallet-sdk-react';
 import { formatTokenAmount } from '@/lib/utils';
 import { chainIdToChainName } from '@/providers/constants';
 import type { SpokeChainId } from '@sodax/types';
@@ -18,29 +19,15 @@ export function ContinueButton(): React.JSX.Element {
   const openModal = useModalStore(state => state.openModal);
   const { selectedChainId, token0Amount, token1Amount, minPrice, maxPrice } = usePoolState();
   const { setIsDialogOpen } = usePoolActions();
+  const { poolData, walletToken0Balance, walletToken1Balance, spokeAddress } = usePoolContext();
 
-  const pair = MOCK_POOL_PAIR;
+  const walletConnected = !!spokeAddress;
 
-  // Wallet state
-  const { address } = useXAccount(selectedChainId || undefined);
-  const walletConnected = !!address;
+  const token0 = poolData?.token0;
+  const token1 = poolData?.token1;
 
-  const { data: balances } = useXBalances({
-    xChainId: selectedChainId || 'sonic',
-    xTokens: selectedChainId
-      ? [
-          { ...pair.token0, xChainId: selectedChainId },
-          { ...pair.token1, xChainId: selectedChainId },
-        ]
-      : [],
-    address,
-  });
-
-  const token0Balance = balances?.[pair.token0.address] ?? 0n;
-  const token1Balance = balances?.[pair.token1.address] ?? 0n;
-
-  const formattedToken0Balance = formatTokenAmount(token0Balance, pair.token0.decimals);
-  const formattedToken1Balance = formatTokenAmount(token1Balance, pair.token1.decimals);
+  const formattedToken0Balance = token0 ? formatTokenAmount(walletToken0Balance, token0.decimals) : '0';
+  const formattedToken1Balance = token1 ? formatTokenAmount(walletToken1Balance, token1.decimals) : '0';
 
   const buttonState = useMemo(() => {
     // No network selected
@@ -54,8 +41,13 @@ export function ContinueButton(): React.JSX.Element {
       return { label: `Connect ${chainName}`, disabled: false, action: 'connect' as const };
     }
 
-    // No balance
-    if (token0Balance === 0n && token1Balance === 0n) {
+    // No pool data yet
+    if (!poolData) {
+      return { label: 'Loading pool...', disabled: true, action: 'none' as const };
+    }
+
+    // No wallet balance — prompt to buy SODA
+    if (walletToken0Balance === 0n && walletToken1Balance === 0n) {
       return { label: 'Buy SODA', disabled: false, action: 'buy' as const };
     }
 
@@ -86,8 +78,9 @@ export function ContinueButton(): React.JSX.Element {
   }, [
     selectedChainId,
     walletConnected,
-    token0Balance,
-    token1Balance,
+    poolData,
+    walletToken0Balance,
+    walletToken1Balance,
     minPrice,
     maxPrice,
     token0Amount,
@@ -119,11 +112,12 @@ export function ContinueButton(): React.JSX.Element {
   return (
     <Button
       variant="cherry"
-      className="w-full h-12 rounded-lg text-sm font-semibold font-['InterRegular']"
+      className="w-full md:w-auto h-10 px-5 rounded-full text-sm font-semibold font-['InterRegular'] whitespace-nowrap shrink-0 gap-1.5"
       disabled={buttonState.disabled}
       onClick={handleClick}
     >
       {buttonState.label}
+      <ArrowRight className="w-4 h-4" />
     </Button>
   );
 }
