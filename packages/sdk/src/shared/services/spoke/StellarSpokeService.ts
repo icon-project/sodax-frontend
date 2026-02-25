@@ -2,6 +2,7 @@ import { type Address, type Hex, fromHex } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
 import type { StellarSpokeProvider } from '../../entities/stellar/StellarSpokeProvider.js';
 import {
+  CustomSorobanServer,
   CustomStellarAccount,
   type DepositSimulationParams,
   type Result,
@@ -10,6 +11,7 @@ import {
   type StellarGasEstimate,
   type StellarSpokeProviderType,
   type TxReturnType,
+  type VerifyTxHashRawStellarConfig,
   encodeAddress,
   isStellarRawSpokeProvider,
   parseToStroops,
@@ -370,6 +372,43 @@ export class StellarSpokeService {
       spokeProvider,
       raw,
     );
+  }
+
+  public static async waitForTransactionRaw(params: VerifyTxHashRawStellarConfig): Promise<Result<boolean, Error>> {
+    const defaultParams = {
+      pollingTimeout: 750,
+      maxAttempts: 40,
+    } as const;
+    const { pollingTimeout, maxAttempts, sorobanRpcConfig, txHash } = { ...defaultParams, ...params };
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const sorobanServer = new CustomSorobanServer(sorobanRpcConfig.sorobanRpcUrl, sorobanRpcConfig.customHeaders);
+        const tx = await sorobanServer.getTransaction(txHash);
+
+        if (tx && tx.status === 'SUCCESS') {
+          return { ok: true, value: true }; // confirmed
+        }
+
+        if (tx && tx.status === 'FAILED') {
+          return { ok: false, error: new Error(`Transaction failed: ${JSON.stringify(tx)}`) };
+        }
+
+        if (tx && tx.status === 'NOT_FOUND') {
+          // not in a closed ledger yet → poll again
+          await sleep(pollingTimeout);
+          continue;
+        }
+
+        // unknown status or tx undefined -> poll again
+        await sleep(pollingTimeout);
+      } catch (err) {
+        // Network/transient error → back off and retry
+        await sleep(pollingTimeout);
+      }
+    }
+
+    return { ok: false, error: new Error('Transaction was not confirmed within the max attempts') };
   }
 
   public static async waitForTransaction(

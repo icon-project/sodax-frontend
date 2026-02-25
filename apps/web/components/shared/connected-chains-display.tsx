@@ -8,6 +8,7 @@ import { useXAccounts } from '@sodax/wallet-sdk-react';
 import { getChainIconByName, EVM_CHAIN_ICONS } from '@/constants/chains';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { isPartnerRoute } from '@/constants/routes';
 
 interface ConnectedChainsDisplayProps {
   onClick?: () => void;
@@ -17,7 +18,7 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
   const xAccounts = useXAccounts();
 
   const pathname = usePathname();
-  const isPartner = pathname.startsWith('/partner');
+  const isPartner = isPartnerRoute(pathname);
 
   const connectedChains = Object.entries(xAccounts)
     .filter(([_, account]) => account?.address)

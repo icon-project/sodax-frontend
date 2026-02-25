@@ -4,12 +4,24 @@ import { useStakeState, useStakeActions } from '../../_stores/stake-store-provid
 import { UNSTAKE_METHOD } from '../../_stores/stake-store';
 import Image from 'next/image';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useStakingConfig } from '@sodax/dapp-kit';
 
 export default function UnstakeMethodSelectionStep({
-  receivedSodaAmount,
-}: { receivedSodaAmount: string }): React.JSX.Element {
+  regularUnstakeAmount,
+  instantUnstakeAmount,
+}: {
+  regularUnstakeAmount: string;
+  instantUnstakeAmount: string;
+}): React.JSX.Element {
   const { unstakeMethod } = useStakeState();
   const { setUnstakeMethod } = useStakeActions();
+  const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
+  if (isLoadingStakingConfig) {
+    return <div>Loading staking config...</div>;
+  }
+  if (!stakingConfig) {
+    return <div>No staking config found</div>;
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -36,7 +48,7 @@ export default function UnstakeMethodSelectionStep({
         >
           <div className="flex flex-col gap-2 flex-1">
             <div className="text-espresso text-(length:--body-comfortable) font-['InterRegular'] leading-[1.4] flex justify-between items-center">
-              Wait 180 Days
+              Wait {stakingConfig.unstakingPeriod}s
               <div className="mt-0.5 shrink-0">
                 <RadioGroupItem value={UNSTAKE_METHOD.REGULAR} className="w-4 h-4 border-2 border-clay-light" />
               </div>
@@ -49,7 +61,7 @@ export default function UnstakeMethodSelectionStep({
                 <Image src="/coin/soda.png" alt="SODA" width={16} height={16} />
               </div>
               <div className="flex justify-center gap-1">
-                <span className="text-espresso text-xs font-bold font-['InterRegular'] ">{receivedSodaAmount}</span>
+                <span className="text-espresso text-xs font-bold font-['InterRegular'] ">{regularUnstakeAmount}</span>
                 <span className="text-clay text-xs font-normal font-['InterRegular'] "> SODA</span>
               </div>
             </div>
@@ -79,7 +91,7 @@ export default function UnstakeMethodSelectionStep({
                 <Image src="/coin/soda.png" alt="SODA" width={16} height={16} />
               </div>
               <div className="flex justify-center gap-1">
-                <span className="text-espresso text-xs font-bold font-['InterRegular'] ">{receivedSodaAmount}</span>
+                <span className="text-espresso text-xs font-bold font-['InterRegular'] ">{instantUnstakeAmount}</span>
                 <span className="text-clay text-xs font-normal font-['InterRegular'] ">SODA</span>
               </div>
             </div>

@@ -27,17 +27,12 @@ export function usePartnerFeeLifecycle(partnerAddress?: Address) {
     updateMutation,
   } = useFeeClaimPreferences(partnerAddress);
   // 2. Fetch Claimable Balances
-  // We don't need 'hasPreferences' here because we derive 'hasSetupDestination' below
   const {
     assets: claimableFees,
     isLoading: isAssetsLoading,
     refetch: refreshBalances,
   } = useFeeClaimAssets(partnerAddress);
 
-  if (!isAssetsLoading) {
-    hasLoadedOnce.current = true;
-  }
-  // mark first successful load
   if (!isAssetsLoading) {
     hasLoadedOnce.current = true;
   }

@@ -56,7 +56,7 @@ export const getUser = async ({ address, chainType }: { address: string; chainTy
 export const isRegisteredUser = async ({ address, chainType }: { address: string; chainType: string }) => {
   const user = await getUser({ address, chainType });
   if (SIGN_SUPPORTED_CHAINS.includes(chainType)) {
-    if (user) {
+    if (user && user.address && user.chain) {
       return address.toLowerCase() === user.address.toLowerCase() && chainType === user.chain;
       // const { message, signature, address } = user;
       // const recoveredAddress = await recoverMessageAddress({ message, signature });

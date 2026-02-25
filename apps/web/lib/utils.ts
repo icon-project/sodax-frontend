@@ -10,8 +10,14 @@ import BigNumber from 'bignumber.js';
 
 import { getSupportedSolverTokens, supportedSpokeChains, moneyMarketSupportedTokens } from '@sodax/sdk';
 
-import type { Token, XToken, SpokeChainId } from '@sodax/types';
-import { INJECTIVE_MAINNET_CHAIN_ID, LIGHTLINK_MAINNET_CHAIN_ID, ICON_MAINNET_CHAIN_ID, hubAssets } from '@sodax/types';
+import type { Token, XToken, SpokeChainId, ChainId, EvmChainId, Address } from '@sodax/types';
+import {
+  INJECTIVE_MAINNET_CHAIN_ID,
+  LIGHTLINK_MAINNET_CHAIN_ID,
+  ICON_MAINNET_CHAIN_ID,
+  hubAssets,
+  EVM_CHAIN_IDS,
+} from '@sodax/types';
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
 
@@ -27,6 +33,14 @@ export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, 
 export function shortenAddress(address: string, chars = 4): string {
   if (!address) return '';
   return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`;
+}
+
+/**
+ * Type guard to check if a value is an Address type.
+ * Uses viem's isAddress function for validation.
+ */
+export function isValidAddress(value: unknown): value is Address {
+  return typeof value === 'string' && isEvmAddress(value);
 }
 
 function isValidInjectiveAddress(addr: string): boolean {
@@ -366,4 +380,25 @@ export function getTimeRemaining(startTime: bigint, unstakingPeriod: bigint): st
     return `${hours}h ${minutes}m remaining`;
   }
   return `${minutes}m remaining`;
+}
+
+/**
+ * Checks if a given Chain ID corresponds to an EVM-compatible network.
+ *
+ * Use this helper to filter or validate chains before attempting EVM-specific
+ * operations (like switching networks or calling contracts).
+ *
+ * @param chainId - The unique identifier of the chain to check.
+ * @returns `true` if the chain supports the Ethereum Virtual Machine, otherwise `false`.
+ *
+ * @example
+ * if (isEvmChainId(1)) {
+ * console.log("Ethereum Mainnet is EVM"); // true
+ * }
+ */
+export function isEvmChainId(chainId: ChainId): chainId is EvmChainId {
+  for (const evmId of EVM_CHAIN_IDS) {
+    if (chainId === evmId) return true;
+  }
+  return false;
 }
