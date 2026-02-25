@@ -36,7 +36,7 @@ function NetworkPicker({
   const { x, y, strategy, refs } = useFloating({
     placement: 'bottom',
     strategy: 'absolute',
-    middleware: [offset(10), shift({ padding: 8, limiter: limitShift() })],
+    middleware: [offset(13), shift({ padding: 8, limiter: limitShift() })],
     whileElementsMounted: autoUpdate,
   });
 
@@ -108,7 +108,7 @@ function NetworkPicker({
 
       <div
         className={cn(
-          'flex flex-wrap justify-center network-picker-container w-[170px] gap-[2px]',
+          'flex flex-wrap justify-center network-picker-container w-[140px] gap-0',
 
           isMobile && isSingle && 'ml-4',
         )}
@@ -245,25 +245,25 @@ export function TokenAsset({
             {name}
           </div>
 
-          {/* Single asset = one balance; group = total across chains. */}
-          {isHoldToken && formattedBalance && (
-            <div className="flex items-center justify-center">
-              {isHovered ? (
+          {/* Reserve space so row height is identical with/without wallet. When connected and has balance, show balance on hover. */}
+          <div className="flex min-h-5 items-center justify-center text-(length:--text-body-fine-print)">
+            {isHoldToken && formattedBalance ? (
+              isHovered ? (
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.15 }}
-                  className="text-clay text-(length:--text-body-fine-print)!"
+                  className="text-clay!"
                 >
                   {formattedBalance}
                 </motion.p>
               ) : (
-                <span className="invisible text-(length:--text-body-fine-print)" aria-hidden>
+                <span className="invisible" aria-hidden>
                   {formattedBalance}
                 </span>
-              )}
-            </div>
-          )}
+              )
+            ) : null}
+          </div>
         </motion.div>
       </div>
 

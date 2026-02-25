@@ -77,12 +77,12 @@ export default function NetworkIcon({
   const ringClass = hasBalance ? 'ring-[6px] ring-white' : 'ring-2 ring-white';
 
   if (swapPickerShadow) {
-    // Swap network picker: match Figma — border-radius 4px, border 5px white, box-shadow -2px 0 8px 0 rgba(175,145,145,0.40).
+    // Swap network picker: thick ring + shadow only when chain has balance; otherwise minimal ring (match Stake).
     const networkIconInPickerBoxShadow = 'shadow-[-2px_0_8px_0_rgba(175,145,145,0.40)]';
-    const networkIconInPickerRing = 'ring-[5px] ring-white';
+    const networkIconInPickerRing = hasBalance ? 'ring-[5px] ring-white' : 'ring-2 ring-white';
     return (
       <div
-        className={`flex shrink-0 w-4 h-4 items-center justify-center rounded-[4px] bg-white ${networkIconInPickerRing} ${networkIconInPickerBoxShadow} ${className}`}
+        className={`flex shrink-0 w-4 h-4 items-center justify-center rounded-[4px] bg-white ${networkIconInPickerRing} ${hasBalance ? networkIconInPickerBoxShadow : ''} ${className}`}
       >
         {renderIcons(id)}
       </div>
