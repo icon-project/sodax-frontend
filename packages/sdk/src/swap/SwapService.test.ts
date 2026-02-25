@@ -11,7 +11,6 @@ import {
   type PartnerFee,
   type RelayTxStatus,
   SwapService,
-  calculateFeeAmount,
   type SpokeProvider,
   DEFAULT_RELAY_TX_TIMEOUT,
   type ConfigService,
@@ -40,15 +39,16 @@ import { DEFAULT_RELAYER_API_ENDPOINT } from '../shared/constants.js';
 import {
   createTestEvmSpokeProvider,
   createTestSonicSpokeProvider,
-  createTestEvmHubProviderInstance,
   createTestEvmHubProvider,
   createTestConfigService,
+  createTestStellarSpokeProvider,
 } from '../shared/test-utils/testInstances.js';
 import { SONIC_MAINNET_CHAIN_ID, SOLANA_MAINNET_CHAIN_ID } from '@sodax/types';
 import type { GetBlockReturnType } from 'viem';
 import { SolverApiService } from './SolverApiService.js';
 import { SpokeService } from '../shared/services/spoke/SpokeService.js';
 import { SonicSpokeService } from '../shared/services/spoke/SonicSpokeService.js';
+import { StellarSpokeService } from '../shared/services/spoke/StellarSpokeService.js';
 import type { CreateLimitOrderParams } from './SwapService.js';
 
 describe('SwapService', async () => {
@@ -295,7 +295,7 @@ describe('SwapService', async () => {
 
     beforeEach(() => {
       testConfigService = createTestConfigService();
-      hubProvider = createTestEvmHubProviderInstance();
+      hubProvider = createTestEvmHubProvider();
     });
 
     // This test verifies that SwapService.getQuote calls SolverApiService.getQuote
@@ -328,6 +328,31 @@ describe('SwapService', async () => {
         expect.objectContaining({
           ...quoteRequest,
           amount: expectedAdjustedAmount,
+        }),
+        expect.objectContaining(solverConfig),
+        testConfigService,
+      );
+    });
+
+    it('should not adjust amount when no partner fee configured', async () => {
+      const spyGetQuote = vi.spyOn(SolverApiService, 'getQuote');
+
+      swapService = new SwapService({
+        configService: testConfigService,
+        hubProvider: hubProvider,
+      });
+
+      const testPayload: SolverIntentQuoteRequest = {
+        ...quoteRequest,
+        amount: 1000n,
+      };
+
+      swapService.getQuote(testPayload);
+
+      expect(spyGetQuote).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ...quoteRequest,
+          amount: 1000n,
         }),
         expect.objectContaining(solverConfig),
         testConfigService,
@@ -391,6 +416,11 @@ describe('SwapService', async () => {
     it('should handle null input amount', () => {
       // @ts-expect-error Testing invalid input
       expect(() => testSwapServiceWithAmountFee.getPartnerFee(null)).toThrow();
+    });
+
+    it('should return 0n when no partner fee is configured', () => {
+      const result = testSwapService.getPartnerFee(1000n);
+      expect(result).toBe(0n);
     });
   });
 
@@ -595,8 +625,7 @@ describe('SwapService', async () => {
       }
       expect(Erc20Service.isAllowanceValid).toHaveBeenCalledWith(
         testIntentParams.inputToken,
-        testIntentParams.inputAmount +
-          calculateFeeAmount(testIntentParams.inputAmount, testSwapService.config.partnerFee),
+        testIntentParams.inputAmount,
         await testArbWalletProvider.getWalletAddress(),
         testArbSpokeProvider.chainConfig.addresses.assetManager,
         testArbSpokeProvider,
@@ -709,6 +738,28 @@ describe('SwapService', async () => {
         sonicSpokeProvider,
       );
     });
+
+    it('should check trustline for Stellar spoke provider', async () => {
+      const testIntentParams = await createIntentParams();
+      const stellarSpokeProvider = createTestStellarSpokeProvider();
+
+      vi.spyOn(StellarSpokeService, 'hasSufficientTrustline').mockResolvedValueOnce(true);
+
+      const result = await testSwapService.isAllowanceValid({
+        intentParams: testIntentParams,
+        spokeProvider: stellarSpokeProvider,
+      });
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.value).toBe(true);
+      }
+      expect(StellarSpokeService.hasSufficientTrustline).toHaveBeenCalledWith(
+        testIntentParams.inputToken,
+        testIntentParams.inputAmount,
+        stellarSpokeProvider,
+      );
+    });
   });
 
   describe('getIntent', () => {
@@ -756,6 +807,68 @@ describe('SwapService', async () => {
       testSwapService.getFilledIntent(txHash);
 
       expect(spyGetFilledIntent).toHaveBeenCalledWith(txHash, expect.objectContaining(solverConfig), testHubProvider);
+    });
+  });
+
+  describe('getIntentSubmitTxExtraData', () => {
+    const mockIntent = {
+      intentId: 1n,
+      creator: creatorHubWalletAddress,
+      inputToken: '0x0000000000000000000000000000000000000000',
+      outputToken: '0x5979D7b546E38E414F7E9822514be443A4800529',
+      inputAmount: 1000000n,
+      minOutputAmount: 900000n,
+      deadline: 0n,
+      allowPartialFill: false,
+      srcChain: getIntentRelayChainId(BSC_MAINNET_CHAIN_ID),
+      dstChain: getIntentRelayChainId(ARBITRUM_MAINNET_CHAIN_ID),
+      srcAddress: '0x1234567890123456789012345678901234567890',
+      dstAddress: '0x1234567890123456789012345678901234567890',
+      solver: '0x0000000000000000000000000000000000000000',
+      data: '0x',
+    } as Intent;
+
+    it('should return extra data when txHash is provided', async () => {
+      const txHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+      const mockEncodedData = {
+        address: intentsContract as `0x${string}`,
+        value: 0n,
+        data: '0xencodeddata' as `0x${string}`,
+      };
+
+      vi.spyOn(EvmSolverService, 'getIntent').mockResolvedValueOnce(mockIntent);
+      vi.spyOn(EvmSolverService, 'encodeCreateIntent').mockReturnValue(mockEncodedData);
+
+      const result = await testSwapService.getIntentSubmitTxExtraData({ txHash });
+
+      expect(EvmSolverService.getIntent).toHaveBeenCalledWith(
+        txHash,
+        expect.objectContaining(solverConfig),
+        testHubProvider,
+      );
+      expect(result).toEqual({
+        address: mockIntent.creator,
+        payload: mockEncodedData.data,
+      });
+    });
+
+    it('should return extra data when intent is provided directly', async () => {
+      const mockEncodedData = {
+        address: intentsContract as `0x${string}`,
+        value: 0n,
+        data: '0xencodeddata' as `0x${string}`,
+      };
+
+      const spyGetIntent = vi.spyOn(EvmSolverService, 'getIntent');
+      vi.spyOn(EvmSolverService, 'encodeCreateIntent').mockReturnValue(mockEncodedData);
+
+      const result = await testSwapService.getIntentSubmitTxExtraData({ intent: mockIntent });
+
+      expect(spyGetIntent).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        address: mockIntent.creator,
+        payload: mockEncodedData.data,
+      });
     });
   });
 
@@ -818,6 +931,69 @@ describe('SwapService', async () => {
         submitPayload,
         testSwapService.config.relayerApiEndpoint,
       );
+    });
+
+    it('should return error when submitTransaction returns failure', async () => {
+      const submitPayload = {
+        action: 'submit',
+        params: {
+          chain_id: getIntentRelayChainId(BSC_MAINNET_CHAIN_ID).toString(),
+          tx_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
+        },
+      } satisfies IntentRelayRequest<'submit'>;
+
+      vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
+        success: false,
+        message: 'Failed',
+      });
+
+      const result = await testSwapService.submitIntent(submitPayload);
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.code).toBe('SUBMIT_TX_FAILED');
+      }
+    });
+
+    it('should return error when submitTransaction throws', async () => {
+      const submitPayload = {
+        action: 'submit',
+        params: {
+          chain_id: getIntentRelayChainId(BSC_MAINNET_CHAIN_ID).toString(),
+          tx_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
+        },
+      } satisfies IntentRelayRequest<'submit'>;
+
+      vi.spyOn(IntentRelayApiService, 'submitTransaction').mockRejectedValueOnce(new Error('Network error'));
+
+      const result = await testSwapService.submitIntent(submitPayload);
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.code).toBe('SUBMIT_TX_FAILED');
+      }
+    });
+
+    it('should return success result with relay response', async () => {
+      const submitPayload = {
+        action: 'submit',
+        params: {
+          chain_id: getIntentRelayChainId(BSC_MAINNET_CHAIN_ID).toString(),
+          tx_hash: '0xba3dce19347264db32ced212ff1a2036f20d9d2c7493d06af15027970be061af',
+        },
+      } satisfies IntentRelayRequest<'submit'>;
+
+      vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
+        success: true,
+        message: 'Transaction submitted successfully',
+      });
+
+      const result = await testSwapService.submitIntent(submitPayload);
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.value.success).toBe(true);
+      }
     });
 
     it('should handle submit with Solana data', async () => {
@@ -1040,6 +1216,249 @@ describe('SwapService', async () => {
         expect(result.value[2].dstTxHash).toBe(mockTxHash);
       }
     });
+
+    it('should return error when submitIntent fails', async () => {
+      const params = await createIntentParams();
+      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+      const mockIntent = {
+        intentId: 1n,
+        creator: creatorHubWalletAddress,
+        inputToken: '0x0000000000000000000000000000000000000000',
+        outputToken: '0x5979D7b546E38E414F7E9822514be443A4800529',
+        inputAmount: 1000000n,
+        minOutputAmount: 900000n,
+        deadline: 0n,
+        allowPartialFill: false,
+        srcChain: getIntentRelayChainId(BSC_MAINNET_CHAIN_ID),
+        dstChain: getIntentRelayChainId(ARBITRUM_MAINNET_CHAIN_ID),
+        srcAddress: '0x1234567890123456789012345678901234567890',
+        dstAddress: '0x1234567890123456789012345678901234567890',
+        solver: '0x0000000000000000000000000000000000000000',
+        data: '0x',
+      } as Intent;
+
+      vi.spyOn(testSwapService, 'createIntent').mockResolvedValueOnce({
+        ok: true,
+        value: [mockTxHash, { ...mockIntent, feeAmount: 0n }, '0x'],
+      });
+      vi.spyOn(SpokeService, 'verifyTxHash').mockResolvedValueOnce({ ok: true, value: true });
+      vi.spyOn(testSwapService, 'submitIntent').mockResolvedValueOnce({
+        ok: false,
+        error: {
+          code: 'SUBMIT_TX_FAILED',
+          data: {
+            payload: {} as IntentRelayRequest<'submit'>,
+            error: new Error('Submit failed'),
+          },
+        },
+      });
+
+      const result = await testSwapService.createAndSubmitIntent({
+        intentParams: params,
+        spokeProvider: testArbSpokeProvider,
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.code).toBe('SUBMIT_TX_FAILED');
+      }
+    });
+
+    it('should return error when waitUntilIntentExecuted fails', async () => {
+      const params = await createIntentParams();
+      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+      const mockIntent = {
+        intentId: 1n,
+        creator: creatorHubWalletAddress,
+        inputToken: '0x0000000000000000000000000000000000000000',
+        outputToken: '0x5979D7b546E38E414F7E9822514be443A4800529',
+        inputAmount: 1000000n,
+        minOutputAmount: 900000n,
+        deadline: 0n,
+        allowPartialFill: false,
+        srcChain: getIntentRelayChainId(BSC_MAINNET_CHAIN_ID),
+        dstChain: getIntentRelayChainId(ARBITRUM_MAINNET_CHAIN_ID),
+        srcAddress: '0x1234567890123456789012345678901234567890',
+        dstAddress: '0x1234567890123456789012345678901234567890',
+        solver: '0x0000000000000000000000000000000000000000',
+        data: '0x',
+      } as Intent;
+
+      vi.spyOn(testSwapService, 'createIntent').mockResolvedValueOnce({
+        ok: true,
+        value: [mockTxHash, { ...mockIntent, feeAmount: 0n }, '0x'],
+      });
+      vi.spyOn(SpokeService, 'verifyTxHash').mockResolvedValueOnce({ ok: true, value: true });
+      vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
+        success: true,
+        message: 'Transaction submitted successfully',
+      });
+      vi.spyOn(IntentRelayApiService, 'waitUntilIntentExecuted').mockResolvedValueOnce({
+        ok: false,
+        error: {
+          code: 'RELAY_TIMEOUT',
+          data: {
+            payload: {} as WaitUntilIntentExecutedPayload,
+            error: new Error('Timeout'),
+          },
+        },
+      });
+
+      const result = await testSwapService.createAndSubmitIntent({
+        intentParams: params,
+        spokeProvider: testArbSpokeProvider,
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.code).toBe('RELAY_TIMEOUT');
+      }
+    });
+
+    it('should return error when postExecution fails', async () => {
+      const params = await createIntentParams();
+      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+      const mockDstTxHash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+      const mockIntent = {
+        intentId: 1n,
+        creator: creatorHubWalletAddress,
+        inputToken: '0x0000000000000000000000000000000000000000',
+        outputToken: '0x5979D7b546E38E414F7E9822514be443A4800529',
+        inputAmount: 1000000n,
+        minOutputAmount: 900000n,
+        deadline: 0n,
+        allowPartialFill: false,
+        srcChain: getIntentRelayChainId(BSC_MAINNET_CHAIN_ID),
+        dstChain: getIntentRelayChainId(ARBITRUM_MAINNET_CHAIN_ID),
+        srcAddress: '0x1234567890123456789012345678901234567890',
+        dstAddress: '0x1234567890123456789012345678901234567890',
+        solver: '0x0000000000000000000000000000000000000000',
+        data: '0x',
+      } as Intent;
+
+      vi.spyOn(testSwapService, 'createIntent').mockResolvedValueOnce({
+        ok: true,
+        value: [mockTxHash, { ...mockIntent, feeAmount: 0n }, '0x'],
+      });
+      vi.spyOn(SpokeService, 'verifyTxHash').mockResolvedValueOnce({ ok: true, value: true });
+      vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
+        success: true,
+        message: 'Transaction submitted successfully',
+      });
+      vi.spyOn(IntentRelayApiService, 'waitUntilIntentExecuted').mockResolvedValueOnce({
+        ok: true,
+        value: {
+          ...packetData,
+          dst_tx_hash: mockDstTxHash,
+        },
+      });
+      vi.spyOn(testSwapService, 'postExecution').mockResolvedValueOnce({
+        ok: false,
+        error: {
+          detail: {
+            code: -12,
+            message: 'Intent not found',
+          },
+        },
+      });
+
+      const result = await testSwapService.createAndSubmitIntent({
+        intentParams: params,
+        spokeProvider: testArbSpokeProvider,
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.code).toBe('POST_EXECUTION_FAILED');
+        const postExecError = result.error as IntentError<'POST_EXECUTION_FAILED'>;
+        expect(postExecError.data.intent).toBeDefined();
+        expect(postExecError.data.intentDeliveryInfo).toBeDefined();
+      }
+    });
+
+    it('should handle unexpected exceptions', async () => {
+      const params = await createIntentParams();
+      const error = new Error('Unexpected error');
+
+      vi.spyOn(testSwapService, 'createIntent').mockRejectedValueOnce(error);
+
+      const result = await testSwapService.createAndSubmitIntent({
+        intentParams: params,
+        spokeProvider: testArbSpokeProvider,
+      });
+
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.error.code).toBe('UNKNOWN');
+      }
+    });
+
+    it('should include Solana extra data in submit payload', async () => {
+      const params = await createIntentParams();
+      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+      const mockDstTxHash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+      const mockIntent = {
+        intentId: 1n,
+        creator: creatorHubWalletAddress,
+        inputToken: '0x0000000000000000000000000000000000000000',
+        outputToken: '0x5979D7b546E38E414F7E9822514be443A4800529',
+        inputAmount: 1000000n,
+        minOutputAmount: 900000n,
+        deadline: 0n,
+        allowPartialFill: false,
+        srcChain: getIntentRelayChainId(SOLANA_MAINNET_CHAIN_ID),
+        dstChain: getIntentRelayChainId(ARBITRUM_MAINNET_CHAIN_ID),
+        srcAddress: '0x1234567890123456789012345678901234567890',
+        dstAddress: '0x1234567890123456789012345678901234567890',
+        solver: '0x0000000000000000000000000000000000000000',
+        data: '0x',
+      } as Intent;
+
+      vi.spyOn(testSwapService, 'createIntent').mockResolvedValueOnce({
+        ok: true,
+        value: [mockTxHash, { ...mockIntent, feeAmount: 0n }, '0xabcdef'],
+      });
+      vi.spyOn(SpokeService, 'verifyTxHash').mockResolvedValueOnce({ ok: true, value: true });
+      vi.spyOn(IntentRelayApiService, 'submitTransaction').mockResolvedValueOnce({
+        success: true,
+        message: 'Transaction submitted successfully',
+      });
+      vi.spyOn(IntentRelayApiService, 'waitUntilIntentExecuted').mockResolvedValueOnce({
+        ok: true,
+        value: {
+          ...packetData,
+          dst_tx_hash: mockDstTxHash,
+        },
+      });
+      vi.spyOn(testSwapService, 'postExecution').mockResolvedValueOnce({
+        ok: true,
+        value: {
+          answer: 'OK',
+          intent_hash: mockDstTxHash,
+        },
+      });
+
+      await testSwapService.createAndSubmitIntent({
+        intentParams: {
+          ...params,
+          srcChain: SOLANA_MAINNET_CHAIN_ID,
+        },
+        spokeProvider: testArbSpokeProvider,
+      });
+
+      expect(IntentRelayApiService.submitTransaction).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'submit',
+          params: expect.objectContaining({
+            data: {
+              address: mockIntent.creator,
+              payload: '0xabcdef',
+            },
+          }),
+        }),
+        testSwapService.config.relayerApiEndpoint,
+      );
+    });
   });
 
   describe('approve', () => {
@@ -1164,6 +1583,27 @@ describe('SwapService', async () => {
         params.inputAmount,
         expect.any(String),
         sonicSpokeProvider,
+        undefined,
+      );
+    });
+
+    it('should request trustline for Stellar spoke provider', async () => {
+      const params = await createIntentParams();
+      const stellarSpokeProvider = createTestStellarSpokeProvider();
+      const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+
+      vi.spyOn(StellarSpokeService, 'requestTrustline').mockResolvedValueOnce(mockTxHash as never);
+
+      const result = await testSwapService.approve({
+        intentParams: params,
+        spokeProvider: stellarSpokeProvider,
+      });
+
+      expect(result.ok).toBe(true);
+      expect(StellarSpokeService.requestTrustline).toHaveBeenCalledWith(
+        params.inputToken,
+        params.inputAmount,
+        stellarSpokeProvider,
         undefined,
       );
     });

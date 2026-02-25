@@ -66,6 +66,7 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
     "@changesets/cli": "catalog:",
+    "@sodax/wallet-sdk-core": "workspace:*",
     "@types/bn.js": "^5.1.6",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
