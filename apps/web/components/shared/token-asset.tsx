@@ -36,7 +36,7 @@ function NetworkPicker({
   const { x, y, strategy, refs } = useFloating({
     placement: 'bottom',
     strategy: 'absolute',
-    middleware: [offset(-30), shift({ padding: 8, limiter: limitShift() })],
+    middleware: [offset(10), shift({ padding: 8, limiter: limitShift() })],
     whileElementsMounted: autoUpdate,
   });
 
@@ -190,9 +190,10 @@ export function TokenAsset({
   /**
    * IMPORTANT:
    * This wrapper NEVER scales.
-   * Floating UI uses this as reference.
    */
   const assetRef = useRef<HTMLDivElement>(null);
+  /** Icon ref used as floating reference when picker is open so gap matches Stake (Figma). */
+  const iconRef = useRef<HTMLDivElement>(null);
   const tileOpacity = isClickBlurred ? 0.4 : isHoverDimmed ? 0.8 : 1; // 0.4 is 40% opacity, 0.5 is 50%, 1 is 100%
 
   return (
@@ -217,7 +218,7 @@ export function TokenAsset({
           onMouseLeave={onMouseLeave}
           onClick={onClick}
         >
-          <div className="relative">
+          <div ref={iconRef} className="relative">
             {(token || (isGroup && tokens?.length)) && (
               <CurrencyLogo
                 currency={token || tokens?.[0] || ({} as XToken)}
@@ -272,7 +273,7 @@ export function TokenAsset({
           tokens={tokens || []}
           tokenSymbol={name}
           onSelect={onChainClick}
-          reference={assetRef.current}
+          reference={iconRef.current}
           getFormattedBalanceForToken={getFormattedBalanceForToken}
           showBalanceRing={showBalanceRing}
         />

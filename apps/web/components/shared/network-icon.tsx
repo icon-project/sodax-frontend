@@ -77,30 +77,22 @@ export default function NetworkIcon({
   const ringClass = hasBalance ? 'ring-[6px] ring-white' : 'ring-2 ring-white';
 
   if (swapPickerShadow) {
-    // Swap network picker only: drop-shadow + box-shadow so icons don't merge into a cloud.
-    // w-4 h-4 shrink-0 so layout matches stake (5 icons per row in 140px).
-    const dropShadowClass = hasBalance
-      ? 'filter drop-shadow-[0_3px_8px_rgba(0,0,0,0.32)]'
-      : 'filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)]';
-    const boxShadowClass = hasBalance
-      ? 'shadow-[0_3px_8px_rgba(0,0,0,0.18)]'
-      : 'shadow-[0_3px_10px_rgba(0,0,0,0.2)]';
+    // Swap network picker: match Figma — border-radius 4px, border 5px white, box-shadow -2px 0 8px 0 rgba(175,145,145,0.40).
+    const networkIconInPickerBoxShadow = 'shadow-[-2px_0_8px_0_rgba(175,145,145,0.40)]';
+    const networkIconInPickerRing = 'ring-[5px] ring-white';
     return (
       <div
-        className={`flex shrink-0 w-4 h-4 items-center justify-center rounded ${dropShadowClass} ${className}`}
+        className={`flex shrink-0 w-4 h-4 items-center justify-center rounded-[4px] bg-white ${networkIconInPickerRing} ${networkIconInPickerBoxShadow} ${className}`}
       >
-        <div
-          className={`flex items-center justify-center rounded bg-white ${ringClass} w-4 h-4 ${boxShadowClass}`}
-        >
-          {renderIcons(id)}
-        </div>
+        {renderIcons(id)}
       </div>
     );
   }
 
+  // Neutral gray shadow (designer: previous rgba(175,145,145) was too dark and color off).
   const shadowClass = hasBalance
-    ? 'shadow-[-5px_0px_5px_0px_rgba(175,145,145,1)]'
-    : 'shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)]';
+    ? 'shadow-[-4px_0_6px_0_rgba(0,0,0,0.08)]'
+    : 'shadow-[-2px_0_4px_0_rgba(0,0,0,0.06)]';
   return (
     <div className={`flex items-center justify-center rounded ${ringClass} ${shadowClass} w-4 h-4 ${className}`}>
       {renderIcons(id)}
