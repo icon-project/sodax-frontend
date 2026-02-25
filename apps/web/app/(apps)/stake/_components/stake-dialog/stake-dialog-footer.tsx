@@ -14,7 +14,7 @@ import { parseUnits } from 'viem';
 import { useStakeApprove, useStakeAllowance } from '@sodax/dapp-kit';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Check, CheckIcon, FilePenLine, Loader2Icon } from 'lucide-react';
+import { ArrowLeft, Check, CheckIcon, FilePenLine, Loader2Icon } from 'lucide-react';
 import { chainIdToChainName } from '@/providers/constants';
 interface StakeDialogFooterProps {
   selectedToken: XToken | null;
@@ -72,7 +72,6 @@ export default function StakeDialogFooter({
     stakeOrderPayloadForApprove,
     spokeProvider as SpokeProvider,
   );
-  console.log('hasAllowed', hasAllowed);
 
   const { mutateAsync: approveStake, isPending: isApproving } = useStakeApprove(spokeProvider as SpokeProvider);
 
@@ -89,6 +88,12 @@ export default function StakeDialogFooter({
   const handleContinue = (): void => {
     if (currentStakeStep === STAKE_STEP.STAKE_TERMS) {
       setCurrentStakeStep(STAKE_STEP.STAKE_APPROVE);
+    }
+  };
+
+  const handleBack = (): void => {
+    if (currentStakeStep === STAKE_STEP.STAKE_APPROVE) {
+      setCurrentStakeStep(STAKE_STEP.STAKE_TERMS);
     }
   };
 
@@ -144,7 +149,9 @@ export default function StakeDialogFooter({
 
   return (
     <DialogFooter className="flex justify-between gap-2 overflow-hidden bottom-8 md:inset-x-12 inset-x-8 absolute">
-      {(isMobile ? currentStakeStep === STAKE_STEP.STAKE_TERMS : true) && (
+      {(isMobile
+        ? currentStakeStep === STAKE_STEP.STAKE_TERMS || currentStakeStep === STAKE_STEP.STAKE_APPROVE
+        : true) && (
         <Button
           variant="cherry"
           className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
@@ -154,10 +161,16 @@ export default function StakeDialogFooter({
                 ? 'w-10 h-10 rounded-full p-0 flex items-center justify-center'
                 : 'flex flex-1'
           }`}
-          onClick={handleContinue}
-          disabled={currentStakeStep !== STAKE_STEP.STAKE_TERMS}
+          onClick={currentStakeStep === STAKE_STEP.STAKE_APPROVE ? handleBack : handleContinue}
+          disabled={currentStakeStep === STAKE_STEP.STAKE_CONFIRM}
         >
-          {currentStakeStep !== STAKE_STEP.STAKE_TERMS ? <Check className="w-5 h-5" /> : 'Continue'}
+          {currentStakeStep === STAKE_STEP.STAKE_APPROVE ? (
+            <ArrowLeft className="w-5 h-5" />
+          ) : currentStakeStep !== STAKE_STEP.STAKE_TERMS ? (
+            <Check className="w-5 h-5" />
+          ) : (
+            'Continue'
+          )}
         </Button>
       )}
 
