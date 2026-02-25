@@ -41,7 +41,7 @@ export default function StakePage(): React.JSX.Element {
         <div
           className={cn(
             'relative w-full rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius)',
-            'before:absolute before:inset-0 before:border-almost-white before:border-[3px] before:border-b-0 before:rounded-tl-(--layout-container-radius) before:rounded-tr-(--layout-container-radius) before:mix-blend-multiply before:pointer-events-none',
+            'before:absolute before:inset-0 before:border-almost-white before:border-4 before:border-b-0 before:rounded-tl-(--layout-container-radius) before:rounded-tr-(--layout-container-radius) before:mix-blend-multiply before:pointer-events-none',
             'transition-[filter] duration-300',
             isNetworkPickerOpened && 'blur-sm',
           )}

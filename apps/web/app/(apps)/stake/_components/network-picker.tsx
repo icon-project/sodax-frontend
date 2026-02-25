@@ -107,34 +107,28 @@ export function NetworkPicker({
           isMobile && isSingle ? 'text-left ml-5' : 'text-center',
         )}
       >
-        {hoveredIcon !== null && tokens[hoveredIcon] ? (
-          <>
-            {(() => {
+        {hoveredIcon !== null && tokens[hoveredIcon]
+          ? (() => {
               const hoveredToken = tokens[hoveredIcon];
               const hoveredBalance = tokenBalances.get(hoveredToken.xChainId) || 0n;
-              const hasHoveredBalance = hoveredBalance > 0n;
-              const formattedHoveredBalance = hasHoveredBalance
-                ? formatTokenAmount(hoveredBalance, hoveredToken.decimals)
-                : null;
-
+              const balance =
+                hoveredBalance > 0n
+                  ? formatTokenAmount(hoveredBalance, hoveredToken.decimals)
+                  : undefined;
+              if (balance) {
+                return (
+                  <>
+                    {balance} {tokenSymbol}
+                  </>
+                );
+              }
               return (
                 <>
-                  {BigInt(hoveredBalance) === 0n && (
-                    <>
-                      {' '}
-                      {tokenSymbol} <span className="font-bold">on {chainIdToChainName(hoveredToken.xChainId)}</span>
-                    </>
-                  )}
-                  {hoveredBalance !== 0n && formattedHoveredBalance !== null && (
-                    <> Balance: {formattedHoveredBalance}</>
-                  )}
+                  {tokenSymbol} <span className="font-bold">on {chainIdToChainName(hoveredToken.xChainId)}</span>
                 </>
               );
-            })()}
-          </>
-        ) : (
-          'Choose a network'
-        )}
+            })()
+          : 'Choose a network'}
       </div>
 
       <div
