@@ -47,7 +47,7 @@ jobs:
         id: claude
         uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: |
             --allowedTools "Bash(pnpm lint),Bash(pnpm build:packages),Bash(pnpm checkTs),Bash(pnpm test),Bash(pnpm run *)"
             --system-prompt "You are working on sodax-frontend, a TypeScript monorepo using pnpm workspaces. Key packages: @sodax/sdk (packages/sdk), @sodax/types (packages/types), @sodax/dapp-kit (packages/wallet-dapp-kit), apps/web (Next.js app). Use pnpm for all package management. Follow Biome linting rules (biome.json at repo root). Use strict TypeScript with ESM imports (.js extensions in source). When implementing features, prefer editing existing files over creating new ones. Keep changes focused and avoid over-engineering."
