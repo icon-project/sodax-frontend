@@ -83,13 +83,11 @@ export async function generateGlossaryMetadata(slug: string, config: GlossaryPag
       type: 'article',
       modifiedTime: page.last_edited_time,
       tags,
-      images: [{ url: config.ogImage, width: 1200, height: 630, alt: `${title} - ${config.label}` }],
     },
     twitter: {
       card: 'summary_large_image',
       title: `${title} - ${config.label}`,
       description,
-      images: [config.ogImage],
       creator: '@gosodax',
     },
     alternates: { canonical: url },
@@ -157,7 +155,7 @@ export default async function GlossaryDetailPage({
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <div className="min-h-screen bg-cream-white flex flex-col w-full">
         <MarketingHeader backLink="/glossary" backText="← glossary" />
-        <div className="max-w-7xl mx-auto pt-25 w-full px-4">
+        <div className="max-w-7xl mx-auto pt-30 w-full px-4">
           <article className="py-8 flex-1 flex flex-col items-start overflow-clip w-full">
             {/* Breadcrumb */}
             <nav className="mb-6 text-sm text-clay" aria-label="Breadcrumb">

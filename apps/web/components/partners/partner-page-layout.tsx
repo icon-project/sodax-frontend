@@ -52,7 +52,7 @@ export function PartnerPageLayout({ metadata, children, backLink, backText }: Pa
       <MarketingHeader backLink={backLink} backText={backText} />
 
       {/* Content */}
-      <div className="flex flex-col items-center w-full pt-[100px]">
+      <div className="flex flex-col items-center w-full pt-30">
         <div className="flex flex-col gap-8 items-start pt-14 pb-14 w-full max-w-5xl px-4 md:px-8">{children}</div>
       </div>
 

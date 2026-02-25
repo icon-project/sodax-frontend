@@ -6,10 +6,10 @@ export default function NewsLoading() {
   return (
     <div className="min-h-screen w-full bg-almost-white">
       {/* Header skeleton */}
-      <div className="sticky top-0 z-40 bg-cherry-soda h-[100px]" />
+      <div className="sticky top-0 z-40 bg-cherry-soda h-30" />
 
       {/* Category Filter Tabs skeleton */}
-      <div className="max-w-7xl mx-auto px-4 py-8 md:py-12">
+      <div className="max-w-7xl mx-auto px-4 pt-5 pb-8 md:pb-12">
         <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 md:justify-center md:flex-wrap scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
           {[...Array(5)].map((_, i) => (
             <div
@@ -28,14 +28,13 @@ export default function NewsLoading() {
           {/* Main Content Area */}
           <div className="min-w-0 flex flex-col gap-4">
             {/* Featured Article skeleton */}
-            <div className="bg-white rounded-[24px] overflow-hidden shadow-[0px_4px_32px_0px_var(--cream-white)] p-2">
+            <div className="bg-white rounded-3xl overflow-hidden shadow-[0px_4px_32px_0px_#ede6e6] p-2">
               <div className="flex flex-col md:flex-row gap-2 md:items-center">
-                <div className="w-full md:w-[288px] h-[200px] md:h-[180px] bg-cream-white rounded-[16px] shrink-0 animate-pulse" />
-                <div className="flex flex-col gap-2 p-2 flex-1">
+                <div className="w-full md:w-[288px] h-50 md:h-45 bg-cream-white rounded-2xl shrink-0 animate-pulse" />
+                <div className="flex flex-col gap-1 p-2 flex-1">
                   <div className="h-3 w-16 bg-cream-white rounded animate-pulse" />
                   <div className="h-7 bg-cream-white rounded animate-pulse" />
                   <div className="h-5 bg-cream-white rounded animate-pulse w-3/4" />
-                  <div className="h-4 bg-cream-white rounded animate-pulse w-full" />
                   <div className="h-5 w-24 bg-cream-white rounded-[256px] animate-pulse" />
                 </div>
               </div>
@@ -46,9 +45,9 @@ export default function NewsLoading() {
               {[...Array(2)].map((_, i) => (
                 <div
                   key={i}
-                  className="bg-white p-2 rounded-[24px] shadow-[0px_4px_32px_0px_var(--cream-white)] flex flex-col gap-4"
+                  className="bg-white p-2 rounded-3xl shadow-[0px_4px_32px_0px_#ede6e6] flex flex-col gap-4"
                 >
-                  <div className="w-full h-[180px] bg-cream-white rounded-[16px] animate-pulse" />
+                  <div className="w-full h-45 bg-cream-white rounded-2xl animate-pulse" />
                   <div className="flex flex-col gap-2 p-2">
                     <div className="h-3 w-20 bg-cream-white rounded animate-pulse" />
                     <div className="h-5 bg-cream-white rounded animate-pulse" />
@@ -67,9 +66,9 @@ export default function NewsLoading() {
                 {[...Array(4)].map((_, i) => (
                   <div
                     key={i}
-                    className="bg-white p-2 rounded-[24px] shadow-[0px_4px_32px_0px_var(--cream-white)] flex flex-col gap-4"
+                    className="bg-white p-2 rounded-3xl shadow-[0px_4px_32px_0px_#ede6e6] flex flex-col gap-4"
                   >
-                    <div className="w-full h-[180px] bg-cream-white rounded-[16px] animate-pulse" />
+                    <div className="w-full h-45 bg-cream-white rounded-2xl animate-pulse" />
                     <div className="flex flex-col gap-2 p-2">
                       <div className="h-3 w-20 bg-cream-white rounded animate-pulse" />
                       <div className="h-5 bg-cream-white rounded animate-pulse" />
@@ -85,7 +84,7 @@ export default function NewsLoading() {
           {/* Sidebar skeleton */}
           <aside className="flex flex-col gap-4">
             {/* SDK Documentation Card skeleton */}
-            <div className="bg-cream-white rounded-[24px] p-8 flex flex-col gap-4">
+            <div className="bg-cream-white rounded-3xl p-8 flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <div className="h-3 w-24 bg-clay-light rounded animate-pulse" />
                 <div className="h-5 w-40 bg-clay-light rounded animate-pulse" />
@@ -97,7 +96,7 @@ export default function NewsLoading() {
             </div>
 
             {/* Social Media Card skeleton */}
-            <div className="bg-cream-white rounded-[24px] p-8 flex flex-col gap-4">
+            <div className="bg-cream-white rounded-3xl p-8 flex flex-col gap-4">
               <div className="flex flex-col gap-2">
                 <div className="h-3 w-32 bg-clay-light rounded animate-pulse" />
                 <div className="h-5 w-44 bg-clay-light rounded animate-pulse" />
