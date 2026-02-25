@@ -30,7 +30,6 @@ export function useFeeClaimPreferences(address?: Address) {
     queryFn: async () => {
       if (!address || !sodax) throw new Error('SDK or Address missing');
       const result = await sodax.partners.feeClaim.getAutoSwapPreferences({ address });
-      console.log('Fetched preferences:', result);
 
       if (!result.ok) throw result.error;
       return result.value;
@@ -55,7 +54,7 @@ export function useFeeClaimPreferences(address?: Address) {
       queryClient.setQueryData(['feeClaimPrefs', address], {
         outputToken: variables.outputToken,
         dstChain: variables.dstChain,
-        dstAddress: address,
+        dstAddress: variables.dstAddress,
       });
     },
   });

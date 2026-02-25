@@ -12,6 +12,7 @@ import { CircularProgressIcon } from '@/components/icons';
 import { Check } from 'lucide-react';
 import { ClaimExecutionState } from '../../utils/fee-claim';
 import { getChainName } from '@/constants/chains';
+import { isAddress } from 'viem';
 
 interface ConfirmClaimModalProps {
   isOpen: boolean;
@@ -27,11 +28,16 @@ export function ConfirmClaimModal({ isOpen, onClose, asset, partnerAddress, onSu
   const [executionState, setExecutionState] = useState<ClaimExecutionState>(ClaimExecutionState.READY);
 
   const handleConfirm = () => {
+    const tokenAddress = asset.sdkAsset.address;
+    if (!isAddress(tokenAddress)) {
+      toast.error('Cannot claim: Invalid token address detected');
+      return;
+    }
     setExecutionState(ClaimExecutionState.SIGNING);
 
     executeClaim.mutate(
       {
-        fromToken: asset.sdkAsset.address,
+        fromToken: tokenAddress,
         amount: asset.balance,
       },
       {

@@ -20,6 +20,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/sonner';
+import { isPartnerRoute } from '@/constants/routes';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   const { isSwitchingPage } = useAppStore(state => state);
@@ -30,7 +31,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   const { setShouldTriggerAnimation } = useAppStore(state => state);
 
   const pathname = usePathname();
-  const isPartner = pathname.startsWith('/partner');
+  const isPartner = isPartnerRoute(pathname);
 
   useLayoutEffect(() => {
     if (ref.current) {
