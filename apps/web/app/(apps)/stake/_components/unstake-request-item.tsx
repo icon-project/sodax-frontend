@@ -30,12 +30,6 @@ export function UnstakeRequestItem({
   const { mutateAsync: cancelUnstake, isPending: isCancellingUnstake } = useCancelUnstake(spokeProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedToken?.xChainId || 'sonic');
   const [isSwitchChainDialogOpen, setIsSwitchChainDialogOpen] = useState<boolean>(false);
-  const timeRemaining = useMemo((): string => {
-    if (!stakingConfig) {
-      return 'Loading...';
-    }
-    return getTimeRemaining(request.request.startTime, stakingConfig.unstakingPeriod);
-  }, [request.request.startTime, stakingConfig]);
 
   const isReadyToClaim = useMemo((): boolean => {
     return request.penalty === 0n;
@@ -46,6 +40,13 @@ export function UnstakeRequestItem({
     const interval = setInterval(() => setNowSeconds(Math.floor(Date.now() / 1000)), 1000);
     return () => clearInterval(interval);
   }, []);
+
+  const timeRemaining = useMemo((): string => {
+    if (!stakingConfig || !nowSeconds || !request.request.startTime) {
+      return 'Loading...';
+    }
+    return getTimeRemaining(request.request.startTime, stakingConfig.unstakingPeriod);
+  }, [request.request.startTime, stakingConfig, nowSeconds]);
 
   const progressPercentage = useMemo((): number => {
     if (!stakingConfig || isReadyToClaim) {
