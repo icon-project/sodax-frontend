@@ -1060,6 +1060,13 @@ export const spokeChainConfig = {
         address: '0x6308fa9545126237158778e74AE1b6b89022C5c0',
         xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
       },
+      LL: {
+        symbol: 'LL',
+        name: 'LightLink',
+        decimals: 18,
+        address: '0x519d3443cACc61bD844546eDAea48E5502021802',
+        xChainId: LIGHTLINK_MAINNET_CHAIN_ID,
+      },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
   [INJECTIVE_MAINNET_CHAIN_ID]: {
@@ -2086,6 +2093,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'Tether USD',
       vault: SodaTokens.sodaUSDT.address,
     },
+    [spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.LL.address]: {
+      asset: '0x547845f26a7ea68a4202387a536071ff320c1f38',
+      decimal: 18,
+      symbol: 'LL',
+      name: 'LightLink',
+      vault: SodaTokens.sodaLL.address,
+    },
   },
   [INJECTIVE_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ.address]: {
@@ -2604,6 +2618,7 @@ export const swapSupportedTokens = {
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['S.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['POL.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['HYPE.LL'],
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.LL,
   ] as const satisfies XToken[],
   [SOLANA_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL,
@@ -2768,6 +2783,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['HYPE.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.LL,
   ] as const satisfies XToken[],
   [SOLANA_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL,
