@@ -54,7 +54,7 @@ export function useFeeClaimPreferences(address?: Address) {
       queryClient.setQueryData(['feeClaimPrefs', address], {
         outputToken: variables.outputToken,
         dstChain: variables.dstChain,
-        dstAddress: address,
+        dstAddress: variables.dstAddress,
       });
     },
   });

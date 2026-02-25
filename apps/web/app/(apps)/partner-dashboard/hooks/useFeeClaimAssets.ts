@@ -82,14 +82,9 @@ export function useFeeClaimAssets(address?: Address) {
         } else if (!hasPrefs) {
           status = FeeClaimAssetStatus.NO_PREFS;
         }
-        // Check against the $10 threshold
+        // Check against the $10 threshold; if price unknown (null), status stays READY so user can try to claim
         else if (usdEstimate !== null && usdEstimate < MIN_PARTNER_CLAIM_USD_AMOUNT) {
           status = FeeClaimAssetStatus.BELOW_MIN;
-        }
-        // If price is unknown (null), you might want a fallback
-        // or let it be READY so users can try to claim anyway
-        else if (usdEstimate === null) {
-          status = FeeClaimAssetStatus.READY;
         }
 
         return {

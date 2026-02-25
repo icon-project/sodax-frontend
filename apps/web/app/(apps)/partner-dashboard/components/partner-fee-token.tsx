@@ -14,17 +14,18 @@ type PartnerFeeTokenProps = {
 
 export function PartnerFeeToken({ asset, onClaim }: PartnerFeeTokenProps) {
   const tokenAddress = asset.currency.address;
+  const validAddress = isAddress(tokenAddress) ? tokenAddress : undefined;
 
-  if (!isAddress(tokenAddress)) {
+  const { isApproved, approve } = useFeeClaimApproval(validAddress);
+  const [locallyApproved, setLocallyApproved] = useState(false);
+
+  if (!validAddress) {
     return (
       <div className="rounded-xl py-4 text-sm text-negative p-4 sm:grid sm:grid-cols-[auto_1fr_auto] sm:items-center">
         Invalid token address: {String(tokenAddress)}
       </div>
     );
   }
-
-  const { isApproved, approve } = useFeeClaimApproval(tokenAddress);
-  const [locallyApproved, setLocallyApproved] = useState(false);
 
   const isUSDC = asset.currency.symbol === 'USDC';
   const canClaim = asset.status === FeeClaimAssetStatus.READY && (isApproved || locallyApproved);

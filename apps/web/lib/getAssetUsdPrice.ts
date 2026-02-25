@@ -40,7 +40,6 @@ export async function getAssetUsdPrice(assetSymbol: string): Promise<AssetUsdPri
   }
 
   try {
-    console.log('Fetching USD price for asset:', assetSymbol);
     const response = await fetch(`${monitorIp}/api/price?coingecko_id=${coingeckoId}&secret=${monitorSecret}`, {
       method: 'GET',
       headers: {
