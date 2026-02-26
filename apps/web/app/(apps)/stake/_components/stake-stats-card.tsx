@@ -9,12 +9,17 @@ import { useStakingConfig } from '@sodax/dapp-kit';
 import { UnstakeModeToggle } from './unstake-mode-toggle';
 import { STAKE_MODE } from '../_stores/stake-store';
 import { useStakeActions } from '../_stores/stake-store-provider';
+import { Loader2 } from 'lucide-react';
 
 export function StakeStatsCard(): React.JSX.Element {
-  const { totalUserXSodaBalance, totalUserXSodaValue, userXSodaBalance, stakeMode } = useStakeState();
+  const { totalUserXSodaBalance, totalUserXSodaValue, userXSodaBalance, stakeMode, isLoadingBalanceCalculation } =
+    useStakeState();
   const { setStakeMode } = useStakeActions();
   const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
-
+  console.log('totalUserXSodaBalance', totalUserXSodaBalance);
+  console.log('totalUserXSodaValue', totalUserXSodaValue);
+  console.log('userXSodaBalance', userXSodaBalance);
+  console.log('stakeMode', stakeMode);
   return (
     <div className="w-full relative flex flex-col justify-start items-start gap-4">
       <div className="w-full flex justify-between items-center gap-(--layout-space-small)">
@@ -34,9 +39,13 @@ export function StakeStatsCard(): React.JSX.Element {
         </div>
         <div className="grow flex flex-col justify-center items-start gap-1">
           <div className="flex justify-center items-center gap-1">
-            <span className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] leading-5">
-              {formatTokenAmount(totalUserXSodaBalance, 18)}
-            </span>
+            {isLoadingBalanceCalculation ? (
+              <Loader2 className="w-4 h-4 text-espresso animate-spin" />
+            ) : (
+              <span className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] leading-5">
+                {formatTokenAmount(totalUserXSodaBalance, 18)}
+              </span>
+            )}
             <span className="text-clay text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-5">
               {' '}
               xSODA

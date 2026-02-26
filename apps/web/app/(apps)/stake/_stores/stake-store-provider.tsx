@@ -67,12 +67,12 @@ export const useStakeState = () => {
   }, [stakeTypedValue, stakeMode, selectedToken?.decimals]);
 
   // Get stake ratio when staking (converts SODA to xSODA)
-  const { data: stakeRatio } = useStakeRatio(
+  const { data: stakeRatio, isLoading: isLoadingStakeRatio } = useStakeRatio(
     stakeMode === STAKE_MODE.STAKING && stakeValue > 0n ? stakeValue : undefined,
   );
 
   // Get converted assets when unstaking (converts xSODA to SODA)
-  const { data: convertedAssets } = useConvertedAssets(
+  const { data: convertedAssets, isLoading: isLoadingConvertedAssets } = useConvertedAssets(
     stakeMode === STAKE_MODE.UNSTAKING && stakeValue > 0n ? stakeValue : undefined,
   );
 
@@ -80,7 +80,10 @@ export const useStakeState = () => {
     if (!stakingInfo || isLoadingStakingInfo) {
       return { userXSodaBalance: 0n, userXSodaValue: 0n };
     }
-    return { userXSodaBalance: stakingInfo.userXSodaBalance, userXSodaValue: stakingInfo.userXSodaValue };
+    return {
+      userXSodaBalance: stakingInfo.userXSodaBalance,
+      userXSodaValue: stakingInfo.userXSodaValue,
+    };
   }, [stakingInfo, isLoadingStakingInfo]);
 
   const stakeValueInSoda: bigint = useMemo(() => {
@@ -106,7 +109,7 @@ export const useStakeState = () => {
       return userXSodaBalance - stakeValueInXSoda;
     }
 
-    return userXSodaBalance + stakeValueInXSoda;
+    return userXSodaBalance + stakeValueInXSoda < parseUnits('1', 17) ? 0n : userXSodaBalance + stakeValueInXSoda;
   }, [userXSodaBalance, stakeMode, stakeValueInXSoda]);
 
   const totalUserXSodaValue = useMemo(() => {
@@ -116,6 +119,17 @@ export const useStakeState = () => {
 
     return userXSodaValue + stakeValueInSoda;
   }, [userXSodaValue, stakeMode, stakeValueInSoda]);
+
+  // Determine if we're loading calculations for totalUserXSodaBalance
+  const isLoadingBalanceCalculation = useMemo(() => {
+    if (stakeValue === 0n) {
+      return false;
+    }
+    if (stakeMode === STAKE_MODE.STAKING) {
+      return isLoadingStakeRatio;
+    }
+    return isLoadingConvertedAssets;
+  }, [stakeMode, stakeValue, isLoadingStakeRatio, isLoadingConvertedAssets]);
 
   return {
     stakeValue,
@@ -133,6 +147,7 @@ export const useStakeState = () => {
     totalUserXSodaBalance,
     totalUserXSodaValue,
     isNetworkPickerOpened,
+    isLoadingBalanceCalculation,
     reset,
   };
 };
