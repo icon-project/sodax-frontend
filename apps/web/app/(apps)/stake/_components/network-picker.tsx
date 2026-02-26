@@ -98,7 +98,7 @@ export function NetworkPicker({
   return createPortal(
     <div
       ref={refs.setFloating}
-      className="z-53 pointer-events-auto"
+      className="z-[53] pointer-events-auto"
       style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
     >
       <div
@@ -112,9 +112,7 @@ export function NetworkPicker({
               const hoveredToken = tokens[hoveredIcon];
               const hoveredBalance = tokenBalances.get(hoveredToken.xChainId) || 0n;
               const balance =
-                hoveredBalance > 0n
-                  ? formatTokenAmount(hoveredBalance, hoveredToken.decimals)
-                  : undefined;
+                hoveredBalance > 0n ? formatTokenAmount(hoveredBalance, hoveredToken.decimals) : undefined;
               if (balance) {
                 return (
                   <>
@@ -133,7 +131,7 @@ export function NetworkPicker({
 
       <div
         className={cn(
-          'flex flex-wrap justify-center network-picker-container w-[140px] gap-0',
+          'flex flex-wrap justify-center network-picker-container w-[150px] gap-0.5',
           isMobile && isSingle && 'ml-4',
         )}
       >
@@ -158,11 +156,7 @@ export function NetworkPicker({
                 onSelect?.(token);
               }}
             >
-              <NetworkIcon
-                id={token.xChainId}
-                hasBalance={hasBalance}
-                swapPickerShadow={true}
-              />
+              <NetworkIcon id={token.xChainId} hasBalance={hasBalance} swapPickerShadow={true} />
             </motion.div>
           );
         })}

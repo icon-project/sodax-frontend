@@ -19,6 +19,8 @@ interface TokenListProps {
   isChainSelectorOpen: boolean;
   allBalances: Record<string, ChainBalanceEntry[]>;
   tokenPrices: Record<string, number> | undefined;
+  /** When set, used for value-based sort (e.g. unfiltered prices so "all chains" order is by total value). */
+  tokenPricesForSort?: Record<string, number> | undefined;
   holdTokens: XToken[];
   platformTokens: XToken[];
   selectedChainFilter: SpokeChainId | null;
@@ -35,12 +37,14 @@ export function TokenList({
   isChainSelectorOpen,
   allBalances,
   tokenPrices,
+  tokenPricesForSort,
   holdTokens,
   platformTokens,
   selectedChainFilter,
   isFiltered,
   isSearchActive,
 }: TokenListProps): React.JSX.Element {
+  const pricesForSort = tokenPricesForSort ?? tokenPrices;
   const assetsRef = useRef<HTMLDivElement>(null);
   const [hoveredAsset, setHoveredAsset] = useState<string | null>(null);
   const shouldApplyHover = clickedAsset === null;
@@ -113,8 +117,8 @@ export function TokenList({
   const tokenGroupsBySymbol = useMemo(() => getUniqueTokenSymbols(allTokensMerged), [allTokensMerged]);
 
   const sortedTokenGroups = useMemo(
-    () => sortTokenGroupsForPicker(tokenGroupsBySymbol, allBalances),
-    [tokenGroupsBySymbol, allBalances],
+    () => sortTokenGroupsForPicker(tokenGroupsBySymbol, allBalances, pricesForSort),
+    [tokenGroupsBySymbol, allBalances, pricesForSort],
   );
 
   // Center items when (search active or chain selected) and there are fewer than 5 items
@@ -230,7 +234,7 @@ export function TokenList({
     <div className="flex h-full min-h-0 flex-col">
       {backdropShow && (
         <div
-          className="rounded-[32px] fixed inset-0 z-55"
+          className="rounded-[32px] fixed inset-0 z-[55]"
           onClick={() => {
             setBackdropShow(false);
             setHoveredAsset(null);
@@ -243,17 +247,17 @@ export function TokenList({
         data-slot="scroll-area"
         className={`relative flex min-h-0 w-full flex-1 flex-col content-stretch md:flex-none md:h-[416px]! ${clickedAsset ? 'overflow-hidden' : ''}`}
       >
-        <div className="absolute top-0 left-0 right-0 z-100000 h-6 w-full pointer-events-none bg-linear-to-b from-vibrant-white to-transparent" />
+        <div className="absolute top-0 left-0 right-0 z-[100000] h-6 w-full pointer-events-none bg-linear-to-b from-vibrant-white to-transparent" />
 
         <ScrollAreaPrimitive.Viewport
           data-slot="scroll-area-viewport"
-          className={`ring-ring/10 dark:ring-ring/20 dark:outline-ring/40 outline-ring/50 size-full rounded-[inherit] transition-[color,box-shadow] focus-visible:ring-4 focus-visible:outline-1 px-6 ${clickedAsset ? 'overflow-hidden overscroll-none' : ''}`}
+          className={`ring-ring/10 dark:ring-ring/20 dark:outline-ring/40 outline-ring/50 size-full rounded-[inherit] transition-[color,box-shadow] focus-visible:ring-4 focus-visible:outline-1 px-8 py-4 ${clickedAsset ? 'overflow-hidden overscroll-none' : ''}`}
         >
           <motion.div
             ref={assetsRef}
-            className={`pt-3 [flex-flow:wrap] box-border content-start flex items-start justify-center relative shrink-0 w-full flex-1 md:grid md:grid-cols-5 md:content-start md:justify-items-center md:gap-x-4 md:gap-y-2 ${
+            className={`[flex-flow:wrap] box-border content-start flex items-start justify-center relative shrink-0 w-full flex-1 md:grid md:grid-cols-5 md:content-start md:justify-items-center md:gap-x-4 md:gap-y-2 px-3 ${
               isChainSelectorOpen ? 'blur filter opacity-15' : ''
-            } ${isFiltered ? 'px-10' : 'px-0'}`}
+            }`}
             data-name="Assets"
           >
             <AnimatePresence mode="sync">
@@ -265,7 +269,7 @@ export function TokenList({
             </AnimatePresence>
           </motion.div>
         </ScrollAreaPrimitive.Viewport>
-        <div className="w-full h-16 left-0 bottom-0 absolute bg-linear-to-t from-vibrant-white to-neutral-100/0 z-100000 pointer-events-none" />
+        <div className="w-full h-16 left-0 bottom-0 absolute bg-linear-to-t from-vibrant-white to-neutral-100/0 z-[100000] pointer-events-none" />
         <ScrollBar />
         <ScrollAreaPrimitive.Corner />
       </ScrollAreaPrimitive.Root>

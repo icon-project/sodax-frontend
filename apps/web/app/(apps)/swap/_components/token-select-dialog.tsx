@@ -171,6 +171,7 @@ export default function TokenSelectDialog({
                 {...unfilteredTokenGroups}
                 clickedAsset={clickedAsset}
                 tokenPrices={unfilteredTokenPrices}
+                tokenPricesForSort={unfilteredTokenPrices}
                 allBalances={balances}
                 selectedChainFilter={selectedChain}
                 isFiltered={false}
@@ -194,6 +195,7 @@ export default function TokenSelectDialog({
               {...filteredTokenGroups}
               clickedAsset={clickedAsset}
               tokenPrices={tokenPrices}
+              tokenPricesForSort={unfilteredTokenPrices ?? tokenPrices}
               allBalances={balances}
               selectedChainFilter={selectedChain}
               isFiltered={Boolean(selectedChain)}

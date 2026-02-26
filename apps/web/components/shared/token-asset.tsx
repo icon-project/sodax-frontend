@@ -36,7 +36,7 @@ function NetworkPicker({
   const { x, y, strategy, refs } = useFloating({
     placement: 'bottom',
     strategy: 'absolute',
-    middleware: [offset(13), shift({ padding: 8, limiter: limitShift() })],
+    middleware: [offset(-30), shift({ padding: 8, limiter: limitShift() })],
     whileElementsMounted: autoUpdate,
   });
 
@@ -77,7 +77,7 @@ function NetworkPicker({
   return createPortal(
     <div
       ref={refs.setFloating}
-      className="z-53 pointer-events-auto"
+      className="z-[53] pointer-events-auto"
       style={{ position: strategy, top: y ?? 0, left: x ?? 0 }}
     >
       <div
@@ -108,7 +108,7 @@ function NetworkPicker({
 
       <div
         className={cn(
-          'flex flex-wrap justify-center network-picker-container w-[140px] gap-0',
+          'flex flex-wrap justify-center network-picker-container w-[150px] gap-0.5',
 
           isMobile && isSingle && 'ml-4',
         )}
@@ -192,8 +192,6 @@ export function TokenAsset({
    * This wrapper NEVER scales.
    */
   const assetRef = useRef<HTMLDivElement>(null);
-  /** Icon ref used as floating reference when picker is open so gap matches Stake (Figma). */
-  const iconRef = useRef<HTMLDivElement>(null);
   const tileOpacity = isClickBlurred ? 0.4 : isHoverDimmed ? 0.8 : 1; // 0.4 is 40% opacity, 0.5 is 50%, 1 is 100%
 
   return (
@@ -209,16 +207,16 @@ export function TokenAsset({
           transition={{ duration: 0.2, ease: 'easeOut' }}
           whileHover={{ zIndex: 9999 }}
           className={cn(
-            'px-3 flex flex-col items-center justify-start cursor-pointer w-18 pb-3 transition-all',
+            'px-3 flex flex-col items-center justify-start cursor-pointer w-18 transition-all',
             isClickBlurred && 'blur-sm',
-            isClicked && isGroup && 'z-9999',
+            isClicked && isGroup && 'z-[9999]',
           )}
           data-name="Asset"
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
           onClick={onClick}
         >
-          <div ref={iconRef} className="relative">
+          <div className="relative">
             {(token || (isGroup && tokens?.length)) && (
               <CurrencyLogo
                 currency={token || tokens?.[0] || ({} as XToken)}
@@ -273,7 +271,7 @@ export function TokenAsset({
           tokens={tokens || []}
           tokenSymbol={name}
           onSelect={onChainClick}
-          reference={iconRef.current}
+          reference={assetRef.current}
           getFormattedBalanceForToken={getFormattedBalanceForToken}
           showBalanceRing={showBalanceRing}
         />
