@@ -309,7 +309,7 @@ export class BitcoinBaseSpokeProvider {
           );
 
         return (await provider.radfi.requestRadfiSignature({
-          userAddress: data,
+          userAddress: walletAddress,
           signedBase64Tx: signedTx,
         }, accessToken)) satisfies TxReturnType<BitcoinSpokeProviderType, false> as TxReturnType<S, R>;
 

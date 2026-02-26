@@ -1,6 +1,5 @@
 import 'dotenv/config';
 import { encodeFunctionData, keccak256, type Address, type Hash, type Hex } from 'viem';
-import secp256k1 from 'secp256k1';
 import {
   EvmAssetManagerService,
   EvmHubProvider,
@@ -18,7 +17,8 @@ import {
   getHubChainConfig,
   encodeAddress,
   Payload,
-  RadfiConfig
+  RadfiConfig,
+  waitUntilIntentExecuted
 } from '@sodax/sdk';
 import { EvmWalletProvider, BitcoinWalletProvider } from '@sodax/wallet-sdk-core';
 import { SONIC_MAINNET_CHAIN_ID, type HubChainId, type SpokeChainId, BITCOIN_MAINNET_CHAIN_ID, BitcoinSpokeChainConfig, getIntentRelayChainId } from '@sodax/types';
@@ -369,7 +369,7 @@ async function repay(token: Address, amount: bigint, useTradingWallet: boolean =
 }
 
 // uses spoke assets to create intents
-async function createIntent(amount: bigint, nativeToken: Address, inputToken: Address, outputToken: Address) {
+async function createIntent(amount: bigint, inputToken: Address, outputChainId: SpokeChainId, dstAddress: Address) {
   const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
   const walletAddressBytes = encodeAddress(BITCOIN_MAINNET_CHAIN_ID, walletAddress);
   const tradingWalletAddress = await spokeProvider.radfi.getTradingWallet(walletAddress);
@@ -389,9 +389,9 @@ async function createIntent(amount: bigint, nativeToken: Address, inputToken: Ad
     deadline: 0n,
     allowPartialFill: false,
     srcChain: spokeProvider.chainConfig.chain.id,
-    dstChain: "0xa86a.avax",
+    dstChain: outputChainId,
     srcAddress: walletAddress,
-    dstAddress: "0x19297569544CB0837E48D747F349c172f640858a",
+    dstAddress: dstAddress,
     solver: '0x0000000000000000000000000000000000000000',
     data: '0x',
   } satisfies CreateIntentParams;
@@ -405,8 +405,26 @@ async function createIntent(amount: bigint, nativeToken: Address, inputToken: Ad
   
   //@ts-ignore
   const res = await submitData(txHash.value[0], hubWallet, txHash.value[2]);
-  console.log(res);
+  
+   const packet = await waitUntilIntentExecuted({
+          intentRelayChainId:getIntentRelayChainId(spokeCfg.chain.id).toString(),
+          // @ts-ignore
+          spokeTxHash: txHash.value[0],
+          timeout:120000,
+          apiUrl: relayerBackendUrl,
+        });
 
+    
+   if (!packet.ok) {
+          return {
+            ok: false,
+            error: packet.error,
+          };
+        }
+  const dstIntentTxHash = packet.value.dst_tx_hash;
+ const result = await sodax.swaps.postExecution({
+        intent_tx_hash: dstIntentTxHash as `0x${string}`,
+      });
   console.log('[createIntent] txHash', txHash);
 }
 
@@ -587,10 +605,10 @@ async function main() {
     await repay(token, amount);
   } else if (functionName === 'createIntent') {
     const amount = BigInt(process.argv[3]); // Get amount from command line argument
-    const nativeToken = process.argv[4] as Address; // Get input token address from command line argument
-    const inputToken = process.argv[5] as Address; // Get output token address from command line argument
-    const outputToken = process.argv[6] as Address; // Get output token address from command line argument
-    await createIntent(amount, nativeToken, inputToken, outputToken);
+    const inputToken = process.argv[4] as Address; // Get input token address from command line argument
+    const outputChainId = process.argv[5] as SpokeChainId; // Get output chain ID from command line argument
+    const dstAddress = process.argv[6] as Address; // Get destination address from command line argument
+    await createIntent(amount, inputToken, outputChainId, dstAddress);
   } else if (functionName === 'fillIntent') {
     const intentId = BigInt(process.argv[3]); // Get intent ID from command line argument
     const inputToken = process.argv[4] as Address; // Get input token address

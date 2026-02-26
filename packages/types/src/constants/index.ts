@@ -1097,7 +1097,7 @@ export const spokeChainConfig = {
       assetManager: 'bc1p4z9555xw0266vhq2x5un4zdmm9dt9zyet32fs7wa7u5ckdxusd9qsw4xfx',
     },
     chain: baseChainInfo[BITCOIN_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'BITCOIN'>,
-    bnUSD: '',
+    bnUSD: 'no',
     nativeToken: 'BTC' as const,
     supportedTokens: {
       BTC: {
@@ -1110,8 +1110,15 @@ export const spokeChainConfig = {
       bnUSD: {
         symbol: 'bnUSD',
         name: 'bnUSD',
+        decimals: 18,
+        address: '0:0',
+        xChainId: BITCOIN_MAINNET_CHAIN_ID,
+      },
+      BUSD: {
+        symbol: 'BUSD',
+        name: 'BUSDSTABLECOIN',
         decimals: 6,
-        address: '251340:25',
+        address: '897442:43',
         xChainId: BITCOIN_MAINNET_CHAIN_ID,
       }
     },
@@ -2211,14 +2218,14 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       decimal: 8,
       symbol: 'BTC',
       name: 'Bitcoin',
-      vault: '0xeb0393893b5bf98a50073d6740738b08e575058b',
+      vault: '0x7A1A5555842Ad2D0eD274d09b5c4406a95799D5d',
     },
-    [spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.bnUSD.symbol]: {
-      asset: '0xE81544002bFE4A8D02B09D4A2EBB3ED0fd176F0D',
+    [spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BUSD.symbol]: {
+      asset: '0xdb41c7d09406026d4582bc2fc6d6319c323fe1bb',
       decimal: 6,
       symbol: 'BUSD',  
       name: 'BUSD.BUSD.BUSD',
-      vault: '0x6486795C12e731F38C58a559f059c4eb01D31EC9',
+      vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     }
   }
 } as const;
