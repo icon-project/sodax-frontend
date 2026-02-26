@@ -1,3 +1,5 @@
+// Centralized token picker sort: deterministic order, fallback when no wallet/prices.
+
 import type { XToken } from '@sodax/types';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
 import { getChainBalance } from '@/lib/utils';
@@ -5,6 +7,14 @@ import { TOKEN_PICKER_GROUP_A, TOKEN_PICKER_GROUP_B } from '@/lib/token-picker-r
 import { formatUnits } from 'viem';
 
 type TokenGroup = { symbol: string; tokens: XToken[] };
+
+/** Relative tolerance: values within this fraction of the larger are treated as equal so price refetches don't cause list jump. */
+const VALUE_EQUAL_FRACTION = 0.01;
+
+function valuesEffectivelyEqual(aValue: number, bValue: number): boolean {
+  const max = Math.max(Math.abs(aValue), Math.abs(bValue), 1);
+  return Math.abs(aValue - bValue) / max < VALUE_EQUAL_FRACTION;
+}
 
 const toIndexMap = (list: readonly string[]) => new Map(list.map((s, i) => [s.toLowerCase(), i]));
 
@@ -50,28 +60,43 @@ function groupOrder(symbol: string) {
   return Number.MAX_SAFE_INTEGER;
 }
 
+/**
+ * Single source of truth for token picker order. Prevents flicker and position jumps by:
+ * - Using a canonical input order (by symbol) so tie-breaking is deterministic.
+ * - Treating values within ~1% as equal so price refetches don't reorder the list.
+ * - Fallback when no wallet or no prices: group rank → group order → alphabetical.
+ *
+ * Order: 1) has balance first, 2) by USD value desc (when prices available), 3) group rank,
+ * 4) group order, 5) alphabetical. Ties use the next rule.
+ */
 export function sortTokenGroupsForPicker(
   groups: TokenGroup[],
   balances: Record<string, ChainBalanceEntry[]>,
   tokenPrices?: Record<string, number>,
 ): TokenGroup[] {
-  return [...groups].sort((a, b) => {
+  const normalized = [...groups].sort((a, b) =>
+    (a.symbol ?? '').localeCompare(b.symbol ?? '', undefined, { sensitivity: 'base' }),
+  );
+
+  return normalized.sort((a, b) => {
     const aSymbol = a.symbol ?? '';
     const bSymbol = b.symbol ?? '';
 
-    // 1) tokens with balance first
+    // 1) tokens with balance first (fallback: no wallet => all same, then group rank)
     const aHas = groupHasBalance(a.tokens, balances);
     const bHas = groupHasBalance(b.tokens, balances);
     if (aHas !== bHas) return aHas ? -1 : 1;
 
     // 2) among groups with balance: sort by USD value descending when prices available
-    if (aHas && bHas && tokenPrices && Object.keys(tokenPrices).length > 0) {
-      const aValue = groupTotalFiatValue(a.tokens, balances, tokenPrices);
-      const bValue = groupTotalFiatValue(b.tokens, balances, tokenPrices);
-      if (aValue !== bValue) return bValue - aValue; // descending
+    const hasPrices = tokenPrices && Object.keys(tokenPrices).length > 0;
+    if (aHas && bHas && hasPrices) {
+      const aValue = groupTotalFiatValue(a.tokens, balances, tokenPrices as Record<string, number>);
+      const bValue = groupTotalFiatValue(b.tokens, balances, tokenPrices as Record<string, number>);
+      if (!valuesEffectivelyEqual(aValue, bValue)) return bValue - aValue; // descending
+      // values within ~1%: use deterministic tie-break so price refetches don't jump the list
     }
 
-    // 3) Group A, then B, then C (for no-balance or when no prices)
+    // 3) Group A, then B, then C (fallback when no prices or values equal)
     const r = groupRank(aSymbol) - groupRank(bSymbol);
     if (r !== 0) return r;
 

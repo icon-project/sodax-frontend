@@ -116,6 +116,7 @@ export function TokenList({
 
   const tokenGroupsBySymbol = useMemo(() => getUniqueTokenSymbols(allTokensMerged), [allTokensMerged]);
 
+  // Centralized sort: value-desc when prices available, else stable fallback (group rank → alphabetical). No flicker when wallet disconnected or prices loading.
   const sortedTokenGroups = useMemo(
     () => sortTokenGroupsForPicker(tokenGroupsBySymbol, allBalances, pricesForSort),
     [tokenGroupsBySymbol, allBalances, pricesForSort],
