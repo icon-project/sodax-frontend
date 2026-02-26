@@ -50,8 +50,10 @@ jobs:
       - name: Run Claude Code
         id: claude
         uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: |
-            --allowedTools "Bash(pnpm lint),Bash(pnpm build:packages),Bash(pnpm checkTs),Bash(pnpm test),Bash(pnpm run *)"
-            --system-prompt "You are working on sodax-frontend, a TypeScript monorepo using pnpm workspaces. Key packages: @sodax/sdk (packages/sdk), @sodax/types (packages/types), @sodax/dapp-kit (packages/wallet-dapp-kit), apps/web (Next.js app). Use pnpm for all package management. Follow Biome linting rules (biome.json at repo root). Use strict TypeScript with ESM imports (.js extensions in source). When implementing features, prefer editing existing files over creating new ones. Keep changes focused and avoid over-engineering."
+            --allowedTools "Bash(pnpm *),Bash(node *),Bash(npx *),Bash(git *),Bash(gh *),Bash(ls *),Bash(cat *),Bash(find *),Bash(head *),Bash(tail *),Bash(wc *),Bash(sort *),Bash(grep *),Bash(echo *),Bash(pwd),Bash(which *),Bash(env),Bash(curl *),Bash(jq *),Bash(mkdir *),Bash(cp *),WebFetch,WebSearch"
+            --system-prompt "You are working on sodax-frontend, a TypeScript monorepo using pnpm workspaces. Key packages: @sodax/sdk (packages/sdk), @sodax/types (packages/types), @sodax/dapp-kit (packages/wallet-dapp-kit), apps/web (Next.js app). Use pnpm for all package management. Follow Biome linting rules (biome.json at repo root). Use strict TypeScript with ESM imports (.js extensions in source). When implementing features, prefer editing existing files over creating new ones. Keep changes focused and avoid over-engineering. You have access to other repos in the icon-project org via the gh CLI — use it to read issues, PRs, and code from related repos when needed."
