@@ -9,7 +9,7 @@ import UnstakeMethodSelectionStep from './unstake-method-selection-step';
 import UnstakeConfirmationStep from './unstake-confirmation-step';
 import UnstakeDialogFooter from './unstake-dialog-footer';
 import { useStakeState, useStakeActions } from '../../_stores/stake-store-provider';
-import { UNSTAKE_STEP, UNSTAKE_METHOD } from '../../_stores/stake-store';
+import { UNSTAKE_STEP, UNSTAKE_METHOD, STAKE_MODE } from '../../_stores/stake-store';
 import { useConvertedAssets, useInstantUnstakeRatio } from '@sodax/dapp-kit';
 import { formatUnits } from 'viem';
 import BigNumber from 'bignumber.js';
@@ -22,7 +22,7 @@ interface UnstakeDialogProps {
 
 export default function UnstakeDialog({ open, onOpenChange, selectedToken }: UnstakeDialogProps): React.JSX.Element {
   const { currentUnstakeStep, stakeValue, unstakeMethod } = useStakeState();
-  const { resetUnstakeState, setStakeTypedValue } = useStakeActions();
+  const { resetUnstakeState, setStakeTypedValue, setStakeMode } = useStakeActions();
   const [isUnstakePending, setIsUnstakePending] = useState<boolean>(false);
   const [isShaking, setIsShaking] = useState<boolean>(false);
   const [isUnstakeCompleted, setIsUnstakeCompleted] = useState<boolean>(false);
@@ -83,6 +83,8 @@ export default function UnstakeDialog({ open, onOpenChange, selectedToken }: Uns
     if (isUnstakeCompleted) {
       setStakeTypedValue('');
       setIsUnstakeCompleted(false);
+      // Toggle animation to stake mode after unstake is completed
+      setStakeMode(STAKE_MODE.STAKING);
     }
   };
 

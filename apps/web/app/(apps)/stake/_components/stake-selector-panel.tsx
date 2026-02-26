@@ -170,7 +170,7 @@ export function StakeSelectorPanel(): React.JSX.Element {
                     </Button>
                   </div>
                 ) : (
-                  <span>No SODA in wallet</span>
+                  <span>No {stakeMode === STAKE_MODE.STAKING ? 'SODA' : 'xSODA'} in wallet</span>
                 )}
               </div>
             </div>

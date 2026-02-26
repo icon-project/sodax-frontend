@@ -24,6 +24,7 @@ import { useRequestTrustline, useSpokeProvider } from '@sodax/dapp-kit';
 import { Loader2 } from 'lucide-react';
 import type { SpokeProvider } from '@sodax/sdk';
 import { parseUnits } from 'viem';
+import { ErrorDialog } from '@/components/shared/error-dialog';
 
 export function StakeInputPanel(): React.JSX.Element {
   const router = useRouter();
@@ -39,6 +40,8 @@ export function StakeInputPanel(): React.JSX.Element {
   const walletConnected = !!address;
   const [isStakeDialogOpen, setIsStakeDialogOpen] = useState<boolean>(false);
   const [isUnstakeDialogOpen, setIsUnstakeDialogOpen] = useState<boolean>(false);
+  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const { data: balances } = useXBalances({
     xChainId: currentNetwork || 'sonic',
@@ -61,7 +64,13 @@ export function StakeInputPanel(): React.JSX.Element {
     if (!address) {
       return;
     }
-    await activateStellarAccount({ address });
+    try {
+      await activateStellarAccount({ address });
+    } catch (error) {
+      const errorMsg = 'Failed to activate Stellar account. Please try again.';
+      setErrorMessage(errorMsg);
+      setIsErrorDialogOpen(true);
+    }
   };
 
   const { data: stellarTrustlineValidation } = useValidateStellarTrustline(
@@ -69,27 +78,39 @@ export function StakeInputPanel(): React.JSX.Element {
     isStellarChain ? selectedToken : undefined,
   );
 
-  console.log('stellar address', address);
-  console.log('stellar token', selectedToken);
-  console.log('stellar trustline validation', stellarTrustlineValidation);
-
   const walletProvider = useWalletProvider(selectedToken?.xChainId);
   const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
   const {
     requestTrustline,
     isLoading: isRequestingTrustline,
     isRequested: hasTrustline,
+    error: trustlineError,
   } = useRequestTrustline(selectedToken?.address);
   const handleRequestTrustline = async (): Promise<void> => {
     if (!selectedToken || !spokeProvider) {
       return;
     }
-    await requestTrustline({
-      token: selectedToken.address,
-      amount: parseUnits('1', selectedToken.decimals),
-      spokeProvider: spokeProvider as SpokeProvider,
-    });
+    try {
+      await requestTrustline({
+        token: selectedToken.address,
+        amount: parseUnits('1', selectedToken.decimals),
+        spokeProvider: spokeProvider as SpokeProvider,
+      });
+    } catch (error) {
+      const errorMsg = 'Failed to add Stellar trustline. Please try again.';
+      setErrorMessage(errorMsg);
+      setIsErrorDialogOpen(true);
+    }
   };
+
+  // Monitor trustline error from hook
+  useEffect(() => {
+    if (trustlineError) {
+      const errorMsg = 'Failed to add Stellar trustline. Please try again.';
+      setErrorMessage(errorMsg);
+      setIsErrorDialogOpen(true);
+    }
+  }, [trustlineError]);
 
   const handleConnect = (): void => {
     const chainId = selectedToken?.xChainId || 'sonic';
@@ -285,6 +306,12 @@ export function StakeInputPanel(): React.JSX.Element {
       </div>
       <StakeDialog open={isStakeDialogOpen} onOpenChange={setIsStakeDialogOpen} selectedToken={selectedToken} />
       <UnstakeDialog open={isUnstakeDialogOpen} onOpenChange={setIsUnstakeDialogOpen} selectedToken={selectedToken} />
+      <ErrorDialog
+        open={isErrorDialogOpen}
+        onOpenChange={setIsErrorDialogOpen}
+        errorMessage={errorMessage}
+        title="Transaction failed"
+      />
     </>
   );
 }

@@ -131,7 +131,7 @@ export function useAllChainXSodaBalances(chainIds: SpokeChainId[]): Map<SpokeCha
 
           return {
             chainId: query.chainId,
-            balance: result.value.userXSodaBalance >= parseUnits('1', 16) ? result.value.userXSodaBalance : 0n,
+            balance: result.value.userXSodaBalance >= parseUnits('1', 17) ? result.value.userXSodaBalance : 0n,
           };
         } catch (error) {
           console.warn(`Failed to fetch xSODA balance for chain ${query.chainId}:`, error);
