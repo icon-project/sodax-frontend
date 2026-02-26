@@ -16,10 +16,7 @@ export function StakeStatsCard(): React.JSX.Element {
     useStakeState();
   const { setStakeMode } = useStakeActions();
   const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
-  console.log('totalUserXSodaBalance', totalUserXSodaBalance);
-  console.log('totalUserXSodaValue', totalUserXSodaValue);
-  console.log('userXSodaBalance', userXSodaBalance);
-  console.log('stakeMode', stakeMode);
+
   return (
     <div className="w-full relative flex flex-col justify-start items-start gap-4">
       <div className="w-full flex justify-between items-center gap-(--layout-space-small)">
