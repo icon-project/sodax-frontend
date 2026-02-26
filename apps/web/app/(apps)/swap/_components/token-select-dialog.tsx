@@ -3,7 +3,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { XIcon } from 'lucide-react';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogClose, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { CurrencySearchPanel } from './currency-search-panel';
 import { TokenList } from './token-list';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
@@ -134,6 +134,7 @@ export default function TokenSelectDialog({
         hideCloseButton
         className="flex flex-col overflow-hidden w-[90%] h-[80vh] md:h-[600px] md:max-w-[480px] py-12 bg-vibrant-white gap-0 shadow-none"
       >
+        <DialogTitle className="sr-only">Select Asset</DialogTitle>
         <div className="relative flex shrink-0 justify-end h-4">
           <DialogClose asChild>
             <Button

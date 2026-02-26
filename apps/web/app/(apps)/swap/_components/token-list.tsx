@@ -25,7 +25,7 @@ interface TokenListProps {
   platformTokens: XToken[];
   selectedChainFilter: SpokeChainId | null;
   isFiltered: boolean;
-  isSearchActive: boolean;
+  isSearchActive?: boolean;
 }
 
 export function TokenList({
@@ -132,6 +132,13 @@ export function TokenList({
   };
   const shouldCenter = (isSearchActive || isFiltered) && totalItems > 0 && totalItems < 5;
   const startColumn = shouldCenter ? gridStartByCount[totalItems] : undefined;
+
+  // Center partial last row when >5 items (e.g. 8 items → second row of 3 centered)
+  const hasPartialLastRow = totalItems > 5 && totalItems % 5 !== 0;
+  const startIndexLastRow = hasPartialLastRow ? 5 * Math.floor(totalItems / 5) : -1;
+  const lastRowStartColumn = hasPartialLastRow
+    ? Math.floor((5 - (totalItems % 5)) / 2) + 1
+    : undefined;
 
   const getTokenUniqueId = (token: XToken): string => {
     return `${token.symbol}-${token.xChainId}`;
@@ -263,7 +270,16 @@ export function TokenList({
           >
             <AnimatePresence mode="sync">
               {sortedTokenGroups.map(({ symbol, tokens }, index) => (
-                <div key={symbol} style={index === 0 && startColumn ? { gridColumnStart: startColumn } : undefined}>
+                <div
+                  key={symbol}
+                  style={
+                    index === 0 && startColumn
+                      ? { gridColumnStart: startColumn }
+                      : hasPartialLastRow && index === startIndexLastRow && lastRowStartColumn !== undefined
+                        ? { gridColumnStart: lastRowStartColumn }
+                        : undefined
+                  }
+                >
                   {renderAssetGroup(symbol, tokens)}
                 </div>
               ))}{' '}

@@ -107,26 +107,36 @@ export function NetworkPicker({
           isMobile && isSingle ? 'text-left ml-5' : 'text-center',
         )}
       >
-        {hoveredIcon !== null && tokens[hoveredIcon]
-          ? (() => {
+        {hoveredIcon !== null && tokens[hoveredIcon] ? (
+          <>
+            {(() => {
               const hoveredToken = tokens[hoveredIcon];
               const hoveredBalance = tokenBalances.get(hoveredToken.xChainId) || 0n;
-              const balance =
-                hoveredBalance > 0n ? formatTokenAmount(hoveredBalance, hoveredToken.decimals) : undefined;
-              if (balance) {
-                return (
-                  <>
-                    {balance} {tokenSymbol}
-                  </>
-                );
-              }
+              const hasHoveredBalance = hoveredBalance > 0n;
+              const formattedHoveredBalance = hasHoveredBalance
+                ? formatTokenAmount(hoveredBalance, hoveredToken.decimals)
+                : null;
+
               return (
                 <>
-                  {tokenSymbol} <span className="font-bold">on {chainIdToChainName(hoveredToken.xChainId)}</span>
+                  {BigInt(hoveredBalance) === 0n && (
+                    <>
+                      {' '}
+                      {tokenSymbol} <span className="font-bold">on {chainIdToChainName(hoveredToken.xChainId)}</span>
+                    </>
+                  )}
+                  {hoveredBalance !== 0n && formattedHoveredBalance !== null && (
+                    <>
+                      {formattedHoveredBalance} {tokenSymbol}
+                    </>
+                  )}
                 </>
               );
-            })()
-          : 'Choose a network'}
+            })()}
+          </>
+        ) : (
+          'Choose a network'
+        )}
       </div>
 
       <div
@@ -142,7 +152,7 @@ export function NetworkPicker({
             <motion.div
               key={token.xChainId}
               className={cn(
-                'relative flex shrink-0 w-6 h-6 min-w-6 min-h-6 items-center justify-center cursor-pointer rounded-full p-0',
+                'relative flex shrink-0 w-7 h-7 min-w-6 min-h-6 items-center justify-center cursor-pointer rounded-full p-0',
                 hoveredIcon === index && 'z-50',
                 hoveredIcon !== null && hoveredIcon !== index && 'opacity-60 grayscale-[0.5]',
               )}
