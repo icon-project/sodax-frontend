@@ -81,7 +81,7 @@ export const useStakeState = () => {
       return { userXSodaBalance: 0n, userXSodaValue: 0n };
     }
     return {
-      userXSodaBalance: stakingInfo.userXSodaBalance,
+      userXSodaBalance: stakingInfo.userXSodaBalance < parseUnits('1', 17) ? 0n : stakingInfo.userXSodaBalance,
       userXSodaValue: stakingInfo.userXSodaValue,
     };
   }, [stakingInfo, isLoadingStakingInfo]);
