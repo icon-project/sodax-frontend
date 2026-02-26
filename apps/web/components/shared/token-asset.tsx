@@ -82,7 +82,7 @@ function NetworkPicker({
     >
       <div
         className={cn(
-          "font-['InterRegular'] text-(length:--body-small) font-medium text-espresso mb-2 min-h-6",
+          "font-['InterRegular'] text-(length:--body-small) font-medium text-espresso min-h-6",
           isMobile && isSingle ? 'text-left ml-5' : 'text-center',
         )}
       >
