@@ -8,6 +8,7 @@ import { SodaxIcon } from '../icons/sodax-icon';
 import { MainCtaButton } from '../landing/main-cta-button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { usePathname } from 'next/navigation';
+import { isPartnerRoute } from '@/constants/routes';
 
 export function Header(): React.JSX.Element {
   const openModal = useModalStore(state => state.openModal);
@@ -16,7 +17,7 @@ export function Header(): React.JSX.Element {
   const connectedWalletsCount = connectedChains.length;
 
   const pathname = usePathname();
-  const isPartner = pathname.startsWith('/partner');
+  const isPartner = isPartnerRoute(pathname);
   const isMainApp = !isPartner;
   const partnerName = 'PARTNER PORTAL';
 
