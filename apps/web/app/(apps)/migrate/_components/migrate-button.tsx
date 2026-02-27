@@ -22,7 +22,7 @@ import { chainIdToChainName } from '@/providers/constants';
 import type { SpokeProvider } from '@sodax/sdk';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { SuccessDialog } from './success-dialog';
-import { ErrorDialog } from './error-dialog';
+import { ErrorDialog } from '@/components/shared/error-dialog';
 import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
 import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
 import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
@@ -234,7 +234,12 @@ export const MigrateButton = () => {
       )}
 
       <SuccessDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog} />
-      <ErrorDialog open={showErrorDialog} onOpenChange={setShowErrorDialog} errorMessage={migrationError} />
+      <ErrorDialog
+        open={showErrorDialog}
+        onOpenChange={setShowErrorDialog}
+        errorMessage={migrationError}
+        title="Transaction failed"
+      />
     </>
   );
 };

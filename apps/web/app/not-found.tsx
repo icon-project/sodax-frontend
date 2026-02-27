@@ -7,7 +7,7 @@ import { MarketingHeader } from '@/components/shared/marketing-header';
 
 export default function NotFound() {
   return (
-    <div className="relative flex min-h-screen w-full flex-col pt-[100px]">
+    <div className="relative flex min-h-screen w-full flex-col pt-30">
       <MarketingHeader />
       <div className="flex flex-1 py-32 flex-col items-center justify-center px-4">
         <div className="flex flex-col items-center gap-6 text-center">

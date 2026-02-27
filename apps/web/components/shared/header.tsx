@@ -7,18 +7,17 @@ import { MODAL_ID } from '@/stores/modal-store';
 import { SodaxIcon } from '../icons/sodax-icon';
 import { MainCtaButton } from '../landing/main-cta-button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { useAppStore } from '@/stores/app-store-provider';
 import { usePathname } from 'next/navigation';
+import { isPartnerRoute } from '@/constants/routes';
 
 export function Header(): React.JSX.Element {
   const openModal = useModalStore(state => state.openModal);
-  const { setIsSwitchingPage } = useAppStore(state => state);
   const xAccounts = useXAccounts();
   const connectedChains = Object.entries(xAccounts).filter(([, account]) => account?.address);
   const connectedWalletsCount = connectedChains.length;
 
   const pathname = usePathname();
-  const isPartner = pathname.startsWith('/partner');
+  const isPartner = isPartnerRoute(pathname);
   const isMainApp = !isPartner;
   const partnerName = 'PARTNER PORTAL';
 
@@ -54,21 +53,26 @@ export function Header(): React.JSX.Element {
           </div>
           {isMainApp && (
             <div className="justify-center text-cream hidden lg:flex ml-8 gap-1">
-              <span className="text-xs font-bold font-[InterRegular] leading-none">Money, as it</span>
-              <span className="text-xs font-normal font-[Shrikhand] leading-none mt-px">should</span>
-              <span className="text-xs font-bold font-[InterRegular] leading-none">be</span>
+              <span className="text-xs font-bold font-[InterRegular] leading-none">Infrastructure for</span>
+              <span className="text-xs font-normal font-[Shrikhand] leading-none mt-px">modern money</span>
             </div>
           )}
         </div>
 
         <div className="flex justify-end gap-8">
           <div className="hidden lg:flex justify-end items-center gap-4">
-            <span
+            <a
               className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
-              onClick={() => setIsSwitchingPage(false)}
+              href="/news"
             >
-              About
-            </span>
+              News
+            </a>
+            <a
+              className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
+              href="/partners"
+            >
+              Partners
+            </a>
           </div>
           <div className="inline-flex justify-center items-start relative">
             {connectedWalletsCount >= 1 ? (

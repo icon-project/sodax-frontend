@@ -8,6 +8,7 @@ import { useSaveStore } from '@/app/(apps)/save/_stores/save-store-provider';
 import type { TabIconType } from './tab-icon';
 import { cn } from '@/lib/utils';
 import { STAKING_APR } from '@/app/(apps)/stake/_components/constants';
+import { PARTNER_DASHBOARD_ROUTE, isPartnerRoute } from '@/constants/routes';
 
 export interface TabConfig {
   value: string;
@@ -58,7 +59,15 @@ export const tabConfigs: TabConfig[] = [
 ];
 
 export const partnerTabConfigs: TabConfig[] = [
-  { value: 'home', type: 'migrate', label: 'Home', content: '', enabled: true, showIcon: false, href: '/partner' },
+  {
+    value: 'home',
+    type: 'migrate',
+    label: 'Home',
+    content: '',
+    enabled: true,
+    showIcon: false,
+    href: PARTNER_DASHBOARD_ROUTE,
+  },
 ];
 
 interface RouteTabsProps {
@@ -68,8 +77,8 @@ interface RouteTabsProps {
 
 export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.Element {
   const pathname = usePathname();
-  const isPartnerRoute = pathname.startsWith('/partner');
-  const usedTabs = isPartnerRoute ? partnerTabConfigs : tabConfigs;
+  const isPartner = isPartnerRoute(pathname);
+  const usedTabs = isPartner ? partnerTabConfigs : tabConfigs;
 
   const lastSegment = pathname.split('/').filter(Boolean).pop() ?? '';
   const tabValues = usedTabs.map(t => t.value);
@@ -153,7 +162,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
           'hidden md:flex p-[120px_32px] lg:p-[120px_56px] flex-col items-start gap-2 rounded-tl-4xl',
           'bg-[linear-gradient(180deg,#DCBAB5_0px,#EAD6D3_120px,#F4ECEA_360px,#F5F1EE_1000px)]',
           'relative lg:mt-4 min-h-[calc(100vh-192px)] md:min-h-[calc(100vh-104px)] lg:min-h-[calc(100vh-120px)]',
-          isPartnerRoute
+          isPartner
             ? 'md:w-[320px] lg:w-65' // wider partner sidebar
             : 'md:w-66 lg:w-76', // existing apps unchanged
         )}

@@ -2,20 +2,23 @@ import type React from 'react';
 import type { XToken } from '@sodax/types';
 import { useStakeState } from '../../_stores/stake-store-provider';
 import CurrencyLogo from '@/components/shared/currency-logo';
-import { CircleArrowRight } from 'lucide-react';
-import { formatUnits } from 'viem';
-import BigNumber from 'bignumber.js';
+import { CircleArrowRight, ShieldAlertIcon } from 'lucide-react';
+import { formatTokenAmount } from '@/lib/utils';
+import { parseUnits } from 'viem';
+import { cn } from '@/lib/utils';
+import { ETHEREUM_MAINNET_CHAIN_ID } from '@sodax/sdk';
 interface StakeConfirmationStepProps {
   selectedToken: XToken;
   receivedXSodaAmount: string;
+  stakeError: { title: string; message: string } | null;
 }
 
 export default function StakeConfirmationStep({
   selectedToken,
   receivedXSodaAmount,
+  stakeError,
 }: StakeConfirmationStepProps): React.JSX.Element {
   const { stakeValue } = useStakeState();
-
   const xSodaToken = {
     ...selectedToken,
     symbol: 'xsoda',
@@ -24,14 +27,28 @@ export default function StakeConfirmationStep({
 
   return (
     <div className="flex flex-col items-center mt-4">
-      <div className="flex flex-col text-center">
-        <div className="text-espresso text-(length:--body-super-comfortable) font-['InterRegular'] leading-[1.4]">
-          Staking SODA
+      {stakeError ? (
+        <div className="flex flex-col text-center">
+          <div className="flex justify-center gap-1 w-full items-center">
+            <ShieldAlertIcon className="w-4 h-4 text-negative" />
+            <span className="font-['InterBold'] text-(length:--body-super-comfortable) leading-[1.4] text-negative">
+              {stakeError.title}
+            </span>
+          </div>
+          <div className="text-espresso text-(length:--body-small) font-medium font-['InterRegular'] text-center leading-[1.4]">
+            {stakeError.message}
+          </div>
         </div>
-        <div className="text-clay text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4] justify-center">
-          23.77% variable APR
+      ) : (
+        <div className="flex flex-col text-center">
+          <div className="text-espresso text-(length:--body-super-comfortable) font-['InterRegular'] leading-[1.4]">
+            Staking SODA
+          </div>
+          <div className="text-clay text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4] justify-center">
+            23.77% variable APR
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="w-60 pb-6 flex justify-between items-center mt-4">
         <div className="w-10 inline-flex flex-col justify-start items-center gap-2">
@@ -39,7 +56,7 @@ export default function StakeConfirmationStep({
           <div className="flex flex-col justify-start items-center gap-2">
             <div className="inline-flex justify-start items-center gap-1">
               <div className="justify-start text-espresso text-base font-normal font-['InterRegular'] leading-5">
-                {formatUnits(stakeValue, selectedToken.decimals)}
+                {formatTokenAmount(stakeValue, selectedToken.decimals)}
               </div>
               <div className="justify-start text-clay text-base font-normal font-['InterRegular'] leading-5">SODA</div>
             </div>
@@ -47,16 +64,28 @@ export default function StakeConfirmationStep({
         </div>
         <div className="w-16 h-9 inline-flex flex-col justify-between items-center">
           <div className="w-4 h-4 relative overflow-hidden">
-            <CircleArrowRight className="w-4 h-4 text-clay-light" />
+            <CircleArrowRight
+              className={cn(
+                'w-4 h-4',
+                selectedToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID ? 'text-cherry-bright' : 'text-clay-light',
+              )}
+            />
           </div>
-          <div className="justify-start text-clay text-xs font-normal font-['InterRegular'] leading-4">~10s</div>
+          <div
+            className={cn(
+              "justify-start text-xs font-normal font-['InterRegular'] leading-4",
+              selectedToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID ? 'text-cherry-bright' : 'text-clay',
+            )}
+          >
+            {selectedToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID ? '~30s' : '~10s'}
+          </div>
         </div>
         <div className="w-10 inline-flex flex-col justify-start items-center gap-2">
           <CurrencyLogo currency={xSodaToken} />
           <div className="flex flex-col justify-start items-center gap-2">
             <div className="inline-flex justify-start items-center gap-1">
               <div className="justify-start text-espresso text-base font-normal font-['InterRegular'] leading-5">
-                {new BigNumber(receivedXSodaAmount).toFixed(2)}
+                {formatTokenAmount(parseUnits(receivedXSodaAmount, 18), 18)}
               </div>
               <div className="justify-start text-clay text-base font-normal font-['InterRegular'] leading-5">xSODA</div>
             </div>
