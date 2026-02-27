@@ -1,8 +1,5 @@
-import { Account } from '@near-js/accounts';
-import { JsonRpcProvider } from '@near-js/providers';
-import { KeyPairSigner } from '@near-js/signers';
-import type { KeyPairString } from '@near-js/crypto';
-import { actionCreators } from '@near-js/transactions';
+import { Account, JsonRpcProvider, KeyPairSigner, actions } from 'near-api-js';
+import type { KeyPairString } from 'near-api-js';
 import { toHex } from 'viem';
 import type { Hex, INearWalletProvider, CallContractParams, NearRawTransaction } from '@sodax/types';
 import type { NearConnector } from '@hot-labs/near-connect';
@@ -92,27 +89,16 @@ export class NearWalletProvider implements INearWalletProvider {
 
   async signAndSubmitTxn(transaction: NearRawTransaction): Promise<string> {
     if (this.account) {
-      const publicKey = await this.account.getSigner()?.getPublicKey();
-
-      if (!publicKey) {
-        throw new Error('Signer not found');
-      }
-
-      const nearTx = await this.account.createTransaction(
-        transaction.params.contractId,
-        [
-          actionCreators.functionCall(
+      const res = await this.account.signAndSendTransaction({
+        receiverId: transaction.params.contractId,
+        actions: [
+          actions.functionCall(
             transaction.params.method,
             transaction.params.args,
             transaction.params.gas,
             transaction.params.deposit,
           ),
         ],
-        publicKey,
-      );
-
-      const res = await this.account.signAndSendTransaction({
-        ...nearTx,
         throwOnFailure: true,
         waitUntil: 'FINAL',
       });

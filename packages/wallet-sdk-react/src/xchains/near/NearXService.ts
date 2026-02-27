@@ -1,7 +1,7 @@
 import { XService } from '@/core/XService';
 import type { XToken } from '@sodax/types';
 import { NearConnector } from '@hot-labs/near-connect';
-import { JsonRpcProvider } from '@near-js/providers';
+import { JsonRpcProvider } from 'near-api-js';
 
 export class NearXService extends XService {
   private static instance: NearXService;
@@ -33,14 +33,14 @@ export class NearXService extends XService {
 
     // get native balance
     if (xToken.symbol === 'NEAR') {
-      const account = await provider.viewAccount(address ?? '');
+      const account = await provider.viewAccount({ accountId: address ?? '' });
       return BigInt(account.amount);
     }
 
     // Near Fungible Token Standard(https://github.com/near/NEPs/blob/master/neps/nep-0141.md)
     // get balance of the token
 
-    const res = await provider.callFunction<number>(xToken.address, 'ft_balance_of', { account_id: address });
+    const res = await provider.callFunction<number>({ contractId: xToken.address, method: 'ft_balance_of', args: { account_id: address } });
     return BigInt(res ?? 0);
   }
 }

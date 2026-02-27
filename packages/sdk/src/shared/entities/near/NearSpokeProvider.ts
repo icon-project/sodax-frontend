@@ -1,4 +1,4 @@
-import { JsonRpcProvider } from '@near-js/providers';
+import { JsonRpcProvider } from 'near-api-js';
 import { fromHex } from 'viem';
 import type { RateLimitConfig } from '../../types.js';
 import type {
@@ -26,7 +26,7 @@ export class NearBaseSpokeProvider {
   }
 
   queryContract(contractId: string, method: string, args: {}): Promise<QueryResponse> {
-    return this.rpcProvider.callFunction(contractId, method, args);
+    return this.rpcProvider.callFunction({ contractId, method, args });
   }
 
   async getRawTransaction(params: CallContractParams): Promise<NearRawTransaction> {
