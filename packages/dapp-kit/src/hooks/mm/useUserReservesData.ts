@@ -1,15 +1,42 @@
 import type { SpokeChainId } from '@sodax/types';
-import type { UserReserveData } from '@sodax/sdk';
+import type { SpokeProvider, UserReserveData } from '@sodax/sdk';
 import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
-export type UseUserReservesDataParams = {
+type BaseQueryOptions = {
+  queryOptions?: UseQueryOptions<readonly [readonly UserReserveData[], number], Error>;
+};
+
+type NewParams = BaseQueryOptions & {
   /** Spoke chain id (e.g. '0xa86a.avax') */
   spokeChainId: SpokeChainId | undefined;
   /** User wallet address on the spoke chain */
   userAddress: string | undefined;
-  queryOptions?: UseQueryOptions<readonly [readonly UserReserveData[], number], Error>;
 };
+
+/** @deprecated Use `{ spokeChainId, userAddress }` instead */
+type LegacyParams = BaseQueryOptions & {
+  /** @deprecated Use `spokeChainId` instead */
+  spokeProvider: SpokeProvider | undefined;
+  /** @deprecated Use `userAddress` instead */
+  address: string | undefined;
+};
+
+export type UseUserReservesDataParams = NewParams | LegacyParams;
+
+function isLegacyParams(params: UseUserReservesDataParams): params is LegacyParams {
+  return 'spokeProvider' in params || 'address' in params;
+}
+
+function resolveParams(params: UseUserReservesDataParams): { spokeChainId: SpokeChainId | undefined; userAddress: string | undefined } {
+  if (isLegacyParams(params)) {
+    return {
+      spokeChainId: params.spokeProvider?.chainConfig.chain.id as SpokeChainId | undefined,
+      userAddress: params.address,
+    };
+  }
+  return { spokeChainId: params.spokeChainId, userAddress: params.userAddress };
+}
 
 /**
  * Hook for fetching user reserves data from the Sodax money market.
@@ -35,9 +62,10 @@ export function useUserReservesData(
   params?: UseUserReservesDataParams,
 ): UseQueryResult<readonly [readonly UserReserveData[], number], Error> {
   const { sodax } = useSodaxContext();
+  const resolved = params ? resolveParams(params) : { spokeChainId: undefined, userAddress: undefined };
   const defaultQueryOptions = {
-    queryKey: ['mm', 'userReservesData', params?.spokeChainId, params?.userAddress],
-    enabled: !!params?.spokeChainId && !!params?.userAddress,
+    queryKey: ['mm', 'userReservesData', resolved.spokeChainId, resolved.userAddress],
+    enabled: !!resolved.spokeChainId && !!resolved.userAddress,
     refetchInterval: 5000,
   };
   const queryOptions = {
@@ -48,13 +76,13 @@ export function useUserReservesData(
   return useQuery({
     ...queryOptions,
     queryFn: async () => {
-      if (!params?.spokeChainId || !params?.userAddress) {
+      if (!resolved.spokeChainId || !resolved.userAddress) {
         throw new Error('spokeChainId or userAddress is not defined');
       }
 
       return await sodax.moneyMarket.data.getUserReservesData(
-        params.spokeChainId as never,
-        params.userAddress as never,
+        resolved.spokeChainId as never,
+        resolved.userAddress as never,
       );
     },
   });
