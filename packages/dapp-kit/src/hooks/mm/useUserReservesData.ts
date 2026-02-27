@@ -28,7 +28,10 @@ function isLegacyParams(params: UseUserReservesDataParams): params is LegacyPara
   return 'spokeProvider' in params || 'address' in params;
 }
 
-function resolveParams(params: UseUserReservesDataParams): { spokeChainId: SpokeChainId | undefined; userAddress: string | undefined } {
+function resolveParams(params: UseUserReservesDataParams): {
+  spokeChainId: SpokeChainId | undefined;
+  userAddress: string | undefined;
+} {
   if (isLegacyParams(params)) {
     return {
       spokeChainId: params.spokeProvider?.chainConfig.chain.id as SpokeChainId | undefined,
@@ -80,10 +83,7 @@ export function useUserReservesData(
         throw new Error('spokeChainId or userAddress is not defined');
       }
 
-      return await sodax.moneyMarket.data.getUserReservesData(
-        resolved.spokeChainId as never,
-        resolved.userAddress as never,
-      );
+      return await sodax.moneyMarket.data.getUserReservesData(resolved.spokeChainId, resolved.userAddress);
     },
   });
 }

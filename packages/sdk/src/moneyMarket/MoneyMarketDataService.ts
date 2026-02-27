@@ -126,7 +126,7 @@ export class MoneyMarketDataService {
    */
   public async getUserReservesData(
     spokeChainId: SpokeChainId,
-    userAddress: Address,
+    userAddress: string,
   ): Promise<readonly [readonly UserReserveData[], number]> {
     const hubWalletAddress = await HubService.getUserHubWalletAddress(userAddress, spokeChainId, this.hubProvider);
 
