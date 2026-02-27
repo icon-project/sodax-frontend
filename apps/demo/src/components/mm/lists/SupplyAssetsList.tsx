@@ -72,7 +72,7 @@ export function SupplyAssetsList(): ReactElement {
     data: userReservesData,
     isLoading: isUserReservesLoading,
     refetch: refetchReserves,
-  } = useUserReservesData({ spokeProvider, address });
+  } = useUserReservesData({ spokeChainId: selectedChainId, userAddress: address });
   const userReserves = userReservesData?.[0] || [];
   const {
     data: formattedReserves,
