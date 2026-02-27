@@ -1,3 +1,4 @@
+// apps/web/app/(apps)/stake/_components/stake-stats-card.tsx
 import type React from 'react';
 import Image from 'next/image';
 import { Info } from 'lucide-react';
@@ -39,17 +40,14 @@ export function StakeStatsCard(): React.JSX.Element {
             {isLoadingBalanceCalculation ? (
               <Loader2 className="w-4 h-4 text-espresso animate-spin" />
             ) : (
-              <span className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] leading-5">
+              <span className="text-espresso text-(length:--body-super-comfortable) font-bold leading-5">
                 {formatTokenAmount(totalUserXSodaBalance, 18)}
               </span>
             )}
-            <span className="text-clay text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-5">
-              {' '}
-              xSODA
-            </span>
+            <span className="text-clay text-(length:--body-super-comfortable) font-normal leading-5"> xSODA</span>
           </div>
           <div className="flex justify-center items-center gap-1">
-            <div className="justify-center text-clay text-(length:--body-small) font-normal font-['InterRegular'] leading-4">
+            <div className="justify-center text-clay text-(length:--body-small) leading-4">
               ~{formatTokenAmount(totalUserXSodaValue, 18)} SODA
             </div>
             <Info className="w-4 h-4 text-clay-light" />
@@ -58,12 +56,12 @@ export function StakeStatsCard(): React.JSX.Element {
         </div>
         <div className="flex flex-col justify-center items-end gap-1">
           <div className="flex justify-end items-center gap-1">
-            <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] leading-5">
+            <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-bold leading-5">
               {STAKING_APR}% APR
             </div>
             <Info className="w-4 h-4 text-clay-light" />
           </div>
-          <div className="justify-center text-clay text-(length:--body-small) font-normal font-['InterRegular'] leading-4">
+          <div className="justify-center text-clay text-(length:--body-small) font-normal leading-4">
             {/* {formatTokenAmount(stakingInfo?.totalStaked || 0n, 18)} total staked */}
             15.8M total staked
           </div>
@@ -84,21 +82,15 @@ export function StakeStatsCard(): React.JSX.Element {
 
       <div className="w-full flex justify-between items-center">
         <div className="flex flex-col gap-1">
-          <div className="justify-center text-clay text-[9px] font-medium font-['InterRegular'] uppercase leading-3">
-            STAKING NOW
-          </div>
+          <div className="justify-center text-clay text-[9px] font-medium uppercase leading-3">STAKING NOW</div>
           <div className="flex justify-start items-center gap-1">
-            <div className="text-espresso text-(length:--body-comfortable) font-bold font-['InterRegular'] leading-5">
-              1,289 holders
-            </div>
+            <div className="text-espresso text-(length:--body-comfortable) font-bold leading-5">1,289 holders</div>
           </div>
         </div>
         <div className="flex flex-col justify-center items-end gap-1">
-          <div className="justify-center text-clay text-[9px] font-medium font-['InterRegular'] uppercase leading-3">
-            UNSTAKING PERIOD
-          </div>
+          <div className="justify-center text-clay text-[9px] font-medium uppercase leading-3">UNSTAKING PERIOD</div>
           <div className="flex justify-start items-center gap-1">
-            <div className="text-espresso text-(length:--body-comfortable) font-bold font-['InterRegular'] leading-5">
+            <div className="text-espresso text-(length:--body-comfortable) font-bold leading-5">
               {!isLoadingStakingConfig ? `${stakingConfig?.unstakingPeriod} seconds` : '-'}
             </div>
             <Info className="w-4 h-4 text-clay-light" />
