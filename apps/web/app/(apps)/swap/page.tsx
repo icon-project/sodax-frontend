@@ -21,6 +21,7 @@ import { calculateMaxAvailableAmount, formatBalance } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { itemVariants, listVariants } from '@/constants/animation';
 import { getSwapTiming } from '@/lib/swap-timing';
+import { DISCORD_ROUTE } from '@/constants/routes';
 
 export default function SwapPage() {
   const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
@@ -259,7 +260,7 @@ export default function SwapPage() {
             <div className="mt-(--layout-space-comfortable) text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight flex gap-1 items-center">
               Need help?
               <Link
-                href="https://x.com/sodaxlabs"
+                href={DISCORD_ROUTE}
                 target="_blank"
                 className="flex gap-1 hover:font-bold text-clay items-center leading-[1.4]"
               >

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { CMS_ARTICLES_ROUTE, CMS_LOGIN_ROUTE } from "@/constants/routes";
 import { requirePermission } from "@/lib/auth-utils";
 import { ArticleForm } from "@/components/cms/article-form";
 import { getDb } from "@/lib/db";
@@ -21,11 +22,11 @@ export default async function EditArticlePage({ params }: PageProps) {
     const article = await collection.findOne({ _id: new ObjectId(id) });
     
     if (!article) {
-      redirect("/cms/articles");
+      redirect(CMS_ARTICLES_ROUTE);
     }
     
     return <ArticleForm article={article} />;
   } catch (error) {
-    redirect("/cms/login");
+    redirect(CMS_LOGIN_ROUTE);
   }
 }

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SodaxIcon } from '@/components/icons/sodax-icon';
 import { MainCtaButton } from '@/components/landing/main-cta-button';
+import { COMMUNITY_ROUTE, HOME_ROUTE, NEWS_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
 
 interface MarketingHeaderProps {
   backLink?: string;
@@ -12,19 +13,19 @@ interface MarketingHeaderProps {
 }
 
 const navItems = [
-  { href: '/news', label: 'News' },
-  { href: '/partners', label: 'Partners' },
+  { href: NEWS_ROUTE, label: 'News' },
+  { href: PARTNERS_ROUTE, label: 'Partners' },
 ];
 
 export function MarketingHeader({ backLink, backText }: MarketingHeaderProps) {
   const pathname = usePathname();
 
   // Auto-detect section based on URL path if not explicitly provided
-  const isCommunityPage = pathname?.startsWith('/community');
+  const isCommunityPage = pathname?.startsWith(COMMUNITY_ROUTE);
 
   // Set defaults based on current path
-  const defaultBackLink = isCommunityPage ? '/community' : '/partners';
-  const defaultBackText = isCommunityPage ? '← community' : '← partners';
+  const defaultBackLink = isCommunityPage ? COMMUNITY_ROUTE : PARTNERS_ROUTE;
+  const defaultBackText = isCommunityPage ? '← community' : '← Partners';
 
   const finalBackLink = backLink ?? defaultBackLink;
   const finalBackText = backText ?? defaultBackText;
@@ -37,7 +38,7 @@ export function MarketingHeader({ backLink, backText }: MarketingHeaderProps) {
       <div className={`w-full h-full absolute ${backgroundClass}`} />
       <div className="w-full flex justify-between items-center h-full z-20 md:px-16 px-8 lg:px-8 lg:max-w-[1264px]">
         <div className="flex items-center">
-          <Link href="/" className="flex items-center cursor-pointer hover:opacity-80 transition-opacity">
+          <Link href={HOME_ROUTE} className="flex items-center cursor-pointer hover:opacity-80 transition-opacity">
             <Image src="/symbol.png" alt="SODAX Symbol" width={32} height={32} />
             <div className="hidden md:block md:ml-[11px]">
               <SodaxIcon width={84} height={18} fill="white" />

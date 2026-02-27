@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { CMS_LOGIN_ROUTE } from "@/constants/routes";
 import { authClient } from "@/lib/auth-client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ export default function UnauthorizedPage() {
 
   const handleLogout = async () => {
     await authClient.signOut();
-    router.push("/cms/login");
+    router.push(CMS_LOGIN_ROUTE);
   };
 
   return (

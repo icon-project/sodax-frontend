@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/stake/_components/stake-input-panel.tsx
 import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -25,6 +24,7 @@ import { Loader2 } from 'lucide-react';
 import type { SpokeProvider } from '@sodax/sdk';
 import { parseUnits } from 'viem';
 import { ErrorDialog } from '@/components/shared/error-dialog';
+import { SWAP_ROUTE } from '@/constants/routes';
 
 export function StakeInputPanel(): React.JSX.Element {
   const router = useRouter();
@@ -122,7 +122,7 @@ export function StakeInputPanel(): React.JSX.Element {
   };
 
   const handleBuySoda = (): void => {
-    router.push('/swap');
+    router.push(SWAP_ROUTE);
   };
 
   const handleStake = (): void => {

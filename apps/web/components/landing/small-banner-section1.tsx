@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { MIGRATE_ROUTE, X_INTENT_FOLLOW_ROUTE } from '@/constants/routes';
 import { useAppStore } from '@/stores/app-store-provider';
 
 const SmallBannerSection1 = () => {
@@ -36,7 +37,7 @@ const SmallBannerSection1 = () => {
               window.scrollTo({ top: 0, behavior: 'smooth' });
               setTimeout(() => {
                 setShouldTriggerAnimation(true);
-                router.push('/migrate');
+                router.push(MIGRATE_ROUTE);
               }, 500);
             }}
           >
@@ -79,7 +80,7 @@ const SmallBannerSection1 = () => {
             variant="outline"
             className="px-6 font-['InterMedium'] cursor-pointer text-(length:--body-comfortable)"
             size="lg"
-            onClick={() => window.open('https://x.com/intent/user?screen_name=gosodax', '_blank')}
+            onClick={() => window.open(X_INTENT_FOLLOW_ROUTE, '_blank')}
           >
             Follow us for launch
           </Button>

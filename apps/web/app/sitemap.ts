@@ -1,4 +1,16 @@
+// apps/web/app/sitemap.ts
 import type { MetadataRoute } from 'next';
+import {
+  COMMUNITY_ROUTE,
+  DISCORD_PAGE_ROUTE,
+  GLOSSARY_ROUTE,
+  LOANS_ROUTE,
+  MIGRATE_ROUTE,
+  NEWS_ROUTE,
+  PARTNERS_ROUTE,
+  SAVE_ROUTE,
+  SWAP_ROUTE,
+} from '@/constants/routes';
 import { getDb } from '@/lib/db';
 import { getNotionPages, slugify } from '@/lib/notion';
 
@@ -24,7 +36,7 @@ interface Article {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
-  // Static routes that are indexable and public
+  // Static routes that are indexable and public (use route constants for single source of truth)
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: SITE_URL,
@@ -33,70 +45,67 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
-      url: `${SITE_URL}/swap`,
+      url: `${SITE_URL}${SWAP_ROUTE}`,
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.9,
     },
     {
-      url: `${SITE_URL}/save`,
+      url: `${SITE_URL}${SAVE_ROUTE}`,
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.9,
     },
     {
-      url: `${SITE_URL}/loans`,
+      url: `${SITE_URL}${LOANS_ROUTE}`,
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.9,
     },
     {
-      url: `${SITE_URL}/migrate`,
+      url: `${SITE_URL}${MIGRATE_ROUTE}`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
-      url: `${SITE_URL}/discord`,
+      url: `${SITE_URL}${DISCORD_PAGE_ROUTE}`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.7,
     },
-    // News index page
     {
-      url: `${SITE_URL}/news`,
+      url: `${SITE_URL}${NEWS_ROUTE}`,
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.9,
     },
-    // Community pages
     {
-      url: `${SITE_URL}/community/soda-token`,
+      url: `${SITE_URL}${COMMUNITY_ROUTE}/soda-token`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
     },
-    // Partner case studies
     {
-      url: `${SITE_URL}/partners/amped-finance`,
+      url: `${SITE_URL}${PARTNERS_ROUTE}/amped-finance`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
-      url: `${SITE_URL}/partners/hana`,
+      url: `${SITE_URL}${PARTNERS_ROUTE}/hana`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
-      url: `${SITE_URL}/partners/lightlink-network`,
+      url: `${SITE_URL}${PARTNERS_ROUTE}/lightlink-network`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
-      url: `${SITE_URL}/partners/sodax-sdk`,
+      url: `${SITE_URL}${PARTNERS_ROUTE}/sodax-sdk`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.8,
@@ -145,7 +154,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // Map news articles to sitemap entries
     const newsEntries: MetadataRoute.Sitemap = newsArticles.map(article => ({
-      url: `${SITE_URL}/news/${article.slug}`,
+      url: `${SITE_URL}${NEWS_ROUTE}/${article.slug}`,
       lastModified: article.updatedAt,
       changeFrequency: 'weekly' as const,
       priority: 0.8,
@@ -203,7 +212,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     if (glossaryEntries.length > 0) {
       dynamicIndexPages.push({
-        url: `${SITE_URL}/glossary`,
+        url: `${SITE_URL}${GLOSSARY_ROUTE}`,
         lastModified: now,
         changeFrequency: 'weekly',
         priority: 0.7,

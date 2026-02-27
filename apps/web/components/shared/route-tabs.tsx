@@ -8,7 +8,15 @@ import { useSaveStore } from '@/app/(apps)/save/_stores/save-store-provider';
 import type { TabIconType } from './tab-icon';
 import { cn } from '@/lib/utils';
 import { STAKING_APR } from '@/app/(apps)/stake/_components/constants';
-import { PARTNER_DASHBOARD_ROUTE, isPartnerRoute } from '@/constants/routes';
+import {
+  LOANS_ROUTE,
+  MIGRATE_ROUTE,
+  PARTNER_DASHBOARD_ROUTE,
+  SAVE_ROUTE,
+  STAKE_ROUTE,
+  SWAP_ROUTE,
+  isPartnerRoute,
+} from '@/constants/routes';
 
 export interface TabConfig {
   value: string;
@@ -27,6 +35,7 @@ export const tabConfigs: TabConfig[] = [
     label: 'Swap',
     content: 'a quick swap',
     enabled: true,
+    href: SWAP_ROUTE,
   },
   {
     value: 'save',
@@ -34,6 +43,7 @@ export const tabConfigs: TabConfig[] = [
     label: 'Save',
     content: 'a quick save',
     enabled: true,
+    href: SAVE_ROUTE,
   },
   {
     value: 'loans',
@@ -41,6 +51,7 @@ export const tabConfigs: TabConfig[] = [
     label: 'Loans',
     content: 'a quick loans',
     enabled: false,
+    href: LOANS_ROUTE,
   },
   {
     value: 'stake',
@@ -48,6 +59,7 @@ export const tabConfigs: TabConfig[] = [
     label: 'Stake',
     content: 'a quick stake',
     enabled: true,
+    href: STAKE_ROUTE,
   },
   {
     value: 'migrate',
@@ -55,6 +67,7 @@ export const tabConfigs: TabConfig[] = [
     label: 'Migrate',
     content: 'a quick migrate',
     enabled: true,
+    href: MIGRATE_ROUTE,
   },
 ];
 

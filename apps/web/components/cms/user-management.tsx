@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CMS_DASHBOARD_ROUTE } from "@/constants/routes";
 import { ArrowLeft } from "lucide-react";
 import { CMSPermission } from "@/lib/permissions";
 
@@ -167,7 +168,7 @@ export function UserManagement() {
       <div className="mb-8">
         <Button
           variant="ghost"
-          onClick={() => router.push("/cms/dashboard")}
+          onClick={() => router.push(CMS_DASHBOARD_ROUTE)}
           className="mb-4 text-[var(--clay)] hover:text-[var(--espresso)] hover:bg-transparent px-2 !outline-0 !border-0"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />

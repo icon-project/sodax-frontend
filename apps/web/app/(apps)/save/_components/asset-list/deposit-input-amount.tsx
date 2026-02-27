@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import AssetMetrics from './asset-metrics';
 import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
+import { SWAP_ROUTE } from '@/constants/routes';
 interface DepositInputAmountProps {
   tokens: XToken[];
   onBack?: () => void;
@@ -230,7 +231,7 @@ export default function DepositInputAmount({ tokens, onBack, apy, deposits }: De
                 <Button
                   variant="cherry"
                   className="w-27 mix-blend-multiply shadow-none"
-                  onMouseDown={() => router.push('/swap')}
+                  onMouseDown={() => router.push(SWAP_ROUTE)}
                 >
                   Get {selectedToken?.symbol}
                 </Button>

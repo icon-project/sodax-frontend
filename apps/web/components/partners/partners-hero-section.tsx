@@ -2,6 +2,7 @@
 
 import { motion } from 'motion/react';
 import { Bot, PackageOpen, Settings2, Users } from 'lucide-react';
+import { DOCUMENTATION_ROUTE } from '@/constants/routes';
 import { NETWORK_ICON_MAP } from './network-icons';
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -14,7 +15,7 @@ const getNetworkDocsUrl = (networkName: string): string => {
     LightLink: 'lightlink',
   };
   const anchor = anchorMap[networkName] || networkName.toLowerCase();
-  return `https://docs.sodax.com/developers/deployments/solver-compatible-assets#${anchor}`;
+  return `${DOCUMENTATION_ROUTE}/developers/deployments/solver-compatible-assets#${anchor}`;
 };
 
 const NETWORK_NAMES = [
@@ -115,7 +116,7 @@ export default function PartnersHeroSection() {
           <button
             type="button"
             className="bg-transparent border-[3px] border-cherry-bright text-cream font-['InterRegular'] text-[14px] leading-[1.4] h-10 px-6 py-2 rounded-[240px] text-center transition-colors cursor-pointer w-full sm:w-auto"
-            onClick={() => window.open('https://docs.sodax.com', '_blank')}
+            onClick={() => window.open(DOCUMENTATION_ROUTE, '_blank')}
           >
             View documentation
           </button>
