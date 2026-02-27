@@ -25,7 +25,7 @@ export function MarketingHeader({ backLink, backText }: MarketingHeaderProps) {
 
   // Set defaults based on current path
   const defaultBackLink = isCommunityPage ? COMMUNITY_ROUTE : PARTNERS_ROUTE;
-  const defaultBackText = isCommunityPage ? '← community' : '← Partners';
+  const defaultBackText = isCommunityPage ? '← community' : '← partners';
 
   const finalBackLink = backLink ?? defaultBackLink;
   const finalBackText = backText ?? defaultBackText;

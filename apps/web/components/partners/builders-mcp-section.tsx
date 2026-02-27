@@ -205,7 +205,7 @@ export default function BuildersMcpSection() {
             className="bg-cherry-bright flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer hover:opacity-90 transition-opacity w-full sm:w-auto"
           >
             <span className="font-['InterMedium'] text-[14px] leading-[1.4] text-white text-center">
-              Explore {BUILDERS_PORTAL_ROUTE.replace(/^https?:\/\//, '')}
+              Explore builders.sodax.com
             </span>
           </a>
         </motion.div>
