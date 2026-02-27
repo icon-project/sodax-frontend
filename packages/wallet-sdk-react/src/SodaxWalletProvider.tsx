@@ -37,7 +37,7 @@ export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.R
 
   return (
     <QueryClientProvider client={queryClient}>
-      <WagmiProvider config={wagmiConfig}>
+      <WagmiProvider reconnectOnMount={false} config={wagmiConfig}>
         <SuiClientProvider networks={{ mainnet: { url: getFullnodeUrl('mainnet') } }} defaultNetwork="mainnet">
           <SuiWalletProvider autoConnect={true}>
             <SolanaConnectionProvider endpoint={rpcConfig['solana'] ?? ''}>

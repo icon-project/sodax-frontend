@@ -80,6 +80,7 @@ const TOKEN_TO_COINGECKO_ID: Record<string, string> = {
   yapSUI: 'sui',
   trevinSUI: 'sui',
   RBNT: 'redbelly-native-token',
+  KAIA: 'kaia',
 };
 
 const COINGECKO_WRAPPER_API_BASE = 'https://coingecko-wrapper-cyan.vercel.app';

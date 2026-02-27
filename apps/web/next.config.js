@@ -48,6 +48,19 @@ const nextConfig = {
   async headers() {
     return [
       {
+        source: '/.well-known/stellar.toml',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'text/plain; charset=utf-8',
+          },
+          {
+            key: 'Content-Disposition',
+            value: 'inline',
+          },
+        ],
+      },
+      {
         source: '/(.*)', // Apply to all routes
         headers: [
           {

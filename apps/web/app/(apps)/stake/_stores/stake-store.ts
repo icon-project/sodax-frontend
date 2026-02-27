@@ -1,8 +1,7 @@
 import { createStore } from 'zustand/vanilla';
-import { persist } from 'zustand/middleware';
 import type { XToken } from '@sodax/types';
-import { formatTokenAmount } from '@/lib/utils';
 import BigNumber from 'bignumber.js';
+import { formatUnits } from 'viem';
 
 export enum STAKE_MODE {
   STAKING = 'staking',
@@ -27,7 +26,6 @@ export enum UNSTAKE_STEP {
 }
 
 export type StakeState = {
-  stakeValue: bigint;
   stakeTypedValue: string;
   selectedToken: XToken | null;
   stakeMode: STAKE_MODE;
@@ -39,7 +37,6 @@ export type StakeState = {
 };
 
 export type StakeActions = {
-  setStakeValue: (value: bigint) => void;
   setStakeTypedValue: (value: string) => void;
   setStakeValueByPercent: (percent: number, maxValue: bigint) => void;
   setCurrentStakeStep: (step: STAKE_STEP) => void;
@@ -51,6 +48,7 @@ export type StakeActions = {
   setCurrentUnstakeStep: (step: UNSTAKE_STEP) => void;
   resetUnstakeState: () => void;
   setIsNetworkPickerOpened: (value: boolean) => void;
+  reset: () => void;
 };
 
 export type StakeStore = StakeState & StakeActions;
@@ -58,8 +56,7 @@ export type StakeStore = StakeState & StakeActions;
 export const defaultStakeState: StakeState = {
   selectedToken: null,
   stakeMode: STAKE_MODE.STAKING,
-  stakeValue: 0n,
-  stakeTypedValue: '',
+  stakeTypedValue: '0',
   currentStakeStep: STAKE_STEP.STAKE_TERMS,
   totalStakedUsdValue: 0,
   unstakeMethod: UNSTAKE_METHOD.REGULAR,
@@ -68,71 +65,36 @@ export const defaultStakeState: StakeState = {
 };
 
 export const createStakeStore = (initState: StakeState = defaultStakeState) => {
-  return createStore<StakeStore>()(
-    persist(
-      (set, get) => ({
-        ...initState,
-        setStakeValue: (value: bigint) => set({ stakeValue: value }),
-        setStakeTypedValue: (value: string) => {
-          const numericValue = Number(value);
-          if (Number.isNaN(numericValue)) {
-            set({ stakeValue: 0n });
-          } else {
-            set({ stakeTypedValue: value, stakeValue: BigInt(numericValue * 10 ** 18) });
-          }
-        },
-        setStakeValueByPercent: (percent: number, maxValue: bigint) => {
-          if (percent >= 100) {
-            set({ stakeValue: BigInt(maxValue), stakeTypedValue: formatTokenAmount(BigInt(maxValue), 18) });
-            return;
-          }
-          const value = BigInt(new BigNumber(maxValue).multipliedBy(Math.round(percent)).dividedBy(100).toFixed(0));
-          set({ stakeValue: BigInt(value), stakeTypedValue: formatTokenAmount(BigInt(value), 18) });
-        },
-        setCurrentStakeStep: (step: STAKE_STEP) => set({ currentStakeStep: step }),
-        setTotalStakedUsdValue: (value: number) => set({ totalStakedUsdValue: value }),
-        setSelectedToken: (token: XToken | null) => set({ selectedToken: token }),
-        setStakeMode: (mode: STAKE_MODE) => set({ stakeMode: mode, stakeValue: 0n, stakeTypedValue: '' }),
-        resetStakeState: () => {
-          set({
-            currentStakeStep: STAKE_STEP.STAKE_TERMS,
-          });
-        },
-        setUnstakeMethod: (method: UNSTAKE_METHOD) => set({ unstakeMethod: method }),
-        setCurrentUnstakeStep: (step: UNSTAKE_STEP) => set({ currentUnstakeStep: step }),
-        resetUnstakeState: () => {
-          set({
-            currentUnstakeStep: UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE,
-            unstakeMethod: UNSTAKE_METHOD.REGULAR,
-          });
-        },
-        setIsNetworkPickerOpened: (value: boolean) => set({ isNetworkPickerOpened: value }),
+  return createStore<StakeStore>()((set, get) => ({
+    ...initState,
+
+    setStakeTypedValue: (value: string) => {
+      set({ stakeTypedValue: value });
+    },
+
+    setStakeValueByPercent: (percent: number, maxValue: bigint) => {
+      if (percent >= 100) {
+        set({ stakeTypedValue: formatUnits(maxValue, 18) });
+        return;
+      }
+      const value = BigInt(new BigNumber(maxValue).multipliedBy(Math.round(percent)).dividedBy(100).toFixed(0));
+      set({ stakeTypedValue: formatUnits(value, 18) });
+    },
+
+    setCurrentStakeStep: (step: STAKE_STEP) => set({ currentStakeStep: step }),
+    setTotalStakedUsdValue: (value: number) => set({ totalStakedUsdValue: value }),
+    setSelectedToken: (token: XToken | null) => set({ selectedToken: token }),
+    setStakeMode: (mode: STAKE_MODE) => set({ stakeMode: mode, stakeTypedValue: '' }),
+    resetStakeState: () => set({ currentStakeStep: STAKE_STEP.STAKE_TERMS }),
+    setUnstakeMethod: (method: UNSTAKE_METHOD) => set({ unstakeMethod: method }),
+    setCurrentUnstakeStep: (step: UNSTAKE_STEP) => set({ currentUnstakeStep: step }),
+    reset: () => set(defaultStakeState),
+    resetUnstakeState: () =>
+      set({
+        currentUnstakeStep: UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE,
+        unstakeMethod: UNSTAKE_METHOD.REGULAR,
       }),
-      {
-        name: 'sodax-stake-store',
-        partialize: state => ({
-          stakeValue: state.stakeValue.toString(),
-          stakeTypedValue: state.stakeTypedValue,
-          totalStakedUsdValue: state.totalStakedUsdValue,
-          stakeMode: state.stakeMode,
-          unstakeMethod: state.unstakeMethod,
-          currentUnstakeStep: state.currentUnstakeStep,
-        }),
-        merge: (persistedState, currentState) => {
-          const persisted = persistedState as Partial<StakeState & { stakeValue: string }> | null;
-          if (!persisted) {
-            return currentState;
-          }
-          return {
-            ...currentState,
-            ...persisted,
-            stakeValue:
-              typeof persisted.stakeValue === 'string'
-                ? BigInt(persisted.stakeValue)
-                : (persisted.stakeValue ?? currentState.stakeValue),
-          };
-        },
-      },
-    ),
-  );
+
+    setIsNetworkPickerOpened: (value: boolean) => set({ isNetworkPickerOpened: value }),
+  }));
 };

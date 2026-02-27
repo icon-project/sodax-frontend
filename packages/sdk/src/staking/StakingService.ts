@@ -22,9 +22,6 @@ import {
   relayTxAndWaitPacket,
   SolanaSpokeProvider,
   SpokeService,
-  WalletAbstractionService,
-  SonicSpokeService,
-  SonicSpokeProvider,
   type EvmHubProvider,
   type SpokeProvider,
   type SpokeProviderType,
@@ -32,6 +29,8 @@ import {
   EvmAssetManagerService,
   StellarSpokeService,
   type RelayError,
+  HubService,
+  isHubSpokeProvider,
 } from '../index.js';
 import { isEvmSpokeProviderType, isSonicSpokeProviderType, isStellarSpokeProviderType } from '../shared/guards.js';
 import { DEFAULT_RELAY_TX_TIMEOUT } from '../shared/constants.js';
@@ -152,46 +151,23 @@ export class StakingService {
 
         const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
         const targetToken =
-          params.action === 'stake' || spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id
-            ? (spokeProvider.chainConfig.supportedTokens.SODA?.address as Address)
+          params.action === 'stake' || !isHubSpokeProvider(spokeProvider, this.hubProvider)
+            ? spokeProvider.chainConfig.supportedTokens.SODA?.address
             : this.hubProvider.chainConfig.addresses.xSoda;
         invariant(targetToken, 'Target token not found');
 
-        // For regular EVM chains (non-Sonic), check ERC20 allowance against assetManager
-        if (isEvmSpokeProviderType(spokeProvider)) {
+        if (isEvmSpokeProviderType(spokeProvider) || isSonicSpokeProviderType(spokeProvider)) {
+          const spender = isHubSpokeProvider(spokeProvider, this.hubProvider)
+            ? await HubService.getUserRouter(
+                walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
+                this.hubProvider,
+              )
+            : spokeProvider.chainConfig.addresses.assetManager;
           const allowanceResult = await Erc20Service.isAllowanceValid(
-            targetToken,
+            targetToken as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
             params.amount,
-            walletAddress as GetAddressType<EvmSpokeProviderType>,
-            spokeProvider.chainConfig.addresses.assetManager,
-            spokeProvider,
-          );
-
-          if (!allowanceResult.ok) {
-            return {
-              ok: false,
-              error: {
-                code: 'ALLOWANCE_CHECK_FAILED',
-                error: allowanceResult.error,
-              },
-            };
-          }
-
-          return {
-            ok: true,
-            value: allowanceResult.value,
-          };
-        }
-
-        // For Sonic chain, check ERC20 allowance against userRouter
-        if (isSonicSpokeProviderType(spokeProvider)) {
-          const userRouter = await SonicSpokeService.getUserRouter(walletAddress as Address, spokeProvider);
-
-          const allowanceResult = await Erc20Service.isAllowanceValid(
-            targetToken,
-            params.amount,
-            walletAddress as GetAddressType<SonicSpokeProviderType>,
-            userRouter,
+            walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
+            spender as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
             spokeProvider,
           );
 
@@ -264,39 +240,30 @@ export class StakingService {
 
         const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
         const targetToken =
-          params.action === 'stake' || spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id
-            ? (spokeProvider.chainConfig.supportedTokens.SODA?.address as Address)
+          params.action === 'stake' || !isHubSpokeProvider(spokeProvider, this.hubProvider)
+            ? spokeProvider.chainConfig.supportedTokens.SODA?.address
             : this.hubProvider.chainConfig.addresses.xSoda;
         invariant(targetToken, 'Target token not found');
 
-        // For regular EVM chains (non-Sonic), approve against assetManager
-        if (isEvmSpokeProviderType(spokeProvider)) {
-          const result = await Erc20Service.approve(
-            targetToken,
+        if (isEvmSpokeProviderType(spokeProvider) || isSonicSpokeProviderType(spokeProvider)) {
+          const spender = isHubSpokeProvider(spokeProvider, this.hubProvider)
+            ? await HubService.getUserRouter(
+                walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
+                this.hubProvider,
+              )
+            : spokeProvider.chainConfig.addresses.assetManager;
+
+          const result = (await Erc20Service.approve(
+            targetToken as GetAddressType<EvmSpokeProviderType>,
             params.amount,
-            spokeProvider.chainConfig.addresses.assetManager,
+            spender as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
             spokeProvider,
             raw,
-          );
+          )) satisfies TxReturnType<EvmSpokeProviderType, R> as TxReturnType<S, R>;
 
           return {
             ok: true,
-            value: result as TxReturnType<S, R>,
-          };
-        }
-
-        // For Sonic chain, approve against userRouter
-        if (isSonicSpokeProviderType(spokeProvider)) {
-          const userRouter = await SonicSpokeService.getUserRouter(
-            walletAddress as GetAddressType<SonicSpokeProviderType>,
-            spokeProvider,
-          );
-
-          const result = await Erc20Service.approve(targetToken, params.amount, userRouter, spokeProvider, raw);
-
-          return {
-            ok: true,
-            value: result as TxReturnType<S, R>,
+            value: result,
           };
         }
 
@@ -371,7 +338,7 @@ export class StakingService {
       }
 
       let hubTxHash: string | null = null;
-      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           spokeProvider instanceof SolanaSpokeProvider
@@ -435,18 +402,13 @@ export class StakingService {
       const sodaAsset = this.configService.getHubAssetInfo(spokeProvider.chainConfig.chain.id, sodaToken.address);
       invariant(sodaAsset, 'SODA asset not found');
 
-      const hubWallet = await WalletAbstractionService.getUserAbstractedWalletAddress(
+      const hubWallet = await HubService.getUserHubWalletAddress(
         walletAddress,
-        spokeProvider,
+        spokeProvider.chainConfig.chain.id,
         this.hubProvider,
       );
 
-      let to = hubWallet;
-      if (spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id) {
-        to = walletAddress as Address;
-      }
-
-      const data: Hex = this.buildStakeData(sodaAsset, to, params);
+      const data: Hex = this.buildStakeData(sodaAsset, hubWallet, params);
 
       const txResult = await SpokeService.deposit(
         {
@@ -463,7 +425,7 @@ export class StakingService {
 
       return {
         ok: true,
-        value: txResult as TxReturnType<S, R>,
+        value: txResult satisfies TxReturnType<S, R> as TxReturnType<S, R>,
         data: {
           address: hubWallet,
           payload: data,
@@ -528,7 +490,7 @@ export class StakingService {
       }
 
       let hubTxHash: string | null = null;
-      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           spokeProvider instanceof SolanaSpokeProvider
@@ -586,11 +548,10 @@ export class StakingService {
     Result<TxReturnType<S, R>, StakingError<'UNSTAKE_FAILED'>> & { data?: { address: string; payload: Hex } }
   > {
     try {
-      const isHub = this.hubProvider.chainConfig.chain.id === spokeProvider.chainConfig.chain.id;
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const hubWallet = await WalletAbstractionService.getUserAbstractedWalletAddress(
+      const hubWallet = await HubService.getUserHubWalletAddress(
         walletAddress,
-        spokeProvider,
+        spokeProvider.chainConfig.chain.id,
         this.hubProvider,
       );
 
@@ -602,27 +563,11 @@ export class StakingService {
       );
       const data: Hex = this.buildUnstakeData(hubWallet, params, xSoda, underlyingSodaAmount);
 
-      let txResult: Promise<TxReturnType<S, R>> | TxReturnType<S, R>;
-      if (isHub) {
-        txResult = await SpokeService.deposit(
-          {
-            from: walletAddress as Address,
-            to: hubWallet,
-            token: this.hubProvider.chainConfig.addresses.xSoda,
-            amount: params.amount,
-            data,
-          } satisfies GetSpokeDepositParamsType<SonicSpokeProvider> as GetSpokeDepositParamsType<S>,
-          spokeProvider,
-          this.hubProvider,
-          raw,
-        );
-      } else {
-        txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
-      }
+      const txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
 
       return {
         ok: true,
-        value: txResult as TxReturnType<S, R>,
+        value: txResult satisfies TxReturnType<S, R> as TxReturnType<S, R>,
         data: {
           address: hubWallet,
           payload: data,
@@ -686,7 +631,7 @@ export class StakingService {
       }
 
       let hubTxHash: string | null = null;
-      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           spokeProvider instanceof SolanaSpokeProvider
@@ -742,47 +687,30 @@ export class StakingService {
     Result<TxReturnType<S, R>, StakingError<'INSTANT_UNSTAKE_FAILED'>> & { data?: { address: string; payload: Hex } }
   > {
     try {
-      const isHub = this.hubProvider.chainConfig.chain.id === spokeProvider.chainConfig.chain.id;
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const hubWallet = await WalletAbstractionService.getUserAbstractedWalletAddress(
+      const hubWallet = await HubService.getUserHubWalletAddress(
         walletAddress,
-        spokeProvider,
+        spokeProvider.chainConfig.chain.id,
         this.hubProvider,
       );
 
-      const sodaToken = spokeProvider.chainConfig.supportedTokens.SODA as XToken;
+      const sodaToken = spokeProvider.chainConfig.supportedTokens.SODA;
       invariant(sodaToken, 'SODA token not found');
       const sodaAsset = this.configService.getHubAssetInfo(spokeProvider.chainConfig.chain.id, sodaToken.address);
       invariant(sodaAsset, 'SODA asset not found');
 
-      const data: Hex = this.buildInstantUnstakeData(
+      const data = this.buildInstantUnstakeData(
         sodaAsset,
         spokeProvider.chainConfig.chain.id,
         encodeAddress(spokeProvider.chainConfig.chain.id, walletAddress),
         params,
       );
 
-      let txResult: Promise<TxReturnType<S, R>> | TxReturnType<S, R>;
-      if (isHub) {
-        txResult = await SpokeService.deposit(
-          {
-            from: walletAddress as Address,
-            to: hubWallet,
-            token: this.hubProvider.chainConfig.addresses.xSoda,
-            amount: params.amount,
-            data,
-          } satisfies GetSpokeDepositParamsType<SonicSpokeProvider> as GetSpokeDepositParamsType<S>,
-          spokeProvider,
-          this.hubProvider,
-          raw,
-        );
-      } else {
-        txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
-      }
+      const txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
 
       return {
         ok: true,
-        value: txResult as TxReturnType<S, R>,
+        value: txResult satisfies TxReturnType<S, R> as TxReturnType<S, R>,
         data: {
           address: hubWallet,
           payload: data,
@@ -860,7 +788,7 @@ export class StakingService {
       }
 
       let hubTxHash: string | null = null;
-      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           spokeProvider instanceof SolanaSpokeProvider
@@ -917,9 +845,9 @@ export class StakingService {
   > {
     try {
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const hubWallet = await WalletAbstractionService.getUserAbstractedWalletAddress(
+      const hubWallet = await HubService.getUserHubWalletAddress(
         walletAddress,
-        spokeProvider,
+        spokeProvider.chainConfig.chain.id,
         this.hubProvider,
       );
 
@@ -939,7 +867,7 @@ export class StakingService {
 
       return {
         ok: true,
-        value: txResult as TxReturnType<S, R>,
+        value: txResult satisfies TxReturnType<S, R> as TxReturnType<S, R>,
         data: {
           address: hubWallet,
           payload: data,
@@ -1017,7 +945,7 @@ export class StakingService {
       }
 
       let hubTxHash: string | null = null;
-      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           spokeProvider instanceof SolanaSpokeProvider
@@ -1074,24 +1002,18 @@ export class StakingService {
   > {
     try {
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-      let hubWallet: Address;
-      if (spokeProvider instanceof SonicSpokeProvider) {
-        hubWallet = walletAddress as Address;
-      } else {
-        hubWallet = await WalletAbstractionService.getUserAbstractedWalletAddress(
-          walletAddress,
-          spokeProvider,
-          this.hubProvider,
-        );
-      }
+      const hubWallet = await HubService.getUserHubWalletAddress(
+        walletAddress,
+        spokeProvider.chainConfig.chain.id,
+        this.hubProvider,
+      );
 
-      const data: Hex = await this.buildCancelUnstakeData(params, hubWallet);
-
+      const data = await this.buildCancelUnstakeData(params, hubWallet);
       const txResult = await SpokeService.callWallet(hubWallet, data, spokeProvider, this.hubProvider, raw);
 
       return {
         ok: true,
-        value: txResult as TxReturnType<S, R>,
+        value: txResult satisfies TxReturnType<S, R> as TxReturnType<S, R>,
         data: {
           address: hubWallet,
           payload: data,
@@ -1151,12 +1073,9 @@ export class StakingService {
   ): Promise<Result<StakingInfo, StakingError<'INFO_FETCH_FAILED'>>> {
     try {
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-      if (spokeProvider instanceof SonicSpokeProvider) {
-        return this.getStakingInfo(walletAddress as `0x${string}`);
-      }
-      const hubWallet = await WalletAbstractionService.getUserAbstractedWalletAddress(
-        walletAddress as `0x${string}`,
-        spokeProvider,
+      const hubWallet = await HubService.getUserHubWalletAddress(
+        walletAddress,
+        spokeProvider.chainConfig.chain.id,
         this.hubProvider,
       );
 
@@ -1184,11 +1103,10 @@ export class StakingService {
       const hubConfig = getHubChainConfig();
       const xSoda = hubConfig.addresses.xSoda;
 
-      // Get total assets in xSoda vault (total underlying SODA)
-      const totalUnderlying = await StakingLogic.getXSodaTotalAssets(xSoda, this.hubProvider.publicClient);
-
-      // Get user's raw xSODA shares
-      const userXSodaShares = await this.getXSodaBalance(xSoda, userAddress);
+      const [totalUnderlying, userXSodaShares] = await Promise.all([
+        StakingLogic.getXSodaTotalAssets(xSoda, this.hubProvider.publicClient), // Get total assets in xSoda vault (total underlying SODA)
+        this.getXSodaBalance(xSoda, userAddress), // Get user's raw xSODA shares
+      ]);
 
       // Convert user's xSODA shares to SODA value
       const userXSodaValue = await StakingLogic.convertXSodaSharesToSoda(
@@ -1232,9 +1150,9 @@ export class StakingService {
         userAddress = param;
       } else {
         const walletAddress = await param.walletProvider.getWalletAddress();
-        userAddress = await WalletAbstractionService.getUserAbstractedWalletAddress(
+        userAddress = await HubService.getUserHubWalletAddress(
           walletAddress,
-          param,
+          param.chainConfig.chain.id,
           this.hubProvider,
         );
       }
@@ -1361,9 +1279,9 @@ export class StakingService {
         userAddress = param;
       } else {
         const walletAddress = await param.walletProvider.getWalletAddress();
-        userAddress = await WalletAbstractionService.getUserAbstractedWalletAddress(
+        userAddress = await HubService.getUserHubWalletAddress(
           walletAddress,
-          param,
+          param.chainConfig.chain.id,
           this.hubProvider,
         );
       }

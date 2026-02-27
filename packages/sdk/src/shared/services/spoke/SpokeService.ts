@@ -25,8 +25,9 @@ import type {
   SolanaSpokeProviderType,
   StellarSpokeProviderType,
   NearSpokeProviderType,
+  VerifyTxHashRawConfig,
 } from '../../types.js';
-import { getIntentRelayChainId, type Address, type Hex, type HubAddress } from '@sodax/types';
+import { getIntentRelayChainId, type Address, type ChainType, type Hex, type HubAddress } from '@sodax/types';
 import { InjectiveSpokeService } from './InjectiveSpokeService.js';
 import { EvmSpokeService } from './EvmSpokeService.js';
 import { IconSpokeService } from './IconSpokeService.js';
@@ -603,5 +604,31 @@ export class SpokeService {
       ok: true,
       value: true,
     };
+  }
+
+  /**
+   * Verifies the transaction hash for the spoke chain to exist on chain.
+   * @param {VerifyTxHashRawConfig} params - The parameters for the verification.
+   * @returns {Promise<Result<boolean>>} A promise that resolves to the result of the verification.
+   */
+  public static async verifyTxHashRaw<T extends ChainType>(params: VerifyTxHashRawConfig<T>): Promise<Result<boolean>> {
+    switch (params.chainType) {
+      case 'SOLANA':
+        return SolanaSpokeService.waitForConfirmationRaw(params);
+      case 'STELLAR':
+        return StellarSpokeService.waitForTransactionRaw(params);
+      case 'EVM': {
+        const result = await EvmSpokeService.waitForTransactionReceipt(params);
+        if (!result.ok) {
+          return result;
+        }
+        if (result.value.status && result.value.status !== '0x1') {
+          return { ok: false, error: new Error('Transaction reverted') };
+        }
+        return { ok: true, value: true };
+      }
+      default:
+        return { ok: true, value: true };
+    }
   }
 }

@@ -20,7 +20,7 @@ import type { DepositItemData, NetworkBalance } from '@/constants/save';
 
 export default function SavingsPage() {
   const [isOpen, setIsOpen] = useState(false);
-  const { setDepositValue, setTotalDepositedUsdValue } = useSaveActions();
+  const { setDepositValue, setTotalDepositedUsdValue, reset } = useSaveActions();
   const { activeAsset, isSwitchingChain } = useSaveState();
   const carouselApiRef = useRef<CarouselApi | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
@@ -145,6 +145,12 @@ export default function SavingsPage() {
       setDepositValue(0);
     }
   }, [activeAsset, setDepositValue]);
+
+  useEffect(() => {
+    return () => {
+      reset();
+    };
+  }, [reset]);
 
   const navigateToAsset = useCallback(
     (asset: XToken): void => {

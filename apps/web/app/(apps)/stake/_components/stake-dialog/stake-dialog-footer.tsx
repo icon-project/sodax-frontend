@@ -14,20 +14,24 @@ import { parseUnits } from 'viem';
 import { useStakeApprove, useStakeAllowance } from '@sodax/dapp-kit';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Check, CheckIcon, FilePenLine, Loader2Icon } from 'lucide-react';
+import { ArrowLeft, Check, CheckIcon, FilePenLine, Loader2Icon } from 'lucide-react';
 import { chainIdToChainName } from '@/providers/constants';
 interface StakeDialogFooterProps {
   selectedToken: XToken | null;
   receivedXSodaAmount: string;
   onPendingChange?: (isPending: boolean) => void;
+  onCompletedChange?: (isCompleted: boolean) => void;
   onClose?: () => void;
+  onError?: (error: { title: string; message: string } | null) => void;
 }
 
 export default function StakeDialogFooter({
   selectedToken,
   receivedXSodaAmount,
   onPendingChange,
+  onCompletedChange,
   onClose,
+  onError,
 }: StakeDialogFooterProps): React.JSX.Element {
   const { currentStakeStep } = useStakeState();
   const { stakeValue } = useStakeState();
@@ -50,7 +54,7 @@ export default function StakeDialogFooter({
     return {
       amount: stakeValue,
       account: address as `0x${string}`,
-      minReceive: parseUnits(receivedXSodaAmount, 18),
+      minReceive: parseUnits(receivedXSodaAmount, 18) as bigint,
       action: 'stake' as const,
     } satisfies StakeParams;
   }, [address, stakeValue, receivedXSodaAmount]);
@@ -76,19 +80,45 @@ export default function StakeDialogFooter({
   }, [isPending, onPendingChange]);
 
   useEffect(() => {
-    if (hasAllowed) {
+    if (currentStakeStep === STAKE_STEP.STAKE_APPROVE && hasAllowed && !isWrongChain) {
       setCurrentStakeStep(STAKE_STEP.STAKE_CONFIRM);
       setIsApproved(true);
     }
-  }, [hasAllowed, setCurrentStakeStep]);
+  }, [hasAllowed, setCurrentStakeStep, currentStakeStep, isWrongChain]);
   const handleContinue = (): void => {
     if (currentStakeStep === STAKE_STEP.STAKE_TERMS) {
       setCurrentStakeStep(STAKE_STEP.STAKE_APPROVE);
     }
   };
 
+  const handleBack = (): void => {
+    if (currentStakeStep === STAKE_STEP.STAKE_APPROVE) {
+      setCurrentStakeStep(STAKE_STEP.STAKE_TERMS);
+    }
+  };
+
   const handleApprove = async (): Promise<void> => {
-    await approveStake(stakeOrderPayloadForApprove);
+    try {
+      onError?.(null);
+      const response = await approveStake(stakeOrderPayloadForApprove);
+      if (!response) {
+        onError?.({
+          title: 'Approval Failed',
+          message: 'No response received. Please try again.',
+        });
+      } else {
+        setIsApproved(true);
+        setCurrentStakeStep(STAKE_STEP.STAKE_CONFIRM);
+      }
+    } catch (error) {
+      console.error('Error approving stake:', error);
+      const errorObj = error as { message?: string; shortMessage?: string };
+      const errorMessage = errorObj?.shortMessage || errorObj?.message || 'Failed to approve stake';
+      onError?.({
+        title: 'Approval Failed',
+        message: errorMessage,
+      });
+    }
   };
 
   const handleStake = async (): Promise<void> => {
@@ -97,6 +127,7 @@ export default function StakeDialogFooter({
     }
 
     try {
+      onError?.(null);
       await stake({
         amount: stakeValue,
         minReceive: parseUnits(receivedXSodaAmount, 18) as bigint,
@@ -104,14 +135,23 @@ export default function StakeDialogFooter({
         action: 'stake',
       });
       setIsCompleted(true);
+      onCompletedChange?.(true);
     } catch (error) {
       console.error('Stake error:', error);
+      const errorObj = error as { message?: string; shortMessage?: string };
+      const errorMessage = errorObj?.shortMessage || errorObj?.message || 'Failed to stake';
+      onError?.({
+        title: 'Stake Failed',
+        message: errorMessage,
+      });
     }
   };
 
   return (
     <DialogFooter className="flex justify-between gap-2 overflow-hidden bottom-8 md:inset-x-12 inset-x-8 absolute">
-      {(isMobile ? currentStakeStep === STAKE_STEP.STAKE_TERMS : true) && (
+      {(isMobile
+        ? currentStakeStep === STAKE_STEP.STAKE_TERMS || currentStakeStep === STAKE_STEP.STAKE_APPROVE
+        : true) && (
         <Button
           variant="cherry"
           className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
@@ -121,10 +161,16 @@ export default function StakeDialogFooter({
                 ? 'w-10 h-10 rounded-full p-0 flex items-center justify-center'
                 : 'flex flex-1'
           }`}
-          onClick={handleContinue}
-          disabled={currentStakeStep !== STAKE_STEP.STAKE_TERMS}
+          onClick={currentStakeStep === STAKE_STEP.STAKE_APPROVE ? handleBack : handleContinue}
+          disabled={currentStakeStep === STAKE_STEP.STAKE_CONFIRM}
         >
-          {currentStakeStep !== STAKE_STEP.STAKE_TERMS ? <Check className="w-5 h-5" /> : 'Continue'}
+          {currentStakeStep === STAKE_STEP.STAKE_APPROVE ? (
+            <ArrowLeft className="w-5 h-5" />
+          ) : currentStakeStep !== STAKE_STEP.STAKE_TERMS ? (
+            <Check className="w-5 h-5" />
+          ) : (
+            'Continue'
+          )}
         </Button>
       )}
 
@@ -165,7 +211,9 @@ export default function StakeDialogFooter({
             className={`text-white font-['InterRegular'] rounded-full p-0 flex items-center justify-center gap-1 ${
               isMobile ? 'w-full' : 'flex-1'
             }`}
-            onClick={onClose}
+            onClick={() => {
+              onClose?.();
+            }}
           >
             Stake complete
             <CheckIcon className="w-4 h-4" />

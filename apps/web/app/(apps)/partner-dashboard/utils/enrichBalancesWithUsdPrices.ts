@@ -1,9 +1,15 @@
+// apps/web/app/(apps)/partner-dashboard/utils/enrichBalancesWithUsdPrices.ts
 import { getAssetUsdPrice } from '@/lib/getAssetUsdPrice';
 import type { PartnerFeeClaimAssetBalance } from '@sodax/sdk';
 
+/** Balance entry with USD price attached by this util. */
+export type PartnerFeeClaimAssetBalanceWithUsd = PartnerFeeClaimAssetBalance & {
+  usdPrice: number | null;
+};
+
 export async function enrichBalancesWithUsdPrices(
   balances: Map<string, PartnerFeeClaimAssetBalance>,
-): Promise<Map<string, PartnerFeeClaimAssetBalance>> {
+): Promise<Map<string, PartnerFeeClaimAssetBalanceWithUsd>> {
   const symbols = Array.from(balances.values()).map(a => a.symbol);
   const uniqueSymbols = Array.from(new Set(symbols));
 

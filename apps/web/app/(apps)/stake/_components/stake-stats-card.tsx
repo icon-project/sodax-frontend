@@ -6,9 +6,15 @@ import { formatTokenAmount } from '@/lib/utils';
 import { STAKING_APR } from './constants';
 import LoadingThreeDotsJumping from '@/components/shared/loading-three-dots-jumping';
 import { useStakingConfig } from '@sodax/dapp-kit';
+import { UnstakeModeToggle } from './unstake-mode-toggle';
+import { STAKE_MODE } from '../_stores/stake-store';
+import { useStakeActions } from '../_stores/stake-store-provider';
+import { Loader2 } from 'lucide-react';
 
 export function StakeStatsCard(): React.JSX.Element {
-  const { totalUserXSodaBalance, totalUserXSodaValue, userXSodaBalance } = useStakeState();
+  const { totalUserXSodaBalance, totalUserXSodaValue, userXSodaBalance, stakeMode, isLoadingBalanceCalculation } =
+    useStakeState();
+  const { setStakeMode } = useStakeActions();
   const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
 
   return (
@@ -30,9 +36,13 @@ export function StakeStatsCard(): React.JSX.Element {
         </div>
         <div className="grow flex flex-col justify-center items-start gap-1">
           <div className="flex justify-center items-center gap-1">
-            <span className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] leading-5">
-              {formatTokenAmount(totalUserXSodaBalance, 18)}
-            </span>
+            {isLoadingBalanceCalculation ? (
+              <Loader2 className="w-4 h-4 text-espresso animate-spin" />
+            ) : (
+              <span className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] leading-5">
+                {formatTokenAmount(totalUserXSodaBalance, 18)}
+              </span>
+            )}
             <span className="text-clay text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-5">
               {' '}
               xSODA
@@ -58,6 +68,13 @@ export function StakeStatsCard(): React.JSX.Element {
             15.8M total staked
           </div>
         </div>
+      </div>
+
+      <div className="w-full flex justify-end items-center">
+        <UnstakeModeToggle
+          enabled={stakeMode === STAKE_MODE.UNSTAKING}
+          onToggle={() => setStakeMode(stakeMode === STAKE_MODE.UNSTAKING ? STAKE_MODE.STAKING : STAKE_MODE.UNSTAKING)}
+        />
       </div>
 
       <div className="w-full h-0.5 relative">
