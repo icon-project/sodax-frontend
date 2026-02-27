@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useState, useRef, useEffect, useMemo, Fragment } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { ScrollBar } from '@/components/ui/scroll-area';
 import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
@@ -252,10 +252,8 @@ export function TokenList({
               data-name="Assets"
               layout
             >
-              <AnimatePresence mode="sync">
-                {sortedTokenGroups.map(({ symbol, tokens }) => (
-                  <Fragment key={symbol}>{renderAssetGroup(symbol, tokens)}</Fragment>
-                ))}{' '}
+              <AnimatePresence mode="popLayout">
+                {sortedTokenGroups.map(({ symbol, tokens }) => renderAssetGroup(symbol, tokens))}
               </AnimatePresence>
             </motion.div>
           </div>
