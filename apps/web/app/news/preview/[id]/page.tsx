@@ -108,7 +108,7 @@ export default async function NewsPreviewPage({ params }: PageProps) {
         </div>
       </div>
 
-      <MarketingHeader backLink={NEWS_ROUTE} backText="← News" />
+      <MarketingHeader backLink={NEWS_ROUTE} backText="← news" />
       <div className="max-w-7xl mx-auto">
         {/* Article */}
         <article className="py-8">

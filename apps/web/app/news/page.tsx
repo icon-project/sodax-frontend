@@ -208,7 +208,7 @@ export default async function NewsPage(props: {
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
         <div className="relative min-h-screen w-full bg-almost-white">
-          <MarketingHeader backLink={HOME_ROUTE} backText="← Home" />
+          <MarketingHeader backLink={HOME_ROUTE} backText="← home" />
           <div className="max-w-7xl mx-auto px-4 py-16 pt-35">
             <div className="bg-white rounded-lg p-8 text-center border-2 border-clay-light">
               <h2 className="text-2xl font-bold text-espresso mb-2">
@@ -238,7 +238,7 @@ export default async function NewsPage(props: {
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <div className="relative min-h-screen w-full bg-almost-white">
-        <MarketingHeader backLink={HOME_ROUTE} backText="← Home" />
+        <MarketingHeader backLink={HOME_ROUTE} backText="← home" />
 
         {/* Category Filter Tabs */}
         <div className="max-w-7xl mx-auto px-4 pt-35 pb-8 md:pb-12">

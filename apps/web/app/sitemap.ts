@@ -1,4 +1,3 @@
-// apps/web/app/sitemap.ts
 import type { MetadataRoute } from 'next';
 import {
   COMMUNITY_ROUTE,

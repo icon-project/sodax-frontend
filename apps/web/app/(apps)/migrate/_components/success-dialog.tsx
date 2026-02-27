@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/migrate/_components/success-dialog.tsx
 'use client';
 
 import Image from 'next/image';
