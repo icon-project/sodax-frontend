@@ -16,7 +16,7 @@ export function UnstakeModeToggle({ enabled, onToggle }: UnstakeModeToggleProps)
     <div className={cn('flex items-center gap-2', userXSodaBalance === 0n && 'opacity-60 pointer-events-none')}>
       {/* <div className="justify-center text-clay text-xs font-normal font-['Inter'] leading-5">Unstake mode</div> */}
       <div className="justify-center text-espresso text-(length:--body-comfortable) font-normal font-['InterRegular'] leading-5">
-        Unstake
+        Unstake mode
       </div>
       <div className="mix-blend-multiply">
         <Switch

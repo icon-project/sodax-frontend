@@ -25,9 +25,7 @@ export default function UnstakeMethodSelectionStep({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] mt-4">
-        Choose how to unstake
-      </div>
+      <div className="text-espresso text-(length:--body-super-comfortable) font-bold mt-4">Choose how to unstake</div>
 
       <RadioGroup
         value={unstakeMethod}
@@ -61,8 +59,8 @@ export default function UnstakeMethodSelectionStep({
                 <Image src="/coin/soda.png" alt="SODA" width={16} height={16} />
               </div>
               <div className="flex justify-center gap-1">
-                <span className="text-espresso text-xs font-bold font-['InterRegular'] ">{regularUnstakeAmount}</span>
-                <span className="text-clay text-xs font-normal font-['InterRegular'] "> SODA</span>
+                <span className="text-espresso text-xs font-bold">{regularUnstakeAmount}</span>
+                <span className="text-clay text-xs"> SODA</span>
               </div>
             </div>
           </div>
@@ -83,7 +81,7 @@ export default function UnstakeMethodSelectionStep({
                 <RadioGroupItem value={UNSTAKE_METHOD.INSTANT} className="w-4 h-4 border-2 border-clay-light" />
               </div>
             </div>
-            <div className="text-clay text-(length:--body-fine-print) font-['InterRegular'] leading-[1.3] font-style-normal font-normal tracking-[-0.5px]">
+            <div className="text-clay text-(length:--body-fine-print) leading-[1.3] tracking-[-0.5px]">
               Sell your xSODA now at current market rate. No waiting period.
             </div>
             <div className="flex justify-start items-center gap-2">
@@ -91,8 +89,8 @@ export default function UnstakeMethodSelectionStep({
                 <Image src="/coin/soda.png" alt="SODA" width={16} height={16} />
               </div>
               <div className="flex justify-center gap-1">
-                <span className="text-espresso text-xs font-bold font-['InterRegular'] ">{instantUnstakeAmount}</span>
-                <span className="text-clay text-xs font-normal font-['InterRegular'] ">SODA</span>
+                <span className="text-espresso text-xs font-bold ">{instantUnstakeAmount}</span>
+                <span className="text-clay text-xs ">SODA</span>
               </div>
             </div>
           </div>
