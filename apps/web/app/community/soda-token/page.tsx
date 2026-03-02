@@ -20,6 +20,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import Footer from '@/components/landing/footer';
 import { MarketingHeader } from '@/components/shared/marketing-header';
+import { DOCUMENTATION_ROUTE, SODAX_SCAN_TOKEN_ROUTE, SWAP_ROUTE } from '@/constants/routes';
 
 // API fetcher with proper error handling
 async function fetchSupplyData(endpoint: string): Promise<number> {
@@ -309,7 +310,7 @@ export default function SodaTokenPage() {
                     </code>
                     <CopyButton text="0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963" />
                     <a
-                      href="https://sonicscan.org/token/0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963"
+                      href={SODAX_SCAN_TOKEN_ROUTE}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-xs text-yellow-dark hover:text-cherry-dark font-medium transition-colors"
@@ -513,14 +514,14 @@ export default function SodaTokenPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-2 justify-center items-center">
               <Link
-                href="/swap"
+                href={SWAP_ROUTE}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-espresso px-5 py-2.5 rounded-lg font-['InterRegular'] font-medium text-sm hover:bg-almost-white transition-colors"
               >
                 Launch App
                 <ExternalLink className="w-4 h-4" />
               </Link>
               <a
-                href="https://docs.sodax.com"
+                href={DOCUMENTATION_ROUTE}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-white/30 text-white px-5 py-2.5 rounded-lg font-['InterRegular'] font-medium text-sm hover:bg-white/10 transition-colors"

@@ -8,7 +8,7 @@ import { SodaxIcon } from '../icons/sodax-icon';
 import { MainCtaButton } from '../landing/main-cta-button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { usePathname } from 'next/navigation';
-import { isPartnerRoute } from '@/constants/routes';
+import { isPartnerRoute, NEWS_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
 
 export function Header(): React.JSX.Element {
   const openModal = useModalStore(state => state.openModal);
@@ -63,13 +63,13 @@ export function Header(): React.JSX.Element {
           <div className="hidden lg:flex justify-end items-center gap-4">
             <a
               className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
-              href="/news"
+              href={NEWS_ROUTE}
             >
               News
             </a>
             <a
               className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
-              href="/partners"
+              href={PARTNERS_ROUTE}
             >
               Partners
             </a>

@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'motion/react';
+import { PARTNERS_ROUTE } from '@/constants/routes';
 
 const caseStudies = [
   {
@@ -15,7 +16,7 @@ const caseStudies = [
       { label: 'To launch', value: '2 days' },
       { label: 'Infrastructure cost', value: '$0' },
     ],
-    href: '/partners/amped-finance',
+    href: `${PARTNERS_ROUTE}/amped-finance`,
   },
   {
     logo: '/partners/hana/logo.svg',
@@ -27,7 +28,7 @@ const caseStudies = [
       { label: 'Users enabled', value: '47,000+' },
       { label: 'Dev cost saved', value: 'Zero infra team' },
     ],
-    href: '/partners/hana',
+    href: `${PARTNERS_ROUTE}/hana`,
   },
   {
     logo: '/partners/lightlink-network/logo.svg',
@@ -39,7 +40,7 @@ const caseStudies = [
       { label: 'Time to market', value: 'Day 1 liquidity' },
       { label: 'Partnerships saved', value: '6+ months' },
     ],
-    href: '/partners/lightlink-network',
+    href: `${PARTNERS_ROUTE}/lightlink-network`,
   },
 ];
 

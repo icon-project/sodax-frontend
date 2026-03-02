@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Footer from '@/components/landing/footer';
 import { MarketingHeader } from '@/components/shared/marketing-header';
+import { HOME_ROUTE } from '@/constants/routes';
 
 export default function NotFound() {
   return (
@@ -32,7 +33,7 @@ export default function NotFound() {
           {/* Actions */}
           <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Button asChild variant="default" size="lg">
-              <Link href="/">Go Home</Link>
+              <Link href={HOME_ROUTE}>Go Home</Link>
             </Button>
           </div>
         </div>

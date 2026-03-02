@@ -5,6 +5,7 @@ import { useStore } from 'zustand';
 
 import { type AppStore, createAppStore, initAppStore } from './app-store';
 import { useRouter } from 'next/navigation';
+import { HOME_ROUTE } from '@/constants/routes';
 
 export type AppStoreApi = ReturnType<typeof createAppStore>;
 
@@ -29,7 +30,7 @@ export const AppStoreProvider = ({ children }: AppStoreProviderProps) => {
       if (state.isSwitchingPage !== prevState.isSwitchingPage) {
         if (!state.isSwitchingPage) {
           setTimeout(() => {
-            router.push('/');
+            router.push(HOME_ROUTE);
           }, 1000);
 
           setTimeout(() => {
