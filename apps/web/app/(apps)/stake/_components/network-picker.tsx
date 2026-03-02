@@ -114,7 +114,9 @@ export function NetworkPicker({
               const hoveredBalance = tokenBalances.get(hoveredToken.xChainId) || 0n;
               const hasHoveredBalance = hoveredBalance > 0n;
               const formattedHoveredBalance = hasHoveredBalance
-                ? formatTokenAmount(hoveredBalance, hoveredToken.decimals)
+                ? stakeMode === STAKE_MODE.UNSTAKING
+                  ? formatTokenAmount(hoveredBalance, 18)
+                  : formatTokenAmount(hoveredBalance, hoveredToken.decimals)
                 : null;
 
               return (
@@ -126,9 +128,7 @@ export function NetworkPicker({
                     </>
                   )}
                   {hoveredBalance !== 0n && formattedHoveredBalance !== null && (
-                    <>
-                      {formattedHoveredBalance} {tokenSymbol}
-                    </>
+                    <> Balance: {formattedHoveredBalance}</>
                   )}
                 </>
               );
@@ -141,19 +141,19 @@ export function NetworkPicker({
 
       <div
         className={cn(
-          'flex flex-wrap justify-center network-picker-container w-[150px] gap-0.5',
+          'flex flex-wrap justify-center w-[140px] network-picker-container',
           isMobile && isSingle && 'ml-4',
         )}
       >
         {tokens.map((token, index) => {
           const balance = tokenBalances.get(token.xChainId) || 0n;
           const hasBalance = balance > 0n;
+
           return (
             <motion.div
               key={token.xChainId}
               className={cn(
-                'relative flex shrink-0 w-7 h-7 min-w-6 min-h-6 items-center justify-center cursor-pointer rounded-full p-0',
-                hoveredIcon === index && 'z-50',
+                'p-1.5 cursor-pointer rounded-full ',
                 hoveredIcon !== null && hoveredIcon !== index && 'opacity-60 grayscale-[0.5]',
               )}
               whileHover={{ scale: 1.3 }}
@@ -166,7 +166,10 @@ export function NetworkPicker({
                 onSelect?.(token);
               }}
             >
-              <NetworkIcon id={token.xChainId} hasBalance={hasBalance} swapPickerShadow={true} />
+              <NetworkIcon
+                id={token.xChainId}
+                className={hasBalance ? '!ring-[5px] shadow-[-5px_0px_5px_0px_rgba(175,145,145,1)]' : ''}
+              />
             </motion.div>
           );
         })}
