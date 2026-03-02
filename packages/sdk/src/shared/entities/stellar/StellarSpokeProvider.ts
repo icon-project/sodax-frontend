@@ -316,6 +316,12 @@ export class StellarBaseSpokeProvider {
   }
 }
 
+export type StellarRawSpokeProviderConfig = {
+  walletAddress: string;
+  chainConfig: StellarSpokeChainConfig;
+  rpcConfig?: StellarRpcConfig;
+};
+
 export class StellarRawSpokeProvider extends StellarBaseSpokeProvider implements IRawSpokeProvider {
   public readonly walletProvider: WalletAddressProvider;
   public readonly raw = true;
