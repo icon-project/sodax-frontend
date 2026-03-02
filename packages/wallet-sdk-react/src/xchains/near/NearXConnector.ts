@@ -18,7 +18,7 @@ export class NearXConnector extends XConnector {
 
   async connect(): Promise<XAccount | undefined> {
     const walletSelector = this.getXService().walletSelector;
-    const wallet = await walletSelector.connect(this._wallet.manifest.id);
+    const wallet = await walletSelector.connect({ walletId: this._wallet.manifest.id });
     const accounts = await wallet.getAccounts();
 
     if (accounts.length === 0 || accounts[0] === undefined) {
