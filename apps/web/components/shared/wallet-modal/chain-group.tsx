@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
-import type { FeeClaimAsset } from '@/app/(apps)/partner/hooks/useFeeClaimAssets';
+import type { FeeClaimAsset } from '@/app/(apps)/partner-dashboard/hooks/useFeeClaimAssets';
 
 type ChainGroupProps = {
   chainName: string;

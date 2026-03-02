@@ -5,7 +5,12 @@ import { useClickAway } from 'react-use';
 import { cn, formatTokenAmount } from '@/lib/utils';
 import { STAKE_MODE } from '../_stores/stake-store';
 import type { XToken } from '@sodax/types';
-import { supportedSpokeChains, spokeChainConfig } from '@sodax/sdk';
+import {
+  supportedSpokeChains,
+  spokeChainConfig,
+  INJECTIVE_MAINNET_CHAIN_ID,
+  REDBELLY_MAINNET_CHAIN_ID,
+} from '@sodax/sdk';
 import type { SpokeChainId } from '@sodax/types';
 import { useStakeActions, useStakeState } from '../_stores/stake-store-provider';
 import { Button } from '@/components/ui/button';
@@ -47,7 +52,11 @@ export function StakeSelectorPanel(): React.JSX.Element {
       const chainConfig = spokeChainConfig[chainId as SpokeChainId];
       if (chainConfig?.supportedTokens && 'SODA' in chainConfig.supportedTokens) {
         const sodaToken = chainConfig.supportedTokens.SODA as XToken;
-        if (sodaToken) {
+        if (
+          sodaToken &&
+          sodaToken.xChainId !== INJECTIVE_MAINNET_CHAIN_ID &&
+          sodaToken.xChainId !== REDBELLY_MAINNET_CHAIN_ID
+        ) {
           tokens.push(sodaToken);
         }
       }
@@ -136,7 +145,7 @@ export function StakeSelectorPanel(): React.JSX.Element {
                   <div className="flex items-center gap-1">
                     <span>Balance: {formattedBalance}</span>
                     {stakeMode === STAKE_MODE.UNSTAKING &&
-                      [5, 10].map(percent => (
+                      [25, 50].map(percent => (
                         <Button
                           key={percent}
                           variant="default"
@@ -161,7 +170,7 @@ export function StakeSelectorPanel(): React.JSX.Element {
                     </Button>
                   </div>
                 ) : (
-                  <span>No SODA in wallet</span>
+                  <span>No {stakeMode === STAKE_MODE.STAKING ? 'SODA' : 'xSODA'} in wallet</span>
                 )}
               </div>
             </div>

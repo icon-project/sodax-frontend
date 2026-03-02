@@ -5,6 +5,7 @@ import { FooterLink } from '@/components/landing/footer-link';
 import Image from 'next/image';
 import { useState } from 'react';
 import TermsModal from '@/components/landing/terms-modal';
+import { PARTNER_DASHBOARD_ROUTE } from '@/constants/routes';
 
 interface FooterProps {
   onTermsClick?: () => void;
@@ -42,11 +43,11 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           <FooterLink href="https://app.balanced.network/" showArrow>
             Balanced DeFi
           </FooterLink>
-          {/* <FooterLink href="/partner" showArrow>
+          <FooterLink href={PARTNER_DASHBOARD_ROUTE} showArrow>
             <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">
               partner portal
             </div>
-          </FooterLink> */}
+          </FooterLink>
         </div>
         <div className="inline-flex flex-col justify-start items-start gap-3 w-33.5">
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">

@@ -114,7 +114,9 @@ export function NetworkPicker({
               const hoveredBalance = tokenBalances.get(hoveredToken.xChainId) || 0n;
               const hasHoveredBalance = hoveredBalance > 0n;
               const formattedHoveredBalance = hasHoveredBalance
-                ? formatTokenAmount(hoveredBalance, hoveredToken.decimals)
+                ? stakeMode === STAKE_MODE.UNSTAKING
+                  ? formatTokenAmount(hoveredBalance, 18)
+                  : formatTokenAmount(hoveredBalance, hoveredToken.decimals)
                 : null;
 
               return (

@@ -1,28 +1,53 @@
+import type { SpokeChainId } from '@sodax/types';
 import type { FormatUserSummaryResponse, FormatReserveUSDResponse, SpokeProvider } from '@sodax/sdk';
 import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
 
-export type UseUserFormattedSummaryParams = {
-  spokeProvider?: SpokeProvider;
-  address?: string;
+type BaseQueryOptions = {
   queryOptions?: UseQueryOptions<FormatUserSummaryResponse<FormatReserveUSDResponse>, Error>;
 };
+
+type NewParams = BaseQueryOptions & {
+  /** Spoke chain id (e.g. '0xa86a.avax') */
+  spokeChainId: SpokeChainId | undefined;
+  /** User wallet address on the spoke chain */
+  userAddress: string | undefined;
+};
+
+/** @deprecated Use `{ spokeChainId, userAddress }` instead */
+type LegacyParams = BaseQueryOptions & {
+  /** @deprecated Use `spokeChainId` instead */
+  spokeProvider: SpokeProvider | undefined;
+  /** @deprecated Use `userAddress` instead */
+  address: string | undefined;
+};
+
+export type UseUserFormattedSummaryParams = NewParams | LegacyParams;
+
+function isLegacyParams(params: UseUserFormattedSummaryParams): params is LegacyParams {
+  return 'spokeProvider' in params || 'address' in params;
+}
+
+function resolveParams(params: UseUserFormattedSummaryParams): {
+  spokeChainId: SpokeChainId | undefined;
+  userAddress: string | undefined;
+} {
+  if (isLegacyParams(params)) {
+    return {
+      spokeChainId: params.spokeProvider?.chainConfig.chain.id as SpokeChainId | undefined,
+      userAddress: params.address,
+    };
+  }
+  return { spokeChainId: params.spokeChainId, userAddress: params.userAddress };
+}
 
 /**
  * React hook to fetch a formatted summary of a user's Sodax money market portfolio.
  *
- * Accepts an optional params object:
- *   - `spokeProvider`: The SpokeProvider instance for the target chain
- *   - `address`: The user wallet address to get the summary for
- *   - `queryOptions`: Optional React Query options (key, caching, intervals, etc)
- *
- * The hook returns a React Query result object containing the formatted summary, loading and error state.
- * The query is enabled only if both the spokeProvider and address are provided.
- *
- * @param params Optional parameters:
- *   - spokeProvider: SpokeProvider to query chain data (required for enabled query)
- *   - address: User account address (required for enabled query)
- *   - queryOptions: React Query options for customization (optional)
+ * @param params (optional) - Object including:
+ *   - spokeChainId: The spoke chain id whose data will be fetched. If not provided, data fetching is disabled.
+ *   - userAddress: The user's address (string) whose summary will be fetched. If not provided, data fetching is disabled.
+ *   - queryOptions: (optional) Custom React Query options such as `queryKey`, `enabled`, or cache policy.
  *
  * @returns {UseQueryResult<FormatUserSummaryResponse<FormatReserveUSDResponse>, Error>}
  *   A result object from React Query including:
@@ -32,28 +57,29 @@ export type UseUserFormattedSummaryParams = {
  *     - error: Error if thrown in fetching
  *
  * @example
- * const { data, isLoading, error } = useUserFormattedSummary({ spokeProvider, address });
+ * const { data, isLoading, error } = useUserFormattedSummary({ spokeChainId, userAddress });
  */
 export function useUserFormattedSummary(
   params?: UseUserFormattedSummaryParams,
 ): UseQueryResult<FormatUserSummaryResponse<FormatReserveUSDResponse>, Error> {
   const { sodax } = useSodaxContext();
+  const resolved = params ? resolveParams(params) : { spokeChainId: undefined, userAddress: undefined };
   const defaultQueryOptions = {
-    queryKey: ['mm', 'userFormattedSummary', params?.spokeProvider?.chainConfig.chain.id, params?.address],
-    enabled: !!params?.spokeProvider && !!params?.address,
+    queryKey: ['mm', 'userFormattedSummary', resolved.spokeChainId, resolved.userAddress],
+    enabled: !!resolved.spokeChainId && !!resolved.userAddress,
     refetchInterval: 5000,
   };
 
   const queryOptions = {
     ...defaultQueryOptions,
     ...params?.queryOptions, // override default query options if provided
-  }
+  };
 
   return useQuery({
     ...queryOptions,
     queryFn: async () => {
-      if (!params?.spokeProvider || !params?.address) {
-        throw new Error('Spoke provider or address is not defined');
+      if (!resolved.spokeChainId || !resolved.userAddress) {
+        throw new Error('spokeChainId or userAddress is not defined');
       }
 
       // fetch reserves and hub wallet address
@@ -65,7 +91,10 @@ export function useUserFormattedSummary(
       );
 
       // fetch user reserves
-      const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(params?.spokeProvider);
+      const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(
+        resolved.spokeChainId,
+        resolved.userAddress,
+      );
 
       // format user summary
       return sodax.moneyMarket.data.formatUserSummary(
