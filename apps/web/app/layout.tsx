@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
+import { DISCORD_ROUTE, GITHUB_ROUTE, X_ROUTE } from '@/constants/routes';
 import Providers from '../providers/providers';
 import AppSidebar from '@/components/landing/sidebar';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -80,11 +81,7 @@ const structuredData = {
       name: 'SODAX',
       url: 'https://sodax.com',
       logo: 'https://sodax.com/symbol2.png',
-      sameAs: [
-        'https://twitter.com/gosodax',
-        'https://github.com/icon-project/sodax-frontend',
-        'https://discord.gg/xM2Nh4S6vN',
-      ],
+      sameAs: [X_ROUTE, GITHUB_ROUTE, DISCORD_ROUTE],
     },
     {
       '@type': 'WebSite',

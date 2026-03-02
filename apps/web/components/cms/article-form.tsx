@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { CMS_ARTICLES_ROUTE } from "@/constants/routes";
 import { TiptapEditor } from "./tiptap-editor";
 import { ArrowLeft, Save, Upload } from "lucide-react";
 import type { Article } from "@/lib/mongodb-types";
@@ -97,7 +98,7 @@ export function ArticleForm({ article }: ArticleFormProps) {
         throw new Error(error.error || "Failed to save");
       }
 
-      router.push("/cms/articles");
+      router.push(CMS_ARTICLES_ROUTE);
       router.refresh();
     } catch (error) {
       console.error("Save error:", error);

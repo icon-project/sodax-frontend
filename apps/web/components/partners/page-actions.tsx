@@ -1,6 +1,7 @@
 'use client';
 
 import { BookOpen, FileDown, Share2 } from 'lucide-react';
+import { DOCUMENTATION_ROUTE } from '@/constants/routes';
 import { useShare } from '@/hooks/use-share';
 import { downloadFile } from '@/lib/download-utils';
 
@@ -24,7 +25,7 @@ export function PageActions({ pdfUrl, pdfTitle = 'Case Study', shareTitle, share
     <div className="flex items-center gap-3 md:gap-4">
       {/* SODAX SDK Link */}
       <a
-        href="https://docs.sodax.com/"
+        href={DOCUMENTATION_ROUTE}
         target="_blank"
         rel="noopener noreferrer"
         className="group flex items-center gap-1.5 text-[var(--clay)] hover:text-[var(--espresso)] transition-colors"

@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { MIGRATE_ROUTE } from '@/constants/routes';
 
 const MigrateSection = () => {
   const router = useRouter();
@@ -29,7 +30,7 @@ const MigrateSection = () => {
           variant="outline"
           className="px-6 font-['InterMedium'] cursor-pointer"
           size="lg"
-          onClick={() => router.push('/migrate')}
+          onClick={() => router.push(MIGRATE_ROUTE)}
         >
           Migrate
         </Button>

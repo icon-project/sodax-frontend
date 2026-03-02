@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
+import { DOCUMENTATION_ROUTE, X_INTENT_FOLLOW_ROUTE } from '@/constants/routes';
 
 const SmallBannerSection2 = () => {
   return (
@@ -26,7 +27,7 @@ const SmallBannerSection2 = () => {
             className="rounded-full cursor-pointer"
             variant="subtle"
             size="lg"
-            onClick={() => window.open('https://x.com/intent/user?screen_name=gosodax', '_blank')}
+            onClick={() => window.open(X_INTENT_FOLLOW_ROUTE, '_blank')}
           >
             Follow us for launch
           </Button>
@@ -56,7 +57,7 @@ const SmallBannerSection2 = () => {
             className="rounded-full cursor-pointer"
             variant="subtle"
             size="lg"
-            onClick={() => window.open('https://docs.sodax.com/', '_blank')}
+            onClick={() => window.open(DOCUMENTATION_ROUTE, '_blank')}
           >
             Docs
           </Button>

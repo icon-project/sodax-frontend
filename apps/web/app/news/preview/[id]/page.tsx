@@ -6,6 +6,7 @@ import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/db';
 import { requirePermission } from '@/lib/auth-utils';
 import { sanitizeHtml } from '@/lib/sanitize';
+import { CMS_LOGIN_ROUTE, CMS_NEWS_ROUTE, NEWS_ROUTE } from '@/constants/routes';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
 
@@ -46,7 +47,7 @@ export default async function NewsPreviewPage({ params }: PageProps) {
   try {
     await requirePermission('news');
   } catch {
-    redirect('/cms/login');
+    redirect(CMS_LOGIN_ROUTE);
   }
 
   const { id } = await params;
@@ -54,7 +55,7 @@ export default async function NewsPreviewPage({ params }: PageProps) {
   // Validate ObjectId format before querying
   if (!ObjectId.isValid(id)) {
     console.error(`Invalid ObjectId format for preview: ${id}`);
-    redirect('/cms/news');
+    redirect(CMS_NEWS_ROUTE);
   }
 
   // Fetch article by ID (not slug), regardless of published status
@@ -68,7 +69,7 @@ export default async function NewsPreviewPage({ params }: PageProps) {
   }
 
   if (!article) {
-    redirect('/cms/news');
+    redirect(CMS_NEWS_ROUTE);
   }
 
   const formatDate = (date: Date) => {
@@ -93,13 +94,13 @@ export default async function NewsPreviewPage({ params }: PageProps) {
             visitors
           </span>
           <Link
-            href={`/cms/news/${id}`}
+            href={`${CMS_NEWS_ROUTE}/${id}`}
             className="ml-4 px-3 py-1 bg-[var(--espresso)] text-white text-sm font-medium rounded-md hover:bg-opacity-90 transition-colors"
           >
             Edit Article
           </Link>
           <Link
-            href="/cms/news"
+            href={CMS_NEWS_ROUTE}
             className="px-3 py-1 bg-white text-[var(--espresso)] text-sm font-medium rounded-md hover:bg-opacity-90 transition-colors border border-[var(--espresso)]"
           >
             Back to CMS
@@ -107,14 +108,14 @@ export default async function NewsPreviewPage({ params }: PageProps) {
         </div>
       </div>
 
-      <MarketingHeader backLink="/news" backText="← news" />
+      <MarketingHeader backLink={NEWS_ROUTE} backText="← news" />
       <div className="max-w-7xl mx-auto">
         {/* Article */}
         <article className="py-8">
           <div className="container mx-auto px-4 max-w-4xl">
             {/* Breadcrumb */}
             <nav className="mb-6 text-sm text-[var(--clay)]" aria-label="Breadcrumb">
-              <Link href="/news" className="hover:text-[var(--cherry-soda)] transition-colors">
+              <Link href={NEWS_ROUTE} className="hover:text-[var(--cherry-soda)] transition-colors">
                 News
               </Link>
               <span className="mx-2">/</span>
@@ -193,7 +194,7 @@ export default async function NewsPreviewPage({ params }: PageProps) {
             {/* Back to CMS */}
             <div className="mt-12">
               <Link
-                href="/cms/news"
+                href={CMS_NEWS_ROUTE}
                 className="inline-flex items-center gap-2 text-[var(--cherry-soda)] font-medium hover:gap-3 transition-all"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

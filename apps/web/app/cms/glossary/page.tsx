@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { CMS_DASHBOARD_ROUTE } from "@/constants/routes";
 import { requirePermission } from "@/lib/auth-utils";
 import { GlossaryListView } from "@/components/cms/glossary-list-view";
 
@@ -10,6 +11,6 @@ export default async function GlossaryManagementPage() {
     await requirePermission("glossary");
     return <GlossaryListView />;
   } catch (error) {
-    redirect("/cms/dashboard");
+    redirect(CMS_DASHBOARD_ROUTE);
   }
 }
