@@ -475,7 +475,8 @@ export function isEvmRawSpokeProviderConfig(value: RawSpokeProviderConfig): valu
     typeof value === 'object' &&
     value !== null &&
     'walletAddress' in value &&
-    'chainConfig' in value
+    'chainConfig' in value &&
+    value.chainConfig.chain.type === 'EVM'
   );
 }
 
@@ -484,7 +485,8 @@ export function isSonicRawSpokeProviderConfig(value: RawSpokeProviderConfig): va
     typeof value === 'object' &&
     value !== null &&
     'walletAddress' in value &&
-    'chainConfig' in value
+    'chainConfig' in value &&
+    value.chainConfig.chain.type === 'EVM'
   );
 }
 
@@ -493,7 +495,8 @@ export function isStellarRawSpokeProviderConfig(value: RawSpokeProviderConfig): 
     typeof value === 'object' &&
     value !== null &&
     'walletAddress' in value &&
-    'chainConfig' in value
+    'chainConfig' in value &&
+    value.chainConfig.chain.type === 'STELLAR'
   );
 }
 
@@ -503,6 +506,7 @@ export  function isSolanaRawSpokeProviderConfig(value: RawSpokeProviderConfig): 
     value !== null &&
     'walletAddress' in value &&
     'chainConfig' in value &&
-    'connection' in value
+    'connection' in value &&
+    value.chainConfig.chain.type === 'SOLANA'
   );
 }

@@ -43,6 +43,44 @@ Raw spoke providers are ideal for:
 
 **Note**: When using raw spoke providers with Sodax features, you must pass the `raw: true` flag to methods like `createIntent()`, `supply()`, etc. This ensures the methods return raw transaction data instead of attempting to execute transactions.
 
+### Constructing a Raw Spoke Provider from Config
+
+When you have a generic config object (e.g. from API or runtime) and want a single entry point to build the correct raw spoke provider for any supported chain, use the **`constructRawSpokeProvider`** helper. It dispatches on `config.chainConfig.chain.type` and returns the appropriate raw spoke provider instance.
+
+**Signature**
+
+```typescript
+function constructRawSpokeProvider(config: RawSpokeProviderConfig): RawSpokeProvider
+```
+
+- **Parameter**: `config` — A chain-specific raw spoke provider config (`EvmRawSpokeProviderConfig`, `SonicRawSpokeProviderConfig`, `StellarRawSpokeProviderConfig`, `SolanaRawSpokeProviderConfig`, `IconRawSpokeProviderConfig`, `InjectiveRawSpokeProviderConfig`, or `SuiRawSpokeProviderConfig`). The config must include `chainConfig` with `chain.type` set to one of: `EVM`, `STELLAR`, `SOLANA`, `ICON`, `INJECTIVE`, `SUI`. For Sonic, use EVM config with `chain.id === SONIC_MAINNET_CHAIN_ID`.
+- **Returns**: A `RawSpokeProvider` instance (e.g. `EvmRawSpokeProvider`, `StellarRawSpokeProvider`, `SolanaRawSpokeProvider`, etc.).
+- **Throws**: `Error` with message `Unsupported chain type: ${chainType}` if `chain.type` is not supported.
+
+**Example**
+
+```typescript
+import {
+  constructRawSpokeProvider,
+  spokeChainConfig,
+  ARBITRUM_MAINNET_CHAIN_ID,
+  type RawSpokeProviderConfig,
+  type EvmRawSpokeProviderConfig,
+} from "@sodax/sdk";
+
+// Config might come from API or be built at runtime
+const config: EvmRawSpokeProviderConfig = {
+  walletAddress: "0x...",
+  chainConfig: spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID],
+  rpcUrl: "https://arb1.arbitrum.io/rpc",
+};
+
+const rawSpokeProvider = constructRawSpokeProvider(config);
+// rawSpokeProvider is EvmRawSpokeProvider — use with Sodax features and raw: true
+```
+
+Use `constructRawSpokeProvider` when the chain type is determined at runtime or when you want one code path that works for all supported chains. For a known chain type, you can still instantiate the specific raw spoke provider class directly (e.g. `new EvmRawSpokeProvider(...)`) as shown in the chain-specific sections below.
+
 ## Prerequisites
 
 Before creating a spoke provider, ensure you have:
@@ -1073,6 +1111,7 @@ For detailed staking documentation, see [STAKING.md](./STAKING.md).
   - `InjectiveRawSpokeProvider` for Injective blockchain
   - `IconRawSpokeProvider` for ICON blockchain
   - `SolanaRawSpokeProvider` for Solana blockchain
+  - **`constructRawSpokeProvider(config)`** — builds the correct raw spoke provider from a `RawSpokeProviderConfig` based on `chainConfig.chain.type` (use when chain is chosen at runtime).
 
 - **When to use Raw Spoke Providers:**
   - Backend services creating transaction payloads

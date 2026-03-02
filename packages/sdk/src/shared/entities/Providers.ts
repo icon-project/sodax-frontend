@@ -212,7 +212,6 @@ export type IWalletProvider =
   | IStellarWalletProvider
   | ISuiWalletProvider
   | IIconWalletProvider
-  | IInjectiveWalletProvider
   | ISolanaWalletProvider;
 
 export type SpokeProvider = (
