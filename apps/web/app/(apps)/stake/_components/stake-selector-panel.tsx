@@ -145,7 +145,7 @@ export function StakeSelectorPanel(): React.JSX.Element {
                   <div className="flex items-center gap-1">
                     <span>Balance: {formattedBalance}</span>
                     {stakeMode === STAKE_MODE.UNSTAKING &&
-                      [5, 10].map(percent => (
+                      [25, 50].map(percent => (
                         <Button
                           key={percent}
                           variant="default"

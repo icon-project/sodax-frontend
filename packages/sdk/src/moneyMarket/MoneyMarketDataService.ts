@@ -165,7 +165,7 @@ export class MoneyMarketDataService {
    */
   public async getUserReservesHumanized(
     spokeChainId: SpokeChainId,
-    userAddress: Address,
+    userAddress: string,
   ): Promise<{
     userReserves: UserReserveDataHumanized[];
     userEmodeCategoryId: number;
