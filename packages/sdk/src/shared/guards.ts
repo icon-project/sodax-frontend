@@ -486,7 +486,8 @@ export function isSonicRawSpokeProviderConfig(value: RawSpokeProviderConfig): va
     value !== null &&
     'walletAddress' in value &&
     'chainConfig' in value &&
-    value.chainConfig.chain.type === 'EVM'
+    value.chainConfig.chain.type === 'EVM' &&
+    value.chainConfig.chain.id === SONIC_MAINNET_CHAIN_ID
   );
 }
 
@@ -500,7 +501,7 @@ export function isStellarRawSpokeProviderConfig(value: RawSpokeProviderConfig): 
   );
 }
 
-export  function isSolanaRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is SolanaRawSpokeProviderConfig {
+export function isSolanaRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is SolanaRawSpokeProviderConfig {
   return (
     typeof value === 'object' &&
     value !== null &&
