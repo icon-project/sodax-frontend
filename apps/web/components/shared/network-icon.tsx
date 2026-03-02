@@ -82,7 +82,7 @@ export default function NetworkIcon({
     const networkIconInPickerRing = hasBalance ? 'ring-[5px] ring-white' : 'ring-2 ring-white';
     return (
       <div
-        className={`flex shrink-0 w-4 h-4 items-center justify-center rounded-[4px] bg-white ${networkIconInPickerRing} ${hasBalance ? networkIconInPickerBoxShadow : ''} ${className}`}
+        className={`flex shrink-0 w-4 h-4 items-center justify-center rounded-[4px] bg-white ${networkIconInPickerRing} ${networkIconInPickerBoxShadow} ${className}`}
       >
         {renderIcons(id)}
       </div>

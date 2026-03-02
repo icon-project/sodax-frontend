@@ -244,8 +244,8 @@ export function TokenAsset({
             {name}
           </div>
 
-          {/* Reserve space so row height is identical with/without wallet. When connected and has balance, show balance on hover. */}
-          <div className="flex min-h-5 items-center justify-center text-(length:--text-body-fine-print)">
+          {/* Reserve space so row height is identical with/without wallet. When connected and has balance, show balance on hover. Design: p-4 (16px) below the number. */}
+          <div className="flex min-h-4 items-center justify-center pb-4 text-(length:--text-body-fine-print)">
             {isHoldToken && formattedBalance ? (
               isHovered ? (
                 <motion.p

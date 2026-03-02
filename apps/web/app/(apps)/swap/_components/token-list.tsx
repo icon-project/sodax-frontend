@@ -246,7 +246,7 @@ export function TokenList({
           <div className="w-full min-w-full">
             <motion.div
               ref={assetsRef}
-              className={`h-[calc(80vh-176px)] md:h-126 pt-4 min-w-full [flex-flow:wrap] box-border content-start flex items-start justify-center relative shrink-0 w-full flex-1 ${
+              className={`h-[calc(80vh-176px)] md:h-126 min-w-full [flex-flow:wrap] box-border content-start flex items-start justify-center relative shrink-0 w-full flex-1 ${
                 isChainSelectorOpen ? 'blur filter opacity-15' : ''
               } ${isFiltered ? 'px-10' : 'px-0'}`}
               data-name="Assets"
@@ -258,7 +258,7 @@ export function TokenList({
             </motion.div>
           </div>
         </ScrollAreaPrimitive.Viewport>
-        <div className="w-full h-16 left-0 bottom-0 absolute bg-linear-to-t from-vibrant-white to-neutral-100/0 z-[100000] pointer-events-none" />
+        <div className="w-full h-14 left-0 bottom-0 absolute bg-linear-to-t from-vibrant-white to-neutral-100/0 z-[100000] pointer-events-none" />
         <ScrollBar />
         <ScrollAreaPrimitive.Corner />
       </ScrollAreaPrimitive.Root>
