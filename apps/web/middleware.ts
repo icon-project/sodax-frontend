@@ -29,7 +29,7 @@ export function middleware(request: NextRequest) {
 
   response.cookies.set('cookie_consent_region', region, {
     httpOnly: false, // Client JS must read this cookie
-    secure: true,
+    secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
     maxAge: 60 * 60 * 24 * 365, // 1 year

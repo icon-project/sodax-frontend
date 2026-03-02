@@ -109,6 +109,7 @@ export default function RootLayout({
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: Consent Mode v2 defaults must execute synchronously before GTM */}
         <script dangerouslySetInnerHTML={{
             __html: `
+try{
 window.dataLayer=window.dataLayer||[];
 function gtag(){dataLayer.push(arguments);}
 var m=document.cookie.match(/cookie_consent_region=([^;]+)/);
@@ -117,6 +118,11 @@ if(r==='eu'){
   gtag('consent','default',{'ad_storage':'denied','ad_user_data':'denied','ad_personalization':'denied','analytics_storage':'granted','wait_for_update':500});
 }else{
   gtag('consent','default',{'ad_storage':'granted','ad_user_data':'granted','ad_personalization':'granted','analytics_storage':'granted'});
+}
+}catch(e){
+window.dataLayer=window.dataLayer||[];
+function gtag(){window.dataLayer.push(arguments);}
+gtag('consent','default',{'ad_storage':'denied','ad_user_data':'denied','ad_personalization':'denied','analytics_storage':'denied'});
 }`,
           }}
         />
