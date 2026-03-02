@@ -8,6 +8,7 @@ import CurrencyLogo from '@/components/shared/currency-logo';
 import type { XToken } from '@sodax/types';
 import { Twitter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { X_ROUTE } from '@/constants/routes';
 import { useSaveState } from '../../_stores/save-store-provider';
 
 export default function NoResults() {
@@ -28,7 +29,7 @@ export default function NoResults() {
           }}
           transition={{ duration: 0.3, ease: 'easeOut' }}
           onClick={() => {
-            window.open('https://x.com/gosodax', '_blank');
+            window.open(X_ROUTE, '_blank');
           }}
         >
           <Item className="cursor-pointer py-5 px-0 w-full gap-(--layout-space-normal) border-none">

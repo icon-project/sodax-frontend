@@ -1,9 +1,10 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui/dialog';
-import { XIcon } from 'lucide-react';
-
+import { ExternalLinkIcon, XIcon } from 'lucide-react';
+import { DISCORD_ROUTE } from '@/constants/routes';
 interface SuccessDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -31,11 +32,15 @@ export function SuccessDialog({ open, onOpenChange }: SuccessDialogProps) {
             Your new assets are now in your wallet. Make sure you have native gas to transact with them.
           </p>
         </div>
-        <div className="text-espresso font-['InterRegular'] font-medium leading-[1.4] text-(size:--body-comfortable)">
+        <div className="text-espresso font-['InterRegular'] font-medium leading-[1.4] text-(size:--body-comfortable) flex flex-wrap items-center gap-1">
           Need help?{' '}
-          <span className="underline hover:text-cherry-brighter transition-colors cursor-pointer hover:font-bold">
-            Join our Discord
-          </span>
+          <Link
+            href={DISCORD_ROUTE}
+            target="_blank"
+            className="inline-flex gap-1 items-center underline hover:text-cherry-brighter transition-colors cursor-pointer hover:font-bold"
+          >
+            Get support on Discord <ExternalLinkIcon className="w-4 h-4" />
+          </Link>
         </div>
       </DialogContent>
     </Dialog>

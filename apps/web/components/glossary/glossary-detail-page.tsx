@@ -2,6 +2,14 @@ import { notFound } from 'next/navigation';
 import { getNotionPageBySlug } from '@/lib/notion';
 import { getGlossaryTerms, injectGlossaryLinks } from '@/lib/glossary-linker';
 import Link from 'next/link';
+import {
+  DOCUMENTATION_ROUTE,
+  GLOSSARY_ROUTE,
+  REDDIT_ROUTE,
+  SUBSCRIBE_VIA_RSS_ROUTE,
+  X_ROUTE,
+  YOUTUBE_ROUTE,
+} from '@/constants/routes';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
 import { BookOpenIcon } from '@phosphor-icons/react/dist/ssr';
@@ -154,12 +162,12 @@ export default async function GlossaryDetailPage({
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <div className="min-h-screen bg-cream-white flex flex-col w-full">
-        <MarketingHeader backLink="/glossary" backText="← glossary" />
+        <MarketingHeader backLink={GLOSSARY_ROUTE} backText="← glossary" />
         <div className="max-w-7xl mx-auto pt-30 w-full px-4">
           <article className="py-8 flex-1 flex flex-col items-start overflow-clip w-full">
             {/* Breadcrumb */}
             <nav className="mb-6 text-sm text-clay" aria-label="Breadcrumb">
-              <Link href="/glossary" className="hover:text-cherry-soda transition-colors">
+              <Link href={GLOSSARY_ROUTE} className="hover:text-cherry-soda transition-colors">
                 Glossary
               </Link>
               <span className="mx-2">/</span>
@@ -221,7 +229,7 @@ export default async function GlossaryDetailPage({
                   </div>
                   <DecorativeDivider />
                   <Link
-                    href="https://docs.sodax.com"
+                    href={DOCUMENTATION_ROUTE}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-[12px] text-clay hover:text-espresso transition-colors"
@@ -243,7 +251,7 @@ export default async function GlossaryDetailPage({
                   <DecorativeDivider />
                   <div className="flex flex-col gap-2">
                     <Link
-                      href="https://x.com/gosodax"
+                      href={X_ROUTE}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 text-[12px] text-clay hover:text-espresso transition-colors"
@@ -255,7 +263,7 @@ export default async function GlossaryDetailPage({
                       Follow on X
                     </Link>
                     <Link
-                      href="https://www.reddit.com/r/SODAX/"
+                      href={REDDIT_ROUTE}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 text-[12px] text-clay hover:text-espresso transition-colors"
@@ -267,7 +275,7 @@ export default async function GlossaryDetailPage({
                       Join on Reddit
                     </Link>
                     <Link
-                      href="https://www.youtube.com/@gosodax"
+                      href={YOUTUBE_ROUTE}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 text-[12px] text-clay hover:text-espresso transition-colors"
@@ -279,7 +287,7 @@ export default async function GlossaryDetailPage({
                       Watch on YouTube
                     </Link>
                     <Link
-                      href="https://sodax.com/news/feed.xml"
+                      href={SUBSCRIBE_VIA_RSS_ROUTE}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-1 text-[12px] text-clay hover:text-espresso transition-colors"

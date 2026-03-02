@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ShareIcon, CheckIcon, LinkIcon, XLogo, RedditLogo } from '@phosphor-icons/react';
+import { REDDIT_SUBMIT_BASE_ROUTE } from '@/constants/routes';
 
 interface ShareButtonProps {
   title: string;
@@ -76,7 +77,7 @@ export function ShareButton({ title, url }: ShareButtonProps) {
   const handleShareReddit = () => {
     const shareUrl = encodeURIComponent(url);
     const text = encodeURIComponent(title);
-    window.open(`https://reddit.com/submit?url=${shareUrl}&title=${text}`, '_blank', 'width=800,height=600');
+    window.open(`${REDDIT_SUBMIT_BASE_ROUTE}?url=${shareUrl}&title=${text}`, '_blank', 'width=800,height=600');
     setShowMenu(false);
   };
 

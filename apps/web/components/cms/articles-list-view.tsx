@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  CMS_ARTICLES_NEW_ROUTE,
+  CMS_ARTICLES_ROUTE,
+  CMS_DASHBOARD_ROUTE,
+} from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -60,7 +65,7 @@ export function ArticlesListView() {
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
-              onClick={() => router.push("/cms/dashboard")}
+              onClick={() => router.push(CMS_DASHBOARD_ROUTE)}
               className="text-[var(--clay)] hover:text-[var(--espresso)] hover:bg-transparent px-2 !outline-0 !border-0"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -72,7 +77,7 @@ export function ArticlesListView() {
             </div>
           </div>
           <Button
-            onClick={() => router.push("/cms/articles/new")}
+            onClick={() => router.push(CMS_ARTICLES_NEW_ROUTE)}
             className="bg-gradient-to-r from-[var(--yellow-dark)] to-[var(--yellow-soda)] hover:opacity-90 text-white shadow-lg"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -91,7 +96,7 @@ export function ArticlesListView() {
             <div className="p-12 text-center">
               <p className="text-[var(--clay)] mb-4">No articles yet</p>
               <Button
-                onClick={() => router.push("/cms/articles/new")}
+                onClick={() => router.push(CMS_ARTICLES_NEW_ROUTE)}
                 variant="outline"
                 className="border-[var(--yellow-soda)] text-[var(--yellow-dark)] hover:bg-[var(--yellow-soda)] hover:text-white"
               >
@@ -150,7 +155,7 @@ export function ArticlesListView() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => router.push(`/cms/articles/${article._id.toString()}`)}
+                          onClick={() => router.push(`${CMS_ARTICLES_ROUTE}/${article._id.toString()}`)}
                           className="hover:bg-[var(--cream)]"
                         >
                           <Edit className="w-4 h-4" />

@@ -1,25 +1,26 @@
 'use client';
 
 import { motion } from 'motion/react';
+import { DISCORD_ROUTE, DOCUMENTATION_ROUTE, GITHUB_SODAX_REPO_ROUTE } from '@/constants/routes';
 
 const quickLinks = [
   {
     title: 'Documentation',
     description: 'Comprehensive guides, API references, and integration tutorials for building with SODAX.',
     badges: ['SDK reference', 'Guides', 'Examples'],
-    href: 'https://docs.sodax.com',
+    href: DOCUMENTATION_ROUTE,
   },
   {
     title: 'GitHub',
     description: 'Explore our open-source SDKs, example implementations, and contribute to the ecosystem.',
     badges: ['Open source', 'SDKs', 'Examples'],
-    href: 'https://github.com/icon-project/sodax',
+    href: GITHUB_SODAX_REPO_ROUTE,
   },
   {
     title: 'Discord Community',
     description: 'Connect with other builders, get technical support, and stay updated on new features.',
     badges: ['Support', 'Builders', 'Updates'],
-    href: 'https://discord.gg/xM2Nh4S6vN',
+    href: DISCORD_ROUTE,
   },
 ];
 
@@ -48,7 +49,7 @@ export default function PartnersCtaSection() {
 
           {/* CTA Button */}
           <a
-            href="https://docs.sodax.com"
+            href={DOCUMENTATION_ROUTE}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-cherry-bright flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer w-full sm:w-auto"

@@ -12,6 +12,7 @@ import { MainCtaButton } from './main-cta-button';
 import { SodaxIcon } from '../icons/sodax-icon';
 import { Separator } from '@radix-ui/react-separator';
 import { useRouter } from 'next/navigation';
+import { NEWS_ROUTE, PARTNERS_ROUTE, SWAP_ROUTE } from '@/constants/routes';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAppStore } from '@/stores/app-store-provider';
 
@@ -89,7 +90,7 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
               <li>
                 <a
                   className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
-                  href="/news"
+                  href={NEWS_ROUTE}
                 >
                   News
                 </a>
@@ -97,7 +98,7 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
               <li>
                 <a
                   className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
-                  href="/partners"
+                  href={PARTNERS_ROUTE}
                 >
                   Partners
                 </a>
@@ -106,7 +107,7 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
             <div className="inline-flex justify-center items-start relative">
               <MainCtaButton
                 onClick={() => {
-                  router.push('/swap');
+                  router.push(SWAP_ROUTE);
                   setShouldTriggerAnimation(true);
                 }}
               >
@@ -217,7 +218,7 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
             <div className="inline-flex justify-center items-start relative">
               <MainCtaButton
                 onClick={() => {
-                  router.push('/swap');
+                  router.push(SWAP_ROUTE);
                   setShouldTriggerAnimation(true);
                 }}
               >
