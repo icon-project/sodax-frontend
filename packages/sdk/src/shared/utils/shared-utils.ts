@@ -1,14 +1,33 @@
 import invariant from 'tiny-invariant';
 import { DEFAULT_MAX_RETRY, DEFAULT_RETRY_DELAY_MS, FEE_PERCENTAGE_SCALE } from '../constants.js';
-import type { EvmHubProvider, SpokeProviderType } from '../entities/Providers.js';
-import { isPartnerFeeAmount, isPartnerFeePercentage } from '../guards.js';
-import type { PartnerFee, QuoteType } from '../types.js';
-import type { SpokeChainId, Address, Hex } from '@sodax/types';
+import {
+  EvmRawSpokeProvider,
+  type EvmHubProvider,
+  type RawSpokeProvider,
+  type RawSpokeProviderConfig,
+  type SpokeProviderType,
+} from '../entities/Providers.js';
+import { isEvmRawSpokeProviderConfig, isPartnerFeeAmount, isPartnerFeePercentage, isSolanaRawSpokeProviderConfig, isSonicRawSpokeProviderConfig, isStellarRawSpokeProviderConfig } from '../guards.js';
+import type { GetAddressType, GetChainConfigType, PartnerFee, QuoteType } from '../types.js';
+import {
+  type SpokeChainId,
+  type Address,
+  type Hex,
+  SONIC_MAINNET_CHAIN_ID,
+} from '@sodax/types';
 import { toHex } from 'viem';
 import { bcs } from '@mysten/sui/bcs';
 import { PublicKey } from '@solana/web3.js';
 import { Address as StellarAddress } from '@stellar/stellar-sdk';
 import { EvmWalletAbstraction } from '../services/index.js';
+import {
+  StellarRawSpokeProvider,
+  SolanaRawSpokeProvider,
+  IconRawSpokeProvider,
+  InjectiveRawSpokeProvider,
+  SonicRawSpokeProvider,
+} from '../entities/index.js';
+import { SuiRawSpokeProvider } from '../entities/sui/SuiSpokeProvider.js';
 
 export async function retry<T>(
   action: (retryCount: number) => Promise<T>,
@@ -196,4 +215,63 @@ export function sleep(ms: number): Promise<void> {
 
 export function isHubSpokeProvider(spokeProvider: SpokeProviderType, hubProvider: EvmHubProvider): boolean {
   return spokeProvider.chainConfig.chain.id === hubProvider.chainConfig.chain.id;
+}
+
+export function constructRawSpokeProvider(config: RawSpokeProviderConfig): RawSpokeProvider {
+  const chainType = config.chainConfig?.chain?.type;
+  switch (chainType) {
+    case 'EVM': {
+      if (config.chainConfig.chain.id === SONIC_MAINNET_CHAIN_ID) {
+        invariant(isSonicRawSpokeProviderConfig(config), 'Invalid Sonic raw spoke provider config');
+        return new SonicRawSpokeProvider(
+          config.walletAddress,
+          config.chainConfig,
+          config.rpcUrl,
+        );
+      }
+
+      invariant(isEvmRawSpokeProviderConfig(config), 'Invalid Evm raw spoke provider config');
+      return new EvmRawSpokeProvider(
+        config.walletAddress,
+        config.chainConfig,
+        config.rpcUrl,
+      );
+    }
+    case 'STELLAR':
+      invariant(isStellarRawSpokeProviderConfig(config), 'Invalid Stellar raw spoke provider config');
+      return new StellarRawSpokeProvider(
+        config.walletAddress,
+        config.chainConfig,
+        config.rpcConfig,
+      );
+    case 'SOLANA': {
+      invariant(isSolanaRawSpokeProviderConfig(config), 'Invalid Solana raw spoke provider config');
+      return new SolanaRawSpokeProvider({
+        connection: config.connection,
+        walletAddress: config.walletAddress,
+        chainConfig: config.chainConfig,
+      });
+    }
+    case 'ICON': {
+      return new IconRawSpokeProvider(
+        config.chainConfig as GetChainConfigType<'ICON'>,
+        config.walletAddress as GetAddressType<IconRawSpokeProvider>,
+      );
+    }
+    case 'INJECTIVE': {
+      return new InjectiveRawSpokeProvider(
+        config.chainConfig as GetChainConfigType<'INJECTIVE'>,
+        config.walletAddress as GetAddressType<InjectiveRawSpokeProvider>,
+      );
+    }
+    case 'SUI': {
+      return new SuiRawSpokeProvider(
+        config.chainConfig as GetChainConfigType<'SUI'>,
+        config.walletAddress as GetAddressType<SuiRawSpokeProvider>,
+      );
+    }
+    default: {
+      throw new Error(`Unsupported chain type: ${chainType}`);
+    }
+  }
 }

@@ -14,12 +14,15 @@ import {
   type SonicRawSpokeProvider,
   type RawSpokeProvider,
   type SpokeProviderType,
+  type EvmRawSpokeProviderConfig,
+  type SonicRawSpokeProviderConfig,
+  type RawSpokeProviderConfig,
 } from './entities/Providers.js';
 import { InjectiveSpokeProvider, type InjectiveRawSpokeProvider } from './entities/injective/InjectiveSpokeProvider.js';
 import { IconSpokeProvider, type IconRawSpokeProvider } from './entities/icon/IconSpokeProvider.js';
-import { SolanaSpokeProvider, type SolanaRawSpokeProvider } from './entities/solana/SolanaSpokeProvider.js';
+import { SolanaSpokeProvider, type SolanaRawSpokeProvider, type SolanaRawSpokeProviderConfig } from './entities/solana/SolanaSpokeProvider.js';
 import { SuiSpokeProvider, type SuiRawSpokeProvider } from './entities/sui/SuiSpokeProvider.js';
-import { StellarSpokeProvider, type StellarRawSpokeProvider } from './entities/stellar/StellarSpokeProvider.js';
+import { StellarSpokeProvider, type StellarRawSpokeProvider, type StellarRawSpokeProviderConfig } from './entities/stellar/StellarSpokeProvider.js';
 import type {
   EvmSpokeProviderType,
   IconSpokeProviderType,
@@ -465,4 +468,41 @@ export function isSonicRawSpokeProvider(value: unknown): value is SonicRawSpokeP
 
 export function isAddressString(value: unknown): value is string {
   return typeof value === 'string';
+}
+
+export function isEvmRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is EvmRawSpokeProviderConfig {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletAddress' in value &&
+    'chainConfig' in value
+  );
+}
+
+export function isSonicRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is SonicRawSpokeProviderConfig {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletAddress' in value &&
+    'chainConfig' in value
+  );
+}
+
+export function isStellarRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is StellarRawSpokeProviderConfig {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletAddress' in value &&
+    'chainConfig' in value
+  );
+}
+
+export  function isSolanaRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is SolanaRawSpokeProviderConfig {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletAddress' in value &&
+    'chainConfig' in value &&
+    'connection' in value
+  );
 }

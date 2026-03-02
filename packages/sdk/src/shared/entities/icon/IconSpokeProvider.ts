@@ -35,6 +35,11 @@ export class IconSpokeProvider extends IconBaseSpokeProvider implements ISpokePr
   }
 }
 
+export type IconRawSpokeProviderConfig = {
+  chainConfig: IconSpokeChainConfig;
+  walletAddress: string;
+};
+
 export class IconRawSpokeProvider extends IconBaseSpokeProvider implements IRawSpokeProvider {
   public readonly walletProvider: WalletAddressProvider;
   public readonly raw = true;
