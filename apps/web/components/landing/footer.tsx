@@ -20,6 +20,7 @@ import {
   SWAP_ROUTE,
   X_ROUTE,
 } from '@/constants/routes';
+import { showCookiePreferences } from '@/components/cookie-consent/cookie-consent-banner';
 
 interface FooterProps {
   onTermsClick?: () => void;
@@ -108,6 +109,15 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           </FooterLink>
           <FooterLink href="#" onClick={handleTermsClick}>
             Terms
+          </FooterLink>
+          <FooterLink
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              showCookiePreferences();
+            }}
+          >
+            Cookie Settings
           </FooterLink>
         </div>
       </div>
