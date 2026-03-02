@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   Erc20Service,
   EvmSpokeProvider,
+  HubService,
   Sodax,
   SonicSpokeProvider,
   SonicSpokeService,
@@ -80,7 +81,7 @@ describe('StakingService', () => {
     expect(result.ok && result.value).toBe(true);
   });
   it('returns true for Sonic provider (unstake action)', async () => {
-    vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce(mockCreatorHubWalletAddress);
+    vi.spyOn(HubService, 'getUserRouter').mockResolvedValueOnce(mockCreatorHubWalletAddress);
     vi.spyOn(Erc20Service, 'isAllowanceValid').mockResolvedValueOnce({ ok: true, value: true });
 
     const params = {
@@ -122,7 +123,7 @@ describe('StakingService', () => {
   });
 
   it('returns true for Sonic provider (instantUnstake action)', async () => {
-    vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce(mockCreatorHubWalletAddress);
+    vi.spyOn(HubService, 'getUserRouter').mockResolvedValueOnce(mockCreatorHubWalletAddress);
     vi.spyOn(Erc20Service, 'isAllowanceValid').mockResolvedValueOnce({ ok: true, value: true });
 
     const params = {
@@ -182,7 +183,7 @@ describe('StakingService', () => {
 
   describe('sodax.staking.approve', () => {
     it('it approves for Sonic provider (stake action)', async () => {
-      vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce(mockCreatorHubWalletAddress);
+      vi.spyOn(HubService, 'getUserRouter').mockResolvedValueOnce(mockCreatorHubWalletAddress);
       vi.spyOn(Erc20Service, 'approve').mockResolvedValueOnce(mockTxHash);
 
       const params = {
@@ -220,7 +221,7 @@ describe('StakingService', () => {
   });
 
   it('it unstakes for Sonic provider (unstake action)', async () => {
-    vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce(mockCreatorHubWalletAddress);
+    vi.spyOn(HubService, 'getUserRouter').mockResolvedValueOnce(mockCreatorHubWalletAddress);
     vi.spyOn(Erc20Service, 'approve').mockResolvedValueOnce(mockTxHash);
 
     const params = {
@@ -255,7 +256,7 @@ describe('StakingService', () => {
   });
 
   it('it unstakes for Sonic provider (instantUnstake action)', async () => {
-    vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce(mockCreatorHubWalletAddress);
+    vi.spyOn(HubService, 'getUserRouter').mockResolvedValueOnce(mockCreatorHubWalletAddress);
     vi.spyOn(Erc20Service, 'approve').mockResolvedValueOnce(mockTxHash);
 
     const params = {
@@ -274,7 +275,7 @@ describe('StakingService', () => {
   });
 
   it('it unstakes for Sonic provider (instantUnstake action)', async () => {
-    vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce(mockCreatorHubWalletAddress);
+    vi.spyOn(HubService, 'getUserRouter').mockResolvedValueOnce(mockCreatorHubWalletAddress);
     vi.spyOn(Erc20Service, 'approve').mockResolvedValueOnce(mockTxHash);
 
     const params = {

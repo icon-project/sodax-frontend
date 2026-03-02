@@ -1,10 +1,10 @@
 import type React from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
-import { cn, formatTokenAmount } from '@/lib/utils';
+import { cn, formatTokenAmount, validateChainAddress } from '@/lib/utils';
 import { CustomSlider } from '@/components/ui/customer-slider';
 import StakeDialog from './stake-dialog/stake-dialog';
 import UnstakeDialog from './unstake-dialog/unstake-dialog';
@@ -12,16 +12,26 @@ import { getChainName } from '@/constants/chains';
 import { STAKE_MODE } from '../_stores/stake-store';
 import { useStakeState } from '../_stores/stake-store-provider';
 import { useStakeActions } from '../_stores/stake-store-provider';
-import { useXAccount, useXBalances, getXChainType } from '@sodax/wallet-sdk-react';
-import { ChevronDownIcon } from 'lucide-react';
+import { useXAccount, useXBalances, getXChainType, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from '@/components/ui/input-group';
+import { AnimatePresence, motion } from 'framer-motion';
+import { STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
+import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
+import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
+import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
+import { useRequestTrustline, useSpokeProvider } from '@sodax/dapp-kit';
+import { Loader2 } from 'lucide-react';
+import type { SpokeProvider } from '@sodax/sdk';
+import { parseUnits } from 'viem';
+import { ErrorDialog } from '@/components/shared/error-dialog';
+import { SWAP_ROUTE } from '@/constants/routes';
 
 export function StakeInputPanel(): React.JSX.Element {
   const router = useRouter();
 
-  const { selectedToken, stakeValue, stakeTypedValue, stakeMode, userXSodaBalance, isNetworkPickerOpened } =
+  const { selectedToken, stakeValue, stakeTypedValue, stakeMode, userXSodaBalance, isLoadingStakingInfo } =
     useStakeState();
-  const { setStakeTypedValue, setStakeValueByPercent, setIsNetworkPickerOpened } = useStakeActions();
+  const { setStakeTypedValue } = useStakeActions();
 
   const openModal = useModalStore(state => state.openModal);
 
@@ -30,6 +40,8 @@ export function StakeInputPanel(): React.JSX.Element {
   const walletConnected = !!address;
   const [isStakeDialogOpen, setIsStakeDialogOpen] = useState<boolean>(false);
   const [isUnstakeDialogOpen, setIsUnstakeDialogOpen] = useState<boolean>(false);
+  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const { data: balances } = useXBalances({
     xChainId: currentNetwork || 'sonic',
@@ -39,6 +51,66 @@ export function StakeInputPanel(): React.JSX.Element {
   const balance = selectedToken ? balances?.[selectedToken.address] || 0n : 0n;
   const formattedBalance = selectedToken ? formatTokenAmount(balance, selectedToken.decimals) : '0';
   const formattedUserXSodaBalance = userXSodaBalance ? formatTokenAmount(userXSodaBalance, 18) : '0';
+
+  // Stellar wallet activation and trustline checks
+  const isStellarChain = selectedToken?.xChainId === STELLAR_MAINNET_CHAIN_ID;
+  const { data: stellarAccountValidation } = useValidateStellarAccount(isStellarChain ? address : undefined);
+  const {
+    activateStellarAccount,
+    isLoading: isActivatingStellarAccount,
+    isActivated: isActivatedStellarAccount,
+  } = useActivateStellarAccount();
+  const handleActivateStellarAccount = async (): Promise<void> => {
+    if (!address) {
+      return;
+    }
+    try {
+      await activateStellarAccount({ address });
+    } catch (error) {
+      const errorMsg = 'Failed to activate Stellar account. Please try again.';
+      setErrorMessage(errorMsg);
+      setIsErrorDialogOpen(true);
+    }
+  };
+
+  const { data: stellarTrustlineValidation } = useValidateStellarTrustline(
+    isStellarChain ? address : undefined,
+    isStellarChain ? selectedToken : undefined,
+  );
+
+  const walletProvider = useWalletProvider(selectedToken?.xChainId);
+  const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
+  const {
+    requestTrustline,
+    isLoading: isRequestingTrustline,
+    isRequested: hasTrustline,
+    error: trustlineError,
+  } = useRequestTrustline(selectedToken?.address);
+  const handleRequestTrustline = async (): Promise<void> => {
+    if (!selectedToken || !spokeProvider) {
+      return;
+    }
+    try {
+      await requestTrustline({
+        token: selectedToken.address,
+        amount: parseUnits('1', selectedToken.decimals),
+        spokeProvider: spokeProvider as SpokeProvider,
+      });
+    } catch (error) {
+      const errorMsg = 'Failed to add Stellar trustline. Please try again.';
+      setErrorMessage(errorMsg);
+      setIsErrorDialogOpen(true);
+    }
+  };
+
+  // Monitor trustline error from hook
+  useEffect(() => {
+    if (trustlineError) {
+      const errorMsg = 'Failed to add Stellar trustline. Please try again.';
+      setErrorMessage(errorMsg);
+      setIsErrorDialogOpen(true);
+    }
+  }, [trustlineError]);
 
   const handleConnect = (): void => {
     const chainId = selectedToken?.xChainId || 'sonic';
@@ -50,7 +122,7 @@ export function StakeInputPanel(): React.JSX.Element {
   };
 
   const handleBuySoda = (): void => {
-    router.push('/swap');
+    router.push(SWAP_ROUTE);
   };
 
   const handleStake = (): void => {
@@ -61,76 +133,22 @@ export function StakeInputPanel(): React.JSX.Element {
     setIsUnstakeDialogOpen(true);
   };
 
-  const maxValue = useMemo(() => {
-    return stakeMode === STAKE_MODE.STAKING ? balance : userXSodaBalance;
-  }, [stakeMode, balance, userXSodaBalance]);
-
   const sliderMaxValue = useMemo(() => {
     return stakeMode === STAKE_MODE.STAKING ? Number(formattedBalance) : Number(formattedUserXSodaBalance);
   }, [stakeMode, formattedBalance, formattedUserXSodaBalance]);
+
+  useEffect(() => {
+    if (sliderMaxValue === 0 && !isLoadingStakingInfo && (!stakeTypedValue || stakeTypedValue === '0')) {
+      setStakeTypedValue('0');
+    }
+  }, [sliderMaxValue, setStakeTypedValue, isLoadingStakingInfo, stakeTypedValue]);
 
   const isSliderDisabled = useMemo(() => {
     return !selectedToken || !walletConnected || sliderMaxValue === 0;
   }, [selectedToken, walletConnected, sliderMaxValue]);
   return (
     <>
-      <div className="w-full px-(--layout-space-big) pt-10 pb-8 flex flex-col justify-start items-start gap-8 sm:gap-4 isolate">
-        <div className="w-full flex justify-between items-center">
-          <div
-            onClick={() => setIsNetworkPickerOpened(!isNetworkPickerOpened)}
-            className="flex justify-start items-center pl-12 cursor-pointer h-12"
-          >
-            <div className="flex flex-col gap-[2px] ml-(--layout-space-small)">
-              <div className="font-['InterRegular'] flex items-center text-(length:--body-super-comfortable) text-espresso">
-                <span>{stakeMode === STAKE_MODE.STAKING ? 'Stake SODA' : 'Unstake xSODA'}</span>
-                <ChevronDownIcon
-                  className={cn(
-                    'w-4 h-4 text-clay ml-1 transition-transform duration-200',
-                    isNetworkPickerOpened && 'rotate-180',
-                  )}
-                />
-              </div>
-              <div className="font-['InterRegular'] flex items-center text-(length:--body-small) text-clay">
-                {!selectedToken ? (
-                  <span>Choose a network</span>
-                ) : !walletConnected ? (
-                  <span>Wallet not connected</span>
-                ) : balance > 0n ? (
-                  <div className="flex items-center gap-1">
-                    <span>Balance: {sliderMaxValue}</span>
-                    {stakeMode === STAKE_MODE.UNSTAKING &&
-                      [5, 10].map(percent => (
-                        <Button
-                          key={percent}
-                          variant="default"
-                          className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold font-['InterRegular'] uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
-                          onClick={e => {
-                            e.stopPropagation();
-                            setStakeValueByPercent(percent, maxValue);
-                          }}
-                        >
-                          {percent}%
-                        </Button>
-                      ))}
-                    <Button
-                      variant="default"
-                      className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold font-['InterRegular'] uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
-                      onClick={e => {
-                        e.stopPropagation();
-                        setStakeValueByPercent(100, maxValue);
-                      }}
-                    >
-                      MAX
-                    </Button>
-                  </div>
-                ) : (
-                  <span>No SODA in wallet</span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
+      <div className="w-full px-(--layout-space-big) pt-26 pb-8 flex flex-col justify-start items-start gap-8 sm:gap-4 isolate">
         <div className="w-full flex flex-col sm:flex-row sm:gap-2 justify-between items-center">
           <CustomSlider
             defaultValue={[0]}
@@ -148,65 +166,152 @@ export function StakeInputPanel(): React.JSX.Element {
           />
 
           <div className="w-full flex gap-2 flex-1 mt-4 sm:mt-0">
-            <InputGroup className={cn("border-cream-white border-4 w-30 h-10 rounded-full outline-none shadow-none", isSliderDisabled && 'pointer-events-none')}>
-              <InputGroupInput
-                type="number"
-                placeholder="0"
-                value={stakeTypedValue}
-                onChange={e => setStakeTypedValue(e.target.value)}
-                disabled={isSliderDisabled}
-                className={cn("pl-6 pr-4 text-espresso text-(length:--body-comfortable) placeholder:text-clay-light font-['InterRegular']")}
-              />
-              <InputGroupAddon align="inline-end">
-                <InputGroupText
-                  className={cn(
-                    'text-cherry-grey text-(length:--body-comfortable) font-normal font-["InterRegular"]',
-                    stakeTypedValue && 'hidden',
-                  )}
+            <InputGroup
+              className={cn(
+                'border-cream-white border-4 w-30 h-10 rounded-full outline-none shadow-none',
+                isSliderDisabled && 'pointer-events-none',
+              )}
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={stakeMode === STAKE_MODE.STAKING ? 'SODA' : 'xSODA'}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.8 }}
+                  className="flex"
                 >
-                  {stakeMode === STAKE_MODE.STAKING ? 'SODA' : 'xSODA'}
-                </InputGroupText>
-              </InputGroupAddon>
+                  <InputGroupInput
+                    type="number"
+                    placeholder="0"
+                    value={stakeTypedValue}
+                    onChange={e => setStakeTypedValue(e.target.value)}
+                    disabled={isSliderDisabled}
+                    className={cn(
+                      "pl-6 pr-4 text-espresso text-(length:--body-comfortable) placeholder:text-clay-light font-['InterRegular']",
+                    )}
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupText
+                      className={cn(
+                        'text-cherry-grey text-(length:--body-comfortable) font-normal font-["InterRegular"]',
+                        stakeTypedValue && 'hidden',
+                      )}
+                    >
+                      {stakeMode === STAKE_MODE.STAKING ? 'SODA' : 'xSODA'}
+                    </InputGroupText>
+                  </InputGroupAddon>
+                </motion.div>
+              </AnimatePresence>
             </InputGroup>
 
-            {stakeMode === STAKE_MODE.STAKING ? (
-              !walletConnected && selectedToken ? (
-                <Button variant="cherry" className="px-6" onClick={() => handleConnect()}>
-                  Connect {getChainName(selectedToken.xChainId)}
-                </Button>
-              ) : balance > 0n ? (
-                <Button
-                  variant="cherry"
-                  className="px-6"
-                  onClick={handleStake}
-                  disabled={!selectedToken || !walletConnected || stakeValue === 0n || stakeValue > balance}
-                >
-                  Stake
-                </Button>
-              ) : (
-                <Button variant="cherry" className="px-6" onClick={handleBuySoda}>
-                  Buy SODA
-                </Button>
-              )
-            ) : !walletConnected && selectedToken ? (
-              <Button variant="cherry" className="px-6" onClick={() => handleConnect()}>
-                Connect {getChainName(selectedToken.xChainId)}
-              </Button>
-            ) : (
-              <Button
-                variant="cherry"
-                className="px-6"
-                onClick={handleUnstake}
-                disabled={!selectedToken || !walletConnected || stakeValue === 0n || stakeValue > userXSodaBalance}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={stakeMode === STAKE_MODE.STAKING ? 'SODA' : 'xSODA'}
+                initial={false}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.8 }}
+                className="flex"
               >
-                Unstake
-              </Button>
-            )}
+                {stakeMode === STAKE_MODE.STAKING ? (
+                  !walletConnected && selectedToken ? (
+                    <Button variant="cherry" className="px-6" onClick={() => handleConnect()}>
+                      Connect {getChainName(selectedToken.xChainId)}
+                    </Button>
+                  ) : isStellarChain &&
+                    !isActivatedStellarAccount &&
+                    stellarAccountValidation?.ok === false &&
+                    validateChainAddress(address, 'STELLAR') ? (
+                    <Button
+                      variant="cherry"
+                      className="px-6"
+                      onClick={handleActivateStellarAccount}
+                      disabled={isActivatingStellarAccount}
+                    >
+                      {isActivatingStellarAccount ? 'Activating Stellar Account' : 'Activate Stellar Account'}
+                      {isActivatingStellarAccount && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
+                    </Button>
+                  ) : isStellarChain &&
+                    stellarTrustlineValidation?.ok === false &&
+                    !hasTrustline &&
+                    validateChainAddress(address || '', 'STELLAR') ? (
+                    <Button
+                      variant="cherry"
+                      className="px-6"
+                      onClick={handleRequestTrustline}
+                      disabled={isRequestingTrustline}
+                    >
+                      {isRequestingTrustline ? 'Adding Stellar Trustline' : 'Add Stellar Trustline'}
+                      {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
+                    </Button>
+                  ) : balance > 0n ? (
+                    <Button
+                      variant="cherry"
+                      className="px-6 w-25"
+                      onClick={handleStake}
+                      disabled={!selectedToken || !walletConnected || stakeValue === 0n || stakeValue > balance}
+                    >
+                      Stake
+                    </Button>
+                  ) : (
+                    <Button variant="cherry" className="px-6" onClick={handleBuySoda}>
+                      Buy SODA
+                    </Button>
+                  )
+                ) : !walletConnected && selectedToken ? (
+                  <Button variant="cherry" className="px-6" onClick={() => handleConnect()}>
+                    Connect {getChainName(selectedToken.xChainId)}
+                  </Button>
+                ) : isStellarChain &&
+                  !isActivatedStellarAccount &&
+                  stellarAccountValidation?.ok === false &&
+                  validateChainAddress(address, 'STELLAR') ? (
+                  <Button
+                    variant="cherry"
+                    className="px-6"
+                    onClick={handleActivateStellarAccount}
+                    disabled={isActivatingStellarAccount}
+                  >
+                    {isActivatingStellarAccount ? 'Activating Stellar Account' : 'Activate Stellar Account'}
+                    {isActivatingStellarAccount && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
+                  </Button>
+                ) : isStellarChain &&
+                  stellarTrustlineValidation?.ok === false &&
+                  !hasTrustline &&
+                  validateChainAddress(address || '', 'STELLAR') ? (
+                  <Button
+                    variant="cherry"
+                    className="px-6"
+                    onClick={handleRequestTrustline}
+                    disabled={isRequestingTrustline || stakeValue === 0n}
+                  >
+                    {isRequestingTrustline ? 'Adding Stellar Trustline' : 'Add Stellar Trustline'}
+                    {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="cherry"
+                    className="px-6 w-25"
+                    onClick={handleUnstake}
+                    disabled={!selectedToken || !walletConnected || stakeValue === 0n || stakeValue > userXSodaBalance}
+                  >
+                    Unstake
+                  </Button>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>
       <StakeDialog open={isStakeDialogOpen} onOpenChange={setIsStakeDialogOpen} selectedToken={selectedToken} />
       <UnstakeDialog open={isUnstakeDialogOpen} onOpenChange={setIsUnstakeDialogOpen} selectedToken={selectedToken} />
+      <ErrorDialog
+        open={isErrorDialogOpen}
+        onOpenChange={setIsErrorDialogOpen}
+        errorMessage={errorMessage}
+        title="Transaction failed"
+      />
     </>
   );
 }

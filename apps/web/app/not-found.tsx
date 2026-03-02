@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Footer from '@/components/landing/footer';
 import { MarketingHeader } from '@/components/shared/marketing-header';
+import { HOME_ROUTE } from '@/constants/routes';
 
 export default function NotFound() {
   return (
-    <div className="relative flex min-h-screen w-full flex-col pt-[100px]">
+    <div className="relative flex min-h-screen w-full flex-col pt-30">
       <MarketingHeader />
       <div className="flex flex-1 py-32 flex-col items-center justify-center px-4">
         <div className="flex flex-col items-center gap-6 text-center">
@@ -32,7 +33,7 @@ export default function NotFound() {
           {/* Actions */}
           <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Button asChild variant="default" size="lg">
-              <Link href="/">Go Home</Link>
+              <Link href={HOME_ROUTE}>Go Home</Link>
             </Button>
           </div>
         </div>

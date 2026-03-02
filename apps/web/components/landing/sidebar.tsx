@@ -12,6 +12,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { HOME_ROUTE, SWAP_ROUTE } from '@/constants/routes';
 
 const AppSidebar = (): React.ReactElement => {
   const { toggleSidebar } = useSidebar();
@@ -42,12 +43,12 @@ const AppSidebar = (): React.ReactElement => {
             <Image src="/symbol.png" alt="SODAX Symbol" width={32} height={32} />
             <SidebarMenu className="gap-6">
               <SidebarMenuItem>
-                <Link href="/swap" className="text-(length:--body-super-comfortable) text-white font-medium">
+                <Link href={SWAP_ROUTE} className="text-(length:--body-super-comfortable) text-white font-medium">
                   <p>Launch apps</p>
                 </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <Link href="/" className="text-(length:--body-super-comfortable) text-white font-medium">
+                <Link href={HOME_ROUTE} className="text-(length:--body-super-comfortable) text-white font-medium">
                   <p>About</p>
                 </Link>
               </SidebarMenuItem>

@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Terminal, Cpu, BookOpen, Copy, Check } from 'lucide-react';
+import { BUILDERS_PORTAL_ROUTE } from '@/constants/routes';
 
 const tools = [
   {
@@ -31,7 +32,7 @@ const tools = [
 
 const compatibleAgents = ['Claude', 'ChatGPT', 'Cursor', 'VS Code', 'Windsurf', 'Cline', 'Gemini', 'Goose', 'Roo Code'];
 
-const MCP_URL = 'https://builders.sodax.com/mcp';
+const MCP_URL = `${BUILDERS_PORTAL_ROUTE}/mcp`;
 
 export default function BuildersMcpSection() {
   const [copied, setCopied] = useState(false);
@@ -198,7 +199,7 @@ export default function BuildersMcpSection() {
           className="flex flex-col sm:flex-row gap-4 items-center px-4"
         >
           <a
-            href="https://builders.sodax.com"
+            href={BUILDERS_PORTAL_ROUTE}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-cherry-bright flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer hover:opacity-90 transition-opacity w-full sm:w-auto"

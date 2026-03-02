@@ -15,9 +15,9 @@ export const PolygonIcon = () => (
     </g>
     <defs>
       <linearGradient id="polygon__b" x1="3.948" x2="19.217" y1="16.617" y2="7.645" gradientUnits="userSpaceOnUse">
-        <stop stop-color="#803BDF" />
-        <stop offset=".88" stop-color="#803BDF" />
-        <stop offset="1" stop-color="#803BDF" />
+        <stop stopColor="#803BDF" />
+        <stop offset=".88" stopColor="#803BDF" />
+        <stop offset="1" stopColor="#803BDF" />
       </linearGradient>
       <clipPath id="polygon__a">
         <path fill="#fff" d="M0 0h24v24H0z" />

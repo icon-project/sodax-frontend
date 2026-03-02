@@ -1,14 +1,13 @@
 import React, { type JSX, useMemo, useState } from 'react';
 import {
   useUserReservesData,
-  useSpokeProvider,
   useReservesUsdFormat,
   useBackendAllMoneyMarketAssets,
   useUserFormattedSummary,
 } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
+import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { BorrowAssetsListItem } from './BorrowAssetsListItem';
 import { formatUnits } from 'viem';
 import { getBorrowableAssetsWithMarketData } from '@/lib/borrowUtils';
@@ -50,8 +49,7 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
   const { selectedChainId: selectedMarketChainId } = useAppStore();
 
   const { address } = useXAccount(selectedChainId);
-  const walletProvider = useWalletProvider(selectedChainId);
-  const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
+  const { address: marketAddress } = useXAccount(selectedMarketChainId);
 
   const allTokens = useMemo(() => {
     const tokens = Object.entries(moneyMarketSupportedTokens).flatMap(([chainId, chainTokens]) =>
@@ -67,23 +65,23 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
     return tokens;
   }, []);
 
-  const { address: marketAddress } = useXAccount(selectedMarketChainId);
-  const marketWalletProvider = useWalletProvider(selectedMarketChainId);
-  const marketSpokeProvider = useSpokeProvider(selectedMarketChainId, marketWalletProvider);
   const { data: allMoneyMarketAssets, isLoading: isAssetsLoading } = useBackendAllMoneyMarketAssets({});
 
-  const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData({ spokeProvider, address });
+  const { data: userReserves, isLoading: isUserReservesLoading } = useUserReservesData({
+    spokeChainId: selectedChainId,
+    userAddress: address,
+  });
 
   const { data: marketUserReserves, isLoading: isMarketUserReservesLoading } = useUserReservesData({
-    spokeProvider: marketSpokeProvider,
-    address: marketAddress,
+    spokeChainId: selectedMarketChainId,
+    userAddress: marketAddress,
   });
 
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
-  // Use marketSpokeProvider and marketAddress for userSummary since that's where collateral is
+  // Use market chain for userSummary since that's where collateral is
   const { data: userSummary } = useUserFormattedSummary({
-    spokeProvider: marketSpokeProvider,
-    address: marketAddress,
+    spokeChainId: selectedMarketChainId,
+    userAddress: marketAddress,
   });
   const borrowableAssets = useMemo(() => {
     if (!allMoneyMarketAssets) return [];

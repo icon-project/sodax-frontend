@@ -16,25 +16,30 @@ import {
   useInstantUnstakeAllowance,
   useSpokeProvider,
   useInstantUnstakeRatio,
+  useConvertedAssets,
 } from '@sodax/dapp-kit';
 import { useWalletProvider, useXAccount, useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import type { SpokeProvider, UnstakeParams, InstantUnstakeParams } from '@sodax/sdk';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Check, CheckIcon, FilePenLine, Loader2Icon } from 'lucide-react';
+import { ArrowLeft, Check, CheckIcon, FilePenLine, Loader2Icon } from 'lucide-react';
 import { chainIdToChainName } from '@/providers/constants';
-
+import BigNumber from 'bignumber.js';
 interface UnstakeDialogFooterProps {
   selectedToken: XToken | null;
   scaledUnstakeAmount: bigint | undefined;
   onPendingChange?: (isPending: boolean) => void;
+  onCompletedChange?: (isCompleted: boolean) => void;
   onClose?: () => void;
+  onError?: (error: { title: string; message: string } | null) => void;
 }
 
 export default function UnstakeDialogFooter({
   selectedToken,
   scaledUnstakeAmount,
   onPendingChange,
+  onCompletedChange,
   onClose,
+  onError,
 }: UnstakeDialogFooterProps): React.JSX.Element {
   const { currentUnstakeStep, unstakeMethod } = useStakeState();
   const { setCurrentUnstakeStep } = useStakeActions();
@@ -50,6 +55,7 @@ export default function UnstakeDialogFooter({
 
   // Get estimates for instant unstake
   const { data: instantUnstakeRatio } = useInstantUnstakeRatio(scaledUnstakeAmount);
+  const { data: convertedAssets } = useConvertedAssets(scaledUnstakeAmount);
 
   // Calculate minAmount for instant unstake (95% of instantUnstakeRatio)
   const minUnstakeAmount = useMemo((): bigint | undefined => {
@@ -61,15 +67,19 @@ export default function UnstakeDialogFooter({
 
   // Calculate penalty percentage for instant unstake
   const penaltyPercentage = useMemo((): number | undefined => {
-    if (!scaledUnstakeAmount || !instantUnstakeRatio || unstakeMethod !== UNSTAKE_METHOD.INSTANT) {
+    if (!instantUnstakeRatio || !convertedAssets || unstakeMethod !== UNSTAKE_METHOD.INSTANT) {
       return undefined;
     }
     if (scaledUnstakeAmount === 0n) {
       return 0;
     }
-    const penalty = ((scaledUnstakeAmount - instantUnstakeRatio) * 10000n) / scaledUnstakeAmount;
-    return Number(penalty) / 100;
-  }, [scaledUnstakeAmount, instantUnstakeRatio, unstakeMethod]);
+    const penalty = new BigNumber(instantUnstakeRatio)
+      .minus(convertedAssets)
+      .dividedBy(convertedAssets)
+      .multipliedBy(100)
+      .toNumber();
+    return penalty;
+  }, [scaledUnstakeAmount, instantUnstakeRatio, convertedAssets, unstakeMethod]);
 
   // Regular unstake hooks
   const { mutateAsync: unstake, isPending: isUnstakingPending } = useUnstake(spokeProvider as SpokeProvider);
@@ -141,20 +151,16 @@ export default function UnstakeDialogFooter({
   const isAllowanceLoading =
     unstakeMethod === UNSTAKE_METHOD.INSTANT ? isInstantUnstakeAllowanceLoading : isRegularUnstakeAllowanceLoading;
 
-  console.log('isAllowanceLoading', isAllowanceLoading);
-  console.log('hasAllowed', hasAllowed);
-  console.log('isApproved', isApproved);
-  console.log('currentUnstakeStep', currentUnstakeStep);
   useEffect(() => {
     onPendingChange?.(isPending);
   }, [isPending, onPendingChange]);
 
   useEffect(() => {
-    if (hasAllowed) {
+    if (currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE && hasAllowed && !isWrongChain) {
       setCurrentUnstakeStep(UNSTAKE_STEP.UNSTAKE_CONFIRM);
       setIsApproved(true);
     }
-  }, [hasAllowed, setCurrentUnstakeStep]);
+  }, [hasAllowed, setCurrentUnstakeStep, currentUnstakeStep, isWrongChain]);
 
   const handleContinue = (): void => {
     if (currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE) {
@@ -162,11 +168,38 @@ export default function UnstakeDialogFooter({
     }
   };
 
+  const handleBack = (): void => {
+    if (currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE) {
+      setCurrentUnstakeStep(UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE);
+    }
+  };
+
   const handleApprove = async (): Promise<void> => {
-    if (unstakeMethod === UNSTAKE_METHOD.INSTANT && instantUnstakeParamsForApprove) {
-      await approveInstantUnstake(instantUnstakeParamsForApprove);
-    } else if (unstakeMethod === UNSTAKE_METHOD.REGULAR && regularUnstakeParamsForApprove) {
-      await approveRegularUnstake(regularUnstakeParamsForApprove);
+    try {
+      onError?.(null);
+      let response: unknown;
+      if (unstakeMethod === UNSTAKE_METHOD.INSTANT && instantUnstakeParamsForApprove) {
+        response = await approveInstantUnstake(instantUnstakeParamsForApprove);
+      } else if (unstakeMethod === UNSTAKE_METHOD.REGULAR && regularUnstakeParamsForApprove) {
+        response = await approveRegularUnstake(regularUnstakeParamsForApprove);
+      }
+      if (!response) {
+        onError?.({
+          title: 'Approval Failed',
+          message: 'No response received. Please try again.',
+        });
+      } else {
+        setIsApproved(true);
+        setCurrentUnstakeStep(UNSTAKE_STEP.UNSTAKE_CONFIRM);
+      }
+    } catch (error) {
+      console.error('Error approving unstake:', error);
+      const errorObj = error as { message?: string; shortMessage?: string };
+      const errorMessage = errorObj?.shortMessage || errorObj?.message || 'Failed to approve unstake';
+      onError?.({
+        title: 'Approval Failed',
+        message: errorMessage,
+      });
     }
   };
 
@@ -176,20 +209,30 @@ export default function UnstakeDialogFooter({
     }
 
     try {
+      onError?.(null);
       if (unstakeMethod === UNSTAKE_METHOD.INSTANT && instantUnstakeParams) {
         await instantUnstake(instantUnstakeParams);
       } else if (unstakeMethod === UNSTAKE_METHOD.REGULAR && regularUnstakeParams) {
         await unstake(regularUnstakeParams);
       }
       setIsCompleted(true);
+      onCompletedChange?.(true);
     } catch (error) {
       console.error('Unstake error:', error);
+      const errorObj = error as { message?: string; shortMessage?: string };
+      const errorMessage = errorObj?.shortMessage || errorObj?.message || 'Failed to unstake';
+      onError?.({
+        title: 'Unstake Failed',
+        message: errorMessage,
+      });
     }
   };
 
   return (
     <DialogFooter className="flex justify-between gap-2 overflow-hidden bottom-8 md:inset-x-12 inset-x-8 absolute">
-      {(isMobile ? currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE : true) && (
+      {(isMobile
+        ? currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE || currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE
+        : true) && (
         <Button
           variant="cherry"
           className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
@@ -199,10 +242,19 @@ export default function UnstakeDialogFooter({
                 ? 'w-10 h-10 rounded-full p-0 flex items-center justify-center'
                 : 'flex flex-1'
           }`}
-          onClick={handleContinue}
-          disabled={currentUnstakeStep !== UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE}
+          onClick={currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE ? handleBack : handleContinue}
+          disabled={
+            currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CONFIRM ||
+            (currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE && isApproving)
+          }
         >
-          {currentUnstakeStep !== UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE ? <Check className="w-5 h-5" /> : 'Continue'}
+          {currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE ? (
+            <ArrowLeft className="w-5 h-5" />
+          ) : currentUnstakeStep !== UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE ? (
+            <Check className="w-5 h-5" />
+          ) : (
+            'Continue'
+          )}
         </Button>
       )}
 

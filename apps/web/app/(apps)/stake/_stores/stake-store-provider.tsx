@@ -6,6 +6,7 @@ import { useStore } from 'zustand';
 import { type StakeStore, createStakeStore, STAKE_MODE } from './stake-store';
 import { useSpokeProvider, useStakingInfo, useStakeRatio, useConvertedAssets } from '@sodax/dapp-kit';
 import { useWalletProvider } from '@sodax/wallet-sdk-react';
+import { parseUnits } from 'viem';
 
 export type StakeStoreApi = ReturnType<typeof createStakeStore>;
 
@@ -35,9 +36,7 @@ export const useStakeStore = <T,>(selector: (store: StakeStore) => T): T => {
 };
 
 export const useStakeState = () => {
-  const stakeValue = useStakeStore(state => state.stakeValue);
   const stakeTypedValue = useStakeStore(state => state.stakeTypedValue);
-
   const currentStakeStep = useStakeStore(state => state.currentStakeStep);
   const totalStakedUsdValue = useStakeStore(state => state.totalStakedUsdValue);
   const selectedToken = useStakeStore(state => state.selectedToken);
@@ -48,14 +47,32 @@ export const useStakeState = () => {
   const walletProvider = useWalletProvider(selectedToken?.xChainId);
   const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
   const { data: stakingInfo, isLoading: isLoadingStakingInfo } = useStakingInfo(spokeProvider);
+  const reset = useStakeStore(state => state.reset);
+  // Compute stakeValue from stakeTypedValue
+  const stakeValue = useMemo((): bigint => {
+    if (!stakeTypedValue || stakeTypedValue === '' || stakeTypedValue === '0') {
+      return 0n;
+    }
+    const numericValue = Number(stakeTypedValue);
+    if (Number.isNaN(numericValue)) {
+      return 0n;
+    }
+    // For staking, use selectedToken decimals; for unstaking, always 18 (xSODA)
+    const decimals = stakeMode === STAKE_MODE.STAKING ? (selectedToken?.decimals ?? 18) : 18;
+    try {
+      return parseUnits(stakeTypedValue, decimals);
+    } catch {
+      return 0n;
+    }
+  }, [stakeTypedValue, stakeMode, selectedToken?.decimals]);
 
   // Get stake ratio when staking (converts SODA to xSODA)
-  const { data: stakeRatio } = useStakeRatio(
+  const { data: stakeRatio, isLoading: isLoadingStakeRatio } = useStakeRatio(
     stakeMode === STAKE_MODE.STAKING && stakeValue > 0n ? stakeValue : undefined,
   );
 
   // Get converted assets when unstaking (converts xSODA to SODA)
-  const { data: convertedAssets } = useConvertedAssets(
+  const { data: convertedAssets, isLoading: isLoadingConvertedAssets } = useConvertedAssets(
     stakeMode === STAKE_MODE.UNSTAKING && stakeValue > 0n ? stakeValue : undefined,
   );
 
@@ -63,7 +80,10 @@ export const useStakeState = () => {
     if (!stakingInfo || isLoadingStakingInfo) {
       return { userXSodaBalance: 0n, userXSodaValue: 0n };
     }
-    return { userXSodaBalance: stakingInfo.userXSodaBalance, userXSodaValue: stakingInfo.userXSodaValue };
+    return {
+      userXSodaBalance: stakingInfo.userXSodaBalance < parseUnits('1', 17) ? 0n : stakingInfo.userXSodaBalance,
+      userXSodaValue: stakingInfo.userXSodaValue,
+    };
   }, [stakingInfo, isLoadingStakingInfo]);
 
   const stakeValueInSoda: bigint = useMemo(() => {
@@ -75,7 +95,11 @@ export const useStakeState = () => {
 
   const stakeValueInXSoda: bigint = useMemo(() => {
     if (stakeMode === STAKE_MODE.STAKING) {
-      return BigInt(stakeRatio?.[0] || 0);
+      if (!stakeRatio) {
+        return 0n;
+      }
+      const [, previewDepositAmount] = stakeRatio;
+      return previewDepositAmount;
     }
     return stakeValue;
   }, [stakeMode, stakeValue, stakeRatio]);
@@ -85,7 +109,7 @@ export const useStakeState = () => {
       return userXSodaBalance - stakeValueInXSoda;
     }
 
-    return userXSodaBalance + stakeValueInXSoda;
+    return userXSodaBalance + stakeValueInXSoda < parseUnits('1', 17) ? 0n : userXSodaBalance + stakeValueInXSoda;
   }, [userXSodaBalance, stakeMode, stakeValueInXSoda]);
 
   const totalUserXSodaValue = useMemo(() => {
@@ -96,6 +120,17 @@ export const useStakeState = () => {
     return userXSodaValue + stakeValueInSoda;
   }, [userXSodaValue, stakeMode, stakeValueInSoda]);
 
+  // Determine if we're loading calculations for totalUserXSodaBalance
+  const isLoadingBalanceCalculation = useMemo(() => {
+    if (stakeValue === 0n) {
+      return false;
+    }
+    if (stakeMode === STAKE_MODE.STAKING) {
+      return isLoadingStakeRatio;
+    }
+    return isLoadingConvertedAssets;
+  }, [stakeMode, stakeValue, isLoadingStakeRatio, isLoadingConvertedAssets]);
+
   return {
     stakeValue,
     stakeTypedValue,
@@ -105,7 +140,6 @@ export const useStakeState = () => {
     stakeMode,
     unstakeMethod,
     currentUnstakeStep,
-
     userXSodaBalance,
     userXSodaValue,
     stakingInfo,
@@ -113,11 +147,12 @@ export const useStakeState = () => {
     totalUserXSodaBalance,
     totalUserXSodaValue,
     isNetworkPickerOpened,
+    isLoadingBalanceCalculation,
+    reset,
   };
 };
 
 export const useStakeActions = () => {
-  const setStakeValue = useStakeStore(state => state.setStakeValue);
   const setStakeTypedValue = useStakeStore(state => state.setStakeTypedValue);
   const setStakeValueByPercent = useStakeStore(state => state.setStakeValueByPercent);
   const setCurrentStakeStep = useStakeStore(state => state.setCurrentStakeStep);
@@ -129,9 +164,8 @@ export const useStakeActions = () => {
   const setCurrentUnstakeStep = useStakeStore(state => state.setCurrentUnstakeStep);
   const resetUnstakeState = useStakeStore(state => state.resetUnstakeState);
   const setIsNetworkPickerOpened = useStakeStore(state => state.setIsNetworkPickerOpened);
-
+  const reset = useStakeStore(state => state.reset);
   return {
-    setStakeValue,
     setStakeTypedValue,
     setStakeValueByPercent,
     setCurrentStakeStep,
@@ -143,5 +177,6 @@ export const useStakeActions = () => {
     setCurrentUnstakeStep,
     resetUnstakeState,
     setIsNetworkPickerOpened,
+    reset,
   };
 };

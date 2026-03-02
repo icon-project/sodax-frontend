@@ -1,6 +1,19 @@
 import { Label } from '@/components/ui/label';
 import { FooterLink } from '@/components/landing/footer-link';
 import Image from 'next/image';
+import {
+  BALANCED_DEFI_ROUTE,
+  DISCORD_ROUTE,
+  DOCUMENTATION_GITBOOK_ROUTE,
+  GITHUB_ROUTE,
+  HANA_WALLET_ROUTE,
+  BRAND_KIT_ROUTE,
+  LINKTREE_ROUTE,
+  NEWS_ROUTE,
+  SODAX_SCAN_ROUTE,
+  SWAP_ROUTE,
+  X_ROUTE,
+} from '@/constants/routes';
 
 export function PartnerSimpleFooter() {
   return (
@@ -21,11 +34,11 @@ export function PartnerSimpleFooter() {
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             using soda
           </div>
-          <FooterLink href="/swap">SODAX Swap</FooterLink>
-          <FooterLink href="https://www.hanawallet.io/" showArrow>
+          <FooterLink href={SWAP_ROUTE}>SODAX Swap</FooterLink>
+          <FooterLink href={HANA_WALLET_ROUTE} showArrow>
             Hana Wallet
           </FooterLink>
-          <FooterLink href="https://app.balanced.network/" showArrow>
+          <FooterLink href={BALANCED_DEFI_ROUTE} showArrow>
             Balanced DeFi
           </FooterLink>
         </div>
@@ -33,14 +46,14 @@ export function PartnerSimpleFooter() {
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             socials
           </div>
-          <FooterLink href="https://news.sodax.com/">News</FooterLink>
-          <FooterLink href="https://discord.gg/xM2Nh4S6vN" showArrow>
+          <FooterLink href={NEWS_ROUTE}>News</FooterLink>
+          <FooterLink href={DISCORD_ROUTE} showArrow>
             Discord
           </FooterLink>
-          <FooterLink href="https://x.com/gosodax" showArrow>
+          <FooterLink href={X_ROUTE} showArrow>
             X (Twitter)
           </FooterLink>
-          <FooterLink href="https://linktr.ee/go.sodax" showArrow>
+          <FooterLink href={LINKTREE_ROUTE} showArrow>
             Linktree
           </FooterLink>
         </div>
@@ -48,19 +61,16 @@ export function PartnerSimpleFooter() {
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
             resources
           </div>
-          <FooterLink href="https://sodax-1.gitbook.io/sodax-docs/readme-1" showArrow>
+          <FooterLink href={DOCUMENTATION_GITBOOK_ROUTE} showArrow>
             Documentation
           </FooterLink>
-          <FooterLink href="https://github.com/icon-project/sodax-frontend" showArrow>
+          <FooterLink href={GITHUB_ROUTE} showArrow>
             GitHub
           </FooterLink>
-          <FooterLink href="https://sodaxscan.com/" showArrow>
+          <FooterLink href={SODAX_SCAN_ROUTE} showArrow>
             SODAX Scan
           </FooterLink>
-          <FooterLink
-            href="/SODAX.logos.and.token.zip"
-            showArrowDown={true}
-          >
+          <FooterLink href={BRAND_KIT_ROUTE} showArrowDown={true}>
             Brand Kit
           </FooterLink>
         </div>
