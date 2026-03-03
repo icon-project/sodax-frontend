@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/stake/_components/unstake-request-item.tsx
 import type React from 'react';
 import { useMemo, useState, useEffect } from 'react';
 import type { UnstakeRequestWithPenalty, StakingConfig, SpokeProvider } from '@sodax/sdk';
@@ -6,7 +5,7 @@ import { useClaim, useCancelUnstake } from '@sodax/dapp-kit';
 import { formatTokenAmount, getTimeRemaining } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import LoadingThreeDotsJumping from '@/components/shared/loading-three-dots-jumping';
-import { CircleCheck, CircleEllipsis, MinusCircleIcon, XCircleIcon, XIcon } from 'lucide-react';
+import { CircleEllipsis, MinusCircleIcon, XCircleIcon, XIcon } from 'lucide-react';
 import { useStakeState } from '../_stores/stake-store-provider';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import { Dialog, DialogContent, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
