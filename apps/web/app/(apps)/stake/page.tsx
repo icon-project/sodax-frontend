@@ -39,16 +39,19 @@ export default function StakePage(): React.JSX.Element {
       <motion.div className="relative w-full flex flex-col justify-start items-start gap-0" variants={itemVariants}>
         <StakeSelectorPanel />
 
-        {/* Top section — Tip anchored here at the bottom */}
+        {/* Top section — Tip anchored here at the bottom. Outline hover matches migrate/swap. */}
         <div
           className={cn(
             'relative w-full group rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius)',
-            'before:absolute before:inset-0 before:border-almost-white before:border-b-0 before:rounded-tl-(--layout-container-radius) before:rounded-tr-(--layout-container-radius) before:mix-blend-multiply before:pointer-events-none before:transition-[border-width]',
-            'before:border-2 group-hover:before:border-4 sm:before:border-[3px] sm:group-hover:before:border-[5px] md:before:border-4 md:group-hover:before:border-[6px]',
             'transition-[filter] duration-300',
             isNetworkPickerOpened && 'blur-sm',
           )}
         >
+          {/* Border layer: top/left/right only so the tip is not broken; same hover thickness as migrate */}
+          <div
+            className="absolute inset-0 rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius) border-almost-white pointer-events-none mix-blend-multiply border-2 border-b-0 group-hover:border-4 group-hover:border-b-0 sm:border-[3px] sm:border-b-0 sm:group-hover:border-[5px] sm:group-hover:border-b-0 md:border-4 md:border-b-0 md:group-hover:border-[6px] md:group-hover:border-b-0"
+            aria-hidden
+          />
           {isNetworkPickerOpened && <div className="inset-0 absolute w-full h-full bg-transparent-white z-20" />}
           <StakeInputPanel />
           {/* Tip sits at the bottom of top section, translated down into the seam */}
