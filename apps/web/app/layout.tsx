@@ -115,7 +115,8 @@ function gtag(){dataLayer.push(arguments);}
 var m=document.cookie.match(/cookie_consent_region=([^;]+)/);
 var r=m?m[1]:'other';
 var c=document.cookie.match(/cc_cookie=([^;]+)/);
-var hasMarketing=c?decodeURIComponent(c[1]).indexOf('"marketing"')!==-1:false;
+var hasMarketing=false;
+if(c){try{var p=JSON.parse(decodeURIComponent(c[1]));if(p&&Array.isArray(p.categories)){hasMarketing=p.categories.indexOf('marketing')!==-1;}}catch(e2){hasMarketing=false;}}
 if(r==='eu'&&!hasMarketing){
   gtag('consent','default',{'ad_storage':'denied','ad_user_data':'denied','ad_personalization':'denied','analytics_storage':'granted','wait_for_update':500});
 }else{
