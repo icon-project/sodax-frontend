@@ -174,6 +174,11 @@ export class InjectiveBaseSpokeProvider {
   }
 }
 
+export type InjectiveRawSpokeProviderConfig = {
+  chainConfig: InjectiveSpokeChainConfig;
+  walletAddress: string;
+};
+
 export class InjectiveRawSpokeProvider extends InjectiveBaseSpokeProvider implements IRawSpokeProvider {
   public readonly walletProvider: WalletAddressProvider;
   public readonly raw = true;

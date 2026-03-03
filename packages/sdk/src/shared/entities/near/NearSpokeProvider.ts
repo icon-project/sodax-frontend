@@ -167,6 +167,11 @@ export class NearSpokeProvider extends NearBaseSpokeProvider implements ISpokePr
   }
 }
 
+export type NearRawSpokeProviderConfig = {
+  chainConfig: NearSpokeChainConfig;
+  walletAddress: string;
+};
+
 export class NearRawSpokeProvider extends NearBaseSpokeProvider implements IRawSpokeProvider {
   public readonly walletProvider: WalletAddressProvider;
   public readonly raw = true;

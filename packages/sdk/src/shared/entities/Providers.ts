@@ -11,12 +11,19 @@ import {
   createPublicClient,
 } from 'viem';
 import { getEvmViemChain } from '../constants.js';
-import type { InjectiveRawSpokeProvider, InjectiveSpokeProvider } from './injective/InjectiveSpokeProvider.js';
-import type { IconRawSpokeProvider, IconSpokeProvider } from './icon/IconSpokeProvider.js';
-import type { SolanaRawSpokeProvider, SolanaSpokeProvider } from './solana/SolanaSpokeProvider.js';
-import type { SuiRawSpokeProvider, SuiSpokeProvider } from './sui/SuiSpokeProvider.js';
-import type { NearRawSpokeProvider, NearSpokeProvider } from './near/NearSpokeProvider.js';
-
+import type {
+  InjectiveRawSpokeProvider,
+  InjectiveRawSpokeProviderConfig,
+  InjectiveSpokeProvider,
+} from './injective/InjectiveSpokeProvider.js';
+import type { IconRawSpokeProvider, IconRawSpokeProviderConfig, IconSpokeProvider } from './icon/IconSpokeProvider.js';
+import type {
+  SolanaRawSpokeProvider,
+  SolanaRawSpokeProviderConfig,
+  SolanaSpokeProvider,
+} from './solana/SolanaSpokeProvider.js';
+import type { SuiRawSpokeProvider, SuiRawSpokeProviderConfig, SuiSpokeProvider } from './sui/SuiSpokeProvider.js';
+import type { NearRawSpokeProvider, NearRawSpokeProviderConfig, NearSpokeProvider } from './near/NearSpokeProvider.js';
 import {
   SONIC_MAINNET_CHAIN_ID,
   type IEvmWalletProvider,
@@ -35,7 +42,11 @@ import {
 } from '@sodax/types';
 import type { ConfigService } from '../config/ConfigService.js';
 import { getHubChainConfig } from '../config/ConfigService.js';
-import type { StellarRawSpokeProvider, StellarSpokeProvider } from './stellar/StellarSpokeProvider.js';
+import type {
+  StellarRawSpokeProvider,
+  StellarRawSpokeProviderConfig,
+  StellarSpokeProvider,
+} from './stellar/StellarSpokeProvider.js';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
 
@@ -132,6 +143,12 @@ export class SonicSpokeProvider extends SonicBaseSpokeProvider implements ISpoke
   }
 }
 
+export type SonicRawSpokeProviderConfig = {
+  walletAddress: Address;
+  chainConfig: SonicSpokeChainConfig;
+  rpcUrl?: string;
+};
+
 export class SonicRawSpokeProvider extends SonicBaseSpokeProvider implements IRawSpokeProvider {
   public readonly walletProvider: WalletAddressProvider;
   public readonly raw = true;
@@ -173,6 +190,12 @@ export class EvmSpokeProvider extends EvmBaseSpokeProvider implements ISpokeProv
   }
 }
 
+export type EvmRawSpokeProviderConfig = {
+  walletAddress: Address;
+  chainConfig: EvmSpokeChainConfig;
+  rpcUrl?: string;
+};
+
 export class EvmRawSpokeProvider extends EvmBaseSpokeProvider implements IRawSpokeProvider {
   public readonly walletProvider: WalletAddressProvider;
   public readonly raw = true;
@@ -191,7 +214,6 @@ export type IWalletProvider =
   | IStellarWalletProvider
   | ISuiWalletProvider
   | IIconWalletProvider
-  | IInjectiveWalletProvider
   | ISolanaWalletProvider
   | INearWalletProvider;
 
@@ -218,5 +240,18 @@ export type RawSpokeProvider = (
   | NearRawSpokeProvider
 ) &
   IRawSpokeProvider;
+
+export type RawSpokeProviderConfig = (
+  | EvmRawSpokeProviderConfig
+  | InjectiveRawSpokeProviderConfig
+  | IconRawSpokeProviderConfig
+  | SuiRawSpokeProviderConfig
+  | StellarRawSpokeProviderConfig
+  | SolanaRawSpokeProviderConfig
+  | SonicRawSpokeProviderConfig
+  | NearRawSpokeProviderConfig
+) & {
+  chainConfig: SpokeChainConfig;
+};
 
 export type SpokeProviderType = SpokeProvider | RawSpokeProvider;
