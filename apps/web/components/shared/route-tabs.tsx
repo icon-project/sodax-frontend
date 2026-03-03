@@ -13,7 +13,7 @@ import {
   MIGRATE_ROUTE,
   PARTNER_DASHBOARD_ROUTE,
   SAVE_ROUTE,
-  STAKE_ROUTE,
+  // STAKE_ROUTE,
   SWAP_ROUTE,
   isPartnerRoute,
 } from '@/constants/routes';
@@ -42,7 +42,7 @@ export const tabConfigs: TabConfig[] = [
     type: 'save',
     label: 'Save',
     content: 'a quick save',
-    enabled: true,
+    enabled: false,
     href: SAVE_ROUTE,
   },
   {
@@ -53,14 +53,14 @@ export const tabConfigs: TabConfig[] = [
     enabled: false,
     href: LOANS_ROUTE,
   },
-  {
-    value: 'stake',
-    type: 'stake',
-    label: 'Stake',
-    content: 'a quick stake',
-    enabled: true,
-    href: STAKE_ROUTE,
-  },
+  // {
+  //   value: 'stake',
+  //   type: 'stake',
+  //   label: 'Stake',
+  //   content: 'a quick stake',
+  //   enabled: true,
+  //   href: STAKE_ROUTE,
+  // },
   {
     value: 'migrate',
     type: 'migrate',
@@ -218,7 +218,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
           <div ref={mobileTabsContainerRef} className="w-full px-4 py-4 bg-cream-white h-24 flex">
             <div className="grid grid-cols-4 gap-4 bg-transparent py-0 w-full">
               {usedTabs
-                .filter(tab => !(tab.value === 'loans'))
+                // .filter(tab => !(tab.value === 'loans'))
                 .map(tab => {
                   const href = tab.href ?? `/${tab.value}`;
                   const active = current === tab.value;
