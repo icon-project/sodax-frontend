@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: 'SODAX',
     images: [
       {
-        url: '/community/soda-token/link-preview.png',
+        url: 'https://sodax.com/community/soda-token/link-preview.png',
         width: 1200,
         height: 630,
         alt: 'SODA Token Supply & Metrics',
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     title: 'SODA Token Supply & Metrics',
     description: 'Real-time SODA token supply data and metrics for the SODAX DeFi ecosystem.',
     site: '@gosodax',
-    images: ['/community/soda-token/link-preview.png'],
+    images: ['https://sodax.com/community/soda-token/link-preview.png'],
   },
   alternates: {
     canonical: 'https://sodax.com/community/soda-token',
