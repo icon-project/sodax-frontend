@@ -36,13 +36,16 @@ export default function StakePage(): React.JSX.Element {
       animate={isOpen ? 'open' : 'closed'}
     >
       <StakeHeader apr={STAKING_APR} />
-      <motion.div className="relative w-full flex flex-col justify-start items-start gap-0" variants={itemVariants}>
+      <motion.div
+        className="relative group w-full flex flex-col justify-start items-start gap-0"
+        variants={itemVariants}
+      >
         <StakeSelectorPanel />
 
         {/* Top section — Tip anchored here at the bottom. Outline hover matches migrate/swap. */}
         <div
           className={cn(
-            'relative w-full group rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius)',
+            'relative w-full rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius)',
             'transition-[filter] duration-300',
             isNetworkPickerOpened && 'blur-sm',
           )}
