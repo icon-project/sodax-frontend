@@ -36,19 +36,28 @@ export default function StakePage(): React.JSX.Element {
       animate={isOpen ? 'open' : 'closed'}
     >
       <StakeHeader apr={STAKING_APR} />
-      <motion.div className="relative w-full   flex flex-col justify-start items-start gap-0" variants={itemVariants}>
+      <motion.div className="relative w-full flex flex-col justify-start items-start gap-0" variants={itemVariants}>
         <StakeSelectorPanel />
+
+        {/* Top section — Tip anchored here at the bottom */}
         <div
           className={cn(
-            'relative w-full rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius)',
-            'before:absolute before:inset-0 before:border-almost-white before:border-[3px] before:border-b-0 before:rounded-tl-(--layout-container-radius) before:rounded-tr-(--layout-container-radius) before:mix-blend-multiply before:pointer-events-none',
+            'relative w-full group rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius)',
+            'before:absolute before:inset-0 before:border-almost-white before:border-b-0 before:rounded-tl-(--layout-container-radius) before:rounded-tr-(--layout-container-radius) before:mix-blend-multiply before:pointer-events-none before:transition-[border-width]',
+            'before:border-2 group-hover:before:border-4 sm:before:border-[3px] sm:group-hover:before:border-[5px] md:before:border-4 md:group-hover:before:border-[6px]',
             'transition-[filter] duration-300',
             isNetworkPickerOpened && 'blur-sm',
           )}
         >
           {isNetworkPickerOpened && <div className="inset-0 absolute w-full h-full bg-transparent-white z-20" />}
           <StakeInputPanel />
+          {/* Tip sits at the bottom of top section, translated down into the seam */}
+          <div className="absolute bottom-1 left-[72px] translate-y-full z-10 pointer-events-none">
+            <Tip fill="var(--color-almost-white)" />{' '}
+          </div>
         </div>
+
+        {/* Bottom section — no Tip here */}
         <div
           className={cn(
             'relative p-(--layout-space-big) w-full flex flex-col justify-start items-start bg-almost-white mix-blend-multiply rounded-bl-(--layout-container-radius) rounded-br-(--layout-container-radius)',
@@ -56,10 +65,6 @@ export default function StakePage(): React.JSX.Element {
             isNetworkPickerOpened && 'blur-sm',
           )}
         >
-          <div className="absolute top-0 left-[72px]">
-            <Tip fill="white" />
-          </div>
-
           <StakeStatsCard />
         </div>
       </motion.div>
