@@ -398,34 +398,36 @@ async function createIntent(amount: bigint, inputToken: Address, outputChainId: 
 
   const accessToken = await getRadfiAccessToken(walletAddress);
   spokeProvider.setRadfiAccessToken(accessToken);
-  const txHash = await sodax.swaps.createIntent({
+  const res = await sodax.swaps.swap({
     intentParams: intent,
     spokeProvider,
   });
+
+  console.log('[createIntent] res', res);
   
   //@ts-ignore
-  const res = await submitData(txHash.value[0], hubWallet, txHash.value[2]);
+//   const res = await submitData(txHash.value[0], hubWallet, txHash.value[2]);
   
-   const packet = await waitUntilIntentExecuted({
-          intentRelayChainId:getIntentRelayChainId(spokeCfg.chain.id).toString(),
-          // @ts-ignore
-          spokeTxHash: txHash.value[0],
-          timeout:120000,
-          apiUrl: relayerBackendUrl,
-        });
+//    const packet = await waitUntilIntentExecuted({
+//           intentRelayChainId:getIntentRelayChainId(spokeCfg.chain.id).toString(),
+//           // @ts-ignore
+//           spokeTxHash: txHash.value[0],
+//           timeout:120000,
+//           apiUrl: relayerBackendUrl,
+//         });
 
     
-   if (!packet.ok) {
-          return {
-            ok: false,
-            error: packet.error,
-          };
-        }
-  const dstIntentTxHash = packet.value.dst_tx_hash;
- const result = await sodax.swaps.postExecution({
-        intent_tx_hash: dstIntentTxHash as `0x${string}`,
-      });
-  console.log('[createIntent] txHash', txHash);
+//    if (!packet.ok) {
+//           return {
+//             ok: false,
+//             error: packet.error,
+//           };
+//         }
+//   const dstIntentTxHash = packet.value.dst_tx_hash;
+//  const result = await sodax.swaps.postExecution({
+//         intent_tx_hash: dstIntentTxHash as `0x${string}`,
+//       });
+//   console.log('[createIntent] txHash', txHash);
 }
 
 // Helper function for testing only

@@ -25,6 +25,7 @@ import {
 } from '../shared/utils/shared-utils.js';
 import { encodeContractCalls } from '../shared/utils/evm-utils.js';
 import {
+  isBitcoinSpokeProvider,
   isConfiguredSolverConfig,
   isEvmSpokeProviderType,
   isSonicRawSpokeProvider,
@@ -70,6 +71,7 @@ import {
   getIntentRelayChainId,
   getSolverConfig,
   type Token,
+  BITCOIN_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { StellarSpokeService } from '../shared/services/spoke/StellarSpokeService.js';
 import type { ConfigService } from '../shared/config/ConfigService.js';
@@ -592,7 +594,7 @@ export class SwapService {
       if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
         const intentRelayChainId = getIntentRelayChainId(params.srcChain).toString();
         const submitPayload: IntentRelayRequest<'submit'> =
-          params.srcChain === SOLANA_MAINNET_CHAIN_ID && data
+          ((params.srcChain ===SOLANA_MAINNET_CHAIN_ID) || (params.srcChain === BITCOIN_MAINNET_CHAIN_ID)) && data
             ? {
                 action: 'submit',
                 params: {
@@ -944,11 +946,21 @@ export class SwapService {
     );
 
     try {
-      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      let walletAddress = await spokeProvider.walletProvider.getWalletAddress();
       invariant(
         params.srcAddress.toLowerCase() === walletAddress.toLowerCase(),
         'srcAddress must be the same as wallet address',
       );
+
+      
+      if (isBitcoinSpokeProvider(spokeProvider)) {
+        if (spokeProvider.walletMode === 'TRADING') {
+          const tradingWalletAddress = await spokeProvider.radfi.getTradingWallet(
+            await spokeProvider.walletProvider.getWalletAddress()
+          );
+          walletAddress = tradingWalletAddress.tradingAddress as Address;
+        }
+      }
 
       // derive users hub wallet address
       const creatorHubWalletAddress = await deriveUserWalletAddress(
