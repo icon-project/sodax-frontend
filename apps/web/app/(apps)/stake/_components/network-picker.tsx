@@ -128,7 +128,10 @@ export function NetworkPicker({
                     </>
                   )}
                   {hoveredBalance !== 0n && formattedHoveredBalance !== null && (
-                    <> Balance: {formattedHoveredBalance}</>
+                    <>
+                      {' '}
+                      {formattedHoveredBalance} {tokenSymbol}
+                    </>
                   )}
                 </>
               );
@@ -141,7 +144,7 @@ export function NetworkPicker({
 
       <div
         className={cn(
-          'flex flex-wrap justify-center w-[140px] network-picker-container',
+          'flex flex-wrap justify-center network-picker-container w-[150px] gap-0.5',
           isMobile && isSingle && 'ml-4',
         )}
       >
@@ -153,7 +156,8 @@ export function NetworkPicker({
             <motion.div
               key={token.xChainId}
               className={cn(
-                'p-1.5 cursor-pointer rounded-full ',
+                'relative flex shrink-0 w-7 h-7 min-w-6 min-h-6 items-center justify-center cursor-pointer rounded-full p-0',
+                hoveredIcon === index && 'z-50',
                 hoveredIcon !== null && hoveredIcon !== index && 'opacity-60 grayscale-[0.5]',
               )}
               whileHover={{ scale: 1.3 }}

@@ -161,7 +161,10 @@ export function UnstakeRequestItem({
         </div>
       </div>
 
-      <Progress value={progressPercentage} className="h-1 bg-almost-white rounded-[40px] [&>div]:bg-clay-light" />
+      <Progress
+        value={progressPercentage}
+        className="h-1 bg-almost-white rounded-[40px] [&>div]:bg-clay-light mix-blend-multiply"
+      />
 
       <div className="inline-flex justify-start items-center gap-4">
         {isReadyToClaim ? (
