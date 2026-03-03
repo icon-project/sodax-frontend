@@ -6,7 +6,7 @@ import { useClaim, useCancelUnstake } from '@sodax/dapp-kit';
 import { formatTokenAmount, getTimeRemaining } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import LoadingThreeDotsJumping from '@/components/shared/loading-three-dots-jumping';
-import { CircleCheck, MinusCircleIcon, XCircleIcon, XIcon } from 'lucide-react';
+import { CircleCheck, CircleEllipsis, MinusCircleIcon, XCircleIcon, XIcon } from 'lucide-react';
 import { useStakeState } from '../_stores/stake-store-provider';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import { Dialog, DialogContent, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -130,7 +130,7 @@ export function UnstakeRequestItem({
       <div className="w-full flex flex-col justify-start items-start gap-1">
         <div className="inline-flex justify-start items-center gap-2">
           <div className="justify-center text-clay text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-5">
-            {isReadyToClaim ? 'Unstake complete' : timeRemaining}
+            {isReadyToClaim ? 'Ready to claim' : timeRemaining}
           </div>
           {isReadyToClaim ? null : <LoadingThreeDotsJumping />}
         </div>
@@ -156,7 +156,7 @@ export function UnstakeRequestItem({
             )}
           </div>
           <div className="justify-center text-clay text-(length:--body-fine-print) font-normal font-['InterRegular'] leading-3">
-            {isReadyToClaim ? 'Ready to claim' : completionDate && <>{completionDate}</>}
+            {isReadyToClaim ? null : completionDate || null}
           </div>
         </div>
       </div>
@@ -174,7 +174,7 @@ export function UnstakeRequestItem({
             disabled={isClaiming || isCancellingUnstake || !spokeProvider}
             className="rounded-2xl flex justify-center items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
           >
-            <CircleCheck className="w-4 h-4" />
+            <CircleEllipsis className="w-4 h-4" />{' '}
             <div className="justify-start text-clay text-(length:--body-small) font-normal font-['InterRegular'] leading-4">
               Claim full value
             </div>
