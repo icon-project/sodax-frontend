@@ -216,7 +216,7 @@ export const ChainIdToIntentRelayChainId = {
   [ETHEREUM_MAINNET_CHAIN_ID]: 2n,
   [REDBELLY_MAINNET_CHAIN_ID]: 726564n,
   [KAIA_MAINNET_CHAIN_ID]: 27489n,
-  [STACKS_MAINNET_CHAIN_ID]: 10002n,
+  [STACKS_MAINNET_CHAIN_ID]: 60n,
 } as const;
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
@@ -398,7 +398,7 @@ export const SodaTokens = {
     symbol: 'sodaSTX',
     name: 'Soda STX',
     decimals: 18,
-    address: '0x4d4dC6AeBcD1bBc1eBcD1bBc1eBcD1bBc1eBcD1b',
+    address: '0x1Fbe5229e9d189F26bEE77E5bFa24309FdA90483',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
 } as const satisfies Record<HubVaultSymbol, XToken>;
@@ -1588,15 +1588,15 @@ export const spokeChainConfig = {
   } as const satisfies EvmSpokeChainConfig,
   [STACKS_MAINNET_CHAIN_ID]: {
     addresses: {
-      assetManager: 'STYG050M17PTPDS7GTYEW4T9T3TSJET7A6J58F0.asset-manager-state',
-      connection: 'ST1W8XT40TD4915K82P17N3XCQVDAG8CGBTJQ4B7T.connection-v3',
-      rateLimit: 'STYG050M17PTPDS7GTYEW4T9T3TSJET7A6J58F0.rate-limit-state',
+      assetManager: 'SP3031RGK734636C8KGW2Y76TEQBTVX59Q472EQH0.asset-manager-state',
+      connection: 'SP3031RGK734636C8KGW2Y76TEQBTVX59Q472EQH0.connection-v3',
+      rateLimit: 'SP3031RGK734636C8KGW2Y76TEQBTVX59Q472EQH0.rate-limit-state',
       xTokenManager: '',
       testToken: '',
     },
     chain: baseChainInfo[STACKS_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'STACKS'>,
     nativeToken: 'STX' as const,
-    bnUSD: 'STYG050M17PTPDS7GTYEW4T9T3TSJET7A6J58F0.bnusd',
+    bnUSD: 'SP3031RGK734636C8KGW2Y76TEQBTVX59Q472EQH0.bnusd',
     supportedTokens: {
       STX: {
         symbol: 'STX',
@@ -1609,9 +1609,16 @@ export const spokeChainConfig = {
         symbol: 'bnUSD',
         name: 'bnUSD',
         decimals: 6,
-        address: 'STYG050M17PTPDS7GTYEW4T9T3TSJET7A6J58F0.bnusd',
+        address: 'SP3031RGK734636C8KGW2Y76TEQBTVX59Q472EQH0.bnusd',
         xChainId: STACKS_MAINNET_CHAIN_ID,
       },
+      SODA: {
+        symbol: 'SODA',
+        name: 'SODAX',
+        decimals: 18,
+        address: 'SP3031RGK734636C8KGW2Y76TEQBTVX59Q472EQH0.soda',
+        xChainId: STACKS_MAINNET_CHAIN_ID,
+      }
     },
     rpcUrl: 'https://stacks-node-api.mainnet.stacks.co',
   } as const satisfies StacksSpokeChainConfig,
@@ -2565,19 +2572,26 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
   },
   [STACKS_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[STACKS_MAINNET_CHAIN_ID].nativeToken]: {
-      asset: '0xFBf41b0974Ef0D88a7C3Da7CB05Cc1041d6f7198',
+      asset: '0x30b3b1a3e4f1235472772e60a8cd9c0165db641e',
       decimal: 6,
       symbol: 'STX',
       name: 'Stacks',
       vault: SodaTokens.sodaSTX.address,
     },
     [spokeChainConfig[STACKS_MAINNET_CHAIN_ID].bnUSD]: {
-      asset: '0x4e9120bb4b42f5646e779027473474ad5ab543b6',
+      asset: '0x78093c056fb37ffc1a9ae96daa0a7dd9d372b64d',
       decimal: 6,
       symbol: 'bnUSD',
       name: 'bnUSD',
       vault: SodaTokens.bnUSD.address,
     },
+    [spokeChainConfig[STACKS_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
+      asset: '0xebd34ddf9f47f9bcdf706e87206d40a579c34822',
+      decimal: 6,
+      symbol: 'SODA',
+      name: 'SODAX',
+      vault: SodaTokens.sodaSTX.address,
+    }
   },
 } as const;
 
