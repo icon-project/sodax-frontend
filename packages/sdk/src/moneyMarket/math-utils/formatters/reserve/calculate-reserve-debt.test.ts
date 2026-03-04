@@ -6,10 +6,7 @@ import { describe, expect, it } from 'vitest';
 describe('calculateReserveDebt', () => {
   it('should calculate reserve debt when there is non', () => {
     const reserve = new ReserveMock();
-    const result = calculateReserveDebt(
-      reserve.reserve,
-      reserve.reserve.lastUpdateTimestamp,
-    );
+    const result = calculateReserveDebt(reserve.reserve, reserve.reserve.lastUpdateTimestamp);
 
     expect(result).toEqual({
       totalDebt: new BigNumber('0'),
@@ -20,10 +17,7 @@ describe('calculateReserveDebt', () => {
 
   it('should calculate reserve debt', () => {
     const reserve = new ReserveMock().addLiquidity(100).addVariableDebt(100);
-    const result = calculateReserveDebt(
-      reserve.reserve,
-      reserve.reserve.lastUpdateTimestamp,
-    );
+    const result = calculateReserveDebt(reserve.reserve, reserve.reserve.lastUpdateTimestamp);
 
     expect(result).toEqual({
       totalDebt: new BigNumber('100000000000000000000'),

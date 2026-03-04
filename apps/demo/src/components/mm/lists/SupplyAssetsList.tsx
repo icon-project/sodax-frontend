@@ -1,107 +1,300 @@
-import React, { useMemo } from 'react';
-import { getSpokeTokenAddressByVault, useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
+import React, { useMemo, useState, type ReactElement } from 'react';
+import {
+  useReservesUsdFormat,
+  useSpokeProvider,
+  useUserFormattedSummary,
+  useUserReservesData,
+  useATokensBalances,
+} from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
-import { formatUnits } from 'viem';
+import { formatUnits, isAddress } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
-import { getMoneyMarketConfig, moneyMarketSupportedTokens, SONIC_MAINNET_CHAIN_ID, type UserReserveData } from '@sodax/sdk';
-import type { Token, XToken } from '@sodax/types';
+import { type ChainId, ICON_MAINNET_CHAIN_ID, moneyMarketSupportedTokens, type XToken } from '@sodax/sdk';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Info } from 'lucide-react';
+import { type ActionType, SuccessModal } from './SuccessModal';
+import { RepayModal } from './RepayModal';
+import { SupplyModal } from './SupplyModal';
+import { WithdrawModal } from './WithdrawModal';
+import { getHealthFactorState } from '@/lib/utils';
 
-export function SupplyAssetsList() {
+const TABLE_HEADERS = [
+  'Asset',
+  'Wallet Balance',
+  'Supplied',
+  'LT %',
+  'Total Supply',
+  'Supply APY',
+  'Supply APR',
+  'Borrowed',
+  'Borrow available',
+  'Actions',
+] as const;
+
+export function SupplyAssetsList(): ReactElement {
   const { selectedChainId } = useAppStore();
+  const [repayData, setRepayData] = useState<{
+    token: XToken;
+    maxDebt: string;
+  } | null>(null);
+  const [withdrawData, setWithdrawData] = useState<{
+    token: XToken;
+    maxWithdraw: string;
+  } | null>(null);
+  const [supplyData, setSupplyData] = useState<{
+    token: XToken;
+    maxSupply: string;
+  } | null>(null);
+  const [currentAction, setCurrentAction] = useState<ActionType>('repay');
+  const [successData, setSuccessData] = useState<{
+    amount: string;
+    token: XToken;
+    sourceChainId: ChainId;
+    destinationChainId: ChainId;
+  } | null>(null);
 
-  const tokens = useMemo(
-    () =>
-      moneyMarketSupportedTokens[selectedChainId].map((t: Token) => {
-        return {
-          ...t,
-          xChainId: selectedChainId,
-        } satisfies XToken;
-      }),
-    [selectedChainId],
-  );
+  const tokens = moneyMarketSupportedTokens[selectedChainId];
+  const isIcon = selectedChainId === ICON_MAINNET_CHAIN_ID;
 
   const { address } = useXAccount(selectedChainId);
   const walletProvider = useWalletProvider(selectedChainId);
   const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
-  const { data: balances } = useXBalances({
+  const { data: balances, refetch: refetchWalletBalances } = useXBalances({
     xChainId: selectedChainId,
     xTokens: tokens,
     address,
   });
 
-  const { data: userReserves } = useUserReservesData(spokeProvider, address);
+  const {
+    data: userReservesData,
+    isLoading: isUserReservesLoading,
+    refetch: refetchReserves,
+  } = useUserReservesData({ spokeChainId: selectedChainId, userAddress: address });
+  const userReserves = userReservesData?.[0] || [];
+  const {
+    data: formattedReserves,
+    isLoading: isFormattedReservesLoading,
+    refetch: refetchFormattedReserves,
+  } = useReservesUsdFormat();
+  const { data: userSummary, refetch: refetchSummary } = useUserFormattedSummary({ spokeChainId: selectedChainId, userAddress: address });
+  const healthFactorRaw = userSummary?.healthFactor ? Number(userSummary.healthFactor) : undefined;
 
+  const healthFactorDisplay =
+    healthFactorRaw !== undefined && Number.isFinite(healthFactorRaw) ? healthFactorRaw.toFixed(2) : '-';
+
+  const healthState = healthFactorRaw !== undefined ? getHealthFactorState(healthFactorRaw) : undefined;
+
+  // Extract all aToken addresses from formattedReserves for batch fetching
+  const aTokenAddresses = useMemo(() => {
+    if (!formattedReserves) return [];
+    return formattedReserves
+      .map(reserve => reserve.aTokenAddress)
+      .filter((address): address is `0x${string}` => isAddress(address));
+  }, [formattedReserves]);
+
+  // Fetch all aToken balances in a single multicall
+  const {
+    data: aTokenBalancesMap,
+    isLoading: isATokensLoading,
+    refetch: refetchBalances,
+  } = useATokensBalances({
+    aTokens: aTokenAddresses,
+    spokeProvider,
+    userAddress: address,
+  });
+
+  const handleRefresh = async () => {
+    await Promise.all([
+      refetchFormattedReserves(),
+      refetchBalances(),
+      refetchReserves(),
+      refetchSummary(),
+      refetchWalletBalances(),
+    ]);
+  };
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Markets</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Asset</TableHead>
-              <TableHead>Wallet Balance</TableHead>
-              <TableHead>Balance</TableHead>
-              <TableHead>Debt</TableHead>
-              <TableHead>Action</TableHead>
-              <TableHead>Action</TableHead>
-              <TableHead>Action</TableHead>
-              <TableHead>Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tokens.map(token => {
-              try {
-                let userReserve: UserReserveData | undefined;
-                if (token.symbol === 'bnUSD') {
-                  // bnUSD is special case, because both bnUSD and bnUSDVault are bnUSD reserves
-                  const bnUSDReserve = userReserves?.[0]?.find(
-                    r => getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID).bnUSD.toLowerCase() ===
-                    r.underlyingAsset.toLowerCase(),
-                  );
-                  const bnUSDVaultReserve = userReserves?.[0]?.find(
-                    r => getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID).bnUSDVault.toLowerCase() ===
-                    r.underlyingAsset.toLowerCase()
-                  );
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Markets</CardTitle>
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Health Factor info"
+                    className="inline-flex items-center text-clay hover:text-cherry-dark"
+                  >
+                    <Info className="w-4 h-4 text-cherry-soda" />
+                  </button>
+                </TooltipTrigger>
 
-                  if (!bnUSDReserve || !bnUSDVaultReserve) {
-                    return null;
-                  }
+                <TooltipContent>
+                  <strong>Health Factor</strong> indicates how close your account is to liquidation. Values below{' '}
+                  <strong>1</strong> are unsafe.
+                </TooltipContent>
+              </Tooltip>
+              <span className="text-cherry-soda">Health Factor:</span>
+              <span className="font-semibold text-foreground">{healthFactorDisplay}</span>
+              {healthState && (
+                <span className={`ml-2 text-xs font-medium ${healthState.className}`}>({healthState.label})</span>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isIcon ? (
+            <div className=" text-center text-cherry-dark">
+              <p className="font-medium">
+                Money Market is not available on ICON. ICON is supported for swap and migration only.
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-cherry-grey/20 max-h-[400px] overflow-y-auto overflow-x-hidden px-2">
+              {' '}
+              <Table unstyled className="table-auto">
+                {' '}
+                <TableHeader className="sticky top-0 bg-cream z-20">
+                  <TableRow className="border-b border-cherry-grey/20">
+                    {TABLE_HEADERS.map((header, index) => {
+                      if (header === 'LT %') {
+                        return (
+                          <TableHead key={`${header}-${index}`} className="text-cherry-dark font-bold">
+                            <div className="flex items-center gap-1">
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <button
+                                    type="button"
+                                    aria-label="Liquidation Threshold info"
+                                    className="inline-flex items-center translate-y-px text-clay hover:text-cherry-dark"
+                                  >
+                                    <Info className="w-3 h-3 mb-0.5 text-cherry-soda" />
+                                  </button>
+                                </TooltipTrigger>
 
-                  // we just merge the two bnUSD reserves into one bnUSD vault reserve, but you should be aware of the differences
-                  const mergedbnUSDReserve = {
-                    ...bnUSDVaultReserve,
-                    scaledATokenBalance: bnUSDReserve?.scaledATokenBalance + bnUSDVaultReserve?.scaledATokenBalance,
-                    scaledVariableDebt: bnUSDReserve?.scaledVariableDebt + bnUSDVaultReserve?.scaledVariableDebt,
-                  };
-                  userReserve = mergedbnUSDReserve;
-                } else {
-                  userReserve = userReserves?.[0]?.find(
-                    r => getSpokeTokenAddressByVault(selectedChainId, r.underlyingAsset)?.toLowerCase() === token.address.toLowerCase()
-                  );
-                }
-                return (
-                  <SupplyAssetsListItem
-                    key={token.address}
-                    token={token}
-                    walletBalance={
-                      balances?.[token.address] ? formatUnits(balances?.[token.address] || 0n, token.decimals) : '-'
-                    }
-                    balance={userReserve ? formatUnits(userReserve?.scaledATokenBalance || 0n, 18) : '-'}
-                    debt={userReserve ? formatUnits(userReserve?.scaledVariableDebt || 0n, 18) : '-'}
-                  />
-                );
-              } catch {
-                console.log('error token', token);
-              }
-            })}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+                                <TooltipContent>
+                                  <strong>Liquidation Threshold</strong> is the percentage of supplied value that counts
+                                  toward liquidation calculations.
+                                </TooltipContent>
+                              </Tooltip>
+                              <span>{header}</span>
+                            </div>
+                          </TableHead>
+                        );
+                      }
+
+                      return (
+                        <TableHead key={`${header}-${index}`} className="text-cherry-dark font-bold">
+                          {header}
+                        </TableHead>
+                      );
+                    })}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isUserReservesLoading ||
+                  isFormattedReservesLoading ||
+                  isATokensLoading ||
+                  !userReserves ||
+                  !formattedReserves ? (
+                    <TableRow>
+                      <TableCell colSpan={16} className="text-center">
+                        Loading...
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    userReserves &&
+                    tokens.map(token => (
+                      <SupplyAssetsListItem
+                        key={token.address}
+                        token={token}
+                        walletBalance={
+                          balances?.[token.address]
+                            ? Number(formatUnits(balances?.[token.address] || 0n, token.decimals)).toFixed(4)
+                            : '-'
+                        }
+                        formattedReserves={formattedReserves}
+                        userReserves={userReserves}
+                        aTokenBalancesMap={aTokenBalancesMap}
+                        onRefreshReserves={handleRefresh}
+                        onRepayClick={(token, maxDebt) => {
+                          setCurrentAction('repay');
+                          setRepayData({ token, maxDebt });
+                        }}
+                        onWithdrawClick={(token, maxWithdraw) => {
+                          setCurrentAction('withdraw');
+                          setWithdrawData({ token, maxWithdraw });
+                        }}
+                        onSupplyClick={(token, maxSupply) => {
+                          setCurrentAction('supply');
+                          setSupplyData({ token, maxSupply });
+                        }}
+                      />
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      {supplyData && (
+        <SupplyModal
+          open={true}
+          token={supplyData.token}
+          maxSupply={supplyData.maxSupply}
+          onOpenChange={open => {
+            if (!open) setSupplyData(null);
+          }}
+          onSuccess={data => {
+            setSuccessData(data);
+            setSupplyData(null);
+            handleRefresh();
+          }}
+        />
+      )}
+      {repayData && (
+        <RepayModal
+          open={true}
+          token={repayData.token}
+          maxDebt={repayData.maxDebt}
+          onOpenChange={open => {
+            if (!open) setRepayData(null);
+          }}
+          onSuccess={data => {
+            setSuccessData(data);
+            setRepayData(null);
+            handleRefresh();
+          }}
+        />
+      )}
+      {withdrawData && (
+        <WithdrawModal
+          open={true}
+          token={withdrawData.token}
+          maxWithdraw={withdrawData.maxWithdraw}
+          onOpenChange={open => {
+            if (!open) setWithdrawData(null);
+          }}
+          onSuccess={data => {
+            setSuccessData(data);
+            setWithdrawData(null);
+            handleRefresh();
+          }}
+        />
+      )}
+
+      {/* SuccessModal */}
+      <SuccessModal
+        open={!!successData}
+        onClose={() => setSuccessData(null)}
+        data={successData}
+        action={currentAction}
+      />
+    </>
   );
 }

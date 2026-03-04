@@ -1,7 +1,7 @@
 import { XService } from '@/core/XService';
 import type { IconService } from 'icon-sdk-js';
 import * as IconSdkRaw from 'icon-sdk-js';
-import type { ChainId, XToken } from '@sodax/types';
+import type { XToken } from '@sodax/types';
 import { isNativeToken } from '@/utils';
 
 const IconSdk = ('default' in IconSdkRaw.default ? IconSdkRaw.default : IconSdkRaw) as typeof IconSdkRaw;
@@ -81,7 +81,7 @@ export class IconXService extends XService {
     }
   }
 
-  async getBalances(address: string | undefined, xTokens: XToken[], xChainId: ChainId) {
+  async getBalances(address: string | undefined, xTokens: XToken[]) {
     if (!address) return {};
 
     const balances = {};

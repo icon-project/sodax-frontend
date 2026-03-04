@@ -6,7 +6,5 @@ export function normalizedToUsd(
   marketReferencePriceInUsd: BigNumberValue,
   marketReferenceCurrencyDecimals: number,
 ): BigNumber {
-  return value
-    .multipliedBy(marketReferencePriceInUsd)
-    .shiftedBy(marketReferenceCurrencyDecimals * -1);
+  return value.multipliedBy(marketReferencePriceInUsd).shiftedBy(marketReferenceCurrencyDecimals * -1);
 }

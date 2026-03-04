@@ -19,21 +19,19 @@ export function calculateIncentiveAPR({
   rewardTokenDecimals,
   decimals,
 }: CalculateIncentiveAPRRequest): string {
-  const emissionPerSecondNormalized = normalizeBN(
-    emissionPerSecond,
-    rewardTokenDecimals,
-  ).multipliedBy(rewardTokenPriceInMarketReferenceCurrency);
+  const emissionPerSecondNormalized = normalizeBN(emissionPerSecond, rewardTokenDecimals).multipliedBy(
+    rewardTokenPriceInMarketReferenceCurrency,
+  );
 
   if (emissionPerSecondNormalized.eq(0)) {
     return '0';
   }
 
-  const emissionPerYear =
-    emissionPerSecondNormalized.multipliedBy(SECONDS_PER_YEAR);
+  const emissionPerYear = emissionPerSecondNormalized.multipliedBy(SECONDS_PER_YEAR);
 
-  const totalSupplyNormalized = valueToBigNumber(
-    normalize(totalTokenSupply, decimals),
-  ).multipliedBy(priceInMarketReferenceCurrency);
+  const totalSupplyNormalized = valueToBigNumber(normalize(totalTokenSupply, decimals)).multipliedBy(
+    priceInMarketReferenceCurrency,
+  );
 
   return emissionPerYear.dividedBy(totalSupplyNormalized).toFixed();
 }

@@ -6,7 +6,6 @@ import {
   type EvmSpokeChainConfig,
   EvmSpokeProvider,
   EvmWalletAbstraction,
-  getHubChainConfig,
   spokeChainConfig,
   SpokeService,
   waitForTransactionReceipt,
@@ -18,6 +17,7 @@ import {
   Sodax,
   type EvmRawTransaction,
   type EvmChainId,
+  getHubChainConfig,
 } from '@sodax/sdk';
 import { EvmWalletProvider } from '@sodax/wallet-sdk-core';
 import { SONIC_MAINNET_CHAIN_ID, AVALANCHE_MAINNET_CHAIN_ID, type HubChainId, type SpokeChainId } from '@sodax/types';
@@ -52,24 +52,24 @@ const spokeEvmWallet = new EvmWalletProvider({
 
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
-  chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+  chainConfig: getHubChainConfig(),
 } satisfies EvmHubProviderConfig;
-
-const hubProvider = new EvmHubProvider({
-  hubRpcUrl: HUB_RPC_URL,
-  chainConfig: getHubChainConfig(HUB_CHAIN_ID),
-});
-
-const spokeCfg = spokeChainConfig[EVM_SPOKE_CHAIN_ID] as EvmSpokeChainConfig;
-const spokeProvider = new EvmSpokeProvider(spokeEvmWallet, spokeCfg);
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
 const sodax = new Sodax({
-  solver: solverConfig,
+  swaps: solverConfig,
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
+
+const hubProvider = new EvmHubProvider({
+  config: hubConfig,
+  configService: sodax.config,
+});
+
+const spokeCfg = spokeChainConfig[EVM_SPOKE_CHAIN_ID] as EvmSpokeChainConfig;
+const spokeProvider = new EvmSpokeProvider(spokeEvmWallet, spokeCfg);
 
 async function depositTo(token: Address, amount: bigint, recipient: Address) {
   const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
@@ -82,6 +82,7 @@ async function depositTo(token: Address, amount: bigint, recipient: Address) {
       amount,
     },
     spokeProvider.chainConfig.chain.id,
+    sodax.config,
   );
 
   const txHash: Hash = await SpokeService.deposit(
@@ -128,7 +129,7 @@ async function supply(token: Address, amount: bigint) {
     hubProvider,
   );
 
-  const data = sodax.moneyMarket.buildSupplyData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
+  const data = sodax.moneyMarket.buildSupplyData(spokeProvider.chainConfig.chain.id, token, amount, hubWallet);
 
   const txHash = await SpokeService.deposit(
     {
@@ -192,7 +193,7 @@ async function repay(token: Address, amount: bigint) {
     walletAddress,
     hubProvider,
   );
-  const data: Hex = sodax.moneyMarket.buildRepayData(token, hubWallet, amount, spokeProvider.chainConfig.chain.id);
+  const data: Hex = sodax.moneyMarket.buildRepayData(spokeProvider.chainConfig.chain.id, token, amount, hubWallet);
 
   const txHash: Hash = await SpokeService.deposit(
     {
@@ -226,7 +227,7 @@ async function createIntent(amount: bigint, nativeToken: Address, inputToken: Ad
     data: '0x',
   } satisfies CreateIntentParams;
 
-  const txHash = await sodax.solver.createIntent({
+  const txHash = await sodax.swaps.createIntent({
     intentParams: intent,
     spokeProvider,
   });
@@ -358,9 +359,9 @@ async function fillIntent(
 
 // uses spoke assets to create intents
 async function cancelIntent(intentCreateTxHash: string) {
-  const intent = await sodax.solver.getIntent(intentCreateTxHash as Hash);
+  const intent = await sodax.swaps.getIntent(intentCreateTxHash as Hash);
 
-  const txResult = await sodax.solver.cancelIntent(intent, spokeProvider);
+  const txResult = await sodax.swaps.cancelIntent(intent, spokeProvider);
 
   if (txResult.ok) {
     console.log('[cancelIntent] txHash', txResult.value);
@@ -370,8 +371,13 @@ async function cancelIntent(intentCreateTxHash: string) {
 }
 
 async function getIntent(txHash: string) {
-  const intent = await sodax.solver.getIntent(txHash as Hash);
+  const intent = await sodax.swaps.getIntent(txHash as Hash);
   console.log(intent);
+}
+
+async function getIntentState(txHash: string) {
+  const intentState = await sodax.swaps.getFilledIntent(txHash as Hash);
+  console.log(intentState);
 }
 
 // Main function to decide which function to call
@@ -423,9 +429,12 @@ async function main() {
   } else if (functionName === 'getIntent') {
     const txHash = process.argv[3]; // Get txHash from command line argument
     await getIntent(txHash);
+  } else if (functionName === 'getIntentState') {
+    const txHash = process.argv[3]; // Get txHash from command line argument
+    await getIntentState(txHash);
   } else {
     console.log(
-      'Function not recognized. Please use "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "createIntent", "fillIntent", or "cancelIntent".',
+      'Function not recognized. Please use "deposit", "withdrawAsset", "supply", "borrow", "withdraw", "repay", "createIntent", "fillIntent", "cancelIntent", "getIntent", or "getIntentState".',
     );
   }
 }

@@ -13,7 +13,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { calculateExchangeRate, normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
+import { calculateExchangeRate } from '@/lib/utils';
+import { parseUnits, formatUnits } from 'viem';
 import {
   type CreateIntentParams,
   getSupportedSolverTokens,
@@ -22,7 +23,6 @@ import {
   type IntentDeliveryInfo,
   type SolverIntentQuoteRequest,
   StellarSpokeProvider,
-  supportedSpokeChains,
 } from '@sodax/sdk';
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
@@ -35,6 +35,7 @@ import {
   useSwap,
   useStellarTrustlineCheck,
   useRequestTrustline,
+  useSodaxContext,
 } from '@sodax/dapp-kit';
 import {
   getXChainType,
@@ -42,6 +43,7 @@ import {
   useXAccount,
   useXDisconnect,
   useWalletProvider,
+  useXBalances,
 } from '@sodax/wallet-sdk-react';
 import {
   type ChainId,
@@ -51,6 +53,7 @@ import {
   type ChainType,
   ICON_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
+  type XToken,
 } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 
@@ -61,6 +64,8 @@ export default function SwapCard({
     value: SetStateAction<{ intentHash: Hex; intent: Intent; intentDeliveryInfo: IntentDeliveryInfo }[]>,
   ) => void;
 }) {
+  const { sodax } = useSodaxContext();
+  //chain and account states
   const [sourceChain, setSourceChain] = useState<SpokeChainId>(ICON_MAINNET_CHAIN_ID);
   const sourceAccount = useXAccount(sourceChain);
   const sourceWalletProvider = useWalletProvider(sourceChain);
@@ -75,6 +80,7 @@ export default function SwapCard({
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(intentOrderPayload, sourceProvider);
   const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, sourceProvider);
+  const supportedSpokeChains = sodax.config.getSupportedSpokeChains();
   const destProvider = useSpokeProvider(destChain, useWalletProvider(destChain));
   const {
     data: hasSufficientTrustline,
@@ -89,7 +95,7 @@ export default function SwapCard({
   if (trustlineError) {
     console.error('trustlineError', trustlineError);
   }
-  const { mutateAsync: requestTrustline } = useRequestTrustline(destToken?.address);
+  const { requestTrustline } = useRequestTrustline(destToken?.address);
   const [open, setOpen] = useState(false);
   const [slippage, setSlippage] = useState<string>('0.5');
   const onChangeDirection = () => {
@@ -109,6 +115,22 @@ export default function SwapCard({
     setDestToken(getSupportedSolverTokens(chainId)[0]);
   };
 
+  // Balance fetching- Fetch source token balance for the connected wallet
+  const { data: sourceBalances } = useXBalances({
+    xChainId: sourceChain,
+    xTokens: sourceToken ? [sourceToken as XToken] : [],
+    address: sourceAccount.address,
+  });
+  const sourceTokenBalance = sourceBalances?.[sourceToken?.address ?? ''] ?? 0n;
+
+  // Fetch destination token balance for the connected wallet
+  const { data: destBalances } = useXBalances({
+    xChainId: destChain,
+    xTokens: destToken ? [destToken as XToken] : [],
+    address: destAccount.address,
+  });
+  const destTokenBalance = destBalances?.[destToken?.address ?? ''] ?? 0n;
+
   const payload = useMemo(() => {
     if (!sourceToken || !destToken) {
       return undefined;
@@ -123,7 +145,7 @@ export default function SwapCard({
       token_src_blockchain_id: sourceChain,
       token_dst: destToken.address,
       token_dst_blockchain_id: destChain,
-      amount: scaleTokenAmount(sourceAmount, sourceToken.decimals),
+      amount: parseUnits(sourceAmount, sourceToken.decimals),
       quote_type: 'exact_input',
     } satisfies SolverIntentQuoteRequest;
   }, [sourceToken, destToken, sourceChain, destChain, sourceAmount]);
@@ -141,7 +163,7 @@ export default function SwapCard({
   const exchangeRate = useMemo(() => {
     return calculateExchangeRate(
       new BigNumber(sourceAmount),
-      new BigNumber(normaliseTokenAmount(quote?.quoted_amount ?? 0n, destToken?.decimals ?? 0)),
+      new BigNumber(formatUnits(quote?.quoted_amount ?? 0n, destToken?.decimals ?? 0)),
     );
   }, [quote, sourceAmount, destToken]);
 
@@ -189,7 +211,7 @@ export default function SwapCard({
     const createIntentParams = {
       inputToken: sourceToken.address, // The address of the input token on hub chain
       outputToken: destToken.address, // The address of the output token on hub chain
-      inputAmount: scaleTokenAmount(sourceAmount, sourceToken.decimals), // The amount of input tokens
+      inputAmount: parseUnits(sourceAmount, sourceToken.decimals), // The amount of input tokens
       minOutputAmount: BigInt(minOutputAmount.toFixed(0)), // The minimum amount of output tokens to accept
       deadline: BigInt(Math.floor(Date.now() / 1000) + 60 * 5), // Optional timestamp after which intent expires (0 = no deadline)
       allowPartialFill: false, // Whether the intent can be partially filled
@@ -273,7 +295,7 @@ export default function SwapCard({
           />
         </div>
         <div className="flex space-x-2">
-          <div className="flex-grow">
+          <div className="grow">
             <Input
               type="number"
               placeholder="0.0"
@@ -297,7 +319,13 @@ export default function SwapCard({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex-grow">
+        <div className="mix-blend-multiply text-black text-(length:--body-comfortable) font-medium font-['InterRegular'] flex gap-1">
+          <span className="hidden sm:inline">Balance:</span>
+          <span className="inline">
+            {Number(formatUnits(sourceTokenBalance, sourceToken?.decimals ?? 0)).toFixed(4)}
+          </span>
+        </div>
+        <div className="grow">
           <Label htmlFor="fromAddress">Source address</Label>
           <div className="flex items-center gap-2">
             <Input id="fromAddress" type="text" placeholder="" value={sourceAccount.address || ''} disabled={true} />
@@ -324,11 +352,11 @@ export default function SwapCard({
           />
         </div>
         <div className="flex space-x-2">
-          <div className="flex-grow">
+          <div className="grow">
             <Input
               type="number"
               placeholder="0.0"
-              value={quote ? normaliseTokenAmount(quote?.quoted_amount, destToken?.decimals ?? 0) : ''}
+              value={quote ? formatUnits(quote?.quoted_amount, destToken?.decimals ?? 0) : ''}
               readOnly
             />
           </div>
@@ -348,7 +376,11 @@ export default function SwapCard({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex-grow">
+        <div className="mix-blend-multiply text-black text-(length:--body-comfortable) font-medium font-['InterRegular'] flex gap-1">
+          <span className="hidden sm:inline">Balance:</span>
+          <span className="inline">{Number(formatUnits(destTokenBalance, destToken?.decimals ?? 0)).toFixed(4)}</span>
+        </div>
+        <div className="grow">
           <Label htmlFor="toAddress">Destination address</Label>
           <div className="flex items-center gap-2">
             <Input id="toAddress" type="text" value={destAccount.address || ''} placeholder="" disabled={true} />
@@ -379,7 +411,7 @@ export default function SwapCard({
           <div className="flex justify-between items-center">
             <span>Minimum Output Amount</span>
             <span>
-              {minOutputAmount ? normaliseTokenAmount(minOutputAmount.toString(), destToken?.decimals ?? 0) : '0'}{' '}
+              {minOutputAmount ? formatUnits(BigInt(minOutputAmount.toFixed(0)), destToken?.decimals ?? 0) : '0'}{' '}
               {destToken?.symbol}
             </span>
           </div>
@@ -408,21 +440,16 @@ export default function SwapCard({
                 <div>
                   outputToken: {intentOrderPayload?.outputToken} on {intentOrderPayload?.dstChain}
                 </div>
-                <div>
-                  inputAmount: {normaliseTokenAmount(intentOrderPayload?.inputAmount ?? 0n, sourceToken?.decimals ?? 0)}
-                </div>
+                <div>inputAmount: {formatUnits(intentOrderPayload?.inputAmount ?? 0n, sourceToken?.decimals ?? 0)}</div>
                 <div>deadline: {new Date(Number(intentOrderPayload?.deadline) * 1000).toLocaleString()}</div>
                 <div>allowPartialFill: {intentOrderPayload?.allowPartialFill.toString()}</div>
                 <div>srcAddress: {intentOrderPayload?.srcAddress}</div>
                 <div>dstAddress: {intentOrderPayload?.dstAddress}</div>
                 <div>solver: {intentOrderPayload?.solver}</div>
                 <div>data: {intentOrderPayload?.data}</div>
+                <div>amount: {formatUnits(intentOrderPayload?.inputAmount ?? 0n, sourceToken?.decimals ?? 0)}</div>
                 <div>
-                  amount: {normaliseTokenAmount(intentOrderPayload?.inputAmount ?? 0n, sourceToken?.decimals ?? 0)}
-                </div>
-                <div>
-                  outputAmount:{' '}
-                  {normaliseTokenAmount(intentOrderPayload?.minOutputAmount ?? 0n, destToken?.decimals ?? 0)}
+                  outputAmount: {formatUnits(intentOrderPayload?.minOutputAmount ?? 0n, destToken?.decimals ?? 0)}
                 </div>
                 {destChain === STELLAR_MAINNET_CHAIN_ID && !isTrustlineLoading && !hasSufficientTrustline && (
                   <div className="text-red-500">Insufficient Stellar trustline (request trustline to proceed)</div>

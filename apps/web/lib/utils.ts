@@ -1,129 +1,404 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+import { isAddress as isEvmAddress, parseUnits, formatUnits } from 'viem';
+import { PublicKey } from '@solana/web3.js';
+import { isValidSuiAddress } from '@mysten/sui/utils';
+import { StrKey } from '@stellar/stellar-sdk';
+import { bech32 } from 'bech32';
+import BigNumber from 'bignumber.js';
+
+import { getSupportedSolverTokens, supportedSpokeChains, moneyMarketSupportedTokens } from '@sodax/sdk';
+
+import type { Token, XToken, SpokeChainId, ChainId, EvmChainId, Address } from '@sodax/types';
 import {
-  getSupportedSolverTokens,
-  supportedSpokeChains,
-  spokeChainConfig,
-  isLegacybnUSDToken,
-  isNewbnUSDToken,
-} from '@sodax/sdk';
-import type { XToken, SpokeChainId, Token } from '@sodax/types';
+  INJECTIVE_MAINNET_CHAIN_ID,
+  LIGHTLINK_MAINNET_CHAIN_ID,
+  ICON_MAINNET_CHAIN_ID,
+  hubAssets,
+  EVM_CHAIN_IDS,
+} from '@sodax/types';
+import type { FormatReserveUSDResponse } from '@sodax/sdk';
+import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
+
+import { availableChains, getChainUI } from '@/constants/chains';
+// import { CHAIN_TX_EXPLORERS } from '@/constants/chain-explorers';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-/**
- * Shortens a blockchain address for display purposes
- * Supports both Ethereum (0x...) and Cosmos (inj1..., osmo1..., etc.) style addresses
- * @param address The full address to shorten
- * @param chars Number of characters to show at the beginning and end (default: 4 for Cosmos, 7 for Ethereum)
- * @returns Shortened address in format "0x1234...5678" or "inj1kq...5d3n"
- */
-export function shortenAddress(address: string, chars?: number): string {
+export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+export function shortenAddress(address: string, chars = 4): string {
   if (!address) return '';
-
-  // For Cosmos-style addresses (start with letters like inj1, osmo1, etc.)
-  if (/^[a-z]+\d/.test(address)) {
-    const defaultChars = 4;
-    const charCount = chars ?? defaultChars;
-    return `${address.substring(0, charCount + 2)}...${address.substring(address.length - charCount)}`;
-  }
-
-  // For Ethereum-style addresses (start with 0x)
-  const defaultChars = 4;
-  const charCount = chars ?? defaultChars;
-  return `${address.substring(0, charCount + 2)}...${address.substring(address.length - charCount)}`;
+  return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`;
 }
 
 /**
- * Filter out legacy tokens to prevent duplicates
- * Uses SDK utilities to identify legacy tokens and only includes current versions
- * @param tokens Array of tokens to filter
- * @returns Filtered array with legacy tokens removed
+ * Type guard to check if a value is an Address type.
+ * Uses viem's isAddress function for validation.
  */
-const filterLegacyTokens = (tokens: readonly Token[]): Token[] => {
-  return tokens.filter((token: Token) => {
-    // Use SDK utilities to identify legacy tokens
-    const isLegacy = isLegacybnUSDToken(token);
-    const isNew = isNewbnUSDToken(token);
+export function isValidAddress(value: unknown): value is Address {
+  return typeof value === 'string' && isEvmAddress(value);
+}
 
-    // For bnUSD tokens, only include the new version
-    if (token.symbol === 'bnUSD') {
-      return isNew && !isLegacy;
+function isValidInjectiveAddress(addr: string): boolean {
+  try {
+    return bech32.decode(addr).prefix === 'inj';
+  } catch {
+    return false;
+  }
+}
+
+function isValidIconAddress(addr: string): boolean {
+  return /^h[ cx]/.test(addr);
+}
+
+export function validateChainAddress(address: string | null | undefined, chain: string): boolean {
+  if (!address) return false;
+
+  try {
+    switch (chain) {
+      case 'EVM':
+        return isEvmAddress(address);
+      case 'SOLANA':
+        new PublicKey(address);
+        return true;
+      case 'SUI':
+        return isValidSuiAddress(address);
+      case 'STELLAR':
+        return StrKey.isValidEd25519PublicKey(address);
+      case 'INJECTIVE':
+        return isValidInjectiveAddress(address);
+      case 'ICON':
+        return isValidIconAddress(address);
+      default:
+        return false;
     }
+  } catch {
+    return false;
+  }
+}
 
-    // For other tokens, exclude legacy versions
-    return !isLegacy;
-  });
-};
+function normalizeToken(token: Token): Token {
+  if (token.symbol === 'bnUSD (legacy)') {
+    return { ...token, symbol: 'bnUSD' };
+  }
+  return token;
+}
 
-/**
- * Get all supported solver tokens from all chains
- * Filters out legacy tokens to prevent duplicates
- * @returns Array of XToken objects with chain information
- */
 export const getAllSupportedSolverTokens = (): XToken[] => {
-  const allTokens: XToken[] = [];
+  const activeChains = supportedSpokeChains.filter(chainId => availableChains.some(chain => chain.id === chainId));
 
-  // Filter out Nibiru chain from supported chains
-  const filteredSupportedChains = supportedSpokeChains.filter(chainId => chainId !== 'nibiru');
-
-  for (const chainId of filteredSupportedChains) {
+  return activeChains.flatMap(chainId => {
     try {
-      // const supportedTokens = spokeChainConfig[chainId].supportedTokens;
-      const supportedTokens = getSupportedSolverTokens(chainId);
-      // Filter out legacy tokens to prevent duplicates
-      let filteredTokens = supportedTokens;
-      filteredTokens.map(token => {
-        if (token.symbol === 'bnUSD (legacy)') {
-          token.symbol = 'bnUSD';
-        }
-      });
+      const tokens = getSupportedSolverTokens(chainId).map(normalizeToken);
 
-      if (chainId !== '0x1.icon') filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
-
-      const xTokens: XToken[] = filteredTokens.map((token: Token) => ({
+      return tokens.map(token => ({
         ...token,
         xChainId: chainId,
       }));
-
-      allTokens.push(...xTokens);
     } catch (error) {
-      console.warn(`Failed to get supported tokens for chain ${chainId}:`, error);
+      console.warn(`Failed to load tokens for chain ${chainId}`, error);
+      return [];
     }
-  }
-
-  return allTokens;
+  });
 };
 
-/**
- * Get supported solver tokens for a specific chain
- * Filters out legacy tokens to prevent duplicates
- * @param chainId The chain ID to get tokens for
- * @returns Array of XToken objects for the specified chain
- */
 export const getSupportedSolverTokensForChain = (chainId: SpokeChainId): XToken[] => {
   try {
-    const supportedTokens = getSupportedSolverTokens(chainId);
+    const tokens = getSupportedSolverTokens(chainId).map(normalizeToken);
 
-    let filteredTokens = supportedTokens;
-
-    filteredTokens.map(token => {
-      if (token.symbol === 'bnUSD (legacy)') {
-        token.symbol = 'bnUSD';
-      }
-    });
-
-    if (chainId !== '0x1.icon') filteredTokens = filterLegacyTokens(Object.values(supportedTokens));
-
-    return filteredTokens.map((token: Token) => ({
+    return tokens.map(token => ({
       ...token,
       xChainId: chainId,
     }));
   } catch (error) {
-    console.warn(`Failed to get supported tokens for chain ${chainId}:`, error);
+    console.warn(`Failed to load tokens for chain ${chainId}`, error);
     return [];
   }
 };
+
+export const groupTokensBySymbol = (tokens: XToken[]): Record<string, XToken[]> =>
+  tokens.reduce<Record<string, XToken[]>>((acc, token) => {
+    const key = token.symbol.toLowerCase();
+    acc[key] ??= [];
+    acc[key].push(token);
+    return acc;
+  }, {});
+
+export const getUniqueTokenSymbols = (tokens: XToken[]): Array<{ symbol: string; tokens: XToken[] }> =>
+  Object.values(groupTokensBySymbol(tokens)).map(group => ({
+    symbol: group[0]?.symbol ?? '',
+    tokens: group,
+  }));
+
+export function getChainBalance(balances: Record<string, ChainBalanceEntry[]>, token: XToken): bigint {
+  return balances[token.address]?.find(e => e.chainId === token.xChainId)?.balance ?? 0n;
+}
+
+export function hasTokenBalance(balances: Record<string, ChainBalanceEntry[]>, token: XToken): boolean {
+  return balances[token.address]?.some(e => e.chainId === token.xChainId) ?? false;
+}
+
+/**
+ * Checks if a token group has any tokens with a balance greater than zero.
+ * @param group - Token group with symbol and tokens array
+ * @param balanceMap - Map of balance keys (format: "chainId-address") to balance strings
+ * @returns true if any token in the group has a balance > 0
+ */
+export function hasFunds(group: { symbol: string; tokens: XToken[] }, balanceMap: Map<string, string>): boolean {
+  return group.tokens.some(token => {
+    const key = `${token.xChainId}-${token.address}`;
+    const balance = balanceMap.get(key);
+    return balance ? Number(balance) > 0 : false;
+  });
+}
+
+export const calculateMaxAvailableAmount = (
+  balance: bigint,
+  tokenDecimals: number,
+  solver: { getPartnerFee: (amount: bigint) => bigint },
+): string => {
+  if (balance === 0n) return '0';
+
+  try {
+    const balanceBigInt = parseUnits(formatUnits(balance, tokenDecimals), tokenDecimals);
+    const available = balanceBigInt - solver.getPartnerFee(balanceBigInt);
+    return available > 0n ? formatUnits(available, tokenDecimals) : '0';
+  } catch (error) {
+    console.error('Max amount calc failed:', error);
+    return formatUnits(balance, tokenDecimals);
+  }
+};
+
+export const hasSufficientBalanceWithFee = (
+  amount: string,
+  balance: bigint,
+  tokenDecimals: number,
+  solver: { getPartnerFee: (amount: bigint) => bigint },
+): boolean => {
+  if (!amount || Number(amount) <= 0) return false;
+
+  try {
+    const value = parseUnits(amount, tokenDecimals);
+    return value + solver.getPartnerFee(value) <= balance;
+  } catch {
+    return parseUnits(amount, tokenDecimals) <= balance;
+  }
+};
+
+export function formatTokenAmount(amount: number | string | bigint, decimals: number, displayDecimals = 2): string {
+  return new BigNumber(amount.toString())
+    .dividedBy(new BigNumber(10).pow(decimals))
+    .toFixed(displayDecimals, BigNumber.ROUND_DOWN);
+}
+
+export const formatBalance = (amount: string, price: number): string => {
+  if (!amount || new BigNumber(amount).isZero() || Number(amount) < 0) return '0';
+  const decimals = price >= 10000 ? 6 : 4;
+
+  const value = new BigNumber(amount);
+  return value.isInteger() ? value.toFixed(0) : value.decimalPlaces(decimals, BigNumber.ROUND_FLOOR).toFixed();
+};
+
+export const getSwapErrorMessage = (errorCode: string): { title: string; message: string } => {
+  const map: Record<string, { title: string; message: string }> = {
+    SUBMIT_TX_FAILED: {
+      title: 'Transaction failed at source',
+      message: 'Your transaction couldn’t be broadcast. Your funds remain unchanged.',
+    },
+    RELAY_TIMEOUT: {
+      title: 'Transaction timed out',
+      message: 'We couldn’t broadcast your transaction within the expected timeframe.',
+    },
+    CREATION_FAILED: {
+      title: "Order couldn't be created.",
+      message: 'There was a problem with your order. Please check your network and balance.',
+    },
+    POST_EXECUTION_FAILED: {
+      title: 'Transaction failed at destination.',
+      message: 'Your funds will return in roughly 5 minutes.',
+    },
+    INSUFFICIENT_BALANCE: {
+      title: 'Insufficient balance',
+      message: 'You do not have enough balance to swap.',
+    },
+    INVALID_SOURCE_AMOUNT: {
+      title: 'Invalid source amount',
+      message: 'The source amount is invalid.',
+    },
+  };
+
+  return (
+    map[errorCode] ?? {
+      title: 'Something went wrong.',
+      message: 'We can’t identify the issue right now.',
+    }
+  );
+};
+
+export const STABLECOINS = ['bnUSD', 'USDT', 'USDC'];
+
+export function sortStablecoinsFirst(a: { symbol: string }, b: { symbol: string }): number {
+  const aStable = STABLECOINS.includes(a.symbol);
+  const bStable = STABLECOINS.includes(b.symbol);
+  if (aStable && !bStable) return -1;
+  if (!aStable && bStable) return 1;
+  return 0;
+}
+
+export function getMoneymarketTokens(): XToken[] {
+  return Object.entries(moneyMarketSupportedTokens)
+    .flatMap(([chainId, items]) =>
+      items.map((t: Token) =>
+        chainId !== INJECTIVE_MAINNET_CHAIN_ID &&
+        chainId !== LIGHTLINK_MAINNET_CHAIN_ID &&
+        chainId !== ICON_MAINNET_CHAIN_ID
+          ? ({ ...t, xChainId: chainId as SpokeChainId } satisfies XToken)
+          : undefined,
+      ),
+    )
+    .filter(Boolean) as XToken[];
+}
+
+export function getUniqueByChain(tokens: XToken[]): XToken[] {
+  const map = new Map<SpokeChainId, XToken>();
+  tokens.forEach(t => {
+    if (!map.has(t.xChainId)) map.set(t.xChainId, t);
+  });
+  return [...map.values()];
+}
+
+/**
+ * Formats a large number into a compact, human-readable form.
+ * Examples:
+ *  - 2450000 → "2.45M"
+ *  - 1180 → "1.18K"
+ *  - 9520000000 → "9.52B"
+ */
+export function formatCompactNumber(value: string | number | bigint): string {
+  const num = typeof value === 'bigint' ? Number(value) : typeof value === 'string' ? Number.parseFloat(value) : value;
+
+  if (!Number.isFinite(num)) return '-';
+
+  if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(4).replace(/\.?0+$/, '')}B`;
+
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(4).replace(/\.?0+$/, '')}M`;
+
+  if (num >= 1_000) return `${(num / 1_000).toFixed(4).replace(/\.?0+$/, '')}K`;
+
+  return num.toFixed(4);
+}
+
+/**
+ * Calculates APY (Annual Percentage Yield) for a token based on reserve data.
+ * Finds the vault address from hubAssets, matches it with formatted reserves,
+ * and calculates APY using the liquidity rate.
+ *
+ * @param formattedReserves - Array of formatted reserve data with USD values
+ * @param isFormattedReservesLoading - Whether reserves are currently loading
+ * @param token - The token to calculate APY for
+ * @returns Formatted APY string (e.g., "5.25%") or "-" if unavailable
+ */
+export function calculateAPY(formattedReserves: FormatReserveUSDResponse[] | undefined, token: XToken): string {
+  if (!formattedReserves || formattedReserves.length === 0) {
+    return '-';
+  }
+
+  try {
+    const vault = hubAssets[token.xChainId]?.[token.address]?.vault;
+    if (!vault) {
+      return '-';
+    }
+
+    const entry = formattedReserves.find(r => vault.toLowerCase() === r.underlyingAsset.toLowerCase());
+    if (!entry) {
+      return '-';
+    }
+
+    const SECONDS = 31536000;
+    const liquidityRate = Number(entry.liquidityRate) / 1e27;
+    const apyValue = ((1 + liquidityRate / SECONDS) ** SECONDS - 1) * 100;
+    return `${apyValue.toFixed(2)}%`;
+  } catch {
+    return '-';
+  }
+}
+
+export const getChainExplorerTxUrl = (chainId: string, txHash: string): string | undefined => {
+  const chain = getChainUI(chainId);
+  if (!chain?.explorerTxUrl) return undefined;
+  return `${chain.explorerTxUrl}${txHash}`;
+};
+export function formatCurrencyCompact(value: number): string {
+  const abs = Math.abs(value);
+
+  if (abs < 1000) {
+    return `$${value.toLocaleString()}`;
+  }
+
+  if (abs < 1_000_000) {
+    const num = (value / 1000).toFixed(1);
+    return `$${trimZeros(num)}K`;
+  }
+
+  const num = (value / 1_000_000).toFixed(2);
+  return `$${trimZeros(num)}M`;
+}
+
+function trimZeros(num: string) {
+  return num.replace(/\.?0+$/, '');
+}
+
+/**
+ * Calculates time remaining for unstaking based on start time and unstaking period.
+ * @param startTime - The start time of the unstake request (in seconds, as bigint)
+ * @param unstakingPeriod - The unstaking period duration (in seconds, as bigint)
+ * @returns Formatted string showing time remaining (e.g., "180d 5h 30m remaining" or "Ready to claim")
+ */
+export function getTimeRemaining(startTime: bigint, unstakingPeriod: bigint): string {
+  const now = Math.floor(Date.now() / 1000);
+  const start = Number(startTime);
+  const period = Number(unstakingPeriod);
+  const elapsed = now - start;
+  const remaining = period - elapsed;
+
+  if (remaining <= 0) {
+    return 'Unstake complete';
+  }
+
+  const days = Math.floor(remaining / 86400);
+  const hours = Math.floor((remaining % 86400) / 3600);
+  const minutes = Math.floor((remaining % 3600) / 60);
+
+  if (days > 0) {
+    return `${days} days left`;
+  }
+  if (hours > 0) {
+    return `${hours}h ${minutes}m remaining`;
+  }
+  return `${minutes}m remaining`;
+}
+
+/**
+ * Checks if a given Chain ID corresponds to an EVM-compatible network.
+ *
+ * Use this helper to filter or validate chains before attempting EVM-specific
+ * operations (like switching networks or calling contracts).
+ *
+ * @param chainId - The unique identifier of the chain to check.
+ * @returns `true` if the chain supports the Ethereum Virtual Machine, otherwise `false`.
+ *
+ * @example
+ * if (isEvmChainId(1)) {
+ * console.log("Ethereum Mainnet is EVM"); // true
+ * }
+ */
+export function isEvmChainId(chainId: ChainId): chainId is EvmChainId {
+  for (const evmId of EVM_CHAIN_IDS) {
+    if (chainId === evmId) return true;
+  }
+  return false;
+}

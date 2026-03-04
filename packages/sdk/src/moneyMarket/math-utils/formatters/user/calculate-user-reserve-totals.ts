@@ -31,18 +31,15 @@ export function calculateUserReserveTotals({
   let isolatedReserve: FormatReserveUSDResponse | undefined;
 
   userReserves.forEach(userReserveSummary => {
-    totalLiquidityMarketReferenceCurrency =
-      totalLiquidityMarketReferenceCurrency.plus(
-        userReserveSummary.underlyingBalanceMarketReferenceCurrency,
-      );
-    totalBorrowsMarketReferenceCurrency =
-      totalBorrowsMarketReferenceCurrency.plus(
-        userReserveSummary.variableBorrowsMarketReferenceCurrency,
-      );
+    totalLiquidityMarketReferenceCurrency = totalLiquidityMarketReferenceCurrency.plus(
+      userReserveSummary.underlyingBalanceMarketReferenceCurrency,
+    );
+    totalBorrowsMarketReferenceCurrency = totalBorrowsMarketReferenceCurrency.plus(
+      userReserveSummary.variableBorrowsMarketReferenceCurrency,
+    );
 
     if (
-      userReserveSummary.userReserve.reserve.reserveLiquidationThreshold !==
-        '0' &&
+      userReserveSummary.userReserve.reserve.reserveLiquidationThreshold !== '0' &&
       userReserveSummary.userReserve.usageAsCollateralEnabledOnUser
     ) {
       if (userReserveSummary.userReserve.reserve.debtCeiling !== '0') {
@@ -50,41 +47,31 @@ export function calculateUserReserveTotals({
         isInIsolationMode = true;
       }
 
-      totalCollateralMarketReferenceCurrency =
-        totalCollateralMarketReferenceCurrency.plus(
-          userReserveSummary.underlyingBalanceMarketReferenceCurrency,
-        );
-      const selectedEModeCategory =
-        userReserveSummary.userReserve.reserve.eModes.find(
-          elem => elem.id === userEmodeCategoryId,
-        );
-      if (
-        userEmodeCategoryId &&
-        selectedEModeCategory &&
-        selectedEModeCategory.collateralEnabled
-      ) {
+      totalCollateralMarketReferenceCurrency = totalCollateralMarketReferenceCurrency.plus(
+        userReserveSummary.underlyingBalanceMarketReferenceCurrency,
+      );
+      const selectedEModeCategory = userReserveSummary.userReserve.reserve.eModes.find(
+        elem => elem.id === userEmodeCategoryId,
+      );
+      if (userEmodeCategoryId && selectedEModeCategory && selectedEModeCategory.collateralEnabled) {
         currentLtv = currentLtv.plus(
-          valueToBigNumber(
-            userReserveSummary.underlyingBalanceMarketReferenceCurrency,
-          ).multipliedBy(selectedEModeCategory.eMode.ltv),
+          valueToBigNumber(userReserveSummary.underlyingBalanceMarketReferenceCurrency).multipliedBy(
+            selectedEModeCategory.eMode.ltv,
+          ),
         );
         currentLiquidationThreshold = currentLiquidationThreshold.plus(
-          valueToBigNumber(
-            userReserveSummary.underlyingBalanceMarketReferenceCurrency,
-          ).multipliedBy(selectedEModeCategory.eMode.liquidationThreshold),
+          valueToBigNumber(userReserveSummary.underlyingBalanceMarketReferenceCurrency).multipliedBy(
+            selectedEModeCategory.eMode.liquidationThreshold,
+          ),
         );
       } else {
         currentLtv = currentLtv.plus(
-          valueToBigNumber(
-            userReserveSummary.underlyingBalanceMarketReferenceCurrency,
-          ).multipliedBy(
+          valueToBigNumber(userReserveSummary.underlyingBalanceMarketReferenceCurrency).multipliedBy(
             userReserveSummary.userReserve.reserve.baseLTVasCollateral,
           ),
         );
         currentLiquidationThreshold = currentLiquidationThreshold.plus(
-          valueToBigNumber(
-            userReserveSummary.underlyingBalanceMarketReferenceCurrency,
-          ).multipliedBy(
+          valueToBigNumber(userReserveSummary.underlyingBalanceMarketReferenceCurrency).multipliedBy(
             userReserveSummary.userReserve.reserve.reserveLiquidationThreshold,
           ),
         );
@@ -93,9 +80,7 @@ export function calculateUserReserveTotals({
   });
 
   if (currentLtv.gt(0)) {
-    currentLtv = valueToZDBigNumber(
-      currentLtv.div(totalCollateralMarketReferenceCurrency),
-    );
+    currentLtv = valueToZDBigNumber(currentLtv.div(totalCollateralMarketReferenceCurrency));
   }
 
   if (currentLiquidationThreshold.gt(0)) {

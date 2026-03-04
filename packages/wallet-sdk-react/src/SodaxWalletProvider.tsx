@@ -1,8 +1,7 @@
 'use client';
 
 // biome-ignore lint/style/useImportType: <explanation>
-import React from 'react';
-import { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 // sui
 import { SuiClientProvider, WalletProvider as SuiWalletProvider } from '@mysten/dapp-kit';
@@ -17,39 +16,43 @@ import {
   WalletProvider as SolanaWalletProvider,
 } from '@solana/wallet-adapter-react';
 import { UnsafeBurnerWalletAdapter } from '@solana/wallet-adapter-wallets';
-import type { XConfig } from './types';
-import { initXWagmiStore, InitXWagmiStore } from './useXWagmiStore';
 
-import { getWagmiConfig } from './xchains/evm/EvmXService';
+import type { RpcConfig } from '@sodax/types';
 
-export const SodaxWalletProvider = ({ children, config }: { children: React.ReactNode; config: XConfig }) => {
-  useEffect(() => {
-    initXWagmiStore(config);
-  }, [config]);
+import { Hydrate } from './Hydrate';
+import { createWagmiConfig } from './xchains/evm/EvmXService';
+import { reconnectIcon } from './xchains/icon/actions';
+// import { reconnectInjective } from './xchains/injective/actions';
+import { reconnectStellar } from './xchains/stellar/actions';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-  const {
-    EVM: { chains },
-    SOLANA: { endpoint },
-  } = config;
+const queryClient = new QueryClient();
+
+export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.ReactNode; rpcConfig: RpcConfig }) => {
+  const wagmiConfig = useMemo(() => {
+    return createWagmiConfig(rpcConfig);
+  }, [rpcConfig]);
 
   const wallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
 
-  const wagmiConfig = useMemo(() => {
-    return getWagmiConfig(chains);
-  }, [chains]);
-
   return (
-    <WagmiProvider config={wagmiConfig}>
-      <SuiClientProvider networks={{ mainnet: { url: getFullnodeUrl('mainnet') } }} defaultNetwork="mainnet">
-        <SuiWalletProvider autoConnect={true}>
-          <SolanaConnectionProvider endpoint={endpoint}>
-            <SolanaWalletProvider wallets={wallets} autoConnect>
-              <InitXWagmiStore />
-              {children}
-            </SolanaWalletProvider>
-          </SolanaConnectionProvider>
-        </SuiWalletProvider>
-      </SuiClientProvider>
-    </WagmiProvider>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider reconnectOnMount={false} config={wagmiConfig}>
+        <SuiClientProvider networks={{ mainnet: { url: getFullnodeUrl('mainnet') } }} defaultNetwork="mainnet">
+          <SuiWalletProvider autoConnect={true}>
+            <SolanaConnectionProvider endpoint={rpcConfig['solana'] ?? ''}>
+              <SolanaWalletProvider wallets={wallets} autoConnect>
+                <Hydrate />
+                {children}
+              </SolanaWalletProvider>
+            </SolanaConnectionProvider>
+          </SuiWalletProvider>
+        </SuiClientProvider>
+      </WagmiProvider>
+    </QueryClientProvider>
   );
 };
+
+reconnectIcon();
+// reconnectInjective();
+reconnectStellar();

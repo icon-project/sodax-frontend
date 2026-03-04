@@ -50,23 +50,29 @@ export const useSupportedTokens = (options: UseSupportedTokensOptions = {}): Use
 
   // Group tokens by chain
   const tokensByChain = useMemo(() => {
-    return allTokens.reduce((acc, token) => {
-      const chainId = token.xChainId;
-      if (!acc[chainId]) {
-        acc[chainId] = [];
-      }
-      acc[chainId].push(token);
-      return acc;
-    }, {} as Record<SpokeChainId, XToken[]>);
+    return allTokens.reduce(
+      (acc, token) => {
+        const chainId = token.xChainId;
+        if (!acc[chainId]) {
+          acc[chainId] = [];
+        }
+        acc[chainId].push(token);
+        return acc;
+      },
+      {} as Record<SpokeChainId, XToken[]>,
+    );
   }, [allTokens]);
 
   // Get token summary
   const tokenSummary = useMemo(() => {
-    return allTokens.reduce((acc, token) => {
-      const chainId = token.xChainId;
-      acc[chainId] = (acc[chainId] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    return allTokens.reduce(
+      (acc, token) => {
+        const chainId = token.xChainId;
+        acc[chainId] = (acc[chainId] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
   }, [allTokens]);
 
   // Filter tokens based on current filters
@@ -74,16 +80,16 @@ export const useSupportedTokens = (options: UseSupportedTokensOptions = {}): Use
     return allTokens.filter(token => {
       // Chain filter
       const matchesChain = chainFilter === 'all' || token.xChainId === chainFilter;
-      
+
       // Search filter
-      const matchesSearch = !searchFilter || 
+      const matchesSearch =
+        !searchFilter ||
         token.symbol.toLowerCase().includes(searchFilter.toLowerCase()) ||
         token.name.toLowerCase().includes(searchFilter.toLowerCase());
-      
+
       // Symbol filter
-      const matchesSymbol = !symbolFilter || 
-        token.symbol.toLowerCase() === symbolFilter.toLowerCase();
-      
+      const matchesSymbol = !symbolFilter || token.symbol.toLowerCase() === symbolFilter.toLowerCase();
+
       return matchesChain && matchesSearch && matchesSymbol;
     });
   }, [allTokens, chainFilter, searchFilter, symbolFilter]);

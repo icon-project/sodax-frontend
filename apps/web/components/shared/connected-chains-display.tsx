@@ -5,17 +5,10 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import { useXAccounts } from '@sodax/wallet-sdk-react';
-import { getChainIconByName } from '@/constants/chains';
-
-const EVM_CHAIN_ICONS = [
-  '/chain/0x2105.base.png',
-  '/chain/0x38.bsc.png',
-  '/chain/0xa86a.avax.png',
-  '/chain/0x89.polygon.png',
-  '/chain/0xa.optimism.png',
-  '/chain/0xa4b1.arbitrum.png',
-  '/chain/sonic.png',
-];
+import { getChainIconByName, EVM_CHAIN_ICONS } from '@/constants/chains';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { isPartnerRoute } from '@/constants/routes';
 
 interface ConnectedChainsDisplayProps {
   onClick?: () => void;
@@ -23,6 +16,10 @@ interface ConnectedChainsDisplayProps {
 
 export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps): React.JSX.Element {
   const xAccounts = useXAccounts();
+
+  const pathname = usePathname();
+  const isPartner = isPartnerRoute(pathname);
+
   const connectedChains = Object.entries(xAccounts)
     .filter(([_, account]) => account?.address)
     .map(([chainType, account]) => ({
@@ -37,8 +34,8 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
   const hasEVMChains = connectedChains.some(chain => chain.chainType === 'EVM');
 
   return (
-    <div className="flex justify-end items-center gap-4 w-[183px]">
-      <div className="flex items-center cursor-pointer" onClick={onClick}>
+    <div className="flex justify-end items-center gap-4 w-auto shrink-0">
+      <div className={cn('items-center cursor-pointer', isPartner ? 'hidden sm:flex' : 'flex')} onClick={onClick}>
         {!hasEVMChains &&
           connectedChains.map(chain => {
             return (
@@ -67,7 +64,7 @@ export function ConnectedChainsDisplay({ onClick }: ConnectedChainsDisplayProps)
               <div className="flex justify-center items-center">
                 <span className="text-[10px] text-clay leading-[1.4] font-['InterBold']">+</span>
                 <span className="text-[10px] text-espresso font-bold font-['InterBold'] leading-[1.4]">
-                  {connectedChains.length}
+                  {connectedChains.length + 3}
                 </span>
               </div>
             </div>

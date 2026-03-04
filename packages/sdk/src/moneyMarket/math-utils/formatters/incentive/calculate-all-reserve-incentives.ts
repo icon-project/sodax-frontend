@@ -1,11 +1,5 @@
-import {
-  calculateReserveIncentives,
-  type CalculateReserveIncentivesResponse,
-} from './calculate-reserve-incentives.js';
-import type {
-  ReserveCalculationData,
-  ReservesIncentiveDataHumanized,
-} from './types.js';
+import { calculateReserveIncentives, type CalculateReserveIncentivesResponse } from './calculate-reserve-incentives.js';
+import type { ReserveCalculationData, ReservesIncentiveDataHumanized } from './types.js';
 
 // Indexed by reserve underlyingAsset address
 export type ReserveIncentiveDict = Record<string, ReserveIncentives>;
@@ -38,21 +32,18 @@ export function calculateAllReserveIncentives({
     // Find the corresponding reserve data for each reserveIncentive
     const reserve: ReserveCalculationData | undefined = reserves.find(
       (reserve: ReserveCalculationData) =>
-        reserve.underlyingAsset.toLowerCase() ===
-        reserveIncentive.underlyingAsset.toLowerCase(),
+        reserve.underlyingAsset.toLowerCase() === reserveIncentive.underlyingAsset.toLowerCase(),
     );
     if (reserve) {
-      const calculatedReserveIncentives: CalculateReserveIncentivesResponse =
-        calculateReserveIncentives({
-          reserves,
-          reserveIncentiveData: reserveIncentive,
-          totalLiquidity: reserve.totalLiquidity,
-          totalVariableDebt: reserve.totalVariableDebt,
-          priceInMarketReferenceCurrency:
-            reserve.formattedPriceInMarketReferenceCurrency,
-          decimals: reserve.decimals,
-          marketReferenceCurrencyDecimals,
-        });
+      const calculatedReserveIncentives: CalculateReserveIncentivesResponse = calculateReserveIncentives({
+        reserves,
+        reserveIncentiveData: reserveIncentive,
+        totalLiquidity: reserve.totalLiquidity,
+        totalVariableDebt: reserve.totalVariableDebt,
+        priceInMarketReferenceCurrency: reserve.formattedPriceInMarketReferenceCurrency,
+        decimals: reserve.decimals,
+        marketReferenceCurrencyDecimals,
+      });
       reserveDict[calculatedReserveIncentives.underlyingAsset] = {
         aIncentives: calculatedReserveIncentives.aIncentivesData,
         vIncentives: calculatedReserveIncentives.vIncentivesData,

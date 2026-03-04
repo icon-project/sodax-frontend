@@ -9,6 +9,8 @@ import {
   createMigrationStore,
   // initMigrationStore,
 } from './migration-store';
+import { parseUnits } from 'viem';
+import { getXChainType, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 
 export type MigrationStoreApi = ReturnType<typeof createMigrationStore>;
 
@@ -43,17 +45,28 @@ export const useMigrationInfo = () => {
   const direction = useMigrationStore(state => state[migrationMode].direction);
   const currencies = useMigrationStore(state => state[migrationMode].currencies);
   const typedValue = useMigrationStore(state => state[migrationMode].typedValue);
-  const error = useMemo(() => {
+  const { address: sourceAddress } = useXAccount(getXChainType(direction.from));
+  const { data: balances } = useXBalances({
+    xChainId: direction.from,
+    xTokens: [currencies.from],
+    address: sourceAddress,
+  });
+
+  const sourceBalance = balances?.[currencies.from.address] || 0n;
+  const inputError = useMemo(() => {
     if (typedValue === '' || Number(typedValue) <= 0) {
       return 'Enter amount';
     }
-    return null;
-  }, [typedValue]);
-
+    if (sourceBalance < parseUnits(typedValue, currencies.from.decimals)) {
+      return 'Insufficient balance';
+    }
+    return '';
+  }, [typedValue, currencies.from.decimals, sourceBalance]);
   return {
     migrationMode,
     direction,
     currencies,
-    error,
+    typedValue,
+    inputError,
   };
 };

@@ -1,25 +1,17 @@
 import type BigNumber from 'bignumber.js';
 import type { BigNumberValue } from '../../bignumber.js';
-import {
-  getLinearBalance,
-  getMarketReferenceCurrencyAndUsdBalance,
-  getCompoundedBalance,
-} from '../../pool-math.js';
+import { getLinearBalance, getMarketReferenceCurrencyAndUsdBalance, getCompoundedBalance } from '../../pool-math.js';
 import type { FormatReserveUSDResponse } from '../reserve/index.js';
 import type { CombinedReserveData } from './index.js';
 
-export interface UserReserveSummaryRequest<
-  T extends FormatReserveUSDResponse = FormatReserveUSDResponse,
-> {
+export interface UserReserveSummaryRequest<T extends FormatReserveUSDResponse = FormatReserveUSDResponse> {
   userReserve: CombinedReserveData<T>;
   marketReferencePriceInUsdNormalized: BigNumberValue;
   marketReferenceCurrencyDecimals: number;
   currentTimestamp: number;
 }
 
-export interface UserReserveSummaryResponse<
-  T extends FormatReserveUSDResponse = FormatReserveUSDResponse,
-> {
+export interface UserReserveSummaryResponse<T extends FormatReserveUSDResponse = FormatReserveUSDResponse> {
   userReserve: CombinedReserveData<T>;
   underlyingBalance: BigNumber;
   underlyingBalanceMarketReferenceCurrency: BigNumber;
@@ -32,9 +24,7 @@ export interface UserReserveSummaryResponse<
   totalBorrowsUSD: BigNumber;
 }
 
-export function generateUserReserveSummary<
-  T extends FormatReserveUSDResponse = FormatReserveUSDResponse,
->({
+export function generateUserReserveSummary<T extends FormatReserveUSDResponse = FormatReserveUSDResponse>({
   userReserve,
   marketReferencePriceInUsdNormalized,
   marketReferenceCurrencyDecimals,
@@ -49,16 +39,14 @@ export function generateUserReserveSummary<
     lastUpdateTimestamp: poolReserve.lastUpdateTimestamp,
     currentTimestamp,
   });
-  const {
-    marketReferenceCurrencyBalance: underlyingBalanceMarketReferenceCurrency,
-    usdBalance: underlyingBalanceUSD,
-  } = getMarketReferenceCurrencyAndUsdBalance({
-    balance: underlyingBalance,
-    priceInMarketReferenceCurrency,
-    marketReferenceCurrencyDecimals,
-    decimals,
-    marketReferencePriceInUsdNormalized,
-  });
+  const { marketReferenceCurrencyBalance: underlyingBalanceMarketReferenceCurrency, usdBalance: underlyingBalanceUSD } =
+    getMarketReferenceCurrencyAndUsdBalance({
+      balance: underlyingBalance,
+      priceInMarketReferenceCurrency,
+      marketReferenceCurrencyDecimals,
+      decimals,
+      marketReferencePriceInUsdNormalized,
+    });
 
   const variableBorrows = getCompoundedBalance({
     principalBalance: userReserve.scaledVariableDebt,
@@ -68,16 +56,14 @@ export function generateUserReserveSummary<
     currentTimestamp,
   });
 
-  const {
-    marketReferenceCurrencyBalance: variableBorrowsMarketReferenceCurrency,
-    usdBalance: variableBorrowsUSD,
-  } = getMarketReferenceCurrencyAndUsdBalance({
-    balance: variableBorrows,
-    priceInMarketReferenceCurrency,
-    marketReferenceCurrencyDecimals,
-    decimals,
-    marketReferencePriceInUsdNormalized,
-  });
+  const { marketReferenceCurrencyBalance: variableBorrowsMarketReferenceCurrency, usdBalance: variableBorrowsUSD } =
+    getMarketReferenceCurrencyAndUsdBalance({
+      balance: variableBorrows,
+      priceInMarketReferenceCurrency,
+      marketReferenceCurrencyDecimals,
+      decimals,
+      marketReferencePriceInUsdNormalized,
+    });
 
   return {
     userReserve,

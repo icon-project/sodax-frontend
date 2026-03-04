@@ -1,7 +1,6 @@
-import type { Address } from '@sodax/types';
-import type { EvmHubProvider } from '../entities/Providers.js';
-import { poolAbi } from '../abis/pool.abi.js';
-import { getMoneyMarketConfig } from '../constants.js';
+import { getMoneyMarketConfig, type Address } from '@sodax/types';
+import type { EvmHubProvider } from '../shared/entities/Providers.js';
+import { poolAbi } from '../shared/abis/pool.abi.js';
 import type { ReserveDataLegacy } from './MoneyMarketTypes.js';
 
 export class LendingPoolService {

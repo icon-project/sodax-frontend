@@ -83,12 +83,8 @@ describe('pool math', () => {
       currentTimestamp: 1729942300,
       lastUpdateTimestamp: 1629942200,
     };
-    const reserveNormalizedIncome = getReserveNormalizedIncome(
-      reserveNormalizedIncomeRequest,
-    );
-    expect(reserveNormalizedIncome.toFixed()).toEqual(
-      '1048540644080325710530799122',
-    );
+    const reserveNormalizedIncome = getReserveNormalizedIncome(reserveNormalizedIncomeRequest);
+    expect(reserveNormalizedIncome.toFixed()).toEqual('1048540644080325710530799122');
   });
 
   it('should return index if rate is 0', () => {
@@ -98,12 +94,8 @@ describe('pool math', () => {
       currentTimestamp: 1729942300,
       lastUpdateTimestamp: 1629942200,
     };
-    const reserveNormalizedIncome = getReserveNormalizedIncome(
-      reserveNormalizedIncomeRequest,
-    );
-    expect(reserveNormalizedIncome.toFixed()).toEqual(
-      '1048540642417873800000000000',
-    );
+    const reserveNormalizedIncome = getReserveNormalizedIncome(reserveNormalizedIncomeRequest);
+    expect(reserveNormalizedIncome.toFixed()).toEqual('1048540642417873800000000000');
   });
 
   it('should calculate health factor', () => {
@@ -112,9 +104,7 @@ describe('pool math', () => {
       borrowBalanceMarketReferenceCurrency: 50000000000000000,
       currentLiquidationThreshold: 5000,
     };
-    const minHealthFactor = calculateHealthFactorFromBalances(
-      minHealthFactorRequest,
-    );
+    const minHealthFactor = calculateHealthFactorFromBalances(minHealthFactorRequest);
     expect(minHealthFactor.toFixed()).toEqual('1');
     const healthFactorRequest = {
       collateralBalanceMarketReferenceCurrency: 100000000000000000,
@@ -141,17 +131,14 @@ describe('pool math', () => {
       borrowBalanceMarketReferenceCurrency: 50000000000000000,
       currentLiquidationThreshold: 5000,
     };
-    const minHealthFactor = calculateHealthFactorFromBalancesBigUnits(
-      minHealthFactorRequest,
-    );
+    const minHealthFactor = calculateHealthFactorFromBalancesBigUnits(minHealthFactorRequest);
     expect(minHealthFactor.toFixed()).toEqual('10000');
     const healthFactorRequest = {
       collateralBalanceMarketReferenceCurrency: 100000000000000000,
       borrowBalanceMarketReferenceCurrency: 30000000000000000,
       currentLiquidationThreshold: 5000,
     };
-    const healthFactor =
-      calculateHealthFactorFromBalancesBigUnits(healthFactorRequest);
+    const healthFactor = calculateHealthFactorFromBalancesBigUnits(healthFactorRequest);
     expect(healthFactor.toFixed()).toEqual('16666.66666666666666666667');
   });
 
@@ -161,19 +148,14 @@ describe('pool math', () => {
       borrowBalanceMarketReferenceCurrency: 50000000000000000,
       currentLtv: 0.5,
     };
-    const availableBorrowsMaxed =
-      calculateAvailableBorrowsMarketReferenceCurrency(
-        availableBorrowsMaxedRequest,
-      );
+    const availableBorrowsMaxed = calculateAvailableBorrowsMarketReferenceCurrency(availableBorrowsMaxedRequest);
     expect(availableBorrowsMaxed.toFixed()).toEqual('0');
     const availableBorrowsRequest = {
       collateralBalanceMarketReferenceCurrency: 1000000000000000000,
       borrowBalanceMarketReferenceCurrency: 30000000000000000,
       currentLtv: 0.5,
     };
-    const availableBorrows = calculateAvailableBorrowsMarketReferenceCurrency(
-      availableBorrowsRequest,
-    );
+    const availableBorrows = calculateAvailableBorrowsMarketReferenceCurrency(availableBorrowsRequest);
     expect(availableBorrows.toFixed()).toEqual('0');
   });
 
@@ -183,9 +165,7 @@ describe('pool math', () => {
       borrowBalanceMarketReferenceCurrency: 50000000000000000,
       currentLtv: 0,
     };
-    const availableBorrows = calculateAvailableBorrowsMarketReferenceCurrency(
-      availableBorrowsRequest,
-    );
+    const availableBorrows = calculateAvailableBorrowsMarketReferenceCurrency(availableBorrowsRequest);
     expect(availableBorrows.toFixed()).toEqual('0');
   });
 
@@ -197,8 +177,7 @@ describe('pool math', () => {
       decimals: 18,
       marketReferencePriceInUsdNormalized: 2.5,
     };
-    const { marketReferenceCurrencyBalance, usdBalance } =
-      getMarketReferenceCurrencyAndUsdBalance(balanceRequest);
+    const { marketReferenceCurrencyBalance, usdBalance } = getMarketReferenceCurrencyAndUsdBalance(balanceRequest);
     expect(marketReferenceCurrencyBalance.toNumber()).toEqual(
       10 * 10 ** balanceRequest.marketReferenceCurrencyDecimals,
     );

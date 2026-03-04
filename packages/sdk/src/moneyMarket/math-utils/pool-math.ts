@@ -1,9 +1,5 @@
 import BigNumber from 'bignumber.js';
-import {
-  type BigNumberValue,
-  valueToBigNumber,
-  valueToZDBigNumber,
-} from './bignumber.js';
+import { type BigNumberValue, valueToBigNumber, valueToZDBigNumber } from './bignumber.js';
 import { SECONDS_PER_YEAR, LTV_PRECISION } from './constants.js';
 import * as RayMath from './ray.math.js';
 
@@ -51,9 +47,7 @@ export function getCompoundedBalance({
   const cumulatedInterest = RayMath.rayMul(compoundedInterest, reserveIndex);
   const principalBalanceRay = RayMath.wadToRay(principalBalance);
 
-  return RayMath.rayToWad(
-    RayMath.rayMul(principalBalanceRay, cumulatedInterest),
-  );
+  return RayMath.rayToWad(RayMath.rayMul(principalBalanceRay, cumulatedInterest));
 }
 
 interface LinearInterestRequest {
@@ -67,13 +61,8 @@ export function calculateLinearInterest({
   currentTimestamp,
   lastUpdateTimestamp,
 }: LinearInterestRequest): BigNumber {
-  const timeDelta = RayMath.wadToRay(
-    valueToZDBigNumber(currentTimestamp - lastUpdateTimestamp),
-  );
-  const timeDeltaInSeconds = RayMath.rayDiv(
-    timeDelta,
-    RayMath.wadToRay(SECONDS_PER_YEAR),
-  );
+  const timeDelta = RayMath.wadToRay(valueToZDBigNumber(currentTimestamp - lastUpdateTimestamp));
+  const timeDeltaInSeconds = RayMath.rayDiv(timeDelta, RayMath.wadToRay(SECONDS_PER_YEAR));
   const a = RayMath.rayMul(rate, timeDeltaInSeconds).plus(RayMath.RAY);
   return a;
 }
@@ -185,9 +174,7 @@ export function calculateAvailableBorrowsMarketReferenceCurrency({
     return valueToZDBigNumber('0');
   }
 
-  const availableBorrowsMarketReferenceCurrency = valueToZDBigNumber(
-    collateralBalanceMarketReferenceCurrency,
-  )
+  const availableBorrowsMarketReferenceCurrency = valueToZDBigNumber(collateralBalanceMarketReferenceCurrency)
     .multipliedBy(currentLtv)
     .shiftedBy(LTV_PRECISION * -1)
     .minus(borrowBalanceMarketReferenceCurrency);

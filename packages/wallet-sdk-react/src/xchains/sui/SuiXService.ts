@@ -22,14 +22,10 @@ export class SuiXService extends XService {
 
   // getBalance is not used because getBalances uses getAllBalances which returns all balances
 
-  async getBalances(address: string | undefined, xTokens: XToken[]) {
+  async getBalances(address: string | undefined, xTokens: readonly XToken[]): Promise<Record<string, bigint>> {
     if (!address) return {};
-
     try {
-      const allBalances = await this.suiClient.getAllBalances({
-        owner: address,
-      });
-      const tokenMap = xTokens.reduce((map, xToken) => {
+      const balancePromises = xTokens.map(async xToken => {
         let coinType = isNativeToken(xToken) ? '0x2::sui::SUI' : xToken.address;
 
         //  TODO: hard coded for getting legacy bnUSD balance
@@ -41,11 +37,25 @@ export class SuiXService extends XService {
             '0x3917a812fe4a6d6bc779c5ab53f8a80ba741f8af04121193fc44e0f662e2ceb::balanced_dollar::BALANCED_DOLLAR';
         }
 
-        const balance = allBalances.find(b => b.coinType === coinType);
+        const balance = await this.suiClient.getBalance({
+          owner: address,
+          coinType: coinType,
+        });
 
-        if (balance) map[xToken.address] = balance.totalBalance;
-        return map;
-      }, {});
+        return {
+          address: xToken.address,
+          balance: balance ? BigInt(balance.totalBalance) : undefined,
+        };
+      });
+
+      const results = await Promise.all(balancePromises);
+
+      const tokenMap: Record<string, bigint> = {};
+      results.forEach(result => {
+        if (result.balance !== undefined) {
+          tokenMap[result.address] = result.balance;
+        }
+      });
 
       return tokenMap;
     } catch (e) {

@@ -1,32 +1,32 @@
 import { type SpokeProvider, StellarSpokeProvider, StellarSpokeService, type TxReturnType } from '@sodax/sdk';
-import { useMutation, type UseMutationResult, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
+import { useCallback, useState } from 'react';
 
 /**
  * React hook to request a Stellar trustline for a given token and amount.
  *
- * This hook provides a mutation for requesting a trustline on the Stellar network
+ * This hook provides a callback function for requesting a trustline on the Stellar network
  * using the provided SpokeProvider. It is intended for use with StellarSpokeProvider
  * and will throw if used with a non-Stellar provider. Upon success, it invalidates
  * the trustline check query to ensure UI reflects the updated trustline state.
  *
  * @template T - The type of SpokeProvider, defaults to SpokeProvider.
  * @param {string | undefined} token - The Stellar asset code or token address for which to request a trustline.
- * @returns {UseMutationResult<TxReturnType<StellarSpokeProvider, false>, Error, { token: string; amount: bigint; spokeProvider: T }>}
- *   A React Query mutation result object containing:
- *   - `mutate`/`mutateAsync`: Function to trigger the trustline request.
- *   - `data`: The transaction result if successful.
+ * @returns {Object} An object containing:
+ *   - `requestTrustline`: Function to trigger the trustline request.
+ *   - `isLoading`: Whether the request is in progress.
+ *   - `isRequested`: Whether a trustline has been successfully requested.
  *   - `error`: Any error encountered during the request.
- *   - `isLoading`: Whether the mutation is in progress.
- *   - Other React Query mutation state.
+ *   - `data`: The transaction result if successful.
  *
  * @example
  * ```tsx
  * import { useRequestTrustline } from '@sodax/dapp-kit';
  *
- * const { mutate: requestTrustline, isLoading, error, data } = useRequestTrustline('USDC-G...TOKEN');
+ * const { requestTrustline, isLoading, isRequested, error, data } = useRequestTrustline('USDC-G...TOKEN');
  *
  * // To request a trustline:
- * requestTrustline({
+ * await requestTrustline({
  *   token: 'USDC-G...TOKEN',
  *   amount: 10000000n,
  *   spokeProvider: stellarProvider,
@@ -34,33 +34,31 @@ import { useMutation, type UseMutationResult, useQueryClient } from '@tanstack/r
  *
  * if (isLoading) return <span>Requesting trustline...</span>;
  * if (error) return <span>Error: {error.message}</span>;
- * if (data) return <span>Trustline requested! Tx: {data.txHash}</span>;
+ * if (isRequested) return <span>Trustline requested! Tx: {data?.txHash}</span>;
  * ```
  */
 
 export function useRequestTrustline<T extends SpokeProvider = SpokeProvider>(
   token: string | undefined,
-): UseMutationResult<
-  TxReturnType<StellarSpokeProvider, false>,
-  Error,
-  {
+): {
+  requestTrustline: (params: {
     token: string;
     amount: bigint;
     spokeProvider: T;
-  }
-> {
+  }) => Promise<TxReturnType<StellarSpokeProvider, false>>;
+  isLoading: boolean;
+  isRequested: boolean;
+  error: Error | null;
+  data: TxReturnType<StellarSpokeProvider, false> | null;
+} {
   const queryClient = useQueryClient();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isRequested, setIsRequested] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
+  const [data, setData] = useState<TxReturnType<StellarSpokeProvider, false> | null>(null);
 
-  return useMutation<
-    TxReturnType<StellarSpokeProvider, false>,
-    Error,
-    {
-      token: string;
-      amount: bigint;
-      spokeProvider: T;
-    }
-  >({
-    mutationFn: async ({
+  const requestTrustline = useCallback(
+    async ({
       token,
       amount,
       spokeProvider,
@@ -68,15 +66,38 @@ export function useRequestTrustline<T extends SpokeProvider = SpokeProvider>(
       token: string;
       amount: bigint;
       spokeProvider: T;
-    }) => {
+    }): Promise<TxReturnType<StellarSpokeProvider, false>> => {
       if (!spokeProvider || !token || !amount || !(spokeProvider instanceof StellarSpokeProvider)) {
-        throw new Error('Spoke provider, token or amount not found');
+        const error = new Error('Spoke provider, token or amount not found');
+        setError(error);
+        throw error;
       }
 
-      return StellarSpokeService.requestTrustline(token, amount, spokeProvider);
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const result = await StellarSpokeService.requestTrustline(token, amount, spokeProvider);
+        setData(result);
+        setIsRequested(true);
+        queryClient.invalidateQueries({ queryKey: ['stellar-trustline-check', token] });
+        return result;
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error('Unknown error occurred');
+        setError(error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['stellar-trustline-check', token] });
-    },
-  });
+    [queryClient],
+  );
+
+  return {
+    requestTrustline,
+    isLoading,
+    isRequested,
+    error,
+    data,
+  };
 }

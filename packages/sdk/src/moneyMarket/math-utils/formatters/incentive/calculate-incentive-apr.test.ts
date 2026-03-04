@@ -10,18 +10,14 @@ describe('calculateIncentiveAPR', () => {
     const { totalLiquidity } = calculateReserveDebt(userReserveMock.reserve, 1);
     const result = calculateIncentiveAPR({
       emissionPerSecond:
-        reserveIncentiveMock.reserveIncentive.aIncentiveData
-          ?.rewardsTokenInformation?.[0]?.emissionPerSecond ?? '',
+        reserveIncentiveMock.reserveIncentive.aIncentiveData?.rewardsTokenInformation?.[0]?.emissionPerSecond ?? '',
       rewardTokenPriceInMarketReferenceCurrency:
-        reserveIncentiveMock.reserveIncentive.aIncentiveData
-          ?.rewardsTokenInformation?.[0]?.rewardPriceFeed ?? '',
+        reserveIncentiveMock.reserveIncentive.aIncentiveData?.rewardsTokenInformation?.[0]?.rewardPriceFeed ?? '',
       totalTokenSupply: totalLiquidity.toString(),
-      priceInMarketReferenceCurrency:
-        userReserveMock.reserve.priceInMarketReferenceCurrency,
+      priceInMarketReferenceCurrency: userReserveMock.reserve.priceInMarketReferenceCurrency,
       decimals: userReserveMock.reserve.decimals,
       rewardTokenDecimals:
-        reserveIncentiveMock.reserveIncentive.aIncentiveData
-          ?.rewardsTokenInformation?.[0]?.rewardTokenDecimals ?? 0,
+        reserveIncentiveMock.reserveIncentive.aIncentiveData?.rewardsTokenInformation?.[0]?.rewardTokenDecimals ?? 0,
     });
 
     expect(result).toEqual('0.000021024');

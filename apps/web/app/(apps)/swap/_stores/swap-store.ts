@@ -1,40 +1,50 @@
 import { createStore } from 'zustand/vanilla';
 import { persist } from 'zustand/middleware';
 import { type XToken, ICON_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
-import { spokeChainConfig } from '@sodax/sdk';
+import { spokeChainConfig, SolverIntentStatusCode } from '@sodax/sdk';
 
 export type SwapState = {
-  sourceToken: XToken;
-  destinationToken: XToken;
-  sourceAmount: string;
-  destinationAmount: string;
+  inputToken: XToken;
+  outputToken: XToken;
+  inputAmount: string;
   isSwapAndSend: boolean;
   customDestinationAddress: string;
   slippageTolerance: number;
+  swapStatus: SolverIntentStatusCode;
+  swapError: { title: string; message: string } | null;
+  dstTxHash: string;
+  allowanceConfirmed: boolean;
 };
 
 export type SwapActions = {
-  setSourceToken: (token: XToken) => void;
-  setDestinationToken: (token: XToken) => void;
-  setSourceAmount: (amount: string) => void;
-  setDestinationAmount: (amount: string) => void;
+  setInputToken: (token: XToken) => void;
+  setOutputToken: (token: XToken) => void;
+  setInputAmount: (amount: string) => void;
   setIsSwapAndSend: (isSwapAndSend: boolean) => void;
   setCustomDestinationAddress: (address: string) => void;
   setSlippageTolerance: (tolerance: number) => void;
   switchTokens: () => void;
   resetSwapState: () => void;
+  setSwapStatus: (status: SolverIntentStatusCode) => void;
+  setSwapError: (error: { title: string; message: string } | null) => void;
+  setDstTxHash: (hash: string) => void;
+  setAllowanceConfirmed: (confirmed: boolean) => void;
+  resetSwapExecutionState: () => void;
 };
 
 export type SwapStore = SwapState & SwapActions;
 
 export const defaultSwapState: SwapState = {
-  sourceToken: spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.ICX,
-  destinationToken: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC,
-  sourceAmount: '',
-  destinationAmount: '',
+  inputToken: spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.ICX,
+  outputToken: spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC,
+  inputAmount: '',
   isSwapAndSend: false,
   customDestinationAddress: '',
   slippageTolerance: 0.5,
+  swapStatus: SolverIntentStatusCode.NOT_FOUND,
+  swapError: null,
+  dstTxHash: '',
+  allowanceConfirmed: false,
 };
 
 export const createSwapStore = (initState: SwapState = defaultSwapState) => {
@@ -42,31 +52,42 @@ export const createSwapStore = (initState: SwapState = defaultSwapState) => {
     persist(
       (set, get) => ({
         ...initState,
-        setSourceToken: (token: XToken) => set({ sourceToken: token }),
-        setDestinationToken: (token: XToken) => set({ destinationToken: token }),
-        setSourceAmount: (amount: string) => set({ sourceAmount: amount }),
-        setDestinationAmount: (amount: string) => set({ destinationAmount: amount }),
-        setIsSwapAndSend: (isSwapAndSend: boolean) => set({ isSwapAndSend }),
+        setInputToken: (token: XToken) => set({ inputToken: token }),
+        setOutputToken: (token: XToken) => set({ outputToken: token }),
+        setInputAmount: (amount: string) => set({ inputAmount: amount }),
+        setIsSwapAndSend: (enabled: boolean) =>
+          set({
+            isSwapAndSend: enabled,
+            customDestinationAddress: enabled ? '' : '',
+          }),
         setCustomDestinationAddress: (address: string) => set({ customDestinationAddress: address }),
         setSlippageTolerance: (tolerance: number) => set({ slippageTolerance: tolerance }),
         switchTokens: () => {
-          const { sourceToken, destinationToken, sourceAmount, destinationAmount } = get();
+          const { inputToken, outputToken } = get();
           set({
-            sourceToken: destinationToken,
-            destinationToken: sourceToken,
-            sourceAmount: destinationAmount,
-            destinationAmount: sourceAmount,
+            inputToken: outputToken,
+            outputToken: inputToken,
+            inputAmount: '',
           });
         },
         resetSwapState: () => set(defaultSwapState),
+        setSwapStatus: (status: SolverIntentStatusCode) => set({ swapStatus: status }),
+        setSwapError: (error: { title: string; message: string } | null) => set({ swapError: error }),
+        setDstTxHash: (hash: string) => set({ dstTxHash: hash }),
+        setAllowanceConfirmed: (confirmed: boolean) => set({ allowanceConfirmed: confirmed }),
+        resetSwapExecutionState: () =>
+          set({
+            swapStatus: SolverIntentStatusCode.NOT_FOUND,
+            swapError: null,
+            dstTxHash: '',
+            allowanceConfirmed: false,
+          }),
       }),
       {
         name: 'sodax-swap-store',
         partialize: state => ({
-          sourceToken: state.sourceToken,
-          destinationToken: state.destinationToken,
-          isSwapAndSend: state.isSwapAndSend,
-          customDestinationAddress: state.customDestinationAddress,
+          inputToken: state.inputToken,
+          outputToken: state.outputToken,
           slippageTolerance: state.slippageTolerance,
         }),
       },

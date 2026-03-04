@@ -85,14 +85,6 @@ export class InjectiveExecuteResponse {
 }
 
 export interface IInjectiveWalletProvider extends WalletAddressProvider {
-  getRawTransaction(
-    chainId: string,
-    _: string,
-    senderAddress: string,
-    contractAddress: string,
-    msg: JsonObject,
-    memo?: string,
-  ): Promise<InjectiveRawTransaction>;
   getWalletAddress: () => Promise<InjectiveEoaAddress>;
   execute: (
     senderAddress: InjectiveEoaAddress,

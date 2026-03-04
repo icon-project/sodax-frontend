@@ -1,17 +1,9 @@
 import BigNumber from 'bignumber.js';
 import { normalize } from '../../bignumber.js';
-import {
-  ReserveIncentiveMock,
-  ReserveMock,
-  UserIncentiveMock,
-  UserReserveMock,
-} from '../../mocks.js';
+import { ReserveIncentiveMock, ReserveMock, UserIncentiveMock, UserReserveMock } from '../../mocks.js';
 
 import { calculateReserveDebt } from '../reserve/calculate-reserve-debt.js';
-import {
-  calculateAccruedIncentives,
-  type CalculateAccruedIncentivesRequest,
-} from './calculate-accrued-incentives.js';
+import { calculateAccruedIncentives, type CalculateAccruedIncentivesRequest } from './calculate-accrued-incentives.js';
 import { describe, expect, it } from 'vitest';
 
 describe('calculateAccruedIncentives', () => {
@@ -21,63 +13,50 @@ describe('calculateAccruedIncentives', () => {
   const userIncentiveMock = new UserIncentiveMock();
   const currentTimestamp = 1;
 
-  const { totalLiquidity, totalVariableDebt } = calculateReserveDebt(
-    reserveMock.reserve,
-    currentTimestamp,
-  );
+  const { totalLiquidity, totalVariableDebt } = calculateReserveDebt(reserveMock.reserve, currentTimestamp);
 
   const depositRewardsRequest: CalculateAccruedIncentivesRequest = {
-    principalUserBalance: new BigNumber(
-      userMock.userReserve.scaledATokenBalance,
-    ),
+    principalUserBalance: new BigNumber(userMock.userReserve.scaledATokenBalance),
     reserveIndex: new BigNumber(
-      reserveIncentiveMock.reserveIncentive.aIncentiveData
-        ?.rewardsTokenInformation?.[0]?.tokenIncentivesIndex ?? '',
+      reserveIncentiveMock.reserveIncentive.aIncentiveData?.rewardsTokenInformation?.[0]?.tokenIncentivesIndex ?? '',
     ),
     userIndex: new BigNumber(
-      userIncentiveMock.userIncentive.aTokenIncentivesUserData
-        ?.userRewardsInformation?.[0]?.tokenIncentivesUserIndex ?? '',
+      userIncentiveMock.userIncentive.aTokenIncentivesUserData?.userRewardsInformation?.[0]?.tokenIncentivesUserIndex ??
+        '',
     ),
     precision: 18,
     reserveIndexTimestamp:
-      reserveIncentiveMock.reserveIncentive.aIncentiveData
-        ?.rewardsTokenInformation?.[0]?.incentivesLastUpdateTimestamp ?? 0,
+      reserveIncentiveMock.reserveIncentive.aIncentiveData?.rewardsTokenInformation?.[0]
+        ?.incentivesLastUpdateTimestamp ?? 0,
     emissionPerSecond: new BigNumber(
-      reserveIncentiveMock.reserveIncentive.aIncentiveData
-        ?.rewardsTokenInformation?.[0]?.emissionPerSecond ?? '',
+      reserveIncentiveMock.reserveIncentive.aIncentiveData?.rewardsTokenInformation?.[0]?.emissionPerSecond ?? '',
     ),
     totalSupply: totalLiquidity,
     currentTimestamp,
     emissionEndTimestamp:
-      reserveIncentiveMock.reserveIncentive.aIncentiveData
-        ?.rewardsTokenInformation?.[0]?.emissionEndTimestamp ?? 0,
+      reserveIncentiveMock.reserveIncentive.aIncentiveData?.rewardsTokenInformation?.[0]?.emissionEndTimestamp ?? 0,
   };
 
   const variableDebtRewardsRequest: CalculateAccruedIncentivesRequest = {
-    principalUserBalance: new BigNumber(
-      userMock.userReserve.scaledVariableDebt,
-    ),
+    principalUserBalance: new BigNumber(userMock.userReserve.scaledVariableDebt),
     reserveIndex: new BigNumber(
-      reserveIncentiveMock.reserveIncentive.vIncentiveData
-        ?.rewardsTokenInformation?.[0]?.tokenIncentivesIndex ?? '',
+      reserveIncentiveMock.reserveIncentive.vIncentiveData?.rewardsTokenInformation?.[0]?.tokenIncentivesIndex ?? '',
     ),
     userIndex: new BigNumber(
-      userIncentiveMock.userIncentive.vTokenIncentivesUserData
-        ?.userRewardsInformation?.[0]?.tokenIncentivesUserIndex ?? '',
+      userIncentiveMock.userIncentive.vTokenIncentivesUserData?.userRewardsInformation?.[0]?.tokenIncentivesUserIndex ??
+        '',
     ),
     precision: 18,
     reserveIndexTimestamp:
-      reserveIncentiveMock.reserveIncentive.vIncentiveData
-        ?.rewardsTokenInformation?.[0]?.incentivesLastUpdateTimestamp ?? 0,
+      reserveIncentiveMock.reserveIncentive.vIncentiveData?.rewardsTokenInformation?.[0]
+        ?.incentivesLastUpdateTimestamp ?? 0,
     emissionPerSecond: new BigNumber(
-      reserveIncentiveMock.reserveIncentive.vIncentiveData
-        ?.rewardsTokenInformation?.[0]?.emissionPerSecond ?? '',
+      reserveIncentiveMock.reserveIncentive.vIncentiveData?.rewardsTokenInformation?.[0]?.emissionPerSecond ?? '',
     ),
     totalSupply: totalVariableDebt,
     currentTimestamp,
     emissionEndTimestamp:
-      reserveIncentiveMock.reserveIncentive.vIncentiveData
-        ?.rewardsTokenInformation?.[0]?.emissionEndTimestamp ?? 0,
+      reserveIncentiveMock.reserveIncentive.vIncentiveData?.rewardsTokenInformation?.[0]?.emissionEndTimestamp ?? 0,
   };
 
   it('should calculate the correct deposit rewards', () => {

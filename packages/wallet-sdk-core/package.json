@@ -57,6 +57,10 @@
   "dependencies": {
     "@injectivelabs/sdk-ts": "catalog:",
     "@injectivelabs/wallet-core": "catalog:",
+    "@injectivelabs/wallet-base": "catalog:",
+    "@injectivelabs/wallet-private-key": "catalog:",
+    "@injectivelabs/ts-types": "catalog:",
+    "@injectivelabs/networks": "catalog:",
     "@mysten/sui": "catalog:",
     "@mysten/wallet-standard": "catalog:",
     "@sodax/types": "workspace:*",

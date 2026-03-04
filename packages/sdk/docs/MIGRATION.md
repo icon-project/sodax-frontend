@@ -22,7 +22,7 @@ const iconChainId: SpokeChainId = ICON_MAINNET_CHAIN_ID;
 const migrationTokens = ['ICX', 'bnUSD', 'BALN'] as const;
 ```
 
-Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/src/constants.ts) for more.
+Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/types/src/constants/index.ts) for more.
 
 ### Initialising Providers
 
@@ -128,34 +128,7 @@ if (approveResult.ok) {
 
 ### Stellar Trustline Requirements
 
-For Stellar-based migration operations, you need to handle trustlines differently depending on whether Stellar is the source or destination chain:
-
-```typescript
-import { StellarSpokeService } from "@sodax/sdk";
-
-// When Stellar is the destination chain, check and establish trustlines
-if (isStellarDestination) {
-  // Check if sufficient trustline exists for the destination token
-  const hasTrustline = await StellarSpokeService.hasSufficientTrustline(
-    destinationTokenAddress,
-    amount,
-    stellarSpokeProvider
-  );
-
-  if (!hasTrustline) {
-    // Request trustline for the destination token
-    const trustlineResult = await StellarSpokeService.requestTrustline(
-      destinationTokenAddress,
-      amount,
-      stellarSpokeProvider,
-      false // false = execute transaction, true = return raw transaction
-    );
-    
-    // Wait for trustline transaction to be confirmed before proceeding
-    console.log('Trustline established:', trustlineResult);
-  }
-}
-```
+For Stellar-based migration operations, you need to handle trustlines differently depending on whether Stellar is the source or destination chain. See [Stellar Trustline Requirements](./STELLAR_TRUSTLINE.md#migration) for detailed information and code examples.
 
 ## ICX Migration (ICX/wICX → SODA)
 

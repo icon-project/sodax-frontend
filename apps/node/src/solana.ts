@@ -46,27 +46,27 @@ const solanaSpokeProvider = new SolanaSpokeProvider(solanaWallet, solanaSpokeCha
 
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
-  chainConfig: getHubChainConfig(HUB_CHAIN_ID),
+  chainConfig: getHubChainConfig(),
 } satisfies EvmHubProviderConfig;
-
-const hubProvider = new EvmHubProvider({
-  hubRpcUrl: HUB_RPC_URL,
-  chainConfig: hubConfig.chainConfig,
-});
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
 const sodax = new Sodax({
-  solver: solverConfig,
+  swaps: solverConfig,
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
+
+const hubProvider = new EvmHubProvider({
+  config: hubConfig,
+  configService: sodax.config,
+});
 
 const relayerBackendUrl = IS_TESTNET
   ? 'https://53naa6u2qd.execute-api.us-east-1.amazonaws.com/test'
   : 'https://n7gem91bcb.execute-api.us-east-1.amazonaws.com/prod';
 
-async function submitData(tx_hash: Hash, address: Address, payload: Hex | null) {
+async function submitData(tx_hash: string, address: Address, payload: Hex | null) {
   let data = {};
   if (payload == null) {
     data = {
@@ -127,9 +127,10 @@ async function depositTo(token: PublicKey, amount: bigint, recipient: Address) {
       amount,
     },
     solanaSpokeChainConfig.chain.id,
+    sodax.config,
   );
 
-  const txHash: Hash = await SpokeService.deposit(
+  const txHash = await SpokeService.deposit(
     {
       from: await solanaSpokeProvider.walletProvider.getWalletAddress(),
       token: token.toBase58(),
@@ -170,7 +171,7 @@ async function withdrawAsset(token: PublicKey, amount: bigint, recipient: Addres
 
   const walletAddress = await solanaSpokeProvider.walletProvider.getWalletAddress();
   const walletAddressBytes = encodeAddress(SOLANA_MAINNET_CHAIN_ID, walletAddress);
-  const txHash: Hash = await SpokeService.callWallet(walletAddressBytes, data, solanaSpokeProvider, hubProvider);
+  const txHash = await SpokeService.callWallet(walletAddressBytes, data, solanaSpokeProvider, hubProvider);
 
   await sleep(3);
   const userWallet = await getUserWallet();
@@ -183,7 +184,7 @@ async function withdrawAsset(token: PublicKey, amount: bigint, recipient: Addres
 async function supply(token: PublicKey, amount: bigint) {
   const hubWallet = await getUserWallet();
 
-  const data = sodax.moneyMarket.buildSupplyData(token.toString(), hubWallet, amount, solanaSpokeChainConfig.chain.id);
+  const data = sodax.moneyMarket.buildSupplyData(solanaSpokeChainConfig.chain.id, token.toString(), amount, hubWallet);
 
   const txHash = await SpokeService.deposit(
     {
@@ -214,7 +215,7 @@ async function borrow(token: PublicKey, amount: bigint) {
     solanaSpokeChainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(
+  const txHash = await SpokeService.callWallet(
     walletAddressBytes,
     keccak256(data) as Hex,
     solanaSpokeProvider,
@@ -242,7 +243,7 @@ async function withdraw(token: PublicKey, amount: bigint) {
     solanaSpokeChainConfig.chain.id,
   );
 
-  const txHash: Hash = await SpokeService.callWallet(
+  const txHash = await SpokeService.callWallet(
     walletAddressBytes,
     keccak256(data) as Hex,
     solanaSpokeProvider,
@@ -263,13 +264,13 @@ async function repay(token: PublicKey, amount: bigint) {
   ]);
 
   const data: Hex = sodax.moneyMarket.buildRepayData(
-    token.toString(),
-    hubWallet,
-    amount,
     solanaSpokeChainConfig.chain.id,
+    token.toString(),
+    amount,
+    hubWallet,
   );
 
-  const txHash: Hash = await SpokeService.deposit(
+  const txHash = await SpokeService.deposit(
     {
       from: walletAddress,
       token: token.toBase58(),

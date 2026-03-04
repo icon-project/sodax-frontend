@@ -60,6 +60,7 @@ export interface ReserveData {
   liquidityRate: string;
   totalScaledVariableDebt: string;
   lastUpdateTimestamp: number;
+  aTokenAddress: string;
   // v3
   borrowCap: string;
   supplyCap: string;

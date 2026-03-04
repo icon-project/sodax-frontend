@@ -20,7 +20,7 @@ const buttonVariants = cva(
         link: 'text-primary underline-offset-4 hover:underline',
         subtle: 'text-black bg-white hover:text-yellow-dark',
         cherry:
-          'mix-blend-multiply bg-cherry-bright text-white shadow-xs hover:bg-cherry-brighter disabled:opacity-100 disabled:bg-cream-white disabled:text-clay-light focus-visible:ring-cherry-soda/20 dark:focus-visible:ring-cherry-soda/40 dark:bg-cherry-soda/60',
+          'mix-blend-multiply bg-cherry-bright text-white shadow-xs hover:bg-cherry-soda disabled:opacity-100 disabled:bg-cream-white disabled:text-clay-light focus-visible:ring-cherry-soda/20 dark:focus-visible:ring-cherry-soda/40 dark:bg-cherry-soda/60',
         cream:
           'bg-cream-white text-clay-light shadow-xs hover:bg-cream-white/90 focus-visible:ring-cream-white/20 dark:focus-visible:ring-cream-white/40 dark:bg-cream-white/60',
       },
@@ -29,6 +29,7 @@ const buttonVariants = cva(
         sm: 'h-8 rounded-3xl gap-1.5 px-3 has-[>svg]:px-2.5',
         lg: 'h-10 rounded-3xl px-6 has-[>svg]:px-4',
         icon: 'size-9',
+        tiny: 'h-4 px-[6px] translate-y-[0.5px]',
       },
     },
     defaultVariants: {

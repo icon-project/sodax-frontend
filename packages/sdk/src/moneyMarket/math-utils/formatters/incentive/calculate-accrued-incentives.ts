@@ -30,18 +30,12 @@ export function calculateAccruedIncentives({
     return new BigNumber(0);
   }
 
-  const actualCurrentTimestamp =
-    currentTimestamp > emissionEndTimestamp
-      ? emissionEndTimestamp
-      : currentTimestamp;
+  const actualCurrentTimestamp = currentTimestamp > emissionEndTimestamp ? emissionEndTimestamp : currentTimestamp;
 
   const timeDelta = actualCurrentTimestamp - reserveIndexTimestamp;
 
   let currentReserveIndex: BigNumber;
-  if (
-    reserveIndexTimestamp >= Number(currentTimestamp) ||
-    reserveIndexTimestamp >= emissionEndTimestamp
-  ) {
+  if (reserveIndexTimestamp >= Number(currentTimestamp) || reserveIndexTimestamp >= emissionEndTimestamp) {
     currentReserveIndex = reserveIndex;
   } else {
     currentReserveIndex = emissionPerSecond
@@ -51,9 +45,7 @@ export function calculateAccruedIncentives({
       .plus(reserveIndex);
   }
 
-  const reward = principalUserBalance
-    .multipliedBy(currentReserveIndex.minus(userIndex))
-    .shiftedBy(precision * -1);
+  const reward = principalUserBalance.multipliedBy(currentReserveIndex.minus(userIndex)).shiftedBy(precision * -1);
 
   return reward;
 }

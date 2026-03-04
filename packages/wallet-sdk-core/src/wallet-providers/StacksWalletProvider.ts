@@ -1,13 +1,14 @@
-const { makeContractCall, broadcastTransaction } = await import('@stacks/transactions');
 import { networkFrom, type StacksNetwork } from '@stacks/network';
 
 import {
   Cl,
+  broadcastTransaction,
   fetchCallReadOnlyFunction,
   getAddressFromPrivateKey,
+  makeContractCall,
   PostConditionMode,
   type ClarityValue,
-  serializeCV
+  serializeCV,
 } from '@stacks/transactions';
 
 import type { Hex, IStacksWalletProvider } from '@sodax/types';

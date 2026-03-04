@@ -1,26 +1,31 @@
+import 'dotenv/config';
+
 import type { Address, Hex } from 'viem';
 import {
   EvmAssetManagerService,
   EvmHubProvider,
   EvmWalletAbstraction,
-  getHubChainConfig,
   spokeChainConfig,
   SpokeService,
+  getHubChainConfig,
   getMoneyMarketConfig,
   type EvmHubProviderConfig,
   Sodax,
   type SodaxConfig,
-  type SolverConfigParams,
   StacksSpokeProvider,
   waitForStacksTransaction,
   serializeAddressData,
   encodeAddress,
 } from '@sodax/sdk';
-import dotenv from 'dotenv';
-dotenv.config();
 
 import { StacksWalletProvider } from '@sodax/wallet-sdk-core';
-import { SONIC_MAINNET_CHAIN_ID, type HubChainId, STACKS_MAINNET_CHAIN_ID } from '@sodax/types';
+import {
+  SONIC_MAINNET_CHAIN_ID,
+  STACKS_MAINNET_CHAIN_ID,
+  type HubChainId,
+  type StacksSpokeChainConfig,
+} from '@sodax/types';
+import { solverConfig } from './config.js';
 
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;
@@ -38,29 +43,31 @@ const SPOKE_CHAIN_ID = STACKS_MAINNET_CHAIN_ID;
 
 const stacksNetwork = IS_TESTNET ? 'testnet' : 'mainnet';
 const stacksWalletProvider = new StacksWalletProvider(privateKey, stacksNetwork);
-const stacksSpokeChainConfig = spokeChainConfig[SPOKE_CHAIN_ID];
-const stacksSpokeProvider = new StacksSpokeProvider(stacksSpokeChainConfig, stacksWalletProvider, stacksNetwork, SPOKE_RPC_URL);
+const stacksSpokeChainConfig = spokeChainConfig[SPOKE_CHAIN_ID] as StacksSpokeChainConfig;
+const stacksSpokeProvider = new StacksSpokeProvider(
+  stacksSpokeChainConfig,
+  stacksWalletProvider,
+  stacksNetwork,
+  SPOKE_RPC_URL,
+);
 
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
-  chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+  chainConfig: getHubChainConfig(),
 } satisfies EvmHubProviderConfig;
-const hubProvider = new EvmHubProvider(hubConfig);
 
 const moneyMarketConfig = getMoneyMarketConfig(HUB_CHAIN_ID);
 
-const solverConfig = {
-  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef', // mainnet
-  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
-  partnerFee: undefined,
-} satisfies SolverConfigParams;
-
 const sodax = new Sodax({
-  solver: solverConfig,
+  swaps: solverConfig,
   moneyMarket: moneyMarketConfig,
   hubProviderConfig: hubConfig,
 } satisfies SodaxConfig);
 
+const hubProvider = new EvmHubProvider({
+  config: hubConfig,
+  configService: sodax.config,
+});
 
 async function depositTo(token: string, amount: bigint, recipient: Address) {
   const walletAddress = await stacksSpokeProvider.walletProvider.getWalletAddress();
@@ -72,6 +79,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address) {
       amount,
     },
     stacksSpokeChainConfig.chain.id,
+    sodax.config,
   );
 
   const txHash: string = await SpokeService.deposit(
@@ -80,7 +88,6 @@ async function depositTo(token: string, amount: bigint, recipient: Address) {
       token,
       amount,
       data,
-      
     },
     stacksSpokeProvider,
     hubProvider,
@@ -88,7 +95,7 @@ async function depositTo(token: string, amount: bigint, recipient: Address) {
 
   console.log('[depositTo] txHash', txHash);
 
-  const txReceipt: Boolean = await waitForStacksTransaction(txHash, SPOKE_RPC_URL);
+  const txReceipt = await waitForStacksTransaction(txHash, SPOKE_RPC_URL);
 
   if (txReceipt) {
     console.log('[depositTo] Success');
@@ -119,18 +126,11 @@ async function withdrawAsset(token: Address, amount: bigint, recipient: string) 
 
   console.log('[withdrawAsset] data', data);
 
-  const txHash = await SpokeService.callWallet(
-    hubWallet,
-    data,
-    stacksSpokeProvider,
-    hubProvider,
-    false,
-    true
-  );
+  const txHash = await SpokeService.callWallet(hubWallet, data, stacksSpokeProvider, hubProvider, false, true);
 
   console.log('[withdrawAsset] txHash', txHash);
 
-  const txReceipt: Boolean = await waitForStacksTransaction(txHash, SPOKE_RPC_URL);
+  const txReceipt = await waitForStacksTransaction(txHash as string, SPOKE_RPC_URL);
 
   if (txReceipt) {
     console.log('Success');
@@ -146,12 +146,7 @@ async function supply(token: Address, amount: bigint) {
     hubProvider,
   );
 
-  const data = sodax.moneyMarket.buildSupplyData(
-    token,
-    hubWallet,
-    amount,
-    stacksSpokeProvider.chainConfig.chain.id,
-  );
+  const data = sodax.moneyMarket.buildSupplyData(STACKS_MAINNET_CHAIN_ID, token, amount, hubWallet);
 
   const txHash: string = await SpokeService.deposit(
     {
@@ -166,7 +161,7 @@ async function supply(token: Address, amount: bigint) {
 
   console.log('[supply] txHash', txHash);
 
-  const txReceipt: Boolean = await waitForStacksTransaction(txHash, SPOKE_RPC_URL);
+  const txReceipt = await waitForStacksTransaction(txHash, SPOKE_RPC_URL);
 
   if (txReceipt) {
     console.log('Success');
@@ -187,13 +182,13 @@ async function borrow(token: Address, amount: bigint) {
     walletAddressBytes,
     token,
     amount,
-    stacksSpokeProvider.chainConfig.chain.id
+    STACKS_MAINNET_CHAIN_ID,
   );
   const txHash = await SpokeService.callWallet(hubWallet, data, stacksSpokeProvider, hubProvider);
 
   console.log('[borrow] txHash', txHash);
 
-  const txReceipt: Boolean = await waitForStacksTransaction(txHash, SPOKE_RPC_URL);
+  const txReceipt = await waitForStacksTransaction(txHash as string, SPOKE_RPC_URL);
 
   if (txReceipt) {
     console.log('Success');
@@ -215,13 +210,14 @@ async function withdraw(token: Address, amount: bigint) {
     walletAddressBytes,
     token,
     amount,
-    stacksSpokeProvider.chainConfig.chain.id)
+    STACKS_MAINNET_CHAIN_ID,
+  );
 
   const txHash = await SpokeService.callWallet(hubWallet, data, stacksSpokeProvider, hubProvider);
 
   console.log('[withdraw] txHash', txHash);
 
-  const txReceipt: Boolean = await waitForStacksTransaction(txHash, SPOKE_RPC_URL);
+  const txReceipt = await waitForStacksTransaction(txHash as string, SPOKE_RPC_URL);
 
   if (txReceipt) {
     console.log('Success');
@@ -239,10 +235,10 @@ async function repay(token: Address, amount: bigint) {
   );
 
   const data: Hex = sodax.moneyMarket.buildRepayData(
+    STACKS_MAINNET_CHAIN_ID,
     token,
-    hubWallet,
     amount,
-    stacksSpokeProvider.chainConfig.chain.id,
+    hubWallet,
   );
 
   const txHash: string = await SpokeService.deposit(
@@ -258,7 +254,7 @@ async function repay(token: Address, amount: bigint) {
 
   console.log('[repay] txHash', txHash);
 
-  const txReceipt: Boolean = await waitForStacksTransaction(txHash, SPOKE_RPC_URL);
+  const txReceipt = await waitForStacksTransaction(txHash, SPOKE_RPC_URL);
 
   if (txReceipt) {
     console.log('Success');
@@ -295,8 +291,7 @@ async function main() {
     const token = process.argv[3] as Address; // Get token address from command line argument
     const amount = BigInt(process.argv[4]); // Get amount from command line argument
     await repay(token, amount);
-  } 
-  else {
+  } else {
     console.log('Function not recognized. Please use "deposit" or "anotherFunction".');
   }
 }

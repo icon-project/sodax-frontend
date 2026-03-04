@@ -1,6 +1,11 @@
 import type { ReservesDataHumanized } from '@sodax/sdk';
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext';
+
+export type UseReservesHumanizedParams = {
+  queryOptions?: UseQueryOptions<ReservesDataHumanized, Error>;
+};
+
 /**
  * Hook for fetching humanized reserves data from the Sodax money market.
  *
@@ -18,11 +23,18 @@ import { useSodaxContext } from '../shared/useSodaxContext';
  *   - isLoading: Loading state indicator
  *   - error: Any error that occurred during data fetching
  */
-export function useReservesHumanized(): UseQueryResult<ReservesDataHumanized, Error> {
+export function useReservesHumanized(
+  params?: UseReservesHumanizedParams,
+): UseQueryResult<ReservesDataHumanized, Error> {
+  const defaultQueryOptions = { queryKey: ['mm', 'reservesHumanized'], refetchInterval: 5000 };
+  const queryOptions = {
+    ...defaultQueryOptions,
+    ...params?.queryOptions, // override default query options if provided
+  };
   const { sodax } = useSodaxContext();
 
   return useQuery({
-    queryKey: ['reservesHumanized'],
+    ...queryOptions,
     queryFn: async () => {
       return await sodax.moneyMarket.data.getReservesHumanized();
     },

@@ -21,8 +21,6 @@ import {
   spokeChainConfig,
   STELLAR_MAINNET_CHAIN_ID,
   StellarSpokeProvider,
-  supportedSpokeChains,
-  supportedTokensPerChain,
 } from '@sodax/sdk';
 import type { ChainType, SpokeChainId, XToken } from '@sodax/types';
 import {
@@ -34,7 +32,7 @@ import {
 } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
-import { normaliseTokenAmount, scaleTokenAmount } from '@/lib/utils';
+import { parseUnits, formatUnits } from 'viem';
 import {
   useSpokeProvider,
   useBridgeApprove,
@@ -60,6 +58,8 @@ export default function BridgePage() {
 
   const [toTokenChainId, setToTokenChainId] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
   const toAccount = useXAccount(toTokenChainId);
+  const supportedSpokeChains = sodax.config.getSupportedSpokeChains();
+  const supportedTokensPerChain = sodax.config.getSupportedTokensPerChain();
 
   // Fetch bridgeable tokens and set toToken when bridgeableTokens is defined
   const { data: bridgeableTokens, isLoading: isLoadingBridgeableTokens } = useGetBridgeableTokens(
@@ -92,8 +92,7 @@ export default function BridgePage() {
   const [toToken, setToToken] = useState<XToken | undefined>(bridgeableTokens?.[0] ?? undefined);
   console.log('toToken', toToken);
 
-  const { data: spokeAssetManagerTokenBalance, isLoading: isLoadingSpokeAssetManagerTokenBalance } =
-    useGetBridgeableAmount(fromToken, toToken);
+  const { data: bridgeableAmount, isLoading: isLoadingBridgeableAmount } = useGetBridgeableAmount(fromToken, toToken);
 
   const handleFromAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFromAmount(e.target.value);
@@ -118,7 +117,7 @@ export default function BridgePage() {
     setOrder({
       srcChainId: fromToken.xChainId,
       srcAsset: fromToken?.address,
-      amount: scaleTokenAmount(fromAmount, fromToken?.decimals ?? 0),
+      amount: parseUnits(fromAmount, fromToken?.decimals ?? 0),
       dstChainId: toToken.xChainId,
       dstAsset: toToken?.address,
       recipient: toAccount.address,
@@ -150,14 +149,14 @@ export default function BridgePage() {
     error: trustlineError,
   } = useStellarTrustlineCheck(
     order?.dstAsset,
-    scaleTokenAmount(fromAmount, toToken?.decimals ?? 0),
+    parseUnits(fromAmount, toToken?.decimals ?? 0),
     destProvider,
     order?.dstChainId,
   );
   if (trustlineError) {
     console.error('trustlineError', trustlineError);
   }
-  const { mutateAsync: requestTrustline } = useRequestTrustline(order?.dstAsset);
+  const { requestTrustline } = useRequestTrustline(order?.dstAsset);
 
   const handleBridge = async (order: CreateBridgeIntentParams) => {
     setOpen(false);
@@ -212,7 +211,7 @@ export default function BridgePage() {
 
     await requestTrustline({
       token: order.dstAsset,
-      amount: scaleTokenAmount(fromAmount, toToken?.decimals ?? 0),
+      amount: parseUnits(fromAmount, toToken?.decimals ?? 0),
       spokeProvider: destProvider,
     });
   };
@@ -235,7 +234,7 @@ export default function BridgePage() {
             />
           </div>
           <div className="flex space-x-2">
-            <div className="flex-grow">
+            <div className="grow">
               <Input type="number" placeholder="0.0" value={fromAmount} onChange={handleFromAmountChange} />
             </div>
             <Select
@@ -261,7 +260,7 @@ export default function BridgePage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex-grow">
+          <div className="grow">
             <Label htmlFor="fromAddress">Source address</Label>
             <div className="flex items-center gap-2">
               <Input id="fromAddress" type="text" placeholder="" value={fromAccount.address || ''} disabled={true} />
@@ -288,7 +287,7 @@ export default function BridgePage() {
             />
           </div>
           <div className="flex space-x-2">
-            <div className="flex-grow">
+            <div className="grow">
               <Input type="number" placeholder="0.0" value={fromAmount} readOnly />
             </div>
             {isLoadingBridgeableTokens ? (
@@ -316,7 +315,7 @@ export default function BridgePage() {
               </Select>
             )}
           </div>
-          <div className="flex-grow">
+          <div className="grow">
             <Label htmlFor="toAddress">Destination address</Label>
             <div className="flex items-center gap-2">
               <Input id="toAddress" type="text" value={toAccount.address || ''} placeholder="" disabled={true} />
@@ -332,12 +331,14 @@ export default function BridgePage() {
           {isBridgeable ? (
             <div className="flex items-center gap-2">
               Maximum Bridgeable Amount:{' '}
-              {isLoadingSpokeAssetManagerTokenBalance ? (
+              {isLoadingBridgeableAmount ? (
                 <Skeleton className="w-16 h-6 inline-block" />
               ) : (
-                normaliseTokenAmount(spokeAssetManagerTokenBalance ?? 0n, toToken?.decimals ?? 0)
+                Number.parseFloat(
+                  formatUnits(bridgeableAmount?.amount ?? 0n, bridgeableAmount?.decimals ?? 0),
+                ).toLocaleString('en-US')
               )}{' '}
-              {toToken?.symbol}
+              {toToken?.symbol} ({bridgeableAmount?.type === 'DEPOSIT_LIMIT' ? 'deposit' : 'withdraw'} limit)
             </div>
           ) : (
             <div className="flex items-center gap-2">
@@ -364,9 +365,9 @@ export default function BridgePage() {
               <div>
                 outputToken: {order?.dstAsset} on {order?.dstChainId}
               </div>
-              <div>inputAmount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
-              <div>amount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
-              <div>outputAmount: {normaliseTokenAmount(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
+              <div>inputAmount: {formatUnits(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
+              <div>amount: {formatUnits(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
+              <div>outputAmount: {formatUnits(order?.amount ?? 0n, fromToken?.decimals ?? 0)}</div>
               {order?.dstChainId === STELLAR_MAINNET_CHAIN_ID && !isTrustlineLoading && !hasSufficientTrustline && (
                 <div className="text-red-500">Insufficient Stellar trustline (request trustline to proceed)</div>
               )}

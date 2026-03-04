@@ -1,11 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { formatReserves } from '../reserve/index.js';
-import {
-  ReserveIncentiveMock,
-  ReserveMock,
-  UserIncentiveMock,
-  UserReserveMock,
-} from '../../mocks.js';
+import { ReserveIncentiveMock, ReserveMock, UserIncentiveMock, UserReserveMock } from '../../mocks.js';
 import {
   formatUserSummary,
   formatUserSummaryAndIncentives,
@@ -15,9 +10,7 @@ import {
 import { describe, expect, it } from 'vitest';
 
 describe('formatUserSummaryETHMarket', () => {
-  const usdcUserMock = new UserReserveMock({ decimals: 6 })
-    .supply(200)
-    .variableBorrow(100);
+  const usdcUserMock = new UserReserveMock({ decimals: 6 }).supply(200).variableBorrow(100);
   const marketReferencePriceInUsd = 10 ** 9; // 10
   const marketReferenceCurrencyDecimals = 18;
   const request: FormatUserSummaryRequest = {
@@ -56,9 +49,7 @@ describe('formatUserSummaryETHMarket', () => {
     });
 
     expect(
-      new BigNumber(second.totalBorrowsMarketReferenceCurrency).gt(
-        first.totalBorrowsMarketReferenceCurrency,
-      ),
+      new BigNumber(second.totalBorrowsMarketReferenceCurrency).gt(first.totalBorrowsMarketReferenceCurrency),
     ).toEqual(true);
   });
 
@@ -74,9 +65,7 @@ describe('formatUserSummaryETHMarket', () => {
     });
 
     expect(
-      new BigNumber(second.totalCollateralMarketReferenceCurrency).gt(
-        first.totalCollateralMarketReferenceCurrency,
-      ),
+      new BigNumber(second.totalCollateralMarketReferenceCurrency).gt(first.totalCollateralMarketReferenceCurrency),
     ).toEqual(true);
   });
 
@@ -92,9 +81,7 @@ describe('formatUserSummaryETHMarket', () => {
     });
 
     expect(
-      new BigNumber(second.totalBorrowsMarketReferenceCurrency).gt(
-        first.totalBorrowsMarketReferenceCurrency,
-      ),
+      new BigNumber(second.totalBorrowsMarketReferenceCurrency).gt(first.totalBorrowsMarketReferenceCurrency),
     ).toEqual(true);
   });
 
@@ -110,9 +97,7 @@ describe('formatUserSummaryETHMarket', () => {
     });
 
     expect(
-      new BigNumber(second.totalCollateralMarketReferenceCurrency).gt(
-        first.totalCollateralMarketReferenceCurrency,
-      ),
+      new BigNumber(second.totalCollateralMarketReferenceCurrency).gt(first.totalCollateralMarketReferenceCurrency),
     ).toEqual(true);
   });
 });
@@ -145,9 +130,7 @@ describe('formatUserSummaryAndIncentives', () => {
   it('should calculate correct user incentives', () => {
     const summary = formatUserSummaryAndIncentives(request);
     expect(
-      summary.calculatedUserIncentives?.[
-        '0x0000000000000000000000000000000000000000'
-      ]?.claimableRewards.toString(),
+      summary.calculatedUserIncentives?.['0x0000000000000000000000000000000000000000']?.claimableRewards.toString(),
     ).toEqual('1');
   });
 });

@@ -7,7 +7,7 @@ import { InjectiveXService } from './InjectiveXService';
 
 export class InjectiveKelprXConnector extends XConnector {
   constructor() {
-    super('INJECTIVE', 'Keplr', 'keplr');
+    super('INJECTIVE', 'Keplr', Wallet.Keplr);
   }
 
   getXService(): InjectiveXService {

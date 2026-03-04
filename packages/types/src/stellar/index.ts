@@ -40,8 +40,8 @@ export type StellarRawTransactionReceipt = {
   signatures: XDR[]; // Array of Base64-encoded signatures
   valid_after?: string; // Minimum time bound (if set)
   valid_before?: string; // Maximum time bound (if set)
-  fee_charged: number; // Fee charged for the transaction (in stroops)
-  max_fee: number; // Maximum fee specified (in stroops)
+  fee_charged: number | string; // Fee charged for the transaction (in stroops)
+  max_fee: number | string; // Maximum fee specified (in stroops)
   operation_count: number; // Number of operations in the transaction to fetch the next transaction
 };
 

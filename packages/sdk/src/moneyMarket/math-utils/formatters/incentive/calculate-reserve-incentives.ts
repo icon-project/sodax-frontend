@@ -48,9 +48,7 @@ export function calculateRewardTokenPrice(
   }
 
   // For V2 incentives, reward price feed comes from the reserves
-  const rewardReserve = reserves.find(
-    reserve => reserve.underlyingAsset.toLowerCase() === address,
-  );
+  const rewardReserve = reserves.find(reserve => reserve.underlyingAsset.toLowerCase() === address);
   if (rewardReserve) {
     return rewardReserve.formattedPriceInMarketReferenceCurrency;
   }
@@ -76,18 +74,17 @@ export function calculateReserveIncentives({
   decimals,
   priceInMarketReferenceCurrency,
 }: CalculateReserveIncentivesRequest): CalculateReserveIncentivesResponse {
-  const aIncentivesData: ReserveIncentiveResponse[] =
-    reserveIncentiveData.aIncentiveData.rewardsTokenInformation.map(reward => {
+  const aIncentivesData: ReserveIncentiveResponse[] = reserveIncentiveData.aIncentiveData.rewardsTokenInformation.map(
+    reward => {
       const aIncentivesAPR = rewardEmissionActive(reward)
         ? calculateIncentiveAPR({
             emissionPerSecond: reward.emissionPerSecond,
-            rewardTokenPriceInMarketReferenceCurrency:
-              calculateRewardTokenPrice(
-                reserves,
-                reward.rewardTokenAddress,
-                reward.rewardPriceFeed,
-                reward.priceFeedDecimals,
-              ),
+            rewardTokenPriceInMarketReferenceCurrency: calculateRewardTokenPrice(
+              reserves,
+              reward.rewardTokenAddress,
+              reward.rewardPriceFeed,
+              reward.priceFeedDecimals,
+            ),
             priceInMarketReferenceCurrency,
             totalTokenSupply: totalLiquidity,
             decimals,
@@ -100,19 +97,19 @@ export function calculateReserveIncentives({
         rewardTokenSymbol: reward.rewardTokenSymbol,
       };
       return aIncentiveData;
-    });
-  const vIncentivesData: ReserveIncentiveResponse[] =
-    reserveIncentiveData.vIncentiveData.rewardsTokenInformation.map(reward => {
+    },
+  );
+  const vIncentivesData: ReserveIncentiveResponse[] = reserveIncentiveData.vIncentiveData.rewardsTokenInformation.map(
+    reward => {
       const vIncentivesAPR = rewardEmissionActive(reward)
         ? calculateIncentiveAPR({
             emissionPerSecond: reward.emissionPerSecond,
-            rewardTokenPriceInMarketReferenceCurrency:
-              calculateRewardTokenPrice(
-                reserves,
-                reward.rewardTokenAddress,
-                reward.rewardPriceFeed,
-                reward.priceFeedDecimals,
-              ),
+            rewardTokenPriceInMarketReferenceCurrency: calculateRewardTokenPrice(
+              reserves,
+              reward.rewardTokenAddress,
+              reward.rewardPriceFeed,
+              reward.priceFeedDecimals,
+            ),
             priceInMarketReferenceCurrency,
             totalTokenSupply: totalVariableDebt,
             decimals,
@@ -125,7 +122,8 @@ export function calculateReserveIncentives({
         rewardTokenSymbol: reward.rewardTokenSymbol,
       };
       return vIncentiveData;
-    });
+    },
+  );
 
   return {
     underlyingAsset: reserveIncentiveData.underlyingAsset,

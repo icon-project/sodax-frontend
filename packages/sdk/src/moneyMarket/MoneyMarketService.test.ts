@@ -1,26 +1,14 @@
-import { WalletAbstractionService } from './../services/hub/WalletAbstractionService.js';
+import { WalletAbstractionService } from '../shared/services/hub/WalletAbstractionService.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  isMoneyMarketReserveAsset,
   MoneyMarketService,
   moneyMarketReserveAssets,
-  EvmHubProvider,
   type EvmHubProviderConfig,
   getHubChainConfig,
-  type IEvmWalletProvider,
-  EvmSpokeProvider,
-  spokeChainConfig,
-  getSupportedMoneyMarketTokens,
   EvmWalletAbstraction,
   SpokeService,
-  type EvmRawTransaction,
   type PacketData,
-  type Address,
-  SonicSpokeProvider,
-  Erc20Service,
-  SonicSpokeService,
   type MoneyMarketSupplyParams,
-  type MoneyMarketWithdrawParams,
   type MoneyMarketAction,
   isMoneyMarketCreateSupplyIntentFailedError,
   isMoneyMarketCreateBorrowIntentFailedError,
@@ -33,9 +21,32 @@ import {
   isMoneyMarketSupplyUnknownError,
   type MoneyMarketError,
   isMoneyMarketBorrowUnknownError,
+  Erc20Service,
+  type MoneyMarketEncodeSupplyParams,
+  poolAbi,
+  type MoneyMarketEncodeWithdrawParams,
+  type MoneyMarketEncodeBorrowParams,
+  type MoneyMarketEncodeRepayParams,
+  type MoneyMarketEncodeRepayWithATokensParams,
+  hubAssets,
+  HubService,
 } from '../index.js';
-import * as IntentRelayApiService from '../services/intentRelay/IntentRelayApiService.js';
-import { BSC_MAINNET_CHAIN_ID, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import { Sodax } from '../shared/entities/Sodax.js';
+import { EvmSpokeProvider } from '../shared/entities/Providers.js';
+import { EvmHubProvider } from '../shared/entities/Providers.js';
+import { SonicSpokeProvider } from '../shared/entities/Providers.js';
+import * as IntentRelayApiService from '../shared/services/intentRelay/IntentRelayApiService.js';
+import {
+  BSC_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+  type IEvmWalletProvider,
+  spokeChainConfig,
+  type Address,
+  type EvmRawTransaction,
+} from '@sodax/types';
+import { decodeFunctionData } from 'viem';
+
+const sodax = new Sodax();
 
 describe('MoneyMarketService', () => {
   // Mock wallet providers
@@ -60,25 +71,26 @@ describe('MoneyMarketService', () => {
   // Hub provider configuration
   const hubConfig = {
     hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+    chainConfig: getHubChainConfig(),
   } satisfies EvmHubProviderConfig;
 
-  const hubProvider = new EvmHubProvider(hubConfig);
+  const hubProvider = new EvmHubProvider({ config: hubConfig, configService: sodax.config });
 
   // Money market service instance
-  const moneyMarket = new MoneyMarketService(
-    {
+  const moneyMarket = new MoneyMarketService({
+    config: {
       partnerFee: {
         address: '0x9999999999999999999999999999999999999999',
         percentage: 10,
       },
     },
     hubProvider,
-  );
+    configService: sodax.config,
+  });
 
   // Test parameters - use real supported tokens
-  const bscSupportedTokens = getSupportedMoneyMarketTokens(BSC_MAINNET_CHAIN_ID);
-  const sonicSupportedTokens = getSupportedMoneyMarketTokens(SONIC_MAINNET_CHAIN_ID);
+  const bscSupportedTokens = moneyMarket.getSupportedTokensByChainId(BSC_MAINNET_CHAIN_ID);
+  const sonicSupportedTokens = moneyMarket.getSupportedTokensByChainId(SONIC_MAINNET_CHAIN_ID);
 
   const bscTestToken = bscSupportedTokens[0]?.address as Address; // ETHB
   const sonicTestToken = sonicSupportedTokens[0]?.address as Address; // WETH
@@ -192,115 +204,10 @@ describe('MoneyMarketService', () => {
       });
     });
 
-    it('should call SonicSpokeService.getWithdrawInfo and isWithdrawApproved for withdraw action', async () => {
-      const mockWithdrawInfo = {
-        aTokenAddress: '0x1111111111111111111111111111111111111111' as Address,
-        aTokenAmount: 1000000000000000000n,
-        token: sonicTestToken,
-      };
-      const mockApprovalResult = { ok: true as const, value: true };
-
-      vi.spyOn(SonicSpokeService, 'getWithdrawInfo').mockResolvedValue(mockWithdrawInfo);
-      vi.spyOn(SonicSpokeService, 'isWithdrawApproved').mockResolvedValue(mockApprovalResult);
-
-      const result = await moneyMarket.isAllowanceValid(
-        {
-          token: sonicTestToken,
-          amount: testAmount,
-          action: 'withdraw',
-        },
-        sonicSpokeProvider,
-      );
-
-      expect(SonicSpokeService.getWithdrawInfo).toHaveBeenCalledWith(
-        sonicTestToken,
-        testAmount,
-        sonicSpokeProvider,
-        moneyMarket.data,
-      );
-      expect(SonicSpokeService.isWithdrawApproved).toHaveBeenCalledWith(
-        '0x8888888888888888888888888888888888888888',
-        mockWithdrawInfo,
-        sonicSpokeProvider,
-      );
-      expect(result).toEqual(mockApprovalResult);
-    });
-
-    it('should call SonicSpokeService.getBorrowInfo and isBorrowApproved for borrow action', async () => {
-      const mockBorrowInfo = {
-        variableDebtTokenAddress: '0x2222222222222222222222222222222222222222' as Address,
-        vaultAddress: '0x3333333333333333333333333333333333333333' as Address,
-        amount: testAmount,
-      };
-      const mockApprovalResult = { ok: true as const, value: false };
-
-      vi.spyOn(SonicSpokeService, 'getBorrowInfo').mockResolvedValue(mockBorrowInfo);
-      vi.spyOn(SonicSpokeService, 'isBorrowApproved').mockResolvedValue(mockApprovalResult);
-
-      const result = await moneyMarket.isAllowanceValid(
-        {
-          token: sonicTestToken,
-          amount: testAmount,
-          action: 'borrow',
-        },
-        sonicSpokeProvider,
-      );
-
-      expect(SonicSpokeService.getBorrowInfo).toHaveBeenCalledWith(
-        sonicTestToken,
-        testAmount,
-        sonicSpokeProvider.chainConfig.chain.id,
-        moneyMarket.data,
-      );
-      expect(SonicSpokeService.isBorrowApproved).toHaveBeenCalledWith(
-        '0x8888888888888888888888888888888888888888',
-        mockBorrowInfo,
-        sonicSpokeProvider,
-      );
-      expect(result).toEqual(mockApprovalResult);
-    });
-
-    it('should return error when SonicSpokeService.getWithdrawInfo throws', async () => {
-      const mockError = new Error('Withdraw info error');
-      vi.spyOn(SonicSpokeService, 'getWithdrawInfo').mockRejectedValue(mockError);
-
-      const result = await moneyMarket.isAllowanceValid(
-        {
-          token: sonicTestToken,
-          amount: testAmount,
-          action: 'withdraw',
-        },
-        sonicSpokeProvider,
-      );
-
-      expect(result).toEqual({
-        ok: false,
-        error: mockError,
-      });
-    });
-
-    it('should return error when SonicSpokeService.getBorrowInfo throws', async () => {
-      const mockError = new Error('Borrow info error');
-      vi.spyOn(SonicSpokeService, 'getBorrowInfo').mockRejectedValue(mockError);
-
-      const result = await moneyMarket.isAllowanceValid(
-        {
-          token: sonicTestToken,
-          amount: testAmount,
-          action: 'borrow',
-        },
-        sonicSpokeProvider,
-      );
-
-      expect(result).toEqual({
-        ok: false,
-        error: mockError,
-      });
-    });
 
     it('should call Erc20Service.isAllowanceValid for supply action', async () => {
       const mockResult = { ok: true as const, value: true };
-      vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce('0x8888888888888888888888888888888888888888');
+      vi.spyOn(HubService, 'getUserRouter').mockResolvedValueOnce('0x8888888888888888888888888888888888888888');
       vi.spyOn(Erc20Service, 'isAllowanceValid').mockResolvedValueOnce(mockResult);
 
       const result = await moneyMarket.isAllowanceValid(
@@ -324,7 +231,7 @@ describe('MoneyMarketService', () => {
 
     it('should call Erc20Service.isAllowanceValid for repay action', async () => {
       const mockResult = { ok: true as const, value: false };
-      vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce('0x8888888888888888888888888888888888888888');
+      vi.spyOn(HubService, 'getUserRouter').mockResolvedValueOnce('0x8888888888888888888888888888888888888888');
       vi.spyOn(Erc20Service, 'isAllowanceValid').mockResolvedValueOnce(mockResult);
 
       const result = await moneyMarket.isAllowanceValid(
@@ -345,10 +252,11 @@ describe('MoneyMarketService', () => {
       );
       expect(result).toEqual(mockResult);
     });
+  });
 
     describe('Integration with real supported tokens', () => {
       it('should work with real supported BSC tokens', async () => {
-        const supportedTokens = getSupportedMoneyMarketTokens(BSC_MAINNET_CHAIN_ID);
+        const supportedTokens = moneyMarket.getSupportedTokensByChainId(BSC_MAINNET_CHAIN_ID);
         expect(supportedTokens.length).toBeGreaterThan(0);
 
         const tokenAddress = supportedTokens[0]?.address;
@@ -378,44 +286,6 @@ describe('MoneyMarketService', () => {
         );
         expect(result).toEqual(mockResult);
       });
-
-      it('should work with real supported Sonic tokens', async () => {
-        const supportedTokens = getSupportedMoneyMarketTokens(SONIC_MAINNET_CHAIN_ID);
-        expect(supportedTokens.length).toBeGreaterThan(0);
-
-        const tokenAddress = supportedTokens[0]?.address;
-        expect(tokenAddress).toBeDefined();
-
-        if (!tokenAddress) {
-          throw new Error('Token address should be defined');
-        }
-
-        const realTokenParams: MoneyMarketWithdrawParams = {
-          token: tokenAddress,
-          amount: testAmount,
-          action: 'withdraw',
-        };
-
-        const mockWithdrawInfo = {
-          aTokenAddress: '0x1111111111111111111111111111111111111111' as Address,
-          aTokenAmount: 1000000000000000000n,
-          token: tokenAddress as Address,
-        };
-        const mockApprovalResult = { ok: true as const, value: true };
-
-        vi.spyOn(SonicSpokeService, 'getWithdrawInfo').mockResolvedValueOnce(mockWithdrawInfo);
-        vi.spyOn(SonicSpokeService, 'isWithdrawApproved').mockResolvedValueOnce(mockApprovalResult);
-
-        const result = await moneyMarket.isAllowanceValid(realTokenParams, sonicSpokeProvider);
-
-        expect(SonicSpokeService.getWithdrawInfo).toHaveBeenCalledWith(
-          tokenAddress as Address,
-          testAmount,
-          sonicSpokeProvider,
-          moneyMarket.data,
-        );
-        expect(result).toEqual(mockApprovalResult);
-      });
     });
 
     describe('Error handling', () => {
@@ -437,59 +307,6 @@ describe('MoneyMarketService', () => {
           error: mockError,
         });
       });
-
-      it('should return error when SonicSpokeService.isWithdrawApproved throws', async () => {
-        const mockWithdrawInfo = {
-          aTokenAddress: '0x1111111111111111111111111111111111111111' as Address,
-          aTokenAmount: 1000000000000000000n,
-          token: sonicTestToken,
-        };
-        const mockError = new Error('Withdraw approval error');
-
-        vi.spyOn(SonicSpokeService, 'getWithdrawInfo').mockResolvedValueOnce(mockWithdrawInfo);
-        vi.spyOn(SonicSpokeService, 'isWithdrawApproved').mockRejectedValueOnce(mockError);
-
-        const result = await moneyMarket.isAllowanceValid(
-          {
-            token: sonicTestToken,
-            amount: testAmount,
-            action: 'withdraw',
-          },
-          sonicSpokeProvider,
-        );
-
-        expect(result).toEqual({
-          ok: false,
-          error: mockError,
-        });
-      });
-
-      it('should return error when SonicSpokeService.isBorrowApproved throws', async () => {
-        const mockBorrowInfo = {
-          variableDebtTokenAddress: '0x2222222222222222222222222222222222222222' as Address,
-          vaultAddress: '0x3333333333333333333333333333333333333333' as Address,
-          amount: testAmount,
-        };
-        const mockError = new Error('Borrow approval error');
-
-        vi.spyOn(SonicSpokeService, 'getBorrowInfo').mockResolvedValueOnce(mockBorrowInfo);
-        vi.spyOn(SonicSpokeService, 'isBorrowApproved').mockRejectedValueOnce(mockError);
-
-        const result = await moneyMarket.isAllowanceValid(
-          {
-            token: sonicTestToken,
-            amount: testAmount,
-            action: 'borrow',
-          },
-          sonicSpokeProvider,
-        );
-
-        expect(result).toEqual({
-          ok: false,
-          error: mockError,
-        });
-      });
-    });
 
     describe('Edge cases', () => {
       it('should throw error for empty token address', async () => {
@@ -632,7 +449,7 @@ describe('MoneyMarketService', () => {
 
       it('should approve sonic spoke provider supply action', async () => {
         const mockResult = '0x1234567890abcdef';
-        vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce(
+        vi.spyOn(HubService, 'getUserRouter').mockResolvedValueOnce(
           '0x8888888888888888888888888888888888888888',
         );
         vi.spyOn(Erc20Service, 'approve').mockResolvedValueOnce(mockResult);
@@ -661,7 +478,7 @@ describe('MoneyMarketService', () => {
 
       it('should approve sonic spoke provider repay action', async () => {
         const mockResult = '0x1234567890abcdef';
-        vi.spyOn(SonicSpokeService, 'getUserRouter').mockResolvedValueOnce(
+        vi.spyOn(HubService, 'getUserRouter').mockResolvedValueOnce(
           '0x8888888888888888888888888888888888888888',
         );
         vi.spyOn(Erc20Service, 'approve').mockResolvedValueOnce(mockResult);
@@ -719,7 +536,7 @@ describe('MoneyMarketService', () => {
         expect(result).toEqual({
           ok: false,
           error: new Error(
-            'Invariant failed: Invalid action (only withdraw, borrow, supply and repay are supported on sonic)',
+            'Invariant failed: Invalid action (only supply and repay are supported on evm)',
           ),
         });
       });
@@ -781,6 +598,8 @@ describe('MoneyMarketService', () => {
   describe('Core Money Market Actions', () => {
     it('should supply a token', async () => {
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
+      vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
+
       vi.spyOn(moneyMarket, 'buildSupplyData').mockReturnValueOnce('0x');
       vi.spyOn(SpokeService, 'deposit').mockResolvedValueOnce('0x');
       vi.spyOn(SpokeService, 'verifyDepositSimulation').mockResolvedValueOnce();
@@ -810,7 +629,10 @@ describe('MoneyMarketService', () => {
       } satisfies EvmRawTransaction;
 
       vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
+      vi.spyOn(EvmWalletAbstraction, 'getUserHubWalletAddress').mockResolvedValueOnce(mockHubAddress);
+
       vi.spyOn(moneyMarket, 'buildSupplyData').mockReturnValueOnce('0x');
+
       vi.spyOn(SpokeService, 'verifyDepositSimulation').mockResolvedValueOnce();
 
       const result = await moneyMarket.createSupplyIntent(
@@ -1103,8 +925,8 @@ describe('MoneyMarketService', () => {
       const testAsset = moneyMarketReserveAssets[0];
       const wrongAsset = '0x0000000000000000000000000000000000000000';
 
-      expect(isMoneyMarketReserveAsset(testAsset)).toBe(true);
-      expect(isMoneyMarketReserveAsset(wrongAsset)).toBe(false);
+      expect(sodax.config.isMoneyMarketReserveAsset(testAsset)).toBe(true);
+      expect(sodax.config.isMoneyMarketReserveAsset(wrongAsset)).toBe(false);
     });
 
     describe('Error Handling', () => {
@@ -1499,6 +1321,162 @@ describe('MoneyMarketService', () => {
           expect(result.ok).toBe(false);
           expect(!result.ok && isMoneyMarketRepayUnknownError(result.error)).toBeTruthy();
         });
+      });
+    });
+  });
+  describe('encoding methods', () => {
+    const mockToken = '0x0000000000000000000000000000000000000000' as Address;
+    const mockVault =
+      hubAssets['0xa86a.avax'][mockToken]?.vault ?? ('0x0000000000000000000000000000000000000001' as Address);
+    const mockLendingPool = '0x3333333333333333333333333333333333333333' as Address;
+    const mockUser = '0x4444444444444444444444444444444444444444' as Address;
+    const mockAmount = 1000000000000000000n; // 1 token with 18 decimals
+
+    describe('encodeSupply', () => {
+      it('should correctly encode supply transaction', () => {
+        const supplyParams = {
+          asset: mockVault,
+          amount: mockAmount,
+          onBehalfOf: mockUser,
+          referralCode: 0,
+        } satisfies MoneyMarketEncodeSupplyParams;
+
+        const encodedCall = MoneyMarketService.encodeSupply(supplyParams, mockLendingPool);
+
+        expect(encodedCall).toEqual({
+          address: mockLendingPool,
+          value: 0n,
+          data: expect.any(String),
+        });
+
+        const decoded = decodeFunctionData({
+          abi: poolAbi,
+          data: encodedCall.data,
+        });
+
+        expect(decoded.functionName).toBe('supply');
+        expect(decoded.args.map(arg => (typeof arg === 'string' ? arg.toLowerCase() : arg))).toEqual([
+          mockVault.toLowerCase(),
+          mockAmount,
+          mockUser.toLowerCase(),
+          0,
+        ]);
+      });
+    });
+
+    describe('encodeWithdraw', () => {
+      it('should correctly encode withdraw transaction', () => {
+        const withdrawParams = {
+          asset: mockVault,
+          amount: mockAmount,
+          to: mockUser,
+        } satisfies MoneyMarketEncodeWithdrawParams;
+
+        const encodedCall = MoneyMarketService.encodeWithdraw(withdrawParams, mockLendingPool);
+
+        const decoded = decodeFunctionData({
+          abi: poolAbi,
+          data: encodedCall.data,
+        });
+
+        expect(decoded.functionName).toBe('withdraw');
+        expect(decoded.args.map(arg => (typeof arg === 'string' ? arg.toLowerCase() : arg))).toEqual([
+          mockVault.toLowerCase(),
+          mockAmount,
+          mockUser.toLowerCase(),
+        ]);
+      });
+    });
+
+    describe('encodeBorrow', () => {
+      it('should correctly encode borrow transaction', () => {
+        const borrowParams = {
+          asset: mockVault,
+          amount: mockAmount,
+          interestRateMode: 2n,
+          referralCode: 0,
+          onBehalfOf: mockUser,
+        } satisfies MoneyMarketEncodeBorrowParams;
+
+        const encodedCall = MoneyMarketService.encodeBorrow(borrowParams, mockLendingPool);
+
+        const decoded = decodeFunctionData({
+          abi: poolAbi,
+          data: encodedCall.data,
+        });
+
+        expect(decoded.functionName).toBe('borrow');
+        expect(decoded.args.map(arg => (typeof arg === 'string' ? arg.toLowerCase() : arg))).toEqual([
+          mockVault.toLowerCase(),
+          mockAmount,
+          2n,
+          0,
+          mockUser.toLowerCase(),
+        ]);
+      });
+    });
+
+    describe('encodeRepay', () => {
+      it('should correctly encode repay transaction', () => {
+        const repayParams = {
+          asset: mockVault,
+          amount: mockAmount,
+          interestRateMode: 2n,
+          onBehalfOf: mockUser,
+        } satisfies MoneyMarketEncodeRepayParams;
+
+        const encodedCall = MoneyMarketService.encodeRepay(repayParams, mockLendingPool);
+
+        const decoded = decodeFunctionData({
+          abi: poolAbi,
+          data: encodedCall.data,
+        });
+
+        expect(decoded.functionName).toBe('repay');
+        expect(decoded.args.map(arg => (typeof arg === 'string' ? arg.toLowerCase() : arg))).toEqual([
+          mockVault.toLowerCase(),
+          mockAmount,
+          2n,
+          mockUser.toLowerCase(),
+        ]);
+      });
+    });
+
+    describe('encodeRepayWithATokens', () => {
+      it('should correctly encode repayWithATokens transaction', () => {
+        const repayParams = {
+          asset: mockVault,
+          amount: mockAmount,
+          interestRateMode: 2n,
+        } satisfies MoneyMarketEncodeRepayWithATokensParams;
+
+        const encodedCall = MoneyMarketService.encodeRepayWithATokens(repayParams, mockLendingPool);
+
+        const decoded = decodeFunctionData({
+          abi: poolAbi,
+          data: encodedCall.data,
+        });
+
+        expect(decoded.functionName).toBe('repayWithATokens');
+        expect(decoded.args.map(arg => (typeof arg === 'string' ? arg.toLowerCase() : arg))).toEqual([
+          mockVault.toLowerCase(),
+          mockAmount,
+          2n,
+        ]);
+      });
+    });
+
+    describe('encodeSetUserUseReserveAsCollateral', () => {
+      it('should correctly encode setUserUseReserveAsCollateral transaction', () => {
+        const encodedCall = MoneyMarketService.encodeSetUserUseReserveAsCollateral(mockToken, true, mockLendingPool);
+
+        const decoded = decodeFunctionData({
+          abi: poolAbi,
+          data: encodedCall.data,
+        });
+
+        expect(decoded.functionName).toBe('setUserUseReserveAsCollateral');
+        expect(decoded.args).toEqual([mockToken, true]);
       });
     });
   });
