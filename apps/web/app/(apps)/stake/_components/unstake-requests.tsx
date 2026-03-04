@@ -29,7 +29,7 @@ export function UnstakeRequests(): React.JSX.Element {
     <>
       {requests.length > 0 && (
         <div className="w-full relative flex flex-col justify-start items-start gap-(--layout-space-normal)">
-          <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-['InterBold'] leading-5 flex gap-2 items-center">
+          <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-bold leading-5 flex gap-2 items-center">
             <div className="w-4 h-4 relative">
               <NetworkIcon id={selectedToken?.xChainId || AVALANCHE_MAINNET_CHAIN_ID} />
               <div className="w-2.5 h-2.5 left-[8px] top-[8px] absolute bg-green-500 rounded-full border-[1.50px] border-white" />

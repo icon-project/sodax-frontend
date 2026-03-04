@@ -31,20 +31,16 @@ export default function StakeConfirmationStep({
         <div className="flex flex-col text-center">
           <div className="flex justify-center gap-1 w-full items-center">
             <ShieldAlertIcon className="w-4 h-4 text-negative" />
-            <span className="font-['InterBold'] text-(length:--body-super-comfortable) leading-[1.4] text-negative">
+            <span className="font-bold text-(length:--body-super-comfortable) leading-[1.4] text-negative">
               {stakeError.title}
             </span>
           </div>
-          <div className="text-espresso text-(length:--body-small) font-medium font-['InterRegular'] text-center leading-[1.4]">
-            {stakeError.message}
-          </div>
+          <div className="text-espresso text-(length:--body-small) text-center leading-[1.4]">{stakeError.message}</div>
         </div>
       ) : (
         <div className="flex flex-col text-center">
-          <div className="text-espresso text-(length:--body-super-comfortable) font-['InterRegular'] leading-[1.4]">
-            Staking SODA
-          </div>
-          <div className="text-clay text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4] justify-center">
+          <div className="text-espresso text-(length:--body-super-comfortable) leading-[1.4]">Staking SODA</div>
+          <div className="text-clay text-(length:--body-small) font-medium leading-[1.4] justify-center">
             23.77% variable APR
           </div>
         </div>
@@ -55,10 +51,10 @@ export default function StakeConfirmationStep({
           <CurrencyLogo currency={selectedToken} />
           <div className="flex flex-col justify-start items-center gap-2">
             <div className="inline-flex justify-start items-center gap-1">
-              <div className="justify-start text-espresso text-base font-normal font-['InterRegular'] leading-5">
+              <div className="justify-start text-espresso text-base leading-5">
                 {formatTokenAmount(stakeValue, selectedToken.decimals)}
               </div>
-              <div className="justify-start text-clay text-base font-normal font-['InterRegular'] leading-5">SODA</div>
+              <div className="justify-start text-clay text-base leading-5">SODA</div>
             </div>
           </div>
         </div>
@@ -73,7 +69,7 @@ export default function StakeConfirmationStep({
           </div>
           <div
             className={cn(
-              "justify-start text-xs font-normal font-['InterRegular'] leading-4",
+              'justify-start text-xs leading-4',
               selectedToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID ? 'text-cherry-bright' : 'text-clay',
             )}
           >
@@ -84,10 +80,10 @@ export default function StakeConfirmationStep({
           <CurrencyLogo currency={xSodaToken} />
           <div className="flex flex-col justify-start items-center gap-2">
             <div className="inline-flex justify-start items-center gap-1">
-              <div className="justify-start text-espresso text-base font-normal font-['InterRegular'] leading-5">
+              <div className="justify-start text-espresso text-base  leading-5">
                 {formatTokenAmount(parseUnits(receivedXSodaAmount, 18), 18)}
               </div>
-              <div className="justify-start text-clay text-base font-normal font-['InterRegular'] leading-5">xSODA</div>
+              <div className="justify-start text-clay text-base leading-5">xSODA</div>
             </div>
           </div>
         </div>

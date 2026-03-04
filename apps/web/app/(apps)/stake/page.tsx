@@ -19,11 +19,10 @@ export default function StakePage() {
   const { reset } = useStakeActions();
 
   const [isOpen, setIsOpen] = useState(false);
-
+  // Delay drives entrance animation (listVariants + itemVariants).
   useEffect(() => {
-    setTimeout(() => {
-      setIsOpen(true);
-    }, 500);
+    const t = setTimeout(() => setIsOpen(true), 500);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -40,19 +39,35 @@ export default function StakePage() {
       animate={isOpen ? 'open' : 'closed'}
     >
       <StakeHeader apr={STAKING_APR} />
-      <motion.div className="relative w-full   flex flex-col justify-start items-start gap-0" variants={itemVariants}>
+      <motion.div
+        className="relative group w-full flex flex-col justify-start items-start gap-0"
+        variants={itemVariants}
+      >
         <StakeSelectorPanel />
+
+        {/* Top section — Tip anchored here at the bottom. Outline hover matches migrate/swap. */}
         <div
           className={cn(
-            'relative w-full rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius)',
-            'before:absolute before:inset-0 before:border-almost-white before:border-[3px] before:border-b-0 before:rounded-tl-(--layout-container-radius) before:rounded-tr-(--layout-container-radius) before:mix-blend-multiply before:pointer-events-none',
+            'relative w-full rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius) ',
             'transition-[filter] duration-300',
             isNetworkPickerOpened && 'blur-sm',
           )}
         >
+          {/* Border layer: top/left/right only so the tip is not broken; same hover thickness as migrate */}
+          <div
+            className="absolute inset-0 rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius) border-almost-white pointer-events-none mix-blend-multiply border-2 border-b-0 group-hover:border-4 group-hover:border-b-0 sm:border-[3px] sm:border-b-0 sm:group-hover:border-[5px] sm:group-hover:border-b-0 md:border-4 md:border-b-0 md:group-hover:border-[6px] md:group-hover:border-b-0"
+            aria-hidden
+          />
+          {/* Blur + overlay when picker open; overlay blocks interaction. */}
           {isNetworkPickerOpened && <div className="inset-0 absolute w-full h-full bg-transparent-white z-20" />}
           <StakeInputPanel />
+          {/* Tip sits at the bottom of top section, translated down into the seam */}
+          <div className="absolute bottom-1 left-[72px] translate-y-full z-10 pointer-events-none">
+            <Tip fill="var(--color-almost-white)" />{' '}
+          </div>
         </div>
+
+        {/* Bottom section — no Tip here */}
         <div
           className={cn(
             'relative p-(--layout-space-big) w-full flex flex-col justify-start items-start bg-almost-white mix-blend-multiply rounded-bl-(--layout-container-radius) rounded-br-(--layout-container-radius)',
@@ -60,15 +75,15 @@ export default function StakePage() {
             isNetworkPickerOpened && 'blur-sm',
           )}
         >
-          <div className="absolute top-0 left-[72px]">
-            <Tip fill="white" />
-          </div>
-
           <StakeStatsCard />
         </div>
       </motion.div>
-
-      <UnstakeRequests />
+      {/* Unstaking to [chain] list — blur when network picker is open so backdrop matches top/bottom sections */}
+      <div className={cn('relative w-full', 'transition-[filter] duration-300', isNetworkPickerOpened && 'blur-sm')}>
+        {/* Same blur + overlay as top/bottom sections. */}
+        {isNetworkPickerOpened && <div className="inset-0 absolute w-full h-full bg-transparent-white z-20" />}
+        <UnstakeRequests />
+      </div>{' '}
     </motion.div>
   );
 }
