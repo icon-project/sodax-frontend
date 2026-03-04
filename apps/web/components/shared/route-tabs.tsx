@@ -12,6 +12,7 @@ import {
   LOANS_ROUTE,
   MIGRATE_ROUTE,
   PARTNER_DASHBOARD_ROUTE,
+  POOL_ROUTE,
   SAVE_ROUTE,
   STAKE_ROUTE,
   SWAP_ROUTE,
@@ -60,6 +61,14 @@ export const tabConfigs: TabConfig[] = [
     content: 'a quick stake',
     enabled: true,
     href: STAKE_ROUTE,
+  },
+  {
+    value: 'pool',
+    type: 'pool',
+    label: 'Pool',
+    content: 'a quick pool',
+    enabled: true,
+    href: POOL_ROUTE,
   },
   {
     value: 'migrate',
