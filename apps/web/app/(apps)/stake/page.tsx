@@ -15,11 +15,10 @@ export default function StakePage(): React.JSX.Element {
   const { reset } = useStakeActions();
 
   const [isOpen, setIsOpen] = useState(false);
-
+  // Delay drives entrance animation (listVariants + itemVariants).
   useEffect(() => {
-    setTimeout(() => {
-      setIsOpen(true);
-    }, 500);
+    const t = setTimeout(() => setIsOpen(true), 500);
+    return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
@@ -45,7 +44,7 @@ export default function StakePage(): React.JSX.Element {
         {/* Top section — Tip anchored here at the bottom. Outline hover matches migrate/swap. */}
         <div
           className={cn(
-            'relative w-full rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius)',
+            'relative w-full rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius) ',
             'transition-[filter] duration-300',
             isNetworkPickerOpened && 'blur-sm',
           )}
@@ -55,6 +54,7 @@ export default function StakePage(): React.JSX.Element {
             className="absolute inset-0 rounded-tl-(--layout-container-radius) rounded-tr-(--layout-container-radius) border-almost-white pointer-events-none mix-blend-multiply border-2 border-b-0 group-hover:border-4 group-hover:border-b-0 sm:border-[3px] sm:border-b-0 sm:group-hover:border-[5px] sm:group-hover:border-b-0 md:border-4 md:border-b-0 md:group-hover:border-[6px] md:group-hover:border-b-0"
             aria-hidden
           />
+          {/* Blur + overlay when picker open; overlay blocks interaction. */}
           {isNetworkPickerOpened && <div className="inset-0 absolute w-full h-full bg-transparent-white z-20" />}
           <StakeInputPanel />
           {/* Tip sits at the bottom of top section, translated down into the seam */}
@@ -76,6 +76,7 @@ export default function StakePage(): React.JSX.Element {
       </motion.div>
       {/* Unstaking to [chain] list — blur when network picker is open so backdrop matches top/bottom sections */}
       <div className={cn('relative w-full', 'transition-[filter] duration-300', isNetworkPickerOpened && 'blur-sm')}>
+        {/* Same blur + overlay as top/bottom sections. */}
         {isNetworkPickerOpened && <div className="inset-0 absolute w-full h-full bg-transparent-white z-20" />}
         <UnstakeRequests />
       </div>{' '}

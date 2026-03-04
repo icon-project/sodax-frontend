@@ -22,6 +22,8 @@ import { useAllChainXSodaBalances } from '@/hooks/useAllChainXSodaBalances';
 
 export function StakeSelectorPanel(): React.JSX.Element {
   const assetRef = useRef<HTMLDivElement>(null);
+  // Skip next onClick toggle when picker was closed by click-away on same gesture (mousedown vs click).
+  const ignoreNextToggleRef = useRef(false);
   const { setSelectedToken, setIsNetworkPickerOpened, setStakeValueByPercent } = useStakeActions();
   const { isNetworkPickerOpened, stakeMode, selectedToken, userXSodaBalance } = useStakeState();
   const { address } = useXAccount(selectedToken?.xChainId);
@@ -88,14 +90,14 @@ export function StakeSelectorPanel(): React.JSX.Element {
 
   useClickAway(assetRef, event => {
     const target = event.target as HTMLElement;
-    const isInNetworkPicker = target.closest('.network-picker-container') !== null;
-    if (!isInNetworkPicker) {
-      setIsNetworkPickerOpened(false);
-    }
+    if (target.closest('.network-picker-container') !== null) return;
+    if (target.closest('[data-stake-trigger]') !== null) ignoreNextToggleRef.current = true;
+    setIsNetworkPickerOpened(false);
   });
 
   return (
     <div className="absolute top-10 left-(--layout-space-big) z-10">
+      {/* mode="wait" so exit finishes before Stake SODA ↔ Unstake xSODA enter. */}
       <AnimatePresence mode="wait">
         <motion.div
           key={stakeMode}
@@ -122,7 +124,17 @@ export function StakeSelectorPanel(): React.JSX.Element {
           )}
 
           <div
-            onClick={() => setIsNetworkPickerOpened(!isNetworkPickerOpened)}
+            data-stake-trigger
+            onMouseDown={() => {
+              if (isNetworkPickerOpened) ignoreNextToggleRef.current = true;
+            }}
+            onClick={() => {
+              if (ignoreNextToggleRef.current) {
+                ignoreNextToggleRef.current = false;
+                return;
+              }
+              setIsNetworkPickerOpened(!isNetworkPickerOpened);
+            }}
             className={cn('flex justify-start items-center cursor-pointer h-12', isNetworkPickerOpened && 'blur-sm')}
           >
             <div className="flex flex-col gap-[2px] ml-(--layout-space-small)">
@@ -150,7 +162,7 @@ export function StakeSelectorPanel(): React.JSX.Element {
                           variant="default"
                           className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
                           onClick={e => {
-                            e.stopPropagation();
+                            e.stopPropagation(); // Don't toggle network picker.
                             setStakeValueByPercent(percent, balance);
                           }}
                         >
@@ -161,7 +173,7 @@ export function StakeSelectorPanel(): React.JSX.Element {
                       variant="default"
                       className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
                       onClick={e => {
-                        e.stopPropagation();
+                        e.stopPropagation(); // Don't toggle network picker.
                         setStakeValueByPercent(100, balance);
                       }}
                     >

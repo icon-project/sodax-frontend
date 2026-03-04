@@ -34,6 +34,7 @@ export function NetworkPicker({
   const chainIds = useMemo(() => tokens.map(token => token.xChainId), [tokens]);
   const allChainXSodaBalances = useAllChainXSodaBalances(chainIds);
 
+  // STAKING: SODA per chain; UNSTAKING: xSODA per chain.
   const tokenBalances = useMemo(() => {
     const balances: Map<string, bigint> = new Map();
 
@@ -69,6 +70,7 @@ export function NetworkPicker({
     if (!isClicked) hasScrolledRef.current = false;
   }, [isClicked]);
 
+  // One-time scroll so picker stays in view when opened near viewport edge.
   useEffect(() => {
     if (!isClicked || !reference || x == null || y == null || hasScrolledRef.current) return;
 
@@ -95,6 +97,7 @@ export function NetworkPicker({
 
   if (!isClicked || !reference) return null;
 
+  // Portal to body so picker isn't clipped and sits above blur overlay.
   return createPortal(
     <div
       ref={refs.setFloating}
@@ -144,7 +147,7 @@ export function NetworkPicker({
 
       <div
         className={cn(
-          'flex flex-wrap justify-center network-picker-container w-[150px] gap-0.5',
+          'flex flex-wrap justify-center network-picker-container w-[150px] gap-0.5', // class used by useClickAway to exclude from "away"
           isMobile && isSingle && 'ml-4',
         )}
       >
@@ -166,7 +169,7 @@ export function NetworkPicker({
               onMouseLeave={() => setHoveredIcon(null)}
               onMouseDown={e => {
                 e.preventDefault();
-                e.stopPropagation();
+                e.stopPropagation(); // Select before click-away runs; avoid toggling picker.
                 onSelect?.(token);
               }}
             >
