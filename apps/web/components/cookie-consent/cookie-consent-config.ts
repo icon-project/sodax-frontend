@@ -14,6 +14,12 @@ function updateGtagConsent(categories: string[]) {
     ad_user_data: hasMarketing ? 'granted' : 'denied',
     ad_personalization: hasMarketing ? 'granted' : 'denied',
   });
+
+  // Push a custom event so GTM can trigger non-Google tags (X pixel, Reddit pixel)
+  // that don't automatically re-fire on consent state changes.
+  if (hasMarketing) {
+    window.dataLayer?.push({ event: 'marketing_consent_granted' });
+  }
 }
 
 export function getCookieConsentConfig(): CookieConsentConfig {
