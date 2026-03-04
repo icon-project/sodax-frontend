@@ -74,8 +74,11 @@ export default function StakePage(): React.JSX.Element {
           <StakeStatsCard />
         </div>
       </motion.div>
-
-      <UnstakeRequests />
+      {/* Unstaking to [chain] list — blur when network picker is open so backdrop matches top/bottom sections */}
+      <div className={cn('relative w-full', 'transition-[filter] duration-300', isNetworkPickerOpened && 'blur-sm')}>
+        {isNetworkPickerOpened && <div className="inset-0 absolute w-full h-full bg-transparent-white z-20" />}
+        <UnstakeRequests />
+      </div>{' '}
     </motion.div>
   );
 }
