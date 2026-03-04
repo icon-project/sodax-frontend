@@ -1747,7 +1747,7 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       vault: SodaTokens.sodaSODA.address,
     },
     [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.sUSDS.address]: {
-      asset: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
+      asset: '0x8794A87979efA70bBE29Ed3357e9A93932B48675',
       decimal: 18,
       symbol: 'sUSDS',
       name: 'staked USDS',
