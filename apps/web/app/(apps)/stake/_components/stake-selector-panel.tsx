@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/stake/_components/stake-selector-panel.tsx
 import type React from 'react';
 import { useRef, useMemo, useEffect } from 'react';
 import { useClickAway } from 'react-use';
@@ -127,7 +126,7 @@ export function StakeSelectorPanel(): React.JSX.Element {
             className={cn('flex justify-start items-center cursor-pointer h-12', isNetworkPickerOpened && 'blur-sm')}
           >
             <div className="flex flex-col gap-[2px] ml-(--layout-space-small)">
-              <div className="font-['InterRegular'] flex items-center text-(length:--body-super-comfortable) text-espresso">
+              <div className=" flex items-center text-(length:--body-super-comfortable) text-espresso">
                 <span>{stakeMode === STAKE_MODE.STAKING ? 'Stake SODA' : 'Unstake xSODA'}</span>
                 <ChevronDownIcon
                   className={cn(
@@ -136,7 +135,7 @@ export function StakeSelectorPanel(): React.JSX.Element {
                   )}
                 />
               </div>
-              <div className="font-['InterRegular'] flex items-center text-(length:--body-small) text-clay">
+              <div className="flex items-center text-(length:--body-small) text-clay">
                 {!selectedToken ? (
                   <span>Choose a network</span>
                 ) : !walletConnected ? (
@@ -149,7 +148,7 @@ export function StakeSelectorPanel(): React.JSX.Element {
                         <Button
                           key={percent}
                           variant="default"
-                          className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold font-['InterRegular'] uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
+                          className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
                           onClick={e => {
                             e.stopPropagation();
                             setStakeValueByPercent(percent, balance);
@@ -160,7 +159,7 @@ export function StakeSelectorPanel(): React.JSX.Element {
                       ))}
                     <Button
                       variant="default"
-                      className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold font-['InterRegular'] uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
+                      className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
                       onClick={e => {
                         e.stopPropagation();
                         setStakeValueByPercent(100, balance);
