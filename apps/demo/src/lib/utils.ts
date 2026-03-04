@@ -1,7 +1,17 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import BigNumber from 'bignumber.js';
-import { hubAssets, SolverIntentStatusCode, type SpokeChainId } from '@sodax/sdk';
+import {
+  hubAssets,
+  moneyMarketSupportedTokens,
+  SolverIntentStatusCode,
+  supportedSpokeChains,
+  spokeChainConfig,
+  type XToken,
+  type SpokeChainId,
+  type ChainId,
+} from '@sodax/sdk';
+import { getChainUI } from './chains';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -148,4 +158,91 @@ export function getHealthFactorState(hf: number) {
     return { label: 'Moderate Risk', className: 'text-yellow-dark' };
   }
   return { label: 'Low Risk', className: 'text-cherry-soda' };
+}
+
+export function getChainsWithThisToken(token: XToken) {
+  return supportedSpokeChains.filter(chainId =>
+    moneyMarketSupportedTokens[chainId].some(t => t.symbol === token.symbol),
+  );
+}
+
+export function getTokenOnChain(symbol: string, chainId: ChainId): XToken | undefined {
+  const normalizedChainId = String(chainId).toLowerCase();
+
+  return Object.values(moneyMarketSupportedTokens)
+    .flat()
+    .find(t => t.symbol === symbol && t.xChainId === normalizedChainId);
+}
+
+export const getChainExplorerTxUrl = (chainId: string, txHash: string): string | undefined => {
+  const chain = getChainUI(chainId);
+  if (!chain?.explorerTxUrl) return undefined;
+  return `${chain.explorerTxUrl}${txHash}`;
+};
+export function formatCurrencyCompact(value: number): string {
+  const abs = Math.abs(value);
+
+  if (abs < 1000) {
+    return `$${value.toLocaleString()}`;
+  }
+
+  if (abs < 1_000_000) {
+    const num = (value / 1000).toFixed(1);
+    return `$${trimZeros(num)}K`;
+  }
+
+  const num = (value / 1_000_000).toFixed(2);
+  return `$${trimZeros(num)}M`;
+}
+
+function trimZeros(num: string) {
+  return num.replace(/\.?0+$/, '');
+}
+
+export function isTxHash(value: unknown): value is `0x${string}` {
+  return typeof value === 'string' && value.startsWith('0x');
+}
+
+/** Returns the full error message/code for display in MM modals (exact error text). */
+export function getMmErrorText(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  if (error && typeof error === 'object') {
+    const o = error as { message?: string; code?: string; data?: { payload?: string; error?: unknown } };
+    
+    // Handle relay timeout errors with a user-friendly message
+    if (o.code === 'RELAY_TIMEOUT') {
+      const txHash = o.data?.payload;
+      if (txHash && typeof txHash === 'string') {
+        return `Transaction timed out while waiting for relay. The transaction may still be processing.\n\nTransaction hash: ${txHash}\n\nPlease check the transaction status on the explorer.`;
+      }
+      return 'Transaction timed out while waiting for relay. The transaction may still be processing. Please check the transaction status on the explorer.';
+    }
+    
+    // Handle submit tx failed errors
+    if (o.code === 'SUBMIT_TX_FAILED') {
+      return 'Failed to submit transaction to relay. Please try again.';
+    }
+    
+    const part = o.message ?? o.code;
+    if (typeof part === 'string') return part;
+  }
+  return String(error);
+}
+
+/**
+ * Gets the native token symbol for a given chain ID (e.g., ETH for Arbitrum, AVAX for Avalanche).
+ * Used for displaying gas fee requirements to users.
+ */
+export function getNativeTokenSymbol(chainId: ChainId): string {
+  const config = spokeChainConfig[chainId as SpokeChainId];
+  if (!config) return 'native token';
+  
+  // Find the token with address matching nativeToken (0x0000... for EVM chains)
+  const nativeTokenAddress = config.nativeToken;
+  const nativeToken = Object.values(config.supportedTokens).find(
+    token => token.address.toLowerCase() === nativeTokenAddress.toLowerCase()
+  );
+  
+  return nativeToken?.symbol ?? 'native token';
 }
