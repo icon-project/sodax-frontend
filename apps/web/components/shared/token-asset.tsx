@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import type { XToken } from '@sodax/types';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { motion } from 'motion/react';
@@ -9,6 +9,11 @@ import { chainIdToChainName } from '@/providers/constants';
 import { useFloating, autoUpdate, offset, shift, limitShift } from '@floating-ui/react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+
+// CurrencyLogo is always w-12 h-12 = 48px. Using this constant lets the
+// NetworkPicker anchor to exactly the bottom of the icon circle, ignoring
+// any extra height that balance text or name adds below it.
+const CURRENCY_LOGO_HEIGHT = 48;
 
 function NetworkPicker({
   isClicked,
@@ -40,9 +45,34 @@ function NetworkPicker({
     whileElementsMounted: autoUpdate,
   });
 
+  // Build a virtual reference anchored to the outer (non-scaled) wrapper's
+  // top + exactly the icon height. This makes the picker position independent
+  // of the balance text, name height, and the parent motion.div scale transform.
+  const virtualReference = useMemo(() => {
+    if (!reference) return null;
+    return {
+      getBoundingClientRect() {
+        const r = reference.getBoundingClientRect();
+        return {
+          width: r.width,
+          height: CURRENCY_LOGO_HEIGHT,
+          x: r.x,
+          y: r.y,
+          top: r.top,
+          left: r.left,
+          bottom: r.top + CURRENCY_LOGO_HEIGHT,
+          right: r.right,
+          toJSON() {
+            return this;
+          },
+        };
+      },
+    };
+  }, [reference]);
+
   useEffect(() => {
-    if (reference) refs.setReference(reference);
-  }, [reference, refs]);
+    if (virtualReference) refs.setReference(virtualReference);
+  }, [virtualReference, refs]);
 
   useEffect(() => {
     if (!isClicked) hasScrolledRef.current = false;
@@ -273,7 +303,7 @@ export function TokenAsset({
           tokens={tokens || []}
           tokenSymbol={name}
           onSelect={onChainClick}
-          reference={assetIconRef.current}
+          reference={assetRef.current}
           getFormattedBalanceForToken={getFormattedBalanceForToken}
           showBalanceRing={showBalanceRing}
         />
