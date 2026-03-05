@@ -131,13 +131,13 @@ export default function CurrencySearchPanel({
             </Tooltip>
           ))}
           <div
-            className="ml-2 w-4 h-4 relative bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.5)] ring ring-2 ring-white inline-flex flex-col justify-center items-center cursor-pointer"
+            className="ml-2 w-4 h-4 relative bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.5)] ring ring-white inline-flex flex-col justify-center items-center cursor-pointer"
             ref={networkPickerReference}
             onClick={() => {
               setIsAssetListBlurred(true);
             }}
           >
-            <div className="w-3 h-4 left-[4px] top-0 absolute mix-blend-multiply bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.5)] ring ring-2 ring-white" />
+            <div className="w-3 h-4 left-[4px] top-0 absolute mix-blend-multiply bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.5)] ring ring-white" />
             <div className="left-[4.50px] top-[3px] absolute inline-flex justify-start items-center">
               <div className="justify-start text-espresso text-[8px] font-medium font-['InterRegular'] leading-[9.60px]">
                 +{remainingChains.length}
