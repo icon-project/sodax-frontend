@@ -12,6 +12,7 @@ import type {
   SonicRawSpokeProvider,
   SonicSpokeProvider,
   SpokeProvider,
+  StacksSpokeProvider,
   SpokeProviderType,
   StellarRawSpokeProvider,
   StellarSpokeProvider,
@@ -49,6 +50,7 @@ import type {
   EvmChainId,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
+import type { StacksSpokeDepositParams } from './services/spoke/StacksSpokeService.js';
 import type { Finality } from '@solana/web3.js';
 
 export type LegacybnUSDChainId = (typeof bnUSDLegacySpokeChainIds)[number];
@@ -209,7 +211,9 @@ export type GetSpokeDepositParamsType<T extends SpokeProviderType> = T extends E
                           ? SonicSpokeDepositParams
                           : T extends SonicRawSpokeProvider
                             ? SonicSpokeDepositParams
-                            : never;
+                            : T extends StacksSpokeProvider
+                              ? StacksSpokeDepositParams
+                              : never;
 
 export type GetAddressType<T extends SpokeProviderType> = T extends EvmSpokeProvider
   ? Address
@@ -351,12 +355,17 @@ export type SuiRawTransaction = {
   data: Base64String;
 };
 
+export type StacksRawTransaction = {
+    [key: string]: string | object | number;
+}
+
 export type EvmReturnType<Raw extends boolean> = Raw extends true ? EvmRawTransaction : Hex;
 export type SolanaReturnType<Raw extends boolean> = Raw extends true ? SolanaRawTransaction : string;
 export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarRawTransaction : string;
 export type IconReturnType<Raw extends boolean> = Raw extends true ? IconRawTransaction : Hex;
 export type SuiReturnType<Raw extends boolean> = Raw extends true ? SuiRawTransaction : string;
 export type InjectiveReturnType<Raw extends boolean> = Raw extends true ? InjectiveRawTransaction : string;
+export type StacksReturnType<Raw extends boolean> = Raw extends true ? StacksRawTransaction : Hex;
 
 export type HashTxReturnType =
   | EvmReturnType<false>
@@ -372,7 +381,8 @@ export type RawTxReturnType =
   | InjectiveRawTransaction
   | IconRawTransaction
   | SuiRawTransaction
-  | StellarRawTransaction;
+  | StellarRawTransaction
+  | StacksRawTransaction;
 
 /**
  * Return type for a transaction based on the given SpokeProvider or RawSpokeProvider.
@@ -420,6 +430,7 @@ export type PromiseStellarTxReturnType<Raw extends boolean> = Promise<TxReturnTy
 export type PromiseIconTxReturnType<Raw extends boolean> = Promise<TxReturnType<IconSpokeProvider, Raw>>;
 export type PromiseSuiTxReturnType<Raw extends boolean> = Promise<TxReturnType<SuiSpokeProvider, Raw>>;
 export type PromiseInjectiveTxReturnType<Raw extends boolean> = Promise<TxReturnType<InjectiveSpokeProvider, Raw>>;
+export type PromiseStacksTxReturnType<Raw extends boolean> = Promise<TxReturnType<StacksSpokeProvider, Raw>>;
 
 // @deprecated - kept for backward compatible reasons of version 1, to be removed in version 2
 export type PromiseTxReturnType<

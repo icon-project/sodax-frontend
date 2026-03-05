@@ -15,7 +15,7 @@ export type SpokeChainId = (typeof CHAIN_IDS)[number];
 
 export type ChainId = (typeof CHAIN_IDS)[number];
 
-export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA'] as const;
+export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'STACKS'] as const;
 export type ChainType = (typeof ChainTypeArr)[number];
 
 export type Chain = {
@@ -230,6 +230,19 @@ export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
   nid: Hex;
 };
 
+export type StacksSpokeChainConfig = BaseSpokeChainConfig<'STACKS'> & {
+  addresses: {
+    assetManager: string;
+    connection: string;
+    rateLimit: string;
+    xTokenManager: string;
+    testToken: string;
+  };
+  chain: SpokeChainInfo<'STACKS'>;
+  rpcUrl: string;
+  nativeToken: string;
+};
+
 export type SpokeChainConfig =
   | EvmSpokeChainConfig
   | SonicSpokeChainConfig
@@ -237,7 +250,8 @@ export type SpokeChainConfig =
   | IconSpokeChainConfig
   | SuiSpokeChainConfig
   | StellarSpokeChainConfig
-  | SolanaChainConfig;
+  | SolanaChainConfig
+  | StacksSpokeChainConfig;
 
 export type SolverConfig = {
   intentsContract: Address; // Intents Contract (Hub)

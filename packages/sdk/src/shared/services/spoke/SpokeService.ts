@@ -5,6 +5,7 @@ import type {
   EvmSpokeProvider,
   SolanaSpokeProvider,
   SonicSpokeProvider,
+  StacksSpokeProvider,
   SpokeProvider,
   SpokeProviderType,
   StellarSpokeProvider,
@@ -38,6 +39,8 @@ import {
   isSolanaSpokeProvider,
   isSonicSpokeProvider,
   isStellarSpokeProvider,
+  isStacksSpokeProvider,
+  isStacksSpokeProviderType,
   isSonicRawSpokeProvider,
   isSolanaSpokeProviderType,
   isStellarSpokeProviderType,
@@ -50,6 +53,7 @@ import {
 import * as rlp from 'rlp';
 import { encodeFunctionData } from 'viem';
 import { encodeAddress } from '../../utils/shared-utils.js';
+import { StacksSpokeService } from './StacksSpokeService.js';
 
 /**
  * SpokeService is a main class that provides functionalities for dealing with spoke chains.
@@ -290,7 +294,14 @@ export class SpokeService {
         raw,
       ) satisfies Promise<TxReturnType<StellarSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
     }
-
+    if (isStacksSpokeProviderType(spokeProvider)) {
+      return StacksSpokeService.deposit(
+        params as GetSpokeDepositParamsType<StacksSpokeProvider>,
+        spokeProvider as StacksSpokeProvider,
+        hubProvider,
+        raw,
+      ) as Promise<TxReturnType<S, R>>;
+    }
     throw new Error('Invalid spoke provider');
   }
 
@@ -389,6 +400,9 @@ export class SpokeService {
     if (isSonicSpokeProviderType(spokeProvider)) {
       return SonicSpokeService.getDeposit(token, spokeProvider);
     }
+    if (isStacksSpokeProviderType(spokeProvider)) {
+      return StacksSpokeService.getDeposit(token, spokeProvider as StacksSpokeProvider);
+    }
 
     throw new Error('Invalid spoke provider');
   }
@@ -483,6 +497,12 @@ export class SpokeService {
         hubProvider,
         raw,
       )) satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<T, R>;
+    }
+    if (isStacksSpokeProvider(spokeProvider)) {
+      return (await StacksSpokeService.callWallet(from, payload, spokeProvider, hubProvider)) satisfies TxReturnType<
+        StacksSpokeProvider,
+        R
+      > as TxReturnType<T, R>;
     }
 
     throw new Error('[callWallet] Invalid spoke provider');

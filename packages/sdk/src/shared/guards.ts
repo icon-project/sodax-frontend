@@ -23,6 +23,7 @@ import { IconSpokeProvider, type IconRawSpokeProvider } from './entities/icon/Ic
 import { SolanaSpokeProvider, type SolanaRawSpokeProvider, type SolanaRawSpokeProviderConfig } from './entities/solana/SolanaSpokeProvider.js';
 import { SuiSpokeProvider, type SuiRawSpokeProvider } from './entities/sui/SuiSpokeProvider.js';
 import { StellarSpokeProvider, type StellarRawSpokeProvider, type StellarRawSpokeProviderConfig } from './entities/stellar/StellarSpokeProvider.js';
+import { StacksSpokeProvider } from './entities/stacks/StacksSpokeProvider.js';
 import type {
   EvmSpokeProviderType,
   IconSpokeProviderType,
@@ -242,6 +243,24 @@ export function isSuiSpokeProvider(value: SpokeProviderType): value is SuiSpokeP
     !('raw' in value) &&
     value.chainConfig.chain.type === 'SUI'
   );
+}
+
+export function isStacksSpokeProviderType(value: SpokeProviderType): value is StacksSpokeProvider {
+  return typeof value === 'object' && value !== null && (isStacksSpokeProvider(value) || isStacksRawSpokeProvider(value));
+}
+
+export function isStacksSpokeProvider(value: SpokeProviderType): value is StacksSpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof StacksSpokeProvider &&
+    !('raw' in value) &&
+    value.chainConfig.chain.type === 'STACKS'
+  );
+}
+
+export function isStacksRawSpokeProvider(value: unknown): value is RawSpokeProvider {
+  return isRawSpokeProvider(value) && (value.chainConfig.chain.type as string) === 'STACKS';
 }
 
 export function isConfiguredSolverConfig(

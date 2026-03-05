@@ -56,6 +56,8 @@
     "@solana/spl-token": "catalog:",
     "@solana/web3.js": "catalog:",
     "@stellar/stellar-sdk": "catalog:",
+    "@stacks/transactions": "catalog:",
+    "@stacks/network": "catalog:",
     "bn.js": "^5.2.1",
     "icon-sdk-js": "catalog:",
     "rlp": "3.0.0",
