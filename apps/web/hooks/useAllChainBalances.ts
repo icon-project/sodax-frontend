@@ -6,7 +6,7 @@ import { useXAccounts } from '@sodax/wallet-sdk-react';
 import { getXChainType } from '@sodax/wallet-sdk-react';
 import { useXWagmiStore } from '@sodax/wallet-sdk-react';
 import { spokeChainConfig } from '@sodax/sdk';
-import { getSupportedSolverTokensForChain } from '@/lib/utils';
+import { getMoneymarketTokensForChain, getSupportedSolverTokensForChain } from '@/lib/utils';
 import { availableChains } from '@/constants/chains';
 
 /**
@@ -24,10 +24,14 @@ export interface ChainBalanceEntry {
  * Uses a single React Query to fetch all balances in parallel
  * @param options - Optional configuration
  * @param options.onlySodaTokens - If true, only fetch SODA tokens instead of all supported solver tokens
+ * @param options.useMoneymarketTokens - If true, fetch balances only for money market supported tokens
  * @returns Object mapping token addresses to arrays of balance entries with chain and token info
  */
-export function useAllChainBalances(options?: { onlySodaTokens?: boolean }): Record<string, ChainBalanceEntry[]> {
-  const { onlySodaTokens = false } = options || {};
+export function useAllChainBalances(options?: {
+  onlySodaTokens?: boolean;
+  useMoneymarketTokens?: boolean;
+}): Record<string, ChainBalanceEntry[]> {
+  const { onlySodaTokens = false, useMoneymarketTokens = false } = options || {};
   const xAccounts = useXAccounts();
   const xServices = useXWagmiStore(state => state.xServices);
 
@@ -39,7 +43,7 @@ export function useAllChainBalances(options?: { onlySodaTokens?: boolean }): Rec
       const account = chainType ? xAccounts[chainType] : undefined;
       const address = account?.address;
 
-      // Get tokens based on mode: SODA tokens only for stake, or all supported solver tokens
+      // Get tokens based on mode: SODA tokens only for stake, money market tokens, or all supported solver tokens
       let tokens: XToken[] = [];
       if (onlySodaTokens) {
         const chainConfig = spokeChainConfig[chainId];
@@ -49,6 +53,8 @@ export function useAllChainBalances(options?: { onlySodaTokens?: boolean }): Rec
             tokens = [sodaToken];
           }
         }
+      } else if (useMoneymarketTokens) {
+        tokens = getMoneymarketTokensForChain(chainId);
       } else {
         tokens = getSupportedSolverTokensForChain(chainId);
       }
@@ -60,14 +66,19 @@ export function useAllChainBalances(options?: { onlySodaTokens?: boolean }): Rec
         tokens,
       };
     });
-  }, [xAccounts, onlySodaTokens]);
+  }, [xAccounts, onlySodaTokens, useMoneymarketTokens]);
 
   // Check if any wallet is connected
   const hasConnectedWallet = chainQueries.some(q => !!q.address);
 
   // Single query that fetches balances for all chains in parallel
   const { data: allBalances } = useQuery({
-    queryKey: ['allChainBalances', onlySodaTokens, chainQueries.map(q => ({ chainId: q.chainId, address: q.address }))],
+    queryKey: [
+      'allChainBalances',
+      onlySodaTokens,
+      useMoneymarketTokens,
+      chainQueries.map(q => ({ chainId: q.chainId, address: q.address })),
+    ],
     queryFn: async (): Promise<Record<string, ChainBalanceEntry[]>> => {
       const balancesByAddress: Record<string, ChainBalanceEntry[]> = {};
 

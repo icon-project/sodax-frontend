@@ -25,7 +25,7 @@ export default function WithdrawAmountSelect({
   sourceAddress,
 }: WithdrawAmountSelectProps): React.JSX.Element {
   const { data: tokenPrice } = useTokenPrice(selectedToken as XToken);
-  const allChainBalances = useAllChainBalances();
+  const allChainBalances = useAllChainBalances({ useMoneymarketTokens: true });
   const balance = selectedToken
     ? (allChainBalances[selectedToken.address]?.find(entry => entry.chainId === selectedToken.xChainId)?.balance ?? 0n)
     : 0n;

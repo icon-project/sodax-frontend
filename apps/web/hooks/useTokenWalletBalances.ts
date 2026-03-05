@@ -13,7 +13,7 @@ import { useAllChainBalances } from '@/hooks/useAllChainBalances';
  * @returns {Array<XToken & { supplyBalance: string }>} Tokens enriched with supplyBalance (wallet balance).
  */
 export function useTokenWalletBalances(tokens: XToken[]): Array<XToken & { supplyBalance: string }> {
-  const allChainBalances = useAllChainBalances();
+  const allChainBalances = useAllChainBalances({ useMoneymarketTokens: true });
 
   return useMemo(() => {
     return tokens.map(token => {
