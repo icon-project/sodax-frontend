@@ -24,7 +24,7 @@ import type {
   XToken,
 } from '../common/index.js';
 
-export const CONFIG_VERSION = 6; // Increment this when the config is updated
+export const CONFIG_VERSION = 7; // Increment this when the config is updated
 
 // chain ids (actual for evm chains), custom for other chains not having native ids
 export const AVALANCHE_MAINNET_CHAIN_ID = '0xa86a.avax';
@@ -233,6 +233,7 @@ export const HubVaultSymbols = [
   'sodaWEETH',
   'sodaWSTETH',
   'sodaKAIA',
+  'sodaUSDS',
 ] as const;
 
 export const SodaTokens = {
@@ -381,6 +382,13 @@ export const SodaTokens = {
     name: 'Soda KAIA',
     decimals: 18,
     address: '0xD7d41b5f803b6A40F8A6eAa34E459A4564e39891',
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
+  sodaUSDS: {
+    symbol: 'sodaUSDS',
+    name: 'Soda sUSDS',
+    decimals: 18,
+    address: '0x243b0c26c8b38793908d7C64e8510f21B19B4613',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
 } as const satisfies Record<HubVaultSymbol, XToken>;
@@ -649,6 +657,13 @@ export const spokeChainConfig = {
         name: 'SODAX',
         decimals: 18,
         address: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
+        xChainId: ARBITRUM_MAINNET_CHAIN_ID,
+      },
+      sUSDS: {
+        symbol: 'sUSDS',
+        name: 'staked USDS',
+        decimals: 18,
+        address: '0xddb46999f8891663a8f2828d25298f70416d7610',
         xChainId: ARBITRUM_MAINNET_CHAIN_ID,
       },
     } as const,
@@ -1731,6 +1746,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'SODAX',
       vault: SodaTokens.sodaSODA.address,
     },
+    [spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.sUSDS.address]: {
+      asset: '0x8794A87979efA70bBE29Ed3357e9A93932B48675',
+      decimal: 18,
+      symbol: 'sUSDS',
+      name: 'staked USDS',
+      vault: SodaTokens.sodaUSDS.address,
+    },
   },
   [BASE_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[BASE_MAINNET_CHAIN_ID].nativeToken]: {
@@ -2710,6 +2732,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.sUSDS,
   ] as const satisfies XToken[],
   [BASE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.ETH,
