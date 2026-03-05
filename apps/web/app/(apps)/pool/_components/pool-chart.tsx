@@ -1,562 +1,791 @@
-// apps/web/app/(apps)/pool/_components/pool-chart.tsx
-import type React from 'react';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
+import { MinusCircleIcon, PlusCircleIcon, RefreshCcwIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
-function generateLiquidityData(
-  currentPrice: number,
-  numBins = 200,
-  spread = 0.4,
-): Array<{ price: number; liquidity: number }> {
-  const data: Array<{ price: number; liquidity: number }> = [];
-  const priceMin = currentPrice * (1 - spread);
-  const priceMax = currentPrice * (1 + spread);
-  const step = (priceMax - priceMin) / numBins;
+type PricePoint = {
+  time: number;
+  price: number;
+};
 
-  for (let i = 0; i < numBins; i++) {
-    const price = priceMin + i * step;
-    const distFromCurrent = Math.abs(price - currentPrice) / currentPrice;
-    const base = Math.exp(-distFromCurrent * 8) * 100;
-    const noise = (Math.random() - 0.5) * 10;
-    const spike = Math.random() > 0.95 ? Math.random() * 30 : 0;
-    const liquidity = Math.max(0, base + noise + spike);
-    data.push({ price, liquidity });
+type TickPoint = {
+  price: number;
+  liquidity: number;
+};
+
+function generateETHData(): PricePoint[] {
+  const data: PricePoint[] = [];
+  let price = 2800;
+  const now = Date.now();
+
+  for (let i = 730; i >= 0; i--) {
+    price += (Math.random() - 0.47) * 55;
+    price = Math.max(1200, Math.min(4800, price));
+    data.push({ time: now - i * 24 * 60 * 60 * 1000, price: +price.toFixed(2) });
   }
+
   return data;
 }
 
-const CURRENT_PRICE = 2485.32;
-const ZOOM_LEVELS = [0.1, 0.2, 0.4, 0.8, 1.6];
-const PERIODS = ['1D', '1W', '1M', '3M', 'ALL'] as const;
-type Period = (typeof PERIODS)[number];
+function generateTickData(currentPrice: number, count = 80): TickPoint[] {
+  const ticks: TickPoint[] = [];
+  const spread = currentPrice * 0.6;
 
-const zoomBtnStyle: React.CSSProperties = {
-  width: 28,
-  height: 28,
-  borderRadius: '8px',
-  border: '1px solid #2A2A2A',
-  background: '#1A1A1A',
-  color: '#888',
-  fontSize: '16px',
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  transition: 'background 0.15s',
-  fontFamily: 'monospace',
-  lineHeight: 1,
-};
+  for (let i = 0; i < count; i++) {
+    const tickPrice = currentPrice - spread / 2 + (i / count) * spread;
+    const dist = Math.abs(tickPrice - currentPrice) / (spread * 0.25);
+    const liq = Math.exp(-0.5 * dist * dist) * (0.6 + Math.random() * 0.4);
+    ticks.push({ price: tickPrice, liquidity: liq });
+  }
+
+  return ticks;
+}
+
+const ALL_DATA = generateETHData();
+const LATEST_POINT: PricePoint = ALL_DATA[ALL_DATA.length - 1] ?? { time: Date.now(), price: 2800 };
+const CURRENT_PRICE = LATEST_POINT.price;
+const NOW = LATEST_POINT.time;
+const TICK_DATA = generateTickData(CURRENT_PRICE);
+
+const C = {
+  lineInside: '#483534',
+  lineOutside: '#8E7E7D',
+  lineWidthIn: 3,
+  lineWidthOut: 1.5,
+  nowLine: '#B9ACAB',
+  minMaxLine: '#D7CDCB',
+  bandFill: '#EDE6E6',
+  bandOpacityTop: 0.18,
+  bandOpacityBot: 0.1,
+  textDim: '#8E7E7D',
+  tickInStroke: 'transparent',
+  tickOutStroke: 'transparent',
+  tickInFill: '#B9ACAB',
+  tickInOpacityA: 0.55,
+  tickInOpacityB: 0.04,
+  tickOutFill: '#EDE6E6',
+  tickOutOpacityA: 0.55,
+  tickOutOpacityB: 0.04,
+  handleCircle: 'white',
+  handleGrip: '#B9ACAB',
+} as const;
+
+const RANGES = [
+  { label: '1D', ms: 1 * 86400000 },
+  { label: '1W', ms: 7 * 86400000 },
+  { label: '1M', ms: 30 * 86400000 },
+  { label: '1Y', ms: 365 * 86400000 },
+  { label: 'All', ms: null },
+] as const;
+
+const HEIGHT = 132;
+const ML = { top: 24, right: 16, bottom: 8, left: 16 };
+const TICK_W = 90;
+const TM = { top: 20, right: 8, bottom: 36, left: 4 };
 
 export function PoolChart(): React.JSX.Element {
-  const svgRef = useRef<SVGSVGElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [zoomLevel, setZoomLevel] = useState<number>(2);
-  const [period, setPeriod] = useState<Period>('1M');
-  const [rangeMin, setRangeMin] = useState<number>(CURRENT_PRICE * 0.85);
-  const [rangeMax, setRangeMax] = useState<number>(CURRENT_PRICE * 1.15);
-  const [dims, setDims] = useState({ width: 600, height: 220 });
-  const rangeRef = useRef({ min: CURRENT_PRICE * 0.85, max: CURRENT_PRICE * 1.15 });
+  const mainSvgRef = useRef<SVGSVGElement | null>(null);
+  const tickSvgRef = useRef<SVGSVGElement | null>(null);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const zoomBehRef = useRef<d3.Selection<SVGRectElement, unknown, null, undefined> | null>(null);
+  const zoomObjRef = useRef<d3.ZoomBehavior<SVGRectElement, unknown> | null>(null);
 
-  const margin = { top: 20, right: 16, bottom: 32, left: 8 };
+  const [minPrice, setMinPrice] = useState<number>(+(CURRENT_PRICE * 0.85).toFixed(2));
+  const [maxPrice, setMaxPrice] = useState<number>(+(CURRENT_PRICE * 1.15).toFixed(2));
+  const [activeRange, setActiveRange] = useState<(typeof RANGES)[number]['label']>('1M');
+  const [zoomTransform, setZoomTransform] = useState<d3.ZoomTransform>(d3.zoomIdentity);
+  const [width, setWidth] = useState<number>(700);
+
+  const draggingRef = useRef<'min' | 'max' | 'band' | null>(null);
+  const dragDataRef = useRef<{
+    anchorY: number;
+    anchorMin: number;
+    anchorMax: number;
+    span: number;
+    pxPerPrice: number;
+  } | null>(null);
+
+  const INNER_W = width - ML.left - ML.right;
+  const INNER_H = HEIGHT - ML.top - ML.bottom;
+  const TICK_IH = HEIGHT - TM.top - TM.bottom;
+  const TICK_IW = TICK_W - TM.left - TM.right;
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    const ro = new ResizeObserver((entries: ResizeObserverEntry[]) => {
-      const { width } = entries[0]?.contentRect ?? { width: 600 };
-      setDims({ width, height: 220 });
+    const obs = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setWidth(Math.floor(entry.contentRect.width));
+      }
     });
-    ro.observe(containerRef.current);
-    return () => ro.disconnect();
+
+    if (wrapRef.current) {
+      obs.observe(wrapRef.current);
+    }
+
+    return () => obs.disconnect();
   }, []);
 
-  const draw = useCallback((): void => {
-    if (!svgRef.current) return;
+  const visibleData = useMemo(() => {
+    const range = RANGES.find((item) => item.label === activeRange);
+    if (!range || range.ms === null) {
+      return ALL_DATA;
+    }
 
-    const spread = ZOOM_LEVELS[zoomLevel] ?? 0.4;
-    const rawData = generateLiquidityData(CURRENT_PRICE, 200, spread);
-    const allData = rawData.map((d, i) => {
-      const win = rawData.slice(Math.max(0, i - 3), Math.min(rawData.length, i + 4));
-      const avg = win.reduce((s, v) => s + v.liquidity, 0) / win.length;
-      return { price: d.price, liquidity: avg };
-    });
+    return ALL_DATA.filter((d) => d.time >= NOW - range.ms);
+  }, [activeRange]);
 
-    const W = dims.width - margin.left - margin.right;
-    const H = dims.height - margin.top - margin.bottom;
+  const xScaleBase = useMemo(
+    () =>
+      d3
+        .scaleTime<number, number>()
+        .domain(d3.extent(visibleData, (d) => d.time) as [number, number])
+        .range([0, INNER_W]),
+    [visibleData, INNER_W]
+  );
 
-    const svg = d3.select(svgRef.current);
+  const xScale = useMemo(() => zoomTransform.rescaleX(xScaleBase), [zoomTransform, xScaleBase]);
+
+  const priceMin = d3.min(visibleData, (d) => d.price) ?? 0;
+  const priceMax = d3.max(visibleData, (d) => d.price) ?? 0;
+  const pad = (priceMax - priceMin) * 0.3;
+  const yDomainMin = Math.min(priceMin - pad, minPrice - 80);
+  const yDomainMax = Math.max(priceMax + pad, maxPrice + 80);
+
+  const yScale = useMemo(
+    () => d3.scaleLinear().domain([yDomainMin, yDomainMax]).range([INNER_H, 0]),
+    [yDomainMin, yDomainMax, INNER_H]
+  );
+
+  const clamp = useCallback((v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v)), []);
+  const priceToY = useCallback((p: number) => clamp(yScale(p), 0, INNER_H), [yScale, INNER_H, clamp]);
+
+  useEffect(() => {
+    void activeRange;
+    if (zoomBehRef.current && zoomObjRef.current) {
+      zoomBehRef.current.call(zoomObjRef.current.transform, d3.zoomIdentity);
+    }
+  }, [activeRange]);
+
+  useEffect(() => {
+    if (!mainSvgRef.current || INNER_W <= 0) {
+      return;
+    }
+
+    const zoom = d3
+      .zoom<SVGRectElement, unknown>()
+      .scaleExtent([0.5, 20])
+      .translateExtent([
+        [0, 0],
+        [INNER_W, INNER_H],
+      ])
+      .extent([
+        [0, 0],
+        [INNER_W, INNER_H],
+      ])
+      .on('zoom', (event) => setZoomTransform(event.transform));
+
+    zoomObjRef.current = zoom;
+    const bg = d3.select(mainSvgRef.current).select<SVGRectElement>('.zoom-bg');
+    bg.call(zoom).on('dblclick.zoom', null);
+    zoomBehRef.current = bg;
+  }, [INNER_W, INNER_H]);
+
+  useEffect(() => {
+    if (!mainSvgRef.current || INNER_W <= 0) {
+      return;
+    }
+
+    const svg = d3.select(mainSvgRef.current);
+    svg.selectAll('defs').remove();
+    svg.selectAll('.chart-content').remove();
+
+    const minY = priceToY(minPrice);
+    const maxY = priceToY(maxPrice);
+    const cpY = priceToY(CURRENT_PRICE);
+
+    const defs = svg.append('defs');
+
+    const bandGrad = defs
+      .append('linearGradient')
+      .attr('id', 'g-band')
+      .attr('x1', '0')
+      .attr('x2', '0')
+      .attr('y1', '0')
+      .attr('y2', '1');
+    bandGrad.append('stop').attr('offset', '0%').attr('stop-color', C.bandFill).attr('stop-opacity', C.bandOpacityTop);
+    bandGrad.append('stop').attr('offset', '100%').attr('stop-color', C.bandFill).attr('stop-opacity', C.bandOpacityBot);
+
+    const glow = defs.append('filter').attr('id', 'glow-f');
+    glow.append('feGaussianBlur').attr('stdDeviation', '2.5').attr('result', 'b');
+    const glowMerge = glow.append('feMerge');
+    glowMerge.append('feMergeNode').attr('in', 'b');
+    glowMerge.append('feMergeNode').attr('in', 'SourceGraphic');
+
+    defs.append('clipPath').attr('id', 'clip-band-in').append('rect').attr('x', 0).attr('y', maxY).attr('width', INNER_W).attr('height', Math.max(0, minY - maxY));
+
+    const outClip = defs.append('clipPath').attr('id', 'clip-band-out');
+    outClip.append('rect').attr('x', 0).attr('y', 0).attr('width', INNER_W).attr('height', maxY);
+    outClip.append('rect').attr('x', 0).attr('y', minY).attr('width', INNER_W).attr('height', Math.max(0, INNER_H - minY));
+
+    const g = svg
+      .append('g')
+      .attr('class', 'chart-content')
+      .attr('transform', `translate(${ML.left},${ML.top})`);
+
+    g.append('rect')
+      .attr('class', 'band-hit')
+      .attr('x', 0)
+      .attr('y', maxY)
+      .attr('width', INNER_W)
+      .attr('height', Math.max(0, minY - maxY))
+      .attr('fill', 'url(#g-band)')
+      .attr('pointer-events', 'all')
+      .style('cursor', 'ns-resize');
+
+    const line = d3
+      .line<PricePoint>()
+      .x((d) => xScale(d.time))
+      .y((d) => yScale(d.price))
+      .curve(d3.curveCatmullRom.alpha(0.5));
+
+    g.append('path')
+      .datum(visibleData)
+      .attr('d', line)
+      .attr('fill', 'none')
+      .attr('stroke', C.lineOutside)
+      .attr('stroke-width', C.lineWidthOut)
+      .attr('clip-path', 'url(#clip-band-out)');
+
+    g.append('path')
+      .datum(visibleData)
+      .attr('d', line)
+      .attr('fill', 'none')
+      .attr('stroke', C.lineInside)
+      .attr('stroke-width', C.lineWidthIn)
+      .attr('filter', 'url(#glow-f)')
+      .attr('clip-path', 'url(#clip-band-in)');
+
+    g.append('g')
+      .attr('transform', 'translate(0,0)')
+      .call(d3.axisTop(xScale).ticks(5).tickFormat((d) => d3.timeFormat(activeRange === '1D' ? '%H:%M' : '%b %d')(new Date(d as number))))
+      .call((a) => a.select('.domain').remove())
+      .call((a) => a.selectAll('line').remove())
+      .call((a) =>
+        a
+          .selectAll('text')
+          .attr('fill', C.textDim)
+          .attr('font-family', "'JetBrains Mono',monospace")
+          .attr('font-size', '9px')
+          .attr('dy', '-4px')
+      );
+
+    function drawHLine({
+      y,
+      color,
+      label,
+      price,
+      dashed = false,
+    }: {
+      y: number;
+      color: string;
+      label: 'MIN' | 'MAX' | 'NOW';
+      price: number;
+      dashed?: boolean;
+    }): void {
+      const grp = g.append('g').attr('transform', `translate(0,${y})`);
+
+      grp.append('line')
+        .attr('x1', 0)
+        .attr('x2', INNER_W)
+        .attr('stroke', color)
+        .attr('stroke-width', dashed ? 1 : 2)
+        .attr('stroke-dasharray', dashed ? '5 4' : 'none')
+        .attr('opacity', dashed ? 0.8 : 0.9)
+        .attr('pointer-events', 'none');
+
+      if (!dashed) {
+        const pct = ((price - CURRENT_PRICE) / CURRENT_PRICE) * 100;
+        const pctStr = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+        const cx = INNER_W / 2;
+
+        const badgeH = 20;
+        const badgeW = 70;
+        const badgeX = cx - badgeW / 2 - 28;
+        const fo = grp
+          .append('foreignObject')
+          .attr('x', badgeX)
+          .attr('y', -badgeH / 2)
+          .attr('width', badgeW)
+          .attr('height', badgeH)
+          .attr('pointer-events', 'none')
+          .style('overflow', 'visible');
+
+        const wrapper = fo
+          .append('xhtml:div')
+          .style('display', 'flex')
+          .style('justify-content', 'center')
+          .style('align-items', 'center')
+          .style('width', '100%')
+          .style('height', '100%');
+
+        const pill = wrapper
+          .append('xhtml:div')
+          .style('height', '20px')
+          .style('padding', '4px 8px')
+          .style('background', 'white')
+          .style('border-radius', '256px')
+          .style('display', 'inline-flex')
+          .style('flex-direction', 'column')
+          .style('justify-content', 'center')
+          .style('align-items', 'center');
+
+        pill
+          .append('xhtml:div')
+          .style('color', C.lineInside)
+          .style('font-size', '12px')
+          .style('font-family', 'Inter, sans-serif')
+          .style('font-weight', '700')
+          .style('line-height', '16px')
+          .style('white-space', 'nowrap')
+          .text(pctStr);
+
+        const iconW = 40;
+        const iconH = 40;
+        const iconX = cx + 4;
+        const iconY = -iconH / 2;
+
+        grp.append('rect')
+          .attr('x', iconX)
+          .attr('y', iconY)
+          .attr('width', iconW)
+          .attr('height', iconH)
+          .attr('fill', 'transparent')
+          .attr('class', label === 'MAX' ? 'hit-max' : 'hit-min')
+          .style('cursor', 'ns-resize');
+
+        const icon = grp
+          .append('g')
+          .attr('transform', `translate(${iconX}, ${iconY})`)
+          .attr('pointer-events', 'none');
+
+        const fid = `drag-shadow-${label}`;
+        const iconFilter = icon
+          .append('filter')
+          .attr('id', fid)
+          .attr('x', '0')
+          .attr('y', '0')
+          .attr('width', '40')
+          .attr('height', '40')
+          .attr('filterUnits', 'userSpaceOnUse')
+          .attr('color-interpolation-filters', 'sRGB');
+
+        iconFilter.append('feFlood').attr('flood-opacity', '0').attr('result', 'BackgroundImageFix');
+        iconFilter
+          .append('feColorMatrix')
+          .attr('in', 'SourceAlpha')
+          .attr('type', 'matrix')
+          .attr('values', '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0')
+          .attr('result', 'hardAlpha');
+        iconFilter.append('feOffset').attr('dy', '2');
+        iconFilter.append('feGaussianBlur').attr('stdDeviation', '4');
+        iconFilter.append('feComposite').attr('in2', 'hardAlpha').attr('operator', 'out');
+        iconFilter
+          .append('feColorMatrix')
+          .attr('type', 'matrix')
+          .attr('values', '0 0 0 0 0.930288 0 0 0 0 0.903541 0 0 0 0 0.903541 0 0 0 1 0');
+        const merge = iconFilter.append('feMerge');
+        merge.append('feMergeNode').attr('in', 'BackgroundImageFix');
+        merge.append('feMergeNode').attr('in', 'SourceGraphic');
+
+        icon.append('circle').attr('cx', '20').attr('cy', '18').attr('r', '12').attr('fill', C.handleCircle).attr('filter', `url(#${fid})`);
+        icon.append('path').attr('d', 'M14 16H26').attr('stroke', C.handleGrip).attr('stroke-linecap', 'round');
+        icon.append('path').attr('d', 'M14 20H26').attr('stroke', C.handleGrip).attr('stroke-linecap', 'round');
+      }
+
+      if (dashed) {
+        const pH = 20;
+        const pW = 90;
+        const pX = INNER_W - pW - 8;
+        const nowFo = grp
+          .append('foreignObject')
+          .attr('x', pX)
+          .attr('y', -pH / 2)
+          .attr('width', pW)
+          .attr('height', pH)
+          .attr('pointer-events', 'none')
+          .style('overflow', 'visible');
+
+        nowFo
+          .append('xhtml:div')
+          .style('height', '20px')
+          .style('padding', '4px 8px')
+          .style('background', C.lineInside)
+          .style('border-radius', '256px')
+          .style('display', 'inline-flex')
+          .style('align-items', 'center')
+          .style('justify-content', 'center')
+          .style('white-space', 'nowrap')
+          .style('width', '100%')
+          .append('xhtml:div')
+          .style('color', 'white')
+          .style('font-size', '11px')
+          .style('font-family', 'Inter, sans-serif')
+          .style('font-weight', '700')
+          .style('line-height', '14.3px')
+          .text(`$${d3.format(',.2f')(price)}`);
+      }
+    }
+
+    drawHLine({ y: maxY, color: C.minMaxLine, label: 'MAX', price: maxPrice });
+    drawHLine({ y: cpY, color: C.nowLine, label: 'NOW', price: CURRENT_PRICE, dashed: true });
+    drawHLine({ y: minY, color: C.minMaxLine, label: 'MIN', price: minPrice });
+  }, [minPrice, maxPrice, INNER_W, INNER_H, xScale, yScale, visibleData, activeRange, priceToY]);
+
+  useEffect(() => {
+    if (!tickSvgRef.current || TICK_IH <= 0) {
+      return;
+    }
+
+    const svg = d3.select(tickSvgRef.current);
     svg.selectAll('*').remove();
-    svg.attr('width', dims.width).attr('height', dims.height);
 
-    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+    const minY = priceToY(minPrice);
+    const maxY = priceToY(maxPrice);
 
-    const xDomain = d3.extent(allData, d => d.price) as [number, number];
-    const xScale = d3.scaleLinear().domain(xDomain).range([0, W]);
-    const yScale = d3
-      .scaleLinear()
-      .domain([0, (d3.max(allData, d => d.liquidity) ?? 0) * 1.15])
-      .range([H, 0]);
-
-    const rMin = rangeRef.current.min;
-    const rMax = rangeRef.current.max;
-
-    // --- Defs ---
     const defs = svg.append('defs');
 
     const inGrad = defs
       .append('linearGradient')
-      .attr('id', 'inAreaGrad')
-      .attr('x1', '0')
+      .attr('id', 'tick-grad-in')
+      .attr('x1', '1')
       .attr('x2', '0')
       .attr('y1', '0')
-      .attr('y2', '1');
-    inGrad.append('stop').attr('offset', '0%').attr('stop-color', '#FF007A').attr('stop-opacity', 0.4);
-    inGrad.append('stop').attr('offset', '100%').attr('stop-color', '#FF007A').attr('stop-opacity', 0.02);
+      .attr('y2', '0');
+    inGrad.append('stop').attr('offset', '0%').attr('stop-color', C.tickInFill).attr('stop-opacity', C.tickInOpacityA);
+    inGrad.append('stop').attr('offset', '100%').attr('stop-color', C.tickInFill).attr('stop-opacity', C.tickInOpacityB);
 
     const outGrad = defs
       .append('linearGradient')
-      .attr('id', 'outAreaGrad')
-      .attr('x1', '0')
+      .attr('id', 'tick-grad-out')
+      .attr('x1', '1')
       .attr('x2', '0')
       .attr('y1', '0')
-      .attr('y2', '1');
-    outGrad.append('stop').attr('offset', '0%').attr('stop-color', '#4A4A4A').attr('stop-opacity', 0.3);
-    outGrad.append('stop').attr('offset', '100%').attr('stop-color', '#4A4A4A').attr('stop-opacity', 0.0);
+      .attr('y2', '0');
+    outGrad.append('stop').attr('offset', '0%').attr('stop-color', C.tickOutFill).attr('stop-opacity', C.tickOutOpacityA);
+    outGrad.append('stop').attr('offset', '100%').attr('stop-color', C.tickOutFill).attr('stop-opacity', C.tickOutOpacityB);
 
-    defs
-      .append('clipPath')
-      .attr('id', 'clipIn')
-      .append('rect')
-      .attr('x', xScale(rMin))
-      .attr('y', 0)
-      .attr('width', Math.max(0, xScale(rMax) - xScale(rMin)))
-      .attr('height', H);
+    defs.append('clipPath').attr('id', 'clip-tick-in').append('rect').attr('x', 0).attr('y', maxY).attr('width', TICK_IW).attr('height', Math.max(0, minY - maxY));
 
-    const outClip = defs.append('clipPath').attr('id', 'clipOut');
-    outClip
-      .append('rect')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('width', Math.max(0, xScale(rMin)))
-      .attr('height', H);
-    outClip
-      .append('rect')
-      .attr('x', xScale(rMax))
-      .attr('y', 0)
-      .attr('width', Math.max(0, W - xScale(rMax)))
-      .attr('height', H);
+    const outClip = defs.append('clipPath').attr('id', 'clip-tick-out');
+    outClip.append('rect').attr('x', 0).attr('y', 0).attr('width', TICK_IW).attr('height', maxY);
+    outClip.append('rect').attr('x', 0).attr('y', minY).attr('width', TICK_IW).attr('height', Math.max(0, TICK_IH - minY));
 
-    // --- Generators ---
-    const area = d3
-      .area<{ price: number; liquidity: number }>()
-      .x(d => xScale(d.price))
-      .y0(H)
-      .y1(d => yScale(d.liquidity))
-      .curve(d3.curveCatmullRom.alpha(0.5));
+    const g = svg.append('g').attr('transform', `translate(${TM.left},${TM.top})`);
+    const liqMax = d3.max(TICK_DATA, (d) => d.liquidity) ?? 1;
+    const xLiq = d3.scaleLinear().domain([0, liqMax]).range([TICK_IW, 0]);
 
-    const line = d3
-      .line<{ price: number; liquidity: number }>()
-      .x(d => xScale(d.price))
-      .y(d => yScale(d.liquidity))
-      .curve(d3.curveCatmullRom.alpha(0.5));
+    const liqArea = d3
+      .area<TickPoint>()
+      .x0(TICK_IW)
+      .x1((d) => xLiq(d.liquidity))
+      .y((d) => priceToY(d.price))
+      .curve(d3.curveBasis);
 
+    const liqLine = d3
+      .line<TickPoint>()
+      .x((d) => xLiq(d.liquidity))
+      .y((d) => priceToY(d.price))
+      .curve(d3.curveBasis);
+
+    g.append('path').datum(TICK_DATA).attr('d', liqArea).attr('fill', 'url(#tick-grad-out)').attr('clip-path', 'url(#clip-tick-out)');
     g.append('path')
-      .datum(allData)
-      .attr('d', area)
-      .attr('fill', 'url(#outAreaGrad)')
-      .attr('clip-path', 'url(#clipOut)');
-    g.append('path')
-      .datum(allData)
-      .attr('d', line)
+      .datum(TICK_DATA)
+      .attr('d', liqLine)
       .attr('fill', 'none')
-      .attr('stroke', '#3A3A3A')
+      .attr('stroke', C.tickOutStroke)
       .attr('stroke-width', 1.5)
-      .attr('clip-path', 'url(#clipOut)');
-    g.append('path').datum(allData).attr('d', area).attr('fill', 'url(#inAreaGrad)').attr('clip-path', 'url(#clipIn)');
+      .attr('opacity', 0.6)
+      .attr('clip-path', 'url(#clip-tick-out)');
+
+    g.append('path').datum(TICK_DATA).attr('d', liqArea).attr('fill', 'url(#tick-grad-in)').attr('clip-path', 'url(#clip-tick-in)');
     g.append('path')
-      .datum(allData)
-      .attr('d', line)
+      .datum(TICK_DATA)
+      .attr('d', liqLine)
       .attr('fill', 'none')
-      .attr('stroke', '#FF007A')
+      .attr('stroke', C.tickInStroke)
       .attr('stroke-width', 2)
-      .attr('clip-path', 'url(#clipIn)');
-
-    // Current price line
-    const cpX = xScale(CURRENT_PRICE);
-    g.append('line')
-      .attr('x1', cpX)
-      .attr('x2', cpX)
-      .attr('y1', 0)
-      .attr('y2', H)
-      .attr('stroke', '#FF007A')
-      .attr('stroke-width', 1)
-      .attr('stroke-dasharray', '4,3')
-      .attr('opacity', 0.6);
-    g.append('text')
-      .attr('x', cpX + 4)
-      .attr('y', 10)
-      .attr('fill', '#FF007A')
-      .attr('font-size', '10px')
-      .attr('font-family', 'monospace')
-      .text(`$${CURRENT_PRICE.toFixed(2)}`);
-
-    // X Axis
-    g.append('g')
-      .attr('transform', `translate(0,${H})`)
-      .call(
-        d3
-          .axisBottom(xScale)
-          .ticks(6)
-          .tickFormat(d => `$${d3.format(',.0f')(d as number)}`),
-      )
-      .call(ax => {
-        ax.select('.domain').remove();
-        ax.selectAll('.tick line').remove();
-        ax.selectAll('.tick text').attr('fill', '#555').attr('font-size', '10px').attr('font-family', 'monospace');
-      });
-
-    // --- Helper: update clip paths when range changes ---
-    function updateClips(newMin: number, newMax: number): void {
-      svg
-        .select('#clipIn rect')
-        .attr('x', xScale(newMin))
-        .attr('width', Math.max(0, xScale(newMax) - xScale(newMin)));
-      const outRects = svg.select('#clipOut').selectAll<SVGRectElement, unknown>('rect');
-      outRects.filter((_, i) => i === 0).attr('width', Math.max(0, xScale(newMin)));
-      outRects
-        .filter((_, i) => i === 1)
-        .attr('x', xScale(newMax))
-        .attr('width', Math.max(0, W - xScale(newMax)));
-    }
-
-    // --- LAYER 2: Custom pill handles (above brush) ---
-    const HW = 12; // handle width
-
-    function buildHandle(priceVal: number, isMin: boolean): d3.Selection<SVGGElement, unknown, null, undefined> {
-      const handle = g
-        .append('g')
-        .attr('class', isMin ? 'custom-handle-min' : 'custom-handle-max')
-        .attr('cursor', 'ew-resize')
-        .attr('transform', `translate(${xScale(priceVal) - HW / 2}, 0)`);
-
-      // vertical line
-      handle
-        .append('line')
-        .attr('x1', HW / 2)
-        .attr('x2', HW / 2)
-        .attr('y1', 0)
-        .attr('y2', H)
-        .attr('stroke', '#FF007A')
-        .attr('stroke-width', 1.5)
-        .attr('opacity', 0.7);
-
-      // pill button
-      handle
-        .append('rect')
-        .attr('x', 0)
-        .attr('y', H / 2 - 18)
-        .attr('width', HW)
-        .attr('height', 36)
-        .attr('rx', 6)
-        .attr('fill', '#FF007A');
-
-      handle
-        .append('text')
-        .attr('x', HW / 2)
-        .attr('y', H / 2 + 1)
-        .attr('text-anchor', 'middle')
-        .attr('dominant-baseline', 'middle')
-        .attr('fill', 'white')
-        .attr('font-size', '9px')
-        .text('◀▶');
-
-      // price label
-      handle
-        .append('text')
-        .attr('class', 'handle-label')
-        .attr('x', isMin ? -4 : HW + 4)
-        .attr('y', H / 2 - 24)
-        .attr('text-anchor', isMin ? 'end' : 'start')
-        .attr('fill', '#FF007A')
-        .attr('font-size', '10px')
-        .attr('font-family', 'monospace')
-        .text(`$${priceVal.toFixed(2)}`);
-
-      // transparent wide hit area for easier grabbing
-      handle
-        .append('rect')
-        .attr('x', -8)
-        .attr('y', 0)
-        .attr('width', HW + 16)
-        .attr('height', H)
-        .attr('fill', 'transparent');
-
-      return handle;
-    }
-
-    const minHandleG = buildHandle(rMin, true);
-    const maxHandleG = buildHandle(rMax, false);
-
-    // --- LAYER 1: Brush (below handles) — crosshair drag to set range ---
-    const brushG = g.append('g').attr('class', 'brush');
-    const brush = d3
-      .brushX()
-      .extent([
-        [0, 0],
-        [W, H],
-      ])
-      .on('brush end', (event: d3.D3BrushEvent<unknown>) => {
-        if (!event.selection || event.sourceEvent?.type === 'drag') return;
-        const [x0, x1] = event.selection as [number, number];
-        const newMin = Math.max(xDomain[0], xScale.invert(x0));
-        const newMax = Math.min(xDomain[1], xScale.invert(x1));
-        rangeRef.current.min = newMin;
-        rangeRef.current.max = newMax;
-        setRangeMin(newMin);
-        setRangeMax(newMax);
-        updateClips(newMin, newMax);
-        // move handles to new positions
-        minHandleG.attr('transform', `translate(${xScale(newMin) - HW / 2}, 0)`);
-        minHandleG.select('.handle-label').text(`$${newMin.toFixed(2)}`);
-        maxHandleG.attr('transform', `translate(${xScale(newMax) - HW / 2}, 0)`);
-        maxHandleG.select('.handle-label').text(`$${newMax.toFixed(2)}`);
-      });
-
-    brushG.call(brush as unknown as (sel: d3.Selection<SVGGElement, unknown, null, undefined>) => void);
-    brushG.call(
-      brush.move as unknown as (sel: d3.Selection<SVGGElement, unknown, null, undefined>, v: [number, number]) => void,
-      [xScale(rMin), xScale(rMax)],
-    );
-    brushG.select('.selection').attr('fill', '#FF007A').attr('fill-opacity', 0.05).attr('stroke', 'none');
-    brushG.selectAll('.handle').remove();
-    brushG.select('.overlay').attr('cursor', 'crosshair');
-
-    // Drag: only move horizontally, clamp to chart bounds
-    function attachDrag(handle: d3.Selection<SVGGElement, unknown, null, undefined>, isMin: boolean): void {
-      let startX = 0;
-      let startPrice = 0;
-
-      handle.call(
-        d3
-          .drag<SVGGElement, unknown>()
-          .on('start', (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
-            startX = event.x;
-            startPrice = isMin ? rangeRef.current.min : rangeRef.current.max;
-          })
-          .on('drag', (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
-            // convert pixel delta → price delta
-            const dx = event.x - startX;
-            const pxPerPrice = W / (xDomain[1] - xDomain[0]);
-            const newPrice = Math.max(xDomain[0], Math.min(xDomain[1], startPrice + dx / pxPerPrice));
-
-            if (isMin) {
-              const safe = Math.min(newPrice, rangeRef.current.max - 1);
-              rangeRef.current.min = safe;
-              setRangeMin(safe);
-              handle.attr('transform', `translate(${xScale(safe) - HW / 2}, 0)`);
-              handle.select('.handle-label').text(`$${safe.toFixed(2)}`);
-              updateClips(safe, rangeRef.current.max);
-              // sync brush selection
-              brushG.call(
-                brush.move as unknown as (
-                  sel: d3.Selection<SVGGElement, unknown, null, undefined>,
-                  v: [number, number],
-                ) => void,
-                [xScale(safe), xScale(rangeRef.current.max)],
-              );
-            } else {
-              const safe = Math.max(newPrice, rangeRef.current.min + 1);
-              rangeRef.current.max = safe;
-              setRangeMax(safe);
-              handle.attr('transform', `translate(${xScale(safe) - HW / 2}, 0)`);
-              handle.select('.handle-label').text(`$${safe.toFixed(2)}`);
-              updateClips(rangeRef.current.min, safe);
-              brushG.call(
-                brush.move as unknown as (
-                  sel: d3.Selection<SVGGElement, unknown, null, undefined>,
-                  v: [number, number],
-                ) => void,
-                [xScale(rangeRef.current.min), xScale(safe)],
-              );
-            }
-          }),
-      );
-    }
-
-    attachDrag(minHandleG, true);
-    attachDrag(maxHandleG, false);
-  }, [dims, zoomLevel]);
+      .attr('opacity', 0.95)
+      .attr('clip-path', 'url(#clip-tick-in)');
+  }, [minPrice, maxPrice, TICK_IW, TICK_IH, priceToY]);
 
   useEffect(() => {
-    draw();
-  }, [draw]);
+    const svgEl = mainSvgRef.current;
+    if (!svgEl) {
+      return;
+    }
 
-  const handleZoomIn = (): void => setZoomLevel(z => Math.max(0, z - 1));
-  const handleZoomOut = (): void => setZoomLevel(z => Math.min(ZOOM_LEVELS.length - 1, z + 1));
-  const priceInRange = CURRENT_PRICE >= rangeMin && CURRENT_PRICE <= rangeMax;
+    const getHit = (event: Event): 'min' | 'max' | 'band' | null => {
+      const target = event.target;
+      if (!(target instanceof SVGElement)) {
+        return null;
+      }
+      if (target.classList.contains('hit-max')) {
+        return 'max';
+      }
+      if (target.classList.contains('hit-min')) {
+        return 'min';
+      }
+      if (target.classList.contains('band-hit')) {
+        return 'band';
+      }
+      return null;
+    };
+
+    const getY = (event: MouseEvent | TouchEvent): number => {
+      const rect = svgEl.getBoundingClientRect();
+      const cy = 'touches' in event ? event.touches[0]?.clientY ?? 0 : event.clientY;
+      return cy - rect.top - ML.top;
+    };
+
+    const onDown = (event: MouseEvent | TouchEvent): void => {
+      const hit = getHit(event);
+      if (!hit) {
+        return;
+      }
+
+      event.stopPropagation();
+      event.preventDefault();
+      draggingRef.current = hit;
+
+      if (hit === 'band') {
+        dragDataRef.current = {
+          anchorY: getY(event),
+          anchorMin: minPrice,
+          anchorMax: maxPrice,
+          span: maxPrice - minPrice,
+          pxPerPrice: INNER_H / (yDomainMax - yDomainMin),
+        };
+      }
+    };
+
+    const onMove = (event: MouseEvent | TouchEvent): void => {
+      if (!draggingRef.current) {
+        return;
+      }
+
+      event.preventDefault();
+      const rect = svgEl.getBoundingClientRect();
+      const cy = 'touches' in event ? event.touches[0]?.clientY ?? 0 : event.clientY;
+      const y = cy - rect.top - ML.top;
+      const p = yScale.invert(Math.max(0, Math.min(INNER_H, y)));
+
+      if (draggingRef.current === 'min') {
+        setMinPrice(+(Math.min(p, CURRENT_PRICE - 20)).toFixed(2));
+      } else if (draggingRef.current === 'max') {
+        setMaxPrice(+(Math.max(p, CURRENT_PRICE + 20)).toFixed(2));
+      } else if (draggingRef.current === 'band' && dragDataRef.current) {
+        const dd = dragDataRef.current;
+        const priceDelta = (y - dd.anchorY) / dd.pxPerPrice;
+        const newMin = +(dd.anchorMin - priceDelta).toFixed(2);
+        setMinPrice(newMin);
+        setMaxPrice(+(newMin + dd.span).toFixed(2));
+      }
+    };
+
+    const onUp = (): void => {
+      draggingRef.current = null;
+      dragDataRef.current = null;
+    };
+
+    svgEl.addEventListener('mousedown', onDown, { capture: true });
+    svgEl.addEventListener('mousemove', onMove, { capture: true, passive: false });
+    svgEl.addEventListener('mouseup', onUp, { capture: true });
+    svgEl.addEventListener('touchstart', onDown, { capture: true, passive: false });
+    svgEl.addEventListener('touchmove', onMove, { capture: true, passive: false });
+    svgEl.addEventListener('touchend', onUp, { capture: true });
+
+    return () => {
+      svgEl.removeEventListener('mousedown', onDown, { capture: true });
+      svgEl.removeEventListener('mousemove', onMove, { capture: true });
+      svgEl.removeEventListener('mouseup', onUp, { capture: true });
+      svgEl.removeEventListener('touchstart', onDown, { capture: true });
+      svgEl.removeEventListener('touchmove', onMove, { capture: true });
+      svgEl.removeEventListener('touchend', onUp, { capture: true });
+    };
+  }, [yScale, minPrice, maxPrice, INNER_H, yDomainMin, yDomainMax]);
+
+  const doZoom = useCallback((factor: number) => {
+    if (zoomBehRef.current && zoomObjRef.current) {
+      zoomBehRef.current.transition().duration(300).call(zoomObjRef.current.scaleBy, factor);
+    }
+  }, []);
+
+  const doResetZoom = useCallback(() => {
+    if (zoomBehRef.current && zoomObjRef.current) {
+      zoomBehRef.current.transition().duration(300).call(zoomObjRef.current.transform, d3.zoomIdentity);
+    }
+  }, []);
 
   return (
-    <div
-      style={{
-        background: '#0D0D0D',
-        borderRadius: '20px',
-        padding: '24px',
-        fontFamily: 'monospace',
-        color: '#fff',
-        maxWidth: '700px',
-        width: '100%',
-        boxSizing: 'border-box',
-      }}
-    >
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <span style={{ fontSize: '13px', color: '#888', letterSpacing: '0.05em' }}>LIQUIDITY RANGE</span>
-        <div
-          style={{ display: 'inline-flex', background: '#1A1A1A', borderRadius: '10px', padding: '3px', gap: '2px' }}
-        >
-          {PERIODS.map(p => (
-            <button
-              key={p}
-              onClick={() => setPeriod(p)}
-              type="button"
-              style={{
-                padding: '4px 10px',
-                borderRadius: '8px',
-                border: 'none',
-                background: period === p ? '#FF007A' : 'transparent',
-                color: period === p ? '#fff' : '#555',
-                fontSize: '11px',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-                fontFamily: 'monospace',
-              }}
+    <div className="w-full">
+      <style>{`
+        .lri-root {
+          background: transparent;
+          border-radius: 18px;
+          width: 100%;
+          user-select: none;
+        }
+        .lri-toolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-top: 8px;
+        }
+        .lri-range-btns {
+          display: flex;
+          gap: 4px;
+        }
+        .lri-rbtn {
+          padding: 5px 12px;
+          border-radius: 6px;
+          background: #f8f3f3;
+          border: 1px solid #d8caca;
+          color: #8e7e7d;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 10px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s;
+          letter-spacing: 0.5px;
+        }
+        .lri-rbtn:hover {
+          border-color: #554341;
+          color: #554341;
+        }
+        .lri-rbtn.active {
+          background: #ede6e6;
+          border-color: #554341;
+          color: #554341;
+        }
+        .lri-zoom-btns {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+        .lri-zbtn {
+          width: 30px;
+          height: 28px;
+          border-radius: 6px;
+          background: #f8f3f3;
+          border: 1px solid #d8caca;
+          color: #8e7e7d;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.15s;
+        }
+        .lri-zbtn:hover {
+          border-color: #554341;
+          color: #554341;
+          background: #ede6e6;
+        }
+        .lri-zbtn.reset {
+          font-size: 9px;
+          width: auto;
+          padding: 0 10px;
+          letter-spacing: 0.5px;
+        }
+        .lri-chart-row {
+          background: transparent;
+          border-radius: 12px;
+          position: relative;
+          overflow: hidden;
+        }
+        .lri-main-chart {
+          width: 100%;
+          overflow: visible;
+        }
+        .lri-main-chart svg {
+          display: block;
+          width: 100%;
+          overflow: visible;
+        }
+        .lri-tick-panel {
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: ${TICK_W}px;
+          height: 100%;
+          pointer-events: none;
+        }
+        .lri-tick-panel svg {
+          display: block;
+          width: 100%;
+        }
+      `}</style>
+
+      <div className="lri-root">
+        <div className="lri-chart-row" ref={wrapRef}>
+          <div className="lri-main-chart">
+            <svg
+              ref={mainSvgRef}
+              width={width}
+              height={HEIGHT}
+              style={{ width: '100%', height: HEIGHT }}
+              viewBox={`0 0 ${width} ${HEIGHT}`}
+              preserveAspectRatio="none"
             >
-              {p}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Status */}
-      <div style={{ marginBottom: '12px' }}>
-        <span
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '4px 12px',
-            borderRadius: '999px',
-            background: priceInRange ? 'rgba(255,0,122,0.1)' : 'rgba(255,100,0,0.1)',
-            border: `1px solid ${priceInRange ? '#FF007A44' : '#FF640044'}`,
-            fontSize: '11px',
-            color: priceInRange ? '#FF007A' : '#FF6400',
-          }}
-        >
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: '50%',
-              background: priceInRange ? '#FF007A' : '#FF6400',
-              display: 'inline-block',
-            }}
-          />
-          {priceInRange ? 'Current price in range' : 'Current price out of range'}
-        </span>
-      </div>
-
-      {/* Chart */}
-      <div ref={containerRef} style={{ width: '100%', position: 'relative', userSelect: 'none' }}>
-        <svg ref={svgRef} style={{ overflow: 'visible', display: 'block' }} />
-      </div>
-
-      {/* Zoom */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
-        <span style={{ fontSize: '11px', color: '#555' }}>ZOOM</span>
-        <button
-          onClick={handleZoomIn}
-          type="button"
-          style={zoomBtnStyle}
-          onMouseEnter={e => {
-            e.currentTarget.style.background = '#2A2A2A';
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.background = '#1A1A1A';
-          }}
-        >
-          +
-        </button>
-        <button
-          onClick={handleZoomOut}
-          type="button"
-          style={zoomBtnStyle}
-          onMouseEnter={e => {
-            e.currentTarget.style.background = '#2A2A2A';
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.background = '#1A1A1A';
-          }}
-        >
-          −
-        </button>
-        <div style={{ flex: 1 }} />
-        <span style={{ fontSize: '10px', color: '#444' }}>
-          ±{((ZOOM_LEVELS[zoomLevel] ?? 0.4) * 100).toFixed(0)}% range
-        </span>
-      </div>
-
-      {/* Range inputs */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '16px' }}>
-        {(
-          [
-            {
-              label: 'MIN PRICE',
-              value: rangeMin,
-              setter: (v: number) => {
-                rangeRef.current.min = v;
-                setRangeMin(v);
-                draw();
-              },
-            },
-            {
-              label: 'MAX PRICE',
-              value: rangeMax,
-              setter: (v: number) => {
-                rangeRef.current.max = v;
-                setRangeMax(v);
-                draw();
-              },
-            },
-          ] as const
-        ).map(({ label, value, setter }) => (
-          <div
-            key={label}
-            style={{ background: '#1A1A1A', borderRadius: '12px', padding: '12px 14px', border: '1px solid #222' }}
-          >
-            <div style={{ fontSize: '10px', color: '#555', marginBottom: '6px', letterSpacing: '0.08em' }}>{label}</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ color: '#555', fontSize: '13px' }}>$</span>
-              <input
-                type="number"
-                value={value.toFixed(2)}
-                onChange={e => {
-                  const num = Number.parseFloat(e.target.value);
-                  if (!Number.isNaN(num)) setter(num);
-                }}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#FF007A',
-                  fontSize: '15px',
-                  fontFamily: 'monospace',
-                  width: '100%',
-                  outline: 'none',
-                }}
+              <title>Pool price chart</title>
+              <rect
+                className="zoom-bg"
+                transform={`translate(${ML.left},${ML.top})`}
+                width={Math.max(0, width - ML.left - ML.right)}
+                height={Math.max(0, INNER_H)}
+                fill="transparent"
+                style={{ cursor: 'crosshair' }}
               />
-            </div>
-            <div style={{ fontSize: '10px', color: '#444', marginTop: '4px' }}>ETH per USDC</div>
+            </svg>
           </div>
-        ))}
+
+          <div className="lri-tick-panel">
+            <svg
+              ref={tickSvgRef}
+              width={TICK_W}
+              height={HEIGHT}
+              style={{ width: '100%', height: HEIGHT }}
+              viewBox={`0 0 ${TICK_W} ${HEIGHT}`}
+              preserveAspectRatio="none"
+            >
+              <title>Pool tick liquidity chart</title>
+            </svg>
+          </div>
+        </div>
+
+        <div className="lri-toolbar">
+          <div className="lri-range-btns">
+            {RANGES.map((range) => (
+              <Button
+                key={range.label}
+                variant="outline"
+                size="sm"
+                className={cn('outline-none border-none shadow-none text-(length:--body-fine-print) px-2 py-1 h-[22px]', activeRange === range.label ? 'text-espresso font-bold bg-cream-white' : '')}
+                onClick={() => setActiveRange(range.label)}
+              >{range.label}</Button>
+            ))}
+          </div>
+          <div className="lri-zoom-btns">
+              <MinusCircleIcon className="w-4 h-4 text-clay cursor-pointer hover:text-espresso" onClick={() => doZoom(1 / 1.5)}/>
+              <RefreshCcwIcon className="w-4 h-4 text-clay cursor-pointer hover:text-espresso" onClick={doResetZoom}/>
+              <PlusCircleIcon className="w-4 h-4 text-clay cursor-pointer hover:text-espresso" onClick={() => doZoom(1.5)}/>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
+
+export default PoolChart;

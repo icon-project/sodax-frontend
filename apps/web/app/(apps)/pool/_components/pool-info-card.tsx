@@ -1,10 +1,10 @@
 // apps/web/app/(apps)/pool/_components/pool-info-card.tsx
 import type React from 'react';
-import Image from 'next/image';
 import CurrencyLogo from '@/components/shared/currency-logo';
-import { PoolChart } from './pool-chart';
+import PoolChart from './pool-chart';
 import type { XToken } from '@sodax/types';
 import { ChevronDownIcon } from 'lucide-react';
+import { useState } from 'react';
 
 const mockToken1: XToken = {
   name: 'SODA',
@@ -23,6 +23,16 @@ const mockToken2: XToken = {
 };
 
 export function PoolInfoCard(): React.JSX.Element {
+  const [range, setRange] = useState({
+    min: 2500,
+    max: 3500,
+  })
+
+  const mockData = Array.from({ length: 100 }).map((_, i) => ({
+    timestamp: Date.now() - (100 - i) * 3600000,
+    price: 3000 + Math.sin(i / 10) * 400,
+  }))
+
   return (
     <div className="self-stretch flex flex-col justify-start items-start">
       <div
@@ -62,7 +72,7 @@ export function PoolInfoCard(): React.JSX.Element {
             </div>
           </div>
         </div>
-        {/* <PoolChart /> */}
+        <PoolChart />
       </div>
     </div>
   );
