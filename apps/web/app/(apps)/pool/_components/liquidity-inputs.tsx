@@ -6,7 +6,19 @@ import { InputGroup, InputGroupText } from '@/components/ui/input-group';
 import { InputGroupAddon } from '@/components/ui/input-group';
 import { InputGroupInput } from '@/components/ui/input-group';
 
-export function LiquidityInputs(): React.JSX.Element {
+type LiquidityInputsProps = {
+  sodaAmount: string;
+  xSodaAmount: string;
+  onSodaAmountChange: (value: string) => void;
+  onXSodaAmountChange: (value: string) => void;
+};
+
+export function LiquidityInputs({
+  sodaAmount,
+  xSodaAmount,
+  onSodaAmountChange,
+  onXSodaAmountChange,
+}: LiquidityInputsProps): React.JSX.Element {
   return (
     <div className="self-stretch flex flex-col md:flex-row justify-start items-start gap-2 md:gap-4">
       <InputGroup className="h-10 pl-2 pr-4 bg-almost-white rounded-[32px] flex justify-between items-center w-full md:w-50 font-['InterRegular'] text-espresso">
@@ -22,10 +34,21 @@ export function LiquidityInputs(): React.JSX.Element {
             />
           </InputGroupText>
         </InputGroupAddon>
-        <InputGroupInput placeholder="0" />
-        <InputGroupAddon align="inline-end">
-          <InputGroupText>SODA</InputGroupText>
-        </InputGroupAddon>
+        <div className="relative flex-1">
+          <InputGroupInput
+            placeholder=""
+            inputMode="decimal"
+            value={sodaAmount}
+            onChange={event => onSodaAmountChange(event.target.value)}
+            className="text-espresso!"
+          />
+          {sodaAmount.length === 0 ? (
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center gap-1 text-sm">
+              <span className="text-clay-light">0</span>
+              <span className="text-cherry-grey">SODA</span>
+            </span>
+          ) : null}
+        </div>
       </InputGroup>
       <InputGroup className="h-10 pl-2 pr-4 bg-almost-white rounded-[32px] flex justify-between items-center w-full md:w-50 font-['InterRegular'] text-espresso">
         <InputGroupAddon className="pl-0">
@@ -40,10 +63,21 @@ export function LiquidityInputs(): React.JSX.Element {
             />
           </InputGroupText>
         </InputGroupAddon>
-        <InputGroupInput placeholder="0" />
-        <InputGroupAddon align="inline-end">
-          <InputGroupText>xSODA</InputGroupText>
-        </InputGroupAddon>
+        <div className="relative flex-1">
+          <InputGroupInput
+            placeholder=""
+            inputMode="decimal"
+            value={xSodaAmount}
+            onChange={event => onXSodaAmountChange(event.target.value)}
+            className="text-espresso!"
+          />
+          {xSodaAmount.length === 0 ? (
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center gap-1 text-sm">
+              <span className="text-clay-light">0</span>
+              <span className="text-cherry-grey">xSODA</span>
+            </span>
+          ) : null}
+        </div>
       </InputGroup>
       <Button
         data-state="disabled"
