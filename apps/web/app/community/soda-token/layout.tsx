@@ -20,12 +20,21 @@ export const metadata: Metadata = {
     type: 'website',
     url: 'https://sodax.com/community/soda-token',
     siteName: 'SODAX',
+    images: [
+      {
+        url: 'https://sodax.com/community/soda-token/link-preview.png',
+        width: 1200,
+        height: 630,
+        alt: 'SODA Token Supply & Metrics',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'SODA Token Supply & Metrics',
     description: 'Real-time SODA token supply data and metrics for the SODAX DeFi ecosystem.',
     site: '@gosodax',
+    images: ['https://sodax.com/community/soda-token/link-preview.png'],
   },
   alternates: {
     canonical: 'https://sodax.com/community/soda-token',

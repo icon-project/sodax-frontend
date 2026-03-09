@@ -28,7 +28,7 @@ export default function AssetList({
     return filtered;
   }, [filteredTokens, searchQuery]);
 
-  const allChainBalances = useAllChainBalances();
+  const allChainBalances = useAllChainBalances({ useMoneymarketTokens: true });
   const balanceMap = useMemo(() => {
     const map = new Map<string, string>();
     allTokens.forEach(token => {

@@ -12,6 +12,7 @@ import {
   LOANS_ROUTE,
   MIGRATE_ROUTE,
   PARTNER_DASHBOARD_ROUTE,
+  POOL_ROUTE,
   SAVE_ROUTE,
   STAKE_ROUTE,
   SWAP_ROUTE,
@@ -42,7 +43,7 @@ export const tabConfigs: TabConfig[] = [
     type: 'save',
     label: 'Save',
     content: 'a quick save',
-    enabled: true,
+    enabled: process.env.NEXT_PUBLIC_APP_ENV !== 'production',
     href: SAVE_ROUTE,
   },
   {
@@ -60,6 +61,14 @@ export const tabConfigs: TabConfig[] = [
     content: 'a quick stake',
     enabled: true,
     href: STAKE_ROUTE,
+  },
+  {
+    value: 'pool',
+    type: 'pool',
+    label: 'Pool',
+    content: 'a quick pool',
+    enabled: true,
+    href: POOL_ROUTE,
   },
   {
     value: 'migrate',
@@ -91,7 +100,11 @@ interface RouteTabsProps {
 export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.Element {
   const pathname = usePathname();
   const isPartner = isPartnerRoute(pathname);
-  const usedTabs = isPartner ? partnerTabConfigs : tabConfigs;
+  const usedTabs = isPartner
+    ? partnerTabConfigs
+    : tabConfigs.filter(
+        tab => !((tab.value === 'stake' || tab.value === 'pool') && process.env.NEXT_PUBLIC_APP_ENV === 'production'),
+      );
 
   const lastSegment = pathname.split('/').filter(Boolean).pop() ?? '';
   const tabValues = usedTabs.map(t => t.value);
@@ -218,7 +231,8 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
           <div ref={mobileTabsContainerRef} className="w-full px-4 py-4 bg-cream-white h-24 flex">
             <div className="grid grid-cols-4 gap-4 bg-transparent py-0 w-full">
               {usedTabs
-                .filter(tab => !(tab.value === 'loans'))
+                .filter(tab => !(tab.value === 'loans' && process.env.NEXT_PUBLIC_APP_ENV !== 'production'))
+                .filter(tab => tab.value !== 'pool')
                 .map(tab => {
                   const href = tab.href ?? `/${tab.value}`;
                   const active = current === tab.value;
