@@ -212,7 +212,12 @@ export function StakeInputPanel(): React.JSX.Element {
                 className="flex"
               >
                 {stakeMode === STAKE_MODE.STAKING ? (
-                  !walletConnected && selectedToken ? (
+                  !selectedToken ? (
+                    // Initial stake state stays on "Choose a network" with a disabled "Stake" button.
+                    <Button variant="cherry" className="px-6 w-25" onClick={handleStake} disabled={true}>
+                      Stake
+                    </Button>
+                  ) : !walletConnected && selectedToken ? (
                     <Button variant="cherry" className="px-6" onClick={() => handleConnect()}>
                       Connect {getChainName(selectedToken.xChainId)}
                     </Button>
