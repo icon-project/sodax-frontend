@@ -8,11 +8,14 @@ import {
   type NearReturnType,
   type NearSpokeProviderType,
   type PromiseNearTxReturnType,
+  type Result,
   type TxReturnType,
+  type VerifyTxHashRawNearConfig,
 } from '../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
-import type { NearSpokeProvider } from '../../entities/near/NearSpokeProvider.js';
+import { NearSpokeProvider } from '../../entities/near/NearSpokeProvider.js';
 import { getIntentRelayChainId, type HubAddress } from '@sodax/types';
+import { JsonRpcProvider } from 'near-api-js';
 
 export type NearSpokeDepositParams = {
   from: string; // The address of the user on the spoke chain
@@ -175,5 +178,53 @@ export class NearSpokeService {
   public static async getAvailable(token: string, spokeProvider: NearSpokeProvider): Promise<bigint> {
     const rate_limit = await spokeProvider.getRateLimit(token);
     return BigInt(rate_limit.available);
+  }
+
+  public static async waitForTransaction(
+    spokeProvider: NearSpokeProvider,
+    txHash: string,
+    pollingTimeout?: number,
+    maxAttempts?: number,
+  ): Promise<Result<boolean, Error>> {
+    try {
+      const accountId = await spokeProvider.walletProvider.getWalletAddress();
+      const receipt = await NearSpokeProvider.waitForTransaction(
+        txHash,
+        accountId,
+        spokeProvider.rpcProvider,
+        pollingTimeout,
+        maxAttempts,
+      );
+      if (receipt.status === 'success') {
+        return { ok: true, value: true };
+      }
+      return { ok: false, error: new Error(`NEAR transaction failed: ${txHash}`) };
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err : new Error(String(err)) };
+    }
+  }
+
+  public static async waitForTransactionRaw(params: VerifyTxHashRawNearConfig): Promise<Result<boolean, Error>> {
+    try {
+      const defaultParams = {
+        pollingTimeout: 750,
+        maxAttempts: 40,
+      } as const;
+
+      const { rpcUrl, txHash, accountId, pollingTimeout, maxAttempts } = { ...defaultParams, ...params };
+      const receipt = await NearSpokeProvider.waitForTransaction(
+        txHash,
+        accountId,
+        new JsonRpcProvider({ url: rpcUrl }),
+        pollingTimeout,
+        maxAttempts,
+      );
+      if (receipt.status === 'success') {
+        return { ok: true, value: true };
+      }
+      return { ok: false, error: new Error(`NEAR transaction failed: ${txHash}`) };
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err : new Error(String(err)) };
+    }
   }
 }

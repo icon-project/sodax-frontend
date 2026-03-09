@@ -48,6 +48,7 @@ import {
   isEvmSpokeProviderType,
   isSonicSpokeProviderType,
   isNearSpokeProviderType,
+  isNearSpokeProvider,
 } from '../../guards.js';
 import * as rlp from 'rlp';
 import { encodeFunctionData } from 'viem';
@@ -595,6 +596,9 @@ export class SpokeService {
 
       return result;
     }
+    if (isNearSpokeProvider(spokeProvider)) {
+      return NearSpokeService.waitForTransaction(spokeProvider, txHash);
+    }
     if (isStellarSpokeProvider(spokeProvider)) {
       return StellarSpokeService.waitForTransaction(spokeProvider, txHash);
     }
@@ -617,6 +621,8 @@ export class SpokeService {
         return SolanaSpokeService.waitForConfirmationRaw(params);
       case 'STELLAR':
         return StellarSpokeService.waitForTransactionRaw(params);
+      case 'NEAR':
+        return NearSpokeService.waitForTransactionRaw(params);
       case 'EVM': {
         const result = await EvmSpokeService.waitForTransactionReceipt(params);
         if (!result.ok) {

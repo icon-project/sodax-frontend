@@ -563,6 +563,15 @@ export type VerifyTxHashRawSolanaConfig = {
   pollingTimeout?: number;
 };
 
+export type VerifyTxHashRawNearConfig = {
+  accountId: string;
+  txHash: string;
+  chainType: 'NEAR';
+  rpcUrl: HttpUrl;
+  pollingTimeout?: number;
+  maxAttempts?: number;
+};
+
 export type VerifyTxHashRawStellarConfig = {
   txHash: string;
   chainType: 'STELLAR';
@@ -592,4 +601,6 @@ export type VerifyTxHashRawConfig<T extends ChainType> = T extends 'SOLANA'
     ? VerifyTxHashRawStellarConfig
     : T extends 'EVM'
       ? VerifyTxHashRawEvmConfig
+      : T extends 'NEAR'
+        ? VerifyTxHashRawNearConfig
       : VerifyTxHashRawConfigType;

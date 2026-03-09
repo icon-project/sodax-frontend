@@ -13,8 +13,13 @@ import type {
   WalletAddressProvider,
 } from '@sodax/types';
 import type { IRawSpokeProvider, ISpokeProvider } from '../Providers.js';
+import { sleep } from '../../utils/shared-utils.js';
 export type QueryResponse = string | number | boolean | object | undefined;
 export type CallResponse = string | number | object | bigint | boolean;
+
+export interface NearTransactionResult {
+  status: 'success' | 'failure';
+}
 
 export class NearBaseSpokeProvider {
   public readonly chainConfig: NearSpokeChainConfig;
@@ -24,6 +29,39 @@ export class NearBaseSpokeProvider {
     this.chainConfig = chainConfig;
     this.rpcProvider = new JsonRpcProvider({ url: chainConfig.rpcUrl });
   }
+
+  static async waitForTransaction(
+    txHash: string,
+    accountId: string,
+    rpcProvider: JsonRpcProvider,
+    pollingTimeout = 750,
+    maxAttempts = 40,
+  ): Promise<NearTransactionResult> {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const outcome = await rpcProvider.viewTransactionStatus({ txHash, accountId, waitUntil: 'FINAL' });
+
+        if (outcome?.status) {
+          const status = outcome.status as Record<string, unknown>;
+          if ('SuccessValue' in status || 'SuccessReceiptId' in status) {
+            return { status: 'success' };
+          }
+          if ('Failure' in status) {
+            return { status: 'failure' };
+          }
+        }
+
+        await sleep(pollingTimeout);
+      } catch {
+        // Transaction not yet visible or transient RPC error — poll again
+        await sleep(pollingTimeout);
+      }
+    }
+
+    throw new Error(`NEAR transaction ${txHash} was not confirmed within ${maxAttempts} attempts`);
+  }
+
+
 
   queryContract(contractId: string, method: string, args: {}): Promise<QueryResponse> {
     return this.rpcProvider.callFunction({ contractId, method, args });
