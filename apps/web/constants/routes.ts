@@ -12,6 +12,7 @@ export const SWAP_ROUTE = '/swap';
 export const SAVE_ROUTE = '/save';
 export const LOANS_ROUTE = '/loans';
 export const STAKE_ROUTE = '/stake';
+export const POOL_ROUTE = '/pool';
 export const MIGRATE_ROUTE = '/migrate';
 export const GLOSSARY_ROUTE = '/glossary';
 export const PARTNERS_ROUTE = '/partners';

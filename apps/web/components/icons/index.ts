@@ -14,3 +14,4 @@ export { RoundedPillIcon } from './rounded-pill-icon';
 export { CircularProgressIcon } from './circular-progress-icon';
 export { EvmMultiConnectIcon } from './evm-multi-connect-icon';
 export { StakeIcon } from './stake-icon';
+export { PoolIcon } from './pool-icon';
