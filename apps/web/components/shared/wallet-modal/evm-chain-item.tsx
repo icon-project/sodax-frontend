@@ -1,7 +1,7 @@
 import type React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, MinusIcon, CopyIcon, Loader2, InfoIcon, AlertCircleIcon } from 'lucide-react';
+import { PlusIcon, MinusIcon, CopyIcon, Loader2, InfoIcon } from 'lucide-react';
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { shortenAddress } from '@/lib/utils';
 import { useState } from 'react';
@@ -99,7 +99,7 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button type="button">
-                    <AlertCircleIcon className="w-4 h-4" />
+                    <InfoIcon className="w-4 h-4" />
                   </button>
                 </TooltipTrigger>
                 <TooltipContent

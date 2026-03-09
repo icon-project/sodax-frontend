@@ -94,6 +94,8 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
     setShouldShowInvalidAddressTooltip(false);
   };
 
+  // shouldShowInvalidAddressTooltip is in deps intentionally: once set to true,
+  // the effect re-runs and returns early, ensuring no duplicate timer is queued.
   useEffect(() => {
     if (!isSwapAndSend || !hasDestinationAddress || isDestinationAddressValid) {
       setShouldShowInvalidAddressTooltip(false);
