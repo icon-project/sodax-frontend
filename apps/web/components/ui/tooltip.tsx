@@ -6,7 +6,7 @@ import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { cn } from '@/lib/utils';
 import { ArrowRightIcon } from '../icons/arrow-right-icon';
 
-type TooltipVariant = 'default' | 'soft' | 'pill';
+type TooltipVariant = 'default' | 'soft' | 'bubble';
 
 function TooltipProvider({ delayDuration = 0, ...props }: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
   return <TooltipPrimitive.Provider data-slot="tooltip-provider" delayDuration={delayDuration} {...props} />;
@@ -34,7 +34,7 @@ function TooltipContent({
   variant?: TooltipVariant;
 }) {
   const isSoft = variant === 'soft';
-  const isPill = variant === 'pill';
+  const isBubble = variant === 'bubble';
 
   return (
     <TooltipPrimitive.Portal>
@@ -48,11 +48,11 @@ function TooltipContent({
           'data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
           'z-50 w-fit text-xs',
           // default (backward compatible)
-          !isSoft && !isPill && 'rounded-md bg-primary text-primary-foreground px-3 py-1.5',
+          !isSoft && !isBubble && 'rounded-md bg-primary text-primary-foreground px-3 py-1.5',
           // soft (new)
           isSoft && 'rounded-md bg-cream-white text-espresso px-4 py-2 shadow-lg border border-clay-light/20',
-          // pill (used by save tooltips)
-          isPill && 'rounded-full bg-white text-espresso',
+          // bubble (used by save tooltips)
+          isBubble && 'rounded-full bg-white text-espresso',
           className,
         )}
         {...props}

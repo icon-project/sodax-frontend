@@ -34,7 +34,7 @@ export function NetworkBalanceTooltip({ network, tokenPrice, count }: NetworkBal
         </div>
       </TooltipTrigger>
       <TooltipContent
-        variant="pill"
+        variant="bubble"
         side="top"
         sideOffset={10}
         hidden={count === 1}

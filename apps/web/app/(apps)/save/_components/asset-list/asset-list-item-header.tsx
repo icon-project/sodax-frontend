@@ -72,7 +72,7 @@ function AccordionCollapsedInfo({ tokens }: { tokens: XToken[] }) {
                   </span>
                 </TooltipTrigger>
                 <TooltipContent
-                  variant="pill"
+                  variant="bubble"
                   side="top"
                   sideOffset={20}
                   className="flex h-[54px] items-center gap-2 px-8 py-4 text-(length:--body-comfortable)"
