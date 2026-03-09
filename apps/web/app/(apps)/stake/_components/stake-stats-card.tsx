@@ -1,15 +1,13 @@
-// apps/web/app/(apps)/stake/_components/stake-stats-card.tsx
 import type React from 'react';
 import Image from 'next/image';
 import { Info } from 'lucide-react';
-import { useStakeState } from '../_stores/stake-store-provider';
+import { useStakeState, useStakeActions } from '../_stores/stake-store-provider';
 import { formatTokenAmount } from '@/lib/utils';
-import { STAKING_APR } from './constants';
+import { STAKING_APR, STAKING_NOW_HOLDERS, STAKING_TOTAL_STAKED } from './constants';
 import LoadingThreeDotsJumping from '@/components/shared/loading-three-dots-jumping';
 import { useStakingConfig } from '@sodax/dapp-kit';
 import { UnstakeModeToggle } from './unstake-mode-toggle';
 import { STAKE_MODE } from '../_stores/stake-store';
-import { useStakeActions } from '../_stores/stake-store-provider';
 import { Loader2 } from 'lucide-react';
 
 export function StakeStatsCard(): React.JSX.Element {
@@ -17,7 +15,10 @@ export function StakeStatsCard(): React.JSX.Element {
     useStakeState();
   const { setStakeMode } = useStakeActions();
   const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
-
+  // Keep the unstaking period UI stable while config is loading or missing.
+  const hasUnstakingPeriod = typeof stakingConfig?.unstakingPeriod === 'bigint';
+  const unstakingPeriodLabel = hasUnstakingPeriod ? `${stakingConfig.unstakingPeriod} seconds` : '-';
+  const shouldShowUnstakingPeriodInfo = !isLoadingStakingConfig && hasUnstakingPeriod;
   return (
     <div className="w-full relative flex flex-col justify-start items-start gap-4">
       <div className="w-full flex justify-between items-center gap-(--layout-space-small)">
@@ -63,7 +64,7 @@ export function StakeStatsCard(): React.JSX.Element {
           </div>
           <div className="justify-center text-clay text-(length:--body-small) font-normal leading-4">
             {/* {formatTokenAmount(stakingInfo?.totalStaked || 0n, 18)} total staked */}
-            15.8M total staked
+            {STAKING_TOTAL_STAKED}
           </div>
         </div>
       </div>
@@ -84,16 +85,18 @@ export function StakeStatsCard(): React.JSX.Element {
         <div className="flex flex-col gap-1">
           <div className="justify-center text-clay text-[9px] font-medium uppercase leading-3">STAKING NOW</div>
           <div className="flex justify-start items-center gap-1">
-            <div className="text-espresso text-(length:--body-comfortable) font-bold leading-5">1,289 holders</div>
+            <div className="text-espresso text-(length:--body-comfortable) font-bold leading-5">
+              {STAKING_NOW_HOLDERS}
+            </div>
           </div>
         </div>
         <div className="flex flex-col justify-center items-end gap-1">
           <div className="justify-center text-clay text-[9px] font-medium uppercase leading-3">UNSTAKING PERIOD</div>
           <div className="flex justify-start items-center gap-1">
             <div className="text-espresso text-(length:--body-comfortable) font-bold leading-5">
-              {!isLoadingStakingConfig ? `${stakingConfig?.unstakingPeriod} seconds` : '-'}
+              {isLoadingStakingConfig ? <LoadingThreeDotsJumping /> : unstakingPeriodLabel}
             </div>
-            <Info className="w-4 h-4 text-clay-light" />
+            {shouldShowUnstakingPeriodInfo ? <Info className="w-4 h-4 text-clay-light" /> : null}
           </div>
         </div>
       </div>

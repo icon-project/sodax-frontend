@@ -7,6 +7,7 @@ import { CircleArrowRight, ShieldAlertIcon } from 'lucide-react';
 import { cn, formatTokenAmount } from '@/lib/utils';
 import { useStakingConfig } from '@sodax/dapp-kit';
 import { ETHEREUM_MAINNET_CHAIN_ID } from '@sodax/sdk';
+import { DEFAULT_ESTIMATED_TX_TIME, ETHEREUM_ESTIMATED_TX_TIME } from '../constants';
 interface UnstakeConfirmationStepProps {
   selectedToken: XToken;
   receivedSodaAmount: string;
@@ -89,8 +90,8 @@ export default function UnstakeConfirmationStep({
           >
             {unstakeMethod === UNSTAKE_METHOD.INSTANT
               ? selectedToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID
-                ? '~30s'
-                : '~10s'
+                ? ETHEREUM_ESTIMATED_TX_TIME
+                : DEFAULT_ESTIMATED_TX_TIME
               : `~${stakingConfig.unstakingPeriod} s`}
           </div>
         </div>

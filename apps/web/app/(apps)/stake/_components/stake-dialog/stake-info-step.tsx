@@ -1,6 +1,7 @@
 import type React from 'react';
 import type { XToken } from '@sodax/types';
 import { useStakingConfig } from '@sodax/dapp-kit';
+import { STAKING_APR } from '../constants';
 
 export default function StakeInfoStep({
   selectedToken,
@@ -29,7 +30,7 @@ export default function StakeInfoStep({
       <div className="self-stretch inline-flex justify-start items-start gap-4">
         <div className="flex-1 pl-4 border-l-2 border-cream-white inline-flex flex-col justify-center items-start gap-1">
           <div className="md:w-40 h-4 justify-start text-espresso text-(length:--body-comfortable) font-bold leading-[1.4] overflow-hidden">
-            23.77% variable APR
+            {STAKING_APR}% variable APR
           </div>
           <div className="self-stretch justify-start text-clay text-(length:--body-comfortable) leading-[1.4]">
             Earnings update in cycles, not constantly.
