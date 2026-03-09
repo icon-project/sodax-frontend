@@ -10,6 +10,7 @@ import {
   AnimatedStaggerChild,
   AnimatedFadeIn,
 } from '@/components/partners/animated-section';
+import { DOCUMENTATION_ROUTE } from '@/constants/routes';
 
 // Local asset paths
 const imgLogo = '/partners/hana/logo.svg';
@@ -409,7 +410,7 @@ export default function HanaPage() {
                   </p>
                   <div className="flex flex-col items-start text-xs w-full leading-tight">
                     <a
-                      href="https://docs.sodax.com/developers/packages/sdk"
+                      href={`${DOCUMENTATION_ROUTE}/developers/packages/sdk`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-['InterBold'] text-espresso w-full hover:underline"

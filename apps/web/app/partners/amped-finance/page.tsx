@@ -10,6 +10,7 @@ import {
   AnimatedStaggerChild,
   AnimatedFadeIn,
 } from '@/components/partners/animated-section';
+import { DOCUMENTATION_ROUTE } from '@/constants/routes';
 
 // Local asset paths
 const imgLogo = '/partners/amped-finance/logo.svg';
@@ -403,7 +404,7 @@ export default function AmpedFinancePage() {
                   </p>
                   <div className="flex flex-col items-start text-xs w-full leading-tight">
                     <a
-                      href="https://docs.sodax.com/developers/packages/sdk"
+                      href={`${DOCUMENTATION_ROUTE}/developers/packages/sdk`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-['InterBold'] text-[var(--espresso)] w-full hover:underline"
@@ -422,7 +423,7 @@ export default function AmpedFinancePage() {
                   </p>
                   <div className="flex flex-col items-start text-xs w-full leading-tight">
                     <a
-                      href="https://docs.sodax.com/developers/packages/wallet-sdk-react"
+                      href={`${DOCUMENTATION_ROUTE}/developers/packages/wallet-sdk-react`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-['InterBold'] text-[var(--espresso)] w-full hover:underline"
@@ -441,7 +442,7 @@ export default function AmpedFinancePage() {
                   </p>
                   <div className="flex flex-col items-start text-xs w-full leading-tight">
                     <a
-                      href="https://docs.sodax.com/developers/packages/dapp-kit"
+                      href={`${DOCUMENTATION_ROUTE}/developers/packages/dapp-kit`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-['InterBold'] text-[var(--espresso)] w-full hover:underline"

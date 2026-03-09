@@ -8,7 +8,7 @@ import { StrKey } from '@stellar/stellar-sdk';
 import { bech32 } from 'bech32';
 import BigNumber from 'bignumber.js';
 
-import { getSupportedSolverTokens, supportedSpokeChains, moneyMarketSupportedTokens } from '@sodax/sdk';
+import { getSupportedSolverTokens, supportedSpokeChains, moneyMarketSupportedTokens, REDBELLY_MAINNET_CHAIN_ID } from '@sodax/sdk';
 
 import type { Token, XToken, SpokeChainId, ChainId, EvmChainId, Address } from '@sodax/types';
 import {
@@ -255,12 +255,17 @@ export function getMoneymarketTokens(): XToken[] {
       items.map((t: Token) =>
         chainId !== INJECTIVE_MAINNET_CHAIN_ID &&
         chainId !== LIGHTLINK_MAINNET_CHAIN_ID &&
-        chainId !== ICON_MAINNET_CHAIN_ID
+        chainId !== ICON_MAINNET_CHAIN_ID &&
+        chainId !== REDBELLY_MAINNET_CHAIN_ID
           ? ({ ...t, xChainId: chainId as SpokeChainId } satisfies XToken)
           : undefined,
       ),
     )
     .filter(Boolean) as XToken[];
+}
+
+export function getMoneymarketTokensForChain(chainId: SpokeChainId): XToken[] {
+  return getMoneymarketTokens().filter(token => token.xChainId === chainId);
 }
 
 export function getUniqueByChain(tokens: XToken[]): XToken[] {

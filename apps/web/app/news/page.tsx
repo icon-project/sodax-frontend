@@ -2,6 +2,19 @@ import type { Metadata } from 'next';
 import { cache } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import {
+  COMMUNITY_NEWS_ROUTE,
+  DOCUMENTATION_ROUTE,
+  HOME_ROUTE,
+  NEWS_ROUTE,
+  PARTNERSHIPS_ROUTE,
+  PRODUCT_UPDATES_ROUTE,
+  REDDIT_ROUTE,
+  SUBSCRIBE_VIA_RSS_ROUTE,
+  TECHNICAL_UPDATES_ROUTE,
+  X_ROUTE,
+  YOUTUBE_ROUTE,
+} from '@/constants/routes';
 import { getDb } from '@/lib/db';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
@@ -195,7 +208,7 @@ export default async function NewsPage(props: {
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
         <div className="relative min-h-screen w-full bg-almost-white">
-          <MarketingHeader backLink="/" backText="← home" />
+          <MarketingHeader backLink={HOME_ROUTE} backText="← home" />
           <div className="max-w-7xl mx-auto px-4 py-16 pt-35">
             <div className="bg-white rounded-lg p-8 text-center border-2 border-clay-light">
               <h2 className="text-2xl font-bold text-espresso mb-2">
@@ -206,7 +219,7 @@ export default async function NewsPage(props: {
               </p>
               {category && (
                 <Link
-                  href="/news"
+                  href={NEWS_ROUTE}
                   className="inline-flex items-center gap-2 px-4 py-2 bg-cherry-soda text-white font-semibold rounded-lg hover:bg-cherry-dark transition-colors"
                 >
                   View All News
@@ -225,13 +238,13 @@ export default async function NewsPage(props: {
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <div className="relative min-h-screen w-full bg-almost-white">
-        <MarketingHeader backLink="/" backText="← home" />
+        <MarketingHeader backLink={HOME_ROUTE} backText="← home" />
 
         {/* Category Filter Tabs */}
         <div className="max-w-7xl mx-auto px-4 pt-35 pb-8 md:pb-12">
           <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 md:justify-center md:flex-wrap scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
             <Link
-              href="/news"
+              href={NEWS_ROUTE}
               className={`h-10 px-6 py-2 text-xs font-bold rounded-[240px] transition-all duration-200 flex items-center justify-center whitespace-nowrap ${
                 !category
                   ? 'bg-[#ede6e6] text-[#483534]'
@@ -241,7 +254,7 @@ export default async function NewsPage(props: {
               All news
             </Link>
             <Link
-              href="/news?category=product"
+              href={PRODUCT_UPDATES_ROUTE}
               className={`h-10 px-6 py-2 text-xs rounded-[240px] transition-all duration-200 flex items-center justify-center whitespace-nowrap ${
                 category === 'product'
                   ? 'bg-[#ede6e6] text-[#483534] font-bold'
@@ -251,7 +264,7 @@ export default async function NewsPage(props: {
               Product updates
             </Link>
             <Link
-              href="/news?category=partnerships"
+              href={PARTNERSHIPS_ROUTE}
               className={`h-10 px-6 py-2 text-xs rounded-[240px] transition-all duration-200 flex items-center justify-center whitespace-nowrap ${
                 category === 'partnerships'
                   ? 'bg-[#ede6e6] text-[#483534] font-bold'
@@ -261,7 +274,7 @@ export default async function NewsPage(props: {
               Partnerships
             </Link>
             <Link
-              href="/news?category=community"
+              href={COMMUNITY_NEWS_ROUTE}
               className={`h-10 px-6 py-2 text-xs rounded-[240px] transition-all duration-200 flex items-center justify-center whitespace-nowrap ${
                 category === 'community'
                   ? 'bg-[#ede6e6] text-[#483534] font-bold'
@@ -271,7 +284,7 @@ export default async function NewsPage(props: {
               Community
             </Link>
             <Link
-              href="/news?category=technical"
+              href={TECHNICAL_UPDATES_ROUTE}
               className={`h-10 px-6 py-2 text-xs rounded-[240px] transition-all duration-200 flex items-center justify-center whitespace-nowrap ${
                 category === 'technical'
                   ? 'bg-[#ede6e6] text-[#483534] font-bold'
@@ -298,7 +311,7 @@ export default async function NewsPage(props: {
               <section className="bg-white rounded-3xl overflow-hidden shadow-[0px_4px_32px_0px_#ede6e6]">
                 <div className="p-2">
                   <Link
-                    href={`/news/${featured.slug}`}
+                    href={`${NEWS_ROUTE}/${featured.slug}`}
                     className="group flex flex-col md:flex-row gap-2 md:items-center"
                   >
                     {featured.image && (
@@ -339,7 +352,7 @@ export default async function NewsPage(props: {
                     {secondary.map(article => (
                       <Link
                         key={article._id}
-                        href={`/news/${article.slug}`}
+                        href={`${NEWS_ROUTE}/${article.slug}`}
                         className="group bg-white p-2 rounded-3xl hover:shadow-[0px_8px_40px_0px_#ede6e6] transition-all duration-300 shadow-[0px_4px_32px_0px_#ede6e6] flex flex-col gap-4"
                       >
                         {article.image && (
@@ -390,7 +403,7 @@ export default async function NewsPage(props: {
                 </div>
                 <DecorativeDivider />
                 <Link
-                  href="https://docs.sodax.com"
+                  href={DOCUMENTATION_ROUTE}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-[12px] text-[#8e7e7d] hover:text-[#483534] transition-colors"
@@ -414,7 +427,7 @@ export default async function NewsPage(props: {
                 <DecorativeDivider />
                 <div className="flex flex-col gap-2">
                   <Link
-                    href="https://x.com/gosodax"
+                    href={X_ROUTE}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-[12px] text-[#8e7e7d] hover:text-[#483534] transition-colors"
@@ -426,7 +439,7 @@ export default async function NewsPage(props: {
                     Follow on X
                   </Link>
                   <Link
-                    href="https://www.reddit.com/r/SODAX/"
+                    href={REDDIT_ROUTE}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-[12px] text-[#8e7e7d] hover:text-[#483534] transition-colors"
@@ -438,7 +451,7 @@ export default async function NewsPage(props: {
                     Join on Reddit
                   </Link>
                   <Link
-                    href="https://www.youtube.com/@gosodax"
+                    href={YOUTUBE_ROUTE}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-[12px] text-[#8e7e7d] hover:text-[#483534] transition-colors"
@@ -450,7 +463,7 @@ export default async function NewsPage(props: {
                     Watch on YouTube
                   </Link>
                   <Link
-                    href="/news/feed.xml"
+                    href={SUBSCRIBE_VIA_RSS_ROUTE}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-[12px] text-[#8e7e7d] hover:text-[#483534] transition-colors"

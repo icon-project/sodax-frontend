@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { CMS_DASHBOARD_ROUTE } from "@/constants/routes";
 import { requirePermission } from "@/lib/auth-utils";
 import { NewsListView } from "@/components/cms/news-list-view";
 
@@ -10,6 +11,6 @@ export default async function NewsManagementPage() {
     await requirePermission("news");
     return <NewsListView />;
   } catch (error) {
-    redirect("/cms/dashboard");
+    redirect(CMS_DASHBOARD_ROUTE);
   }
 }

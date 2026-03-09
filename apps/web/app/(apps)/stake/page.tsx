@@ -10,7 +10,11 @@ import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { itemVariants, listVariants } from '@/constants/animation';
 
-export default function StakePage(): React.JSX.Element {
+export default function StakePage() {
+  if (process.env.NEXT_PUBLIC_APP_ENV === 'production') {
+    return null;
+  }
+
   const { isNetworkPickerOpened } = useStakeState();
   const { reset } = useStakeActions();
 

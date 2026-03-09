@@ -25,6 +25,7 @@ import { getIntentRelayChainId, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 import { getSwapTiming } from '@/lib/swap-timing';
 import { trackSwapCompleted } from '@/lib/analytics';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
+import { DISCORD_ROUTE, X_ROUTE } from '@/constants/routes';
 
 interface SwapConfirmDialogProps {
   open: boolean;
@@ -357,7 +358,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
             <div className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight text-center flex justify-center gap-1 items-center">
               Enjoying SODAX?
               <Link
-                href="https://x.com/gosodax"
+                href={X_ROUTE}
                 target="_blank"
                 className="flex gap-1 hover:font-bold text-clay items-center leading-[1.4]"
               >
@@ -368,7 +369,7 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
             <div className="text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight text-center flex justify-center gap-1 items-center">
               Need help?
               <Link
-                href="https://discord.gg/xM2Nh4S6vN"
+                href={DISCORD_ROUTE}
                 target="_blank"
                 className="flex gap-1 hover:font-bold text-clay items-center leading-[1.4]"
               >

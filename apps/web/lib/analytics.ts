@@ -19,7 +19,8 @@ export interface SwapCompletedEvent {
 // Extend Window interface for dataLayer
 declare global {
   interface Window {
-    dataLayer?: Object[];
+    dataLayer?: Record<string, unknown>[];
+    gtag?: (...args: unknown[]) => void;
   }
 }
 

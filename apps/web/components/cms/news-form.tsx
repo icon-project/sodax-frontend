@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CMS_NEWS_ROUTE } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -150,7 +151,7 @@ export function NewsForm({ article, authors = [] }: NewsFormProps) {
         throw new Error(error.error || 'Failed to save');
       }
 
-      router.push('/cms/news');
+      router.push(CMS_NEWS_ROUTE);
       router.refresh();
     } catch (error) {
       console.error('Save error:', error);

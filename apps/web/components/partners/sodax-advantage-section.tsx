@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { motion } from 'motion/react';
+import { DOCUMENTATION_ROUTE } from '@/constants/routes';
 
 const advantages = [
   {
@@ -37,21 +38,21 @@ const sdkLayers = [
     title: 'Foundation layer',
     description: 'Core logic, swaps, lending, and bridging primitives',
     badge: '@sodax/sdk',
-    href: 'https://docs.sodax.com/developers/packages/1.-the-foundation',
+    href: `${DOCUMENTATION_ROUTE}/developers/packages/1.-the-foundation`,
   },
   {
     number: '2',
     title: 'Connection layer',
     description: 'Opinionated React wrapper for cross-chain wallet providers',
     badge: '@sodax/wallet-sdk-react',
-    href: 'https://docs.sodax.com/developers/packages/2.-the-connection-layer',
+    href: `${DOCUMENTATION_ROUTE}/developers/packages/2.-the-connection-layer`,
   },
   {
     number: '3',
     title: 'Experience layer',
     description: 'Pre-built UI components and hooks for rapid deployment',
     badge: '@sodax/dapp-kit',
-    href: 'https://docs.sodax.com/developers/packages/3.-the-experience-layer',
+    href: `${DOCUMENTATION_ROUTE}/developers/packages/3.-the-experience-layer`,
   },
 ];
 
@@ -201,7 +202,7 @@ export default function SodaxAdvantageSection() {
         <button
           type="button"
           className="bg-cherry-grey flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer"
-          onClick={() => window.open('https://docs.sodax.com', '_blank')}
+          onClick={() => window.open(DOCUMENTATION_ROUTE, '_blank')}
         >
           <span className="font-['InterMedium'] text-[14px] leading-[1.4] text-espresso text-center">
             View documentation

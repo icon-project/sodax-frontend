@@ -3,6 +3,7 @@ import { cache } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { NEWS_ROUTE } from '@/constants/routes';
 import { getDb } from '@/lib/db';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { getGlossaryTerms, injectGlossaryLinks } from '@/lib/glossary-linker';
@@ -249,14 +250,14 @@ export default async function NewsArticlePage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbStructuredData) }}
       />
       <div className="relative min-h-screen w-full bg-almost-white">
-        <MarketingHeader backLink="/news" backText="← news" />
+        <MarketingHeader backLink={NEWS_ROUTE} backText="← news" />
         <div className="max-w-7xl mx-auto pt-30">
           {/* Article */}
           <article className="py-8" itemScope itemType="https://schema.org/NewsArticle">
             <div className="container mx-auto px-4 max-w-4xl">
               {/* Breadcrumb */}
               <nav className="mb-6 text-sm text-clay" aria-label="Breadcrumb">
-                <Link href="/news" className="hover:text-cherry-soda transition-colors">
+                <Link href={NEWS_ROUTE} className="hover:text-cherry-soda transition-colors">
                   News
                 </Link>
                 <span className="mx-2">/</span>
@@ -347,7 +348,7 @@ export default async function NewsArticlePage({
               {/* Back to News */}
               <div className="mt-12">
                 <Link
-                  href="/news"
+                  href={NEWS_ROUTE}
                   className="inline-flex items-center gap-2 text-cherry-soda font-medium hover:gap-3 transition-all"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

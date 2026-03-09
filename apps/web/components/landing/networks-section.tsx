@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Image from 'next/image';
+import { X_INTENT_FOLLOW_ROUTE } from '@/constants/routes';
 import { ArrowRightIcon } from '../icons/arrow-right-icon';
 import { Element } from 'react-scroll';
 
@@ -34,7 +35,7 @@ const NetworksSection = () => {
           variant="outline"
           className="px-6 font-['InterMedium'] cursor-pointer text-(length:--body-comfortable)"
           size="lg"
-          onClick={() => window.open('https://x.com/intent/user?screen_name=gosodax', '_blank')}
+          onClick={() => window.open(X_INTENT_FOLLOW_ROUTE, '_blank')}
         >
           Follow us for launch
         </Button>

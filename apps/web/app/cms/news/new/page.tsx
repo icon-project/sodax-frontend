@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { CMS_DASHBOARD_ROUTE } from '@/constants/routes';
 import { requirePermission } from '@/lib/auth-utils';
 import { NewsForm } from '@/components/cms/news-form';
 import { getDb } from '@/lib/auth';
@@ -33,6 +34,6 @@ export default async function CreateNewsPage() {
 
     return <NewsForm authors={authors} />;
   } catch (error) {
-    redirect('/cms/dashboard');
+    redirect(CMS_DASHBOARD_ROUTE);
   }
 }

@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/partner-dashboard/utils/enrichBalancesWithUsdPrices.ts
 import { getAssetUsdPrice } from '@/lib/getAssetUsdPrice';
 import type { PartnerFeeClaimAssetBalance } from '@sodax/sdk';
 

@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { CMS_LOGIN_ROUTE, CMS_NEWS_ROUTE } from '@/constants/routes';
 import { requirePermission } from '@/lib/auth-utils';
 import { NewsForm } from '@/components/cms/news-form';
 import { getDb } from '@/lib/db';
@@ -30,7 +31,7 @@ export default async function EditNewsPage({ params }: PageProps) {
     const article = await collection.findOne({ _id: new ObjectId(id) });
 
     if (!article) {
-      redirect('/cms/news');
+      redirect(CMS_NEWS_ROUTE);
     }
 
     // Fetch CMS users for author selection
@@ -59,6 +60,6 @@ export default async function EditNewsPage({ params }: PageProps) {
 
     return <NewsForm article={serializedArticle} authors={authors} />;
   } catch (error) {
-    redirect('/cms/login');
+    redirect(CMS_LOGIN_ROUTE);
   }
 }

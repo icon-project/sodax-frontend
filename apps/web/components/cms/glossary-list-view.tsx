@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  CMS_DASHBOARD_ROUTE,
+  CMS_GLOSSARY_NEW_ROUTE,
+  CMS_GLOSSARY_ROUTE,
+} from "@/constants/routes";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -59,7 +64,7 @@ export function GlossaryListView() {
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
-              onClick={() => router.push("/cms/dashboard")}
+              onClick={() => router.push(CMS_DASHBOARD_ROUTE)}
               className="text-[var(--clay)] hover:text-[var(--espresso)] hover:bg-transparent px-2 !outline-0 !border-0"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -71,7 +76,7 @@ export function GlossaryListView() {
             </div>
           </div>
           <Button
-            onClick={() => router.push("/cms/glossary/new")}
+            onClick={() => router.push(CMS_GLOSSARY_NEW_ROUTE)}
             className="bg-gradient-to-r from-[var(--orange-sonic)] to-[var(--yellow-soda)] hover:opacity-90 text-white shadow-lg"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -90,7 +95,7 @@ export function GlossaryListView() {
             <div className="p-12 text-center">
               <p className="text-[var(--clay)] mb-4">No terms yet</p>
               <Button
-                onClick={() => router.push("/cms/glossary/new")}
+                onClick={() => router.push(CMS_GLOSSARY_NEW_ROUTE)}
                 variant="outline"
                 className="border-[var(--orange-sonic)] text-[var(--orange-sonic)] hover:bg-[var(--orange-sonic)] hover:text-white"
               >
@@ -143,7 +148,7 @@ export function GlossaryListView() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => router.push(`/cms/glossary/${term._id.toString()}`)}
+                          onClick={() => router.push(`${CMS_GLOSSARY_ROUTE}/${term._id.toString()}`)}
                           className="hover:bg-[var(--cream)]"
                         >
                           <Edit className="w-4 h-4" />

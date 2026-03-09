@@ -3,23 +3,52 @@ import {
   adjustAmountByFee,
   calculateFeeAmount,
   calculatePercentageFeeAmount,
+  constructRawSpokeProvider,
   deriveUserWalletAddress,
   encodeAddress,
   hexToBigInt,
 } from './shared-utils.js';
 import {
   type IEvmWalletProvider,
+  type SpokeChainConfig,
   type SpokeChainId,
   BSC_MAINNET_CHAIN_ID,
+  ICON_MAINNET_CHAIN_ID,
+  INJECTIVE_MAINNET_CHAIN_ID,
+  SOLANA_MAINNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
   spokeChainConfig,
+  STELLAR_MAINNET_CHAIN_ID,
+  SUI_MAINNET_CHAIN_ID,
 } from '@sodax/types';
-import { EvmWalletAbstraction, getHubChainConfig, type EvmHubProviderConfig } from '../../index.js';
+import {
+  EvmWalletAbstraction,
+  getEvmViemChain,
+  getHubChainConfig,
+  IconRawSpokeProvider,
+  InjectiveRawSpokeProvider,
+  SolanaRawSpokeProvider,
+  StellarRawSpokeProvider,
+  type EvmHubProviderConfig,
+  type InjectiveRawSpokeProviderConfig,
+  type SolanaRawSpokeProviderConfig,
+  type StellarRawSpokeProviderConfig,
+  type SuiRawSpokeProviderConfig,
+} from '../../index.js';
+import { SuiRawSpokeProvider } from '../entities/sui/SuiSpokeProvider.js';
 import { Sodax } from '../entities/Sodax.js';
-import { EvmHubProvider } from '../entities/Providers.js';
+import {
+  EvmHubProvider,
+  EvmRawSpokeProvider,
+  SonicRawSpokeProvider,
+  type EvmRawSpokeProviderConfig,
+  type RawSpokeProviderConfig,
+  type SonicRawSpokeProviderConfig,
+} from '../entities/Providers.js';
 
-import { EvmSpokeProvider } from '../entities/Providers.js';
-import { SonicSpokeProvider } from '../entities/Providers.js';
+import { EvmSpokeProvider, SonicSpokeProvider } from '../entities/Providers.js';
+import invariant from 'tiny-invariant';
+import type { IconRawSpokeProviderConfig } from '../entities/icon/IconSpokeProvider.js';
 describe('calculatePercentageAmount', () => {
   const sodax = new Sodax();
   const address = '0x0000000000000000000000000000000000000001' as `0x${string}`;
@@ -227,5 +256,201 @@ describe('calculatePercentageAmount', () => {
     );
 
     expect(walletAddress).toBe(mockHubWalletAddress);
+  });
+
+  describe('constructRawSpokeProvider', () => {
+    it('should construct raw spoke provider correctly for evm chain', async () => {
+      const config = {
+        walletAddress: '0x0000000000000000000000000000000000000001',
+        chainConfig: spokeChainConfig[BSC_MAINNET_CHAIN_ID],
+        rpcUrl: 'https://rpc.bsc.org',
+      } satisfies EvmRawSpokeProviderConfig;
+
+      const rawSpokeProvider = constructRawSpokeProvider(config);
+      expect(rawSpokeProvider).toBeInstanceOf(EvmRawSpokeProvider);
+      invariant(rawSpokeProvider instanceof EvmRawSpokeProvider, 'Raw spoke provider is not a EvmRawSpokeProvider');
+      expect(rawSpokeProvider.publicClient.transport.url).toBe('https://rpc.bsc.org');
+      expect(rawSpokeProvider.chainConfig.chain.id).toBe(BSC_MAINNET_CHAIN_ID);
+      expect(await rawSpokeProvider.walletProvider.getWalletAddress()).toBe(
+        '0x0000000000000000000000000000000000000001',
+      );
+    });
+    it('should construct raw spoke provider correctly for evm chain without rpc url', async () => {
+      const config = {
+        walletAddress: '0x0000000000000000000000000000000000000001',
+        chainConfig: spokeChainConfig[BSC_MAINNET_CHAIN_ID],
+      } satisfies EvmRawSpokeProviderConfig;
+
+      const rawSpokeProvider = constructRawSpokeProvider(config);
+      expect(rawSpokeProvider).toBeInstanceOf(EvmRawSpokeProvider);
+      invariant(rawSpokeProvider instanceof EvmRawSpokeProvider, 'Raw spoke provider is not a EvmRawSpokeProvider');
+      expect(rawSpokeProvider.publicClient.transport.url).toBe(
+        getEvmViemChain(BSC_MAINNET_CHAIN_ID).rpcUrls.default.http[0],
+      );
+      expect(rawSpokeProvider.chainConfig.chain.id).toBe(BSC_MAINNET_CHAIN_ID);
+      expect(await rawSpokeProvider.walletProvider.getWalletAddress()).toBe(
+        '0x0000000000000000000000000000000000000001',
+      );
+    });
+    it('should construct raw spoke provider correctly for Sonic evm chain', async () => {
+      const config = {
+        walletAddress: '0x0000000000000000000000000000000000000001',
+        chainConfig: spokeChainConfig[SONIC_MAINNET_CHAIN_ID],
+        rpcUrl: 'https://rpc.soniclabs.com',
+      } satisfies SonicRawSpokeProviderConfig;
+
+      const rawSpokeProvider = constructRawSpokeProvider(config);
+      expect(rawSpokeProvider).toBeInstanceOf(SonicRawSpokeProvider);
+      invariant(rawSpokeProvider instanceof SonicRawSpokeProvider, 'Raw spoke provider is not a SonicRawSpokeProvider');
+      expect(rawSpokeProvider.publicClient.transport.url).toBe('https://rpc.soniclabs.com');
+      expect(rawSpokeProvider.chainConfig.chain.id).toBe(SONIC_MAINNET_CHAIN_ID);
+      expect(await rawSpokeProvider.walletProvider.getWalletAddress()).toBe(
+        '0x0000000000000000000000000000000000000001',
+      );
+    });
+    it('should construct raw spoke provider correctly for Sonic evm chain without rpc url', async () => {
+      const config = {
+        walletAddress: '0x0000000000000000000000000000000000000001',
+        chainConfig: spokeChainConfig[SONIC_MAINNET_CHAIN_ID],
+      } satisfies SonicRawSpokeProviderConfig;
+
+      const rawSpokeProvider = constructRawSpokeProvider(config);
+      expect(rawSpokeProvider).toBeInstanceOf(SonicRawSpokeProvider);
+      invariant(rawSpokeProvider instanceof SonicRawSpokeProvider, 'Raw spoke provider is not a SonicRawSpokeProvider');
+      expect(rawSpokeProvider.publicClient.transport.url).toBe(
+        getEvmViemChain(SONIC_MAINNET_CHAIN_ID).rpcUrls.default.http[0],
+      );
+      expect(rawSpokeProvider.chainConfig.chain.id).toBe(SONIC_MAINNET_CHAIN_ID);
+      expect(await rawSpokeProvider.walletProvider.getWalletAddress()).toBe(
+        '0x0000000000000000000000000000000000000001',
+      );
+    });
+    it('should construct raw spoke provider correctly for stellar chain', async () => {
+      const config = {
+        walletAddress: 'GBOKX5FMDSEYOWNOMKVN45Y3KCEAYXAT4WFGX2MLORSTMLXUZIICUE5O',
+        chainConfig: spokeChainConfig[STELLAR_MAINNET_CHAIN_ID],
+        rpcConfig: {
+          horizonRpcUrl: 'https://horizon.stellar.org',
+          sorobanRpcUrl: 'https://soroban-rpc.stellar.org',
+        },
+      } satisfies StellarRawSpokeProviderConfig;
+
+      const rawSpokeProvider = constructRawSpokeProvider(config);
+      expect(rawSpokeProvider).toBeInstanceOf(StellarRawSpokeProvider);
+      invariant(
+        rawSpokeProvider instanceof StellarRawSpokeProvider,
+        'Raw spoke provider is not a StellarRawSpokeProvider',
+      );
+      expect(rawSpokeProvider.chainConfig.chain.id).toBe(STELLAR_MAINNET_CHAIN_ID);
+      expect(await rawSpokeProvider.walletProvider.getWalletAddress()).toBe(
+        'GBOKX5FMDSEYOWNOMKVN45Y3KCEAYXAT4WFGX2MLORSTMLXUZIICUE5O',
+      );
+      expect(rawSpokeProvider.server.serverURL.toString()).toBe('https://horizon.stellar.org/');
+      expect(rawSpokeProvider.sorobanServer.serverURL.toString()).toBe('https://soroban-rpc.stellar.org/');
+    });
+    it('should construct raw spoke provider correctly for stellar chain without rpc config', async () => {
+      const config = {
+        walletAddress: 'GBOKX5FMDSEYOWNOMKVN45Y3KCEAYXAT4WFGX2MLORSTMLXUZIICUE5O',
+        chainConfig: spokeChainConfig[STELLAR_MAINNET_CHAIN_ID],
+        rpcConfig: {},
+      } satisfies StellarRawSpokeProviderConfig;
+
+      const rawSpokeProvider = constructRawSpokeProvider(config);
+      expect(rawSpokeProvider).toBeInstanceOf(StellarRawSpokeProvider);
+      invariant(
+        rawSpokeProvider instanceof StellarRawSpokeProvider,
+        'Raw spoke provider is not a StellarRawSpokeProvider',
+      );
+      expect(rawSpokeProvider.chainConfig.chain.id).toBe(STELLAR_MAINNET_CHAIN_ID);
+      expect(await rawSpokeProvider.walletProvider.getWalletAddress()).toBe(
+        'GBOKX5FMDSEYOWNOMKVN45Y3KCEAYXAT4WFGX2MLORSTMLXUZIICUE5O',
+      );
+      expect(rawSpokeProvider.server.serverURL.toString()).toBe(`${config.chainConfig.horizonRpcUrl}/`);
+      expect(rawSpokeProvider.sorobanServer.serverURL.toString()).toBe(`${config.chainConfig.sorobanRpcUrl}`);
+    });
+    it('should construct raw spoke provider correctly for solana chain', async () => {
+      const config = {
+        walletAddress: '0x0000000000000000000000000000000000000001',
+        chainConfig: spokeChainConfig[SOLANA_MAINNET_CHAIN_ID],
+        connection: {
+          rpcUrl: 'https://rpc.solana.org',
+        },
+      } satisfies SolanaRawSpokeProviderConfig;
+
+      const rawSpokeProvider = constructRawSpokeProvider(config);
+      expect(rawSpokeProvider).toBeInstanceOf(SolanaRawSpokeProvider);
+      invariant(
+        rawSpokeProvider instanceof SolanaRawSpokeProvider,
+        'Raw spoke provider is not a SolanaRawSpokeProvider',
+      );
+      expect(rawSpokeProvider.chainConfig.chain.id).toBe(SOLANA_MAINNET_CHAIN_ID);
+      expect(await rawSpokeProvider.walletProvider.getWalletAddress()).toBe(
+        '0x0000000000000000000000000000000000000001',
+      );
+      expect(rawSpokeProvider.connection.rpcEndpoint.toString()).toBe('https://rpc.solana.org');
+    });
+
+    it('should construct raw spoke provider correctly for icon chain', async () => {
+      const config = {
+        walletAddress: '0x0000000000000000000000000000000000000001',
+        chainConfig: spokeChainConfig[ICON_MAINNET_CHAIN_ID],
+      } satisfies IconRawSpokeProviderConfig;
+
+      const rawSpokeProvider = constructRawSpokeProvider(config);
+      expect(rawSpokeProvider).toBeInstanceOf(IconRawSpokeProvider);
+      invariant(rawSpokeProvider instanceof IconRawSpokeProvider, 'Raw spoke provider is not a IconRawSpokeProvider');
+      expect(rawSpokeProvider.chainConfig.chain.id).toBe(ICON_MAINNET_CHAIN_ID);
+      expect(await rawSpokeProvider.walletProvider.getWalletAddress()).toBe(
+        '0x0000000000000000000000000000000000000001',
+      );
+      expect(rawSpokeProvider.debugRpcUrl).toBe('https://ctz.solidwallet.io/api/v3d');
+    });
+
+    it('should construct raw spoke provider correctly for injective chain', async () => {
+      const config = {
+        walletAddress: '0x0000000000000000000000000000000000000001',
+        chainConfig: spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID],
+      } satisfies InjectiveRawSpokeProviderConfig;
+
+      const rawSpokeProvider = constructRawSpokeProvider(config);
+      expect(rawSpokeProvider).toBeInstanceOf(InjectiveRawSpokeProvider);
+      invariant(
+        rawSpokeProvider instanceof InjectiveRawSpokeProvider,
+        'Raw spoke provider is not a InjectiveRawSpokeProvider',
+      );
+      expect(rawSpokeProvider.chainConfig.chain.id).toBe(INJECTIVE_MAINNET_CHAIN_ID);
+      expect(await rawSpokeProvider.walletProvider.getWalletAddress()).toBe(
+        '0x0000000000000000000000000000000000000001',
+      );
+    });
+
+    it('should construct raw spoke provider correctly for sui chain', async () => {
+      const config = {
+        walletAddress: '0x0000000000000000000000000000000000000001',
+        chainConfig: spokeChainConfig[SUI_MAINNET_CHAIN_ID],
+      } satisfies SuiRawSpokeProviderConfig;
+
+      const rawSpokeProvider = constructRawSpokeProvider(config);
+      expect(rawSpokeProvider).toBeInstanceOf(SuiRawSpokeProvider);
+      invariant(rawSpokeProvider instanceof SuiRawSpokeProvider, 'Raw spoke provider is not a SuiRawSpokeProvider');
+      expect(rawSpokeProvider.chainConfig.chain.id).toBe(SUI_MAINNET_CHAIN_ID);
+      expect(await rawSpokeProvider.walletProvider.getWalletAddress()).toBe(
+        '0x0000000000000000000000000000000000000001',
+      );
+    });
+
+    it('should throw error when constructing raw spoke provider for unsupported chain', () => {
+      const config = {
+        walletAddress: '0x0000000000000000000000000000000000000001',
+        chainConfig: {
+          chain: {
+            id: '0x0000000000000000000000000000000000000001',
+            type: 'TEST',
+          },
+        } as unknown as SpokeChainConfig,
+      } satisfies unknown as RawSpokeProviderConfig;
+
+      expect(() => constructRawSpokeProvider(config)).toThrow('Unsupported chain type: TEST');
+    });
   });
 });

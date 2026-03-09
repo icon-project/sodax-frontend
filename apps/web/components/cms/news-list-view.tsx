@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CMS_DASHBOARD_ROUTE, CMS_NEWS_NEW_ROUTE, CMS_NEWS_ROUTE } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -60,7 +61,7 @@ export function NewsListView() {
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
-              onClick={() => router.push('/cms/dashboard')}
+              onClick={() => router.push(CMS_DASHBOARD_ROUTE)}
               className="text-[var(--clay)] hover:text-[var(--espresso)] hover:bg-transparent px-2 !outline-0 !border-0"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -72,7 +73,7 @@ export function NewsListView() {
             </div>
           </div>
           <Button
-            onClick={() => router.push('/cms/news/new')}
+            onClick={() => router.push(CMS_NEWS_NEW_ROUTE)}
             className="bg-gradient-to-r from-[var(--cherry-dark)] to-[var(--cherry-soda)] hover:opacity-90 text-white shadow-lg"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -91,7 +92,7 @@ export function NewsListView() {
             <div className="p-12 text-center">
               <p className="text-[var(--clay)] mb-4">No articles yet</p>
               <Button
-                onClick={() => router.push('/cms/news/new')}
+                onClick={() => router.push(CMS_NEWS_NEW_ROUTE)}
                 variant="outline"
                 className="border-[var(--cherry-soda)] text-[var(--cherry-soda)] hover:bg-[var(--cherry-soda)] hover:text-white"
               >
@@ -158,7 +159,7 @@ export function NewsListView() {
                         )}
                         <button
                           type="button"
-                          onClick={() => router.push(`/cms/news/${article._id.toString()}`)}
+                          onClick={() => router.push(`${CMS_NEWS_ROUTE}/${article._id.toString()}`)}
                           className="inline-flex items-center justify-center h-8 w-8 px-0 rounded-md bg-transparent text-[var(--espresso)] hover:bg-[var(--cream)] hover:text-[var(--espresso)] transition-colors cursor-pointer border-0 outline-none"
                           style={{ border: 'none', outline: 'none' }}
                           title="Edit article"

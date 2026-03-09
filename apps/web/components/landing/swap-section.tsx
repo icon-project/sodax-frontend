@@ -3,7 +3,7 @@ import { Label } from '@/components/ui/label';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { ArrowRightIcon } from '../icons/arrow-right-icon';
-
+import { SWAP_ROUTE } from '@/constants/routes';
 const SwapSection = () => {
   const router = useRouter();
 
@@ -39,7 +39,7 @@ const SwapSection = () => {
           onClick={() => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
             setTimeout(() => {
-              router.push('/swap');
+              router.push(SWAP_ROUTE);
             }, 300);
           }}
         >

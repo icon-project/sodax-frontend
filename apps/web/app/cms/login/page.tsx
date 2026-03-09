@@ -1,5 +1,6 @@
 "use client";
 
+import { CMS_DASHBOARD_ROUTE } from "@/constants/routes";
 import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ export default function CMSLoginPage() {
     try {
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/cms/dashboard",
+        callbackURL: CMS_DASHBOARD_ROUTE,
       });
     } catch (err) {
       setError("Failed to sign in. Please try again.");

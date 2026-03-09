@@ -59,6 +59,7 @@
     "bs58": "^6.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "d3": "^7.9.0",
     "date-fns": "^4.1.0",
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
@@ -81,6 +82,7 @@
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.0.8",
     "tailwindcss-animate": "^1.0.7",
+    "vanilla-cookieconsent": "^3.1.0",
     "vaul": "^1.1.2",
     "viem": "catalog:",
     "wagmi": "catalog:",
@@ -90,6 +92,7 @@
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",
     "@types/bcryptjs": "^3.0.0",
+    "@types/d3": "^7.4.3",
     "@types/node": "catalog:",
     "@types/numeral": "^2.0.5",
     "@types/react": "^19.0.8",
