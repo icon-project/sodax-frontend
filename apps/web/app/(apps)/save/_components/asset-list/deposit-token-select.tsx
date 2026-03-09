@@ -9,6 +9,7 @@ import { parseUnits } from 'viem';
 import { DepositTokenSelector } from './deposit-token-selector';
 import { useSaveState } from '../../_stores/save-store-provider';
 import { cn } from '@/lib/utils';
+import { SAVE_COPY, SAVE_MIN_ACTIONABLE_AMOUNT } from '../constants';
 
 type Props = {
   displayItems: DisplayItem[];
@@ -34,15 +35,16 @@ export function DepositTokenSelect({
     ? (allChainBalances[selectedToken.address]?.find(entry => entry.chainId === selectedToken.xChainId)?.balance ?? 0n)
     : 0n;
   const isSimulate = !(sourceAddress && balance > 0n);
-  const isTooLow = sourceAddress && balance > 0n && balance < parseUnits('0.001', selectedToken?.decimals ?? 0);
+  const isTooLow =
+    sourceAddress && balance > 0n && balance < parseUnits(SAVE_MIN_ACTIONABLE_AMOUNT, selectedToken?.decimals ?? 0);
   const { isNetworkPickerOpened } = useSaveState();
   const continueButtonRef = useRef<HTMLDivElement>(null);
 
   return (
     <>
-      <AssetMetrics apy={apy} deposits={deposits} />
+      <AssetMetrics apy={apy} deposits={deposits} assetType={displayItems[0]?.tokens?.[0]?.symbol ?? 'asset'} />
       <div className="text-(length:--body-super-comfortable) text-espresso font-['InterRegular']">
-        {isReadyToEarn ? 'In your wallet' : 'Simulate yield using $10k of test funds'}
+        {isReadyToEarn ? 'In your wallet' : SAVE_COPY.simulationDescription}
       </div>
       <DepositTokenSelector
         displayItems={displayItems}

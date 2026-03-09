@@ -17,6 +17,13 @@ import AssetMetrics from './asset-metrics';
 import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
 import { SWAP_ROUTE } from '@/constants/routes';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  MONTHS_PER_YEAR,
+  SAVE_DEFAULT_CHAIN_ID,
+  SAVE_SIMULATION_USD,
+  SAVE_TOOLTIPS,
+} from '../constants';
 interface DepositInputAmountProps {
   tokens: XToken[];
   onBack?: () => void;
@@ -35,7 +42,7 @@ export default function DepositInputAmount({ tokens, onBack, apy, deposits }: De
   const openModal = useModalStore(state => state.openModal);
   const [isDepositDialogOpen, setIsDepositDialogOpen] = useState<boolean>(false);
   const { data: balances } = useXBalances({
-    xChainId: selectedToken?.xChainId || 'sonic',
+    xChainId: selectedToken?.xChainId || SAVE_DEFAULT_CHAIN_ID,
     xTokens: selectedToken ? [selectedToken] : [],
     address: sourceAddress,
   });
@@ -63,7 +70,7 @@ export default function DepositInputAmount({ tokens, onBack, apy, deposits }: De
     }
 
     const depositValueUSD = depositValue * tokenPrice;
-    return (depositValueUSD * Number(apy.replace('%', ''))) / 100 / 12;
+    return (depositValueUSD * Number(apy.replace('%', ''))) / 100 / MONTHS_PER_YEAR;
   }, [depositValue, tokenPrice, apy]);
 
   const isSimulate = !(sourceAddress && balance > 0n);
@@ -96,7 +103,7 @@ export default function DepositInputAmount({ tokens, onBack, apy, deposits }: De
     }
 
     // Use the correct max value based on simulation mode
-    const effectiveMaxValue = isSimulate ? 10000 / (tokenPrice ?? 1) : maxValue;
+    const effectiveMaxValue = isSimulate ? SAVE_SIMULATION_USD / (tokenPrice ?? 1) : maxValue;
 
     // Clamp the value between 0 and max
     const clampedValue = Math.max(0, Math.min(numericValue, effectiveMaxValue));
@@ -105,7 +112,7 @@ export default function DepositInputAmount({ tokens, onBack, apy, deposits }: De
   };
 
   const handleConnect = () => {
-    const chainType = getXChainType(selectedToken?.xChainId || 'sonic') || 'EVM';
+    const chainType = getXChainType(selectedToken?.xChainId || SAVE_DEFAULT_CHAIN_ID) || 'EVM';
     openModal(MODAL_ID.WALLET_MODAL, {
       isExpanded: false,
       primaryChainType: chainType,
@@ -121,7 +128,20 @@ export default function DepositInputAmount({ tokens, onBack, apy, deposits }: De
             <span className="font-['InterRegular'] text-espresso font-medium">
               {monthlyYield > 0 ? `~$${formatBalance(monthlyYield.toString(), tokenPrice ?? 0)}` : '-'}
             </span>
-            <AlertCircleIcon width={16} height={16} className="text-clay" />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" className="text-clay-light" aria-label="Yield per month info">
+                  <AlertCircleIcon className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                sideOffset={10}
+                className="bg-white px-4 py-2 text-espresso rounded-full text-(length:--body-small)"
+              >
+                {SAVE_TOOLTIPS.monthlyYield}
+              </TooltipContent>
+            </Tooltip>
           </div>
         )}
       </>
@@ -130,7 +150,7 @@ export default function DepositInputAmount({ tokens, onBack, apy, deposits }: De
 
   return (
     <>
-      <AssetMetrics apy={apy} deposits={deposits} />
+      <AssetMetrics apy={apy} deposits={deposits} assetType={selectedToken?.symbol ?? tokens[0]?.symbol ?? 'asset'} />
       <div className="flex gap-2 items-center">
         {!sourceAddress || balance === 0n ? (
           <div className="font-['InterRegular'] text-(length:--body-super-comfortable) text-espresso">
@@ -165,7 +185,7 @@ export default function DepositInputAmount({ tokens, onBack, apy, deposits }: De
             setProgress(value);
             setDepositValue(value[0] ?? 0);
           }}
-          maxValue={isSimulate ? 10000 / (tokenPrice ?? 1) : maxValue}
+          maxValue={isSimulate ? SAVE_SIMULATION_USD / (tokenPrice ?? 1) : maxValue}
           isSimulate={isSimulate}
           tokenSymbol={tokens[0]?.symbol || selectedToken?.symbol || ''}
           onInputChange={handleInputChange}
@@ -174,9 +194,9 @@ export default function DepositInputAmount({ tokens, onBack, apy, deposits }: De
           <div className="font-['InterRegular'] text-(length:--body-comfortable) font-medium text-clay-light">
             {isSimulate ? (
               sourceAddress ? (
-                `Add ${selectedToken?.symbol} to your ${chainIdToChainName(selectedToken?.xChainId || 'sonic')} wallet or swap via SODAX.`
+                `Add ${selectedToken?.symbol} to your ${chainIdToChainName(selectedToken?.xChainId || SAVE_DEFAULT_CHAIN_ID)} wallet or swap via SODAX.`
               ) : (
-                `Connect your ${chainIdToChainName(selectedToken?.xChainId || 'sonic')} wallet to continue.`
+                `Connect your ${chainIdToChainName(selectedToken?.xChainId || SAVE_DEFAULT_CHAIN_ID)} wallet to continue.`
               )
             ) : (
               <div className="flex gap-2">
@@ -189,7 +209,10 @@ export default function DepositInputAmount({ tokens, onBack, apy, deposits }: De
                       Number(
                         formatUnits(
                           isSimulate
-                            ? parseUnits((10000 / (tokenPrice ?? 1)).toString(), selectedToken?.decimals ?? 0)
+                            ? parseUnits(
+                                (SAVE_SIMULATION_USD / (tokenPrice ?? 1)).toString(),
+                                selectedToken?.decimals ?? 0,
+                              )
                             : balance,
                           selectedToken?.decimals ?? 0,
                         ),
@@ -221,7 +244,7 @@ export default function DepositInputAmount({ tokens, onBack, apy, deposits }: De
 
           {!sourceAddress && (
             <Button variant="cherry" className="w-39 mix-blend-multiply shadow-none" onMouseDown={handleConnect}>
-              Connect {chainIdToChainName(selectedToken?.xChainId || 'sonic')}
+              Connect {chainIdToChainName(selectedToken?.xChainId || SAVE_DEFAULT_CHAIN_ID)}
             </Button>
           )}
 
