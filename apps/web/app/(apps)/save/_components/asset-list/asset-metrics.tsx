@@ -44,9 +44,10 @@ function InfoBlock({ value, label, tooltipContent }: InfoBlockProps): React.JSX.
             </button>
           </TooltipTrigger>
           <TooltipContent
+            variant="pill"
             side="top"
             sideOffset={10}
-            className="bg-white px-4 py-2 text-espresso rounded-full text-(length:--body-small)"
+            className="px-4 py-2 text-(length:--body-small)"
           >
             {tooltipContent}
           </TooltipContent>

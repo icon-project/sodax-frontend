@@ -34,10 +34,11 @@ export function NetworkBalanceTooltip({ network, tokenPrice, count }: NetworkBal
         </div>
       </TooltipTrigger>
       <TooltipContent
+        variant="pill"
         side="top"
         sideOffset={10}
         hidden={count === 1}
-        className="bg-white px-8 py-4 items-center gap-2 text-espresso rounded-full h-[54px] text-(length:--body-comfortable)"
+        className="h-[54px] items-center gap-2 px-8 py-4 text-(length:--body-comfortable)"
       >
         <div className="flex gap-1">
           <div className="font-medium">{formattedBalance}</div>

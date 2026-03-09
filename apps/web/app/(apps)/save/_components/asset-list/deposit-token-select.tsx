@@ -39,10 +39,11 @@ export function DepositTokenSelect({
     sourceAddress && balance > 0n && balance < parseUnits(SAVE_MIN_ACTIONABLE_AMOUNT, selectedToken?.decimals ?? 0);
   const { isNetworkPickerOpened } = useSaveState();
   const continueButtonRef = useRef<HTMLDivElement>(null);
+  const assetType = selectedToken?.symbol ?? displayItems[0]?.tokens?.[0]?.symbol ?? 'asset';
 
   return (
     <>
-      <AssetMetrics apy={apy} deposits={deposits} assetType={displayItems[0]?.tokens?.[0]?.symbol ?? 'asset'} />
+      <AssetMetrics apy={apy} deposits={deposits} assetType={assetType} />
       <div className="text-(length:--body-super-comfortable) text-espresso font-['InterRegular']">
         {isReadyToEarn ? 'In your wallet' : SAVE_COPY.simulationDescription}
       </div>

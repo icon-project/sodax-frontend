@@ -18,12 +18,8 @@ import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
 import { SWAP_ROUTE } from '@/constants/routes';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import {
-  MONTHS_PER_YEAR,
-  SAVE_DEFAULT_CHAIN_ID,
-  SAVE_SIMULATION_USD,
-  SAVE_TOOLTIPS,
-} from '../constants';
+import { MONTHS_PER_YEAR, SAVE_DEFAULT_CHAIN_ID, SAVE_SIMULATION_USD, SAVE_TOOLTIPS } from '../constants';
+
 interface DepositInputAmountProps {
   tokens: XToken[];
   onBack?: () => void;
@@ -47,9 +43,6 @@ export default function DepositInputAmount({ tokens, onBack, apy, deposits }: De
     address: sourceAddress,
   });
   const balance = selectedToken ? (balances?.[selectedToken.address] ?? 0n) : 0n;
-  if (selectedToken?.xChainId === '0xa.optimism' && selectedToken.symbol === 'USDT') {
-    console.log('balance', balance);
-  }
   const { data: formattedReserves } = useReservesUsdFormat();
   const tokensWithSupplyBalances = useTokenSupplyBalances(
     selectedToken ? [selectedToken] : [],
@@ -135,9 +128,10 @@ export default function DepositInputAmount({ tokens, onBack, apy, deposits }: De
                 </button>
               </TooltipTrigger>
               <TooltipContent
+                variant="pill"
                 side="top"
                 sideOffset={10}
-                className="bg-white px-4 py-2 text-espresso rounded-full text-(length:--body-small)"
+                className="px-4 py-2 text-(length:--body-small)"
               >
                 {SAVE_TOOLTIPS.monthlyYield}
               </TooltipContent>
