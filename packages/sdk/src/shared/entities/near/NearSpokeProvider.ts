@@ -33,35 +33,46 @@ export class NearBaseSpokeProvider {
     this.rpcProvider = new JsonRpcProvider({ url: chainConfig.rpcUrl });
   }
 
+  /**
+   * Waits for a NEAR transaction to reach finality.
+   *
+   * Uses the RPC `waitUntil: 'FINAL'` long-polling mode, which blocks server-side
+   * until the transaction is finalized. Retries are only for transient network errors
+   * (e.g. connection resets, DNS failures, timeouts). A successful RPC response —
+   * whether success or failure — returns immediately without further retries.
+   */
   static async waitForTransaction(
     txHash: string,
     accountId: string,
     rpcProvider: JsonRpcProvider,
-    pollingTimeout = 750,
-    maxAttempts = 40,
+    maxRetries = 3,
+    retryDelay = 1000,
   ): Promise<NearTransactionResult> {
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    for (let retry = 0; retry <= maxRetries; retry++) {
       try {
         const outcome = await rpcProvider.viewTransactionStatus({ txHash, accountId, waitUntil: 'FINAL' });
 
-        if (outcome?.status) {
-          const status = outcome.status as Record<string, unknown>;
-          if ('SuccessValue' in status || 'SuccessReceiptId' in status) {
-            return { status: 'success' };
-          }
-          if ('Failure' in status) {
-            return { status: 'failure', failure: status.Failure };
-          }
+        const status = outcome?.status as Record<string, unknown> | undefined;
+        if (status && ('SuccessValue' in status || 'SuccessReceiptId' in status)) {
+          return { status: 'success' };
+        }
+        if (status && 'Failure' in status) {
+          return { status: 'failure', failure: status.Failure };
         }
 
-        await sleep(pollingTimeout);
+        // Unexpected status shape — treat as transient and retry
+        if (retry < maxRetries) {
+          await sleep(retryDelay);
+        }
       } catch {
-        // Transaction not yet visible or transient RPC error — poll again
-        await sleep(pollingTimeout);
+        // Transient network error — retry after delay
+        if (retry < maxRetries) {
+          await sleep(retryDelay);
+        }
       }
     }
 
-    throw new Error(`NEAR transaction ${txHash} was not confirmed within ${maxAttempts} attempts`);
+    throw new Error(`NEAR transaction ${txHash} was not confirmed after ${maxRetries} retries`);
   }
 
 
