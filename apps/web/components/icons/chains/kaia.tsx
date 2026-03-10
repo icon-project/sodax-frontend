@@ -1,6 +1,5 @@
 export const KaiaIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
-    <title>Kaia</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" aria-hidden>
     <defs>
       <clipPath id="rounded-clip">
         <rect width="24" height="24" rx="6" ry="6" />

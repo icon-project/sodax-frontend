@@ -61,7 +61,9 @@
     "@solana/web3.js": "catalog:",
     "@stellar/stellar-sdk": "catalog:",
     "@mysten/sui": "catalog:",
-    "@mysten/wallet-standard": "catalog:"
+    "@mysten/wallet-standard": "catalog:",
+    "near-api-js": "7.1.1",
+    "@hot-labs/near-connect": "0.10.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",

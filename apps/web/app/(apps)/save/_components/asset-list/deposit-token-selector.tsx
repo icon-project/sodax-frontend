@@ -163,7 +163,7 @@ export function DepositTokenSelector({
   };
 
   return (
-    <div className="flex flex-wrap -ml-3 -my-[1px]">
+    <div className="flex flex-wrap -ml-3 -my-[1px] gap-y-4">
       {displayItems.map((item, idx) => {
         const isSelected = selectedAsset === idx;
         const isHovered = hoveredAsset === idx;

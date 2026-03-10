@@ -1,15 +1,19 @@
 import type React from 'react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import type { XToken } from '@sodax/types';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { motion } from 'motion/react';
 import NetworkIcon from '@/components/shared/network-icon';
 import { createPortal } from 'react-dom';
-import { ChevronDownIcon } from 'lucide-react';
 import { chainIdToChainName } from '@/providers/constants';
 import { useFloating, autoUpdate, offset, shift, limitShift } from '@floating-ui/react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+
+// CurrencyLogo is always w-12 h-12 = 48px. Using this constant lets the
+// NetworkPicker anchor to exactly the bottom of the icon circle, ignoring
+// any extra height that balance text or name adds below it.
+const CURRENCY_LOGO_HEIGHT = 48;
 
 function NetworkPicker({
   isClicked,
@@ -17,12 +21,17 @@ function NetworkPicker({
   tokenSymbol,
   onSelect,
   reference,
+  getFormattedBalanceForToken,
+  showBalanceRing = false,
 }: {
   isClicked: boolean;
   tokens: XToken[];
   tokenSymbol: string;
   onSelect?: (token: XToken) => void;
   reference: HTMLElement | null;
+  getFormattedBalanceForToken?: (token: XToken) => string | undefined;
+  /** When true, show white ring on network icons only for chains where user has balance (swap "choose a network" only). */
+  showBalanceRing?: boolean;
 }): React.JSX.Element | null {
   const [hoveredIcon, setHoveredIcon] = useState<number | null>(null);
   const [isSingle, setIsSingle] = useState(false);
@@ -32,13 +41,38 @@ function NetworkPicker({
   const { x, y, strategy, refs } = useFloating({
     placement: 'bottom',
     strategy: 'absolute',
-    middleware: [offset(-30), shift({ padding: 8, limiter: limitShift() })],
+    middleware: [offset(8), shift({ padding: 8, limiter: limitShift() })],
     whileElementsMounted: autoUpdate,
   });
 
+  // Build a virtual reference anchored to the outer (non-scaled) wrapper's
+  // top + exactly the icon height. This makes the picker position independent
+  // of the balance text, name height, and the parent motion.div scale transform.
+  const virtualReference = useMemo(() => {
+    if (!reference) return null;
+    return {
+      getBoundingClientRect() {
+        const r = reference.getBoundingClientRect();
+        return {
+          width: r.width,
+          height: CURRENCY_LOGO_HEIGHT,
+          x: r.x,
+          y: r.y,
+          top: r.top,
+          left: r.left,
+          bottom: r.top + CURRENCY_LOGO_HEIGHT,
+          right: r.right,
+          toJSON() {
+            return this;
+          },
+        };
+      },
+    };
+  }, [reference]);
+
   useEffect(() => {
-    if (reference) refs.setReference(reference);
-  }, [reference, refs]);
+    if (virtualReference) refs.setReference(virtualReference);
+  }, [virtualReference, refs]);
 
   useEffect(() => {
     if (!isClicked) hasScrolledRef.current = false;
@@ -78,40 +112,66 @@ function NetworkPicker({
     >
       <div
         className={cn(
-          "font-['InterRegular'] text-(length:--body-small) font-medium text-espresso mb-2",
+          "font-['InterRegular'] text-(length:--body-small) font-medium text-espresso min-h-6",
           isMobile && isSingle ? 'text-left ml-5' : 'text-center',
         )}
       >
-        {hoveredIcon !== null && tokens[hoveredIcon] ? (
-          <>
-            {tokenSymbol} <span className="font-bold">on {chainIdToChainName(tokens[hoveredIcon].xChainId)}</span>
-          </>
-        ) : (
-          'Choose a network'
-        )}
+        {hoveredIcon !== null && tokens[hoveredIcon]
+          ? (() => {
+              const hoveredToken = tokens[hoveredIcon];
+              const balance = hoveredToken && getFormattedBalanceForToken?.(hoveredToken);
+              if (balance) {
+                return (
+                  <>
+                    {balance} {tokenSymbol}
+                  </>
+                );
+              }
+              return (
+                <>
+                  {tokenSymbol} <span>on {chainIdToChainName(tokens[hoveredIcon].xChainId)}</span>
+                </>
+              );
+            })()
+          : 'Choose a network'}
       </div>
 
-      <div className={cn('flex flex-wrap justify-center w-[140px]', isMobile && isSingle && 'ml-4')}>
-        {tokens.map((token, index) => (
-          <motion.div
-            key={token.xChainId}
-            className={cn(
-              'p-1.5 cursor-pointer',
-              hoveredIcon !== null && hoveredIcon !== index && 'opacity-60 grayscale-[0.5]',
-            )}
-            whileHover={{ scale: 1.3 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            onMouseEnter={() => setHoveredIcon(index)}
-            onMouseLeave={() => setHoveredIcon(null)}
-            onMouseDown={e => {
-              e.preventDefault();
-              e.stopPropagation();
-              onSelect?.(token);
-            }}
-          >
-            <NetworkIcon id={token.xChainId} />
-          </motion.div>
-        ))}
+      <div
+        className={cn(
+          'flex flex-wrap justify-center network-picker-container w-[150px] gap-0.5',
+
+          isMobile && isSingle && 'ml-4',
+        )}
+        onMouseLeave={() => setHoveredIcon(null)}
+      >
+        {tokens.map((token, index) => {
+          const hasBalance = !!getFormattedBalanceForToken?.(token);
+          return (
+            <motion.div
+              key={token.xChainId}
+              className={cn(
+                'relative flex shrink-0 w-7 h-7 items-center justify-center cursor-pointer rounded-full',
+                showBalanceRing ? 'p-0' : 'p-1.5',
+                hoveredIcon === index && 'z-50',
+                hoveredIcon !== null && hoveredIcon !== index && 'opacity-60 grayscale-[0.5]',
+              )}
+              whileHover={{ scale: 1.3 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              onMouseEnter={() => setHoveredIcon(index)}
+              onMouseDown={e => {
+                e.preventDefault();
+                e.stopPropagation();
+                onSelect?.(token);
+              }}
+            >
+              <NetworkIcon
+                id={token.xChainId}
+                hasBalance={showBalanceRing ? hasBalance : false}
+                swapPickerShadow={showBalanceRing}
+              />
+            </motion.div>
+          );
+        })}
       </div>
     </div>,
     document.body,
@@ -133,6 +193,9 @@ interface TokenAssetProps {
   tokens?: XToken[];
   onChainClick?: (token: XToken) => void;
   isClicked?: boolean;
+  getFormattedBalanceForToken?: (token: XToken) => string | undefined;
+  /** When true, show white ring on network icons in "choose a network" picker only for chains with balance (swap only). */
+  showBalanceRing?: boolean;
 }
 
 export function TokenAsset({
@@ -151,14 +214,16 @@ export function TokenAsset({
   tokens,
   onChainClick,
   isClicked = false,
+  getFormattedBalanceForToken,
+  showBalanceRing = false,
 }: TokenAssetProps): React.JSX.Element {
   /**
    * IMPORTANT:
    * This wrapper NEVER scales.
-   * Floating UI uses this as reference.
    */
   const assetRef = useRef<HTMLDivElement>(null);
-  const tileOpacity = isClickBlurred ? 0.4 : isHoverDimmed ? 0.5 : 1; // 0.4 is 40% opacity, 0.5 is 50%, 1 is 100%
+  const assetIconRef = useRef<HTMLDivElement>(null);
+  const tileOpacity = isClickBlurred ? 0.4 : isHoverDimmed ? 0.8 : 1; // 0.4 is 40% opacity, 0.5 is 50%, 1 is 100%
 
   return (
     <>
@@ -174,7 +239,7 @@ export function TokenAsset({
           transition={{ duration: 0.2, ease: 'easeOut' }}
           whileHover={{ zIndex: 9999 }}
           className={cn(
-            'px-3 flex flex-col items-center justify-start cursor-pointer w-18 pb-4 transition-all',
+            'px-3 flex flex-col items-center justify-start cursor-pointer w-18 transition-all',
             isClickBlurred && 'blur-sm',
             isClicked && isGroup && 'z-[9999]',
           )}
@@ -183,7 +248,7 @@ export function TokenAsset({
           onMouseLeave={onMouseLeave}
           onClick={onClick}
         >
-          <div className="relative">
+          <div ref={assetIconRef} className="relative">
             {(token || (isGroup && tokens?.length)) && (
               <CurrencyLogo
                 currency={token || tokens?.[0] || ({} as XToken)}
@@ -208,18 +273,27 @@ export function TokenAsset({
             )}
           >
             {name}
-            {tokenCount && tokenCount > 1 && <ChevronDownIcon className="w-2 h-2 text-clay ml-1" />}
           </div>
 
-          {isHoldToken && formattedBalance && (
-            <motion.p
-              className="text-clay !text-(length:--text-body-fine-print)"
-              animate={{ color: isHovered ? '#483534' : '#8e7e7d' }}
-              transition={{ duration: 0.3 }}
-            >
-              {formattedBalance}
-            </motion.p>
-          )}
+          {/* Reserve space so row height is identical with/without wallet. When connected and has balance, show balance on hover. Design: p-4 (16px) below the number. */}
+          <div className="flex min-h-4 items-center justify-center pb-4 text-(length:--text-body-fine-print)">
+            {isHoldToken && formattedBalance ? (
+              isHovered ? (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.15 }}
+                  className="text-clay!"
+                >
+                  {formattedBalance}
+                </motion.p>
+              ) : (
+                <span className="invisible" aria-hidden>
+                  {formattedBalance}
+                </span>
+              )
+            ) : null}
+          </div>
         </motion.div>
       </div>
 
@@ -230,6 +304,8 @@ export function TokenAsset({
           tokenSymbol={name}
           onSelect={onChainClick}
           reference={assetRef.current}
+          getFormattedBalanceForToken={getFormattedBalanceForToken}
+          showBalanceRing={showBalanceRing}
         />
       )}
     </>
