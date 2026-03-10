@@ -17,9 +17,12 @@ import { sleep } from '../../utils/shared-utils.js';
 export type QueryResponse = string | number | boolean | object | undefined;
 export type CallResponse = string | number | object | bigint | boolean;
 
-export interface NearTransactionResult {
-  status: 'success' | 'failure';
-}
+/** NEAR transaction status Failure payload from RPC (structure varies by execution failure). */
+export type NearTransactionFailure = unknown;
+
+export type NearTransactionResult =
+  | { status: 'success' }
+  | { status: 'failure'; failure: NearTransactionFailure };
 
 export class NearBaseSpokeProvider {
   public readonly chainConfig: NearSpokeChainConfig;
@@ -47,7 +50,7 @@ export class NearBaseSpokeProvider {
             return { status: 'success' };
           }
           if ('Failure' in status) {
-            return { status: 'failure' };
+            return { status: 'failure', failure: status.Failure };
           }
         }
 
