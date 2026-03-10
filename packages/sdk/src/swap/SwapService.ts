@@ -944,6 +944,12 @@ export class SwapService {
       this.configService.isValidSpokeChainId(params.dstChain),
       `Invalid spoke chain (params.dstChain): ${params.dstChain}`,
     );
+    //if dstChain is Bitcoin and token is BTC, check minOutputToken should be higher than 546 sats
+    if (params.dstChain === BITCOIN_MAINNET_CHAIN_ID && params.outputToken === "BTC") {
+      invariant(
+        params.minOutputAmount >= 546n,
+        `Invalid minOutputAmount (params.minOutputAmount): ${params.minOutputAmount}`,
+    );
 
     try {
       let walletAddress = await spokeProvider.walletProvider.getWalletAddress();
