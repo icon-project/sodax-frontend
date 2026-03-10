@@ -14,7 +14,7 @@ import { INJECTIVE_MAINNET_CHAIN_ID, REDBELLY_MAINNET_CHAIN_ID } from '@sodax/ty
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { usePoolState } from '../_stores/pool-store-provider';
 
-const mockToken1: XToken = {
+const sodaToken: XToken = {
   name: 'SODA',
   symbol: 'SODA',
   address: '0x0',
@@ -22,7 +22,7 @@ const mockToken1: XToken = {
   xChainId: 'sonic',
 };
 
-const mockToken2: XToken = {
+const xSodaToken: XToken = {
   name: 'xSODA',
   symbol: 'xSODA',
   address: '0x1',
@@ -133,6 +133,16 @@ export function PoolNetworkSelector({
     }
     return tokens;
   }, []);
+  const mockToken2WithSelectedChain = useMemo((): XToken => {
+    if (!selectedToken) {
+      return xSodaToken;
+    }
+
+    return {
+      ...xSodaToken,
+      xChainId: selectedToken.xChainId,
+    };
+  }, [selectedToken]);
 
   useClickAway(assetRef, event => {
     const target = event.target as HTMLElement;
@@ -151,12 +161,13 @@ export function PoolNetworkSelector({
       >
         <div data-property-1="Pair" className="inline-flex flex-col justify-start items-center gap-2">
           <div className="relative inline-flex justify-start items-center" ref={networkPickerAnchorRef}>
-            <CurrencyLogo currency={mockToken1} hideNetwork className="relative" />
+            <CurrencyLogo currency={sodaToken} hideNetwork className="relative" />
             <CurrencyLogo
-              currency={mockToken2}
+              currency={mockToken2WithSelectedChain}
               className="relative -ml-4"
-              tokenCount={sodaTokens.length}
+              tokenCount={selectedToken ? 1 : sodaTokens.length}
               isGroup={selectedToken === null}
+              isChainConnected={walletConnected}
             />
             {isNetworkPickerOpened && (
               <PoolNetworkPicker
