@@ -593,7 +593,7 @@ export type VerifyTxHashRawEvmConfig = {
 };
 
 export type VerifyTxHashRawConfigType = Prettify<
-  (VerifyTxHashRawSolanaConfig | VerifyTxHashRawStellarConfig | VerifyTxHashRawEvmConfig) & { chainType: ChainType }
+  (VerifyTxHashRawSolanaConfig | VerifyTxHashRawStellarConfig | VerifyTxHashRawEvmConfig | VerifyTxHashRawNearConfig) & { chainType: ChainType }
 >;
 export type VerifyTxHashRawConfig<T extends ChainType> = T extends 'SOLANA'
   ? VerifyTxHashRawSolanaConfig
