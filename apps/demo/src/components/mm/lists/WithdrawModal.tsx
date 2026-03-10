@@ -239,7 +239,12 @@ export function WithdrawModal({
                   const amountNum = Number.parseFloat(amount.replace(',', '.'));
                   if (Number.isNaN(amountNum) || amountNum <= 0) return null;
 
-                  if (maxWithdraw && maxWithdraw !== '0' && amountNum > Number.parseFloat(maxWithdraw)) {
+                  if (
+                    maxWithdraw &&
+                    maxWithdraw !== '0' &&
+                    amountNum > Number.parseFloat(maxWithdraw) &&
+                    !isBusy
+                  ) {
                     return (
                       <ErrorAlert
                         text={`Amount exceeds maximum withdrawable: ${Number(maxWithdraw).toFixed(6)} ${token.symbol}`}

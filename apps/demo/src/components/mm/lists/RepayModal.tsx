@@ -55,7 +55,7 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
   const [successData, setSuccessData] = useState<ActionSuccessData | null>(null);
   // Track when approve button is clicked to show "Approving..." immediately
   const [isApprovingLocal, setIsApprovingLocal] = useState(false);
-  const { selectedChainId: selectedMarketChainId } = useAppStore();
+  const { selectedChainId: selectedMarketChainId, openWalletModal } = useAppStore();
 
   const [fromChainId, setFromChainId] = useState(selectedMarketChainId);
   // toChainId = market chain where debt is recorded (where collateral is), NOT token.xChainId (where borrowed asset was delivered)
@@ -161,6 +161,9 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
 
   // Chain switching hook for the source chain
   const { isWrongChain: isWrongSourceChain, handleSwitchChain: handleSwitchToSource } = useEvmSwitchChain(fromChainId);
+
+  // Market chain wallet connection guard (toAddress is needed to identify the hub wallet for debt)
+  const isMissingMarketChainAddress = !toAddress;
 
   const handleRepay = async (): Promise<void> => {
     setError(null);
@@ -327,7 +330,7 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
                     return <ErrorAlert text="No debt to repay" variant="compact" />;
                   }
 
-                  if (!isBalanceUnknown && insufficientBalance) {
+                  if (!isBalanceUnknown && insufficientBalance && !isBusy) {
                     return (
                       <ErrorAlert
                         text={`Insufficient balance. You have ${userBalance?.toFixed(6)} ${sourceToken?.symbol || token.symbol}, but need ${amountNum.toFixed(6)} ${sourceToken?.symbol || token.symbol}`}
@@ -384,6 +387,10 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
           ) : isWrongSourceChain ? (
             <Button className="w-full" variant="cherry" onClick={handleSwitchToSource} disabled={isBusy}>
               Switch to {getChainName(fromChainId)}
+            </Button>
+          ) : isMissingMarketChainAddress ? (
+            <Button className="w-full" variant="cherry" onClick={openWalletModal}>
+              Connect Wallet on {getChainName(toChainId)}
             </Button>
           ) : !hasDebt ? (
             <Button className="w-full" variant="default" disabled>

@@ -211,7 +211,7 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
                   const amountNum = Number.parseFloat(amount.replace(',', '.'));
                   if (Number.isNaN(amountNum) || amountNum <= 0) return null;
 
-                  if (maxSupply && maxSupply !== '0' && amountNum > Number.parseFloat(maxSupply)) {
+                  if (maxSupply && maxSupply !== '0' && amountNum > Number.parseFloat(maxSupply) && !isBusy) {
                     return (
                       <ErrorAlert
                         text={`Amount exceeds maximum supply: ${Number(maxSupply).toFixed(6)} ${token.symbol}`}

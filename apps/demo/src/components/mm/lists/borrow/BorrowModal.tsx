@@ -429,7 +429,7 @@ export function BorrowModal({
                   const amountNum = Number.parseFloat(amount.replace(',', '.'));
                   if (Number.isNaN(amountNum) || amountNum <= 0) return null;
 
-                  if (isMaxBorrowEffectivelyZero) {
+                  if (isMaxBorrowEffectivelyZero && !isBusy) {
                     return (
                       <ErrorAlert
                         text="Insufficient collateral to borrow this asset. Supply more collateral to borrow."
@@ -439,7 +439,7 @@ export function BorrowModal({
                   }
 
                   const maxBorrowNum = Number.parseFloat(maxBorrow);
-                  if (!Number.isNaN(maxBorrowNum) && amountNum > maxBorrowNum) {
+                  if (!Number.isNaN(maxBorrowNum) && amountNum > maxBorrowNum && !isBusy) {
                     return (
                       <ErrorAlert
                         text={`Amount exceeds maximum borrowable: ${Number(maxBorrow).toFixed(6)} ${token.symbol}`}
