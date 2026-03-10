@@ -206,12 +206,7 @@ export class NearSpokeService {
 
   public static async waitForTransactionRaw(params: VerifyTxHashRawNearConfig): Promise<Result<boolean, Error>> {
     try {
-      const defaultParams = {
-        pollingTimeout: 750,
-        maxAttempts: 40,
-      } as const;
-
-      const { rpcUrl, txHash, accountId, pollingTimeout, maxAttempts } = { ...defaultParams, ...params };
+      const { rpcUrl, txHash, accountId, pollingTimeout, maxAttempts } = params;
       const receipt = await NearSpokeProvider.waitForTransaction(
         txHash,
         accountId,
