@@ -75,8 +75,6 @@ export class NearBaseSpokeProvider {
     throw new Error(`NEAR transaction ${txHash} was not confirmed after ${maxRetries} retries`);
   }
 
-
-
   queryContract(contractId: string, method: string, args: {}): Promise<QueryResponse> {
     return this.rpcProvider.callFunction({ contractId, method, args });
   }

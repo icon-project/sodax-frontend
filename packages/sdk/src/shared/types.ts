@@ -568,8 +568,8 @@ export type VerifyTxHashRawNearConfig = {
   txHash: string;
   chainType: 'NEAR';
   rpcUrl: HttpUrl;
-  pollingTimeout?: number;
-  maxAttempts?: number;
+  maxRetries?: number;
+  retryDelay?: number;
 };
 
 export type VerifyTxHashRawStellarConfig = {

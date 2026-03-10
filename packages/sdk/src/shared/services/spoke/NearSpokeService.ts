@@ -183,8 +183,8 @@ export class NearSpokeService {
   public static async waitForTransaction(
     spokeProvider: NearSpokeProvider,
     txHash: string,
-    pollingTimeout?: number,
-    maxAttempts?: number,
+    maxRetries?: number,
+    retryDelay?: number,
   ): Promise<Result<boolean, Error>> {
     try {
       const accountId = await spokeProvider.walletProvider.getWalletAddress();
@@ -192,8 +192,8 @@ export class NearSpokeService {
         txHash,
         accountId,
         spokeProvider.rpcProvider,
-        pollingTimeout,
-        maxAttempts,
+        maxRetries,
+        retryDelay,
       );
       if (receipt.status === 'success') {
         return { ok: true, value: true };
@@ -206,13 +206,13 @@ export class NearSpokeService {
 
   public static async waitForTransactionRaw(params: VerifyTxHashRawNearConfig): Promise<Result<boolean, Error>> {
     try {
-      const { rpcUrl, txHash, accountId, pollingTimeout, maxAttempts } = params;
+      const { rpcUrl, txHash, accountId, maxRetries, retryDelay } = params;
       const receipt = await NearSpokeProvider.waitForTransaction(
         txHash,
         accountId,
         new JsonRpcProvider({ url: rpcUrl }),
-        pollingTimeout,
-        maxAttempts,
+        maxRetries,
+        retryDelay,
       );
       if (receipt.status === 'success') {
         return { ok: true, value: true };
