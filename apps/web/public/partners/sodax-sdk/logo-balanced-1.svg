@@ -7,20 +7,20 @@
 </g>
 <defs>
 <radialGradient id="paint0_radial_0_176" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(4.56115 21.1671) scale(16.4207 16.5492)">
-<stop stop-color="#2CA9B7"/>
-<stop offset="1" stop-color="#2CA9B7" stop-opacity="0"/>
+<stop stopColor="#2CA9B7"/>
+<stop offset="1" stopColor="#2CA9B7" stopOpacity="0"/>
 </radialGradient>
 <radialGradient id="paint1_radial_0_176" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(21.0041 21.3202) rotate(-90) scale(16.5492 16.4207)">
-<stop stop-color="#2CA9B7"/>
-<stop offset="1" stop-color="#2CA9B7" stop-opacity="0"/>
+<stop stopColor="#2CA9B7"/>
+<stop offset="1" stopColor="#2CA9B7" stopOpacity="0"/>
 </radialGradient>
 <linearGradient id="paint2_linear_0_176" x1="22.3971" y1="4.44715" x2="3.61283" y2="4.44715" gradientUnits="userSpaceOnUse">
-<stop stop-color="#2CA9B7"/>
-<stop offset="1" stop-color="#2CA9B7" stop-opacity="0"/>
+<stop stopColor="#2CA9B7"/>
+<stop offset="1" stopColor="#2CA9B7" stopOpacity="0"/>
 </linearGradient>
 <radialGradient id="paint3_radial_0_176" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(4.71238 4.59544) rotate(90) scale(16.5492 16.4207)">
-<stop stop-color="#2CA9B7"/>
-<stop offset="1" stop-color="#2CA9B7" stop-opacity="0"/>
+<stop stopColor="#2CA9B7"/>
+<stop offset="1" stopColor="#2CA9B7" stopOpacity="0"/>
 </radialGradient>
 </defs>
 </svg>

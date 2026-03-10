@@ -35,15 +35,17 @@ import {
   KAIA_MAINNET_CHAIN_ID,
   REDBELLY_MAINNET_CHAIN_ID,
 } from '@sodax/types';
-
 interface NetworkIconProps {
   id: string;
   className?: string;
+  hasBalance?: boolean;
+  /** When true, use drop-shadow + box-shadow (swap network picker only). */
+  swapPickerShadow?: boolean;
 }
 
-export default function NetworkIcon({ id, className }: NetworkIconProps): React.JSX.Element {
+function renderIcons(id: string): React.ReactNode {
   return (
-    <div className={`ring-2 ring-white shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] rounded w-4 h-4 ${className}`}>
+    <>
       {id === ICON_MAINNET_CHAIN_ID && <IcxIcon />}
       {id === AVALANCHE_MAINNET_CHAIN_ID && <AvalancheIcon />}
       {id === BASE_MAINNET_CHAIN_ID && <BaseIcon />}
@@ -61,6 +63,39 @@ export default function NetworkIcon({ id, className }: NetworkIconProps): React.
       {id === ETHEREUM_MAINNET_CHAIN_ID && <EthereumIcon />}
       {id === KAIA_MAINNET_CHAIN_ID && <KaiaIcon />}
       {id === REDBELLY_MAINNET_CHAIN_ID && <RedbellyIcon />}
+    </>
+  );
+}
+
+export default function NetworkIcon({
+  id,
+  className,
+  hasBalance = false,
+  swapPickerShadow = false,
+}: NetworkIconProps): React.JSX.Element {
+  // Same as main: always show border (ring-2). When wallet connected and we know there is balance, use thicker ring.
+  const ringClass = hasBalance ? 'ring-[6px] ring-white' : 'ring-2 ring-white';
+
+  if (swapPickerShadow) {
+    // Swap network picker: thick ring + shadow only when chain has balance; otherwise minimal ring (match Stake).
+    const networkIconInPickerBoxShadow = 'shadow-[-2px_0_8px_0_rgba(175,145,145,0.40)]';
+    const networkIconInPickerRing = hasBalance ? 'ring-[5px] ring-white' : 'ring-2 ring-white';
+    return (
+      <div
+        className={`flex shrink-0 w-4 h-4 items-center justify-center rounded-[4px] bg-white ${networkIconInPickerRing} ${networkIconInPickerBoxShadow} ${className}`}
+      >
+        {renderIcons(id)}
+      </div>
+    );
+  }
+
+  // Neutral gray shadow (designer: previous rgba(175,145,145) was too dark and color off).
+  const shadowClass = hasBalance
+    ? 'shadow-[-4px_0_6px_0_rgba(0,0,0,0.08)]'
+    : 'shadow-[-2px_0_4px_0_rgba(0,0,0,0.06)]';
+  return (
+    <div className={`flex items-center justify-center rounded ${ringClass} ${shadowClass} w-4 h-4 ${className}`}>
+      {renderIcons(id)}
     </div>
   );
 }
