@@ -564,7 +564,7 @@ export class SpokeService {
         if (!result.ok) {
           return result;
         }
-        if (result.value.status && result.value.status !== '0x1') {
+        if (result.value.status && result.value.status !== '0x1' && result.value.status !== 'success') {
           return { ok: false, error: new Error('Transaction reverted') };
         }
         return { ok: true, value: true };
