@@ -26,7 +26,7 @@ Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-fronten
 
 ### Initialising Providers
 
-Refer to [Initialising Spoke Provider](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/README.md#initialising-spoke-provider) section to see how IconSpokeProvider and SonicSpokeProvider can be created.
+Refer to [Initialising Spoke Provider](https://docs.sodax.com/developers/how-to/how_to_create_a_spoke_provider) section to see how IconSpokeProvider and SonicSpokeProvider can be created.
 
 ## Migration Types
 
