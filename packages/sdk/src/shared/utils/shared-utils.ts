@@ -7,7 +7,7 @@ import {
   type RawSpokeProviderConfig,
   type SpokeProviderType,
 } from '../entities/Providers.js';
-import { isEvmRawSpokeProviderConfig, isPartnerFeeAmount, isPartnerFeePercentage, isSolanaRawSpokeProviderConfig, isSonicRawSpokeProviderConfig, isStellarRawSpokeProviderConfig } from '../guards.js';
+import { isEvmRawSpokeProviderConfig, isNearRawSpokeProviderConfig, isPartnerFeeAmount, isPartnerFeePercentage, isSolanaRawSpokeProviderConfig, isSonicRawSpokeProviderConfig, isStellarRawSpokeProviderConfig } from '../guards.js';
 import type { GetAddressType, GetChainConfigType, PartnerFee, QuoteType } from '../types.js';
 import {
   type SpokeChainId,
@@ -26,6 +26,7 @@ import {
   IconRawSpokeProvider,
   InjectiveRawSpokeProvider,
   SonicRawSpokeProvider,
+  NearRawSpokeProvider,
 } from '../entities/index.js';
 import { SuiRawSpokeProvider } from '../entities/sui/SuiSpokeProvider.js';
 
@@ -163,6 +164,9 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
     case 'stellar':
       return `0x${StellarAddress.fromString(address).toScVal().toXDR('hex')}`;
 
+    case 'near':
+      return toHex(Buffer.from(address, 'utf-8'));
+
     default:
       return address as Hex;
   }
@@ -268,6 +272,13 @@ export function constructRawSpokeProvider(config: RawSpokeProviderConfig): RawSp
       return new SuiRawSpokeProvider(
         config.chainConfig as GetChainConfigType<'SUI'>,
         config.walletAddress as GetAddressType<SuiRawSpokeProvider>,
+      );
+    }
+    case 'NEAR': {
+      invariant(isNearRawSpokeProviderConfig(config), 'Invalid Near raw spoke provider config');
+      return new NearRawSpokeProvider(
+        config.chainConfig,
+        config.walletAddress,
       );
     }
     default: {
