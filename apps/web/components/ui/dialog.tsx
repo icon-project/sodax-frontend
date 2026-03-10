@@ -72,6 +72,7 @@ const DialogContent = React.forwardRef<React.ElementRef<typeof DialogPrimitive.C
       <DialogPortal data-slot="dialog-portal">
         <DialogOverlay />
         <DialogPrimitive.Content
+          aria-describedby={undefined}
           ref={ref}
           data-slot="dialog-content"
           asChild={enableMotion}
