@@ -298,8 +298,8 @@ async function swapWithStellarDestination(
 
 ## Related Documentation
 
-- [Swaps](./SWAPS.md) - Cross-chain intent-based swaps
-- [Money Market](./MONEY_MARKET.md) - Cross-chain lending and borrowing
-- [Bridge](./BRIDGE.md) - Cross-chain token bridging
-- [Migration](./MIGRATION.md) - Token migration
-- [Staking](./STAKING.md) - SODA token staking
+- [Swaps](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/SWAPS.md) - Cross-chain intent-based swaps
+- [Money Market](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/MONEY_MARKET.md) - Cross-chain lending and borrowing
+- [Bridge](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/BRIDGE.md) - Cross-chain token bridging
+- [Migration](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/MIGRATION.md) - Token migration
+- [Staking](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/STAKING.md) - SODA token staking

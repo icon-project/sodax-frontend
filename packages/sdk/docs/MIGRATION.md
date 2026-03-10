@@ -26,7 +26,7 @@ Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-fronten
 
 ### Initialising Providers
 
-Refer to [Initialising Spoke Provider](../README.md#initialising-spoke-provider) section to see how IconSpokeProvider and SonicSpokeProvider can be created.
+Refer to [Initialising Spoke Provider](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/README.md#initialising-spoke-provider) section to see how IconSpokeProvider and SonicSpokeProvider can be created.
 
 ## Migration Types
 
@@ -128,7 +128,7 @@ if (approveResult.ok) {
 
 ### Stellar Trustline Requirements
 
-For Stellar-based migration operations, you need to handle trustlines differently depending on whether Stellar is the source or destination chain. See [Stellar Trustline Requirements](./STELLAR_TRUSTLINE.md#migration) for detailed information and code examples.
+For Stellar-based migration operations, you need to handle trustlines differently depending on whether Stellar is the source or destination chain. See [Stellar Trustline Requirements](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/STELLAR_TRUSTLINE.md#migration) for detailed information and code examples.
 
 ## ICX Migration (ICX/wICX → SODA)
 

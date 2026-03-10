@@ -88,7 +88,7 @@ All swap methods are accessible through `sodax.swaps`:
 
 ### Initialising Spoke Provider
 
-Refer to [Initialising Spoke Provider](../README.md#initialising-spoke-provider) section to see how BSC spoke provider used as `bscSpokeProvider` can be created.
+Refer to [Initialising Spoke Provider](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/README.md#initialising-spoke-provider) section to see how BSC spoke provider used as `bscSpokeProvider` can be created.
 
 ### Request a Quote
 
@@ -157,7 +157,7 @@ const createIntentParams = {
 All solver functions use object parameters for better readability and extensibility. The common parameter structure includes:
 
 - **`intentParams`**: The `CreateIntentParams` object containing swap details
-- **`spokeProvider`**: The spoke provider instance for the source chain. Can be a regular `SpokeProvider` (e.g., `EvmSpokeProvider`) or a raw spoke provider (e.g., `EvmRawSpokeProvider`) when you only have a wallet address. See [HOW_TO_CREATE_A_SPOKE_PROVIDER.md](./HOW_TO_CREATE_A_SPOKE_PROVIDER.md) for details on raw spoke providers.
+- **`spokeProvider`**: The spoke provider instance for the source chain. Can be a regular `SpokeProvider` (e.g., `EvmSpokeProvider`) or a raw spoke provider (e.g., `EvmRawSpokeProvider`) when you only have a wallet address. See [HOW_TO_CREATE_A_SPOKE_PROVIDER.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/HOW_TO_CREATE_A_SPOKE_PROVIDER.md) for details on raw spoke providers.
 - **`fee`**: (Optional) Partner fee configuration. If not provided, uses the default partner fee from config. **Note**: Fees are now deducted from the input amount rather than added to it.
 - **`raw`**: (Optional) Whether to return raw transaction data instead of executing the transaction. **Note**: When using raw spoke providers, you must pass `raw: true`. Some methods like `swap` and `createAndSubmitIntent` do not support raw mode as they need to execute transactions.
 - **`timeout`**: (Optional) Timeout in milliseconds for relay operations (default: 60 seconds).
@@ -311,7 +311,7 @@ For Stellar-based swap operations, the allowance and approval system works diffe
 
 - **Source Chain (Stellar)**: The standard `isAllowanceValid` and `approve` methods work as expected for EVM chains, but for Stellar as the source chain, these methods check and establish trustlines instead.
 
-- **Destination Chain (Stellar)**: When Stellar is specified as the destination chain, frontends/clients need to manually establish trustlines before executing swaps. See [Stellar Trustline Requirements](./STELLAR_TRUSTLINE.md#swaps) for detailed information and code examples.
+- **Destination Chain (Stellar)**: When Stellar is specified as the destination chain, frontends/clients need to manually establish trustlines before executing swaps. See [Stellar Trustline Requirements](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/STELLAR_TRUSTLINE.md#swaps) for detailed information and code examples.
 
 ### Estimate Gas for Raw Transactions
 
