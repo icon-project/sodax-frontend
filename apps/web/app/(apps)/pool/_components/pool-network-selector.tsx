@@ -1,14 +1,18 @@
 import type React from 'react';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useClickAway } from 'react-use';
 import { ChevronDownIcon } from 'lucide-react';
+import { motion, useAnimationControls } from 'framer-motion';
 import CurrencyLogo from '@/components/shared/currency-logo';
+import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import { cn } from '@/lib/utils';
 import { chainIdToChainName } from '@/providers/constants';
 import { PoolNetworkPicker } from './pool-network-picker';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { supportedSpokeChains, spokeChainConfig } from '@sodax/sdk';
 import { INJECTIVE_MAINNET_CHAIN_ID, REDBELLY_MAINNET_CHAIN_ID } from '@sodax/types';
+import { useXAccount } from '@sodax/wallet-sdk-react';
+import { usePoolState } from '../_stores/pool-store-provider';
 
 const mockToken1: XToken = {
   name: 'SODA',
@@ -30,7 +34,7 @@ type PoolNetworkSelectorProps = {
   isNetworkPickerOpened: boolean;
   selectedNetworkChainId: SpokeChainId;
   onNetworkPickerOpenChange: (isOpened: boolean) => void;
-  onNetworkSelect: (chainId: SpokeChainId) => void;
+  onNetworkSelect: (token: XToken) => void;
 };
 
 export function PoolNetworkSelector({
@@ -41,7 +45,77 @@ export function PoolNetworkSelector({
 }: PoolNetworkSelectorProps): React.JSX.Element {
   const assetRef = useRef<HTMLDivElement>(null);
   const networkPickerAnchorRef = useRef<HTMLDivElement>(null);
-  // Get all SODA tokens from all supported chains
+  const { address } = useXAccount(selectedNetworkChainId);
+  const { selectedToken } = usePoolState();
+  const walletConnected = !!address;
+  const allChainSodaBalances = useAllChainBalances({ onlySodaTokens: true });
+  const subtitleControls = useAnimationControls();
+  const [subtitleText, setSubtitleText] = useState<string>(`on ${chainIdToChainName(selectedNetworkChainId)}`);
+  const selectedSodaBalance = useMemo((): bigint => {
+    const selectedChainConfig = spokeChainConfig[selectedNetworkChainId];
+    const selectedSodaToken =
+      selectedChainConfig?.supportedTokens && 'SODA' in selectedChainConfig.supportedTokens
+        ? (selectedChainConfig.supportedTokens.SODA as XToken)
+        : undefined;
+
+    if (!selectedSodaToken) {
+      return 0n;
+    }
+
+    const selectedSodaBalanceEntry = (allChainSodaBalances[selectedSodaToken.address] || []).find(
+      balanceEntry => balanceEntry.chainId === selectedNetworkChainId,
+    );
+
+    return selectedSodaBalanceEntry?.balance ?? 0n;
+  }, [allChainSodaBalances, selectedNetworkChainId]);
+
+  useEffect((): (() => void) => {
+    let isCancelled = false;
+
+    const animateSubtitleClose = async (finalText: string): Promise<void> => {
+      setSubtitleText('Choose a network');
+      await subtitleControls.start({
+        scale: 1.08,
+        transition: {
+          type: 'spring',
+          stiffness: 400,
+          damping: 12,
+          mass: 0.5,
+        },
+      });
+
+      if (isCancelled) return;
+      setSubtitleText(finalText);
+
+      await subtitleControls.start({
+        scale: 1,
+        transition: {
+          type: 'spring',
+          stiffness: 400,
+          damping: 12,
+          mass: 0.5,
+        },
+      });
+    };
+
+    if (isNetworkPickerOpened) {
+      setSubtitleText('Choose a network');
+      void subtitleControls.start({ scale: 1 });
+    } else if (!walletConnected) {
+      void animateSubtitleClose('Wallet not connected');
+    } else {
+      if (selectedSodaBalance <= 0n) {
+        void animateSubtitleClose('Required assets missing');
+      } else {
+        void animateSubtitleClose('Join the pool');
+      }
+    }
+
+    return (): void => {
+      isCancelled = true;
+    };
+  }, [isNetworkPickerOpened, walletConnected, selectedSodaBalance, subtitleControls]);
+
   const sodaTokens = useMemo((): XToken[] => {
     const tokens: XToken[] = [];
     for (const chainId of supportedSpokeChains) {
@@ -78,14 +152,19 @@ export function PoolNetworkSelector({
         <div data-property-1="Pair" className="inline-flex flex-col justify-start items-center gap-2">
           <div className="relative inline-flex justify-start items-center" ref={networkPickerAnchorRef}>
             <CurrencyLogo currency={mockToken1} hideNetwork className="relative" />
-            <CurrencyLogo currency={mockToken2} hideNetwork className="relative -ml-4" tokenCount={16} isGroup />
+            <CurrencyLogo
+              currency={mockToken2}
+              className="relative -ml-4"
+              tokenCount={sodaTokens.length}
+              isGroup={selectedToken === null}
+            />
             {isNetworkPickerOpened && (
               <PoolNetworkPicker
                 isClicked={isNetworkPickerOpened}
                 tokens={sodaTokens}
                 tokenSymbol="SODA"
                 onSelect={(token: XToken) => {
-                  onNetworkSelect(token.xChainId as SpokeChainId);
+                  onNetworkSelect(token);
                   onNetworkPickerOpenChange(false);
                 }}
                 reference={networkPickerAnchorRef.current}
@@ -109,7 +188,9 @@ export function PoolNetworkSelector({
           </div>
           <div className="inline-flex justify-start items-center gap-2">
             <div className="justify-center text-clay text-(length:--body-small) font-normal font-['InterRegular'] leading-4">
-              {isNetworkPickerOpened ? 'Choose a network' : `on ${chainIdToChainName(selectedNetworkChainId)}`}
+              <motion.p animate={subtitleControls} initial={{ scale: 1 }} className="leading-4">
+                {subtitleText}
+              </motion.p>
             </div>
           </div>
         </div>

@@ -17,14 +17,8 @@ import { usePoolActions, usePoolState } from './_stores/pool-store-provider';
 export default function PoolPage(): React.JSX.Element {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const { selectedNetworkChainId, minPrice, maxPrice, sodaAmount, xSodaAmount, isNetworkPickerOpened } = usePoolState();
-  const {
-    setSelectedNetworkChainId,
-    setMinPrice,
-    setMaxPrice,
-    setSodaAmount,
-    setXSodaAmount,
-    setIsNetworkPickerOpened,
-  } = usePoolActions();
+  const { setSelectedToken, setMinPrice, setMaxPrice, setSodaAmount, setXSodaAmount, setIsNetworkPickerOpened } =
+    usePoolActions();
 
   useEffect(() => {
     setTimeout(() => {
@@ -46,7 +40,7 @@ export default function PoolPage(): React.JSX.Element {
             isNetworkPickerOpened={isNetworkPickerOpened}
             selectedNetworkChainId={selectedNetworkChainId}
             onNetworkPickerOpenChange={setIsNetworkPickerOpened}
-            onNetworkSelect={setSelectedNetworkChainId}
+            onNetworkSelect={setSelectedToken}
           />
           <div className="relative self-stretch">
             {isNetworkPickerOpened && <div className="inset-0 absolute w-full h-full bg-transparent-white z-20" />}
@@ -74,6 +68,7 @@ export default function PoolPage(): React.JSX.Element {
                   onMaxPriceChange={setMaxPrice}
                 />
                 <LiquidityInputs
+                  selectedNetworkChainId={selectedNetworkChainId}
                   sodaAmount={sodaAmount}
                   xSodaAmount={xSodaAmount}
                   onSodaAmountChange={setSodaAmount}
