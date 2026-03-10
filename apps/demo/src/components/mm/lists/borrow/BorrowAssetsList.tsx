@@ -15,7 +15,6 @@ import { BorrowModal } from './BorrowModal';
 import { type XToken, type ChainId, moneyMarketSupportedTokens, AVALANCHE_MAINNET_CHAIN_ID } from '@sodax/types';
 import { ChainSelector } from '@/components/shared/ChainSelector';
 import { RepayModal } from '../RepayModal';
-import { useAppStore } from '@/zustand/useAppStore';
 import { isXTokenArray } from '../../typeGuards';
 import { Info } from 'lucide-react';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
@@ -46,10 +45,7 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
     maxDebt: string;
   } | null>(null);
 
-  const { selectedChainId: selectedMarketChainId } = useAppStore();
-
   const { address } = useXAccount(selectedChainId);
-  const { address: marketAddress } = useXAccount(selectedMarketChainId);
 
   const allTokens = useMemo(() => {
     const tokens = Object.entries(moneyMarketSupportedTokens).flatMap(([chainId, chainTokens]) =>
@@ -72,16 +68,10 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
     userAddress: address,
   });
 
-  const { data: marketUserReserves, isLoading: isMarketUserReservesLoading } = useUserReservesData({
-    spokeChainId: selectedMarketChainId,
-    userAddress: marketAddress,
-  });
-
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
-  // Use market chain for userSummary since that's where collateral is
   const { data: userSummary } = useUserFormattedSummary({
-    spokeChainId: selectedMarketChainId,
-    userAddress: marketAddress,
+    spokeChainId: selectedChainId,
+    userAddress: address,
   });
   const borrowableAssets = useMemo(() => {
     if (!allMoneyMarketAssets) return [];
@@ -107,10 +97,9 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
     xTokens: tokensOnSelectedChain,
     address,
   });
-  const hasCollateral = !!marketUserReserves?.[0]?.some(reserve => reserve.scaledATokenBalance > 0n);
+  const hasCollateral = !!userReserves?.[0]?.some(reserve => reserve.scaledATokenBalance > 0n);
 
-  const isLoading =
-    isUserReservesLoading || isFormattedReservesLoading || isAssetsLoading || isMarketUserReservesLoading;
+  const isLoading = isUserReservesLoading || isFormattedReservesLoading || isAssetsLoading;
 
   return (
     <Card className="mt-3">
@@ -258,7 +247,7 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
                           : '-'
                       }
                       formattedReserves={formattedReserves || []}
-                      userReserves={marketUserReserves?.[0] || []}
+                      userReserves={userReserves?.[0] || []}
                       onBorrowClick={(token, maxBorrow, priceUSD) => {
                         setBorrowData({ token, maxBorrow, priceUSD });
                       }}
