@@ -123,7 +123,7 @@ export const useSwapInfo = () => {
       return ENTER_DESTINATION_ADDRESS_PLACEHOLDER;
     }
     if (isSwapAndSend && !validateChainAddress(customDestinationAddress, getXChainType(outputToken.xChainId) || '')) {
-      return getInvalidDestinationAddressMessage(chainIdToChainName(outputToken.xChainId));
+      return 'Address is not valid'; // this is a message on the button
     }
     if (sourceBalance < parseUnits(inputAmount, inputToken.decimals)) {
       return 'Insufficient balance';
