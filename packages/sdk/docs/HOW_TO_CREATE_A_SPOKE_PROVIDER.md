@@ -13,7 +13,7 @@ The spoke provider acts as the bridge between your application and the Sodax pro
 
 **Important**: You should create one spoke provider instance for each user wallet connection. Once created, reuse the same spoke provider instance for all Sodax feature interactions on that specific chain.
 
-For more information, refer to the [README.md](../README.md#initialising-spoke-provider) section.
+For more information, refer to the [README.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/README.md#initialising-spoke-provider) section.
 
 ## What is a Raw Spoke Provider?
 
@@ -85,7 +85,7 @@ Use `constructRawSpokeProvider` when the chain type is determined at runtime or 
 
 Before creating a spoke provider, ensure you have:
 
-- A wallet provider implementation for your target chain. You can use existing wallet provider implementations from the [`@sodax/wallet-sdk-core`](https://www.npmjs.com/package/@sodax/wallet-sdk-core) npm package, or use the local package [@wallet-sdk-core](../../wallet-sdk-core/README.md) if working within the Sodax monorepo.
+- A wallet provider implementation for your target chain. You can use existing wallet provider implementations from the [`@sodax/wallet-sdk-core`](https://www.npmjs.com/package/@sodax/wallet-sdk-core) npm package, or use the local package [@wallet-sdk-core](https://github.com/icon-project/sodax-frontend/blob/main/packages/wallet-sdk-core/README.md) if working within the Sodax monorepo.
 - The `@sodax/sdk` package installed
 - For Node.js environments: RPC URLs for the chains you're interacting with (we recommend using dedicated node providers like Alchemy, QuickNode, etc.)
 - For browser environments: Wallet extensions installed and connected (e.g., MetaMask for EVM chains)
@@ -997,7 +997,7 @@ const createIntentResult = await sodax.swaps.createIntent(
 );
 ```
 
-For detailed swap documentation, see [HOW_TO_MAKE_A_SWAP.md](./HOW_TO_MAKE_A_SWAP.md) and [SWAPS.md](./SWAPS.md).
+For detailed swap documentation, see [HOW_TO_MAKE_A_SWAP.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/HOW_TO_MAKE_A_SWAP.md) and [SWAPS.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/SWAPS.md).
 
 ### Using Raw Spoke Providers with Swaps
 
@@ -1061,7 +1061,7 @@ const supplyResult = await sodax.moneyMarket.supply(
 );
 ```
 
-For detailed money market documentation, see [MONEY_MARKET.md](./MONEY_MARKET.md).
+For detailed money market documentation, see [MONEY_MARKET.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/MONEY_MARKET.md).
 
 ### Using with Bridge
 
@@ -1073,7 +1073,7 @@ const bridgeResult = await sodax.bridge.createBridgeIntent(
 );
 ```
 
-For detailed bridge documentation, see [BRIDGE.md](./BRIDGE.md).
+For detailed bridge documentation, see [BRIDGE.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/BRIDGE.md).
 
 ### Using with Staking
 
@@ -1085,7 +1085,7 @@ const stakeResult = await sodax.staking.stake(
 );
 ```
 
-For detailed staking documentation, see [STAKING.md](./STAKING.md).
+For detailed staking documentation, see [STAKING.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/STAKING.md).
 
 ## Summary
 
@@ -1131,8 +1131,8 @@ For detailed staking documentation, see [STAKING.md](./STAKING.md).
 
 For more information on specific features, refer to the respective documentation files:
 
-- [HOW_TO_MAKE_A_SWAP.md](./HOW_TO_MAKE_A_SWAP.md) - Swap operations
-- [SWAPS.md](./SWAPS.md) - Swap API reference
-- [MONEY_MARKET.md](./MONEY_MARKET.md) - Money market operations
-- [BRIDGE.md](./BRIDGE.md) - Bridge operations
-- [STAKING.md](./STAKING.md) - Staking operations
+- [HOW_TO_MAKE_A_SWAP.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/HOW_TO_MAKE_A_SWAP.md) - Swap operations
+- [SWAPS.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/SWAPS.md) - Swap API reference
+- [MONEY_MARKET.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/MONEY_MARKET.md) - Money market operations
+- [BRIDGE.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/BRIDGE.md) - Bridge operations
+- [STAKING.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/STAKING.md) - Staking operations
