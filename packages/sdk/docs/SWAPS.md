@@ -836,7 +836,7 @@ Get the intent delivery info about solved intent from the Relayer API. Packet da
 
 ```typescript
 import {
-  ARBITRUM_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
   SolverIntentStatusCode,
   type SolverIntentStatusRequest,
   type PacketData,
@@ -854,9 +854,9 @@ if (statusResult.ok && statusResult.value.status === SolverIntentStatusCode.SOLV
   const { fill_tx_hash } = statusResult.value;
   
   if (fill_tx_hash) {
-    // Get the packet data for the solved intent
+    // Get the packet data for the solved intent on hub chain
     const packetResult = await sodax.swaps.getSolvedIntentPacket({
-      chainId: ARBITRUM_MAINNET_CHAIN_ID, // Destination spoke chain ID
+      chainId: sodax.config.getHubChainConfig().chain.id // or SONIC_MAINNET_CHAIN_ID which represents hub chain used in Sodax
       fillTxHash: fill_tx_hash, // Fill transaction hash from getStatus
       timeout: 120000, // Optional: timeout in milliseconds (default: 120 seconds)
     });
