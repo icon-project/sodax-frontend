@@ -17,11 +17,11 @@ import {
   getHubChainConfig,
   encodeAddress,
   Payload,
-  RadfiConfig,
+  type RadfiConfig,
   waitUntilIntentExecuted
 } from '@sodax/sdk';
 import { EvmWalletProvider, BitcoinWalletProvider } from '@sodax/wallet-sdk-core';
-import { SONIC_MAINNET_CHAIN_ID, type HubChainId, type SpokeChainId, BITCOIN_MAINNET_CHAIN_ID, BitcoinSpokeChainConfig, getIntentRelayChainId } from '@sodax/types';
+import { SONIC_MAINNET_CHAIN_ID, type HubChainId, type SpokeChainId, BITCOIN_MAINNET_CHAIN_ID, type BitcoinSpokeChainConfig, getIntentRelayChainId } from '@sodax/types';
 import { solverConfig } from './config.js';
 import type { BitcoinWalletConfig } from '@sodax/wallet-sdk-core';
 import { sleep } from '@injectivelabs/utils';
@@ -91,7 +91,7 @@ async function submitData(tx_hash: string, address: Address, payload: Hex | null
       },
     };
   } else {
-    const payloadData = tx_hash == "withdraw" ?
+    const payloadData = tx_hash === "withdraw" ?
       JSON.parse(payload) :
       {
         address: address,
@@ -139,7 +139,7 @@ async function depositTo(token: Address, amount: bigint, recipient: Address) {
   const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
   const tradingWalletAddress = await spokeProvider.radfi.getTradingWallet(walletAddress);
   console.log('tradingWalletAddress', WALLET_MODE, tradingWalletAddress, walletAddress);
-  const spokeAddress = 
+  const spokeAddress =
     spokeProvider.walletMode === "TRADING" ? tradingWalletAddress.tradingAddress as Address : walletAddress
   const spokeAddressBytes = encodeAddress(BITCOIN_MAINNET_CHAIN_ID, spokeAddress);
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
@@ -198,13 +198,13 @@ async function getRadfiAccessToken(walletAddress: string) {
   return response.accessToken;
 }
 
-async function withdrawAsset(token: Address, amount: bigint, recipient: Address, useTradingWallet: boolean = false) {
+async function withdrawAsset(token: Address, amount: bigint, recipient: Address, useTradingWallet = false) {
   const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
   const walletAddressBytes = encodeAddress(BITCOIN_MAINNET_CHAIN_ID, walletAddress);
   const tradingWalletAddress = await spokeProvider.radfi.getTradingWallet(walletAddress);
   console.log('tradingWalletAddress', WALLET_MODE, tradingWalletAddress, walletAddress);
   const spokeAddressBytes = encodeAddress(BITCOIN_MAINNET_CHAIN_ID,
-    WALLET_MODE==="TRADING" ? tradingWalletAddress.tradingAddress as Address : walletAddress
+    WALLET_MODE === "TRADING" ? tradingWalletAddress.tradingAddress as Address : walletAddress
   );
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
@@ -235,7 +235,7 @@ async function withdrawAsset(token: Address, amount: bigint, recipient: Address,
   console.log(res);
 }
 
-async function supply(token: Address, amount: bigint, useTradingWallet: boolean = false) {
+async function supply(token: Address, amount: bigint, useTradingWallet = false) {
   const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
   const walletAddressBytes = encodeAddress(BITCOIN_MAINNET_CHAIN_ID, walletAddress);
   const tradingWalletAddress = await spokeProvider.radfi.getTradingWallet(walletAddress);
@@ -269,7 +269,7 @@ async function supply(token: Address, amount: bigint, useTradingWallet: boolean 
   console.log(res);
 }
 
-async function borrow(token: Address, amount: bigint, useTradingWallet: boolean = false) {
+async function borrow(token: Address, amount: bigint, useTradingWallet = false) {
   const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
   const tradingWalletAddress = await spokeProvider.radfi.getTradingWallet(walletAddress);
   const spokeAddressBytes = encodeAddress(BITCOIN_MAINNET_CHAIN_ID,
@@ -301,7 +301,7 @@ async function borrow(token: Address, amount: bigint, useTradingWallet: boolean 
   console.log(res);
 }
 
-async function withdraw(token: Address, amount: bigint, useTradingWallet: boolean = false) {
+async function withdraw(token: Address, amount: bigint, useTradingWallet = false) {
   const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
   const walletAddressBytes = encodeAddress(BITCOIN_MAINNET_CHAIN_ID, walletAddress);
   const tradingWalletAddress = await spokeProvider.radfi.getTradingWallet(walletAddress);
@@ -322,7 +322,7 @@ async function withdraw(token: Address, amount: bigint, useTradingWallet: boolea
     spokeProvider.chainConfig.chain.id,
   );
 
-const withdrawData: string = await SpokeService.callWallet(
+  const withdrawData: string = await SpokeService.callWallet(
     hubWallet,
     data,
     spokeProvider,
@@ -335,7 +335,7 @@ const withdrawData: string = await SpokeService.callWallet(
   console.log(res);
 }
 
-async function repay(token: Address, amount: bigint, useTradingWallet: boolean = false) {
+async function repay(token: Address, amount: bigint, useTradingWallet = false) {
   const walletAddress = (await spokeProvider.walletProvider.getWalletAddress()) as Address;
   const walletAddressBytes = encodeAddress(BITCOIN_MAINNET_CHAIN_ID, walletAddress);
   const tradingWalletAddress = await spokeProvider.radfi.getTradingWallet(walletAddress);
@@ -374,7 +374,7 @@ async function createIntent(amount: bigint, inputToken: Address, outputChainId: 
   const walletAddressBytes = encodeAddress(BITCOIN_MAINNET_CHAIN_ID, walletAddress);
   const tradingWalletAddress = await spokeProvider.radfi.getTradingWallet(walletAddress);
   const spokeAddressBytes = encodeAddress(BITCOIN_MAINNET_CHAIN_ID,
-    WALLET_MODE==="TRADING" ? tradingWalletAddress.tradingAddress as Address : walletAddress
+    WALLET_MODE === "TRADING" ? tradingWalletAddress.tradingAddress as Address : walletAddress
   );
   const hubWallet = await EvmWalletAbstraction.getUserHubWalletAddress(
     spokeProvider.chainConfig.chain.id,
@@ -404,30 +404,30 @@ async function createIntent(amount: bigint, inputToken: Address, outputChainId: 
   });
 
   console.log('[createIntent] res', res);
-  
-  //@ts-ignore
-//   const res = await submitData(txHash.value[0], hubWallet, txHash.value[2]);
-  
-//    const packet = await waitUntilIntentExecuted({
-//           intentRelayChainId:getIntentRelayChainId(spokeCfg.chain.id).toString(),
-//           // @ts-ignore
-//           spokeTxHash: txHash.value[0],
-//           timeout:120000,
-//           apiUrl: relayerBackendUrl,
-//         });
 
-    
-//    if (!packet.ok) {
-//           return {
-//             ok: false,
-//             error: packet.error,
-//           };
-//         }
-//   const dstIntentTxHash = packet.value.dst_tx_hash;
-//  const result = await sodax.swaps.postExecution({
-//         intent_tx_hash: dstIntentTxHash as `0x${string}`,
-//       });
-//   console.log('[createIntent] txHash', txHash);
+  //@ts-ignore
+  //   const res = await submitData(txHash.value[0], hubWallet, txHash.value[2]);
+
+  //    const packet = await waitUntilIntentExecuted({
+  //           intentRelayChainId:getIntentRelayChainId(spokeCfg.chain.id).toString(),
+  //           // @ts-ignore
+  //           spokeTxHash: txHash.value[0],
+  //           timeout:120000,
+  //           apiUrl: relayerBackendUrl,
+  //         });
+
+
+  //    if (!packet.ok) {
+  //           return {
+  //             ok: false,
+  //             error: packet.error,
+  //           };
+  //         }
+  //   const dstIntentTxHash = packet.value.dst_tx_hash;
+  //  const result = await sodax.swaps.postExecution({
+  //         intent_tx_hash: dstIntentTxHash as `0x${string}`,
+  //       });
+  //   console.log('[createIntent] txHash', txHash);
 }
 
 // Helper function for testing only

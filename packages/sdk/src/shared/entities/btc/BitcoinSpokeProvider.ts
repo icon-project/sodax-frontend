@@ -62,7 +62,7 @@ export class BitcoinBaseSpokeProvider {
   public readonly chainConfig: BitcoinSpokeChainConfig;
   public readonly radfi: RadfiProvider;
   public readonly walletMode: WalletMode;
-  public radfiAccessToken: string = '';
+  public radfiAccessToken = '';
 
 
   constructor(config: BitcoinSpokeChainConfig, radfiConfig: RadfiConfig, walletMode: WalletMode = "USER", rpcURL?: string) {
@@ -278,15 +278,16 @@ export class BitcoinBaseSpokeProvider {
 
       // ───────────────── Trading wallet flow ─────────────────
       if (provider.walletMode === "TRADING") {
-        const tokenId =
-          provider.chainConfig.supportedTokens[token]?.address;
+        const tokenId = Object.values(provider.chainConfig.supportedTokens).find(
+          t => t.address === token,
+        )?.address;
 
         if (!tokenId) {
           throw new Error(`Unsupported token: ${token}`);
         }
 
         data = data.startsWith('0x') ? data.slice(2) : data
-        data = data.length == 64 ? data : keccak256(`0x${data}`).slice(2);
+        data = data.length === 64 ? data : keccak256(`0x${data}`).slice(2);
 
         accessToken = accessToken || provider.radfiAccessToken;
         const withdrawTx =
@@ -308,9 +309,16 @@ export class BitcoinBaseSpokeProvider {
             false
           );
 
+        // Normalize to base64 — Radfi expects base64 PSBT.
+        // Unisat/OKX return hex, Xverse returns base64.
+        const isHex = /^[0-9a-fA-F]+$/.test(signedTx);
+        const signedBase64Tx = isHex
+          ? Buffer.from(signedTx, 'hex').toString('base64')
+          : signedTx;
+
         return (await provider.radfi.requestRadfiSignature({
           userAddress: walletAddress,
-          signedBase64Tx: signedTx,
+          signedBase64Tx,
         }, accessToken)) satisfies TxReturnType<BitcoinSpokeProviderType, false> as TxReturnType<S, R>;
 
       }
@@ -500,7 +508,7 @@ export class BitcoinBaseSpokeProvider {
     }
     const orderedPayload = provider.encodePayloadToBytes(payload)
 
-    let onDemandWithdraw: OnDemandPayload = {
+    const onDemandWithdraw: OnDemandPayload = {
       payload_hex: Buffer.from(orderedPayload).toString('hex'),
       signature: undefined
     }
@@ -557,6 +565,31 @@ export class BitcoinSpokeProvider extends BitcoinBaseSpokeProvider implements IS
   ) {
     super(chainConfig, radfiConfig, walletMode, rpcUrl);
     this.walletProvider = walletProvider;
+  }
+
+  /**
+   * Ensure a valid Radfi access token is set on this provider.
+   * If the token is missing, authenticates with Radfi using BIP322 signature.
+   */
+  public async ensureRadfiAccessToken(): Promise<void> {
+    if (this.radfiAccessToken) {
+      console.log('[BitcoinSpokeProvider.ensureRadfiAccessToken] token already set, skipping auth');
+      return;
+    }
+
+    console.log('[BitcoinSpokeProvider.ensureRadfiAccessToken] no token, authenticating with Radfi...');
+    const address = await this.walletProvider.getWalletAddress();
+    const message = 'Login to Radfi via Sodax';
+    const signature = await this.walletProvider.signBip322Message(message);
+
+    if (!this.walletProvider.getPublicKey) {
+      throw new Error('Wallet provider does not support getPublicKey');
+    }
+    const publicKey = await this.walletProvider.getPublicKey();
+
+    const { accessToken } = await this.radfi.authenticate({ message, signature, address, publicKey });
+    console.log('[BitcoinSpokeProvider.ensureRadfiAccessToken] authenticated, token:', accessToken ? `${accessToken.slice(0, 20)}...` : 'null');
+    this.setRadfiAccessToken(accessToken);
   }
 
   /**

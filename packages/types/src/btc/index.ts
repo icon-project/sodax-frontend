@@ -96,7 +96,7 @@ export interface IBitcoinWalletProvider extends WalletAddressProvider {
    * @param satoshis - Amount to send in satoshis
    * @returns Promise resolving to transaction hash
    */
-  // sendBitcoin(toAddress: string, satoshis: number): Promise<string>;
+  sendBitcoin(toAddress: string, satoshis: bigint): Promise<string>;
 
   /**
    * Create radfi trading wallet

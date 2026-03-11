@@ -1,11 +1,11 @@
 // import * as bitcoin from 'bitcoinjs-lib';
-import { type Hex, type HubAddress, type HubChainId } from '@sodax/types';
+import type { Hex, HubAddress, HubChainId } from '@sodax/types';
 import type { BitcoinSpokeProviderType, TxReturnType } from '../../types.js';
 import type { EvmHubProvider } from '../../entities/index.js';
 // import { isBitcoinRawSpokeProvider } from '../../guards.js';
 import { encodeAddress } from '../../utils/shared-utils.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
-import { BitcoinBaseSpokeProvider } from '../../entities/btc/BitcoinSpokeProvider.js';
+import { BitcoinBaseSpokeProvider, type BitcoinSpokeProvider } from '../../entities/btc/BitcoinSpokeProvider.js';
 
 export type BitcoinSpokeDepositParams = {
   from: string; // Bitcoin address of the user on the spoke chain
@@ -120,8 +120,11 @@ export class BitcoinSpokeService {
         encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
         EvmHubProvider,
       ));
-    
-    const token = spokeProvider.chainConfig.supportedTokens[params.token]?.address!;
+
+    const tokenEntry = Object.values(spokeProvider.chainConfig.supportedTokens).find(
+      t => t.address === params.token,
+    );
+    const token = tokenEntry?.address ?? params.token;
     return {
       spokeChainID: spokeProvider.chainConfig.chain.id,
       token: encodeAddress(spokeProvider.chainConfig.chain.id, token),
@@ -134,6 +137,23 @@ export class BitcoinSpokeService {
         spokeProvider.chainConfig.addresses.assetManager,
       ),
     };
+  }
+
+  /**
+   * Fund the Radfi trading wallet by sending BTC from the user's personal wallet
+   *
+   * @param {bigint} amount - Amount in satoshis to send
+   * @param {BitcoinSpokeProvider} spokeProvider - The Bitcoin spoke provider (must have signing capability)
+   * @returns {Promise<string>} Transaction ID of the funding transaction
+   */
+  public static async fundTradingWallet(
+    amount: bigint,
+    spokeProvider: BitcoinSpokeProvider,
+  ): Promise<string> {
+    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+    const { tradingAddress } = await spokeProvider.radfi.getTradingWallet(walletAddress);
+
+    return spokeProvider.walletProvider.sendBitcoin(tradingAddress, amount);
   }
 
   /**

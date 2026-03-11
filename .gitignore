@@ -12,4 +12,4 @@ public/dist
 .history
 .idea
 **/build/**
-
+.personal-docs

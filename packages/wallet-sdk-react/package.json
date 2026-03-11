@@ -7,7 +7,10 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -37,13 +40,13 @@
     "@injectivelabs/ts-types": "catalog:",
     "@injectivelabs/wallet-base": "catalog:",
     "@injectivelabs/wallet-core": "catalog:",
-    "@injectivelabs/wallet-strategy": "catalog:",
-    "@injectivelabs/wallet-evm": "catalog:",
     "@injectivelabs/wallet-cosmos": "catalog:",
+    "@injectivelabs/wallet-evm": "catalog:",
+    "@injectivelabs/wallet-strategy": "catalog:",
     "@mysten/dapp-kit": "catalog:",
     "@mysten/sui": "catalog:",
-    "@sodax/wallet-sdk-core": "workspace:*",
     "@sodax/types": "workspace:*",
+    "@sodax/wallet-sdk-core": "workspace:*",
     "@solana/spl-token": "catalog:",
     "@solana/wallet-adapter-react": "0.15.35",
     "@solana/wallet-adapter-wallets": "0.19.30",
@@ -51,6 +54,7 @@
     "@stellar/stellar-sdk": "catalog:",
     "icon-sdk-js": "catalog:",
     "immer": "10.1.1",
+    "sats-connect": "^4.2.1",
     "viem": "catalog:",
     "wagmi": "catalog:",
     "zustand": "4.5.2"

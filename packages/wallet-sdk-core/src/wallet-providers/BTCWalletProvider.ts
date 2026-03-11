@@ -19,6 +19,7 @@ export interface BitcoinWalletsKit {
   signEcdsaMessage(message: string): Promise<string>;
   signBip322Message(message: string): Promise<string>;
   getPublicKey(): Promise<string>;
+  sendBitcoin?(toAddress: string, satoshis: number): Promise<string>;
 }
 
 export type PrivateKeyBitcoinWalletConfig = {
@@ -173,7 +174,7 @@ export class BitcoinWalletProvider implements IBitcoinWalletProvider {
   /**
    * Sign PSBT and return fully signed transaction hex
    */
-  async signTransaction(psbtBase64: string, finalize: boolean = true): Promise<string> {
+  async signTransaction(psbtBase64: string, finalize = true): Promise<string> {
     if (isPkWallet(this.wallet)) {
       const psbt = bitcoin.Psbt.fromBase64(psbtBase64, { network: this.network });
 
@@ -268,5 +269,17 @@ export class BitcoinWalletProvider implements IBitcoinWalletProvider {
           `Unsupported address type: ${addressType}`,
         );
     }
+  }
+
+  async sendBitcoin(toAddress: string, satoshis: bigint): Promise<string> {
+    if (isPkWallet(this.wallet)) {
+      throw new BitcoinWalletError('sendBitcoin not implemented for PRIVATE_KEY wallet');
+    }
+
+    if (!this.wallet.walletsKit.sendBitcoin) {
+      throw new BitcoinWalletError('sendBitcoin not supported by this browser extension');
+    }
+
+    return this.wallet.walletsKit.sendBitcoin(toAddress, Number(satoshis));
   }
 }

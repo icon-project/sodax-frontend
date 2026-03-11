@@ -11,6 +11,12 @@ export type RadfiTradingWallet = {
   userPublicKey: string;
 };
 
+export type RadfiAuthResult = {
+  accessToken: string;
+  refreshToken: string;
+  tradingAddress: string;
+};
+
 export class RadfiProvider {
   constructor(private readonly config: RadfiConfig) {}
 
@@ -19,7 +25,7 @@ export class RadfiProvider {
     signature: string;
     address: string;
     publicKey: string;
-  }): Promise<string> {
+  }): Promise<RadfiAuthResult> {
     const res = await this.request('/auth/authenticate', {
       method: 'POST',
       body: JSON.stringify(params),
@@ -30,15 +36,39 @@ export class RadfiProvider {
       throw new Error(err.message || 'Radfi authentication failed');
     }
 
-    return res.json().then(r => r.data);
+    return res.json().then(r => ({
+      accessToken: r.data?.accessToken ?? '',
+      refreshToken: r.data?.refreshToken ?? '',
+      tradingAddress: r.data?.tradingAddress ?? r.data?.wallet?.tradingAddress ?? '',
+    }));
+  }
+
+  public async refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+    const res = await this.request('/auth/refresh-token', {
+      method: 'POST',
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Token refresh failed');
+    }
+
+    return res.json().then(r => ({
+      accessToken: r.data?.accessToken ?? '',
+      refreshToken: r.data?.refreshToken ?? refreshToken,
+    }));
   }
 
   public async createTradingWallet(params: {
     walletAddress: string;
     publicKey: string;
-  }): Promise<RadfiTradingWallet> {
+  }, accessToken: string): Promise<RadfiTradingWallet> {
     const res = await this.request('/wallets', {
       method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken || this.config.apiKey}`,
+      },
       body: JSON.stringify(params),
     });
 
@@ -52,16 +82,22 @@ export class RadfiProvider {
 
   public async getTradingWallet(
     userAddress: string,
+    accessToken?: string,
   ): Promise<RadfiTradingWallet> {
     const res = await this.request(`/wallets/details/${userAddress}`, {
       method: 'GET',
+      headers: accessToken
+        ? { Authorization: `Bearer ${accessToken}` }
+        : {},
     });
 
     if (!res.ok) {
       throw new Error('Trading wallet not found');
     }
 
-    return res.json().then(r => r.data);
+    const data = await res.json().then(r => r.data);
+    if (!data) throw new Error('Trading wallet not found');
+    return data;
   }
 
   public async checkIfTradingWalletExists(userAddress: string): Promise<boolean> {

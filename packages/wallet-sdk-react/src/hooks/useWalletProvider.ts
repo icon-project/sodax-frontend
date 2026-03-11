@@ -6,8 +6,11 @@ import type {
   ISolanaWalletProvider,
   IStellarWalletProvider,
   ISuiWalletProvider,
+  IBitcoinWalletProvider,
 } from '@sodax/types';
 import { useMemo } from 'react';
+import { BitcoinXService } from '../xchains/bitcoin/BitcoinXService';
+import type { BitcoinXConnector } from '../xchains/bitcoin/BitcoinXConnector';
 import {
   EvmWalletProvider,
   IconWalletProvider,
@@ -18,7 +21,7 @@ import {
 } from '@sodax/wallet-sdk-core';
 import { getXChainType } from '../actions';
 import { usePublicClient, useWalletClient } from 'wagmi';
-import { type SolanaXService, type StellarXService, useXAccount, useXService } from '..';
+import { type SolanaXService, type StellarXService, useXAccount, useXService, useXConnection } from '..';
 import type { SuiXService } from '../xchains/sui/SuiXService';
 import { CHAIN_INFO, SupportedChainId } from '../xchains/icon/IconXService';
 import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
@@ -49,6 +52,7 @@ export function useWalletProvider(
   | IInjectiveWalletProvider
   | IStellarWalletProvider
   | ISolanaWalletProvider
+  | IBitcoinWalletProvider
   | undefined {
   const xChainType = getXChainType(spokeChainId);
   // EVM-specific hooks
@@ -59,6 +63,7 @@ export function useWalletProvider(
   // Cross-chain hooks
   const xService = useXService(getXChainType(spokeChainId));
   const xAccount = useXAccount(spokeChainId);
+  const xConnection = useXConnection(xChainType);
 
   return useMemo(() => {
     switch (xChainType) {
@@ -141,8 +146,16 @@ export function useWalletProvider(
         });
       }
 
+      case 'BITCOIN': {
+        if (!xConnection?.xConnectorId) return undefined;
+        const connector = BitcoinXService.getInstance().getXConnectorById(xConnection.xConnectorId) as BitcoinXConnector | undefined;
+        if (!connector) return undefined;
+        // Recreate from window extension object — works after page reload without reconnect
+        return connector.recreateWalletProvider(xConnection.xAccount);
+      }
+
       default:
         return undefined;
     }
-  }, [xChainType, evmPublicClient, evmWalletClient, xService, xAccount]);
+  }, [xChainType, evmPublicClient, evmWalletClient, xService, xAccount, xConnection]);
 }

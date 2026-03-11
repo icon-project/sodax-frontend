@@ -2213,17 +2213,17 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
     },
   },
   [BITCOIN_MAINNET_CHAIN_ID]: {
-    [spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BTC.symbol]: {
+    [spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BTC.address]: {
       asset: '0xeb0393893b5bf98a50073d6740738b08e575058b',
       decimal: 8,
       symbol: 'BTC',
       name: 'Bitcoin',
       vault: '0x7A1A5555842Ad2D0eD274d09b5c4406a95799D5d',
     },
-    [spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BUSD.symbol]: {
+    [spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BUSD.address]: {
       asset: '0xdb41c7d09406026d4582bc2fc6d6319c323fe1bb',
       decimal: 6,
-      symbol: 'BUSD',  
+      symbol: 'BUSD',
       name: 'BUSD.BUSD.BUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     }
@@ -2350,7 +2350,8 @@ export const swapSupportedTokens = {
     // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies XToken[],
   [BITCOIN_MAINNET_CHAIN_ID]: [
-    
+    spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BTC,
+    spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BUSD,
   ] as const satisfies XToken[],
   [ETHEREUM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.ETH,

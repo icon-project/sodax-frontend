@@ -184,16 +184,16 @@ export type IntentErrorCode =
 export type IntentErrorData<T extends IntentErrorCode> = T extends 'RELAY_TIMEOUT'
   ? IntentWaitUntilIntentExecutedFailedErrorData
   : T extends 'CREATION_FAILED'
-    ? IntentCreationFailedErrorData
-    : T extends 'SUBMIT_TX_FAILED'
-      ? IntentSubmitTxFailedErrorData
-      : T extends 'POST_EXECUTION_FAILED'
-        ? IntentPostExecutionFailedErrorData
-        : T extends 'UNKNOWN'
-          ? IntentCreationFailedErrorData
-          : T extends 'CANCEL_FAILED'
-            ? IntentCancelFailedErrorData
-            : never;
+  ? IntentCreationFailedErrorData
+  : T extends 'SUBMIT_TX_FAILED'
+  ? IntentSubmitTxFailedErrorData
+  : T extends 'POST_EXECUTION_FAILED'
+  ? IntentPostExecutionFailedErrorData
+  : T extends 'UNKNOWN'
+  ? IntentCreationFailedErrorData
+  : T extends 'CANCEL_FAILED'
+  ? IntentCancelFailedErrorData
+  : never;
 
 export type IntentError<T extends IntentErrorCode = IntentErrorCode> = {
   code: T;
@@ -594,25 +594,25 @@ export class SwapService {
       if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
         const intentRelayChainId = getIntentRelayChainId(params.srcChain).toString();
         const submitPayload: IntentRelayRequest<'submit'> =
-          ((params.srcChain ===SOLANA_MAINNET_CHAIN_ID) || (params.srcChain === BITCOIN_MAINNET_CHAIN_ID)) && data
+          ((params.srcChain === SOLANA_MAINNET_CHAIN_ID) || (params.srcChain === BITCOIN_MAINNET_CHAIN_ID)) && data
             ? {
-                action: 'submit',
-                params: {
-                  chain_id: intentRelayChainId,
-                  tx_hash: spokeTxHash,
-                  data: {
-                    address: intent.creator,
-                    payload: data,
-                  },
+              action: 'submit',
+              params: {
+                chain_id: intentRelayChainId,
+                tx_hash: spokeTxHash,
+                data: {
+                  address: intent.creator,
+                  payload: data,
                 },
-              }
+              },
+            }
             : {
-                action: 'submit',
-                params: {
-                  chain_id: intentRelayChainId,
-                  tx_hash: spokeTxHash,
-                },
-              };
+              action: 'submit',
+              params: {
+                chain_id: intentRelayChainId,
+                tx_hash: spokeTxHash,
+              },
+            };
 
         const submitResult = await this.submitIntent(submitPayload);
 
@@ -949,21 +949,28 @@ export class SwapService {
       invariant(
         params.minOutputAmount >= 546n,
         `Invalid minOutputAmount (params.minOutputAmount): ${params.minOutputAmount}`,
-    );
+      );
+    }
 
     try {
+      console.log('[SwapService.createIntent] start', { srcChain: params.srcChain, dstChain: params.dstChain, inputToken: params.inputToken, inputAmount: params.inputAmount.toString() });
+
       let walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      console.log('[SwapService.createIntent] walletAddress', walletAddress, 'srcAddress', params.srcAddress);
       invariant(
         params.srcAddress.toLowerCase() === walletAddress.toLowerCase(),
         'srcAddress must be the same as wallet address',
       );
 
-      
       if (isBitcoinSpokeProvider(spokeProvider)) {
+        console.log('[SwapService.createIntent] Bitcoin detected, walletMode:', spokeProvider.walletMode, 'hasToken:', !!spokeProvider.radfiAccessToken);
+        await spokeProvider.ensureRadfiAccessToken();
+        console.log('[SwapService.createIntent] ensureRadfiAccessToken done, hasToken:', !!spokeProvider.radfiAccessToken);
         if (spokeProvider.walletMode === 'TRADING') {
           const tradingWalletAddress = await spokeProvider.radfi.getTradingWallet(
             await spokeProvider.walletProvider.getWalletAddress()
           );
+          console.log('[SwapService.createIntent] tradingWalletAddress', tradingWalletAddress);
           walletAddress = tradingWalletAddress.tradingAddress as Address;
         }
       }
@@ -974,6 +981,7 @@ export class SwapService {
         spokeProvider.chainConfig.chain.id,
         walletAddress,
       );
+      console.log('[SwapService.createIntent] creatorHubWalletAddress', creatorHubWalletAddress);
 
       if (
         spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id &&
@@ -1013,7 +1021,9 @@ export class SwapService {
           this.configService,
           fee,
         );
+        console.log('[SwapService.createIntent] intent data constructed', { data, intentId: intent.intentId?.toString() });
 
+        console.log('[SwapService.createIntent] calling SpokeService.deposit...');
         const txResult = (await SpokeService.deposit(
           {
             from: walletAddress,
@@ -1027,6 +1037,7 @@ export class SwapService {
           raw,
           skipSimulation,
         )) satisfies TxReturnType<S, R>;
+        console.log('[SwapService.createIntent] SpokeService.deposit done, txResult:', txResult);
 
         return {
           ok: true,
@@ -1034,6 +1045,7 @@ export class SwapService {
         };
       }
     } catch (error) {
+      console.error('[SwapService.createIntent] FAILED', error);
       return {
         ok: false,
         error: {
