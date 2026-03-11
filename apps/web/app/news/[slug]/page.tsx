@@ -3,8 +3,10 @@ import { cache } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { NEWS_ROUTE } from '@/constants/routes';
 import { getDb } from '@/lib/db';
 import { sanitizeHtml } from '@/lib/sanitize';
+import { getGlossaryTerms, injectGlossaryLinks } from '@/lib/glossary-linker';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
 import { ShareButton } from '@/components/news/share-button';
@@ -136,7 +138,7 @@ export default async function NewsArticlePage({
 }) {
   const { slug } = await params;
 
-  const article = await getArticleBySlug(slug);
+  const [article, glossaryTerms] = await Promise.all([getArticleBySlug(slug), getGlossaryTerms()]);
 
   if (!article) {
     notFound();
@@ -242,17 +244,20 @@ export default async function NewsArticlePage({
     <>
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleStructuredData) }} />
-      {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbStructuredData) }} />
+      <script
+        type="application/ld+json"
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbStructuredData) }}
+      />
       <div className="relative min-h-screen w-full bg-almost-white">
-        <MarketingHeader backLink="/news" backText="← news" />
-        <div className="max-w-7xl mx-auto pt-25">
+        <MarketingHeader backLink={NEWS_ROUTE} backText="← news" />
+        <div className="max-w-7xl mx-auto pt-30">
           {/* Article */}
           <article className="py-8" itemScope itemType="https://schema.org/NewsArticle">
             <div className="container mx-auto px-4 max-w-4xl">
               {/* Breadcrumb */}
               <nav className="mb-6 text-sm text-clay" aria-label="Breadcrumb">
-                <Link href="/news" className="hover:text-cherry-soda transition-colors">
+                <Link href={NEWS_ROUTE} className="hover:text-cherry-soda transition-colors">
                   News
                 </Link>
                 <span className="mx-2">/</span>
@@ -261,10 +266,7 @@ export default async function NewsArticlePage({
 
               {/* Header */}
               <header className="mb-8">
-                <h1
-                  className="text-4xl md:text-5xl font-black text-espresso leading-tight mb-4"
-                  itemProp="headline"
-                >
+                <h1 className="text-4xl md:text-5xl font-black text-espresso leading-tight mb-4" itemProp="headline">
                   {article.title}
                 </h1>
 
@@ -326,8 +328,8 @@ export default async function NewsArticlePage({
                 prose-code:text-cherry-soda prose-code:bg-cream prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded
                 prose-pre:bg-espresso prose-pre:text-cream-white prose-pre:rounded-lg
                 prose-hr:border-clay-light prose-hr:my-8"
-                // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is sanitized with sanitize-html library
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(article.content) }}
+                // biome-ignore lint/security/noDangerouslySetInnerHtml: Content is sanitized with sanitize-html library, then enriched with auto-generated glossary links
+                dangerouslySetInnerHTML={{ __html: injectGlossaryLinks(sanitizeHtml(article.content), glossaryTerms) }}
               />
 
               {/* Tags */}
@@ -335,10 +337,7 @@ export default async function NewsArticlePage({
                 <div className="mt-12 pt-8 border-t border-clay-light">
                   <div className="flex flex-wrap gap-2">
                     {article.tags.map(tag => (
-                      <span
-                        key={tag}
-                        className="px-3 py-1 bg-cream text-espresso text-sm font-medium rounded-full"
-                      >
+                      <span key={tag} className="px-3 py-1 bg-cream text-espresso text-sm font-medium rounded-full">
                         {tag}
                       </span>
                     ))}
@@ -349,7 +348,7 @@ export default async function NewsArticlePage({
               {/* Back to News */}
               <div className="mt-12">
                 <Link
-                  href="/news"
+                  href={NEWS_ROUTE}
                   className="inline-flex items-center gap-2 text-cherry-soda font-medium hover:gap-3 transition-all"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

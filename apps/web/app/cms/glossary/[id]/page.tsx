@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { CMS_GLOSSARY_ROUTE, CMS_LOGIN_ROUTE } from "@/constants/routes";
 import { requirePermission } from "@/lib/auth-utils";
 import { GlossaryForm } from "@/components/cms/glossary-form";
 import { getDb } from "@/lib/db";
@@ -21,11 +22,11 @@ export default async function EditGlossaryPage({ params }: PageProps) {
     const term = await collection.findOne({ _id: new ObjectId(id) });
     
     if (!term) {
-      redirect("/cms/glossary");
+      redirect(CMS_GLOSSARY_ROUTE);
     }
     
     return <GlossaryForm term={term} />;
   } catch (error) {
-    redirect("/cms/login");
+    redirect(CMS_LOGIN_ROUTE);
   }
 }

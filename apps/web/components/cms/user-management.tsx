@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CMS_DASHBOARD_ROUTE } from "@/constants/routes";
 import { ArrowLeft } from "lucide-react";
 import { CMSPermission } from "@/lib/permissions";
 
@@ -51,9 +52,11 @@ export function UserManagement() {
   };
 
   const getUserPermissions = (user: User): CMSPermission[] => {
-    if (user.role === "admin") return ["news", "articles", "glossary"];
+    if (user.role === "admin") return ["news"];
     try {
-      return JSON.parse(user.permissions || "[]");
+      const perms = JSON.parse(user.permissions || "[]");
+      // Filter out glossary (managed via Notion) and articles (coming soon)
+      return perms.filter((p: CMSPermission) => p !== "glossary" && p !== "articles");
     } catch {
       return [];
     }
@@ -165,7 +168,7 @@ export function UserManagement() {
       <div className="mb-8">
         <Button
           variant="ghost"
-          onClick={() => router.push("/cms/dashboard")}
+          onClick={() => router.push(CMS_DASHBOARD_ROUTE)}
           className="mb-4 text-[var(--clay)] hover:text-[var(--espresso)] hover:bg-transparent px-2 !outline-0 !border-0"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -238,7 +241,7 @@ export function UserManagement() {
               <div>
                 <Label>Permissions</Label>
                 <div className="flex gap-6 mt-2">
-                  {(["news", "articles", "glossary"] as CMSPermission[]).map(permission => (
+                  {(["news"] as CMSPermission[]).map(permission => (
                     <label key={permission} className="flex items-center gap-2 cursor-pointer">
                       <Checkbox
                         checked={newPermissions.includes(permission)}
@@ -330,7 +333,7 @@ export function UserManagement() {
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          {(["news", "articles", "glossary"] as CMSPermission[]).map(
+                          {(["news"] as CMSPermission[]).map(
                             permission => (
                               <div key={permission} className="flex items-center gap-2">
                                 <Checkbox

@@ -1,7 +1,7 @@
 'use client';
 
 import { StakeHeader, StakeInputPanel, StakeSelectorPanel, StakeStatsCard } from './_components';
-import { useStakeState } from './_stores/stake-store-provider';
+import { useStakeActions, useStakeState } from './_stores/stake-store-provider';
 import { UnstakeRequests } from './_components/unstake-requests';
 import { STAKING_APR } from './_components/constants';
 import Tip from './_components/icons/tip';
@@ -10,8 +10,13 @@ import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { itemVariants, listVariants } from '@/constants/animation';
 
-export default function StakePage(): React.JSX.Element {
+export default function StakePage() {
+  if (process.env.NEXT_PUBLIC_APP_ENV === 'production') {
+    return null;
+  }
+
   const { isNetworkPickerOpened } = useStakeState();
+  const { reset } = useStakeActions();
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -20,6 +25,12 @@ export default function StakePage(): React.JSX.Element {
       setIsOpen(true);
     }, 500);
   }, []);
+
+  useEffect(() => {
+    return () => {
+      reset();
+    };
+  }, [reset]);
 
   return (
     <motion.div

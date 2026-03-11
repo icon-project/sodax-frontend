@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
-import { cn, formatTokenAmount } from '@/lib/utils';
+import { cn, formatTokenAmount, validateChainAddress } from '@/lib/utils';
 import { CustomSlider } from '@/components/ui/customer-slider';
 import StakeDialog from './stake-dialog/stake-dialog';
 import UnstakeDialog from './unstake-dialog/unstake-dialog';
@@ -12,14 +12,25 @@ import { getChainName } from '@/constants/chains';
 import { STAKE_MODE } from '../_stores/stake-store';
 import { useStakeState } from '../_stores/stake-store-provider';
 import { useStakeActions } from '../_stores/stake-store-provider';
-import { useXAccount, useXBalances, getXChainType } from '@sodax/wallet-sdk-react';
+import { useXAccount, useXBalances, getXChainType, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from '@/components/ui/input-group';
 import { AnimatePresence, motion } from 'framer-motion';
+import { STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
+import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
+import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
+import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
+import { useRequestTrustline, useSpokeProvider } from '@sodax/dapp-kit';
+import { Loader2 } from 'lucide-react';
+import type { SpokeProvider } from '@sodax/sdk';
+import { parseUnits } from 'viem';
+import { ErrorDialog } from '@/components/shared/error-dialog';
+import { SWAP_ROUTE } from '@/constants/routes';
 
 export function StakeInputPanel(): React.JSX.Element {
   const router = useRouter();
 
-  const { selectedToken, stakeValue, stakeTypedValue, stakeMode, userXSodaBalance } = useStakeState();
+  const { selectedToken, stakeValue, stakeTypedValue, stakeMode, userXSodaBalance, isLoadingStakingInfo } =
+    useStakeState();
   const { setStakeTypedValue } = useStakeActions();
 
   const openModal = useModalStore(state => state.openModal);
@@ -29,6 +40,8 @@ export function StakeInputPanel(): React.JSX.Element {
   const walletConnected = !!address;
   const [isStakeDialogOpen, setIsStakeDialogOpen] = useState<boolean>(false);
   const [isUnstakeDialogOpen, setIsUnstakeDialogOpen] = useState<boolean>(false);
+  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const { data: balances } = useXBalances({
     xChainId: currentNetwork || 'sonic',
@@ -38,6 +51,66 @@ export function StakeInputPanel(): React.JSX.Element {
   const balance = selectedToken ? balances?.[selectedToken.address] || 0n : 0n;
   const formattedBalance = selectedToken ? formatTokenAmount(balance, selectedToken.decimals) : '0';
   const formattedUserXSodaBalance = userXSodaBalance ? formatTokenAmount(userXSodaBalance, 18) : '0';
+
+  // Stellar wallet activation and trustline checks
+  const isStellarChain = selectedToken?.xChainId === STELLAR_MAINNET_CHAIN_ID;
+  const { data: stellarAccountValidation } = useValidateStellarAccount(isStellarChain ? address : undefined);
+  const {
+    activateStellarAccount,
+    isLoading: isActivatingStellarAccount,
+    isActivated: isActivatedStellarAccount,
+  } = useActivateStellarAccount();
+  const handleActivateStellarAccount = async (): Promise<void> => {
+    if (!address) {
+      return;
+    }
+    try {
+      await activateStellarAccount({ address });
+    } catch (error) {
+      const errorMsg = 'Failed to activate Stellar account. Please try again.';
+      setErrorMessage(errorMsg);
+      setIsErrorDialogOpen(true);
+    }
+  };
+
+  const { data: stellarTrustlineValidation } = useValidateStellarTrustline(
+    isStellarChain ? address : undefined,
+    isStellarChain ? selectedToken : undefined,
+  );
+
+  const walletProvider = useWalletProvider(selectedToken?.xChainId);
+  const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
+  const {
+    requestTrustline,
+    isLoading: isRequestingTrustline,
+    isRequested: hasTrustline,
+    error: trustlineError,
+  } = useRequestTrustline(selectedToken?.address);
+  const handleRequestTrustline = async (): Promise<void> => {
+    if (!selectedToken || !spokeProvider) {
+      return;
+    }
+    try {
+      await requestTrustline({
+        token: selectedToken.address,
+        amount: parseUnits('1', selectedToken.decimals),
+        spokeProvider: spokeProvider as SpokeProvider,
+      });
+    } catch (error) {
+      const errorMsg = 'Failed to add Stellar trustline. Please try again.';
+      setErrorMessage(errorMsg);
+      setIsErrorDialogOpen(true);
+    }
+  };
+
+  // Monitor trustline error from hook
+  useEffect(() => {
+    if (trustlineError) {
+      const errorMsg = 'Failed to add Stellar trustline. Please try again.';
+      setErrorMessage(errorMsg);
+      setIsErrorDialogOpen(true);
+    }
+  }, [trustlineError]);
 
   const handleConnect = (): void => {
     const chainId = selectedToken?.xChainId || 'sonic';
@@ -49,7 +122,7 @@ export function StakeInputPanel(): React.JSX.Element {
   };
 
   const handleBuySoda = (): void => {
-    router.push('/swap');
+    router.push(SWAP_ROUTE);
   };
 
   const handleStake = (): void => {
@@ -65,10 +138,10 @@ export function StakeInputPanel(): React.JSX.Element {
   }, [stakeMode, formattedBalance, formattedUserXSodaBalance]);
 
   useEffect(() => {
-    if (sliderMaxValue === 0) {
+    if (sliderMaxValue === 0 && !isLoadingStakingInfo && (!stakeTypedValue || stakeTypedValue === '0')) {
       setStakeTypedValue('0');
     }
-  }, [sliderMaxValue, setStakeTypedValue]);
+  }, [sliderMaxValue, setStakeTypedValue, isLoadingStakingInfo, stakeTypedValue]);
 
   const isSliderDisabled = useMemo(() => {
     return !selectedToken || !walletConnected || sliderMaxValue === 0;
@@ -146,6 +219,32 @@ export function StakeInputPanel(): React.JSX.Element {
                     <Button variant="cherry" className="px-6" onClick={() => handleConnect()}>
                       Connect {getChainName(selectedToken.xChainId)}
                     </Button>
+                  ) : isStellarChain &&
+                    !isActivatedStellarAccount &&
+                    stellarAccountValidation?.ok === false &&
+                    validateChainAddress(address, 'STELLAR') ? (
+                    <Button
+                      variant="cherry"
+                      className="px-6"
+                      onClick={handleActivateStellarAccount}
+                      disabled={isActivatingStellarAccount}
+                    >
+                      {isActivatingStellarAccount ? 'Activating Stellar Account' : 'Activate Stellar Account'}
+                      {isActivatingStellarAccount && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
+                    </Button>
+                  ) : isStellarChain &&
+                    stellarTrustlineValidation?.ok === false &&
+                    !hasTrustline &&
+                    validateChainAddress(address || '', 'STELLAR') ? (
+                    <Button
+                      variant="cherry"
+                      className="px-6"
+                      onClick={handleRequestTrustline}
+                      disabled={isRequestingTrustline}
+                    >
+                      {isRequestingTrustline ? 'Adding Stellar Trustline' : 'Add Stellar Trustline'}
+                      {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
+                    </Button>
                   ) : balance > 0n ? (
                     <Button
                       variant="cherry"
@@ -164,6 +263,32 @@ export function StakeInputPanel(): React.JSX.Element {
                   <Button variant="cherry" className="px-6" onClick={() => handleConnect()}>
                     Connect {getChainName(selectedToken.xChainId)}
                   </Button>
+                ) : isStellarChain &&
+                  !isActivatedStellarAccount &&
+                  stellarAccountValidation?.ok === false &&
+                  validateChainAddress(address, 'STELLAR') ? (
+                  <Button
+                    variant="cherry"
+                    className="px-6"
+                    onClick={handleActivateStellarAccount}
+                    disabled={isActivatingStellarAccount}
+                  >
+                    {isActivatingStellarAccount ? 'Activating Stellar Account' : 'Activate Stellar Account'}
+                    {isActivatingStellarAccount && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
+                  </Button>
+                ) : isStellarChain &&
+                  stellarTrustlineValidation?.ok === false &&
+                  !hasTrustline &&
+                  validateChainAddress(address || '', 'STELLAR') ? (
+                  <Button
+                    variant="cherry"
+                    className="px-6"
+                    onClick={handleRequestTrustline}
+                    disabled={isRequestingTrustline || stakeValue === 0n}
+                  >
+                    {isRequestingTrustline ? 'Adding Stellar Trustline' : 'Add Stellar Trustline'}
+                    {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
+                  </Button>
                 ) : (
                   <Button
                     variant="cherry"
@@ -181,6 +306,12 @@ export function StakeInputPanel(): React.JSX.Element {
       </div>
       <StakeDialog open={isStakeDialogOpen} onOpenChange={setIsStakeDialogOpen} selectedToken={selectedToken} />
       <UnstakeDialog open={isUnstakeDialogOpen} onOpenChange={setIsUnstakeDialogOpen} selectedToken={selectedToken} />
+      <ErrorDialog
+        open={isErrorDialogOpen}
+        onOpenChange={setIsErrorDialogOpen}
+        errorMessage={errorMessage}
+        title="Transaction failed"
+      />
     </>
   );
 }

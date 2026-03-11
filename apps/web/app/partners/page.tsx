@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { DISCORD_ROUTE, GITHUB_ROUTE, HOME_ROUTE, X_ROUTE } from '@/constants/routes';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import PartnersHeroSection from '@/components/partners/partners-hero-section';
 import PartnerCategoriesSection from '@/components/partners/partner-categories-section';
@@ -94,11 +95,7 @@ export default function PartnersPage() {
       name: 'SODAX',
       url: 'https://sodax.com',
       logo: 'https://sodax.com/symbol2.png',
-      sameAs: [
-        'https://twitter.com/gosodax',
-        'https://github.com/icon-project/sodax-frontend',
-        'https://discord.gg/xM2Nh4S6vN',
-      ],
+      sameAs: [X_ROUTE, GITHUB_ROUTE, DISCORD_ROUTE],
     },
   };
 
@@ -106,7 +103,7 @@ export default function PartnersPage() {
     <div className="partners-page relative w-full overflow-x-hidden bg-cream">
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: Safe usage for JSON-LD structured data */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-      <MarketingHeader backLink="/" backText="← home" />
+      <MarketingHeader backLink={HOME_ROUTE} backText="← home" />
       <main>
         <PartnersHeroSection />
         <PartnerCategoriesSection />

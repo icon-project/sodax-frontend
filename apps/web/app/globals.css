@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -277,7 +278,7 @@
   --layout-linear-boder: var(--layout-linear-boder-mobile);
   --layout-space-small: var(--layout-space-small-mobile);
   --text-main-title: var(--main-title-mobile);
-  --text-body-fine-print: var(--body-fine-print);
+  --text-body-fine-print: var(--body-fine-print-mobile);
 }
 
 @media (min-width: 768px) {
@@ -467,4 +468,51 @@ textarea[readonly] {
 
 .scrollbar-hide::-webkit-scrollbar {
   display: none; /* Chrome, Safari and Opera */
+}
+
+/* ===== Cookie Consent Banner (vanilla-cookieconsent) ===== */
+#cc-main {
+  --cc-font-family: "InterRegular", "Inter", system-ui, sans-serif;
+  --cc-modal-border-radius: 16px;
+  --cc-btn-border-radius: 8px;
+
+  /* Banner background & text */
+  --cc-bg: var(--almost-white);
+  --cc-primary-color: var(--espresso);
+  --cc-secondary-color: var(--clay-dark);
+
+  /* Primary button (Accept all) */
+  --cc-btn-primary-bg: var(--cherry-dark);
+  --cc-btn-primary-color: #fff;
+  --cc-btn-primary-border-color: var(--cherry-dark);
+  --cc-btn-primary-hover-bg: var(--cherry-soda);
+  --cc-btn-primary-hover-color: #fff;
+  --cc-btn-primary-hover-border-color: var(--cherry-soda);
+
+  /* Secondary button (Reject / Manage) */
+  --cc-btn-secondary-bg: transparent;
+  --cc-btn-secondary-color: var(--cherry-dark);
+  --cc-btn-secondary-border-color: var(--cherry-dark);
+  --cc-btn-secondary-hover-bg: var(--cherry-brighter);
+  --cc-btn-secondary-hover-color: var(--espresso);
+  --cc-btn-secondary-hover-border-color: var(--cherry-bright);
+
+  /* Toggle (preferences modal) */
+  --cc-toggle-on-bg: var(--cherry-dark);
+  --cc-toggle-off-bg: var(--clay-light);
+  --cc-toggle-on-knob-bg: #fff;
+  --cc-toggle-off-knob-bg: #fff;
+  --cc-toggle-readonly-bg: var(--cherry-bright);
+  --cc-toggle-readonly-knob-bg: #fff;
+
+  /* Separators & category blocks */
+  --cc-separator-border-color: var(--cream);
+  --cc-cookie-category-block-bg: var(--cream-white);
+  --cc-cookie-category-block-border: var(--cream);
+
+  /* Overlay */
+  --cc-overlay-bg: rgba(72, 53, 52, 0.7);
+
+  /* Links */
+  --cc-link-color: var(--cherry-dark);
 }

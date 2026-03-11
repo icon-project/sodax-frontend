@@ -19,8 +19,12 @@ import CurrencySearchPanel from './_components/currency-search-panel';
 import type { DepositItemData, NetworkBalance } from '@/constants/save';
 
 export default function SavingsPage() {
+  if (process.env.NEXT_PUBLIC_APP_ENV === 'production') {
+    return null;
+  }
+
   const [isOpen, setIsOpen] = useState(false);
-  const { setDepositValue, setTotalDepositedUsdValue } = useSaveActions();
+  const { setDepositValue, setTotalDepositedUsdValue, reset } = useSaveActions();
   const { activeAsset, isSwitchingChain } = useSaveState();
   const carouselApiRef = useRef<CarouselApi | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
@@ -145,6 +149,12 @@ export default function SavingsPage() {
       setDepositValue(0);
     }
   }, [activeAsset, setDepositValue]);
+
+  useEffect(() => {
+    return () => {
+      reset();
+    };
+  }, [reset]);
 
   const navigateToAsset = useCallback(
     (asset: XToken): void => {

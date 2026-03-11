@@ -79,8 +79,8 @@ All money market methods are accessible through `sodax.moneyMarket`:
 - `data.getReservesData()` - Get raw aggregated reserve data
 - `data.getReservesHumanized()` - Get humanized reserve data
 - `data.getReserveData(asset)` - Get specific reserve data
-- `data.getUserReservesData(spokeProvider)` - Get raw user reserve data
-- `data.getUserReservesHumanized(spokeProvider)` - Get humanized user reserve data
+- `data.getUserReservesData(spokeChainId, userAddress)` - Get raw user reserve data
+- `data.getUserReservesHumanized(spokeChainId, userAddress)` - Get humanized user reserve data
 - `data.formatReservesUSD(request)` - Format reserves with USD conversions
 - `data.formatUserSummary(request)` - Format user portfolio summary with USD conversions
 
@@ -89,7 +89,7 @@ All money market methods are accessible through `sodax.moneyMarket`:
 
 ### Initialising Spoke Provider
 
-Refer to [Initialising Spoke Provider](../README.md#initialising-spoke-provider) section to see how BSC spoke provider used as `bscSpokeProvider` can be created.
+Refer to [Initialising Spoke Provider](./developers/how-to/how_to_create_a_spoke_provider) section to see how BSC spoke provider used as `bscSpokeProvider` can be created.
 
 ### Function Parameters Structure
 
@@ -193,7 +193,7 @@ The allowance and approval system supports different actions depending on the sp
 
 ### Stellar Trustline Requirements
 
-For Stellar-based money market operations, you need to handle trustlines differently depending on whether Stellar is the source or destination chain. See [Stellar Trustline Requirements](./STELLAR_TRUSTLINE.md#money-market) for detailed information and code examples.
+For Stellar-based money market operations, you need to handle trustlines differently depending on whether Stellar is the source or destination chain. See [Stellar Trustline Requirements](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/STELLAR_TRUSTLINE.md#money-market) for detailed information and code examples.
 
 ### Complete Example
 
@@ -830,8 +830,8 @@ The SDK provides several methods to retrieve different types of data:
 - `getReserveNormalizedIncome(asset)` - Get normalized income for a specific asset
 
 #### User Data
-- `getUserReservesData(spokeProvider)` - Get raw user reserve data
-- `getUserReservesHumanized(spokeProvider)` - Get humanized user reserve data
+- `getUserReservesData(spokeChainId, userAddress)` - Get raw user reserve data
+- `getUserReservesHumanized(spokeChainId, userAddress)` - Get humanized user reserve data
 
 #### E-Mode Data
 - `getEModes()` - Get raw E-Mode data
@@ -864,7 +864,7 @@ const formattedReserves = sodax.moneyMarket.data.formatReservesUSD(
 );
 
 // Fetch user reserves data
-const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(spokeProvider);
+const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(spokeChainId, userAddress);
 
 // Format user summary with USD conversions
 const userSummary = sodax.moneyMarket.data.formatUserSummary(
@@ -887,7 +887,7 @@ First, retrieve the raw data from the blockchain:
 const reserves = await sodax.moneyMarket.data.getReservesHumanized();
 
 // Get user reserves data for a specific spoke provider
-const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(spokeProvider);
+const userReserves = await sodax.moneyMarket.data.getUserReservesHumanized(spokeChainId, userAddress);
 ```
 
 #### 2. Build Formatting Requests

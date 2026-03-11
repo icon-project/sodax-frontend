@@ -5,6 +5,7 @@ import { MarketingHeader } from '@/components/shared/marketing-header';
 import { PartnerSimpleFooter } from '@/components/partners/partner-simple-footer';
 import { PageActions } from '@/components/partners/page-actions';
 import { AnimatedSection, AnimatedScrollSection } from '@/components/partners/animated-section';
+import { DOCUMENTATION_ROUTE, X_ROUTE } from '@/constants/routes';
 
 // Local asset paths
 const pdfDeck = '/partners/sodax-sdk/SODAX-SDK-Deck.pdf';
@@ -149,7 +150,7 @@ export default function SodaxSDKPage() {
     <div className="relative bg-white flex flex-col min-h-screen w-full">
       <MarketingHeader />
 
-      <div className="flex flex-col items-center w-full pt-[100px]">
+      <div className="flex flex-col items-center w-full pt-30">
         <div className="flex flex-col gap-8 items-start pt-14 pb-14 w-full max-w-5xl px-4 md:px-8">
           {/* ============================================ */}
           {/* FRAME 1: SODAX SDK Overview */}
@@ -228,7 +229,7 @@ export default function SodaxSDKPage() {
                   </div>
                   <div className="flex flex-wrap gap-3 items-center lg:justify-end">
                     <a
-                      href="https://docs.sodax.com/"
+                      href={DOCUMENTATION_ROUTE}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 bg-[var(--cherry-soda)] hover:bg-[var(--espresso)] transition-colors text-white font-['InterMedium'] text-sm px-5 py-2.5 rounded-full"
@@ -580,7 +581,7 @@ export default function SodaxSDKPage() {
                   <li>
                     Social media:{' '}
                     <a
-                      href="https://x.com/gosodax"
+                      href={X_ROUTE}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="underline hover:text-[var(--espresso)]"
@@ -629,7 +630,7 @@ export default function SodaxSDKPage() {
                   <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] leading-relaxed">
                     Visit{' '}
                     <a
-                      href="https://docs.sodax.com/"
+                      href={DOCUMENTATION_ROUTE}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-['InterBold'] underline hover:text-[var(--espresso)]"
@@ -663,7 +664,7 @@ export default function SodaxSDKPage() {
             </div>
             <div className="flex gap-4 items-center mt-4">
               <a
-                href="https://docs.sodax.com/"
+                href={DOCUMENTATION_ROUTE}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 bg-[var(--cherry-soda)] hover:bg-[var(--espresso)] transition-colors text-white font-['InterMedium'] text-sm px-6 py-3 rounded-full"

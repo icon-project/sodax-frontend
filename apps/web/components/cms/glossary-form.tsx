@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { CMS_GLOSSARY_ROUTE } from "@/constants/routes";
 import { TiptapEditor } from "./tiptap-editor";
 import { ArrowLeft, Save } from "lucide-react";
 import type { GlossaryTerm } from "@/lib/mongodb-types";
@@ -63,7 +64,7 @@ export function GlossaryForm({ term }: GlossaryFormProps) {
         throw new Error(error.error || "Failed to save");
       }
 
-      router.push("/cms/glossary");
+      router.push(CMS_GLOSSARY_ROUTE);
       router.refresh();
     } catch (error) {
       console.error("Save error:", error);

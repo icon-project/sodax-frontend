@@ -1,12 +1,11 @@
 export const BnbIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
-    <title>BSC</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" aria-hidden>
     <defs>
       <clipPath id="rounded-clip">
         <rect width="24" height="24" rx="6" ry="6" />
       </clipPath>
     </defs>
-    <g clip-path="url(#rounded-clip)">
+    <g clipPath="url(#rounded-clip)">
       <path fill="#F0B90B" d="M24 0H0v24h24z" />
       <path
         fill="#fff"

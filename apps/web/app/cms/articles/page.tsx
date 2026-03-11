@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { CMS_DASHBOARD_ROUTE } from "@/constants/routes";
 import { requirePermission } from "@/lib/auth-utils";
 import { ArticlesListView } from "@/components/cms/articles-list-view";
 
@@ -10,6 +11,6 @@ export default async function ArticlesManagementPage() {
     await requirePermission("articles");
     return <ArticlesListView />;
   } catch (error) {
-    redirect("/cms/dashboard");
+    redirect(CMS_DASHBOARD_ROUTE);
   }
 }

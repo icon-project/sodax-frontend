@@ -1,5 +1,17 @@
 import type { MetadataRoute } from 'next';
+import {
+  COMMUNITY_ROUTE,
+  DISCORD_PAGE_ROUTE,
+  GLOSSARY_ROUTE,
+  LOANS_ROUTE,
+  MIGRATE_ROUTE,
+  NEWS_ROUTE,
+  PARTNERS_ROUTE,
+  SAVE_ROUTE,
+  SWAP_ROUTE,
+} from '@/constants/routes';
 import { getDb } from '@/lib/db';
+import { getNotionPages, slugify } from '@/lib/notion';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://sodax.com';
 
@@ -20,15 +32,10 @@ interface Article {
   publishedAt?: Date;
 }
 
-interface GlossaryTerm {
-  slug: string;
-  updatedAt: Date;
-}
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
 
-  // Static routes that are indexable and public
+  // Static routes that are indexable and public (use route constants for single source of truth)
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: SITE_URL,
@@ -37,52 +44,67 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
-      url: `${SITE_URL}/swap`,
+      url: `${SITE_URL}${SWAP_ROUTE}`,
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.9,
     },
     {
-      url: `${SITE_URL}/save`,
+      url: `${SITE_URL}${SAVE_ROUTE}`,
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.9,
     },
     {
-      url: `${SITE_URL}/loans`,
+      url: `${SITE_URL}${LOANS_ROUTE}`,
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.9,
     },
     {
-      url: `${SITE_URL}/migrate`,
+      url: `${SITE_URL}${MIGRATE_ROUTE}`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
-      url: `${SITE_URL}/discord`,
+      url: `${SITE_URL}${DISCORD_PAGE_ROUTE}`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.7,
     },
-    // News index page
     {
-      url: `${SITE_URL}/news`,
+      url: `${SITE_URL}${NEWS_ROUTE}`,
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.9,
     },
-    // Community pages
     {
-      url: `${SITE_URL}/community/soda-token`,
+      url: `${SITE_URL}${COMMUNITY_ROUTE}/soda-token`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
     },
-    // Partner case studies
     {
-      url: `${SITE_URL}/partners/amped-finance`,
+      url: `${SITE_URL}${PARTNERS_ROUTE}/amped-finance`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}${PARTNERS_ROUTE}/hana`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}${PARTNERS_ROUTE}/lightlink-network`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}${PARTNERS_ROUTE}/sodax-sdk`,
       lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.8,
@@ -90,8 +112,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    // Fetch dynamic content from CMS in parallel
-    const [newsArticles, articles, glossaryTerms] = await Promise.all([
+    // Fetch dynamic content from CMS and Notion in parallel
+    const [newsArticles, articles, conceptPages, systemPages] = await Promise.all([
       // News articles
       getDb()
         .collection<NewsArticle>('news')
@@ -116,22 +138,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           return [];
         }),
 
-      // Glossary terms
-      getDb()
-        .collection<GlossaryTerm>('glossary')
-        .find({ published: true })
-        .project({ slug: 1, updatedAt: 1 })
-        .sort({ term: 1 })
-        .toArray()
-        .catch(err => {
-          console.error('Failed to fetch glossary for sitemap:', err);
-          return [];
-        }),
+      // Glossary concepts from Notion
+      getNotionPages('concepts').catch(err => {
+        console.error('Failed to fetch concepts for sitemap:', err);
+        return [];
+      }),
+
+      // Glossary system components from Notion
+      getNotionPages('system').catch(err => {
+        console.error('Failed to fetch system pages for sitemap:', err);
+        return [];
+      }),
     ]);
 
     // Map news articles to sitemap entries
     const newsEntries: MetadataRoute.Sitemap = newsArticles.map(article => ({
-      url: `${SITE_URL}/news/${article.slug}`,
+      url: `${SITE_URL}${NEWS_ROUTE}/${article.slug}`,
       lastModified: article.updatedAt,
       changeFrequency: 'weekly' as const,
       priority: 0.8,
@@ -145,17 +167,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
-    // Map glossary terms to sitemap entries
-    const glossaryEntries: MetadataRoute.Sitemap = glossaryTerms.map(term => ({
-      url: `${SITE_URL}/glossary/${term.slug}`,
-      lastModified: term.updatedAt,
-      changeFrequency: 'monthly' as const,
-      priority: 0.6,
-    }));
+    // Map glossary concept pages to sitemap entries
+    const conceptEntries: MetadataRoute.Sitemap = conceptPages
+      .filter(p => p.properties?.Validated?.checkbox === true)
+      .filter(p => p.properties?.Title?.title?.[0]?.plain_text)
+      .map(page => {
+        const title = page.properties.Title.title[0]?.plain_text || '';
+        return {
+          url: `${SITE_URL}/concepts/${slugify(title)}`,
+          lastModified: new Date(page.last_edited_time),
+          changeFrequency: 'monthly' as const,
+          priority: 0.6,
+        };
+      });
+
+    // Map glossary system pages to sitemap entries
+    const systemEntries: MetadataRoute.Sitemap = systemPages
+      .filter(p => p.properties?.Validated?.checkbox === true)
+      .filter(p => p.properties?.Title?.title?.[0]?.plain_text)
+      .map(page => {
+        const title = page.properties.Title.title[0]?.plain_text || '';
+        return {
+          url: `${SITE_URL}/system/${slugify(title)}`,
+          lastModified: new Date(page.last_edited_time),
+          changeFrequency: 'monthly' as const,
+          priority: 0.6,
+        };
+      });
 
     // Add index pages for dynamic sections if they have content
     const dynamicIndexPages: MetadataRoute.Sitemap = [];
-    
+
     if (articles.length > 0) {
       dynamicIndexPages.push({
         url: `${SITE_URL}/articles`,
@@ -165,9 +207,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       });
     }
 
-    if (glossaryTerms.length > 0) {
+    const glossaryEntries = [...conceptEntries, ...systemEntries];
+
+    if (glossaryEntries.length > 0) {
       dynamicIndexPages.push({
-        url: `${SITE_URL}/glossary`,
+        url: `${SITE_URL}${GLOSSARY_ROUTE}`,
         lastModified: now,
         changeFrequency: 'weekly',
         priority: 0.7,
@@ -175,13 +219,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
 
     // Combine all routes
-    return [
-      ...staticRoutes,
-      ...dynamicIndexPages,
-      ...newsEntries,
-      ...articleEntries,
-      ...glossaryEntries,
-    ];
+    return [...staticRoutes, ...dynamicIndexPages, ...newsEntries, ...articleEntries, ...glossaryEntries];
   } catch (error) {
     console.error('Sitemap generation error:', error);
     // Return at least static routes if DB fails
