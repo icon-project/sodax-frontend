@@ -281,6 +281,7 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
           open={true}
           token={repayData.token}
           maxDebt={repayData.maxDebt}
+          debtChainId={selectedChainId}
           inlineSuccess={true}
           onOpenChange={open => {
             if (!open) setRepayData(null);

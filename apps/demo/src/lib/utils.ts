@@ -223,6 +223,21 @@ export function getMmErrorText(error: unknown): string {
     if (o.code === 'SUBMIT_TX_FAILED') {
       return 'Failed to submit transaction to relay. Please try again.';
     }
+
+    // Repay/create intent failed (e.g. deposit simulation reverted on hub with "External call failed")
+    if (o.code === 'CREATE_REPAY_INTENT_FAILED') {
+      const detail = o.data?.error;
+      const msg = typeof detail === 'string' ? detail : '';
+      if (msg.includes('External call failed') || msg.includes('Simulation failed')) {
+        return 'Repay simulation failed on the hub. The transfer may not be allowed in current state (e.g. contract conditions). Please try again or use a smaller amount.';
+      }
+      return msg || 'Repay intent could not be created. Please try again.';
+    }
+
+    // Generic repay failure (e.g. unexpected throw)
+    if (o.code === 'REPAY_UNKNOWN_ERROR') {
+      return 'Repay failed. Please try again. If the problem persists, check your balance and allowance.';
+    }
     
     const part = o.message ?? o.code;
     if (typeof part === 'string') return part;

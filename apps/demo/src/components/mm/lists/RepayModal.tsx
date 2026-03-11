@@ -35,6 +35,8 @@ interface RepayModalProps {
   onOpenChange: (open: boolean) => void;
   token: XToken;
   maxDebt: string;
+  /** Chain where the debt lives (market/collateral chain). Used for toChainId and initial fromChainId. */
+  debtChainId?: ChainId;
   //If true, shows success screen inline instead of closing and calling onSuccess.
   inlineSuccess?: boolean; //Called on success. Only used when inlineSuccess is false.
   onSuccess?: (data: {
@@ -46,7 +48,15 @@ interface RepayModalProps {
   }) => void;
 }
 
-export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inlineSuccess }: RepayModalProps) {
+export function RepayModal({
+  open,
+  onOpenChange,
+  token,
+  maxDebt,
+  debtChainId: debtChainIdProp,
+  onSuccess,
+  inlineSuccess,
+}: RepayModalProps) {
   const [amount, setAmount] = useState('');
   const [error, setError] = useState<string | null>(null);
   // UI state: tracks whether to show form or success screen within the same dialog
@@ -57,9 +67,21 @@ export function RepayModal({ open, onOpenChange, token, maxDebt, onSuccess, inli
   const [isApprovingLocal, setIsApprovingLocal] = useState(false);
   const { selectedChainId: selectedMarketChainId, openWalletModal } = useAppStore();
 
-  const [fromChainId, setFromChainId] = useState(selectedMarketChainId);
-  // toChainId = market chain where debt is recorded (where collateral is), NOT token.xChainId (where borrowed asset was delivered)
-  const [toChainId] = useState(selectedMarketChainId);
+  // Debt chain = where the debt lives (market/collateral chain). Must match the row/list context.
+  const debtChainId = debtChainIdProp ?? token.xChainId ?? selectedMarketChainId;
+  const [fromChainId, setFromChainId] = useState(debtChainId);
+  // toChainId = market chain where debt is recorded (where collateral is); fixed for this modal session
+  const toChainId = debtChainId;
+
+  // When modal opens, default "Repay from" to the debt chain so balance/context match the row
+  const prevOpenRef = React.useRef(false);
+  useEffect(() => {
+    const justOpened = open && !prevOpenRef.current;
+    prevOpenRef.current = open;
+    if (justOpened) {
+      setFromChainId(debtChainId);
+    }
+  }, [open, debtChainId]);
   const { address: fromAddress } = useXAccount(fromChainId);
   const { address: toAddress } = useXAccount(toChainId);
   const queryClient = useQueryClient();
