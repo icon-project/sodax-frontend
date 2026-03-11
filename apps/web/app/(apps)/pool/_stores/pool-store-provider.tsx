@@ -35,6 +35,7 @@ export const usePoolStore = <T,>(selector: (store: PoolStore) => T): T => {
 
 export const usePoolState = () => {
   const selectedNetworkChainId = usePoolStore(state => state.selectedNetworkChainId);
+  const selectedToken = usePoolStore(state => state.selectedToken);
   const minPrice = usePoolStore(state => state.minPrice);
   const maxPrice = usePoolStore(state => state.maxPrice);
   const sodaAmount = usePoolStore(state => state.sodaAmount);
@@ -43,6 +44,7 @@ export const usePoolState = () => {
 
   return {
     selectedNetworkChainId,
+    selectedToken,
     minPrice,
     maxPrice,
     sodaAmount,
@@ -52,7 +54,7 @@ export const usePoolState = () => {
 };
 
 export const usePoolActions = () => {
-  const setSelectedNetworkChainId = usePoolStore(state => state.setSelectedNetworkChainId);
+  const setSelectedToken = usePoolStore(state => state.setSelectedToken);
   const setMinPrice = usePoolStore(state => state.setMinPrice);
   const setMaxPrice = usePoolStore(state => state.setMaxPrice);
   const setSodaAmount = usePoolStore(state => state.setSodaAmount);
@@ -61,7 +63,7 @@ export const usePoolActions = () => {
   const resetPoolState = usePoolStore(state => state.resetPoolState);
 
   return {
-    setSelectedNetworkChainId,
+    setSelectedToken,
     setMinPrice,
     setMaxPrice,
     setSodaAmount,

@@ -18,6 +18,8 @@ import {
   SONIC_MAINNET_CHAIN_ID,
   SonicSpokeProvider,
   type SonicSpokeChainConfig,
+  NearSpokeProvider,
+  type NearSpokeChainConfig,
 } from '@sodax/sdk';
 import type {
   IEvmWalletProvider,
@@ -27,6 +29,7 @@ import type {
   IInjectiveWalletProvider,
   IStellarWalletProvider,
   ISolanaWalletProvider,
+  INearWalletProvider,
 } from '@sodax/types';
 import { useMemo } from 'react';
 
@@ -114,6 +117,13 @@ export function useSpokeProvider(
               rpcUrl: rpcConfig.solana,
             } as SolanaChainConfig)
           : (spokeChainConfig[spokeChainId] as SolanaChainConfig),
+      );
+    }
+
+    if (xChainType === 'NEAR') {
+      return new NearSpokeProvider(
+        walletProvider as INearWalletProvider,
+        spokeChainConfig[spokeChainId] as NearSpokeChainConfig,
       );
     }
 

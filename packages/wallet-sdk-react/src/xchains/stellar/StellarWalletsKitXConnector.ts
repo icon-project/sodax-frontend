@@ -2,7 +2,15 @@ import type { XAccount } from '@/types';
 
 import { XConnector } from '@/core';
 import { StellarXService } from './StellarXService';
-import type { StellarWalletType } from './useStellarXConnectors';
+
+export type StellarWalletType = {
+  icon: string;
+  id: string;
+  isAvailable: boolean;
+  name: string;
+  type: string;
+  url: string;
+};
 
 export class StellarWalletsKitXConnector extends XConnector {
   _wallet: StellarWalletType;

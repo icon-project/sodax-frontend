@@ -1,12 +1,32 @@
 // apps/web/app/(apps)/pool/_components/liquidity-inputs.tsx
+'use client';
+
 import type React from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupText } from '@/components/ui/input-group';
 import { InputGroupAddon } from '@/components/ui/input-group';
 import { InputGroupInput } from '@/components/ui/input-group';
+import { useConvertedAssets, useStakeRatio } from '@sodax/dapp-kit';
+import { getXChainType, useXAccount } from '@sodax/wallet-sdk-react';
+import { MODAL_ID } from '@/stores/modal-store';
+import { useModalStore } from '@/stores/modal-store-provider';
+import type { SpokeChainId } from '@sodax/types';
+import type { XToken } from '@sodax/types';
+import { chainIdToChainName } from '@/providers/constants';
+import { useAllChainBalances } from '@/hooks/useAllChainBalances';
+import { useAllChainXSodaBalances } from '@/hooks/useAllChainXSodaBalances';
+import { InputGroupButton } from '@/components/ui/input-group';
+import { STAKE_ROUTE, SWAP_ROUTE } from '@/constants/routes';
+import { spokeChainConfig } from '@sodax/sdk';
+import { cn, formatTokenAmount } from '@/lib/utils';
+import { formatUnits, parseUnits } from 'viem';
+import { SupplyDialog } from './supply-dialog';
 
 type LiquidityInputsProps = {
+  selectedNetworkChainId: SpokeChainId;
   sodaAmount: string;
   xSodaAmount: string;
   onSodaAmountChange: (value: string) => void;
@@ -14,82 +34,277 @@ type LiquidityInputsProps = {
 };
 
 export function LiquidityInputs({
+  selectedNetworkChainId,
   sodaAmount,
   xSodaAmount,
   onSodaAmountChange,
   onXSodaAmountChange,
 }: LiquidityInputsProps): React.JSX.Element {
+  const router = useRouter();
+  const openModal = useModalStore(state => state.openModal);
+  const [isSupplyDialogOpen, setIsSupplyDialogOpen] = useState<boolean>(false);
+  const { address } = useXAccount(selectedNetworkChainId);
+  const [lastEditedToken, setLastEditedToken] = useState<'soda' | 'xsoda' | null>(null);
+  const allChainSodaBalances = useAllChainBalances({ onlySodaTokens: true });
+  const allChainXSodaBalances = useAllChainXSodaBalances([selectedNetworkChainId]);
+  const isWalletConnected = Boolean(address);
+  const selectedSodaBalance = useMemo((): bigint => {
+    const selectedChainConfig = spokeChainConfig[selectedNetworkChainId];
+    const selectedSodaToken =
+      selectedChainConfig?.supportedTokens && 'SODA' in selectedChainConfig.supportedTokens
+        ? (selectedChainConfig.supportedTokens.SODA as XToken)
+        : undefined;
+
+    if (!selectedSodaToken) {
+      return 0n;
+    }
+
+    const selectedSodaBalanceEntry = (allChainSodaBalances[selectedSodaToken.address] || []).find(
+      balanceEntry => balanceEntry.chainId === selectedNetworkChainId,
+    );
+
+    return selectedSodaBalanceEntry?.balance ?? 0n;
+  }, [allChainSodaBalances, selectedNetworkChainId]);
+  const selectedXSodaBalance = allChainXSodaBalances.get(selectedNetworkChainId) ?? 0n;
+  const hasNoSodaBalance = isWalletConnected && selectedSodaBalance <= 0n;
+  const hasNoXSodaBalance = isWalletConnected && selectedXSodaBalance <= 0n;
+  const hasSodaBalance = isWalletConnected && selectedSodaBalance > 0n;
+  const hasXSodaBalance = isWalletConnected && selectedXSodaBalance > 0n;
+  const canShowAnyMaxButton = isWalletConnected && (selectedSodaBalance > 0n || selectedXSodaBalance > 0n);
+  const sodaValue = useMemo((): bigint => parseUnits(sodaAmount, 18), [sodaAmount]);
+  const xSodaValue = useMemo((): bigint => parseUnits(xSodaAmount, 18), [xSodaAmount]);
+  const hasValidSodaInput = sodaAmount.trim().length > 0 && sodaValue > 0n && sodaValue <= selectedSodaBalance;
+  const hasValidXSodaInput = xSodaAmount.trim().length > 0 && xSodaValue > 0n && xSodaValue <= selectedXSodaBalance;
+  const isOverMax = sodaValue > selectedSodaBalance || xSodaValue > selectedXSodaBalance;
+  const canContinue = isWalletConnected && hasValidSodaInput && hasValidXSodaInput;
+  const { data: stakeRatio } = useStakeRatio(lastEditedToken === 'soda' && sodaValue > 0n ? sodaValue : undefined);
+  const { data: convertedSodaAssets } = useConvertedAssets(
+    lastEditedToken === 'xsoda' && xSodaValue > 0n ? xSodaValue : undefined,
+  );
+
+  useEffect((): void => {
+    if (lastEditedToken !== 'soda') {
+      return;
+    }
+    if (!sodaAmount) {
+      if (xSodaAmount !== '') {
+        onXSodaAmountChange('');
+      }
+      return;
+    }
+    if (!stakeRatio) {
+      return;
+    }
+
+    const [, previewDepositAmount] = stakeRatio;
+    const nextXSodaAmount = formatUnits(previewDepositAmount, 18);
+    if (nextXSodaAmount !== xSodaAmount) {
+      onXSodaAmountChange(nextXSodaAmount);
+    }
+  }, [lastEditedToken, onXSodaAmountChange, sodaAmount, stakeRatio, xSodaAmount]);
+
+  useEffect((): void => {
+    if (lastEditedToken !== 'xsoda') {
+      return;
+    }
+    if (!xSodaAmount) {
+      if (sodaAmount !== '') {
+        onSodaAmountChange('');
+      }
+      return;
+    }
+    if (typeof convertedSodaAssets !== 'bigint') {
+      return;
+    }
+
+    const nextSodaAmount = formatUnits(convertedSodaAssets, 18);
+    if (nextSodaAmount !== sodaAmount) {
+      onSodaAmountChange(nextSodaAmount);
+    }
+  }, [convertedSodaAssets, lastEditedToken, onSodaAmountChange, sodaAmount, xSodaAmount]);
+
+  const handleOpenWalletModal = (): void => {
+    openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getXChainType(selectedNetworkChainId) });
+  };
+  const handleBuySoda = (): void => {
+    router.push(SWAP_ROUTE);
+  };
+  const handleGetXSoda = (): void => {
+    router.push(STAKE_ROUTE);
+  };
+  const handleOpenSupplyDialog = (): void => {
+    if (!canContinue) {
+      return;
+    }
+    setIsSupplyDialogOpen(true);
+  };
+
   return (
-    <div className="self-stretch flex flex-col md:flex-row justify-start items-start gap-2 md:gap-4">
-      <InputGroup className="h-10 pl-2 pr-4 bg-almost-white rounded-[32px] flex justify-between items-center w-full md:w-50 font-['InterRegular'] text-espresso">
-        <InputGroupAddon className="pl-0">
-          <InputGroupText>
-            <Image
-              data-property-1="SODA"
-              className="w-6 h-6 rounded-[256px]"
-              src="/coin/soda.png"
-              alt="SODA"
-              width={24}
-              height={24}
+    <>
+      <div className="self-stretch flex flex-col md:flex-row justify-start items-start gap-2 md:gap-4">
+        <InputGroup className="h-10 pl-2 pr-4 bg-almost-white rounded-[32px] flex justify-between items-center w-full md:w-50 font-['InterRegular'] text-espresso">
+          <InputGroupAddon className="pl-0">
+            <InputGroupText>
+              <Image
+                data-property-1="SODA"
+                className="w-6 h-6 rounded-[256px]"
+                src="/coin/soda.png"
+                alt="SODA"
+                width={24}
+                height={24}
+              />
+            </InputGroupText>
+          </InputGroupAddon>
+          <div className="relative flex-1">
+            {hasSodaBalance ? (
+              <InputGroupAddon className="pointer-events-none absolute left-3 top-1 h-auto p-0">
+                <InputGroupText className="text-clay text-[9px] leading-3">
+                  {formatTokenAmount(selectedSodaBalance, 18)}
+                </InputGroupText>
+              </InputGroupAddon>
+            ) : null}
+            <InputGroupInput
+              placeholder=""
+              inputMode="decimal"
+              type="number"
+              value={sodaAmount}
+              disabled={!isWalletConnected}
+              onChange={event => {
+                setLastEditedToken('soda');
+                onSodaAmountChange(event.target.value);
+              }}
+              className={cn(
+                hasNoSodaBalance ? 'text-negative!' : 'text-espresso!',
+                sodaValue > selectedSodaBalance ? 'text-negative!' : 'text-espresso!',
+                canShowAnyMaxButton && 'pr-4',
+                hasSodaBalance && 'pt-3',
+              )}
             />
-          </InputGroupText>
-        </InputGroupAddon>
-        <div className="relative flex-1">
-          <InputGroupInput
-            placeholder=""
-            inputMode="decimal"
-            value={sodaAmount}
-            onChange={event => onSodaAmountChange(event.target.value)}
-            className="text-espresso!"
-          />
-          {sodaAmount.length === 0 ? (
-            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center gap-1 text-sm">
-              <span className="text-clay-light">0</span>
-              <span className="text-cherry-grey">SODA</span>
-            </span>
+
+            {sodaAmount.length === 0 ? (
+              <span
+                className={cn(
+                  'pointer-events-none absolute inset-y-0 left-3 flex items-center gap-1 text-sm',
+                  hasSodaBalance && 'top-3',
+                )}
+              >
+                <span className={hasNoSodaBalance ? 'text-negative' : 'text-clay-light'}>0</span>
+                <span className={hasNoSodaBalance ? 'text-negative' : 'text-cherry-grey'}>SODA</span>
+              </span>
+            ) : null}
+          </div>
+
+          {canShowAnyMaxButton && selectedSodaBalance > 0n ? (
+            <InputGroupButton
+              size="icon-xs"
+              className="text-clay text-[9px] font-['InterRegular'] font-normal border-none! outline-none! leading-0"
+              onClick={() => {
+                setLastEditedToken('soda');
+                onSodaAmountChange(formatUnits(selectedSodaBalance, 18).trim());
+              }}
+            >
+              MAX
+            </InputGroupButton>
           ) : null}
-        </div>
-      </InputGroup>
-      <InputGroup className="h-10 pl-2 pr-4 bg-almost-white rounded-[32px] flex justify-between items-center w-full md:w-50 font-['InterRegular'] text-espresso">
-        <InputGroupAddon className="pl-0">
-          <InputGroupText>
-            <Image
-              data-property-1="xSODA"
-              className="w-6 h-6 rounded-[256px]"
-              src="/coin/xsoda.png"
-              alt="xSODA"
-              width={24}
-              height={24}
+        </InputGroup>
+        <InputGroup className="h-10 pl-2 pr-4 bg-almost-white rounded-[32px] flex justify-between items-center w-full md:w-50 font-['InterRegular'] text-espresso">
+          <InputGroupAddon className="pl-0">
+            <InputGroupText>
+              <Image
+                data-property-1="xSODA"
+                className="w-6 h-6 rounded-[256px]"
+                src="/coin/xsoda.png"
+                alt="xSODA"
+                width={24}
+                height={24}
+              />
+            </InputGroupText>
+          </InputGroupAddon>
+          <div className="relative flex-1">
+            {hasXSodaBalance ? (
+              <InputGroupAddon className="pointer-events-none absolute left-3 top-1 h-auto p-0">
+                <InputGroupText className="text-cherry-grey text-[10px] leading-3">
+                  {formatTokenAmount(selectedXSodaBalance, 18)}
+                </InputGroupText>
+              </InputGroupAddon>
+            ) : null}
+            <InputGroupInput
+              placeholder=""
+              inputMode="decimal"
+              type="number"
+              value={xSodaAmount}
+              disabled={!isWalletConnected}
+              onChange={event => {
+                setLastEditedToken('xsoda');
+                onXSodaAmountChange(event.target.value);
+              }}
+              className={cn(
+                hasNoXSodaBalance ? 'text-negative!' : 'text-espresso!',
+                xSodaValue > selectedXSodaBalance ? 'text-negative!' : 'text-espresso!',
+                canShowAnyMaxButton && 'pr-4',
+                hasXSodaBalance && 'pt-3',
+              )}
             />
-          </InputGroupText>
-        </InputGroupAddon>
-        <div className="relative flex-1">
-          <InputGroupInput
-            placeholder=""
-            inputMode="decimal"
-            value={xSodaAmount}
-            onChange={event => onXSodaAmountChange(event.target.value)}
-            className="text-espresso!"
-          />
-          {xSodaAmount.length === 0 ? (
-            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center gap-1 text-sm">
-              <span className="text-clay-light">0</span>
-              <span className="text-cherry-grey">xSODA</span>
-            </span>
+
+            {xSodaAmount.length === 0 ? (
+              <span
+                className={cn(
+                  'pointer-events-none absolute inset-y-0 left-3 flex items-center gap-1 text-sm',
+                  hasXSodaBalance && 'top-3',
+                )}
+              >
+                <span className={hasNoXSodaBalance ? 'text-negative' : 'text-clay-light'}>0</span>
+                <span className={hasNoXSodaBalance ? 'text-negative' : 'text-cherry-grey'}>xSODA</span>
+              </span>
+            ) : null}
+          </div>
+
+          {canShowAnyMaxButton && selectedXSodaBalance > 0n ? (
+            <InputGroupButton
+              size="icon-xs"
+              className="text-clay text-[9px] font-['InterRegular'] font-normal border-none! outline-none! leading-0"
+              onClick={() => {
+                setLastEditedToken('xsoda');
+                onXSodaAmountChange(formatUnits(selectedXSodaBalance, 18).trim());
+              }}
+            >
+              MAX
+            </InputGroupButton>
           ) : null}
-        </div>
-      </InputGroup>
-      <Button
-        data-state="disabled"
-        data-type="default"
-        variant="cream"
-        disabled
-        className="h-10 min-w-28 px-6 py-2 mix-blend-multiply bg-cream-white rounded-[240px] flex justify-center items-center gap-1 w-full md:w-auto"
-      >
-        <div className="text-center justify-start  text-clay-light text-sm font-medium font-['InterRegular'] leading-5">
-          Continue
-        </div>
-      </Button>
-    </div>
+        </InputGroup>
+        {isWalletConnected ? (
+          !hasNoSodaBalance && hasNoXSodaBalance ? (
+            <Button variant="cherry" onClick={handleGetXSoda} className="px-6">
+              Get xSODA
+            </Button>
+          ) : hasNoSodaBalance ? (
+            <Button variant="cherry" onClick={handleBuySoda} className="px-6">
+              Buy SODA
+            </Button>
+          ) : (
+            <Button
+              data-state={canContinue ? 'enabled' : 'disabled'}
+              data-type="default"
+              variant="cherry"
+              disabled={!canContinue}
+              className="h-10 min-w-28 px-6 py-2 rounded-[240px] flex justify-center items-center gap-1 w-full md:w-auto"
+              onClick={handleOpenSupplyDialog}
+            >
+              {isOverMax ? 'Over max' : 'Continue'}
+            </Button>
+          )
+        ) : (
+          <Button variant="cherry" onClick={handleOpenWalletModal} className="px-6">
+            Connect {chainIdToChainName(selectedNetworkChainId)}
+          </Button>
+        )}
+      </div>
+      <SupplyDialog
+        open={isSupplyDialogOpen}
+        onOpenChange={setIsSupplyDialogOpen}
+        sodaAmount={sodaAmount}
+        xSodaAmount={xSodaAmount}
+      />
+    </>
   );
 }

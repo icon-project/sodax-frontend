@@ -16,6 +16,7 @@ import {
   ICON_MAINNET_CHAIN_ID,
   INJECTIVE_MAINNET_CHAIN_ID,
   SOLANA_MAINNET_CHAIN_ID,
+  NEAR_MAINNET_CHAIN_ID,
   SONIC_MAINNET_CHAIN_ID,
   spokeChainConfig,
   STELLAR_MAINNET_CHAIN_ID,
@@ -27,6 +28,7 @@ import {
   getHubChainConfig,
   IconRawSpokeProvider,
   InjectiveRawSpokeProvider,
+  NearRawSpokeProvider,
   SolanaRawSpokeProvider,
   StellarRawSpokeProvider,
   type EvmHubProviderConfig,
@@ -49,6 +51,7 @@ import {
 import { EvmSpokeProvider, SonicSpokeProvider } from '../entities/Providers.js';
 import invariant from 'tiny-invariant';
 import type { IconRawSpokeProviderConfig } from '../entities/icon/IconSpokeProvider.js';
+import type { NearRawSpokeProviderConfig } from '../entities/near/NearSpokeProvider.js';
 describe('calculatePercentageAmount', () => {
   const sodax = new Sodax();
   const address = '0x0000000000000000000000000000000000000001' as `0x${string}`;
@@ -437,6 +440,19 @@ describe('calculatePercentageAmount', () => {
       expect(await rawSpokeProvider.walletProvider.getWalletAddress()).toBe(
         '0x0000000000000000000000000000000000000001',
       );
+    });
+
+    it('should construct raw spoke provider correctly for near chain', async () => {
+      const config = {
+        walletAddress: 'test.near',
+        chainConfig: spokeChainConfig[NEAR_MAINNET_CHAIN_ID],
+      } satisfies NearRawSpokeProviderConfig;
+
+      const rawSpokeProvider = constructRawSpokeProvider(config);
+      expect(rawSpokeProvider).toBeInstanceOf(NearRawSpokeProvider);
+      invariant(rawSpokeProvider instanceof NearRawSpokeProvider, 'Raw spoke provider is not a NearRawSpokeProvider');
+      expect(rawSpokeProvider.chainConfig.chain.id).toBe(NEAR_MAINNET_CHAIN_ID);
+      expect(await rawSpokeProvider.walletProvider.getWalletAddress()).toBe('test.near');
     });
 
     it('should throw error when constructing raw spoke provider for unsupported chain', () => {

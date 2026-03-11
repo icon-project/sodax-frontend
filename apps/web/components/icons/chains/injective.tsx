@@ -1,6 +1,5 @@
 export const InjectiveIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <title>Injective</title>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
     <defs>
       <clipPath id="clip-rounded">
         <rect x="0" y="0" width="16" height="16" rx="4" ry="4" />

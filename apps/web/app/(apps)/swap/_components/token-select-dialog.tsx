@@ -3,13 +3,12 @@ import { useState, useMemo, useCallback } from 'react';
 import { XIcon } from 'lucide-react';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogClose, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { CurrencySearchPanel } from './currency-search-panel';
 import { TokenList } from './token-list';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
-import { getAllSupportedSolverTokens, getSupportedSolverTokensForChain } from '@/lib/utils';
-import { getChainBalance, hasTokenBalance } from '@/lib/utils';
+import { cn, getAllSupportedSolverTokens, getSupportedSolverTokensForChain, getChainBalance, hasTokenBalance } from '@/lib/utils';
 import { isNativeToken } from '@sodax/wallet-sdk-react';
 
 export default function TokenSelectDialog({
@@ -127,50 +126,53 @@ export default function TokenSelectDialog({
     onClose();
   };
 
+  // Mobile view: keep w-[90%] h-[80vh]; desktop uses md:h-[600px] md:max-w-[480px].
   return (
     <Dialog open={isOpen} onOpenChange={handleDialogClose}>
       <DialogContent
         enableMotion
         hideCloseButton
-        className="block w-[90%] h-[80vh] md:h-170 md:max-w-[480px] py-12 bg-vibrant-white gap-0 shadow-none"
+        className="flex flex-col overflow-hidden w-[90%] h-[80vh] md:h-[600px] md:max-w-[480px] py-12 bg-vibrant-white gap-0 shadow-none"
       >
-        <div className="relative flex justify-end h-4">
+        <DialogTitle className="sr-only">Select Asset</DialogTitle>
+        <div className="relative flex shrink-0 justify-end h-4">
           <DialogClose asChild>
             <Button
               variant="ghost"
-              className={`absolute -top-3 w-12 h-12 rounded-full transition-colors outline-none text-clay-light hover:text-clay ${
-                clickedAsset ? 'blur filter' : ''
-              }`}
+              className="absolute -top-3 w-12 h-12 rounded-full transition-colors outline-none text-clay-light hover:text-clay"
             >
               <XIcon className="w-4 h-4 pointer-events-none" />
             </Button>
           </DialogClose>
         </div>
 
-        <CurrencySearchPanel
-          isUsdtClicked={Boolean(clickedAsset)}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          handleChainSelectorClick={() => setIsChainSelectorOpen(v => !v)}
-          handleShowAllChains={() => {
-            setSelectedChain(null);
-            setIsChainSelectorOpen(false);
-          }}
-          handleChainSelect={chain => {
-            setSelectedChain(chain as SpokeChainId);
-            setIsChainSelectorOpen(false);
-          }}
-          isChainSelectorOpen={isChainSelectorOpen}
-          selectedChainId={selectedChain}
-        />
+        <div className="shrink-0">
+          <CurrencySearchPanel
+            isUsdtClicked={Boolean(clickedAsset)}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            handleChainSelectorClick={() => setIsChainSelectorOpen(v => !v)}
+            handleShowAllChains={() => {
+              setSelectedChain(null);
+              setIsChainSelectorOpen(false);
+            }}
+            handleChainSelect={chain => {
+              setSelectedChain(chain as SpokeChainId);
+              setIsChainSelectorOpen(false);
+            }}
+            isChainSelectorOpen={isChainSelectorOpen}
+            selectedChainId={selectedChain}
+          />
+        </div>
 
-        <div className="relative">
+        <div className="relative flex flex-1 min-h-0 overflow-hidden">
           {selectedChain && (
             <div className="absolute inset-0 z-0 blur filter opacity-30 pointer-events-none">
               <TokenList
                 {...unfilteredTokenGroups}
                 clickedAsset={clickedAsset}
                 tokenPrices={unfilteredTokenPrices}
+                tokenPricesForSort={unfilteredTokenPrices}
                 allBalances={balances}
                 selectedChainFilter={selectedChain}
                 isFiltered={false}
@@ -179,12 +181,13 @@ export default function TokenSelectDialog({
                 onClickOutside={() => setClickedAsset(null)}
                 onClose={onClose}
                 isChainSelectorOpen={isChainSelectorOpen}
+                isSearchActive={searchQuery.length > 0}
               />
             </div>
           )}
 
           <div
-            className={selectedChain ? 'relative z-10' : ''}
+            className={cn('flex flex-1 min-h-0 overflow-hidden', selectedChain && 'relative z-10')}
             onClick={() => {
               setSelectedChain(null);
             }}
@@ -193,6 +196,7 @@ export default function TokenSelectDialog({
               {...filteredTokenGroups}
               clickedAsset={clickedAsset}
               tokenPrices={tokenPrices}
+              tokenPricesForSort={unfilteredTokenPrices ?? tokenPrices}
               allBalances={balances}
               selectedChainFilter={selectedChain}
               isFiltered={Boolean(selectedChain)}
@@ -201,6 +205,7 @@ export default function TokenSelectDialog({
               onClickOutside={() => setClickedAsset(null)}
               onClose={onClose}
               isChainSelectorOpen={isChainSelectorOpen}
+              isSearchActive={searchQuery.length > 0}
             />
           </div>
         </div>
