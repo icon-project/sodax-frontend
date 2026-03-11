@@ -1,7 +1,5 @@
-// apps/web/app/(apps)/pool/page.tsx
 'use client';
 
-import type React from 'react';
 import { motion } from 'framer-motion';
 import { itemVariants, listVariants } from '@/constants/animation';
 import { useEffect, useState } from 'react';
@@ -14,7 +12,11 @@ import Tip from '../stake/_components/icons/tip';
 import { cn } from '@/lib/utils';
 import { usePoolActions, usePoolState } from './_stores/pool-store-provider';
 
-export default function PoolPage(): React.JSX.Element {
+export default function PoolPage() {
+  if (process.env.NEXT_PUBLIC_APP_ENV === 'production') {
+    return null;
+  }
+
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const { selectedNetworkChainId, minPrice, maxPrice, sodaAmount, xSodaAmount, isNetworkPickerOpened } = usePoolState();
   const { setSelectedToken, setMinPrice, setMaxPrice, setSodaAmount, setXSodaAmount, setIsNetworkPickerOpened } =
