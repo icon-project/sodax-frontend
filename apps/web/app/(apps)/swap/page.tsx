@@ -121,13 +121,10 @@ export default function SwapPage() {
       return undefined;
     }
 
-    const partnerUsd = swapFees.partner.multipliedBy(inputTokenPrice);
-    const solverUsd = swapFees.solver.multipliedBy(outputTokenPrice);
-    // total: user-facing "Total fees" = partner only (what sodax charges). We do not add solver here.
     return {
-      partner: partnerUsd,
-      solver: solverUsd,
-      total: partnerUsd,
+      partner: swapFees.partner.multipliedBy(inputTokenPrice),
+      solver: swapFees.solver.multipliedBy(outputTokenPrice),
+      total: swapFees.partner.multipliedBy(inputTokenPrice).plus(swapFees.solver.multipliedBy(outputTokenPrice)),
     };
   }, [swapFees, inputTokenPrice, outputTokenPrice]);
 
