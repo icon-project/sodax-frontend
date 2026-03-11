@@ -60,6 +60,9 @@ export default function SwapPage() {
 
   const { sodax } = useSodaxContext();
 
+  // Quote request: we send the full input amount here. The SDK (getQuote → adjustAmountByFee)
+  // applies the partner fee once before calling the solver, so the solver receives e.g. 0.999 USDC for 1 USDC (0.1% fee).
+  // Do not subtract the fee here, or it would be applied twice and the solver would get 0.998 (0.2%).
   const quotePayload = useMemo(() => {
     if (
       !inputToken ||
@@ -72,7 +75,6 @@ export default function SwapPage() {
       return undefined;
     }
 
-    // Send full input amount; SDK getQuote() applies partner fee once via adjustAmountByFee
     const payload = {
       token_src: inputToken.address,
       token_src_blockchain_id: inputToken.xChainId,
@@ -94,6 +96,8 @@ export default function SwapPage() {
     return undefined;
   }, [quoteQuery.data]);
 
+  // Fee breakdown: partner = sodax fee (e.g. 0.1% of input); solver = solver fee (0.1% of quoted output).
+  // Used for display and for computing min output; actual charge to user is only the partner fee.
   const swapFees = useMemo(() => {
     if (!inputAmount || inputAmount === '' || Number.isNaN(Number(inputAmount)) || Number(inputAmount) <= 0) {
       return undefined;
@@ -119,7 +123,7 @@ export default function SwapPage() {
 
     const partnerUsd = swapFees.partner.multipliedBy(inputTokenPrice);
     const solverUsd = swapFees.solver.multipliedBy(outputTokenPrice);
-    // Total fees shown to user: only partner fee (what sodax charges, e.g. 0.1%); solver fee is internal
+    // total: user-facing "Total fees" = partner only (what sodax charges). We do not add solver here.
     return {
       partner: partnerUsd,
       solver: solverUsd,
@@ -127,6 +131,7 @@ export default function SwapPage() {
     };
   }, [swapFees, inputTokenPrice, outputTokenPrice]);
 
+  // Minimum output after slippage tolerance; used as minOutputAmount when creating the swap intent.
   const minOutputAmount = useMemo(() => {
     if (calculatedOutputAmount) {
       return BigInt(
