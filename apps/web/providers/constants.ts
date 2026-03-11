@@ -26,9 +26,10 @@ const testnet = process.env.NEXT_PUBLIC_TESTNET === 'YES';
 const hubChainId = SONIC_MAINNET_CHAIN_ID;
 
 const appEnv = process.env.NEXT_PUBLIC_APP_ENV;
-const isProductionOrPreview = appEnv === 'production' || appEnv === 'preview';
 
-const hubRpcUrl = isProductionOrPreview
+const isProduction = appEnv === 'production';
+
+const hubRpcUrl = isProduction
   ? 'https://sonic-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg'
   : 'https://rpc.soniclabs.com';
 
@@ -61,7 +62,7 @@ export const sodaxConfig = {
 } satisfies SodaxConfig;
 
 export const rpcConfig: RpcConfig = {
-  ...(isProductionOrPreview && {
+  ...(isProduction && {
     sonic: 'https://sonic-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
     '0xa86a.avax': 'https://avax-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
     '0xa4b1.arbitrum': 'https://arb-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
