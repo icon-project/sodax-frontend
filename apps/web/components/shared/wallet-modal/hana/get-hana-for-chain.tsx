@@ -13,6 +13,7 @@ const CHAIN_DISPLAY_NAMES: Record<ChainType, string> = {
   SUI: 'Sui',
   STELLAR: 'Stellar',
   INJECTIVE: 'Injective',
+  NEAR: 'Near',
 };
 
 type GetHanaForChainProps = {
