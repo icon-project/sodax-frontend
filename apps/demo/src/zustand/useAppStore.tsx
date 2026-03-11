@@ -21,20 +21,13 @@ type AppStore = {
 };
 
 export const useAppStore = create<AppStore>()(
-  persist(
-    immer((set, get) => ({
-      selectedChainId: '0xa4b1.arbitrum',
-      selectChainId: (chainId: ChainId) => set({ selectedChainId: chainId }),
-      isWalletModalOpen: false,
-      openWalletModal: () => set({ isWalletModalOpen: true }),
-      closeWalletModal: () => set({ isWalletModalOpen: false }),
-      solverEnvironment: SolverEnv.Production,
-      setSolverEnvironment: (env: SolverEnv) => set({ solverEnvironment: env }),
-    })) as StateCreator<AppStore, [], []>,
-    {
-      name: 'sodax-app-store',
-      storage: createJSONStorage(() => localStorage),
-      partialize: state => ({ selectedChainId: state.selectedChainId }),
-    },
-  ),
+  immer((set, get) => ({
+    selectedChainId: 'near',
+    selectChainId: (chainId: ChainId) => set({ selectedChainId: chainId }),
+    isWalletModalOpen: false,
+    openWalletModal: () => set({ isWalletModalOpen: true }),
+    closeWalletModal: () => set({ isWalletModalOpen: false }),
+    solverEnvironment: SolverEnv.Production,
+    setSolverEnvironment: (env: SolverEnv) => set({ solverEnvironment: env }),
+  })) as StateCreator<AppStore, [], []>,
 );

@@ -14,17 +14,21 @@ import {
   type SonicRawSpokeProvider,
   type RawSpokeProvider,
   type SpokeProviderType,
+  type EvmRawSpokeProviderConfig,
+  type SonicRawSpokeProviderConfig,
+  type RawSpokeProviderConfig,
 } from './entities/Providers.js';
 import { InjectiveSpokeProvider, type InjectiveRawSpokeProvider } from './entities/injective/InjectiveSpokeProvider.js';
 import { IconSpokeProvider, type IconRawSpokeProvider } from './entities/icon/IconSpokeProvider.js';
-import { SolanaSpokeProvider, type SolanaRawSpokeProvider } from './entities/solana/SolanaSpokeProvider.js';
+import { SolanaSpokeProvider, type SolanaRawSpokeProvider, type SolanaRawSpokeProviderConfig } from './entities/solana/SolanaSpokeProvider.js';
 import { SuiSpokeProvider, type SuiRawSpokeProvider } from './entities/sui/SuiSpokeProvider.js';
-import { StellarSpokeProvider, type StellarRawSpokeProvider } from './entities/stellar/StellarSpokeProvider.js';
+import { StellarSpokeProvider, type StellarRawSpokeProvider, type StellarRawSpokeProviderConfig } from './entities/stellar/StellarSpokeProvider.js';
 import type {
   EvmSpokeProviderType,
   IconSpokeProviderType,
   InjectiveSpokeProviderType,
   MoneyMarketConfigParams,
+  NearSpokeProviderType,
   Optional,
   PartnerFeeAmount,
   PartnerFeeConfig,
@@ -52,6 +56,7 @@ import {
   SONIC_MAINNET_CHAIN_ID,
   ChainIdToIntentRelayChainId,
 } from '@sodax/types';
+import { type NearRawSpokeProvider, type NearRawSpokeProviderConfig, NearSpokeProvider } from './entities/near/NearSpokeProvider.js';
 
 export function isEvmHubChainConfig(value: HubChainConfig): value is EvmHubChainConfig {
   return typeof value === 'object' && value.chain.type === 'EVM';
@@ -179,6 +184,16 @@ export function isSolanaSpokeProvider(value: SpokeProviderType): value is Solana
   );
 }
 
+export function isNearSpokeProvider(value: SpokeProviderType): value is NearSpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof NearSpokeProvider &&
+    !('raw' in value) &&
+    value.chainConfig.chain.type === 'NEAR'
+  );
+}
+
 export function isStellarSpokeProviderType(value: SpokeProviderType): value is StellarSpokeProviderType {
   return (
     typeof value === 'object' && value !== null && (isStellarSpokeProvider(value) || isStellarRawSpokeProvider(value))
@@ -193,6 +208,10 @@ export function isStellarSpokeProvider(value: SpokeProviderType): value is Stell
     !('raw' in value) &&
     value.chainConfig.chain.type === 'STELLAR'
   );
+}
+
+export function isNearSpokeProviderType(value: SpokeProviderType): value is NearSpokeProviderType {
+  return typeof value === 'object' && value !== null && (isNearSpokeProvider(value) || isNearRawSpokeProvider(value));
 }
 
 export function isInjectiveSpokeProviderType(value: SpokeProviderType): value is InjectiveSpokeProviderType {
@@ -463,6 +482,62 @@ export function isSonicRawSpokeProvider(value: unknown): value is SonicRawSpokeP
   );
 }
 
+export function isNearRawSpokeProvider(value: unknown): value is NearRawSpokeProvider {
+  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'NEAR';
+}
+
 export function isAddressString(value: unknown): value is string {
   return typeof value === 'string';
+}
+
+export function isEvmRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is EvmRawSpokeProviderConfig {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletAddress' in value &&
+    'chainConfig' in value &&
+    value.chainConfig.chain.type === 'EVM'
+  );
+}
+
+export function isSonicRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is SonicRawSpokeProviderConfig {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletAddress' in value &&
+    'chainConfig' in value &&
+    value.chainConfig.chain.type === 'EVM' &&
+    value.chainConfig.chain.id === SONIC_MAINNET_CHAIN_ID
+  );
+}
+
+export function isStellarRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is StellarRawSpokeProviderConfig {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletAddress' in value &&
+    'chainConfig' in value &&
+    value.chainConfig.chain.type === 'STELLAR'
+  );
+}
+
+export function isSolanaRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is SolanaRawSpokeProviderConfig {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletAddress' in value &&
+    'chainConfig' in value &&
+    'connection' in value &&
+    value.chainConfig.chain.type === 'SOLANA'
+  );
+}
+
+export function isNearRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is NearRawSpokeProviderConfig {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletAddress' in value &&
+    'chainConfig' in value &&
+    value.chainConfig.chain.type === 'NEAR'
+  );
 }

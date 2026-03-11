@@ -112,6 +112,9 @@ export default function WithdrawDialogFooter({
       if (response?.ok) {
         onWithdrawSuccess();
         setIsCompleted(true);
+        await queryClient.invalidateQueries({ queryKey: ['mm', 'aTokensBalances'] });
+        await queryClient.invalidateQueries({ queryKey: ['mm', 'userReservesData'] });
+        await queryClient.invalidateQueries({ queryKey: ['mm', 'reservesUsdFormat'] });
       } else {
         onWithdrawSuccess();
         onError({
@@ -217,14 +220,7 @@ export default function WithdrawDialogFooter({
               variant="cherry"
               className="text-white font-['InterRegular'] transition-all duration-300 ease-in-out w-full disabled:bg-cherry-bright disabled:!text-white"
               onClick={
-                isCompleted
-                  ? async () => {
-                      await queryClient.invalidateQueries({ queryKey: ['mm', 'aTokensBalances'] });
-                      await queryClient.invalidateQueries({ queryKey: ['mm', 'userReservesData'] });
-                      await queryClient.invalidateQueries({ queryKey: ['mm', 'reservesUsdFormat'] });
-                      onClose();
-                    }
-                  : handleWithdraw
+                isCompleted ? onClose : handleWithdraw
               }
               disabled={isWithdrawing}
             >
