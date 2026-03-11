@@ -516,3 +516,39 @@ textarea[readonly] {
   /* Links */
   --cc-link-color: var(--cherry-dark);
 }
+
+/* Integration scanner: print/PDF layout and branding */
+@media print {
+  /* Hide site header (first child) and site footer (div.footer) so only roadmap content prints */
+  .integration-scanner-page > div:first-child,
+  .integration-scanner-page .footer {
+    display: none !important;
+  }
+
+  /* Reduce top margin so roadmap isn’t pushed down; give room for our branded header */
+  @page {
+    size: A4;
+    margin: 0.6in 0.75in;
+  }
+
+  .integration-scanner-page {
+    background: #fff !important;
+  }
+
+  .integration-scanner-page main {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  /* Roadmap print area: ensure backgrounds and avoid awkward breaks */
+  .roadmap-print-area {
+    max-width: 100% !important;
+  }
+
+  .roadmap-print-area .rounded-3xl,
+  .roadmap-print-area .rounded-2xl {
+    break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

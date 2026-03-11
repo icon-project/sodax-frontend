@@ -16,6 +16,8 @@ export const POOL_ROUTE = '/pool';
 export const MIGRATE_ROUTE = '/migrate';
 export const GLOSSARY_ROUTE = '/glossary';
 export const PARTNERS_ROUTE = '/partners';
+/** Integration roadmap scanner: type protocol name, get visual integration roadmap (partners). */
+export const INTEGRATION_SCANNER_ROUTE = '/partners/integration-scanner';
 export const NEWS_ROUTE = '/news';
 export const COMMUNITY_ROUTE = '/community';
 export const PARTNER_DASHBOARD_ROUTE = '/partner-dashboard';
