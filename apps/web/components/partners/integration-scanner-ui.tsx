@@ -332,7 +332,7 @@ export function IntegrationScannerUi(): React.JSX.Element {
             <h1 className="font-bold text-[26px] sm:text-[32px] leading-[1.1] text-espresso">Integration Roadmap</h1>
           </div>
           <p className="font-normal text-[14px] sm:text-[16px] leading-[1.4] text-espresso text-center max-w-full md:max-w-140">
-            See how your protocol can integrate with Sodax. Enter your protocol name and generate a visual roadmap of
+            See how your protocol can integrate with SODAX. Enter your protocol name and generate a visual roadmap of
             SDK layers, partner category, and integration steps.
           </p>
         </motion.div>
@@ -492,7 +492,7 @@ export function IntegrationScannerUi(): React.JSX.Element {
                     href={`mailto:partnerships@sodax.com?subject=${encodeURIComponent(`Partnership inquiry - Economics & integration${roadmap.protocolDisplay ? ` - ${roadmap.protocolDisplay}` : ''}`)}`}
                     className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline w-fit"
                   >
-                    Contact partnerships for details →
+                    Contact us for details →
                   </a>
                 </div>
 
@@ -633,7 +633,7 @@ export function IntegrationScannerUi(): React.JSX.Element {
                       href={`mailto:partnerships@sodax.com?subject=${encodeURIComponent(`Partnership inquiry - Integration roadmap${roadmap.protocolDisplay ? ` - ${roadmap.protocolDisplay}` : ''}`)}`}
                       className="bg-white border-2 border-cherry-soda flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer hover:bg-cherry-soda/5 transition-colors font-medium text-[14px] text-cherry-soda text-center shrink-0"
                     >
-                      Contact partnerships
+                      Contact us
                     </a>
                     <a
                       href={DISCORD_ROUTE}

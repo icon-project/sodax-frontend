@@ -1,4 +1,3 @@
-// apps/web/components/partners/integration-roadmap-section.tsx
 // Partners page section that showcases the Integration Roadmap tool (mirrors Builders MCP section structure).
 
 'use client';
@@ -51,9 +50,7 @@ export default function IntegrationRoadmapSection(): React.JSX.Element {
         >
           <div className="flex gap-2 items-center">
             <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="shrink-0" />
-            <h2 className="font-bold text-[26px] sm:text-[32px] leading-[1.1] text-espresso">
-              Integration Roadmap
-            </h2>
+            <h2 className="font-bold text-[26px] sm:text-[32px] leading-[1.1] text-espresso">Integration Roadmap</h2>
           </div>
           <p className="font-normal text-[14px] sm:text-[16px] leading-[1.4] text-espresso text-center max-w-full md:max-w-140">
             See how your protocol can integrate with SODAX. Type your protocol name and get a visual roadmap of partner
