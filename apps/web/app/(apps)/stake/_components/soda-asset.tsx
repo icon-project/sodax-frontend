@@ -38,7 +38,7 @@ export function SodaAsset({
             <CurrencyLogo
               currency={selectedToken}
               isGroup={false}
-              tokenCount={tokens.length}
+              tokenCount={1} // Single selected network: show chain badge overlay
               logoSrc={isXSoda ? '/coin/xsoda.png' : undefined}
             />
           ) : (
