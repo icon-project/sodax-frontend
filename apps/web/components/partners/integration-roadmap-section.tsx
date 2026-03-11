@@ -51,13 +51,13 @@ export default function IntegrationRoadmapSection(): React.JSX.Element {
         >
           <div className="flex gap-2 items-center">
             <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="shrink-0" />
-            <h2 className="font-['InterBold'] text-[26px] sm:text-[32px] leading-[1.1] text-espresso">
+            <h2 className="font-bold text-[26px] sm:text-[32px] leading-[1.1] text-espresso">
               Integration Roadmap
             </h2>
           </div>
-          <p className="font-['InterRegular'] text-[14px] sm:text-[16px] leading-[1.4] text-espresso text-center max-w-full md:max-w-140">
+          <p className="font-normal text-[14px] sm:text-[16px] leading-[1.4] text-espresso text-center max-w-full md:max-w-140">
             See how your protocol can integrate with SODAX. Type your protocol name and get a visual roadmap of partner
-            category, SDK stack, and integration steps. Built for BD and prospective partners.
+            category, SDK stack, and integration steps.
           </p>
         </motion.div>
 
@@ -80,18 +80,18 @@ export default function IntegrationRoadmapSection(): React.JSX.Element {
               >
                 <div className="flex gap-2 items-center w-full">
                   <Icon className="w-4 h-4 shrink-0 text-espresso" />
-                  <h3 className="font-['InterBold'] text-[16px] sm:text-[18px] leading-[1.2] text-espresso flex-1">
+                  <h3 className="font-bold text-[16px] sm:text-[18px] leading-[1.2] text-espresso flex-1">
                     {feature.title}
                   </h3>
                 </div>
-                <p className="font-['InterRegular'] text-[13px] sm:text-[14px] leading-[1.4] text-clay-dark w-full">
+                <p className="font-normal text-[13px] sm:text-[14px] leading-[1.4] text-clay-dark w-full">
                   {feature.description}
                 </p>
                 <div className="flex gap-1 items-start flex-wrap">
                   {feature.badges.map(badge => (
                     <span
                       key={badge}
-                      className="bg-cream-white mix-blend-multiply h-5 inline-flex items-center justify-center px-2 rounded-full font-['InterRegular'] text-[11px] leading-[1.3] text-clay text-center whitespace-nowrap"
+                      className="bg-cream-white mix-blend-multiply h-5 inline-flex items-center justify-center px-2 rounded-full font-normal text-[11px] leading-[1.3] text-clay text-center whitespace-nowrap"
                     >
                       {badge}
                     </span>

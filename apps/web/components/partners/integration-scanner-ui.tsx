@@ -1,4 +1,3 @@
-// apps/web/components/partners/integration-scanner-ui.tsx
 // Client UI for Integration Roadmap Scanner: protocol input, CTA, mock-backed roadmap (category, SDK layers, steps).
 
 'use client';
@@ -7,7 +6,7 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { motion } from 'motion/react';
-import { Copy, Check, ExternalLink, FileDown, Link2, Coins, Network, Code2 } from 'lucide-react';
+import { Copy, Check, ExternalLink, FileDown, Link2, Mail, Coins, Network, Code2 } from 'lucide-react';
 import { WalletIcon, ArrowsLeftRightIcon, VaultIcon, TrendUpIcon, GlobeIcon, PathIcon } from '@phosphor-icons/react';
 import type { Icon } from '@phosphor-icons/react';
 import Link from 'next/link';
@@ -15,6 +14,7 @@ import {
   DOCUMENTATION_ROUTE,
   DISCORD_ROUTE,
   GITHUB_SODAX_REPO_ROUTE,
+  DEMO_APP_GITHUB_ROUTE,
   PARTNERS_ROUTE,
 } from '@/constants/routes';
 
@@ -204,6 +204,32 @@ function matchCategory(protocolName: string): { category: RoadmapCategory; match
   return { category: DEFAULT_CATEGORY, matched: false };
 }
 
+/** Generic terms that should show category title instead of raw input (e.g. "wallet" → "Wallets"). */
+const GENERIC_DISPLAY_TERMS = new Set([
+  'wallet',
+  'dex',
+  'aggregator',
+  'lending',
+  'borrow',
+  'collateral',
+  'perp',
+  'yield',
+  'network',
+  'chain',
+  'solver',
+  'marketplace',
+]);
+
+/** User-facing label: use category title when the input is a generic term; otherwise use the protocol name. */
+function getProtocolDisplayLabel(protocolDisplay: string, category: RoadmapCategory): string {
+  const trimmed = protocolDisplay.trim();
+  const lower = trimmed.toLowerCase();
+  if (!lower) return category.title;
+  if (lower === category.title.toLowerCase()) return category.title;
+  if (GENERIC_DISPLAY_TERMS.has(lower)) return category.title;
+  return trimmed;
+}
+
 /** Supported network names for partner-facing roadmap (single source for copy). */
 const SUPPORTED_NETWORKS_LIST =
   'Sonic, Ethereum, Solana, Base, Arbitrum, Sui, BNB Chain, Polygon, Avalanche, Optimism, Stellar, ICON, LightLink, Hyper, Kaia';
@@ -219,8 +245,8 @@ function QuickStartInstall(): React.JSX.Element {
   };
   return (
     <div className="bg-white rounded-3xl flex flex-col gap-3 p-6 md:p-8 border border-cherry-grey/20">
-      <h2 className="font-['InterBold'] text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Quick start</h2>
-      <p className="font-['InterRegular'] text-[14px] leading-normal text-clay-dark">
+      <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Quick start</h2>
+      <p className="font-normal text-[14px] leading-normal text-clay-dark">
         Install the SDK packages, then follow the docs for your category.
       </p>
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
@@ -230,7 +256,7 @@ function QuickStartInstall(): React.JSX.Element {
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center justify-center gap-2 shrink-0 h-9 px-4 rounded-lg bg-cherry-soda text-white font-['InterMedium'] text-[13px] hover:opacity-90 transition-opacity"
+          className="flex items-center justify-center gap-2 shrink-0 h-9 px-4 rounded-lg bg-cherry-soda text-white font-medium text-[13px] hover:opacity-90 transition-opacity"
           aria-label="Copy install command"
         >
           {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -303,11 +329,9 @@ export function IntegrationScannerUi(): React.JSX.Element {
         >
           <div className="flex gap-2 items-center">
             <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="shrink-0" />
-            <h1 className="font-['InterBold'] text-[26px] sm:text-[32px] leading-[1.1] text-espresso">
-              Integration Roadmap
-            </h1>
+            <h1 className="font-bold text-[26px] sm:text-[32px] leading-[1.1] text-espresso">Integration Roadmap</h1>
           </div>
-          <p className="font-['InterRegular'] text-[14px] sm:text-[16px] leading-[1.4] text-espresso text-center max-w-full md:max-w-140">
+          <p className="font-normal text-[14px] sm:text-[16px] leading-[1.4] text-espresso text-center max-w-full md:max-w-140">
             See how your protocol can integrate with Sodax. Enter your protocol name and generate a visual roadmap of
             SDK layers, partner category, and integration steps.
           </p>
@@ -326,7 +350,7 @@ export function IntegrationScannerUi(): React.JSX.Element {
             value={protocolName}
             onChange={e => setProtocolName(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleGenerate()}
-            className="flex-1 min-w-0 h-12 min-h-12 sm:h-11 sm:min-h-11 px-4 py-3 sm:py-2 rounded-2xl border-2 border-cherry-grey bg-white font-['InterRegular'] text-[14px] text-espresso placeholder:text-clay focus:outline-none focus:border-cherry-soda transition-colors"
+            className="flex-1 min-w-0 h-12 min-h-12 sm:h-11 sm:min-h-11 px-4 py-3 sm:py-2 rounded-2xl border-2 border-cherry-grey bg-white font-normal text-[14px] text-espresso placeholder:text-clay focus:outline-none focus:border-cherry-soda transition-colors"
             aria-label="Protocol name"
           />
           <button
@@ -350,9 +374,9 @@ export function IntegrationScannerUi(): React.JSX.Element {
             <div className="hidden print:flex flex-col gap-3 pb-6 border-b border-cherry-grey/30" aria-hidden>
               <div className="flex items-center gap-3">
                 <Image src="/symbol_dark.png" alt="" width={28} height={28} className="shrink-0" />
-                <span className="font-['InterBold'] text-lg text-espresso">Integration Roadmap</span>
+                <span className="font-bold text-lg text-espresso">Integration Roadmap</span>
                 <span className="text-cherry-grey text-sm">·</span>
-                <span className="font-['InterMedium'] text-sm text-espresso">SODAX Partners</span>
+                <span className="font-medium text-sm text-espresso">SODAX Partners</span>
               </div>
             </div>
 
@@ -360,26 +384,22 @@ export function IntegrationScannerUi(): React.JSX.Element {
             <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
               {!roadmap.matched && (
                 <div className="rounded-xl bg-cherry-brighter/20 border border-cherry-grey/30 px-4 py-3">
-                  <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-espresso">
+                  <p className="font-normal text-[14px] leading-[1.4] text-espresso">
                     We couldn&apos;t identify a protocol type for &quot;{roadmap.protocolDisplay}&quot;. Choose your
                     category below to see the right roadmap.
                   </p>
                 </div>
               )}
-              <h2 className="font-['InterBold'] text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
-                Partner category
-              </h2>
+              <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Partner category</h2>
               <div className="flex gap-3 items-start">
                 {(() => {
                   const Icon = roadmap.category.icon;
                   return <Icon weight="regular" className="w-5 h-5 shrink-0 text-cherry-soda mt-0.5" aria-hidden />;
                 })()}
                 <div className="flex flex-col gap-1 min-w-0">
-                  <p className="font-['InterBold'] text-[16px] leading-[1.2] text-espresso">{roadmap.category.title}</p>
-                  <p className="font-['InterRegular'] text-[14px] leading-[1.4] text-clay-dark">
-                    {roadmap.category.description}
-                  </p>
-                  <p className="font-['InterRegular'] text-[13px] leading-[1.4] text-clay mt-1">
+                  <p className="font-bold text-[16px] leading-[1.2] text-espresso">{roadmap.category.title}</p>
+                  <p className="font-normal text-[14px] leading-[1.4] text-clay-dark">{roadmap.category.description}</p>
+                  <p className="font-normal text-[13px] leading-[1.4] text-clay mt-1">
                     Typical integration: {TIMELINE_BY_CATEGORY[roadmap.category.id]}
                   </p>
                   {(() => {
@@ -387,7 +407,7 @@ export function IntegrationScannerUi(): React.JSX.Element {
                     return caseStudy ? (
                       <Link
                         href={caseStudy.href}
-                        className="font-['InterMedium'] text-[13px] text-cherry-soda hover:underline mt-1 w-fit"
+                        className="font-medium text-[13px] text-cherry-soda hover:underline mt-1 w-fit"
                       >
                         See how {caseStudy.name} did it →
                       </Link>
@@ -395,7 +415,7 @@ export function IntegrationScannerUi(): React.JSX.Element {
                   })()}
                 </div>
               </div>
-              <p className="font-['InterRegular'] text-[13px] leading-[1.4] text-clay-dark mt-2">
+              <p className="font-normal text-[13px] leading-[1.4] text-clay-dark mt-2">
                 {roadmap.matched ? 'Not the right fit? ' : 'Choose category: '}
                 <select
                   value={roadmap.category.id}
@@ -404,7 +424,7 @@ export function IntegrationScannerUi(): React.JSX.Element {
                     const cat = CATEGORIES.find(c => c.id === id);
                     if (cat) setRoadmap({ ...roadmap, category: cat, matched: true });
                   }}
-                  className="font-['InterRegular'] text-[13px] text-espresso bg-white border border-cherry-grey rounded-lg px-2 py-1.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-cherry-soda/30"
+                  className="font-normal text-[13px] text-espresso bg-white border border-cherry-grey rounded-lg px-2 py-1.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-cherry-soda/30"
                   aria-label="Choose partner category"
                 >
                   {CATEGORIES.map(c => (
@@ -424,10 +444,10 @@ export function IntegrationScannerUi(): React.JSX.Element {
 
                 {/* Why SODAX for [category] */}
                 <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-                  <h2 className="font-['InterBold'] text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
+                  <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
                     Why SODAX for {roadmap.category.title}
                   </h2>
-                  <ul className="flex flex-col gap-2 list-disc list-inside font-['InterRegular'] text-[14px] leading-normal text-clay-dark">
+                  <ul className="flex flex-col gap-2 list-disc list-inside font-normal text-[14px] leading-normal text-clay-dark">
                     {WHY_SODAX_BY_CATEGORY[roadmap.category.id].map((bullet, i) => (
                       <li key={i} className="pl-1">
                         {bullet}
@@ -438,22 +458,20 @@ export function IntegrationScannerUi(): React.JSX.Element {
 
                 {/* Supported networks — partners want to see which chains they can route to */}
                 <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-                  <h2 className="font-['InterBold'] text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
+                  <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
                     <Network className="w-5 h-5 text-cherry-soda shrink-0" aria-hidden />
                     Supported networks
                   </h2>
-                  <p className="font-['InterRegular'] text-[14px] leading-normal text-clay-dark">
+                  <p className="font-normal text-[14px] leading-normal text-clay-dark">
                     One integration gives you access to 17+ networks. Route swaps, deposits, and settlements across EVM,
                     Solana, Sui, Stellar, and more.
                   </p>
-                  <p className="font-['InterRegular'] text-[13px] leading-[1.4] text-clay-dark">
-                    {SUPPORTED_NETWORKS_LIST}.
-                  </p>
+                  <p className="font-normal text-[13px] leading-[1.4] text-clay-dark">{SUPPORTED_NETWORKS_LIST}.</p>
                   <a
                     href={`${DOCUMENTATION_ROUTE}/developers`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 font-['InterMedium'] text-[13px] text-cherry-soda hover:underline w-fit"
+                    className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline w-fit"
                   >
                     Full list &amp; chain config in docs
                     <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
@@ -462,17 +480,17 @@ export function IntegrationScannerUi(): React.JSX.Element {
 
                 {/* Partner economics — revenue and fees matter to BD and partners */}
                 <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-                  <h2 className="font-['InterBold'] text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
+                  <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
                     <Coins className="w-5 h-5 text-cherry-soda shrink-0" aria-hidden />
                     Partner economics
                   </h2>
-                  <p className="font-['InterRegular'] text-[14px] leading-normal text-clay-dark">
+                  <p className="font-normal text-[14px] leading-normal text-clay-dark">
                     Partners can share in revenue on routed volume. Fee structure and payouts are transparent; we align
                     incentives so your integration drives value for both sides.
                   </p>
                   <a
-                    href="mailto:partnerships@sodax.com?subject=Partnership%20inquiry%20-%20Economics%20%26%20integration"
-                    className="inline-flex items-center gap-1.5 font-['InterMedium'] text-[13px] text-cherry-soda hover:underline w-fit"
+                    href={`mailto:partnerships@sodax.com?subject=${encodeURIComponent(`Partnership inquiry - Economics & integration${roadmap.protocolDisplay ? ` - ${roadmap.protocolDisplay}` : ''}`)}`}
+                    className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline w-fit"
                   >
                     Contact partnerships for details →
                   </a>
@@ -480,8 +498,11 @@ export function IntegrationScannerUi(): React.JSX.Element {
 
                 {/* SDK layers */}
                 <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-                  <h2 className="font-['InterBold'] text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
-                    SDK stack for <span className="text-cherry-dark uppercase"> {roadmap.protocolDisplay}</span>
+                  <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
+                    SDK stack for{' '}
+                    <span className="text-cherry-dark uppercase">
+                      {getProtocolDisplayLabel(roadmap.protocolDisplay, roadmap.category)}
+                    </span>
                   </h2>
                   <div className="flex flex-col gap-4">
                     {SDK_LAYERS.map(layer => (
@@ -489,7 +510,7 @@ export function IntegrationScannerUi(): React.JSX.Element {
                         key={layer.name}
                         className="flex flex-col sm:grid sm:grid-cols-[7rem_12rem_1fr] gap-2 sm:gap-6 p-4 rounded-xl bg-cream-white border border-cherry-grey/10 sm:items-center"
                       >
-                        <span className="font-['InterBold'] text-[14px] text-cherry-soda">{layer.name}</span>
+                        <span className="font-bold text-[14px] text-cherry-soda">{layer.name}</span>
                         <a
                           href={layer.docUrl}
                           target="_blank"
@@ -504,7 +525,7 @@ export function IntegrationScannerUi(): React.JSX.Element {
                           {layer.labels.map(label => (
                             <span
                               key={label}
-                              className="inline-flex items-center justify-center h-6 px-2 rounded-full font-['InterRegular'] text-[11px] leading-[1.3] text-clay bg-white border border-cherry-grey/20"
+                              className="inline-flex items-center justify-center h-6 px-2 rounded-full font-normal text-[11px] leading-[1.3] text-clay bg-white border border-cherry-grey/20"
                             >
                               {label}
                             </span>
@@ -517,28 +538,37 @@ export function IntegrationScannerUi(): React.JSX.Element {
 
                 {/* Code & resources — repo, docs, demo so partners can try before committing */}
                 <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-                  <h2 className="font-['InterBold'] text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
+                  <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
                     <Code2 className="w-5 h-5 text-cherry-soda shrink-0" aria-hidden />
                     Code &amp; resources
                   </h2>
-                  <p className="font-['InterRegular'] text-[14px] leading-normal text-clay-dark">
-                    Explore the SDK source, run the demo app, and follow step-by-step guides for your category.
+                  <p className="font-normal text-[14px] leading-normal text-clay-dark">
+                    Explore the SDK source, run the demo app locally, and follow step-by-step guides for your category.
                   </p>
                   <div className="flex flex-col sm:flex-row flex-wrap gap-2">
                     <a
                       href={GITHUB_SODAX_REPO_ROUTE}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 font-['InterMedium'] text-[13px] text-cherry-soda hover:underline w-fit"
+                      className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline w-fit"
                     >
                       SDK monorepo (GitHub)
+                      <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                    </a>
+                    <a
+                      href={DEMO_APP_GITHUB_ROUTE}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline w-fit"
+                    >
+                      Demo app (source, run locally)
                       <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
                     </a>
                     <a
                       href={DOCUMENTATION_ROUTE}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 font-['InterMedium'] text-[13px] text-cherry-soda hover:underline w-fit"
+                      className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline w-fit"
                     >
                       Documentation &amp; guides
                       <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
@@ -548,10 +578,10 @@ export function IntegrationScannerUi(): React.JSX.Element {
 
                 {/* Integration steps */}
                 <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-                  <h2 className="font-['InterBold'] text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
+                  <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
                     Integration steps
                   </h2>
-                  <ol className="flex flex-col gap-3 list-decimal list-inside font-['InterRegular'] text-[14px] leading-normal text-clay-dark">
+                  <ol className="flex flex-col gap-3 list-decimal list-inside font-normal text-[14px] leading-normal text-clay-dark">
                     {STEPS_BY_CATEGORY[roadmap.category.id].map((step, i) => (
                       <li key={i} className="pl-1">
                         {step}
@@ -562,10 +592,8 @@ export function IntegrationScannerUi(): React.JSX.Element {
 
                 {/* Case studies — all featured partners we have */}
                 <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-                  <h2 className="font-['InterBold'] text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
-                    Case studies
-                  </h2>
-                  <p className="font-['InterRegular'] text-[14px] leading-normal text-clay-dark">
+                  <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Case studies</h2>
+                  <p className="font-normal text-[14px] leading-normal text-clay-dark">
                     See how partners built with SODAX across wallets, DeFi apps, and networks.
                   </p>
                   <div className="flex flex-col gap-3">
@@ -575,13 +603,11 @@ export function IntegrationScannerUi(): React.JSX.Element {
                         href={study.href}
                         className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 p-3 rounded-xl bg-cream-white border border-cherry-grey/10 hover:border-cherry-soda/30 transition-colors group"
                       >
-                        <span className="font-['InterBold'] text-[14px] text-espresso group-hover:text-cherry-soda transition-colors">
+                        <span className="font-bold text-[14px] text-espresso group-hover:text-cherry-soda transition-colors">
                           {study.name}
                         </span>
-                        <span className="font-['InterRegular'] text-[13px] text-clay-dark">{study.tagline}</span>
-                        <span className="font-['InterMedium'] text-[12px] text-cherry-soda sm:ml-auto">
-                          Read case study →
-                        </span>
+                        <span className="font-normal text-[13px] text-clay-dark">{study.tagline}</span>
+                        <span className="font-medium text-[12px] text-cherry-soda sm:ml-auto">Read case study →</span>
                       </Link>
                     ))}
                   </div>
@@ -589,10 +615,8 @@ export function IntegrationScannerUi(): React.JSX.Element {
 
                 {/* Next-step CTA */}
                 <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-                  <h2 className="font-['InterBold'] text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
-                    Next steps
-                  </h2>
-                  <p className="font-['InterRegular'] text-[14px] leading-normal text-clay-dark">
+                  <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Next steps</h2>
+                  <p className="font-normal text-[14px] leading-normal text-clay-dark">
                     Open the docs to follow the integration guide, get help in Discord, or reach out to discuss your use
                     case.
                   </p>
@@ -601,13 +625,13 @@ export function IntegrationScannerUi(): React.JSX.Element {
                       href={DOCUMENTATION_ROUTE}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-cherry-bright flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer hover:opacity-90 transition-opacity font-['InterMedium'] text-[14px] text-white text-center shrink-0"
+                      className="bg-cherry-bright flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer hover:opacity-90 transition-opacity font-medium text-[14px] text-white text-center shrink-0"
                     >
                       Open documentation
                     </a>
                     <a
-                      href="mailto:partnerships@sodax.com?subject=Partnership%20inquiry%20-%20Integration%20roadmap"
-                      className="bg-white border-2 border-cherry-soda flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer hover:bg-cherry-soda/5 transition-colors font-['InterMedium'] text-[14px] text-cherry-soda text-center shrink-0"
+                      href={`mailto:partnerships@sodax.com?subject=${encodeURIComponent(`Partnership inquiry - Integration roadmap${roadmap.protocolDisplay ? ` - ${roadmap.protocolDisplay}` : ''}`)}`}
+                      className="bg-white border-2 border-cherry-soda flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer hover:bg-cherry-soda/5 transition-colors font-medium text-[14px] text-cherry-soda text-center shrink-0"
                     >
                       Contact partnerships
                     </a>
@@ -615,7 +639,7 @@ export function IntegrationScannerUi(): React.JSX.Element {
                       href={DISCORD_ROUTE}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-white border-2 border-cherry-grey flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer hover:border-cherry-soda hover:bg-cherry-soda/5 transition-colors font-['InterMedium'] text-[14px] text-espresso text-center shrink-0"
+                      className="bg-white border-2 border-cherry-grey flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer hover:border-cherry-soda hover:bg-cherry-soda/5 transition-colors font-medium text-[14px] text-espresso text-center shrink-0"
                     >
                       Join Discord
                     </a>
@@ -624,14 +648,19 @@ export function IntegrationScannerUi(): React.JSX.Element {
 
                 {/* Share roadmap: one card at the bottom so label and actions read as a single block */}
                 <div className="rounded-3xl border border-cherry-grey/20 bg-white p-6 md:p-8 flex flex-col gap-4 print:hidden">
-                  <h2 className="font-['InterBold'] text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
-                    Share roadmap
-                  </h2>
-                  <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                  <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Share roadmap</h2>
+                  <p className="font-normal text-[13px] leading-[1.4] text-clay-dark">
+                    Share the link with your team or contacts — they&apos;ll see this roadmap for{' '}
+                    <span className="font-medium text-espresso uppercase">
+                      {getProtocolDisplayLabel(roadmap.protocolDisplay, roadmap.category)}
+                    </span>{' '}
+                    pre-filled. Or download the PDF to attach to an email.
+                  </p>
+                  <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:items-center">
                     <button
                       type="button"
                       onClick={handleCopyLink}
-                      className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full border-2 border-cherry-grey bg-white font-['InterMedium'] text-[14px] text-espresso hover:bg-cream-white transition-colors shrink-0 cursor-pointer"
+                      className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full border-2 border-cherry-grey bg-white font-medium text-[14px] text-espresso hover:bg-cream-white transition-colors shrink-0 cursor-pointer"
                       aria-label="Copy link to this roadmap"
                     >
                       {linkCopied ? <Check className="w-4 h-4 text-cherry-soda" /> : <Link2 className="w-4 h-4" />}
@@ -640,22 +669,44 @@ export function IntegrationScannerUi(): React.JSX.Element {
                     <button
                       type="button"
                       onClick={handleDownloadPdf}
-                      className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full border-2 border-cherry-grey bg-white font-['InterMedium'] text-[14px] text-espresso hover:bg-cream-white transition-colors shrink-0 cursor-pointer"
+                      className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full border-2 border-cherry-grey bg-white font-medium text-[14px] text-espresso hover:bg-cream-white transition-colors shrink-0 cursor-pointer"
                       aria-label="Download roadmap as PDF"
                       title="Save as PDF. For a clean PDF, turn off 'Headers and footers' in the print dialog."
                     >
                       <FileDown className="w-4 h-4" />
                       Download PDF
                     </button>
+                    <a
+                      href={(() => {
+                        const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sodax.com';
+                        const base = `${origin}${pathname}`;
+                        const rawProtocol = roadmap?.protocolDisplay ?? (protocolName.trim() || '');
+                        const url = `${base}?protocol=${encodeURIComponent(rawProtocol)}`;
+                        const displayLabel =
+                          roadmap != null
+                            ? getProtocolDisplayLabel(roadmap.protocolDisplay, roadmap.category)
+                            : protocolName.trim() || 'your protocol';
+                        const subject = encodeURIComponent(`SODAX integration roadmap for ${displayLabel}`);
+                        const body = encodeURIComponent(
+                          `Hi,\n\nHere's a tailored integration roadmap for ${displayLabel}:\n${url}\n\nYou can also download it as a PDF from the page.\n\nBest,`,
+                        );
+                        return `mailto:?subject=${subject}&body=${body}`;
+                      })()}
+                      className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full border-2 border-cherry-grey bg-white font-medium text-[14px] text-espresso hover:bg-cream-white transition-colors shrink-0 cursor-pointer no-underline"
+                      aria-label="Email this roadmap"
+                    >
+                      <Mail className="w-4 h-4" />
+                      Email this roadmap
+                    </a>
                   </div>
-                  <p className="font-['InterRegular'] text-[12px] leading-[1.4] text-clay">
+                  <p className="font-normal text-[12px] leading-[1.4] text-clay">
                     For a clean PDF, turn off &quot;Headers and footers&quot; in the print dialog.
                   </p>
                 </div>
 
                 {/* Print-only branded footer: single date so users can turn off browser headers */}
                 <div
-                  className="hidden print:block pt-6 mt-4 border-t border-cherry-grey/30 text-center font-['InterRegular'] text-[11px] text-clay"
+                  className="hidden print:block pt-6 mt-4 border-t border-cherry-grey/30 text-center font-normal text-[11px] text-clay"
                   aria-hidden
                 >
                   sodax.com/partners · © 2025 ICON Foundation{printDate ? ` · ${printDate}` : ''}
