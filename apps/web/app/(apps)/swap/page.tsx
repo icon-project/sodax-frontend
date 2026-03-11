@@ -72,19 +72,18 @@ export default function SwapPage() {
       return undefined;
     }
 
+    // Send full input amount; SDK getQuote() applies partner fee once via adjustAmountByFee
     const payload = {
       token_src: inputToken.address,
       token_src_blockchain_id: inputToken.xChainId,
       token_dst: outputToken.address,
       token_dst_blockchain_id: outputToken.xChainId,
-      amount:
-        parseUnits(inputAmount, inputToken.decimals) -
-        sodax.swaps.getPartnerFee(parseUnits(inputAmount, inputToken.decimals)),
+      amount: parseUnits(inputAmount, inputToken.decimals),
       quote_type: 'exact_input' as QuoteType,
     };
 
     return payload;
-  }, [inputToken, outputToken, inputAmount, sodax]);
+  }, [inputToken, outputToken, inputAmount]);
 
   const quoteQuery = useQuote(quotePayload);
   const { data: outputTokenPrice } = useTokenPrice(outputToken);
@@ -118,10 +117,13 @@ export default function SwapPage() {
       return undefined;
     }
 
+    const partnerUsd = swapFees.partner.multipliedBy(inputTokenPrice);
+    const solverUsd = swapFees.solver.multipliedBy(outputTokenPrice);
+    // Total fees shown to user: only partner fee (what sodax charges, e.g. 0.1%); solver fee is internal
     return {
-      partner: swapFees.partner.multipliedBy(inputTokenPrice),
-      solver: swapFees.solver.multipliedBy(outputTokenPrice),
-      total: swapFees.partner.multipliedBy(inputTokenPrice).plus(swapFees.solver.multipliedBy(outputTokenPrice)),
+      partner: partnerUsd,
+      solver: solverUsd,
+      total: partnerUsd,
     };
   }, [swapFees, inputTokenPrice, outputTokenPrice]);
 
