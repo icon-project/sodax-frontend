@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { Check, ChevronDown, ChevronUp, Eye, Settings2 } from 'lucide-react';
-import { INTEGRATION_SCANNER_ROUTE } from '@/constants/routes';
+import { INTEGRATION_SCANNER_BD_ROUTE, INTEGRATION_SCANNER_ROUTE } from '@/constants/routes';
 import type { BdConfig, CategoryId, PartnershipTier } from './types';
 import { DEFAULT_FROM_SUFFIX } from './constants';
 import { slugifyProtocol } from './utils';
@@ -34,9 +34,14 @@ export function BdComposer({
   const buildUrl = (includeBd: boolean): string => {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sodax.com';
     const slugSource = currentProtocol.trim();
-    const path = slugSource ? `${INTEGRATION_SCANNER_ROUTE}/${slugifyProtocol(slugSource)}` : INTEGRATION_SCANNER_ROUTE;
+    const path = includeBd
+      ? slugSource
+        ? `${INTEGRATION_SCANNER_BD_ROUTE}/${slugifyProtocol(slugSource)}`
+        : INTEGRATION_SCANNER_BD_ROUTE
+      : slugSource
+        ? `${INTEGRATION_SCANNER_ROUTE}/${slugifyProtocol(slugSource)}`
+        : INTEGRATION_SCANNER_ROUTE;
     const params = new URLSearchParams();
-    if (includeBd) params.set('bd', '1');
     if (selectedCategoryId) params.set('cat', selectedCategoryId);
     if (bdConfig.fromName) params.set('from', bdConfig.fromName);
     if (bdConfig.fromSuffix.trim()) params.set('suffix', bdConfig.fromSuffix.trim());

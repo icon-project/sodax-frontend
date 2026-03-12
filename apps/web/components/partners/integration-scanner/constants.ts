@@ -76,6 +76,7 @@ export const CATEGORIES: RoadmapCategory[] = [
     keywords: [
       'lending', 'borrow', 'aave', 'compound', 'venus', 'collateral',
       'morpho', 'euler', 'benqi', 'radiant', 'seamless', 'moonwell', 'ionic', 'spark',
+      'bonzo',
     ],
   },
   {
@@ -111,6 +112,74 @@ export const CATEGORIES: RoadmapCategory[] = [
 /** Default category shown before a protocol is typed / matched (DEXs & Aggregators). */
 export const DEFAULT_CATEGORY: RoadmapCategory = CATEGORIES[1] as RoadmapCategory;
 
+/**
+ * Maps BD CRM (Notion) Category property values to integration-scanner CategoryId.
+ * Used when building pre-filled roadmap URLs from the bd-scope-assessment skill so the
+ * link includes the correct cat= param. Keys are normalized (lowercase, trimmed).
+ * Add new Notion options here as the team adds them to the CRM.
+ */
+export const NOTION_CATEGORY_TO_SCANNER_ID: Record<string, CategoryId> = {
+  // Lending
+  lending: 'lending',
+
+  // DEXs & Aggregators
+  dex: 'dexs',
+  'dex aggregator': 'dexs',
+  aggregator: 'dexs',
+  'dex aggregator, dex': 'dexs',
+  'dex aggregator,dex': 'dexs',
+  'dex aggregator,wallet': 'dexs',
+  'dex aggregator, wallet': 'dexs',
+  trading: 'dexs',
+  cex: 'dexs',
+  defi: 'dexs',
+  payment: 'dexs',
+  stablecoin: 'dexs',
+
+  // Wallets
+  wallet: 'wallets',
+
+  // Solver marketplaces
+  solver: 'solver-marketplaces',
+
+  // New networks / infrastructure
+  bridge: 'new-networks',
+  infrastructure: 'new-networks',
+  blockchain: 'new-networks',
+  'layer 1 blockchain': 'new-networks',
+  'layer 2': 'new-networks',
+  'zk chain': 'new-networks',
+  'rwa chain': 'new-networks',
+  platform: 'new-networks',
+  oracle: 'new-networks',
+  enterprise: 'new-networks',
+  'interchain-native': 'new-networks',
+
+  // Perp / yield (if Notion uses these)
+  perp: 'perp-yield',
+  yield: 'perp-yield',
+  derivatives: 'perp-yield',
+
+  // Fallbacks for other Notion tags (show a sensible roadmap)
+  other: 'dexs',
+  token: 'dexs',
+  nft: 'dexs',
+  gaming: 'dexs',
+  'game & nft': 'dexs',
+  marketing: 'dexs',
+  rwa: 'dexs',
+  launchpad: 'dexs',
+  analytics: 'dexs',
+  streaming: 'dexs',
+  'ai agent': 'dexs',
+  'aggregator/ai': 'dexs',
+  community: 'dexs',
+  foundation: 'dexs',
+  legal: 'dexs',
+  education: 'dexs',
+  'market maker': 'dexs',
+};
+
 // ─── Timeline copy ────────────────────────────────────────────────────────────
 
 /** Typical integration timeline per category (partner-facing). */
@@ -133,10 +202,11 @@ export const CASE_STUDY_BY_CATEGORY: Partial<Record<CategoryId, { name: string; 
 };
 
 /** All featured case studies listed in the Case Studies section. */
+/** Case study taglines must match partner page metadata (marketing source of truth). */
 export const ALL_CASE_STUDIES: { name: string; href: string; tagline: string }[] = [
-  { name: 'Hana Wallet', href: `${PARTNERS_ROUTE}/hana`, tagline: 'Multi-network web3 wallet' },
+  { name: 'Hana Wallet', href: `${PARTNERS_ROUTE}/hana`, tagline: 'Multi-Network Wallet & Payments App' },
   { name: 'Amped Finance', href: `${PARTNERS_ROUTE}/amped-finance`, tagline: 'Derivatives DEX on LightLink & Sonic' },
-  { name: 'LightLink Network', href: `${PARTNERS_ROUTE}/lightlink-network`, tagline: 'Enterprise-grade L2' },
+  { name: 'LightLink Network', href: `${PARTNERS_ROUTE}/lightlink-network`, tagline: 'Ethereum Layer 2' },
 ];
 
 // ─── SDK layers ───────────────────────────────────────────────────────────────
@@ -294,6 +364,8 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
   venus: { categoryId: 'lending' },
   euler: { categoryId: 'lending' },
   spark: { categoryId: 'lending' },
+  'bonzo finance': { categoryId: 'lending' },
+  bonzo: { categoryId: 'lending' },
 
   // ── Wallets ────────────────────────────────────────────────────────────────
   metamask: {

@@ -4,9 +4,9 @@
 
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'motion/react';
-import { INTEGRATION_SCANNER_ROUTE } from '@/constants/routes';
+import { INTEGRATION_SCANNER_BD_ROUTE, INTEGRATION_SCANNER_ROUTE } from '@/constants/routes';
 import type { BdConfig, CategoryId, PartnershipTier, RoadmapCategory } from './types';
 import {
   CATEGORIES,
@@ -27,6 +27,8 @@ import { RoadmapSections } from './roadmap-sections';
 export function IntegrationScannerUi(): React.JSX.Element {
   const searchParams = useSearchParams();
   const params = useParams<{ protocol?: string }>();
+  const pathname = usePathname();
+  const router = useRouter();
   const [protocolName, setProtocolName] = useState('');
   const [roadmap, setRoadmap] = useState<{
     category: RoadmapCategory;
@@ -38,6 +40,16 @@ export function IntegrationScannerUi(): React.JSX.Element {
   const [bdConfig, setBdConfig] = useState<BdConfig>(EMPTY_BD_CONFIG);
   const [printDate, setPrintDate] = useState<string | null>(null);
 
+  // Redirect legacy ?bd=1 on base path to canonical BD route so that path is not used.
+  useEffect(() => {
+    if (pathname !== INTEGRATION_SCANNER_ROUTE) return;
+    const bd = searchParams.get('bd');
+    if (bd === '1') {
+      router.replace(INTEGRATION_SCANNER_BD_ROUTE);
+      return;
+    }
+  }, [pathname, searchParams, router]);
+
   useEffect(() => {
     const fromWindow =
       typeof window !== 'undefined' && window.location.search ? new URLSearchParams(window.location.search) : null;
@@ -47,7 +59,6 @@ export function IntegrationScannerUi(): React.JSX.Element {
     const protocolFromPath = params?.protocol ?? null;
     const protocolDisplay = protocolFromQuery?.trim() || (protocolFromPath ? slugToDisplay(protocolFromPath) : null);
 
-    const bd = get('bd');
     const cat = get('cat');
     const from = get('from');
     const suffix = get('suffix');
@@ -59,7 +70,9 @@ export function IntegrationScannerUi(): React.JSX.Element {
     const whys = get('whys');
     const steps = get('steps');
 
-    if (bd === '1') setBdMode(true);
+    const isBdPath =
+      pathname === INTEGRATION_SCANNER_BD_ROUTE || pathname?.startsWith(`${INTEGRATION_SCANNER_BD_ROUTE}/`);
+    setBdMode(Boolean(isBdPath));
 
     setBdConfig({
       fromName: from ?? '',
@@ -85,7 +98,7 @@ export function IntegrationScannerUi(): React.JSX.Element {
       const effectiveMatched = categoryFromUrl ? true : matched;
       setRoadmap({ category: effectiveCategory, protocolDisplay: trimmed, matched: effectiveMatched });
     }
-  }, [searchParams, params?.protocol]);
+  }, [searchParams, params?.protocol, pathname]);
 
   useEffect(() => {
     setPrintDate(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));

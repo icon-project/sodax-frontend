@@ -1,7 +1,13 @@
 // Pure helpers for protocol slug, display label, and category matching. No React.
 
-import type { ProtocolOverride, RoadmapCategory } from './types';
-import { CATEGORIES, DEFAULT_CATEGORY, GENERIC_DISPLAY_TERMS, PROTOCOL_OVERRIDES } from './constants';
+import type { CategoryId, ProtocolOverride, RoadmapCategory } from './types';
+import {
+  CATEGORIES,
+  DEFAULT_CATEGORY,
+  GENERIC_DISPLAY_TERMS,
+  NOTION_CATEGORY_TO_SCANNER_ID,
+  PROTOCOL_OVERRIDES,
+} from './constants';
 
 /** Slug for prospect URL path: e.g. "Hana Wallet" → "hana-wallet", "Uniswap" → "uniswap". */
 export function slugifyProtocol(name: string): string {
@@ -50,6 +56,19 @@ export function matchCategory(protocolName: string): { category: RoadmapCategory
     if (cat.keywords.some(kw => lower.includes(kw))) return { category: cat, matched: true };
   }
   return { category: DEFAULT_CATEGORY, matched: false };
+}
+
+/**
+ * Map a BD CRM (Notion) Category value to integration-scanner CategoryId for URL cat= param.
+ * Normalizes input (lowercase, trim, collapse spaces). Returns null if no mapping exists.
+ */
+export function notionCategoryToScannerId(notionCategory: string): CategoryId | null {
+  const key = notionCategory
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/,(\s*)/g, ',');
+  return NOTION_CATEGORY_TO_SCANNER_ID[key] ?? null;
 }
 
 /** User-facing label: use category title when the input is a generic term; otherwise use the protocol name. */
