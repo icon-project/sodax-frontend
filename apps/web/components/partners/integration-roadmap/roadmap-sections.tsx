@@ -8,8 +8,8 @@ import {
   DOCUMENTATION_ROUTE,
   DISCORD_ROUTE,
   GITHUB_SODAX_REPO_ROUTE,
-  DEMO_APP_GITHUB_ROUTE,
   INTEGRATION_ROADMAP_ROUTE,
+  CHAIN_DOCUMENTATION_ROUTE,
 } from '@/constants/routes';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -62,6 +62,10 @@ export function RoadmapSections({
   fromFirstName,
 }: RoadmapSectionsProps): React.JSX.Element {
   const displayLabel = getProtocolDisplayLabel(roadmap.protocolDisplay, roadmap.category);
+
+  // Single secondary style for all non-primary actions (Next steps + Share) — clarity over distinction.
+  const secondaryButtonClass =
+    'h-10 px-5 rounded-full border border-cherry-grey bg-white text-espresso cursor-pointer font-medium text-[14px] hover:bg-cream-white transition-colors shrink-0 inline-flex items-center justify-center gap-2';
 
   return (
     <>
@@ -179,7 +183,7 @@ export function RoadmapSections({
         </p>
         <p className="font-normal text-[13px] leading-[1.4] text-clay-dark">{SUPPORTED_NETWORKS_LIST}.</p>
         <a
-          href={`${DOCUMENTATION_ROUTE}/developers`}
+          href={CHAIN_DOCUMENTATION_ROUTE}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"
@@ -260,7 +264,7 @@ export function RoadmapSections({
           Code &amp; resources
         </h2>
         <p className="font-normal text-[14px] leading-normal text-clay-dark">
-          Explore the SDK source, run the demo app locally, and follow step-by-step guides for your category.
+          Explore the SDK source and follow step-by-step guides for your category.
         </p>
         <div className="flex flex-col sm:flex-row flex-wrap gap-2">
           <a
@@ -270,15 +274,6 @@ export function RoadmapSections({
             className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"
           >
             View on GitHub
-            <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
-          </a>
-          <a
-            href={DEMO_APP_GITHUB_ROUTE}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"
-          >
-            Demo app (source, run locally)
             <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
           </a>
           <a
@@ -342,7 +337,7 @@ export function RoadmapSections({
           </a>
           <a
             href={`mailto:partnerships@sodax.com?subject=${encodeURIComponent(`Partnership inquiry - Integration roadmap${currentProtocol ? ` - ${currentProtocol}` : ''}`)}`}
-            className="border border-cherry-grey bg-white text-espresso flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer font-medium text-[14px] text-center shrink-0 hover:bg-cream-white transition-colors"
+            className={secondaryButtonClass}
           >
             {fromFirstName ? `Contact ${fromFirstName}` : 'Contact us'}
           </a>
@@ -350,7 +345,7 @@ export function RoadmapSections({
             href={DISCORD_ROUTE}
             target="_blank"
             rel="noopener noreferrer"
-            className="border border-cherry-grey bg-white text-espresso flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer font-medium text-[14px] text-center shrink-0 hover:bg-cream-white transition-colors"
+            className={secondaryButtonClass}
           >
             Join Discord
           </a>
@@ -361,8 +356,8 @@ export function RoadmapSections({
         <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Share roadmap</h2>
         <p className="font-normal text-[13px] leading-[1.4] text-clay-dark">
           Share the link with your team or contacts — they&apos;ll see this roadmap for{' '}
-          <span className="font-medium text-espresso">{displayLabel}</span> pre-filled. Or download the PDF to
-          attach to an email.
+          <span className="font-medium text-espresso">{displayLabel}</span> pre-filled. Or download the PDF to attach to
+          an email.
         </p>
         <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:items-center">
           <Button
@@ -370,7 +365,7 @@ export function RoadmapSections({
             variant="outline"
             onClick={onCopyLink}
             size="lg"
-            className="h-10 px-5 rounded-full border border-cherry-grey bg-white text-espresso cursor-pointer hover:bg-cream-white transition-colors shrink-0"
+            className={secondaryButtonClass}
             aria-label="Copy link to this roadmap"
           >
             {linkCopied ? <Check className="w-4 h-4 text-cherry-soda" /> : <Link2 className="w-4 h-4" />}
@@ -381,7 +376,7 @@ export function RoadmapSections({
             variant="outline"
             onClick={onDownloadPdf}
             size="lg"
-            className="h-10 px-5 rounded-full border border-cherry-grey bg-white text-espresso cursor-pointer hover:bg-cream-white transition-colors shrink-0"
+            className={secondaryButtonClass}
             aria-label="Download roadmap as PDF"
             title="Save as PDF. For a clean PDF, turn off 'Headers and footers' in the print dialog."
           >
@@ -392,7 +387,7 @@ export function RoadmapSections({
             variant="outline"
             size="lg"
             asChild
-            className="h-10 px-5 rounded-full border border-cherry-grey bg-white text-espresso cursor-pointer hover:bg-cream-white transition-colors shrink-0 no-underline"
+            className={`${secondaryButtonClass} no-underline`}
           >
             <a
               href={(() => {

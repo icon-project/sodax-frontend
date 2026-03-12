@@ -5,21 +5,14 @@ import { Suspense } from 'react';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
 import { IntegrationRoadmapUi } from '@/components/partners/integration-roadmap-ui';
+import { slugToDisplay } from '@/components/partners/integration-roadmap/utils';
 import { INTEGRATION_ROADMAP_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
 
 type PageProps = { params: Promise<{ protocol: string }> };
 
-function slugToTitle(slug: string): string {
-  return slug
-    .split('-')
-    .map(part => (part.length > 0 ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase() : ''))
-    .filter(Boolean)
-    .join(' ');
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { protocol } = await params;
-  const partnerName = protocol ? slugToTitle(protocol) : '';
+  const partnerName = protocol ? slugToDisplay(protocol) : '';
   const title = partnerName ? `Integration roadmap – ${partnerName}` : 'Integration Roadmap';
   return {
     title: `${title} | SODAX Partners`,

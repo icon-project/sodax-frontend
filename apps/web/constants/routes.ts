@@ -53,6 +53,8 @@ export const CMS_USERS_ROUTE = '/cms/users';
 // ── Documentation (external) ─────────────────────────────────────────────────
 /** Canonical product & developer docs (docs.sodax.com). */
 export const DOCUMENTATION_ROUTE = 'https://docs.sodax.com';
+/** Docs: chain config / how to create a spoke provider (Integration Roadmap “Supported networks” link). */
+export const CHAIN_DOCUMENTATION_ROUTE = 'https://docs.sodax.com/developers/how-to/how_to_create_a_spoke_provider';
 /** Legacy GitBook; prefer DOCUMENTATION_ROUTE for primary docs. */
 export const DOCUMENTATION_GITBOOK_ROUTE = 'https://sodax-1.gitbook.io/sodax-docs/readme-1';
 
@@ -70,12 +72,10 @@ export const BALANCED_DEFI_ROUTE = 'https://app.balanced.network/';
 export const HANA_WALLET_ROUTE = 'https://www.hanawallet.io/';
 
 // ── Resources & tools (external) ───────────────────────────────────────────
-/** Frontend repo (this app). */
+/** Frontend repo (this app); SDK and packages live here (monorepo). */
 export const GITHUB_ROUTE = 'https://github.com/icon-project/sodax-frontend';
-/** Main SODAX SDK / monorepo (e.g. partner CTA “Explore SDKs”). */
+/** Main SODAX repo (frontend + SDK monorepo); e.g. partner CTA “Explore SDKs”, Integration Roadmap. */
 export const GITHUB_SODAX_REPO_ROUTE = GITHUB_ROUTE;
-/** Demo app source (run locally); used in Integration Roadmap Code & resources. */
-export const DEMO_APP_GITHUB_ROUTE = 'https://github.com/icon-project/sodax-frontend/tree/main/apps/demo';
 export const SODAX_SCAN_ROUTE = 'https://sodaxscan.com/';
 export const SODAX_SCAN_TOKEN_ROUTE = 'https://sonicscan.org/token/0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963';
 export const BRAND_KIT_ROUTE = '/SODAX.logos.and.token.zip';

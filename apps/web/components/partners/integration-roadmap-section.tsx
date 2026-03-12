@@ -110,8 +110,6 @@ export default function IntegrationRoadmapSection(): React.JSX.Element {
         >
           <Link
             href={INTEGRATION_ROADMAP_ROUTE}
-            target="_blank"
-            rel="noopener noreferrer"
             className="bg-yellow-soda text-cherry-dark font-['Shrikhand'] text-[14px] h-10 px-6 py-2 rounded-full cursor-pointer hover:opacity-90 transition-opacity w-full sm:w-auto text-center lowercase"
           >
             generate your roadmap
