@@ -76,7 +76,8 @@ export const rpcConfig: RpcConfig = {
 
   // Other chains
   '0x1.icon': 'https://ctz.solidwallet.io/api/v3',
-  solana: 'https://solana-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  // solana: 'https://solana-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
+  solana: 'https://solana-rpc.publicnode.com',
   sui: 'https://fullnode.mainnet.sui.io',
   'injective-1': 'https://sentry.tm.injective.network:26657',
   stellar: {
