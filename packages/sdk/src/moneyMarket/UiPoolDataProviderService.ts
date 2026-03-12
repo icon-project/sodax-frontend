@@ -148,7 +148,13 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
       totalScaledVariableDebt: bnUSDReserve.totalScaledVariableDebt + bnUSDVaultReserve.totalScaledVariableDebt,
       virtualUnderlyingBalance: bnUSDReserve.virtualUnderlyingBalance + bnUSDVaultReserve.virtualUnderlyingBalance,
       accruedToTreasury: bnUSDReserve.accruedToTreasury + bnUSDVaultReserve.accruedToTreasury,
+      // Borrow rate comes from the bnUSD debt token, not the vault.
+      // The vault is the supply side; bnUSD is what users actually borrow.
       variableBorrowRate: bnUSDReserve.variableBorrowRate,
+      // The borrow index must also come from the bnUSD debt token.
+      // User debt is stored scaled by bnUSD's index, so reading it back requires the same index.
+      // Using the vault's index here would inflate the displayed debt amount.
+      variableBorrowIndex: bnUSDReserve.variableBorrowIndex,
     };
 
     return [

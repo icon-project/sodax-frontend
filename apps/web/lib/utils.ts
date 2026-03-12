@@ -8,7 +8,12 @@ import { StrKey } from '@stellar/stellar-sdk';
 import { bech32 } from 'bech32';
 import BigNumber from 'bignumber.js';
 
-import { getSupportedSolverTokens, supportedSpokeChains, moneyMarketSupportedTokens, REDBELLY_MAINNET_CHAIN_ID } from '@sodax/sdk';
+import {
+  getSupportedSolverTokens,
+  supportedSpokeChains,
+  moneyMarketSupportedTokens,
+  REDBELLY_MAINNET_CHAIN_ID,
+} from '@sodax/sdk';
 
 import type { Token, XToken, SpokeChainId, ChainId, EvmChainId, Address } from '@sodax/types';
 import {
@@ -18,6 +23,7 @@ import {
   NEAR_MAINNET_CHAIN_ID,
   hubAssets,
   EVM_CHAIN_IDS,
+  NEAR_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';

@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 import { EvmXService } from './xchains/evm';
 import { SolanaXService } from './xchains/solana/SolanaXService';
 import { SuiXService } from './xchains/sui';
-import { useAnchorProvider } from './xchains/solana/hooks/useAnchorProvider';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useConfig } from 'wagmi';
 
@@ -33,7 +32,6 @@ export const Hydrate = () => {
   // solana
   const { connection: solanaConnection } = useConnection();
   const solanaWallet = useWallet();
-  const solanaProvider = useAnchorProvider();
   useEffect(() => {
     if (solanaConnection) {
       SolanaXService.getInstance().connection = solanaConnection;
@@ -44,11 +42,6 @@ export const Hydrate = () => {
       SolanaXService.getInstance().wallet = solanaWallet;
     }
   }, [solanaWallet]);
-  useEffect(() => {
-    if (solanaProvider) {
-      SolanaXService.getInstance().provider = solanaProvider;
-    }
-  }, [solanaProvider]);
 
   // evm
   const wagmiConfig = useConfig();
