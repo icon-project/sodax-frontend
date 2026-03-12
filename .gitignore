@@ -12,6 +12,8 @@ public/dist
 .history
 .idea
 **/build/**
+**/*.testnet.ts
+**/artifacts/**
 
 # Claude Code local settings
 .claude/settings.local.json

@@ -71,7 +71,9 @@
     "@stacks/transactions": "catalog:",
     "@stacks/network": "catalog:",
     "icon-sdk-js": "catalog:",
-    "viem": "catalog:"
+    "viem": "catalog:",
+    "near-api-js": "7.1.1",
+    "@hot-labs/near-connect": "0.10.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",

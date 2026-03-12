@@ -2,19 +2,19 @@
 
 This guide provides a step-by-step walkthrough for executing a cross-chain swap using the Sodax SDK. It covers everything from initializing the SDK to handling errors during the swap process.
 
-For detailed API reference, see [SWAPS.md](./SWAPS.md).
+For detailed API reference, see [SWAPS.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/SWAPS.md).
 
-**Example Source Code**: A complete working example can be found in [`apps/node/src/swap.ts`](../../../apps/node/src/swap.ts). This example demonstrates a full swap implementation from Arbitrum ETH to Polygon POL, including all error handling and status polling.
+**Example Source Code**: A complete working example can be found in [`apps/node/src/swap.ts`](https://github.com/icon-project/sodax-frontend/blob/main/apps/node/src/swap.ts). This example demonstrates a full swap implementation from Arbitrum ETH to Polygon POL, including all error handling and status polling.
 
 ## Prerequisites
 
 Before you begin, ensure you have:
 
-- A wallet provider implementation (e.g., `IEvmWalletProvider` for EVM chains). You can use existing wallet provider implementations from the [`@sodax/wallet-sdk-core`](https://www.npmjs.com/package/@sodax/wallet-sdk-core) npm package, or use the local package [@wallet-sdk-core](../../wallet-sdk-core/README.md) if working within the Sodax monorepo.
+- A wallet provider implementation (e.g., `IEvmWalletProvider` for EVM chains). You can use existing wallet provider implementations from the [`@sodax/wallet-sdk-core`](https://www.npmjs.com/package/@sodax/wallet-sdk-core) npm package, or use the local package [@wallet-sdk-core](https://github.com/icon-project/sodax-frontend/blob/main/packages/wallet-sdk-core/README.md) if working within the Sodax monorepo.
 - The `@sodax/sdk` package installed
 - Sufficient token balance to cover the swap amount and fees
 - RPC URLs for the chains you're interacting with (we recommend having dedicate node provider like Alchemy, Quicknode, etc..)
-- Private key or wallet (browser) connection for signing transactions. For React applications, you can use the [`@sodax/wallet-sdk-react`](https://www.npmjs.com/package/@sodax/wallet-sdk-react) npm package, or use the local package [@wallet-sdk-react](../../wallet-sdk-react/README.md) if working within the Sodax monorepo.
+- Private key or wallet (browser) connection for signing transactions. For React applications, you can use the [`@sodax/wallet-sdk-react`](https://www.npmjs.com/package/@sodax/wallet-sdk-react) npm package, or use the local package [@wallet-sdk-react](https://github.com/icon-project/sodax-frontend/blob/main/packages/wallet-sdk-react/README.md) if working within the Sodax monorepo.
 
 ## Step 1: Initialize Sodax Instance
 
@@ -91,9 +91,9 @@ const arbSpokeProvider = new EvmSpokeProvider(
 
 **Important**: For Sonic chain, use `SonicSpokeProvider` instead of `EvmSpokeProvider`, even though it's an EVM chain. This is because Sonic is the hub chain and requires special handling.
 
-For more details on creating spoke providers for different chain types, refer to the [README.md](../README.md#initialising-spoke-provider) section or see the [HOW_TO_CREATE_A_SPOKE_PROVIDER.md](./HOW_TO_CREATE_A_SPOKE_PROVIDER.md) guide.
+For more details on creating spoke providers for different chain types, refer to the [README.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/README.md#initialising-spoke-provider) section or see the [HOW_TO_CREATE_A_SPOKE_PROVIDER.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/HOW_TO_CREATE_A_SPOKE_PROVIDER.md) guide.
 
-**Example**: See how the Arbitrum spoke provider is created in the example file: [`apps/node/src/swap.ts`](../../../apps/node/src/swap.ts#L28-L44).
+**Example**: See how the Arbitrum spoke provider is created in the example file: [`apps/node/src/swap.ts`](https://github.com/icon-project/sodax-frontend/blob/main/apps/node/src/swap.ts#L28-L44).
 
 ### Getting Supported Tokens
 
@@ -118,7 +118,7 @@ supportedTokens.forEach(token => {
 
 Before executing a swap, it's good practice to get a quote to show users the expected output amount. This helps set proper expectations and allows you to calculate slippage tolerance.
 
-**Example**: See how quotes are obtained in the example file: [`apps/node/src/swap.ts`](../../../apps/node/src/swap.ts#L62-L80).
+**Example**: See how quotes are obtained in the example file: [`apps/node/src/swap.ts`](https://github.com/icon-project/sodax-frontend/blob/main/apps/node/src/swap.ts#L62-L80).
 
 ```typescript
 import {
@@ -162,7 +162,7 @@ if (!quoteResult.ok) {
 
 Before creating a swap intent, you need to check if the Asset Manager contract has permission to spend your tokens. If not, you'll need to approve it first.
 
-**Example**: See how allowance checking is implemented in the example file: [`apps/node/src/swap.ts`](../../../apps/node/src/swap.ts#L82-L112).
+**Example**: See how allowance checking is implemented in the example file: [`apps/node/src/swap.ts`](https://github.com/icon-project/sodax-frontend/blob/main/apps/node/src/swap.ts#L82-L112).
 
 ```typescript
 import type { CreateIntentParams } from "@sodax/sdk";
@@ -205,7 +205,7 @@ if (!allowanceResult.ok) {
 
 If the allowance check returned `false`, you need to approve the Asset Manager contract to spend your tokens. The approval amount should match the `inputAmount` in your intent parameters (fees are automatically deducted from this amount).
 
-**Example**: See how token approval is handled in the example file: [`apps/node/src/swap.ts`](../../../apps/node/src/swap.ts#L114-L135).
+**Example**: See how token approval is handled in the example file: [`apps/node/src/swap.ts`](https://github.com/icon-project/sodax-frontend/blob/main/apps/node/src/swap.ts#L114-L135).
 
 ```typescript
 if (!allowanceResult.value) {
@@ -272,7 +272,7 @@ const createIntentParams: CreateIntentParams = {
 
 Now you're ready to execute the swap. The `swap` method handles all steps automatically:
 
-**Example**: See how the swap is executed in the example file: [`apps/node/src/swap.ts`](../../../apps/node/src/swap.ts#L137-L183).
+**Example**: See how the swap is executed in the example file: [`apps/node/src/swap.ts`](https://github.com/icon-project/sodax-frontend/blob/main/apps/node/src/swap.ts#L137-L183).
 
 1. Creates intent deposit transaction on the source chain
 2. Submits transaction hash to the relayer API
@@ -309,7 +309,7 @@ if (!swapResult.ok) {
 
 After a successful swap submission, you should continuously monitor the intent status until it reaches a terminal state. The status checking should poll every 5 seconds until the swap is completed, failed, or not found.
 
-**Example**: See the complete status polling implementation in the example file: [`apps/node/src/swap.ts`](../../../apps/node/src/swap.ts#L189-L289).
+**Example**: See the complete status polling implementation in the example file: [`apps/node/src/swap.ts`](https://github.com/icon-project/sodax-frontend/blob/main/apps/node/src/swap.ts#L189-L289).
 
 ```typescript
 import type { SolverIntentStatusRequest, SolverIntentStatusCode } from "@sodax/sdk";
@@ -448,7 +448,7 @@ await checkIntentStatus(sodax, intentDeliveryInfo.dstTxHash);
 
 The swap operation can fail at different stages. Use the provided error helper functions to handle each error type appropriately.
 
-**Example**: See how different error types are handled in the example file: [`apps/node/src/swap.ts`](../../../apps/node/src/swap.ts#L144-L170).
+**Example**: See how different error types are handled in the example file: [`apps/node/src/swap.ts`](https://github.com/icon-project/sodax-frontend/blob/main/apps/node/src/swap.ts#L144-L170).
 
 ```typescript
 import {
@@ -537,7 +537,7 @@ if (!swapResult.ok) {
 
 ## Complete Example
 
-Here's a complete end-to-end example combining all the steps. For a production-ready implementation, see the example source code in [`apps/node/src/swap.ts`](../../../apps/node/src/swap.ts):
+Here's a complete end-to-end example combining all the steps. For a production-ready implementation, see the example source code in [`apps/node/src/swap.ts`](https://github.com/icon-project/sodax-frontend/blob/main/apps/node/src/swap.ts):
 
 ```typescript
 import {
@@ -800,8 +800,8 @@ await executeSwap(evmWalletProvider, 100000000000000n); // 0.0001 ETH
 
 ## Next Steps
 
-- **See the complete example**: Check out the working implementation in [`apps/node/src/swap.ts`](../../../apps/node/src/swap.ts) for a production-ready swap example
-- Learn more about swap configuration and advanced features in [SWAPS.md](./SWAPS.md)
-- Learn how to create spoke providers in [HOW_TO_CREATE_A_SPOKE_PROVIDER.md](./HOW_TO_CREATE_A_SPOKE_PROVIDER.md)
-- Explore other SDK features like [Money Market](./MONEY_MARKET.md), [Bridge](./BRIDGE.md), and [Staking](./STAKING.md)
-- Check the [README.md](../README.md) for general SDK usage and configuration
+- **See the complete example**: Check out the working implementation in [`apps/node/src/swap.ts`](https://github.com/icon-project/sodax-frontend/blob/main/apps/node/src/swap.ts) for a production-ready swap example
+- Learn more about swap configuration and advanced features in [SWAPS.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/SWAPS.md)
+- Learn how to create spoke providers in [HOW_TO_CREATE_A_SPOKE_PROVIDER.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/HOW_TO_CREATE_A_SPOKE_PROVIDER.md)
+- Explore other SDK features like [Money Market](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/MONEY_MARKET.md), [Bridge](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/BRIDGE.md), and [Staking](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/STAKING.md)
+- Check the [README.md](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/README.md) for general SDK usage and configuration

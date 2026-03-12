@@ -1,0 +1,8 @@
+// apps/web/app/(apps)/pool/_components/supply-dialog/supply-step.ts
+export const SUPPLY_STEP = {
+  SUPPLY_TERMS: 'SUPPLY_TERMS',
+  SUPPLY_APPROVE: 'SUPPLY_APPROVE',
+  SUPPLY_CONFIRM: 'SUPPLY_CONFIRM',
+} as const;
+
+export type SupplyStep = (typeof SUPPLY_STEP)[keyof typeof SUPPLY_STEP];

@@ -15,7 +15,7 @@ export type SpokeChainId = (typeof CHAIN_IDS)[number];
 
 export type ChainId = (typeof CHAIN_IDS)[number];
 
-export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'STACKS'] as const;
+export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'STACKS', 'NEAR'] as const;
 export type ChainType = (typeof ChainTypeArr)[number];
 
 export type Chain = {
@@ -219,6 +219,16 @@ export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
   rpc_url: string;
 };
 
+export type NearSpokeChainConfig = BaseSpokeChainConfig<'NEAR'> & {
+  addresses: {
+    assetManager: string;
+    connection: string;
+    rateLimit: string;
+    intentFiller: string;
+  };
+  rpcUrl: string;
+};
+
 export type IconAddress = `hx${string}` | `cx${string}`;
 export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
   addresses: {
@@ -251,7 +261,8 @@ export type SpokeChainConfig =
   | SuiSpokeChainConfig
   | StellarSpokeChainConfig
   | SolanaChainConfig
-  | StacksSpokeChainConfig;
+  | StacksSpokeChainConfig
+  | NearSpokeChainConfig;
 
 export type SolverConfig = {
   intentsContract: Address; // Intents Contract (Hub)
@@ -287,5 +298,5 @@ export type TokenInfo = {
 export type BridgeLimit = {
   amount: bigint;
   decimals: number;
-  type : 'DEPOSIT_LIMIT' | 'WITHDRAWAL_LIMIT';
-}
+  type: 'DEPOSIT_LIMIT' | 'WITHDRAWAL_LIMIT';
+};
