@@ -63,13 +63,14 @@ import {
   type IntentRelayChainId,
   SONIC_MAINNET_CHAIN_ID,
   ChainIdToIntentRelayChainId,
+  type SubmitSwapTxResponse,
+  type SubmitSwapTxStatusResponse,
 } from '@sodax/types';
 import {
   type NearRawSpokeProvider,
   type NearRawSpokeProviderConfig,
   NearSpokeProvider,
 } from './entities/near/NearSpokeProvider.js';
-import type { SubmitSwapTxResponse, SubmitSwapTxStatusResponse } from '../backendApi/BackendApiService.js';
 
 export function isEvmHubChainConfig(value: HubChainConfig): value is EvmHubChainConfig {
   return typeof value === 'object' && value.chain.type === 'EVM';

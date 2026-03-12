@@ -5,7 +5,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { BackendApiService, type SubmitSwapTxRequest } from './BackendApiService.js';
+import { BackendApiService } from './BackendApiService.js';
+import type { SubmitSwapTxRequest } from '@sodax/types';
 
 // Mock fetch
 const mockFetch = vi.fn();

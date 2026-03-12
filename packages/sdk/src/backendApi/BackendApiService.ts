@@ -19,6 +19,10 @@ import type {
   GetSwapTokensByChainIdApiResponse,
   IConfigApi,
   SpokeChainId,
+  SubmitSwapTxRequest,
+  SubmitSwapTxResponse,
+  GetSubmitSwapTxStatusParams,
+  SubmitSwapTxStatusResponse,
 } from '@sodax/types';
 import {
   DEFAULT_BACKEND_API_ENDPOINT,
@@ -165,73 +169,6 @@ export interface MoneyMarketBorrowers {
   total: number;
   offset: number;
   limit: number;
-}
-
-// Swap submit-tx types
-export interface SwapIntentData {
-  intentId: string;
-  creator: string;
-  inputToken: string;
-  outputToken: string;
-  inputAmount: string;
-  minOutputAmount: string;
-  deadline: string;
-  allowPartialFill: boolean;
-  srcChain: number;
-  dstChain: number;
-  srcAddress: string;
-  dstAddress: string;
-  solver: string;
-  data: string;
-}
-
-export interface SubmitSwapTxRequest {
-  txHash: string;
-  srcChainId: string;
-  walletAddress: string;
-  intent: SwapIntentData;
-  relayData: string;
-}
-
-export interface SubmitSwapTxResponse {
-  success: boolean;
-  message: string;
-}
-
-export interface GetSubmitSwapTxStatusParams {
-  txHash: string;
-  srcChainId?: string;
-}
-
-export interface SubmitSwapTxStatusResult {
-  dstIntentTxHash: string;
-  packetData?: Record<string, unknown>;
-  intent_hash?: string;
-}
-
-export type SubmitSwapTxStatus =
-  | 'pending'
-  | 'verifying'
-  | 'verified'
-  | 'relaying'
-  | 'relayed'
-  | 'posting_execution'
-  | 'executed'
-  | 'failed';
-
-export interface SubmitSwapTxStatusData {
-  txHash: string;
-  srcChainId: string;
-  status: SubmitSwapTxStatus;
-  failedAtStep?: string;
-  failureReason?: string;
-  failedAttempts: number;
-  result?: SubmitSwapTxStatusResult;
-}
-
-export interface SubmitSwapTxStatusResponse {
-  success: boolean;
-  data: SubmitSwapTxStatusData;
 }
 
 /**
