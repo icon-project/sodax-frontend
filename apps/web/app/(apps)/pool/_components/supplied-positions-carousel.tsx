@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { usePositionInfo } from '@sodax/dapp-kit';
 import { spokeChainConfig } from '@sodax/sdk';
 import type { PoolData, PoolKey } from '@sodax/sdk';
@@ -30,6 +30,7 @@ type PositionCardProps = {
   chainId: string;
   poolKey: PoolKey;
   poolData: PoolData;
+  onLiquidityValueChange: (positionKey: string, value: number) => void;
 };
 
 function formatApproxValue(value: string): string {
@@ -50,12 +51,37 @@ function resolveSpokeChainId(chainId: string): SpokeChainId {
   return chainId as SpokeChainId;
 }
 
-function PositionCard({ tokenId, chainId, poolKey, poolData }: PositionCardProps): React.JSX.Element {
+function PositionCard({
+  tokenId,
+  chainId,
+  poolKey,
+  poolData,
+  onLiquidityValueChange,
+}: PositionCardProps): React.JSX.Element {
   const { data, isLoading, isError, error } = usePositionInfo({ tokenId, poolKey });
+  const positionKey = `${chainId}-${tokenId}`;
+  useEffect((): void => {
+    if (isLoading || isError || !data?.isValid) {
+      onLiquidityValueChange(positionKey, 0);
+      return;
+    }
+    const amount0 = formatTokenAmount(data.positionInfo.amount0, poolData.token0.decimals, 6);
+    const amount1 = formatTokenAmount(data.positionInfo.amount1, poolData.token1.decimals, 6);
+    const positionTotal = Number.parseFloat(amount0 || '0') + Number.parseFloat(amount1 || '0');
+    onLiquidityValueChange(positionKey, positionTotal);
+  }, [
+    data,
+    isError,
+    isLoading,
+    onLiquidityValueChange,
+    poolData.token0.decimals,
+    poolData.token1.decimals,
+    positionKey,
+  ]);
 
   if (isLoading) {
     return (
-      <div className="w-full min-h-42 px-6 py-6 bg-almost-white mix-blend-multiply rounded-2xl inline-flex flex-col justify-center items-center gap-4">
+      <div className="w-80 min-h-42 px-6 py-6 bg-almost-white mix-blend-multiply rounded-2xl inline-flex flex-col justify-center items-center gap-4">
         <div className="self-stretch inline-flex items-center gap-3">
           <Skeleton className="w-14 h-14 rounded-full bg-cream-white" />
           <div className="flex-1 flex flex-col gap-2">
@@ -93,7 +119,7 @@ function PositionCard({ tokenId, chainId, poolKey, poolData }: PositionCardProps
   const isInRange = positionInfo.liquidity > 0n;
 
   return (
-    <div className="w-full min-h-42 px-6 py-6 bg-almost-white mix-blend-multiply rounded-2xl inline-flex flex-col justify-center items-center gap-4">
+    <div className="w-80 min-h-42 px-6 py-6 bg-almost-white mix-blend-multiply rounded-2xl inline-flex flex-col justify-center items-center gap-4">
       <Item className="self-stretch p-0 gap-3 border-none">
         <ItemMedia className="w-14 h-14 relative">
           <div data-property-1="Pair" className="w-14 h-14 relative">
@@ -134,27 +160,31 @@ function PositionCard({ tokenId, chainId, poolKey, poolData }: PositionCardProps
         <ItemContent className="gap-1">
           <div className="self-stretch inline-flex justify-between items-center">
             <div className="flex justify-start items-center gap-1">
-              <div className="text-espresso text-base leading-5 font-['InterBold']">{positionValueText}</div>
+              <div className="text-espresso text-(length:--body-super-comfortable) leading-5 font-['InterBold']">
+                {positionValueText}
+              </div>
             </div>
             <div className="flex justify-center items-center gap-1">
-              <div className="text-espresso text-xs font-normal leading-4 font-['InterRegular']">{totalFeeText}</div>
+              <div className="text-espresso text-(length:--body-small) font-normal leading-4 font-['InterRegular']">
+                {totalFeeText}
+              </div>
             </div>
           </div>
           <div className="self-stretch h-4 inline-flex justify-between items-center">
             <div className="flex justify-start items-center gap-1.5">
-              <div className="text-clay text-xs font-normal leading-4 font-['InterRegular']">
+              <div className="text-clay text-(length:--body-small) font-normal leading-4 font-['InterRegular']">
                 {isInRange ? 'In range' : 'Out of range'}
               </div>
               <div className={`w-2 h-2 rounded-full ${isInRange ? 'bg-green-500' : 'bg-cherry-bright'}`} />
             </div>
             <Badge className="h-4 min-w-[70px] mix-blend-multiply text-white bg-linear-to-br from-cherry-bright to-cherry-brighter px-2">
-              <span className="text-[10px] font-['InterBold'] mt-px">11.48% APY</span>
+              <span className="text-(length:--body-fine-print) font-['InterBold'] mt-px">11.48% APY</span>
             </Badge>
           </div>
         </ItemContent>
       </Item>
-      <div className="w-full h-1 relative pl-16">
-        <div className="w-full h-1 bg-almost-white rounded-[40px] border border-[#E2D6D6]">
+      <div className="w-full h-1 relative pl-16 mix-blend-multiply">
+        <div className="w-full h-1 bg-almost-white rounded-[40px]">
           <div
             className="w-1 h-2 top-[-3px] absolute bg-espresso rounded-[256px]"
             style={{ left: 'calc(50% - 2px)' }}
@@ -171,6 +201,7 @@ export function SuppliedPositionsCarousel({
   poolData,
 }: SuppliedPositionsCarouselProps): React.JSX.Element | null {
   const isMobile = useIsMobile();
+  const [positionLiquidityByKey, setPositionLiquidityByKey] = useState<Record<string, number>>({});
   const normalizedPositions = useMemo((): SuppliedPositionItem[] => {
     const seen = new Set<string>();
     return positions
@@ -187,6 +218,36 @@ export function SuppliedPositionsCarousel({
         return true;
       });
   }, [positions]);
+  useEffect((): void => {
+    const activeKeys = new Set(normalizedPositions.map(position => `${position.chainId}-${position.tokenId}`));
+    setPositionLiquidityByKey(prevState => {
+      const nextState: Record<string, number> = {};
+      let hasChanges = false;
+      Object.entries(prevState).forEach(([key, value]) => {
+        if (activeKeys.has(key)) {
+          nextState[key] = value;
+          return;
+        }
+        hasChanges = true;
+      });
+      return hasChanges ? nextState : prevState;
+    });
+  }, [normalizedPositions]);
+  const totalLiquidityText = useMemo((): string => {
+    const totalLiquidity = Object.values(positionLiquidityByKey).reduce((sum, value) => sum + value, 0);
+    return formatApproxValue(totalLiquidity.toFixed(6));
+  }, [positionLiquidityByKey]);
+  const handleLiquidityValueChange = (positionKey: string, value: number): void => {
+    setPositionLiquidityByKey(prevState => {
+      if (prevState[positionKey] === value) {
+        return prevState;
+      }
+      return {
+        ...prevState,
+        [positionKey]: value,
+      };
+    });
+  };
 
   if (!poolData || normalizedPositions.length === 0) {
     return null;
@@ -194,6 +255,14 @@ export function SuppliedPositionsCarousel({
 
   return (
     <div className="w-full flex flex-col gap-3">
+      <div className="inline-flex justify-start items-center gap-2">
+        <div className="text-center justify-center text-espresso text-(length:--body-super-comfortable) font-['InterBold'] leading-5">
+          {totalLiquidityText}
+        </div>
+        <div className="text-center justify-center text-clay text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-5">
+          Total liquidity
+        </div>
+      </div>
       <Carousel
         className="w-full"
         opts={{
@@ -203,20 +272,24 @@ export function SuppliedPositionsCarousel({
       >
         <CarouselContent className="mix-blend-multiply">
           {normalizedPositions.map(position => (
-            <CarouselItem key={`${position.chainId}-${position.tokenId}`} className="basis-[92%] md:basis-[60%]">
+            <CarouselItem key={`${position.chainId}-${position.tokenId}`} className="basis-1/1.5">
               <PositionCard
                 tokenId={position.tokenId}
                 chainId={position.chainId}
                 poolKey={poolKey}
                 poolData={poolData}
+                onLiquidityValueChange={handleLiquidityValueChange}
               />
             </CarouselItem>
           ))}
         </CarouselContent>
+        {!isMobile ? (
+          <div className="w-32 h-42 right-0 top-0 absolute bg-linear-to-l from-[#F5F2F2] to-[rgba(245, 242, 242, 0)] pointer-events-none" />
+        ) : null}
         {!isMobile && normalizedPositions.length > 1 ? (
           <>
-            <CarouselPrevious className="outline-none h-full border-none shadow-none text-clay hover:text-espresso -left-3" />
-            <CarouselNext className="outline-none h-full border-none shadow-none text-clay hover:text-espresso -right-3" />
+            <CarouselPrevious className="outline-none h-full border-none shadow-none text-clay hover:text-espresso" />
+            <CarouselNext className="outline-none h-full border-none shadow-none text-clay hover:text-espresso" />
           </>
         ) : null}
       </Carousel>
