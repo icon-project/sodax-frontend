@@ -4,7 +4,7 @@ import { persist } from 'zustand/middleware';
 import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 import type { XToken } from '@sodax/types';
 
-export const INITIAL_PRICE = 2800;
+export const INITIAL_PRICE = 1;
 export const INITIAL_MIN_PRICE = +(INITIAL_PRICE * 0.85).toFixed(2);
 export const INITIAL_MAX_PRICE = +(INITIAL_PRICE * 1.15).toFixed(2);
 

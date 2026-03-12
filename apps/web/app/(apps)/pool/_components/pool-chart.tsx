@@ -15,15 +15,82 @@ type TickPoint = {
   liquidity: number;
 };
 
-function generateETHData(): PricePoint[] {
-  const data: PricePoint[] = [];
-  let price = 2800;
-  const now = Date.now();
+function getPriceDecimals(value: number): number {
+  const absValue = Math.abs(value);
+  if (absValue >= 1000) {
+    return 2;
+  }
+  if (absValue >= 1) {
+    return 4;
+  }
+  if (absValue >= 0.1) {
+    return 5;
+  }
+  if (absValue >= 0.01) {
+    return 6;
+  }
+  if (absValue >= 0.001) {
+    return 7;
+  }
+  return 8;
+}
 
-  for (let i = 730; i >= 0; i--) {
-    price += (Math.random() - 0.47) * 55;
-    price = Math.max(1200, Math.min(4800, price));
-    data.push({ time: now - i * 24 * 60 * 60 * 1000, price: +price.toFixed(2) });
+function roundPrice(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return +value.toFixed(getPriceDecimals(value));
+}
+
+function formatPairPrice(value: number): string {
+  const decimals = Math.abs(value) >= 1 ? 2 : getPriceDecimals(value);
+  return d3.format(`,.${decimals}f`)(value);
+}
+
+const DEFAULT_CURRENT_PRICE = 0.78;
+const MOCK_CHART_MIN_PRICE = 0.1;
+const MOCK_CHART_MAX_PRICE = 1.5;
+
+function clampMockPrice(value: number): number {
+  return Math.max(MOCK_CHART_MIN_PRICE, Math.min(MOCK_CHART_MAX_PRICE, value));
+}
+
+function createSeededRandom(seed: number): () => number {
+  let state = seed >>> 0;
+  return (): number => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 4294967296;
+  };
+}
+
+function generatePairData(days: number): PricePoint[] {
+  const data: PricePoint[] = [];
+  const now = Date.now();
+  const intervalMs = days <= 1 ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+  const totalIntervals = Math.max(2, Math.floor((days * 24 * 60 * 60 * 1000) / intervalMs) + 1);
+  const random = createSeededRandom(days * 9973 + 17);
+
+  let price = DEFAULT_CURRENT_PRICE * (0.92 + random() * 0.16);
+  let velocity = 0;
+  let regimeDrift = (random() - 0.5) * 0.02;
+  let regimeSpan = Math.max(8, Math.floor(totalIntervals * (0.08 + random() * 0.12)));
+
+  for (let i = totalIntervals - 1; i >= 0; i--) {
+    const index = totalIntervals - 1 - i;
+    if (index > 0 && index % regimeSpan === 0) {
+      regimeDrift = (random() - 0.5) * 0.03;
+      regimeSpan = Math.max(8, Math.floor(totalIntervals * (0.06 + random() * 0.18)));
+    }
+
+    const shock = random() < 0.04 ? (random() - 0.5) * 0.22 : 0;
+    const noise = (random() - 0.5) * 0.04;
+    const meanReversion = (DEFAULT_CURRENT_PRICE - price) * 0.08;
+    velocity = velocity * 0.6 + regimeDrift + noise + shock + meanReversion;
+
+    price = clampMockPrice(price + velocity);
+    const isLast = i === 0;
+    const nextPrice = isLast ? DEFAULT_CURRENT_PRICE : price;
+    data.push({ time: now - i * intervalMs, price: roundPrice(nextPrice) });
   }
 
   return data;
@@ -43,8 +110,8 @@ function generateTickData(currentPrice: number, count = 80): TickPoint[] {
   return ticks;
 }
 
-const ALL_DATA = generateETHData();
-const LATEST_POINT: PricePoint = ALL_DATA[ALL_DATA.length - 1] ?? { time: Date.now(), price: 2800 };
+const ALL_DATA = generatePairData(730);
+const LATEST_POINT: PricePoint = ALL_DATA[ALL_DATA.length - 1] ?? { time: Date.now(), price: DEFAULT_CURRENT_PRICE };
 const CURRENT_PRICE = LATEST_POINT.price;
 const TICK_DATA = generateTickData(CURRENT_PRICE);
 
@@ -85,6 +152,7 @@ const TICK_W = 90;
 const TM = { top: 20, right: 8, bottom: 36, left: 4 };
 
 type PoolChartProps = {
+  pairPrice?: number | null;
   minPrice?: number;
   maxPrice?: number;
   onMinPriceChange?: (price: number) => void;
@@ -103,8 +171,8 @@ export function PoolChart({
   const zoomBehRef = useRef<d3.Selection<SVGRectElement, unknown, null, undefined> | null>(null);
   const zoomObjRef = useRef<d3.ZoomBehavior<SVGRectElement, unknown> | null>(null);
 
-  const [internalMinPrice, setInternalMinPrice] = useState<number>(+(CURRENT_PRICE * 0.85).toFixed(2));
-  const [internalMaxPrice, setInternalMaxPrice] = useState<number>(+(CURRENT_PRICE * 1.15).toFixed(2));
+  const [internalMinPrice, setInternalMinPrice] = useState<number>(roundPrice(CURRENT_PRICE * 0.85));
+  const [internalMaxPrice, setInternalMaxPrice] = useState<number>(roundPrice(CURRENT_PRICE * 1.15));
 
   const minPrice = propMinPrice ?? internalMinPrice;
   const maxPrice = propMaxPrice ?? internalMaxPrice;
@@ -156,47 +224,40 @@ export function PoolChart({
   useEffect(() => {
     let ignore = false;
 
-    async function fetchData() {
+    function buildPairData(): void {
       setLoading(true);
       try {
         const days = RANGE_DAYS[activeRange];
-        const url = `https://api.coingecko.com/api/v3/coins/ethereum/market_chart?vs_currency=usd&days=${days}&interval=${days <= 1 ? 'hourly' : 'daily'}`;
-        const res = await fetch(url);
-        if (!res.ok) {
-          throw new Error(`CoinGecko request failed (${res.status})`);
-        }
-        const json = await res.json();
-        const prices = Array.isArray(json?.prices) ? json.prices : [];
-        const data = prices.map(([time, price]: [number, number]) => ({ time, price: +price.toFixed(2) }));
+        const data = generatePairData(days);
         if (!data.length || ignore) {
           return;
         }
-        const last = data[data.length - 1].price;
+        const last = data[data.length - 1]?.price ?? DEFAULT_CURRENT_PRICE;
         setAllData(data);
         setCurrentPrice(last);
         setTickData(generateTickData(last, Math.max(80, data.length)));
-        setMinPrice(+(last * 0.85).toFixed(2));
-        setMaxPrice(+(last * 1.15).toFixed(2));
+        setMinPrice(roundPrice(last * 0.85));
+        setMaxPrice(roundPrice(last * 1.15));
       } catch (e) {
         if (ignore) {
           return;
         }
-        // fallback to generated data
-        const fb = generateETHData();
+        // fallback to generated pair-like data
+        const fb = generatePairData(RANGE_DAYS[activeRange]);
         const fallbackLast = fb[fb.length - 1];
         const last = fallbackLast?.price ?? CURRENT_PRICE;
         setAllData(fb);
         setCurrentPrice(last);
         setTickData(generateTickData(last));
-        setMinPrice(+(last * 0.85).toFixed(2));
-        setMaxPrice(+(last * 1.15).toFixed(2));
+        setMinPrice(roundPrice(last * 0.85));
+        setMaxPrice(roundPrice(last * 1.15));
       } finally {
         if (!ignore) {
           setLoading(false);
         }
       }
     }
-    fetchData();
+    buildPairData();
 
     return () => {
       ignore = true;
@@ -238,11 +299,8 @@ export function PoolChart({
 
   const xScale = useMemo(() => zoomTransform.rescaleX(xScaleBase), [zoomTransform, xScaleBase]);
 
-  const priceMin = d3.min(visibleData, d => d.price) ?? 0;
-  const priceMax = d3.max(visibleData, d => d.price) ?? 0;
-  const pad = (priceMax - priceMin) * 0.3;
-  const yDomainMin = Math.min(priceMin - pad, minPrice - 80);
-  const yDomainMax = Math.max(priceMax + pad, maxPrice + 80);
+  const yDomainMin = MOCK_CHART_MIN_PRICE;
+  const yDomainMax = MOCK_CHART_MAX_PRICE;
 
   const yScale = useMemo(
     () => d3.scaleLinear().domain([yDomainMin, yDomainMax]).range([INNER_H, 0]),
@@ -416,7 +474,7 @@ export function PoolChart({
         .attr('pointer-events', 'none');
 
       if (!dashed) {
-        const pct = ((price - currentPrice) / currentPrice) * 100;
+        const pct = currentPrice === 0 ? 0 : ((price - currentPrice) / currentPrice) * 100;
         const pctStr = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
         const cx = INNER_W / 2;
 
@@ -548,7 +606,7 @@ export function PoolChart({
           .style('font-family', 'Inter, sans-serif')
           .style('font-weight', '700')
           .style('line-height', '14.3px')
-          .text(`$${d3.format(',.2f')(price)}`);
+          .text(formatPairPrice(price));
       }
     }
 
@@ -727,16 +785,20 @@ export function PoolChart({
       const y = cy - rect.top - ML.top;
       const p = yScale.invert(Math.max(0, Math.min(INNER_H, y)));
 
+      const dynamicPriceGap = Math.max(Math.abs(currentPrice) * 0.02, 0.000001);
+      const clampedPrice = Math.max(p, 0);
+      const minCap = Math.max(currentPrice - dynamicPriceGap, 0);
+
       if (draggingRef.current === 'min') {
-        setMinPrice(+Math.min(p, currentPrice - 20).toFixed(2));
+        setMinPrice(roundPrice(Math.min(clampedPrice, minCap)));
       } else if (draggingRef.current === 'max') {
-        setMaxPrice(+Math.max(p, currentPrice + 20).toFixed(2));
+        setMaxPrice(roundPrice(Math.max(clampedPrice, currentPrice + dynamicPriceGap)));
       } else if (draggingRef.current === 'band' && dragDataRef.current) {
         const dd = dragDataRef.current;
         const priceDelta = (y - dd.anchorY) / dd.pxPerPrice;
-        const newMin = +(dd.anchorMin - priceDelta).toFixed(2);
-        setMinPrice(newMin);
-        setMaxPrice(+(newMin + dd.span).toFixed(2));
+        const newMin = Math.max(dd.anchorMin - priceDelta, 0);
+        setMinPrice(roundPrice(newMin));
+        setMaxPrice(roundPrice(newMin + dd.span));
       }
     };
 

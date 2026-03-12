@@ -3,6 +3,7 @@ import type React from 'react';
 import PoolChart from './pool-chart';
 
 type PoolInfoCardProps = {
+  pairPrice?: number | null;
   minPrice?: number;
   maxPrice?: number;
   onMinPriceChange?: (price: number) => void;
@@ -10,6 +11,7 @@ type PoolInfoCardProps = {
 };
 
 export function PoolInfoCard({
+  pairPrice,
   minPrice,
   maxPrice,
   onMinPriceChange,
@@ -36,6 +38,7 @@ export function PoolInfoCard({
           </div>
           <div className="self-stretch">
             <PoolChart
+              pairPrice={pairPrice}
               minPrice={minPrice}
               maxPrice={maxPrice}
               onMinPriceChange={onMinPriceChange}

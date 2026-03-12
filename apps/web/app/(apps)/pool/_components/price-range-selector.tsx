@@ -15,7 +15,7 @@ export function PriceRangeSelector({
   maxPrice,
   onMinPriceChange,
   onMaxPriceChange,
-  step = 10,
+  step = 0.01,
 }: PriceRangeSelectorProps): React.JSX.Element {
   const handleDecreaseMin = (): void => {
     const newPrice = Math.max(0, +(minPrice - step).toFixed(2));

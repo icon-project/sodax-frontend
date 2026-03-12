@@ -2,14 +2,13 @@
 'use client';
 
 import type React from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupText } from '@/components/ui/input-group';
 import { InputGroupAddon } from '@/components/ui/input-group';
 import { InputGroupInput } from '@/components/ui/input-group';
-import { useConvertedAssets, useStakeRatio } from '@sodax/dapp-kit';
 import { getXChainType, useXAccount } from '@sodax/wallet-sdk-react';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalStore } from '@/stores/modal-store-provider';
@@ -21,6 +20,7 @@ import { useAllChainXSodaBalances } from '@/hooks/useAllChainXSodaBalances';
 import { InputGroupButton } from '@/components/ui/input-group';
 import { STAKE_ROUTE, SWAP_ROUTE } from '@/constants/routes';
 import { spokeChainConfig } from '@sodax/sdk';
+import type { PoolData, PoolSpokeAssets } from '@sodax/sdk';
 import { cn, formatTokenAmount } from '@/lib/utils';
 import { formatUnits, parseUnits } from 'viem';
 import { SupplyDialog } from './supply-dialog';
@@ -31,6 +31,8 @@ type LiquidityInputsProps = {
   xSodaAmount: string;
   onSodaAmountChange: (value: string) => void;
   onXSodaAmountChange: (value: string) => void;
+  poolData: PoolData | null;
+  poolSpokeAssets: PoolSpokeAssets | null;
 };
 
 export function LiquidityInputs({
@@ -39,12 +41,13 @@ export function LiquidityInputs({
   xSodaAmount,
   onSodaAmountChange,
   onXSodaAmountChange,
+  poolData,
+  poolSpokeAssets,
 }: LiquidityInputsProps): React.JSX.Element {
   const router = useRouter();
   const openModal = useModalStore(state => state.openModal);
   const [isSupplyDialogOpen, setIsSupplyDialogOpen] = useState<boolean>(false);
   const { address } = useXAccount(selectedNetworkChainId);
-  const [lastEditedToken, setLastEditedToken] = useState<'soda' | 'xsoda' | null>(null);
   const allChainSodaBalances = useAllChainBalances({ onlySodaTokens: true });
   const allChainXSodaBalances = useAllChainXSodaBalances([selectedNetworkChainId]);
   const isWalletConnected = Boolean(address);
@@ -76,52 +79,8 @@ export function LiquidityInputs({
   const hasValidSodaInput = sodaAmount.trim().length > 0 && sodaValue > 0n && sodaValue <= selectedSodaBalance;
   const hasValidXSodaInput = xSodaAmount.trim().length > 0 && xSodaValue > 0n && xSodaValue <= selectedXSodaBalance;
   const isOverMax = sodaValue > selectedSodaBalance || xSodaValue > selectedXSodaBalance;
-  const canContinue = isWalletConnected && hasValidSodaInput && hasValidXSodaInput;
-  const { data: stakeRatio } = useStakeRatio(lastEditedToken === 'soda' && sodaValue > 0n ? sodaValue : undefined);
-  const { data: convertedSodaAssets } = useConvertedAssets(
-    lastEditedToken === 'xsoda' && xSodaValue > 0n ? xSodaValue : undefined,
-  );
-
-  useEffect((): void => {
-    if (lastEditedToken !== 'soda') {
-      return;
-    }
-    if (!sodaAmount) {
-      if (xSodaAmount !== '') {
-        onXSodaAmountChange('');
-      }
-      return;
-    }
-    if (!stakeRatio) {
-      return;
-    }
-
-    const [, previewDepositAmount] = stakeRatio;
-    const nextXSodaAmount = formatUnits(previewDepositAmount, 18);
-    if (nextXSodaAmount !== xSodaAmount) {
-      onXSodaAmountChange(nextXSodaAmount);
-    }
-  }, [lastEditedToken, onXSodaAmountChange, sodaAmount, stakeRatio, xSodaAmount]);
-
-  useEffect((): void => {
-    if (lastEditedToken !== 'xsoda') {
-      return;
-    }
-    if (!xSodaAmount) {
-      if (sodaAmount !== '') {
-        onSodaAmountChange('');
-      }
-      return;
-    }
-    if (typeof convertedSodaAssets !== 'bigint') {
-      return;
-    }
-
-    const nextSodaAmount = formatUnits(convertedSodaAssets, 18);
-    if (nextSodaAmount !== sodaAmount) {
-      onSodaAmountChange(nextSodaAmount);
-    }
-  }, [convertedSodaAssets, lastEditedToken, onSodaAmountChange, sodaAmount, xSodaAmount]);
+  const hasPoolContext = poolData !== null && poolSpokeAssets !== null;
+  const canContinue = isWalletConnected && hasPoolContext && hasValidSodaInput && hasValidXSodaInput;
 
   const handleOpenWalletModal = (): void => {
     openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getXChainType(selectedNetworkChainId) });
@@ -170,7 +129,6 @@ export function LiquidityInputs({
               value={sodaAmount}
               disabled={!isWalletConnected}
               onChange={event => {
-                setLastEditedToken('soda');
                 onSodaAmountChange(event.target.value);
               }}
               className={cn(
@@ -199,7 +157,6 @@ export function LiquidityInputs({
               size="icon-xs"
               className="text-clay text-[9px] font-['InterRegular'] font-normal border-none! outline-none! leading-0"
               onClick={() => {
-                setLastEditedToken('soda');
                 onSodaAmountChange(formatUnits(selectedSodaBalance, 18).trim());
               }}
             >
@@ -235,7 +192,6 @@ export function LiquidityInputs({
               value={xSodaAmount}
               disabled={!isWalletConnected}
               onChange={event => {
-                setLastEditedToken('xsoda');
                 onXSodaAmountChange(event.target.value);
               }}
               className={cn(
@@ -264,7 +220,6 @@ export function LiquidityInputs({
               size="icon-xs"
               className="text-clay text-[9px] font-['InterRegular'] font-normal border-none! outline-none! leading-0"
               onClick={() => {
-                setLastEditedToken('xsoda');
                 onXSodaAmountChange(formatUnits(selectedXSodaBalance, 18).trim());
               }}
             >
@@ -302,8 +257,8 @@ export function LiquidityInputs({
       <SupplyDialog
         open={isSupplyDialogOpen}
         onOpenChange={setIsSupplyDialogOpen}
-        sodaAmount={sodaAmount}
-        xSodaAmount={xSodaAmount}
+        poolData={poolData}
+        poolSpokeAssets={poolSpokeAssets}
       />
     </>
   );
