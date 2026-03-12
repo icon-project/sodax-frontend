@@ -556,10 +556,23 @@ export function isNearRawSpokeProviderConfig(value: RawSpokeProviderConfig): val
 }
 
 // Backend API response guards
+const VALID_SUBMIT_SWAP_TX_STATUSES: readonly string[] = [
+  'pending',
+  'verifying',
+  'verified',
+  'relaying',
+  'relayed',
+  'posting_execution',
+  'executed',
+  'failed',
+];
+
 export function isSubmitSwapTxResponse(value: unknown): value is SubmitSwapTxResponse {
   return (
     typeof value === 'object' &&
     value !== null &&
+    'success' in value &&
+    'message' in value &&
     typeof (value as Record<string, unknown>).success === 'boolean' &&
     typeof (value as Record<string, unknown>).message === 'string'
   );
@@ -567,13 +580,14 @@ export function isSubmitSwapTxResponse(value: unknown): value is SubmitSwapTxRes
 
 export function isSubmitSwapTxStatusResponse(value: unknown): value is SubmitSwapTxStatusResponse {
   if (typeof value !== 'object' || value === null) return false;
+  if (!('success' in value) || !('data' in value)) return false;
   const obj = value as Record<string, unknown>;
   if (typeof obj.success !== 'boolean') return false;
   if (typeof obj.data !== 'object' || obj.data === null) return false;
   const data = obj.data as Record<string, unknown>;
   if (typeof data.txHash !== 'string') return false;
   if (typeof data.srcChainId !== 'string') return false;
-  if (typeof data.status !== 'string') return false;
+  if (typeof data.status !== 'string' || !VALID_SUBMIT_SWAP_TX_STATUSES.includes(data.status)) return false;
   if (typeof data.failedAttempts !== 'number') return false;
   if (data.result !== undefined) {
     if (typeof data.result !== 'object' || data.result === null) return false;

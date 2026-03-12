@@ -78,6 +78,24 @@ export interface UserIntentsResponse {
   items: IntentResponse[];
 }
 
+// Swap submit-tx intent shape (also used in OrderbookResponse)
+export interface SwapIntentData {
+  intentId: string;
+  creator: string;
+  inputToken: string;
+  outputToken: string;
+  inputAmount: string;
+  minOutputAmount: string;
+  deadline: string;
+  allowPartialFill: boolean;
+  srcChain: number;
+  dstChain: number;
+  srcAddress: string;
+  dstAddress: string;
+  solver: string;
+  data: string;
+}
+
 // Solver endpoints types
 export interface OrderbookResponse {
   total: number;
@@ -88,21 +106,7 @@ export interface OrderbookResponse {
       receivedOutput: string;
       pendingPayment: boolean;
     };
-    intentData: {
-      intentId: string;
-      creator: string;
-      inputToken: string;
-      outputToken: string;
-      inputAmount: string;
-      minOutputAmount: string;
-      deadline: string;
-      allowPartialFill: boolean;
-      srcChain: number;
-      dstChain: number;
-      srcAddress: string;
-      dstAddress: string;
-      solver: string;
-      data: string;
+    intentData: SwapIntentData & {
       intentHash: string;
       txHash: string;
       blockNumber: number;
@@ -162,23 +166,6 @@ export interface MoneyMarketBorrowers {
 }
 
 // Swap submit-tx types
-export interface SwapIntentData {
-  intentId: string;
-  creator: string;
-  inputToken: string;
-  outputToken: string;
-  inputAmount: string;
-  minOutputAmount: string;
-  deadline: string;
-  allowPartialFill: boolean;
-  srcChain: number;
-  dstChain: number;
-  srcAddress: string;
-  dstAddress: string;
-  solver: string;
-  data: string;
-}
-
 export interface SubmitSwapTxRequest {
   txHash: string;
   srcChainId: string;
@@ -199,7 +186,9 @@ export interface GetSubmitSwapTxStatusParams {
 
 export interface SubmitSwapTxStatusResult {
   dstIntentTxHash: string;
+  /** Raw packet data returned by the backend. Shape varies by chain pair (e.g. { src_chain_id, dst_chain_id, ... }) */
   packetData?: Record<string, unknown>;
+  /** Verbatim backend field name — kept as snake_case to match the API response exactly */
   intent_hash?: string;
 }
 
