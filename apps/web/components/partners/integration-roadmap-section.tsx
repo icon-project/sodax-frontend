@@ -54,7 +54,8 @@ export default function IntegrationRoadmapSection(): React.JSX.Element {
           </div>
           <p className="font-normal text-[14px] sm:text-[16px] leading-[1.4] text-espresso text-center max-w-full md:max-w-140">
             See how your protocol can integrate with SODAX. Type your protocol name and get a visual roadmap of partner
-            category, SDK stack, and integration steps.
+            category, SDK stack, and integration steps. After a partner call, direct them here so they see their
+            technical requirements in one place.
           </p>
         </motion.div>
 

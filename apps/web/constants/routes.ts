@@ -71,7 +71,7 @@ export const HANA_WALLET_ROUTE = 'https://www.hanawallet.io/';
 /** Frontend repo (this app). */
 export const GITHUB_ROUTE = 'https://github.com/icon-project/sodax-frontend';
 /** Main SODAX SDK / monorepo (e.g. partner CTA “Explore SDKs”). */
-export const GITHUB_SODAX_REPO_ROUTE = 'https://github.com/icon-project/sodax';
+export const GITHUB_SODAX_REPO_ROUTE = GITHUB_ROUTE;
 /** Demo app source (run locally); used in Integration Roadmap Code & resources. */
 export const DEMO_APP_GITHUB_ROUTE = 'https://github.com/icon-project/sodax-frontend/tree/main/apps/demo';
 export const SODAX_SCAN_ROUTE = 'https://sodaxscan.com/';
