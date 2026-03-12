@@ -26,6 +26,7 @@ import {
   DEFAULT_BACKEND_API_TIMEOUT,
 } from '../shared/constants.js';
 import type { BackendApiConfig } from '../shared/types.js';
+import { isSubmitSwapTxResponse, isSubmitSwapTxStatusResponse } from '../shared/guards.js';
 
 // Base types for API responses
 export interface ApiResponse<T = unknown> {
@@ -159,6 +160,73 @@ export interface MoneyMarketBorrowers {
   limit: number;
 }
 
+// Swap submit-tx types
+export interface SwapIntentData {
+  intentId: string;
+  creator: string;
+  inputToken: string;
+  outputToken: string;
+  inputAmount: string;
+  minOutputAmount: string;
+  deadline: string;
+  allowPartialFill: boolean;
+  srcChain: number;
+  dstChain: number;
+  srcAddress: string;
+  dstAddress: string;
+  solver: string;
+  data: string;
+}
+
+export interface SubmitSwapTxRequest {
+  txHash: string;
+  srcChainId: string;
+  walletAddress: string;
+  intent: SwapIntentData;
+  relayData: string;
+}
+
+export interface SubmitSwapTxResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface GetSubmitSwapTxStatusParams {
+  txHash: string;
+  srcChainId?: string;
+}
+
+export interface SubmitSwapTxStatusResult {
+  dstIntentTxHash: string;
+  packetData?: Record<string, unknown>;
+  intent_hash?: string;
+}
+
+export type SubmitSwapTxStatus =
+  | 'pending'
+  | 'verifying'
+  | 'verified'
+  | 'relaying'
+  | 'relayed'
+  | 'posting_execution'
+  | 'executed'
+  | 'failed';
+
+export interface SubmitSwapTxStatusData {
+  txHash: string;
+  srcChainId: string;
+  status: SubmitSwapTxStatus;
+  failedAtStep?: string;
+  failureReason?: string;
+  failedAttempts: number;
+  result?: SubmitSwapTxStatusResult;
+}
+
+export interface SubmitSwapTxStatusResponse {
+  success: boolean;
+  data: SubmitSwapTxStatusData;
+}
+
 /**
  * BackendApiService class that acts as a proxy to the Sodax Backend API
  * Provides methods for all Solver and Money Market endpoints
@@ -239,6 +307,43 @@ export class BackendApiService implements IConfigApi {
    */
   public async getIntentByHash(intentHash: string): Promise<IntentResponse> {
     return this.makeRequest<IntentResponse>(`/intent/${intentHash}`, { method: 'GET' });
+  }
+
+  // Swap submit-tx endpoints
+  /**
+   * Submit a swap transaction to be processed (relay, post execution to solver, etc.)
+   * @param params - Swap transaction submission data
+   * @returns Promise<SubmitSwapTxResponse>
+   */
+  public async submitSwapTx(params: SubmitSwapTxRequest): Promise<SubmitSwapTxResponse> {
+    const data = await this.makeRequest<unknown>('/swaps/submit-tx', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+    if (!isSubmitSwapTxResponse(data)) {
+      throw new Error('Invalid submitSwapTx response: unexpected response shape');
+    }
+    return data;
+  }
+
+  /**
+   * Get the processing status of a submitted swap transaction
+   * @param params - Query parameters containing txHash and optional srcChainId
+   * @returns Promise<SubmitSwapTxStatusResponse>
+   */
+  public async getSubmitSwapTxStatus(params: GetSubmitSwapTxStatusParams): Promise<SubmitSwapTxStatusResponse> {
+    const queryParams = new URLSearchParams();
+    queryParams.append('txHash', params.txHash);
+    if (params.srcChainId) queryParams.append('srcChainId', params.srcChainId);
+
+    const queryString = queryParams.toString();
+    const endpoint = `/swaps/submit-tx/status?${queryString}`;
+
+    const data = await this.makeRequest<unknown>(endpoint, { method: 'GET' });
+    if (!isSubmitSwapTxStatusResponse(data)) {
+      throw new Error('Invalid submitSwapTxStatus response: unexpected response shape');
+    }
+    return data;
   }
 
   // Solver endpoints
