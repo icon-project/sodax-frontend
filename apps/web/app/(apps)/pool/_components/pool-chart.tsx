@@ -143,7 +143,7 @@ const RANGES = [
   { label: '1W', ms: 7 * 86400000 },
   { label: '1M', ms: 30 * 86400000 },
   { label: '1Y', ms: 365 * 86400000 },
-  { label: 'All', ms: null },
+  { label: 'All time', ms: null },
 ] as const;
 
 const HEIGHT = 132;
@@ -219,7 +219,7 @@ export function PoolChart({
   const INNER_H = HEIGHT - ML.top - ML.bottom;
   const TICK_IH = HEIGHT - TM.top - TM.bottom;
   const TICK_IW = TICK_W - TM.left - TM.right;
-  const RANGE_DAYS = { '1D': 1, '1W': 7, '1M': 30, '1Y': 365, All: 730 };
+  const RANGE_DAYS = { '1D': 1, '1W': 7, '1M': 30, '1Y': 365, 'All time': 730 };
 
   useEffect(() => {
     let ignore = false;
@@ -370,12 +370,6 @@ export function PoolChart({
       .attr('stop-color', C.bandFill)
       .attr('stop-opacity', C.bandOpacityBot);
 
-    const glow = defs.append('filter').attr('id', 'glow-f');
-    glow.append('feGaussianBlur').attr('stdDeviation', '2.5').attr('result', 'b');
-    const glowMerge = glow.append('feMerge');
-    glowMerge.append('feMergeNode').attr('in', 'b');
-    glowMerge.append('feMergeNode').attr('in', 'SourceGraphic');
-
     defs
       .append('clipPath')
       .attr('id', 'clip-band-in')
@@ -426,7 +420,6 @@ export function PoolChart({
       .attr('fill', 'none')
       .attr('stroke', C.lineInside)
       .attr('stroke-width', C.lineWidthIn)
-      .attr('filter', 'url(#glow-f)')
       .attr('clip-path', 'url(#clip-band-in)');
 
     g.append('g')
@@ -435,7 +428,11 @@ export function PoolChart({
         d3
           .axisTop(xScale)
           .ticks(5)
-          .tickFormat(d => d3.timeFormat(activeRange === '1D' ? '%H:%M' : '%b %d')(new Date(d as number))),
+          .tickFormat(d =>
+            d3
+              .timeFormat(activeRange === '1D' ? '%H:%M' : '%b %d')(new Date(d as number))
+              .toUpperCase(),
+          ),
       )
       .call(a => a.select('.domain').remove())
       .call(a => a.selectAll('line').remove())
@@ -579,7 +576,7 @@ export function PoolChart({
       if (dashed) {
         const pH = 20;
         const pW = 90;
-        const pX = INNER_W - pW - 8;
+        const pX = INNER_W - pW + 25;
         const nowFo = grp
           .append('foreignObject')
           .attr('x', pX)
@@ -936,8 +933,8 @@ export function PoolChart({
                 variant="outline"
                 size="sm"
                 className={cn(
-                  'outline-none border-none shadow-none text-(length:--body-fine-print) px-2 py-1 h-[22px]',
-                  activeRange === range.label ? 'text-espresso font-bold bg-cream-white' : '',
+                  `outline-none border-none shadow-none text-(length:--body-fine-print) px-2 py-1 h-[22px] font-['InterRegular']`,
+                  activeRange === range.label ? `text-espresso font-['InterBold'] bg-cream-white` : '',
                 )}
                 onClick={() => setActiveRange(range.label)}
               >

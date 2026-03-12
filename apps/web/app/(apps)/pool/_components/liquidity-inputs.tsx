@@ -101,7 +101,7 @@ export function LiquidityInputs({
   return (
     <>
       <div className="self-stretch flex flex-col md:flex-row justify-start items-start gap-2 md:gap-4">
-        <InputGroup className="h-10 pl-2 pr-4 bg-almost-white rounded-[32px] flex justify-between items-center w-full md:w-50 font-['InterRegular'] text-espresso">
+        <InputGroup className="h-10 pl-2 pr-4 bg-almost-white rounded-[32px] flex justify-between items-center w-full md:w-50 font-['InterRegular'] text-espresso shadow-none">
           <InputGroupAddon className="pl-0">
             <InputGroupText>
               <Image
@@ -164,7 +164,7 @@ export function LiquidityInputs({
             </InputGroupButton>
           ) : null}
         </InputGroup>
-        <InputGroup className="h-10 pl-2 pr-4 bg-almost-white rounded-[32px] flex justify-between items-center w-full md:w-50 font-['InterRegular'] text-espresso">
+        <InputGroup className="h-10 pl-2 pr-4 bg-almost-white rounded-[32px] flex justify-between items-center w-full md:w-50 font-['InterRegular'] text-espresso shadow-none">
           <InputGroupAddon className="pl-0">
             <InputGroupText>
               <Image
@@ -180,7 +180,7 @@ export function LiquidityInputs({
           <div className="relative flex-1">
             {hasXSodaBalance ? (
               <InputGroupAddon className="pointer-events-none absolute left-3 top-1 h-auto p-0">
-                <InputGroupText className="text-cherry-grey text-[10px] leading-3">
+                <InputGroupText className="text-clay text-[10px] leading-3">
                   {formatTokenAmount(selectedXSodaBalance, 18)}
                 </InputGroupText>
               </InputGroupAddon>
