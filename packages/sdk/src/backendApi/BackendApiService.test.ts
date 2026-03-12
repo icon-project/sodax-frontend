@@ -316,10 +316,22 @@ describe('BackendApiService', () => {
         );
       });
 
-      it('should throw on malformed response (invalid data.status)', async () => {
+      it('should throw on malformed response (invalid data.status - not a string)', async () => {
         const mockData = {
           success: true,
           data: { txHash: '0xabc', srcChainId: '146', status: 123, failedAttempts: 0 },
+        };
+        mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+        await expect(backendApiService.getSubmitSwapTxStatus({ txHash: '0xabc' })).rejects.toThrow(
+          'Invalid submitSwapTxStatus response: unexpected response shape',
+        );
+      });
+
+      it('should throw on malformed response (invalid data.status - unknown string value)', async () => {
+        const mockData = {
+          success: true,
+          data: { txHash: '0xabc', srcChainId: '146', status: 'processing', failedAttempts: 0 },
         };
         mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
 
