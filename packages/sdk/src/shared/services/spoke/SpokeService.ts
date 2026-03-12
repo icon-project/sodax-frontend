@@ -5,6 +5,7 @@ import type {
   EvmSpokeProvider,
   SolanaSpokeProvider,
   SonicSpokeProvider,
+  StacksSpokeProvider,
   SpokeProvider,
   SpokeProviderType,
   StellarSpokeProvider,
@@ -39,6 +40,8 @@ import {
   isSolanaSpokeProvider,
   isSonicSpokeProvider,
   isStellarSpokeProvider,
+  isStacksSpokeProvider,
+  isStacksSpokeProviderType,
   isSonicRawSpokeProvider,
   isSolanaSpokeProviderType,
   isStellarSpokeProviderType,
@@ -53,6 +56,7 @@ import {
 import * as rlp from 'rlp';
 import { encodeFunctionData } from 'viem';
 import { encodeAddress } from '../../utils/shared-utils.js';
+import { StacksSpokeService } from './StacksSpokeService.js';
 import { NearSpokeProvider } from '../../entities/near/NearSpokeProvider.js';
 import { NearSpokeService } from './NearSpokeService.js';
 
@@ -295,6 +299,14 @@ export class SpokeService {
         raw,
       ) satisfies Promise<TxReturnType<StellarSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
     }
+    if (isStacksSpokeProviderType(spokeProvider)) {
+      return StacksSpokeService.deposit(
+        params as GetSpokeDepositParamsType<StacksSpokeProvider>,
+        spokeProvider as StacksSpokeProvider,
+        hubProvider,
+        raw,
+      ) as Promise<TxReturnType<S, R>>;
+    }
     if (isNearSpokeProviderType(spokeProvider)) {
       await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
       return NearSpokeService.deposit(
@@ -410,6 +422,9 @@ export class SpokeService {
     if (isSonicSpokeProviderType(spokeProvider)) {
       return SonicSpokeService.getDeposit(token, spokeProvider);
     }
+    if (isStacksSpokeProviderType(spokeProvider)) {
+      return StacksSpokeService.getDeposit(token, spokeProvider as StacksSpokeProvider);
+    }
     if (isNearSpokeProviderType(spokeProvider)) {
       return NearSpokeService.getDeposit(token, spokeProvider);
     }
@@ -507,6 +522,12 @@ export class SpokeService {
         hubProvider,
         raw,
       )) satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<T, R>;
+    }
+    if (isStacksSpokeProvider(spokeProvider)) {
+      return (await StacksSpokeService.callWallet(from, payload, spokeProvider, hubProvider)) satisfies TxReturnType<
+        StacksSpokeProvider,
+        R
+      > as TxReturnType<T, R>;
     }
 
     if (isNearSpokeProviderType(spokeProvider)) {

@@ -33,6 +33,7 @@ import {
   type IIconWalletProvider,
   type IInjectiveWalletProvider,
   type ISolanaWalletProvider,
+  type IStacksWalletProvider,
   type EvmSpokeChainConfig,
   type SonicSpokeChainConfig,
   type SpokeChainConfig,
@@ -47,6 +48,7 @@ import type {
   StellarRawSpokeProviderConfig,
   StellarSpokeProvider,
 } from './stellar/StellarSpokeProvider.js';
+import type { StacksSpokeProvider } from './stacks/StacksSpokeProvider.js';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
 
@@ -215,6 +217,7 @@ export type IWalletProvider =
   | ISuiWalletProvider
   | IIconWalletProvider
   | ISolanaWalletProvider
+  | IStacksWalletProvider
   | INearWalletProvider;
 
 export type SpokeProvider = (
@@ -225,6 +228,7 @@ export type SpokeProvider = (
   | StellarSpokeProvider
   | SolanaSpokeProvider
   | SonicSpokeProvider
+  | StacksSpokeProvider
   | NearSpokeProvider
 ) &
   ISpokeProvider;
