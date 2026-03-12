@@ -22,10 +22,43 @@ type DexPositionsUpdatedDetail = {
   userAddress: string;
 };
 
+type SavedDexPosition = {
+  tokenId: string;
+  chainId: string;
+};
+
 const DEX_POSITIONS_UPDATED_EVENT = 'sodax-dex-positions-updated';
 
-function createDexTokenIdsStorageKey(chainId: string | number, userAddress: string): string {
-  return `sodax-dex-positions-${chainId}-${userAddress}`;
+function parseTokenIdsFromStorageValue(value: string | null): string[] {
+  if (!value) {
+    return [];
+  }
+
+  return value
+    .split(',')
+    .map(tokenId => tokenId.trim())
+    .filter(tokenId => tokenId.length > 0);
+}
+
+function isDexPositionsStorageKeyForAddress(storageKey: string, normalizedAddress: string): boolean {
+  const normalizedStorageKey = storageKey.toLowerCase();
+  return (
+    normalizedStorageKey.startsWith('sodax-dex-positions-') && normalizedStorageKey.endsWith(`-${normalizedAddress}`)
+  );
+}
+
+function extractChainIdFromDexPositionsStorageKey(storageKey: string, normalizedAddress: string): string | null {
+  if (!isDexPositionsStorageKeyForAddress(storageKey, normalizedAddress)) {
+    return null;
+  }
+
+  const prefix = 'sodax-dex-positions-';
+  const suffix = `-${normalizedAddress}`;
+  if (storageKey.length <= prefix.length + suffix.length) {
+    return null;
+  }
+
+  return storageKey.slice(prefix.length, storageKey.length - suffix.length);
 }
 
 export default function PoolPage() {
@@ -40,7 +73,7 @@ export default function PoolPage() {
   const { setSelectedToken, setMinPrice, setMaxPrice, setSodaAmount, setXSodaAmount, setIsNetworkPickerOpened } =
     usePoolActions();
   const { address } = useXAccount(selectedNetworkChainId);
-  const [savedTokenIds, setSavedTokenIds] = useState<string[]>([]);
+  const [savedPositions, setSavedPositions] = useState<SavedDexPosition[]>([]);
   const fixedPoolKey = dexPools.ASODA_XSODA;
   const { data: poolDataRaw } = usePoolData({ poolKey: fixedPoolKey });
   const poolData = poolDataRaw ?? null;
@@ -131,20 +164,39 @@ export default function PoolPage() {
 
   const loadSavedTokenIds = useCallback((): void => {
     if (typeof globalThis.localStorage === 'undefined' || !address) {
-      setSavedTokenIds([]);
+      setSavedPositions([]);
       return;
     }
 
-    const storageKey = createDexTokenIdsStorageKey(selectedNetworkChainId, address);
-    const storedValue = globalThis.localStorage.getItem(storageKey);
-    const parsedTokenIds = storedValue
-      ? storedValue
-          .split(',')
-          .map(value => value.trim())
-          .filter(value => value.length > 0)
-      : [];
-    setSavedTokenIds(parsedTokenIds);
-  }, [address, selectedNetworkChainId]);
+    const positionsByTokenId = new Map<string, SavedDexPosition>();
+    const normalizedAddress = address.toLowerCase();
+
+    for (let index = 0; index < globalThis.localStorage.length; index += 1) {
+      const storageKey = globalThis.localStorage.key(index);
+      if (!storageKey) {
+        continue;
+      }
+
+      const chainId = extractChainIdFromDexPositionsStorageKey(storageKey, normalizedAddress);
+      if (!chainId) {
+        continue;
+      }
+
+      const parsedTokenIds = parseTokenIdsFromStorageValue(globalThis.localStorage.getItem(storageKey));
+      for (const tokenId of parsedTokenIds) {
+        const normalizedTokenId = tokenId.toLowerCase();
+        if (positionsByTokenId.has(normalizedTokenId)) {
+          continue;
+        }
+        positionsByTokenId.set(normalizedTokenId, {
+          tokenId,
+          chainId,
+        });
+      }
+    }
+
+    setSavedPositions(Array.from(positionsByTokenId.values()));
+  }, [address]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -178,8 +230,7 @@ export default function PoolPage() {
       if (event.storageArea !== globalThis.localStorage) {
         return;
       }
-      const storageKey = createDexTokenIdsStorageKey(selectedNetworkChainId, address);
-      if (event.key && event.key !== storageKey) {
+      if (event.key && !isDexPositionsStorageKeyForAddress(event.key, address.toLowerCase())) {
         return;
       }
       loadSavedTokenIds();
@@ -192,9 +243,7 @@ export default function PoolPage() {
         return;
       }
       const eventAddress = customEvent.detail?.userAddress?.toLowerCase();
-      const eventChainId = String(customEvent.detail?.chainId);
-      const selectedChainId = String(selectedNetworkChainId);
-      if (eventAddress === address.toLowerCase() && eventChainId === selectedChainId) {
+      if (eventAddress === address.toLowerCase()) {
         loadSavedTokenIds();
       }
     };
@@ -205,7 +254,7 @@ export default function PoolPage() {
       globalThis.removeEventListener('storage', onStorageUpdated);
       globalThis.removeEventListener(DEX_POSITIONS_UPDATED_EVENT, onDexPositionsUpdated);
     };
-  }, [address, loadSavedTokenIds, selectedNetworkChainId]);
+  }, [address, loadSavedTokenIds]);
 
   return (
     <motion.div
@@ -215,8 +264,8 @@ export default function PoolPage() {
       animate={isOpen ? 'open' : 'closed'}
     >
       <motion.div className="self-stretch flex flex-col justify-start items-start gap-4 pb-20" variants={itemVariants}>
-        {savedTokenIds.length > 0 ? (
-          <SuppliedPositionsCarousel tokenIds={savedTokenIds} poolKey={fixedPoolKey} poolData={poolData} />
+        {savedPositions.length > 0 ? (
+          <SuppliedPositionsCarousel positions={savedPositions} poolKey={fixedPoolKey} poolData={poolData} />
         ) : (
           <PoolHeader />
         )}

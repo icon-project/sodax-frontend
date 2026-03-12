@@ -10,18 +10,24 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { formatTokenAmount } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import Image from 'next/image';
-import { chainIdToChainName } from '@/providers/constants';
 import { Badge } from '@/components/ui/badge';
 import { Item, ItemContent, ItemMedia } from '@/components/ui/item';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type SuppliedPositionsCarouselProps = {
-  tokenIds: string[];
+  positions: SuppliedPositionItem[];
   poolKey: PoolKey;
   poolData: PoolData | null;
 };
 
+type SuppliedPositionItem = {
+  tokenId: string;
+  chainId: string;
+};
+
 type PositionCardProps = {
   tokenId: string;
+  chainId: string;
   poolKey: PoolKey;
   poolData: PoolData;
 };
@@ -37,23 +43,26 @@ function formatApproxValue(value: string): string {
   })}`;
 }
 
-function resolveChainNameByEvmChainId(evmChainId: number): string {
-  const entries = Object.entries(spokeChainConfig) as Array<[SpokeChainId, (typeof spokeChainConfig)[SpokeChainId]]>;
-  const matchedEntry = entries.find(([, chainConfig]) => chainConfig.chain.chainId === evmChainId);
-  if (!matchedEntry) {
-    return 'Sonic';
+function resolveSpokeChainId(chainId: string): SpokeChainId {
+  if (!(chainId in spokeChainConfig)) {
+    return 'sonic';
   }
-  const [chainId] = matchedEntry;
-  return chainIdToChainName(chainId);
+  return chainId as SpokeChainId;
 }
 
-function PositionCard({ tokenId, poolKey, poolData }: PositionCardProps): React.JSX.Element {
+function PositionCard({ tokenId, chainId, poolKey, poolData }: PositionCardProps): React.JSX.Element {
   const { data, isLoading, isError, error } = usePositionInfo({ tokenId, poolKey });
 
   if (isLoading) {
     return (
-      <div className="rounded-3xl bg-almost-white mix-blend-multiply px-5 py-4 min-h-44 font-['InterRegular']">
-        <div className="text-clay text-sm">Loading position #{tokenId}...</div>
+      <div className="w-full min-h-42 px-6 py-6 bg-almost-white mix-blend-multiply rounded-2xl inline-flex flex-col justify-center items-center gap-4">
+        <div className="self-stretch inline-flex items-center gap-3">
+          <Skeleton className="w-14 h-14 rounded-full bg-cream-white" />
+          <div className="flex-1 flex flex-col gap-2">
+            <Skeleton className="h-5 w-2/5 rounded-md bg-cream-white" />
+            <Skeleton className="h-4 w-3/5 rounded-md [animation-delay:120ms] bg-cream-white" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -72,7 +81,7 @@ function PositionCard({ tokenId, poolKey, poolData }: PositionCardProps): React.
   }
 
   const { positionInfo } = data;
-  const chainName = resolveChainNameByEvmChainId(positionInfo.tickLowerPrice.baseCurrency.chainId);
+  const spokeChainId = resolveSpokeChainId(chainId);
   const amount0 = formatTokenAmount(positionInfo.amount0, poolData.token0.decimals, 6);
   const amount1 = formatTokenAmount(positionInfo.amount1, poolData.token1.decimals, 6);
   const fees0 = formatTokenAmount(positionInfo.unclaimedFees0, poolData.token0.decimals, 6);
@@ -107,7 +116,7 @@ function PositionCard({ tokenId, poolKey, poolData }: PositionCardProps): React.
                 height={20}
               />
             </div>
-            <div className="w-5 h-5 left-[22px] top-[14px] absolute overflow-hidden">
+            <div className="w-5 h-5 left-5 top-[14px] absolute overflow-hidden outline-2 outline-almost-white rounded-full">
               <Image
                 data-property-1="xSODA"
                 className="w-5 h-5 left-0 top-0 absolute mix-blend-multiply rounded-[320px]"
@@ -119,7 +128,7 @@ function PositionCard({ tokenId, poolKey, poolData }: PositionCardProps): React.
             </div>
           </div>
           <div className="h-4 min-w-4 left-[36px] top-[36px] absolute bg-white rounded shadow-[-2px_0px_8px_0px_rgba(175,145,145,0.40)] outline-2 outline-white inline-flex flex-col justify-center items-center overflow-hidden">
-            <Image className="w-4 h-4" src={`/chain/${chainName}.png`} alt={'chain icon'} width={16} height={16} />
+            <Image className="w-4 h-4" src={`/chain/${spokeChainId}.png`} alt={'chain icon'} width={16} height={16} />
           </div>
         </ItemMedia>
         <ItemContent className="gap-1">
@@ -157,25 +166,29 @@ function PositionCard({ tokenId, poolKey, poolData }: PositionCardProps): React.
 }
 
 export function SuppliedPositionsCarousel({
-  tokenIds,
+  positions,
   poolKey,
   poolData,
 }: SuppliedPositionsCarouselProps): React.JSX.Element | null {
   const isMobile = useIsMobile();
-  const normalizedTokenIds = useMemo((): string[] => {
+  const normalizedPositions = useMemo((): SuppliedPositionItem[] => {
     const seen = new Set<string>();
-    return tokenIds
-      .map(id => id.trim())
-      .filter(id => {
-        if (!id || seen.has(id.toLowerCase())) {
+    return positions
+      .map(position => ({
+        tokenId: position.tokenId.trim(),
+        chainId: position.chainId.trim(),
+      }))
+      .filter(position => {
+        const normalizedTokenId = position.tokenId.toLowerCase();
+        if (!position.tokenId || !position.chainId || seen.has(normalizedTokenId)) {
           return false;
         }
-        seen.add(id.toLowerCase());
+        seen.add(normalizedTokenId);
         return true;
       });
-  }, [tokenIds]);
+  }, [positions]);
 
-  if (!poolData || normalizedTokenIds.length === 0) {
+  if (!poolData || normalizedPositions.length === 0) {
     return null;
   }
 
@@ -189,13 +202,18 @@ export function SuppliedPositionsCarousel({
         }}
       >
         <CarouselContent className="mix-blend-multiply">
-          {normalizedTokenIds.map(tokenId => (
-            <CarouselItem key={tokenId} className="basis-[92%] md:basis-[60%]">
-              <PositionCard tokenId={tokenId} poolKey={poolKey} poolData={poolData} />
+          {normalizedPositions.map(position => (
+            <CarouselItem key={`${position.chainId}-${position.tokenId}`} className="basis-[92%] md:basis-[60%]">
+              <PositionCard
+                tokenId={position.tokenId}
+                chainId={position.chainId}
+                poolKey={poolKey}
+                poolData={poolData}
+              />
             </CarouselItem>
           ))}
         </CarouselContent>
-        {!isMobile && normalizedTokenIds.length > 1 ? (
+        {!isMobile && normalizedPositions.length > 1 ? (
           <>
             <CarouselPrevious className="outline-none h-full border-none shadow-none text-clay hover:text-espresso -left-3" />
             <CarouselNext className="outline-none h-full border-none shadow-none text-clay hover:text-espresso -right-3" />

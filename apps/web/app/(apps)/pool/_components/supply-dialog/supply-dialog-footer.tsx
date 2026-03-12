@@ -3,7 +3,7 @@
 
 import type React from 'react';
 import { useMemo, useState } from 'react';
-import { ArrowLeft, Check, CheckIcon, FilePenLine } from 'lucide-react';
+import { ArrowLeft, Check, CheckIcon, FilePenLine, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -99,7 +99,6 @@ export default function SupplyDialogFooter({
   const isTermsStep = currentSupplyStep === SUPPLY_STEP.SUPPLY_TERMS;
   const isApproveStep = currentSupplyStep === SUPPLY_STEP.SUPPLY_APPROVE;
   const isConfirmStep = currentSupplyStep === SUPPLY_STEP.SUPPLY_CONFIRM;
-  const isPending = isApproving || isDepositing || isSupplying;
 
   const token0DepositParams = useMemo((): CreateAssetDepositParams | undefined => {
     if (!poolData || !poolSpokeAssets || !sodaAmount || Number.parseFloat(sodaAmount) <= 0) {
@@ -374,9 +373,13 @@ export default function SupplyDialogFooter({
             ) : isTermsStep ? (
               <FilePenLine />
             ) : isApproving ? (
-              'Approving...'
+              <>
+                Approving <Loader2 className="w-4 h-4 animate-spin ml-2" />
+              </>
             ) : isDepositing ? (
-              'Depositing SODA...'
+              <>
+                Depositing <Loader2 className="w-4 h-4 animate-spin ml-2" />
+              </>
             ) : (
               'Approve Join the pool'
             )}
@@ -406,9 +409,15 @@ export default function SupplyDialogFooter({
                   : 'w-[140px]'
             }`}
             onClick={handleSupply}
-            disabled={!isConfirmStep || isPending}
+            disabled={!isConfirmStep || isSupplying}
           >
-            {isPending ? 'Supplying...' : 'Supply'}
+            {isSupplying ? (
+              <>
+                Supplying <Loader2 className="w-4 h-4 animate-spin ml-2" />
+              </>
+            ) : (
+              'Supply'
+            )}
           </Button>
         ))}
     </DialogFooter>
