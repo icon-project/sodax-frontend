@@ -173,7 +173,7 @@ export function RoadmapSections({
         </h2>
         {bdConfig.chains.trim() && (
           <div className="rounded-xl bg-cherry-soda/5 border border-cherry-soda/20 px-4 py-3">
-            <p className="font-medium text-[13px] leading-[1.5] text-espresso">
+            <p className="font-medium text-[13px] leading-normal text-espresso">
               Your chains — {bdConfig.chains.trim()} — are all supported. One integration reaches every network below.
             </p>
           </div>
@@ -204,13 +204,13 @@ export function RoadmapSections({
           your integration drives value for both sides.
         </p>
         {bdConfig.tier === 'strategic' && (
-          <p className="font-medium text-[13px] leading-[1.5] text-cherry-soda">
+          <p className="font-medium text-[13px] leading-normal text-cherry-soda">
             Strategic partners receive priority support, co-marketing opportunities, and enhanced revenue share. Get in
             touch to discuss terms tailored to your protocol.
           </p>
         )}
         {bdConfig.tier === 'standard' && (
-          <p className="font-medium text-[13px] leading-[1.5] text-cherry-soda">
+          <p className="font-medium text-[13px] leading-normal text-cherry-soda">
             Standard partners get access to dedicated integration support and a transparent revenue share on routed
             volume.
           </p>
@@ -342,12 +342,7 @@ export function RoadmapSections({
           >
             {fromFirstName ? `Contact ${fromFirstName}` : 'Contact us'}
           </a>
-          <a
-            href={DISCORD_ROUTE}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={secondaryButtonClass}
-          >
+          <a href={DISCORD_ROUTE} target="_blank" rel="noopener noreferrer" className={secondaryButtonClass}>
             Join Discord
           </a>
         </div>
@@ -384,12 +379,7 @@ export function RoadmapSections({
             <FileDown className="w-4 h-4" />
             Download PDF
           </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            asChild
-            className={`${secondaryButtonClass} no-underline`}
-          >
+          <Button variant="outline" size="lg" asChild className={`${secondaryButtonClass} no-underline`}>
             <a
               href={(() => {
                 const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sodax.com';
