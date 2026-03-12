@@ -10,6 +10,7 @@ import {
   spokeChainConfig,
   INJECTIVE_MAINNET_CHAIN_ID,
   REDBELLY_MAINNET_CHAIN_ID,
+  NEAR_MAINNET_CHAIN_ID,
 } from '@sodax/sdk';
 import type { SpokeChainId } from '@sodax/types';
 import { useStakeActions, useStakeState } from '../_stores/stake-store-provider';
@@ -55,7 +56,8 @@ export function StakeSelectorPanel(): React.JSX.Element {
         if (
           sodaToken &&
           sodaToken.xChainId !== INJECTIVE_MAINNET_CHAIN_ID &&
-          sodaToken.xChainId !== REDBELLY_MAINNET_CHAIN_ID
+          sodaToken.xChainId !== REDBELLY_MAINNET_CHAIN_ID &&
+          sodaToken.xChainId !== NEAR_MAINNET_CHAIN_ID
         ) {
           tokens.push(sodaToken);
         }

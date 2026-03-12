@@ -10,7 +10,7 @@ import { chainIdToChainName } from '@/providers/constants';
 import { PoolNetworkPicker } from './pool-network-picker';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { supportedSpokeChains, spokeChainConfig } from '@sodax/sdk';
-import { INJECTIVE_MAINNET_CHAIN_ID, REDBELLY_MAINNET_CHAIN_ID } from '@sodax/types';
+import { INJECTIVE_MAINNET_CHAIN_ID, REDBELLY_MAINNET_CHAIN_ID, NEAR_MAINNET_CHAIN_ID } from '@sodax/types';
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { usePoolState } from '../_stores/pool-store-provider';
 
@@ -125,7 +125,8 @@ export function PoolNetworkSelector({
         if (
           sodaToken &&
           sodaToken.xChainId !== INJECTIVE_MAINNET_CHAIN_ID &&
-          sodaToken.xChainId !== REDBELLY_MAINNET_CHAIN_ID
+          sodaToken.xChainId !== REDBELLY_MAINNET_CHAIN_ID &&
+          sodaToken.xChainId !== NEAR_MAINNET_CHAIN_ID
         ) {
           tokens.push(sodaToken);
         }
