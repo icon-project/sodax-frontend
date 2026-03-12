@@ -261,7 +261,8 @@ export class BackendApiService implements IConfigApi {
 
     // Create AbortController for timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+    const timeout = config.timeout ?? this.timeout;
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
       const response = await fetch(url, {
@@ -285,7 +286,7 @@ export class BackendApiService implements IConfigApi {
 
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          throw new Error(`Request timeout after ${this.timeout}ms`);
+          throw new Error(`Request timeout after ${timeout}ms`);
         }
         console.error('[BackendApiService] Request error:', error.message);
         throw error;
