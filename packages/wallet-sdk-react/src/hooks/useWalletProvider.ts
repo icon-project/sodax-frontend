@@ -141,7 +141,7 @@ export function useWalletProvider(
 
         return new SolanaWalletProvider({
           wallet: solanaXService.wallet,
-          connection: solanaXService.connection,
+          endpoint: solanaXService.connection.rpcEndpoint,
         });
       }
 

@@ -3,7 +3,6 @@ import { isNativeToken } from '@/utils';
 import type { XToken } from '@sodax/types';
 import { type Connection, PublicKey } from '@solana/web3.js';
 import { getAccount, getAssociatedTokenAddressSync } from '@solana/spl-token';
-import type { AnchorProvider } from '@coral-xyz/anchor';
 import type { WalletContextState } from '@solana/wallet-adapter-react';
 
 export class SolanaXService extends XService {
@@ -11,7 +10,6 @@ export class SolanaXService extends XService {
 
   public connection: Connection | undefined;
   public wallet: WalletContextState | undefined;
-  public provider: AnchorProvider | undefined;
 
   private constructor() {
     super('SOLANA');
