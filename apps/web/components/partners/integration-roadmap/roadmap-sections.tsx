@@ -9,8 +9,10 @@ import {
   DISCORD_ROUTE,
   GITHUB_SODAX_REPO_ROUTE,
   DEMO_APP_GITHUB_ROUTE,
-  INTEGRATION_SCANNER_ROUTE,
+  INTEGRATION_ROADMAP_ROUTE,
 } from '@/constants/routes';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import type { BdConfig, CategoryId, RoadmapCategory } from './types';
 import {
   ALL_CASE_STUDIES,
@@ -74,7 +76,7 @@ export function RoadmapSections({
 
       <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
         <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Partner category</h2>
+          <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Partner category</h2>
           {bdConfig.tier && (
             <span
               className={`inline-flex items-center h-6 px-3 rounded-full text-[11px] font-medium ${TIER_BADGE_CLASS[bdConfig.tier]}`}
@@ -101,7 +103,7 @@ export function RoadmapSections({
               return caseStudy ? (
                 <Link
                   href={caseStudy.href}
-                  className="font-medium text-[13px] text-cherry-soda hover:underline mt-1 w-fit"
+                  className="font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer mt-1 w-fit"
                 >
                   See how {caseStudy.name} did it →
                 </Link>
@@ -109,32 +111,43 @@ export function RoadmapSections({
             })()}
           </div>
         </div>
-        <p className="font-normal text-[13px] leading-[1.4] text-clay-dark mt-2">
-          Not the right fit? Choose category:{' '}
-          <select
+        <div className="flex flex-wrap items-center gap-2 mt-2">
+          <span className="font-normal text-[13px] leading-[1.4] text-clay-dark">
+            Not the right fit? Choose category:
+          </span>
+          <Select
             value={roadmap.category.id}
-            onChange={e => {
-              const id = e.target.value as CategoryId;
+            onValueChange={(id: CategoryId) => {
               const cat = CATEGORIES.find(c => c.id === id);
               if (cat) setRoadmap({ ...roadmap, category: cat, matched: true });
             }}
-            className="font-normal text-[13px] text-espresso bg-white border border-cherry-grey rounded-lg px-2 py-1.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-cherry-soda/30"
-            aria-label="Choose partner category"
           >
-            {CATEGORIES.map(c => (
-              <option key={c.id} value={c.id}>
-                {c.title}
-              </option>
-            ))}
-          </select>
-        </p>
+            <SelectTrigger
+              aria-label="Choose partner category"
+              className="w-auto min-w-44 h-8 font-normal text-[13px] text-espresso bg-white border border-cherry-grey rounded-lg px-3 focus:ring-2 focus:ring-cherry-soda/30 focus:border-cherry-soda data-[slot=select-trigger]"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="border-cherry-grey/30 bg-white">
+              {CATEGORIES.map(c => (
+                <SelectItem
+                  key={c.id}
+                  value={c.id}
+                  className="text-[13px] text-espresso focus:bg-cherry-soda/10 focus:text-espresso data-highlighted:bg-cherry-soda/10"
+                >
+                  {c.title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <QuickStartInstall />
 
       <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-        <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
-          Why SODAX for <span className="text-cherry-soda uppercase">{displayLabel}</span>
+        <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
+          Why SODAX for <span className="text-cherry-soda">{displayLabel}</span>
         </h2>
         <ul className="flex flex-col gap-2 list-disc list-inside font-normal text-[14px] leading-normal text-clay-dark">
           {whyBullets.map((bullet, i) => (
@@ -149,7 +162,7 @@ export function RoadmapSections({
       </div>
 
       <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-        <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
+        <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
           <Network className="w-5 h-5 text-cherry-soda shrink-0" aria-hidden />
           Supported networks
         </h2>
@@ -169,7 +182,7 @@ export function RoadmapSections({
           href={`${DOCUMENTATION_ROUTE}/developers`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline w-fit"
+          className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"
         >
           Full list &amp; chain config in docs
           <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
@@ -177,7 +190,7 @@ export function RoadmapSections({
       </div>
 
       <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-        <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
+        <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
           <Coins className="w-5 h-5 text-cherry-soda shrink-0" aria-hidden />
           Partner economics
         </h2>
@@ -199,15 +212,15 @@ export function RoadmapSections({
         )}
         <a
           href={`mailto:partnerships@sodax.com?subject=${encodeURIComponent(`Partnership inquiry - Economics & integration${currentProtocol ? ` - ${currentProtocol}` : ''}`)}`}
-          className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline w-fit"
+          className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"
         >
           Contact us for details →
         </a>
       </div>
 
       <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-        <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
-          SDK stack for <span className="text-cherry-dark uppercase">{displayLabel}</span>
+        <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
+          SDK stack for <span className="text-cherry-dark">{displayLabel}</span>
         </h2>
         <div className="flex flex-col gap-4">
           {SDK_LAYERS.map(layer => (
@@ -242,7 +255,7 @@ export function RoadmapSections({
       </div>
 
       <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-        <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
+        <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
           <Code2 className="w-5 h-5 text-cherry-soda shrink-0" aria-hidden />
           Code &amp; resources
         </h2>
@@ -254,7 +267,7 @@ export function RoadmapSections({
             href={GITHUB_SODAX_REPO_ROUTE}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline w-fit"
+            className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"
           >
             View on GitHub
             <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
@@ -263,7 +276,7 @@ export function RoadmapSections({
             href={DEMO_APP_GITHUB_ROUTE}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline w-fit"
+            className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"
           >
             Demo app (source, run locally)
             <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
@@ -272,7 +285,7 @@ export function RoadmapSections({
             href={DOCUMENTATION_ROUTE}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline w-fit"
+            className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"
           >
             Documentation &amp; guides
             <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
@@ -281,7 +294,7 @@ export function RoadmapSections({
       </div>
 
       <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-        <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Integration steps</h2>
+        <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Integration steps</h2>
         <ol className="flex flex-col gap-3 list-decimal list-inside font-normal text-[14px] leading-normal text-clay-dark">
           {displaySteps.map((step, i) => (
             <li key={i} className="pl-1">
@@ -292,7 +305,7 @@ export function RoadmapSections({
       </div>
 
       <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-        <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Case studies</h2>
+        <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Case studies</h2>
         <p className="font-normal text-[14px] leading-normal text-clay-dark">
           See how partners built with SODAX across wallets, DeFi apps, and networks.
         </p>
@@ -301,7 +314,7 @@ export function RoadmapSections({
             <Link
               key={study.name}
               href={study.href}
-              className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 p-3 rounded-xl bg-cream-white border border-cherry-grey/10 hover:border-cherry-soda/30 transition-colors group"
+              className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 p-3 rounded-xl bg-cream-white border border-cherry-grey/10 hover:border-cherry-grey/30 transition-colors cursor-pointer group"
             >
               <span className="font-bold text-[14px] text-espresso group-hover:text-cherry-soda transition-colors">
                 {study.name}
@@ -314,7 +327,7 @@ export function RoadmapSections({
       </div>
 
       <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-        <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Next steps</h2>
+        <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Next steps</h2>
         <p className="font-normal text-[14px] leading-normal text-clay-dark">
           Open the docs to follow the integration guide, get help in Discord, or reach out to discuss your use case.
         </p>
@@ -323,13 +336,13 @@ export function RoadmapSections({
             href={DOCUMENTATION_ROUTE}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-cherry-bright flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer hover:opacity-90 transition-opacity font-medium text-[14px] text-white text-center shrink-0"
+            className="bg-yellow-soda text-espresso flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer font-medium text-[14px] text-center shrink-0 hover:opacity-90 transition-opacity"
           >
             Open documentation
           </a>
           <a
             href={`mailto:partnerships@sodax.com?subject=${encodeURIComponent(`Partnership inquiry - Integration roadmap${currentProtocol ? ` - ${currentProtocol}` : ''}`)}`}
-            className="bg-white border-2 border-cherry-soda flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer hover:bg-cherry-soda/5 transition-colors font-medium text-[14px] text-cherry-soda text-center shrink-0"
+            className="border border-cherry-grey bg-white text-espresso flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer font-medium text-[14px] text-center shrink-0 hover:bg-cream-white transition-colors"
           >
             {fromFirstName ? `Contact ${fromFirstName}` : 'Contact us'}
           </a>
@@ -337,7 +350,7 @@ export function RoadmapSections({
             href={DISCORD_ROUTE}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-white border-2 border-cherry-grey flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer hover:border-cherry-soda hover:bg-cherry-soda/5 transition-colors font-medium text-[14px] text-espresso text-center shrink-0"
+            className="border border-cherry-grey bg-white text-espresso flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer font-medium text-[14px] text-center shrink-0 hover:bg-cream-white transition-colors"
           >
             Join Discord
           </a>
@@ -345,54 +358,64 @@ export function RoadmapSections({
       </div>
 
       <div className="rounded-3xl border border-cherry-grey/20 bg-white p-6 md:p-8 flex flex-col gap-4 print:hidden">
-        <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Share roadmap</h2>
+        <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Share roadmap</h2>
         <p className="font-normal text-[13px] leading-[1.4] text-clay-dark">
           Share the link with your team or contacts — they&apos;ll see this roadmap for{' '}
-          <span className="font-medium text-espresso uppercase">{displayLabel}</span> pre-filled. Or download the PDF to
+          <span className="font-medium text-espresso">{displayLabel}</span> pre-filled. Or download the PDF to
           attach to an email.
         </p>
         <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:items-center">
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={onCopyLink}
-            className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full border-2 border-cherry-grey bg-white font-medium text-[14px] text-espresso hover:bg-cream-white transition-colors shrink-0 cursor-pointer"
+            size="lg"
+            className="h-10 px-5 rounded-full border border-cherry-grey bg-white text-espresso cursor-pointer hover:bg-cream-white transition-colors shrink-0"
             aria-label="Copy link to this roadmap"
           >
             {linkCopied ? <Check className="w-4 h-4 text-cherry-soda" /> : <Link2 className="w-4 h-4" />}
             {linkCopied ? 'Copied' : 'Copy link'}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="outline"
             onClick={onDownloadPdf}
-            className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full border-2 border-cherry-grey bg-white font-medium text-[14px] text-espresso hover:bg-cream-white transition-colors shrink-0 cursor-pointer"
+            size="lg"
+            className="h-10 px-5 rounded-full border border-cherry-grey bg-white text-espresso cursor-pointer hover:bg-cream-white transition-colors shrink-0"
             aria-label="Download roadmap as PDF"
             title="Save as PDF. For a clean PDF, turn off 'Headers and footers' in the print dialog."
           >
             <FileDown className="w-4 h-4" />
             Download PDF
-          </button>
-          <a
-            href={(() => {
-              const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sodax.com';
-              const rawProtocol = roadmap?.protocolDisplay ?? (protocolName.trim() || '');
-              const slug = rawProtocol ? slugifyProtocol(rawProtocol) : '';
-              const url = slug
-                ? `${origin}${INTEGRATION_SCANNER_ROUTE}/${slug}`
-                : `${origin}${INTEGRATION_SCANNER_ROUTE}`;
-              const label = getProtocolDisplayLabel(roadmap.protocolDisplay, roadmap.category);
-              const subject = encodeURIComponent(`SODAX integration roadmap for ${label}`);
-              const senderLine = signature ? `\n\nBest,\n${signature}` : '';
-              const body = encodeURIComponent(
-                `Hi,\n\nHere's a tailored integration roadmap for ${label}:\n${url}\n\nYou can also download it as a PDF from the page.${senderLine}`,
-              );
-              return `mailto:?subject=${subject}&body=${body}`;
-            })()}
-            className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-full border-2 border-cherry-grey bg-white font-medium text-[14px] text-espresso hover:bg-cream-white transition-colors shrink-0 cursor-pointer no-underline"
-            aria-label="Email this roadmap"
+          </Button>
+          <Button
+            variant="outline"
+            size="lg"
+            asChild
+            className="h-10 px-5 rounded-full border border-cherry-grey bg-white text-espresso cursor-pointer hover:bg-cream-white transition-colors shrink-0 no-underline"
           >
-            <Mail className="w-4 h-4" />
-            Email this roadmap
-          </a>
+            <a
+              href={(() => {
+                const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sodax.com';
+                const rawProtocol = roadmap?.protocolDisplay ?? (protocolName.trim() || '');
+                const slug = rawProtocol ? slugifyProtocol(rawProtocol) : '';
+                const url = slug
+                  ? `${origin}${INTEGRATION_ROADMAP_ROUTE}/${slug}`
+                  : `${origin}${INTEGRATION_ROADMAP_ROUTE}`;
+                const label = getProtocolDisplayLabel(roadmap.protocolDisplay, roadmap.category);
+                const subject = encodeURIComponent(`SODAX integration roadmap for ${label}`);
+                const senderLine = signature ? `\n\nBest,\n${signature}` : '';
+                const body = encodeURIComponent(
+                  `Hi,\n\nHere's a tailored integration roadmap for ${label}:\n${url}\n\nYou can also download it as a PDF from the page.${senderLine}`,
+                );
+                return `mailto:?subject=${subject}&body=${body}`;
+              })()}
+              aria-label="Email this roadmap"
+            >
+              <Mail className="w-4 h-4" />
+              Email this roadmap
+            </a>
+          </Button>
         </div>
         <p className="font-normal text-[12px] leading-[1.4] text-clay">
           For a clean PDF, turn off &quot;Headers and footers&quot; in the print dialog.

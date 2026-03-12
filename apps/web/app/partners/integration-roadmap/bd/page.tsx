@@ -1,11 +1,11 @@
-// BD-only entry for Integration Roadmap Scanner: clean URL /partners/integration-scanner/bd (no ?bd=1).
+// BD-only entry for Integration Roadmap: clean URL /partners/integration-roadmap/bd (no ?bd=1).
 
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
-import { IntegrationScannerUi } from '@/components/partners/integration-scanner-ui';
-import { INTEGRATION_SCANNER_BD_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
+import { IntegrationRoadmapUi } from '@/components/partners/integration-roadmap-ui';
+import { INTEGRATION_ROADMAP_BD_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
 
 export const metadata: Metadata = {
   title: 'Integration Roadmap — BD | SODAX Partners',
@@ -14,17 +14,17 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Integration Roadmap — BD | SODAX Partners',
     description: 'BD view: generate and personalize integration roadmaps for partners.',
-    url: `https://sodax.com${INTEGRATION_SCANNER_BD_ROUTE}`,
+    url: `https://sodax.com${INTEGRATION_ROADMAP_BD_ROUTE}`,
   },
 };
 
-export default function IntegrationScannerBdPage(): React.JSX.Element {
+export default function IntegrationRoadmapBdPage(): React.JSX.Element {
   return (
-    <div className="partners-page integration-scanner-page relative w-full overflow-x-hidden bg-cream">
+    <div className="partners-page integration-roadmap-page relative w-full overflow-x-hidden bg-cream">
       <MarketingHeader backLink={PARTNERS_ROUTE} backText="← partners" />
       <main className="pt-40 pb-20">
         <Suspense fallback={null}>
-          <IntegrationScannerUi />
+          <IntegrationRoadmapUi />
         </Suspense>
       </main>
       <Footer />

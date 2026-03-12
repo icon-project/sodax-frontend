@@ -1,4 +1,4 @@
-// ─── Integration Scanner — shared TypeScript types ──────────────────────────
+// ─── Integration Roadmap — shared TypeScript types ──────────────────────────
 // Keep all interfaces here so constants, utils, and components all import from
 // a single source of truth. No runtime values live in this file.
 

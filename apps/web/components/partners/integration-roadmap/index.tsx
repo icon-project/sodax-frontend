@@ -6,7 +6,8 @@ import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'motion/react';
-import { INTEGRATION_SCANNER_BD_ROUTE, INTEGRATION_SCANNER_ROUTE } from '@/constants/routes';
+import { INTEGRATION_ROADMAP_BD_ROUTE, INTEGRATION_ROADMAP_ROUTE } from '@/constants/routes';
+import { Input } from '@/components/ui/input';
 import type { BdConfig, CategoryId, PartnershipTier, RoadmapCategory } from './types';
 import {
   CATEGORIES,
@@ -19,12 +20,13 @@ import {
   TIMELINE_BY_CATEGORY,
   WHY_SODAX_BY_CATEGORY,
 } from './constants';
+import { loadDraftFromStorage } from './draft-storage';
 import { findProtocolOverride, getProtocolDisplayLabel, matchCategory, slugifyProtocol, slugToDisplay } from './utils';
 import { BdComposer } from './bd-composer';
 import { PersonalIntroCard } from './personal-intro-card';
 import { RoadmapSections } from './roadmap-sections';
 
-export function IntegrationScannerUi(): React.JSX.Element {
+export function IntegrationRoadmapUi(): React.JSX.Element {
   const searchParams = useSearchParams();
   const params = useParams<{ protocol?: string }>();
   const pathname = usePathname();
@@ -42,14 +44,18 @@ export function IntegrationScannerUi(): React.JSX.Element {
 
   // Redirect legacy ?bd=1 on base path to canonical BD route so that path is not used.
   useEffect(() => {
-    if (pathname !== INTEGRATION_SCANNER_ROUTE) return;
+    if (pathname !== INTEGRATION_ROADMAP_ROUTE) return;
     const bd = searchParams.get('bd');
     if (bd === '1') {
-      router.replace(INTEGRATION_SCANNER_BD_ROUTE);
+      router.replace(INTEGRATION_ROADMAP_BD_ROUTE);
       return;
     }
   }, [pathname, searchParams, router]);
 
+  // Sync from URL when path or search actually changes. We use searchString (not searchParams) so the effect does not run on every render and overwrite BD Composer local edits (e.g. "Edit bullets").
+  const searchString = searchParams.toString();
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: searchString intentionally replaces searchParams so URL sync only runs when query string changes, preserving BD Composer edits.
   useEffect(() => {
     const fromWindow =
       typeof window !== 'undefined' && window.location.search ? new URLSearchParams(window.location.search) : null;
@@ -71,10 +77,10 @@ export function IntegrationScannerUi(): React.JSX.Element {
     const steps = get('steps');
 
     const isBdPath =
-      pathname === INTEGRATION_SCANNER_BD_ROUTE || pathname?.startsWith(`${INTEGRATION_SCANNER_BD_ROUTE}/`);
+      pathname === INTEGRATION_ROADMAP_BD_ROUTE || pathname?.startsWith(`${INTEGRATION_ROADMAP_BD_ROUTE}/`);
     setBdMode(Boolean(isBdPath));
 
-    setBdConfig({
+    const fromUrl: BdConfig = {
       fromName: from ?? '',
       fromSuffix: suffix ?? DEFAULT_FROM_SUFFIX,
       note: note ?? '',
@@ -84,7 +90,21 @@ export function IntegrationScannerUi(): React.JSX.Element {
       chains: chains ?? '',
       whyOverrides: whys ? whys.split('\n').filter(Boolean) : [],
       stepsOverrides: steps ? steps.split('\n').filter(Boolean) : [],
-    });
+    };
+
+    // When URL has no BD params, auto-load saved draft so the user sees their last options after reload (better UX).
+    const hasBdParamsFromUrl =
+      (from ?? '') !== '' ||
+      (suffix ?? '') !== '' ||
+      (note ?? '') !== '' ||
+      (tier ?? '') !== '' ||
+      (tl ?? '') !== '' ||
+      (why ?? '') !== '' ||
+      (chains ?? '') !== '' ||
+      (whys ?? '') !== '' ||
+      (steps ?? '') !== '';
+    const draft = hasBdParamsFromUrl ? null : loadDraftFromStorage();
+    setBdConfig(draft ?? fromUrl);
 
     if (protocolDisplay != null && protocolDisplay.trim() !== '') {
       const trimmed = protocolDisplay.trim();
@@ -98,7 +118,7 @@ export function IntegrationScannerUi(): React.JSX.Element {
       const effectiveMatched = categoryFromUrl ? true : matched;
       setRoadmap({ category: effectiveCategory, protocolDisplay: trimmed, matched: effectiveMatched });
     }
-  }, [searchParams, params?.protocol, pathname]);
+  }, [pathname, params?.protocol, searchString]);
 
   useEffect(() => {
     setPrintDate(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
@@ -119,7 +139,7 @@ export function IntegrationScannerUi(): React.JSX.Element {
   const handleCopyLink = async (): Promise<void> => {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sodax.com';
     const protocol = (roadmap?.protocolDisplay ?? protocolName.trim()) || '';
-    const path = protocol ? `${INTEGRATION_SCANNER_ROUTE}/${slugifyProtocol(protocol)}` : INTEGRATION_SCANNER_ROUTE;
+    const path = protocol ? `${INTEGRATION_ROADMAP_ROUTE}/${slugifyProtocol(protocol)}` : INTEGRATION_ROADMAP_ROUTE;
     await navigator.clipboard.writeText(`${origin}${path}`);
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2000);
@@ -159,7 +179,7 @@ export function IntegrationScannerUi(): React.JSX.Element {
   const isProspectView = Boolean(params?.protocol) && !bdMode;
 
   return (
-    <section className="bg-cream-white overflow-clip px-4 md:px-8 py-16" aria-label="Integration Roadmap Scanner">
+    <section className="bg-cream-white overflow-clip px-4 md:px-8 py-16" aria-label="Integration Roadmap">
       <div className="flex flex-col gap-8 items-center w-full max-w-5xl mx-auto px-0 sm:px-2">
         {isProspectView && roadmap ? (
           <motion.div
@@ -224,43 +244,45 @@ export function IntegrationScannerUi(): React.JSX.Element {
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
               className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full max-w-120 print:hidden"
             >
-              <input
+              <Input
                 type="text"
                 placeholder="e.g. Uniswap, Aave, Hana Wallet"
                 value={protocolName}
                 onChange={e => setProtocolName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleGenerate()}
-                className="flex-1 min-w-0 h-12 min-h-12 sm:h-11 sm:min-h-11 px-4 py-3 sm:py-2 rounded-2xl border-2 border-cherry-grey bg-white font-normal text-[14px] text-espresso placeholder:text-clay focus:outline-none focus:border-cherry-soda transition-colors"
+                className="flex-1 min-w-0 h-12 min-h-12 sm:h-11 sm:min-h-11 px-4 py-3 sm:py-2 rounded-2xl border-2 border-cherry-grey bg-white font-normal text-[14px] text-espresso placeholder:text-clay focus-visible:border-cherry-soda"
                 aria-label="Protocol name"
               />
               <button
                 type="button"
                 onClick={handleGenerate}
                 disabled={!protocolName.trim()}
-                className="bg-yellow-soda text-cherry-dark font-['Shrikhand'] text-[14px] leading-[1.4] h-12 min-h-12 sm:h-11 sm:min-h-11 px-6 py-3 sm:py-2 rounded-full transition-opacity shrink-0 disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer enabled:hover:opacity-90"
+                className="bg-yellow-soda text-espresso font-['Shrikhand'] text-[14px] leading-[1.4] h-12 min-h-12 sm:h-11 sm:min-h-11 px-6 py-3 sm:py-2 rounded-full shrink-0 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer enabled:hover:opacity-90"
               >
                 generate roadmap
               </button>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-              className="flex flex-wrap items-center justify-center gap-2 print:hidden"
-            >
-              <span className="font-normal text-[12px] text-clay">Try:</span>
-              {EXAMPLE_CHIPS.map(name => (
-                <button
-                  key={name}
-                  type="button"
-                  onClick={() => handleChipClick(name)}
-                  className="h-7 px-3 rounded-full border border-cherry-grey bg-white font-normal text-[12px] text-espresso hover:border-cherry-soda hover:text-cherry-soda transition-colors cursor-pointer"
-                >
-                  {name}
-                </button>
-              ))}
-            </motion.div>
+            {!bdMode && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
+                className="flex flex-wrap items-center justify-center gap-2 print:hidden"
+              >
+                <span className="font-normal text-[12px] text-clay">Try:</span>
+                {EXAMPLE_CHIPS.map(name => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => handleChipClick(name)}
+                    className="h-7 px-3 rounded-full border border-cherry-grey bg-white font-normal text-[12px] text-espresso hover:border-cherry-soda hover:text-cherry-soda transition-colors cursor-pointer"
+                  >
+                    {name}
+                  </button>
+                ))}
+              </motion.div>
+            )}
           </>
         )}
 

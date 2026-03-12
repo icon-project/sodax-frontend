@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'motion/react';
 import { Route, Layers, ListChecks } from 'lucide-react';
-import { INTEGRATION_SCANNER_ROUTE } from '@/constants/routes';
+import { INTEGRATION_ROADMAP_ROUTE } from '@/constants/routes';
 
 const features = [
   {
@@ -109,7 +109,7 @@ export default function IntegrationRoadmapSection(): React.JSX.Element {
           className="flex flex-col sm:flex-row gap-4 items-center px-4"
         >
           <Link
-            href={INTEGRATION_SCANNER_ROUTE}
+            href={INTEGRATION_ROADMAP_ROUTE}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-yellow-soda text-cherry-dark font-['Shrikhand'] text-[14px] h-10 px-6 py-2 rounded-full cursor-pointer hover:opacity-90 transition-opacity w-full sm:w-auto text-center lowercase"

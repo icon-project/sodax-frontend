@@ -1,11 +1,11 @@
-// BD view with protocol in path: /partners/integration-scanner/bd/uniswap (same UI, BD mode from path).
+// Integration Roadmap with protocol in path: /partners/integration-roadmap/uniswap (same UI as base).
 
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
-import { IntegrationScannerUi } from '@/components/partners/integration-scanner-ui';
-import { INTEGRATION_SCANNER_BD_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
+import { IntegrationRoadmapUi } from '@/components/partners/integration-roadmap-ui';
+import { INTEGRATION_ROADMAP_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
 
 type PageProps = { params: Promise<{ protocol: string }> };
 
@@ -20,28 +20,26 @@ function slugToTitle(slug: string): string {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { protocol } = await params;
   const partnerName = protocol ? slugToTitle(protocol) : '';
-  const title = partnerName ? `Integration roadmap – ${partnerName} (BD)` : 'Integration Roadmap — BD';
+  const title = partnerName ? `Integration roadmap – ${partnerName}` : 'Integration Roadmap';
   return {
     title: `${title} | SODAX Partners`,
     description:
-      'BD view: tailored integration roadmap for this partner. Personalize and copy prospect or BD links.',
+      'See how your protocol can integrate with SODAX. Tailored roadmap of SDK layers, partner category, and integration steps.',
     openGraph: {
       title: `${title} | SODAX Partners`,
-      description: 'BD view: tailored integration roadmap for this partner.',
-      url: `https://sodax.com${INTEGRATION_SCANNER_BD_ROUTE}/${protocol}`,
+      description: 'See how your protocol can integrate with SODAX. Tailored integration roadmap.',
+      url: `https://sodax.com${INTEGRATION_ROADMAP_ROUTE}/${protocol}`,
     },
   };
 }
 
-export default async function IntegrationScannerBdProtocolPage({
-  params,
-}: PageProps): Promise<React.JSX.Element> {
+export default async function IntegrationRoadmapProtocolPage({ params }: PageProps): Promise<React.JSX.Element> {
   return (
-    <div className="partners-page integration-scanner-page relative w-full overflow-x-hidden bg-cream">
+    <div className="partners-page integration-roadmap-page relative w-full overflow-x-hidden bg-cream">
       <MarketingHeader backLink={PARTNERS_ROUTE} backText="← partners" />
       <main className="pt-40 pb-20">
         <Suspense fallback={null}>
-          <IntegrationScannerUi />
+          <IntegrationRoadmapUi />
         </Suspense>
       </main>
       <Footer />

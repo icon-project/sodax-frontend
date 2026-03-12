@@ -1,4 +1,4 @@
-// ─── Integration Scanner — static data ──────────────────────────────────────
+// ─── Integration Roadmap — static data ────────────────────────────────────────
 // All lookup tables and copy live here so they can be updated without touching
 // components or business logic. Import individual exports rather than the whole
 // module to keep tree-shaking effective.
@@ -35,10 +35,11 @@ export const TIER_LABELS: Record<PartnershipTier, string> = {
   strategic: 'Strategic Partnership',
 };
 
+// Brand: Espresso or creams in business development; no blue/indigo (Bible 4.2).
 export const TIER_BADGE_CLASS: Record<PartnershipTier, string> = {
   '': '',
-  basic: 'bg-blue-50 text-blue-600 border border-blue-200',
-  standard: 'bg-indigo-50 text-indigo-600 border border-indigo-200',
+  basic: 'bg-cream-white text-clay-dark border border-clay-light',
+  standard: 'bg-cherry-brighter/30 text-espresso border border-cherry-grey',
   strategic: 'bg-cherry-soda/10 text-cherry-soda border border-cherry-soda/30',
 };
 
@@ -113,7 +114,7 @@ export const CATEGORIES: RoadmapCategory[] = [
 export const DEFAULT_CATEGORY: RoadmapCategory = CATEGORIES[1] as RoadmapCategory;
 
 /**
- * Maps BD CRM (Notion) Category property values to integration-scanner CategoryId.
+ * Maps BD CRM (Notion) Category property values to Integration Roadmap CategoryId.
  * Used when building pre-filled roadmap URLs from the bd-scope-assessment skill so the
  * link includes the correct cat= param. Keys are normalized (lowercase, trimmed).
  * Add new Notion options here as the team adds them to the CRM.

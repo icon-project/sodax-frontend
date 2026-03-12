@@ -517,11 +517,11 @@ textarea[readonly] {
   --cc-link-color: var(--cherry-dark);
 }
 
-/* Integration scanner: print/PDF layout and branding */
+/* Integration Roadmap: print/PDF layout and branding */
 @media print {
   /* Hide site header (first child) and site footer (div.footer) so only roadmap content prints */
-  .integration-scanner-page > div:first-child,
-  .integration-scanner-page .footer {
+  .integration-roadmap-page > div:first-child,
+  .integration-roadmap-page .footer {
     display: none !important;
   }
 
@@ -531,11 +531,11 @@ textarea[readonly] {
     margin: 0.6in 0.75in;
   }
 
-  .integration-scanner-page {
+  .integration-roadmap-page {
     background: #fff !important;
   }
 
-  .integration-scanner-page main {
+  .integration-roadmap-page main {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
   }

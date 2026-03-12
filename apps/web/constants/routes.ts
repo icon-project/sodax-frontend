@@ -16,10 +16,10 @@ export const POOL_ROUTE = '/pool';
 export const MIGRATE_ROUTE = '/migrate';
 export const GLOSSARY_ROUTE = '/glossary';
 export const PARTNERS_ROUTE = '/partners';
-/** Integration roadmap scanner: type protocol name, get visual integration roadmap (partners). */
-export const INTEGRATION_SCANNER_ROUTE = '/partners/integration-scanner';
-/** BD-only view of the integration scanner (clean URL; no ?bd=1). */
-export const INTEGRATION_SCANNER_BD_ROUTE = `${INTEGRATION_SCANNER_ROUTE}/bd`;
+/** Integration Roadmap: type protocol name, get visual integration roadmap (partners). */
+export const INTEGRATION_ROADMAP_ROUTE = '/partners/integration-roadmap';
+/** BD-only view of the Integration Roadmap (clean URL; no ?bd=1). */
+export const INTEGRATION_ROADMAP_BD_ROUTE = `${INTEGRATION_ROADMAP_ROUTE}/bd`;
 export const NEWS_ROUTE = '/news';
 export const COMMUNITY_ROUTE = '/community';
 export const PARTNER_DASHBOARD_ROUTE = '/partner-dashboard';

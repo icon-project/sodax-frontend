@@ -1,6 +1,16 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
+  async redirects() {
+    return [
+      { source: '/partners/integration-scanner', destination: '/partners/integration-roadmap', permanent: true },
+      {
+        source: '/partners/integration-scanner/:path*',
+        destination: '/partners/integration-roadmap/:path*',
+        permanent: true,
+      },
+    ];
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },

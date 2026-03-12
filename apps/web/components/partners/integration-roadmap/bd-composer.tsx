@@ -3,10 +3,15 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, ChevronDown, ChevronUp, Eye, Settings2 } from 'lucide-react';
-import { INTEGRATION_SCANNER_BD_ROUTE, INTEGRATION_SCANNER_ROUTE } from '@/constants/routes';
+import { Check, ChevronDown, ChevronUp, Eye, Save, Settings2 } from 'lucide-react';
+import { INTEGRATION_ROADMAP_BD_ROUTE, INTEGRATION_ROADMAP_ROUTE } from '@/constants/routes';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import type { BdConfig, CategoryId, PartnershipTier } from './types';
 import { DEFAULT_FROM_SUFFIX } from './constants';
+import { loadDraftFromStorage, saveDraftToStorage } from './draft-storage';
 import { slugifyProtocol } from './utils';
 
 export interface BdComposerProps {
@@ -30,17 +35,18 @@ export function BdComposer({
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [copiedProspect, setCopiedProspect] = useState(false);
   const [copiedBd, setCopiedBd] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
 
   const buildUrl = (includeBd: boolean): string => {
     const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sodax.com';
     const slugSource = currentProtocol.trim();
     const path = includeBd
       ? slugSource
-        ? `${INTEGRATION_SCANNER_BD_ROUTE}/${slugifyProtocol(slugSource)}`
-        : INTEGRATION_SCANNER_BD_ROUTE
+        ? `${INTEGRATION_ROADMAP_BD_ROUTE}/${slugifyProtocol(slugSource)}`
+        : INTEGRATION_ROADMAP_BD_ROUTE
       : slugSource
-        ? `${INTEGRATION_SCANNER_ROUTE}/${slugifyProtocol(slugSource)}`
-        : INTEGRATION_SCANNER_ROUTE;
+        ? `${INTEGRATION_ROADMAP_ROUTE}/${slugifyProtocol(slugSource)}`
+        : INTEGRATION_ROADMAP_ROUTE;
     const params = new URLSearchParams();
     if (selectedCategoryId) params.set('cat', selectedCategoryId);
     if (bdConfig.fromName) params.set('from', bdConfig.fromName);
@@ -64,16 +70,28 @@ export function BdComposer({
 
   const handleCopyBd = async (): Promise<void> => {
     await navigator.clipboard.writeText(buildUrl(true));
+    saveDraftToStorage(bdConfig);
     setCopiedBd(true);
     setTimeout(() => setCopiedBd(false), 2000);
   };
 
+  const handleSaveDraft = (): void => {
+    saveDraftToStorage(bdConfig);
+    setDraftSaved(true);
+    setTimeout(() => setDraftSaved(false), 2000);
+  };
+
+  const handleLoadDraft = (): void => {
+    const draft = loadDraftFromStorage();
+    if (draft) onChange(draft);
+  };
+
   return (
-    <div className="w-full max-w-5xl mx-auto rounded-3xl border-2 border-yellow-soda bg-yellow-soda/10 overflow-hidden print:hidden">
+    <div className="w-full max-w-5xl mx-auto rounded-3xl border-2 border-yellow-soda bg-yellow-soda/10 overflow-visible print:hidden">
       <button
         type="button"
         onClick={() => setIsExpanded(e => !e)}
-        className="w-full flex items-center justify-between gap-3 px-6 py-4 text-left hover:bg-yellow-soda/10 transition-colors"
+        className="w-full flex items-center justify-between gap-3 px-6 py-4 text-left cursor-pointer hover:bg-yellow-soda/10 transition-colors"
         aria-expanded={isExpanded}
       >
         <div className="flex items-center gap-2">
@@ -126,71 +144,91 @@ export function BdComposer({
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label className="flex flex-col gap-1 sm:col-span-2 sm:flex-row sm:items-end sm:gap-3">
-              <div className="flex-1 flex flex-col gap-1 min-w-0">
+            <label className="flex flex-col gap-1 min-w-0" htmlFor="bd-from-name">
                 <span className="font-medium text-[12px] text-cherry-dark">Your name</span>
-                <input
+                <Input
+                  id="bd-from-name"
                   type="text"
                   placeholder="e.g. Gosia"
                   value={bdConfig.fromName}
                   onChange={e => onChange({ ...bdConfig, fromName: e.target.value })}
-                  className="h-9 px-3 rounded-xl border border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus:outline-none focus:ring-2 focus:ring-yellow-soda/50"
+                  className="h-9 rounded-xl border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus-visible:ring-yellow-soda/50 focus-visible:border-yellow-soda"
                 />
-              </div>
-              <div className="flex-1 flex flex-col gap-1 min-w-0">
+              </label>
+              <label className="flex flex-col gap-1 min-w-0" htmlFor="bd-from-suffix">
                 <span className="font-medium text-[12px] text-cherry-dark">Team / company</span>
-                <input
+                <Input
+                  id="bd-from-suffix"
                   type="text"
                   placeholder={DEFAULT_FROM_SUFFIX}
                   value={bdConfig.fromSuffix}
                   onChange={e => onChange({ ...bdConfig, fromSuffix: e.target.value })}
-                  className="h-9 px-3 rounded-xl border border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus:outline-none focus:ring-2 focus:ring-yellow-soda/50"
+                  className="h-9 rounded-xl border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus-visible:ring-yellow-soda/50 focus-visible:border-yellow-soda"
                 />
-              </div>
-            </label>
+              </label>
 
-            <label className="flex flex-col gap-1">
-              <span className="font-medium text-[12px] text-cherry-dark">Partnership tier</span>
-              <select
-                value={bdConfig.tier}
-                onChange={e => onChange({ ...bdConfig, tier: e.target.value as PartnershipTier })}
-                className="h-9 px-3 rounded-xl border border-yellow-soda/60 bg-white text-[13px] text-espresso focus:outline-none focus:ring-2 focus:ring-yellow-soda/50"
+            <div className="flex flex-col gap-1">
+              <span className="font-medium text-[12px] text-cherry-dark" id="bd-tier-label">
+                Partnership tier
+              </span>
+              <Select
+                value={bdConfig.tier || '_none'}
+                onValueChange={(v: string) => onChange({ ...bdConfig, tier: (v === '_none' ? '' : v) as PartnershipTier })}
               >
-                <option value="">Not specified</option>
-                <option value="basic">Basic Integration</option>
-                <option value="standard">Standard Partnership</option>
-                <option value="strategic">Strategic Partnership</option>
-              </select>
-            </label>
+                <SelectTrigger
+                  id="bd-tier"
+                  aria-labelledby="bd-tier-label"
+                  className="h-9 rounded-xl border-yellow-soda/60 bg-white text-[13px] text-espresso focus:ring-2 focus:ring-yellow-soda/50 focus:border-yellow-soda data-[slot=select-trigger]"
+                >
+                  <SelectValue placeholder="Not specified" />
+                </SelectTrigger>
+                <SelectContent className="border-cherry-grey/30 bg-white">
+                  <SelectItem value="_none" className="text-[13px] text-espresso data-highlighted:bg-cherry-soda/10">
+                    Not specified
+                  </SelectItem>
+                  <SelectItem value="basic" className="text-[13px] text-espresso data-highlighted:bg-cherry-soda/10">
+                    Basic Integration
+                  </SelectItem>
+                  <SelectItem value="standard" className="text-[13px] text-espresso data-highlighted:bg-cherry-soda/10">
+                    Standard Partnership
+                  </SelectItem>
+                  <SelectItem value="strategic" className="text-[13px] text-espresso data-highlighted:bg-cherry-soda/10">
+                    Strategic Partnership
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            <label className="flex flex-col gap-1">
+            <label className="flex flex-col gap-1" htmlFor="bd-timeline">
               <span className="font-medium text-[12px] text-cherry-dark">Timeline override</span>
-              <input
+              <Input
+                id="bd-timeline"
                 type="text"
                 placeholder="e.g. 1–2 weeks (agreed in call)"
                 value={bdConfig.timeline}
                 onChange={e => onChange({ ...bdConfig, timeline: e.target.value })}
-                className="h-9 px-3 rounded-xl border border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus:outline-none focus:ring-2 focus:ring-yellow-soda/50"
+                className="h-9 rounded-xl border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus-visible:ring-yellow-soda/50 focus-visible:border-yellow-soda"
               />
             </label>
 
-            <label className="flex flex-col gap-1">
+            <label className="flex flex-col gap-1" htmlFor="bd-chains">
               <span className="font-medium text-[12px] text-cherry-dark">Prospect&apos;s chains</span>
-              <input
+              <Input
+                id="bd-chains"
                 type="text"
                 placeholder="e.g. Ethereum, Solana, Base"
                 value={bdConfig.chains}
                 onChange={e => onChange({ ...bdConfig, chains: e.target.value })}
-                className="h-9 px-3 rounded-xl border border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus:outline-none focus:ring-2 focus:ring-yellow-soda/50"
+                className="h-9 rounded-xl border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus-visible:ring-yellow-soda/50 focus-visible:border-yellow-soda"
               />
             </label>
           </div>
 
-          <div className="rounded-2xl border border-yellow-soda/60 bg-white/40 overflow-hidden">
+          <div className="rounded-2xl border border-yellow-soda/60 bg-white/40 overflow-visible">
             <button
               type="button"
               onClick={() => setCustomizeOpen(c => !c)}
-              className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-yellow-soda/5 transition-colors"
+              className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-yellow-soda/5 transition-colors cursor-pointer"
               aria-expanded={customizeOpen}
             >
               <span className="font-medium text-[12px] text-cherry-dark flex items-center gap-1.5">
@@ -355,36 +393,60 @@ export function BdComposer({
             )}
           </div>
 
-          <label className="flex flex-col gap-1">
+          <label className="flex flex-col gap-1" htmlFor="bd-note">
             <span className="font-medium text-[12px] text-cherry-dark">Personal note to prospect</span>
-            <textarea
+            <Textarea
+              id="bd-note"
               placeholder="e.g. Hi team, following our call I put together this tailored integration roadmap for you..."
               value={bdConfig.note}
               onChange={e => onChange({ ...bdConfig, note: e.target.value })}
               rows={3}
-              className="px-3 py-2 rounded-xl border border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus:outline-none focus:ring-2 focus:ring-yellow-soda/50 resize-none"
+              className="rounded-xl border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus-visible:ring-yellow-soda/50 focus-visible:border-yellow-soda resize-none min-h-0"
             />
           </label>
 
-          <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-1">
-            <button
-              type="button"
-              onClick={handleCopyProspect}
-              className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-cherry-dark text-white font-medium text-[13px] hover:opacity-90 transition-opacity shrink-0"
-            >
-              {copiedProspect ? <Check className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              {copiedProspect ? 'Copied!' : 'Copy link for prospect'}
-            </button>
-            <button
-              type="button"
-              onClick={handleCopyBd}
-              className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full border-2 border-cherry-dark text-cherry-dark font-medium text-[13px] hover:bg-cherry-dark/5 transition-colors shrink-0"
-            >
-              {copiedBd ? <Check className="w-3.5 h-3.5" /> : <Settings2 className="w-3.5 h-3.5" />}
-              {copiedBd ? 'Copied!' : 'Copy BD link (editable)'}
-            </button>
-            <p className="font-normal text-[11px] text-cherry-dark/60 self-center">
-              Prospect link opens without this panel.
+          <div className="flex flex-col gap-2 pt-1">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:items-center">
+              <Button
+                type="button"
+                variant="cherry"
+                onClick={handleCopyProspect}
+                size="default"
+                className="h-9 px-4 rounded-full font-medium text-[13px] shrink-0"
+              >
+                {copiedProspect ? <Check className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                {copiedProspect ? 'Copied!' : 'Copy link for prospect'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCopyBd}
+                size="default"
+                className="h-9 px-4 rounded-full border border-cherry-grey bg-white text-espresso font-medium text-[13px] hover:bg-cream-white transition-colors shrink-0"
+              >
+                {copiedBd ? <Check className="w-3.5 h-3.5" /> : <Settings2 className="w-3.5 h-3.5" />}
+                {copiedBd ? 'Copied!' : 'Copy BD link (editable)'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSaveDraft}
+                size="default"
+                className="h-9 px-4 rounded-full border border-cherry-grey bg-white text-espresso font-medium text-[13px] hover:bg-cream-white transition-colors shrink-0"
+              >
+                {draftSaved ? <Check className="w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
+                {draftSaved ? 'Saved' : 'Save draft'}
+              </Button>
+              <button
+                type="button"
+                onClick={handleLoadDraft}
+                className="text-[12px] font-medium text-cherry-soda hover:underline cursor-pointer shrink-0 self-center sm:self-center"
+              >
+                Load saved draft
+              </button>
+            </div>
+            <p className="font-normal text-[11px] text-cherry-dark/60">
+              Prospect link opens without this panel. Save draft to restore your options next time.
             </p>
           </div>
         </div>

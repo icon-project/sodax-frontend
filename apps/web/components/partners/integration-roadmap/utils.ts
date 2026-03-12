@@ -59,10 +59,10 @@ export function matchCategory(protocolName: string): { category: RoadmapCategory
 }
 
 /**
- * Map a BD CRM (Notion) Category value to integration-scanner CategoryId for URL cat= param.
+ * Map a BD CRM (Notion) Category value to Integration Roadmap CategoryId for URL cat= param.
  * Normalizes input (lowercase, trim, collapse spaces). Returns null if no mapping exists.
  */
-export function notionCategoryToScannerId(notionCategory: string): CategoryId | null {
+export function notionCategoryToRoadmapId(notionCategory: string): CategoryId | null {
   const key = notionCategory
     .trim()
     .toLowerCase()
