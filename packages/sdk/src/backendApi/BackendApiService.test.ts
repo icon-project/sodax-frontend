@@ -616,4 +616,144 @@ describe('BackendApiService', () => {
       expect(baseURL).toBe('https://api.sodax.com/v1/be');
     });
   });
+
+  describe('RequestOverrideConfig', () => {
+    it('should override baseURL for GET methods', async () => {
+      const mockData = { total: 0, data: [] };
+      mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+      await backendApiService.getOrderbook({ offset: '0', limit: '5' }, { baseURL: 'https://custom.example.com' });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://custom.example.com/solver/orderbook?offset=0&limit=5',
+        expect.objectContaining({ method: 'GET' }),
+      );
+    });
+
+    it('should override baseURL for POST methods', async () => {
+      const mockSubmitRequest: SubmitSwapTxRequest = {
+        txHash: '0xabc',
+        srcChainId: '146',
+        walletAddress: '0x123',
+        intent: {
+          intentId: '1',
+          creator: '0x123',
+          inputToken: '0x456',
+          outputToken: '0x789',
+          inputAmount: '100',
+          minOutputAmount: '90',
+          deadline: '0',
+          allowPartialFill: false,
+          srcChain: 1,
+          dstChain: 2,
+          srcAddress: '0xaaa',
+          dstAddress: '0xbbb',
+          solver: '0x000',
+          data: '0x',
+        },
+        relayData: '0x',
+      };
+      const mockData = { success: true, message: 'ok' };
+      mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+      await backendApiService.submitSwapTx(mockSubmitRequest, { baseURL: 'https://custom.example.com' });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://custom.example.com/swaps/submit-tx',
+        expect.objectContaining({ method: 'POST' }),
+      );
+    });
+
+    it('should merge custom headers with defaults', async () => {
+      const mockData = { total: 0, data: [] };
+      mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+      await backendApiService.getOrderbook({ offset: '0', limit: '5' }, { headers: { 'X-Custom': 'test-value' } });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'X-Custom': 'test-value',
+          }),
+        }),
+      );
+    });
+
+    it('should allow overriding a default header', async () => {
+      const mockData = { total: 0, data: [] };
+      mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+      await backendApiService.getOrderbook({ offset: '0', limit: '5' }, { headers: { Accept: 'text/plain' } });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            Accept: 'text/plain',
+          }),
+        }),
+      );
+    });
+
+    it('should override timeout', async () => {
+      mockFetch.mockImplementation(
+        (_url: string, init: { signal: AbortSignal }) =>
+          new Promise((_resolve, reject) => {
+            init.signal.addEventListener('abort', () => {
+              const err = new Error('The operation was aborted');
+              err.name = 'AbortError';
+              reject(err);
+            });
+          }),
+      );
+
+      await expect(
+        backendApiService.getOrderbook({ offset: '0', limit: '5' }, { timeout: 5 }),
+      ).rejects.toThrow('Request timeout after 5ms');
+    });
+
+    it('should apply all overrides together', async () => {
+      const mockData = { total: 0, data: [] };
+      mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+      await backendApiService.getOrderbook(
+        { offset: '0', limit: '5' },
+        {
+          baseURL: 'https://custom.example.com',
+          headers: { 'X-Request-Id': '12345' },
+        },
+      );
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://custom.example.com/solver/orderbook?offset=0&limit=5',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'X-Request-Id': '12345',
+          }),
+        }),
+      );
+    });
+
+    it('should use defaults when no config is provided', async () => {
+      const mockData = { total: 0, data: [] };
+      mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+      await backendApiService.getOrderbook({ offset: '0', limit: '5' });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://api.sodax.com/v1/be/solver/orderbook?offset=0&limit=5',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          }),
+        }),
+      );
+    });
+  });
 });
