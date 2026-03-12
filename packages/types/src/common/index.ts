@@ -15,7 +15,7 @@ export type SpokeChainId = (typeof CHAIN_IDS)[number];
 
 export type ChainId = (typeof CHAIN_IDS)[number];
 
-export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'NEAR'] as const;
+export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'NEAR', 'BITCOIN'] as const;
 export type ChainType = (typeof ChainTypeArr)[number];
 
 export type Chain = {
@@ -56,6 +56,7 @@ export type OriginalAssetAddress = string;
 
 export interface WalletAddressProvider {
   getWalletAddress(): Promise<string>; // The wallet address as a string
+  getPublicKey?: () => Promise<string>;
 }
 
 export type HttpUrl = `http://${string}` | `https://${string}`;
@@ -181,6 +182,16 @@ export type StellarSpokeChainConfig = BaseSpokeChainConfig<'STELLAR'> & {
   trustlineConfigs: StellarAssetTrustline[];
 };
 
+export type BitcoinSpokeChainConfig = BaseSpokeChainConfig<'BITCOIN'> & {
+  addresses: {
+    assetManager: string;
+  };
+  rpcUrl: string;
+  network: string;
+  radfiApiUrl: string;
+  radfiApiKey: string;
+};
+
 export type InjectiveSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
   rpcUrl: string;
   walletAddress: string;
@@ -247,6 +258,7 @@ export type SpokeChainConfig =
   | IconSpokeChainConfig
   | SuiSpokeChainConfig
   | StellarSpokeChainConfig
+  | BitcoinSpokeChainConfig
   | SolanaChainConfig
   | NearSpokeChainConfig;
 
