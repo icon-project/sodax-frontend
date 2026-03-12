@@ -15,6 +15,7 @@ import {
   INJECTIVE_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
   ICON_MAINNET_CHAIN_ID,
+  NEAR_MAINNET_CHAIN_ID,
   hubAssets,
   EVM_CHAIN_IDS,
 } from '@sodax/types';
@@ -256,7 +257,8 @@ export function getMoneymarketTokens(): XToken[] {
         chainId !== INJECTIVE_MAINNET_CHAIN_ID &&
         chainId !== LIGHTLINK_MAINNET_CHAIN_ID &&
         chainId !== ICON_MAINNET_CHAIN_ID &&
-        chainId !== REDBELLY_MAINNET_CHAIN_ID
+        chainId !== REDBELLY_MAINNET_CHAIN_ID &&
+        chainId !== NEAR_MAINNET_CHAIN_ID
           ? ({ ...t, xChainId: chainId as SpokeChainId } satisfies XToken)
           : undefined,
       ),
