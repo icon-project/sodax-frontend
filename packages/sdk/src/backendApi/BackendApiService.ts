@@ -480,7 +480,7 @@ export class BackendApiService implements IConfigApi {
     const queryString = queryParams.toString();
     const endpoint = `/moneymarket/borrowers?${queryString}`;
 
-    return this.makeRequest<MoneyMarketBorrowers>(endpoint, { method: 'GET' });
+    return this.makeRequest<MoneyMarketBorrowers>(endpoint, { method: 'GET', ...config });
   }
 
   /**
