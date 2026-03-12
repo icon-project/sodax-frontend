@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import type { BdConfig, CategoryId, PartnershipTier } from './types';
 import { DEFAULT_FROM_SUFFIX } from './constants';
 import { loadDraftFromStorage, saveDraftToStorage } from './draft-storage';
-import { slugifyProtocol } from './utils';
+import { slugifyProtocol } from './slug';
 
 export interface BdComposerProps {
   bdConfig: BdConfig;

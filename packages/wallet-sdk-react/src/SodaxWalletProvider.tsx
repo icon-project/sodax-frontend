@@ -53,6 +53,8 @@ export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.R
   );
 };
 
-reconnectIcon();
-// reconnectInjective();
-reconnectStellar();
+if (typeof window !== 'undefined') {
+  reconnectIcon();
+  // reconnectInjective();
+  reconnectStellar();
+}

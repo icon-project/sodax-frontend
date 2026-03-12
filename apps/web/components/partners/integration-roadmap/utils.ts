@@ -1,4 +1,4 @@
-// Pure helpers for protocol slug, display label, and category matching. No React.
+// Helpers for protocol display label and category matching. Keep server-safe slug helpers in `slug.ts`.
 
 import type { CategoryId, ProtocolOverride, RoadmapCategory } from './types';
 import {
@@ -8,28 +8,6 @@ import {
   NOTION_CATEGORY_TO_SCANNER_ID,
   PROTOCOL_OVERRIDES,
 } from './constants';
-
-/** Slug for prospect URL path: e.g. "Hana Wallet" → "hana-wallet", "Uniswap" → "uniswap". */
-export function slugifyProtocol(name: string): string {
-  return (
-    name
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '')
-      .replace(/-+/g, '-')
-      .replace(/^-|-$/g, '') || 'roadmap'
-  );
-}
-
-/** Display name from path slug: e.g. "hana-wallet" → "Hana Wallet". */
-export function slugToDisplay(slug: string): string {
-  return slug
-    .split('-')
-    .map(part => (part.length > 0 ? part.charAt(0).toUpperCase() + part.slice(1) : ''))
-    .filter(Boolean)
-    .join(' ');
-}
 
 /** Find a protocol override by exact or prefix match (handles "Uniswap v4", "Aave v3", etc.). */
 export function findProtocolOverride(lowerName: string): ProtocolOverride | undefined {

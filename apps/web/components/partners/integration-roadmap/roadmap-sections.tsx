@@ -23,7 +23,8 @@ import {
   TIER_BADGE_CLASS,
   TIER_LABELS,
 } from './constants';
-import { getProtocolDisplayLabel, slugifyProtocol } from './utils';
+import { slugifyProtocol } from './slug';
+import { getProtocolDisplayLabel } from './utils';
 import { QuickStartInstall } from './quick-start-install';
 
 export interface RoadmapSectionsProps {

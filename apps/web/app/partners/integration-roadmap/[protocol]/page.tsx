@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
 import { IntegrationRoadmapUi } from '@/components/partners/integration-roadmap-ui';
-import { slugToDisplay } from '@/components/partners/integration-roadmap/utils';
+import { slugToDisplay } from '@/components/partners/integration-roadmap/slug';
 import { INTEGRATION_ROADMAP_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
 
 type PageProps = { params: Promise<{ protocol: string }> };

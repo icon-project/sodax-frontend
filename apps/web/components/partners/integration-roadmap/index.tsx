@@ -21,7 +21,8 @@ import {
   WHY_SODAX_BY_CATEGORY,
 } from './constants';
 import { loadDraftFromStorage } from './draft-storage';
-import { findProtocolOverride, getProtocolDisplayLabel, matchCategory, slugifyProtocol, slugToDisplay } from './utils';
+import { slugifyProtocol, slugToDisplay } from './slug';
+import { findProtocolOverride, getProtocolDisplayLabel, matchCategory } from './utils';
 import { BdComposer } from './bd-composer';
 import { PersonalIntroCard } from './personal-intro-card';
 import { RoadmapSections } from './roadmap-sections';
