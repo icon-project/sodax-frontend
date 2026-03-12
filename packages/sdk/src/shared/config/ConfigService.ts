@@ -21,6 +21,7 @@ import {
   type GetSwapTokensByChainIdApiResponse,
   type GetSwapTokensApiResponse,
   CONFIG_VERSION,
+  defaultSharedConfig,
 } from '@sodax/types';
 import type { BackendApiService } from '../../backendApi/BackendApiService.js';
 import { DEFAULT_BACKEND_API_ENDPOINT, DEFAULT_BACKEND_API_TIMEOUT } from '../constants.js';
@@ -34,6 +35,7 @@ export type ConfigServiceConfig = {
 export type ConfigServiceConstructorParams = {
   backendApiService: BackendApiService;
   config?: ConfigServiceConfig;
+  sharedConfig?: typeof defaultSharedConfig;
 };
 
 /**
@@ -42,6 +44,7 @@ export type ConfigServiceConstructorParams = {
 export class ConfigService {
   readonly serviceConfig: ConfigServiceConfig;
   readonly backendApiService: BackendApiService;
+  readonly sharedConfig: typeof defaultSharedConfig;
   private initialized = false;
 
   private sodaxConfig: GetAllConfigApiResponse;
@@ -57,7 +60,7 @@ export class ConfigService {
   private moneyMarketReserveAssetsSet!: Set<Address>;
   private spokeChainIdsSet!: Set<SpokeChainId>;
 
-  constructor({ backendApiService, config }: ConfigServiceConstructorParams) {
+  constructor({ backendApiService, config, sharedConfig }: ConfigServiceConstructorParams) {
     this.serviceConfig = {
       backendApiUrl: config?.backendApiUrl ?? DEFAULT_BACKEND_API_ENDPOINT,
       timeout: config?.timeout ?? DEFAULT_BACKEND_API_TIMEOUT,
@@ -65,6 +68,10 @@ export class ConfigService {
     this.backendApiService = backendApiService;
     this.sodaxConfig = defaultSodaxConfig;
     this.loadSodaxConfigDataStructures(this.sodaxConfig);
+    this.sharedConfig = {
+      ...defaultSharedConfig,
+      ...sharedConfig,
+    }
   }
 
   public async initialize(): Promise<Result<void>> {
@@ -138,6 +145,10 @@ export class ConfigService {
 
   public getOriginalAssetAddress(chainId: SpokeChainId, hubAsset: Address): OriginalAssetAddress | undefined {
     return this.hubAssetToOriginalAssetMap.get(chainId)?.get(hubAsset.toLowerCase() as Address);
+  }
+
+  public getSpokeTokenFromOriginalAssetAddress(chainId: SpokeChainId, originalAssetAddress: OriginalAssetAddress): XToken | undefined {
+    return this.supportedTokensPerChain.get(chainId)?.find(token => token.address.toLowerCase() === originalAssetAddress.toLowerCase());
   }
 
   public isValidHubAsset(hubAsset: Address): boolean {

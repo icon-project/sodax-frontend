@@ -12,7 +12,7 @@ A comprehensive React Wallet SDK tailored for the Sodax ecosystem that provides 
   - ICON Wallets: ✅ (Hana Wallet and other ICON-compatible extensions)
 
 - Address and connection state management
-  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, LightLink) ✅
+  - EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, LightLink, Ethereum, Redbelly, Kaia) ✅
   - Sui ✅
   - Solana ✅
   - Stellar ✅

@@ -34,12 +34,14 @@ import {
   type StellarSpokeProviderType,
   type EvmSpokeProviderType,
   type SonicSpokeProviderType,
+  type VaultReserves,
 } from '../index.js';
 import { isEvmSpokeProviderType, isSonicSpokeProviderType, isStellarSpokeProviderType } from '../shared/guards.js';
-import type { SpokeChainId, XToken, Hex, HttpUrl } from '@sodax/types';
+import type { SpokeChainId, XToken, Hex, HttpUrl, BridgeLimit } from '@sodax/types';
 import { encodeFunctionData, isAddress } from 'viem';
 import { StellarSpokeService } from '../shared/services/spoke/StellarSpokeService.js';
 import type { ConfigService } from '../shared/config/ConfigService.js';
+import BigNumber from 'bignumber.js';
 
 export type CreateBridgeIntentParams = {
   srcChainId: SpokeChainId;
@@ -574,71 +576,89 @@ export class BridgeService {
    *
    * @param spokeProvider - The spoke provider instance
    * @param token - The token address to query the balance for
-   * @returns {Promise<bigint>} - The token balance as a bigint value
+   * @returns {Promise<BridgeLimit>} - The max bridgeable amount with corresponding decimals
    */
-  public async getBridgeableAmount(from: XToken, to: XToken): Promise<Result<bigint, unknown>> {
+  public async getBridgeableAmount(from: XToken, to: XToken): Promise<Result<BridgeLimit>> {
     try {
       const fromHubAsset = this.configService.getHubAssetInfo(from.xChainId, from.address);
       const toHubAsset = this.configService.getHubAssetInfo(to.xChainId, to.address);
       invariant(fromHubAsset, `Hub asset not found for token ${from.address} on chain ${from.xChainId}`);
       invariant(toHubAsset, `Hub asset not found for token ${to.address} on chain ${to.xChainId}`);
+      invariant(this.isBridgeable({ from, to }), `Tokens ${from.address} and ${to.address} are not bridgeable`);
 
       // we need to check the max deposit of the token on the from chain and the asset manager balance on the to chain
-      const [depositTokenInfo, reserves] = await Promise.all([
-        EvmVaultTokenService.getTokenInfo(fromHubAsset.vault, fromHubAsset.asset, this.hubProvider.publicClient),
+      const [tokenInfos, reserves] = await Promise.all([
+        EvmVaultTokenService.getTokenInfos(
+          fromHubAsset.vault,
+          [fromHubAsset.asset, toHubAsset.asset],
+          this.hubProvider.publicClient,
+        ),
         EvmVaultTokenService.getVaultReserves(toHubAsset.vault, this.hubProvider.publicClient),
       ]);
 
+      invariant(tokenInfos.length === 2, `Expected 2 token infos, got ${tokenInfos.length}`);
+      const [fromTokenInfo, toTokenInfo] = tokenInfos;
+      invariant(fromTokenInfo, 'From token info not found');
+      invariant(toTokenInfo, 'To token info not found');
+
+      // if the from token to be deposited is not supported, we return 0
+      if (!fromTokenInfo.isSupported) {
+        return {
+          ok: true,
+          value: {
+            amount: 0n,
+            decimals: fromTokenInfo.decimals,
+            type: 'DEPOSIT_LIMIT',
+          },
+        };
+      }
+
       // spoke -> hub, we need to check the max deposit of the token on the from chain
-      if (!this.configService.isValidVault(fromHubAsset.asset) && this.configService.isValidVault(toHubAsset.asset)) {
-        const fromTokenIndex = reserves.tokens.findIndex(t => t.toLowerCase() === fromHubAsset.asset.toLowerCase());
-        invariant(
-          fromTokenIndex !== -1,
-          `Token ${fromHubAsset.asset} not found in the vault reserves for chain ${from.xChainId}`,
-        );
-        const fromTokenDepositedAmount = reserves.balances[fromTokenIndex] ?? 0n;
-        const availableDeposit = depositTokenInfo.maxDeposit - fromTokenDepositedAmount;
+      if (
+        from.xChainId !== this.hubProvider.chainConfig.chain.id &&
+        to.xChainId === this.hubProvider.chainConfig.chain.id
+      ) {
+        const fromTokenDepositedAmount = this.findTokenBalanceInReserves(reserves, from);
+        const availableDeposit = fromTokenInfo.maxDeposit - fromTokenDepositedAmount;
 
         return {
           ok: true,
-          value: availableDeposit,
+          value: {
+            amount: availableDeposit,
+            decimals: fromTokenInfo.decimals,
+            type: 'DEPOSIT_LIMIT',
+          },
         };
       }
 
       // hub -> spoke, we need to check the asset manager balance on the to chain
-      if (this.configService.isValidVault(fromHubAsset.asset)) {
-        const tokenIndex = reserves.tokens.findIndex(t => t.toLowerCase() === toHubAsset.asset.toLowerCase());
-        invariant(
-          tokenIndex !== -1,
-          `Token ${toHubAsset.asset} not found in the vault reserves for chain ${to.xChainId}`,
-        );
-        const assetManagerBalance = reserves.balances[tokenIndex] ?? 0n;
-
+      if (
+        from.xChainId === this.hubProvider.chainConfig.chain.id &&
+        to.xChainId !== this.hubProvider.chainConfig.chain.id
+      ) {
         return {
           ok: true,
-          value: assetManagerBalance,
+          value: {
+            amount: this.findTokenBalanceInReserves(reserves, to),
+            decimals: toTokenInfo.decimals,
+            type: 'WITHDRAWAL_LIMIT',
+          },
         };
       }
 
       // spoke -> spoke, we need to check the deposit available on the from chain and the withdrawable asset manager balance on the to chain
-      const fromTokenIndex = reserves.tokens.findIndex(t => t.toLowerCase() === fromHubAsset.asset.toLowerCase());
-      invariant(
-        fromTokenIndex !== -1,
-        `Token ${fromHubAsset.asset} not found in the vault reserves for chain ${from.xChainId}`,
-      );
-      const fromTokenDepositedAmount = reserves.balances[fromTokenIndex] ?? 0n;
-      const availableDeposit = depositTokenInfo.maxDeposit - fromTokenDepositedAmount;
-      const tokenIndex = reserves.tokens.findIndex(t => t.toLowerCase() === toHubAsset.asset.toLowerCase());
-      invariant(
-        tokenIndex !== -1,
-        `Token ${toHubAsset.asset} not found in the vault reserves for chain ${to.xChainId}`,
-      );
-      const assetManagerBalance = reserves.balances[tokenIndex] ?? 0n;
+      const fromTokenDepositedAmount = this.findTokenBalanceInReserves(reserves, from);
+      const availableDeposit = fromTokenInfo.maxDeposit - fromTokenDepositedAmount;
+      const assetManagerBalance = this.findTokenBalanceInReserves(reserves, to);
+      const availableDepositNormalised = BigNumber(availableDeposit).shiftedBy(-fromTokenInfo.decimals);
+      const assetManagerBalanceNormalised = BigNumber(assetManagerBalance).shiftedBy(-toTokenInfo.decimals);
 
       // return the minimum of the deposit available and the withdrawable asset manager balance
       return {
         ok: true,
-        value: availableDeposit < assetManagerBalance ? availableDeposit : assetManagerBalance,
+        value: availableDepositNormalised.isLessThan(assetManagerBalanceNormalised)
+          ? { amount: availableDeposit, decimals: fromTokenInfo.decimals, type: 'DEPOSIT_LIMIT' }
+          : { amount: assetManagerBalance, decimals: toTokenInfo.decimals, type: 'WITHDRAWAL_LIMIT' },
       };
     } catch (error) {
       console.error(error);
@@ -738,5 +758,13 @@ export class BridgeService {
     }
 
     return bridgeableTokens;
+  }
+
+  public findTokenBalanceInReserves(reserves: VaultReserves, token: XToken): bigint {
+    const hubAsset = this.configService.getHubAssetInfo(token.xChainId, token.address);
+    invariant(hubAsset, `Hub asset not found for token ${token.address} on chain ${token.xChainId}`);
+    const tokenIndex = reserves.tokens.findIndex(t => t.toLowerCase() === hubAsset.asset.toLowerCase());
+    invariant(tokenIndex !== -1, `Token ${hubAsset.asset} not found in the vault reserves for chain ${token.xChainId}`);
+    return reserves.balances[tokenIndex] ?? 0n;
   }
 }

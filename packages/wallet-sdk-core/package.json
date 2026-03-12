@@ -74,7 +74,9 @@
     "icon-sdk-js": "catalog:",
     "secp256k1": "^5.0.1",
     "tiny-secp256k1": "^2.2.3",
-    "viem": "catalog:"
+    "viem": "catalog:",
+    "near-api-js": "7.1.1",
+    "@hot-labs/near-connect": "0.10.0"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",

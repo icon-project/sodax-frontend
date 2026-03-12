@@ -6,42 +6,33 @@ import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import BigNumber from 'bignumber.js';
 import AnimatedNumber from '@/components/shared/animated-number';
 import AssetList from './_components/asset-list';
-import { delay, flattenTokens, getUniqueTokenSymbols, calculateAPY, formatBalance } from '@/lib/utils';
+import { delay, getMoneymarketTokens, getUniqueTokenSymbols, calculateAPY, formatBalance } from '@/lib/utils';
 import DepositOverview from './_components/deposit-overview';
-import TotalSaveTokens from './_components/total-save-tokens';
+import TotalSaveAssets from './_components/total-save-assets';
 import { useSaveActions, useSaveState } from './_stores/save-store-provider';
 import { useReservesUsdFormat } from '@sodax/dapp-kit';
 import { useTokenSupplyBalances } from '@/hooks/useTokenSupplyBalances';
 import { useAllTokenPrices } from '@/hooks/useAllTokenPrices';
 import type { XToken } from '@sodax/types';
 import type { CarouselApi } from '@/components/ui/carousel';
-
-export interface NetworkBalance {
-  networkId: string;
-  balance: string;
-  token: XToken;
-}
-
-export interface DepositItemData {
-  token: XToken;
-  totalBalance: string;
-  fiatValue: string;
-  networksWithFunds: NetworkBalance[];
-  apy: string;
-}
+import CurrencySearchPanel from './_components/currency-search-panel';
+import type { DepositItemData, NetworkBalance } from '@/constants/save';
 
 export default function SavingsPage() {
+  if (process.env.NEXT_PUBLIC_APP_ENV === 'production') {
+    return null;
+  }
+
   const [isOpen, setIsOpen] = useState(false);
-  const { setDepositValue, setTokenCount } = useSaveActions();
-  const { openAsset, isSwitchingChain } = useSaveState();
+  const { setDepositValue, setTotalDepositedUsdValue, reset } = useSaveActions();
+  const { activeAsset, isSwitchingChain } = useSaveState();
   const carouselApiRef = useRef<CarouselApi | undefined>(undefined);
-
-  const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
-  const allTokens = useMemo(() => flattenTokens(), []);
-  const groupedTokens = useMemo(() => getUniqueTokenSymbols(allTokens), [allTokens]);
-  const allGroupTokens = useMemo(() => groupedTokens.flatMap(group => group.tokens), [groupedTokens]);
-  const originalTokensWithSupplyBalances = useTokenSupplyBalances(allGroupTokens, formattedReserves || []);
-
+  const [searchQuery, setSearchQuery] = useState('');
+  const { data: formattedReserves } = useReservesUsdFormat();
+  const allTokens = useMemo(() => getMoneymarketTokens(), []);
+  const allAssets = useMemo(() => getUniqueTokenSymbols(allTokens), [allTokens]);
+  const originalTokensWithSupplyBalances = useTokenSupplyBalances(allTokens, formattedReserves || []);
+  const [selectedChain, setSelectedChain] = useState<string | null>(null);
   const cachedTokensWithSupplyBalancesRef = useRef<typeof originalTokensWithSupplyBalances>(
     originalTokensWithSupplyBalances,
   );
@@ -54,27 +45,44 @@ export default function SavingsPage() {
     return originalTokensWithSupplyBalances;
   }, [originalTokensWithSupplyBalances, isSwitchingChain]);
 
-  const { data: tokenPrices } = useAllTokenPrices(allGroupTokens);
+  const { data: tokenPrices } = useAllTokenPrices(allTokens);
 
-  // Filter and prepare carousel items with balances > 0
-  const depositItems = useMemo((): DepositItemData[] => {
+  const highestAPY = useMemo((): number => {
+    if (!formattedReserves || allTokens.length === 0) {
+      return 0;
+    }
+
+    let maxAPY = 0;
+
+    allTokens.forEach(token => {
+      const apyString = calculateAPY(formattedReserves, token);
+      if (apyString !== '-') {
+        const apyValue = Number.parseFloat(apyString.replace('%', ''));
+        if (!Number.isNaN(apyValue) && apyValue > maxAPY) {
+          maxAPY = apyValue;
+        }
+      }
+    });
+
+    return maxAPY;
+  }, [allTokens, formattedReserves]);
+
+  const suppliedAssets = useMemo((): DepositItemData[] => {
     const items: DepositItemData[] = [];
 
-    groupedTokens.forEach(group => {
+    allAssets.forEach(asset => {
       const tokensWithBalance = tokensWithSupplyBalances.filter(
-        token => token.symbol === group.symbol && Number(token.supplyBalance) > 0,
+        token => token.symbol === asset.symbol && Number(token.supplyBalance) > 0,
       );
 
       if (tokensWithBalance.length === 0) {
         return;
       }
 
-      // Calculate total balance (sum of all balances for this token symbol)
       const totalBalance = tokensWithBalance.reduce((sum, token) => {
         return sum + Number(token.supplyBalance || '0');
       }, 0);
 
-      // Get networks that have funds with their balances
       const networksWithFunds: NetworkBalance[] = tokensWithBalance
         .map(token => ({
           networkId: token.xChainId,
@@ -83,29 +91,24 @@ export default function SavingsPage() {
         }))
         .filter(network => network.networkId);
 
-      // Use first token for price and APY calculation
       const firstToken = tokensWithBalance[0];
       if (!firstToken) {
         return;
       }
 
-      const totalBalanceStr = totalBalance.toFixed(6);
-
-      // Calculate fiat value
       let fiatValue = '$0.00';
-      if (tokenPrices && Number(totalBalanceStr) > 0) {
+      if (tokenPrices && Number(totalBalance) > 0) {
         const priceKey = `${firstToken.symbol}-${firstToken.xChainId}`;
         const tokenPrice = tokenPrices[priceKey] || 0;
-        const usdValue = new BigNumber(totalBalanceStr).multipliedBy(tokenPrice).toString();
+        const usdValue = new BigNumber(totalBalance).multipliedBy(tokenPrice).toString();
         fiatValue = `$${formatBalance(usdValue, tokenPrice)}`;
       }
 
-      // Calculate APY
-      const apy = calculateAPY(formattedReserves, isFormattedReservesLoading, firstToken);
+      const apy = calculateAPY(formattedReserves, firstToken);
 
       items.push({
-        token: firstToken,
-        totalBalance: totalBalanceStr,
+        asset: firstToken,
+        totalBalance: totalBalance.toFixed(6),
         fiatValue,
         networksWithFunds,
         apy,
@@ -113,14 +116,27 @@ export default function SavingsPage() {
     });
 
     return items;
-  }, [groupedTokens, tokensWithSupplyBalances, tokenPrices, formattedReserves, isFormattedReservesLoading]);
+  }, [allAssets, tokensWithSupplyBalances, tokenPrices, formattedReserves]);
 
-  // Update token count in store when carousel items change
-  useEffect(() => {
-    setTokenCount(depositItems.length);
-  }, [depositItems.length, setTokenCount]);
+  const totalUsdValue = useMemo((): string => {
+    if (suppliedAssets.length === 0) {
+      return '$0.00';
+    }
 
-  const hasDeposits = depositItems.length > 0;
+    let total = new BigNumber(0);
+
+    suppliedAssets.forEach(item => {
+      const numericValue = item.fiatValue.replace(/[$,]/g, '');
+      const value = Number(numericValue);
+      if (!Number.isNaN(value) && value > 0) {
+        total = total.plus(value);
+      }
+    });
+    setTotalDepositedUsdValue(Number(total.toString()));
+    return formatBalance(total.toString(), 0);
+  }, [suppliedAssets, setTotalDepositedUsdValue]);
+
+  const hasDeposits = suppliedAssets.length > 0;
 
   useEffect(() => {
     delay(500).then(() => {
@@ -129,27 +145,31 @@ export default function SavingsPage() {
   }, []);
 
   useEffect(() => {
-    if (openAsset !== '') {
+    if (activeAsset !== '') {
       setDepositValue(0);
     }
-  }, [openAsset, setDepositValue]);
+  }, [activeAsset, setDepositValue]);
 
-  // Navigation function to scroll carousel to a specific token
-  const navigateToToken = useCallback(
-    (token: XToken): void => {
+  useEffect(() => {
+    return () => {
+      reset();
+    };
+  }, [reset]);
+
+  const navigateToAsset = useCallback(
+    (asset: XToken): void => {
       if (!carouselApiRef.current) {
         return;
       }
 
-      const tokenIndex = depositItems.findIndex(item => item.token.symbol === token.symbol);
-      if (tokenIndex !== -1) {
-        carouselApiRef.current.scrollTo(tokenIndex);
+      const assetIndex = suppliedAssets.findIndex(item => item.asset.symbol === asset.symbol);
+      if (assetIndex !== -1) {
+        carouselApiRef.current.scrollTo(assetIndex);
       }
     },
-    [depositItems],
+    [suppliedAssets],
   );
 
-  // Callback to receive carousel API
   const handleCarouselApiReady = useCallback((api: CarouselApi | undefined): void => {
     carouselApiRef.current = api;
   }, []);
@@ -163,11 +183,15 @@ export default function SavingsPage() {
     >
       {hasDeposits ? (
         <motion.div className="w-full flex flex-col gap-4" variants={itemVariants}>
-          <DepositOverview depositItems={depositItems} tokenPrices={tokenPrices} onApiReady={handleCarouselApiReady} />
-          <TotalSaveTokens
-            tokensWithSupplyBalances={tokensWithSupplyBalances}
-            depositItems={depositItems}
-            onTokenClick={navigateToToken}
+          <DepositOverview
+            suppliedAssets={suppliedAssets}
+            tokenPrices={tokenPrices}
+            onApiReady={handleCarouselApiReady}
+          />
+          <TotalSaveAssets
+            suppliedAssets={suppliedAssets}
+            onAssetClick={navigateToAsset}
+            totalUsdValue={totalUsdValue}
           />
         </motion.div>
       ) : (
@@ -183,7 +207,7 @@ export default function SavingsPage() {
           <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) flex">
             Up to
             <AnimatedNumber
-              to={9.81}
+              to={highestAPY}
               decimalPlaces={2}
               className="text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) min-w-6 ml-1"
             />
@@ -193,7 +217,16 @@ export default function SavingsPage() {
       )}
 
       <motion.div className="w-full flex-grow-1" variants={itemVariants}>
-        <AssetList searchQuery={''} />
+        <CurrencySearchPanel
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedChain={selectedChain}
+          setSelectedChain={setSelectedChain}
+        />
+      </motion.div>
+
+      <motion.div className="w-full flex-grow-1 relative" variants={itemVariants}>
+        <AssetList searchQuery={searchQuery} selectedChain={selectedChain} />
       </motion.div>
     </motion.div>
   );

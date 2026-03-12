@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import type { ChainId, ChainType } from '@sodax/types';
+import { ChainTypeArr, type ChainId, type ChainType } from '@sodax/types';
 
 import type { XAccount } from '../types';
 import { useXConnection } from './useXConnection';
@@ -24,7 +24,7 @@ import { getXChainType } from '../actions';
  * ```
  */
 function isChainType(chainIdentifier: ChainType | ChainId): chainIdentifier is ChainType {
-  return ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA'].includes(chainIdentifier);
+  return ChainTypeArr.includes(chainIdentifier as ChainType);
 }
 
 export function useXAccount(chainIdentifier?: ChainType | ChainId): XAccount {

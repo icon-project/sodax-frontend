@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/save/_components/amount-input-slider.tsx
 'use client';
 
 import type React from 'react';
@@ -26,7 +25,6 @@ export default function AmountInputSlider({
   tokenSymbol,
   onInputChange,
   className,
-  inputId = 'input-secure-19',
 }: AmountInputSliderProps): React.JSX.Element {
   // Handle input change with max value constraint
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -99,7 +97,6 @@ export default function AmountInputSlider({
             />
           </InputGroupAddon>
           <InputGroupInput
-            id={inputId}
             type="number"
             min={0}
             max={maxValue}

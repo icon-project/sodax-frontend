@@ -10,18 +10,21 @@ import AssetListItemHeader from './asset-list-item-header';
 import { useSaveState } from '../../_stores/save-store-provider';
 
 export default function AssetListItem({
-  group,
+  data,
   isExpanded,
+  isReadyToEarn,
 }: {
-  group: { symbol: string; tokens: XToken[] };
+  data: { symbol: string; tokens: XToken[] };
   isExpanded: boolean;
+  isReadyToEarn: boolean;
 }) {
-  const { openAsset, scrollToCenter } = useSaveState();
+  const { scrollToCenter } = useSaveState();
   const ref = useRef<HTMLDivElement>(null);
-  const { symbol, tokens } = group;
+  const { symbol, tokens } = data;
 
   // Calculate total wallet balance for all tokens in the group
   const tokensWithBalances = useTokenWalletBalances(tokens);
+  const { isAssetListBlurred } = useSaveState();
   const totalWalletBalance = useMemo(() => {
     const total = tokensWithBalances.reduce((sum, token) => {
       return sum + Number(token.supplyBalance || '0');
@@ -57,10 +60,7 @@ export default function AssetListItem({
   return (
     <AccordionItem
       value={symbol}
-      className={cn(
-        'border-none money-market',
-        openAsset === '' ? 'opacity-100' : isExpanded ? 'opacity-100' : 'opacity-60',
-      )}
+      className={cn('border-none money-market', isAssetListBlurred && 'blur-md opacity-40 pointer-events-none')}
     >
       <motion.div ref={ref} layout="size">
         <Separator className="h-[1px] bg-clay opacity-30" />
@@ -85,7 +85,7 @@ export default function AssetListItem({
 
         <AccordionContent forceMount className="relative">
           <AnimatePresence initial={false} mode="wait">
-            {isExpanded && <AssetListItemContent tokens={tokens} />}
+            {isExpanded && <AssetListItemContent tokens={tokens} isReadyToEarn={isReadyToEarn} />}
           </AnimatePresence>
         </AccordionContent>
       </motion.div>

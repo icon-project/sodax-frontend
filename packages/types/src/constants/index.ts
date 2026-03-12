@@ -21,11 +21,12 @@ import type {
   SpokeChainId,
   StellarSpokeChainConfig,
   SuiSpokeChainConfig,
+  NearSpokeChainConfig,
   Token,
   XToken,
 } from '../common/index.js';
 
-export const CONFIG_VERSION = 5; // Increment this when the config is updated
+export const CONFIG_VERSION = 6; // Increment this when the config is updated
 
 // chain ids (actual for evm chains), custom for other chains not having native ids
 export const AVALANCHE_MAINNET_CHAIN_ID = '0xa86a.avax';
@@ -42,8 +43,11 @@ export const SOLANA_MAINNET_CHAIN_ID = 'solana';
 export const STELLAR_MAINNET_CHAIN_ID = 'stellar';
 export const HYPEREVM_MAINNET_CHAIN_ID = 'hyper';
 export const LIGHTLINK_MAINNET_CHAIN_ID = 'lightlink';
+export const NEAR_MAINNET_CHAIN_ID = 'near';
 export const ETHEREUM_MAINNET_CHAIN_ID = 'ethereum';
 export const BITCOIN_MAINNET_CHAIN_ID = 'bitcoin';
+export const REDBELLY_MAINNET_CHAIN_ID = 'redbelly';
+export const KAIA_MAINNET_CHAIN_ID = '0x2019.kaia';
 
 export const HUB_CHAIN_IDS = [SONIC_MAINNET_CHAIN_ID] as const;
 
@@ -63,8 +67,11 @@ export const CHAIN_IDS = [
   STELLAR_MAINNET_CHAIN_ID,
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
+  NEAR_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
-  BITCOIN_MAINNET_CHAIN_ID
+  BITCOIN_MAINNET_CHAIN_ID,
+  REDBELLY_MAINNET_CHAIN_ID,
+  KAIA_MAINNET_CHAIN_ID,
 ] as const;
 
 export const EVM_CHAIN_IDS = [
@@ -78,6 +85,8 @@ export const EVM_CHAIN_IDS = [
   HYPEREVM_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
+  REDBELLY_MAINNET_CHAIN_ID,
+  KAIA_MAINNET_CHAIN_ID,
 ] as const;
 
 export const baseChainInfo = {
@@ -165,6 +174,12 @@ export const baseChainInfo = {
     type: 'ICON',
     chainId: '0x1.icon',
   },
+  [NEAR_MAINNET_CHAIN_ID]: {
+    name: 'Near',
+    id: NEAR_MAINNET_CHAIN_ID,
+    type: 'NEAR',
+    chainId: 'near',
+  },
   [ETHEREUM_MAINNET_CHAIN_ID]: {
     name: 'Ethereum',
     id: ETHEREUM_MAINNET_CHAIN_ID,
@@ -176,7 +191,19 @@ export const baseChainInfo = {
     id: BITCOIN_MAINNET_CHAIN_ID,
     type: 'BITCOIN',
     chainId: 'bitcoin',
-  }
+  },
+  [REDBELLY_MAINNET_CHAIN_ID]: {
+    name: 'Redbelly',
+    id: REDBELLY_MAINNET_CHAIN_ID,
+    type: 'EVM',
+    chainId: 151,
+  },
+  [KAIA_MAINNET_CHAIN_ID]: {
+    name: 'Kaia',
+    id: KAIA_MAINNET_CHAIN_ID,
+    type: 'EVM',
+    chainId: 8217,
+  },
 } as const satisfies Record<ChainId, BaseSpokeChainInfo<ChainType>>;
 
 // NOTE: This is not the same as the actual chain ids (wormhole based ids), only used for intent relay
@@ -195,8 +222,11 @@ export const ChainIdToIntentRelayChainId = {
   [ICON_MAINNET_CHAIN_ID]: 1768124270n,
   [HYPEREVM_MAINNET_CHAIN_ID]: 26745n,
   [LIGHTLINK_MAINNET_CHAIN_ID]: 27756n,
+  [NEAR_MAINNET_CHAIN_ID]: 15n,
   [ETHEREUM_MAINNET_CHAIN_ID]: 2n,
-  [BITCOIN_MAINNET_CHAIN_ID]: 627463n
+  [BITCOIN_MAINNET_CHAIN_ID]: 627463n,
+  [REDBELLY_MAINNET_CHAIN_ID]: 726564n,
+  [KAIA_MAINNET_CHAIN_ID]: 27489n,
 } as const;
 
 export const getIntentRelayChainId = (chainId: ChainId): IntentRelayChainId => ChainIdToIntentRelayChainId[chainId];
@@ -218,9 +248,12 @@ export const HubVaultSymbols = [
   'sodaS',
   'IbnUSD',
   'sodaHYPE',
+  'sodaRBNT',
   'sodaLL',
   'sodaWEETH',
   'sodaWSTETH',
+  'sodaNEAR',
+  'sodaKAIA',
 ] as const;
 
 export const SodaTokens = {
@@ -336,6 +369,13 @@ export const SodaTokens = {
     address: '0x6E81124fC5d2Bf666B16a0A5d90066eBf35c7411',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
+  sodaRBNT: {
+    symbol: 'sodaRBNT',
+    name: 'Soda RBNT',
+    decimals: 18,
+    address: '0x4B207114F9118dEAC56436e1aE3c45648783c7Ac',
+    xChainId: REDBELLY_MAINNET_CHAIN_ID,
+  },
   sodaLL: {
     symbol: 'sodaLL',
     name: 'Soda LL',
@@ -355,6 +395,20 @@ export const SodaTokens = {
     name: 'SODA WSTETH',
     decimals: 18,
     address: '0x58b0538D7EEaeE69EF32f9F1dE5cbF32A10a977B',
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
+  sodaNEAR: {
+    symbol: 'sodaNEAR',
+    name: 'SODA NEAR',
+    decimals: 24,
+    address: '0xf4ba497c9b805e4bd88a8a9e6a7b8f74984c3e39',
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
+  sodaKAIA: {
+    symbol: 'sodaKAIA',
+    name: 'Soda KAIA',
+    decimals: 18,
+    address: '0xD7d41b5f803b6A40F8A6eAa34E459A4564e39891',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
 } as const satisfies Record<HubVaultSymbol, XToken>;
@@ -1348,6 +1402,62 @@ export const spokeChainConfig = {
     bnUSD: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
     nid: '0x1',
   } as const satisfies IconSpokeChainConfig,
+  [NEAR_MAINNET_CHAIN_ID]: {
+    rpcUrl: 'https://1rpc.io/near',
+    chain: baseChainInfo[NEAR_MAINNET_CHAIN_ID] as BaseSpokeChainInfo<'NEAR'>,
+    nativeToken: 'NEAR',
+    addresses: {
+      assetManager: 'asset-manager.sodax.near',
+      connection: 'connection.sodax.near',
+      rateLimit: 'rate-limit.sodax.near',
+      intentFiller: 'intent-filler.sodax.near',
+    },
+    supportedTokens: {
+      NEAR: {
+        symbol: 'NEAR',
+        name: 'NEAR',
+        decimals: 24,
+        address: 'NEAR',
+        xChainId: NEAR_MAINNET_CHAIN_ID,
+      },
+      bnUSD: {
+        address: 'bnusd.sodax.near',
+        symbol: 'bnUSD',
+        decimals: 24,
+        name: 'bnUSD',
+        xChainId: NEAR_MAINNET_CHAIN_ID,
+      },
+      SODA: {
+        symbol: 'SODA',
+        name: 'SODAX',
+        decimals: 24,
+        address: 'soda.sodax.near',
+        xChainId: NEAR_MAINNET_CHAIN_ID,
+      },
+      USDC: {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        decimals: 6,
+        address: '17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1',
+        xChainId: NEAR_MAINNET_CHAIN_ID,
+      },
+      USDT: {
+        symbol: 'USDT',
+        name: 'Tether USD',
+        decimals: 6,
+        address: 'usdt.tether-token.near',
+        xChainId: NEAR_MAINNET_CHAIN_ID,
+      },
+      wNEAR: {
+        symbol: 'wNEAR',
+        name: 'Wrapped NEAR fungible token',
+        decimals: 24,
+        address: 'wrap.near',
+        xChainId: NEAR_MAINNET_CHAIN_ID,
+      },
+    },
+    bnUSD: 'bnusd.sodax.near',
+  } as const satisfies NearSpokeChainConfig,
   [ETHEREUM_MAINNET_CHAIN_ID]: {
     chain: baseChainInfo[ETHEREUM_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'EVM'>,
     addresses: {
@@ -1412,6 +1522,168 @@ export const spokeChainConfig = {
         decimals: 6,
         address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
         xChainId: ETHEREUM_MAINNET_CHAIN_ID,
+      },
+      WBTC: {
+        symbol: 'WBTC',
+        name: 'Wrapped Bitcoin',
+        decimals: 8,
+        address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+        xChainId: ETHEREUM_MAINNET_CHAIN_ID,
+      },
+    } as const,
+  } as const satisfies EvmSpokeChainConfig,
+  [KAIA_MAINNET_CHAIN_ID]: {
+    chain: baseChainInfo[KAIA_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'EVM'>,
+    addresses: {
+      assetManager: '0x6D2126DB97dd88AfA85127253807D04A066b6746',
+      connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
+    },
+    nativeToken: '0x0000000000000000000000000000000000000000' as const,
+    bnUSD: '0xF8D13cAcb8E2B6BA8396DbA35a7365EF6b603cd6',
+    supportedTokens: {
+      KAIA: {
+        symbol: 'KAIA',
+        name: 'Kaia',
+        decimals: 18,
+        address: '0x0000000000000000000000000000000000000000',
+        xChainId: KAIA_MAINNET_CHAIN_ID,
+      },
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 18,
+        address: '0xF8D13cAcb8E2B6BA8396DbA35a7365EF6b603cd6',
+        xChainId: KAIA_MAINNET_CHAIN_ID,
+      },
+      USDT: {
+        symbol: 'USDT',
+        name: 'Tether USD',
+        decimals: 6,
+        address: '0xd077a400968890eacc75cdc901f0356c943e4fdb',
+        xChainId: KAIA_MAINNET_CHAIN_ID,
+      },
+      SODA: {
+        symbol: 'SODA',
+        name: 'SODAX',
+        decimals: 18,
+        address: '0x772ffe538e45b2cddfb5823041ec26c44815b9ab',
+        xChainId: KAIA_MAINNET_CHAIN_ID,
+      },
+    } as const,
+  } as const satisfies EvmSpokeChainConfig,
+  [REDBELLY_MAINNET_CHAIN_ID]: {
+    chain: baseChainInfo[REDBELLY_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'EVM'>,
+    addresses: {
+      assetManager: '0x39E77f86C1B1f3fbAb362A82b49D2E86C09659B4',
+      connection: '0x88F03d1b4e84FB6ED54dFFadc609D724E324Ab02',
+    },
+    nativeToken: '0x0000000000000000000000000000000000000000' as const,
+    bnUSD: '0xF4f7dC27c17470a26d0de9039Cf0EA5045F100E8',
+    supportedTokens: {
+      RBNT: {
+        symbol: 'RBNT',
+        name: 'RBNT',
+        decimals: 18,
+        address: '0x0000000000000000000000000000000000000000',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 18,
+        address: '0xF4f7dC27c17470a26d0de9039Cf0EA5045F100E8',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      SODA: {
+        symbol: 'SODA',
+        name: 'SODAX',
+        decimals: 18,
+        address: '0x5034479da62Ec95360165BB45ead266A48519E85',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      USDC: {
+        symbol: 'USDC',
+        name: 'USD Coin',
+        decimals: 6,
+        address: '0x8201c02d4AB2214471E8C3AD6475C8b0CD9F2D06',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      USDT: {
+        symbol: 'USDT',
+        name: 'Tether USD',
+        decimals: 6,
+        address: '0x8C4aCd74Ff4385f3B7911432FA6787Aa14406f8B',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rETH: {
+        symbol: 'rETH',
+        name: 'RedBelly Ethereum',
+        decimals: 18,
+        address: '0xb5239140745067502ee35B4E2dC2869418Db8309',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rBTC: {
+        symbol: 'rBTC',
+        name: 'RedBelly Bitcoin',
+        decimals: 18,
+        address: '0x79F9B344bB64aF1E89B0C3d20ded4f299F4ff262',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rSOL: {
+        symbol: 'rSOL',
+        name: 'RedBelly SOL',
+        decimals: 18,
+        address: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rBNB: {
+        symbol: 'rBNB',
+        name: 'RedBelly BNB',
+        decimals: 18,
+        address: '0x674A76BE36eE36f201df3F918fe0d30AC969FFaB',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rHYPE: {
+        symbol: 'rHYPE',
+        name: 'RedBelly HYPE',
+        decimals: 18,
+        address: '0x30E603F6f4A0642579A9Eb87F39E97C3d63c5185',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rAVAX: {
+        symbol: 'rAVAX',
+        name: 'RedBelly AVAX',
+        decimals: 18,
+        address: '0xdEa692287E2cE8Cb08FA52917Be0F16b1DACDC87',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rXLM: {
+        symbol: 'rXLM',
+        name: 'RedBelly XLM',
+        decimals: 18,
+        address: '0xD6728c68158F8B1c2DD9C2c075b7Ec14Be82B056',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rSUI: {
+        symbol: 'rSUI',
+        name: 'RedBelly SUI',
+        decimals: 18,
+        address: '0x5a075872cb75F68668364Fa9295eCFcE9A1114e2',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rS: {
+        symbol: 'rS',
+        name: 'RedBelly S',
+        decimals: 18,
+        address: '0xd891190A2382c75e3091Bbff3a119e4C578E8ebb',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
+      },
+      rPOL: {
+        symbol: 'rPOL',
+        name: 'RedBelly POL',
+        decimals: 18,
+        address: '0x390ceed555905ec225Da330A188EA04e85570f00',
+        xChainId: REDBELLY_MAINNET_CHAIN_ID,
       },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
@@ -2161,6 +2433,43 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       vault: '0x', // no vault yet
     },
   },
+  [NEAR_MAINNET_CHAIN_ID]: {
+    [spokeChainConfig[NEAR_MAINNET_CHAIN_ID].nativeToken]: {
+      asset: '0xda7a39b44d5aa0b99bd3c16110f79fa43d3bf4a4',
+      decimal: 24,
+      symbol: 'NEAR',
+      name: 'NEAR',
+      vault: SodaTokens.sodaNEAR.address,
+    },
+    [spokeChainConfig[NEAR_MAINNET_CHAIN_ID].bnUSD]: {
+      asset: '0x1979904d6d5ef1178e242471f7091f36d79f8ab4',
+      decimal: 24,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
+      vault: SodaTokens.IbnUSD.address,
+    },
+    [spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
+      asset: '0x4edaa15e106910dbf2b73e6a36828755ebd38668',
+      decimal: 24,
+      symbol: 'SODA',
+      name: 'SODAX',
+      vault: SodaTokens.sodaSODA.address,
+    },
+    [spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
+      asset: '0x0d7209e6a6922a9f8e42bf04dc263dcdd0a0c20a',
+      decimal: 6,
+      symbol: 'USDC',
+      name: 'USD Coin',
+      vault: SodaTokens.sodaUSDC.address,
+    },
+    [spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
+      asset: '0x54e3c4b335caff41577e187fb9be1c2b35a1e151',
+      decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: SodaTokens.sodaUSDT.address,
+    },
+  } as const,
   [ETHEREUM_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.ETH.address]: {
       asset: '0xaeafa26e43f46cd83efe89b1e57c858eb5685a24',
@@ -2211,6 +2520,157 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'Wrapped Staked Ethereum',
       vault: SodaTokens.sodaWSTETH.address,
     },
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
+      asset: '0xd1a1c0ae27f661887fe76b0fd609eb2f6846a8b3',
+      decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: SodaTokens.sodaUSDT.address,
+    },
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.WBTC.address]: {
+      asset: '0x4ccbe4c2cf2aeed19314790622efd71dc0b67acb',
+      decimal: 8,
+      symbol: 'WBTC',
+      name: 'Wrapped Bitcoin',
+      vault: SodaTokens.sodaBTC.address,
+    },
+  },
+  [KAIA_MAINNET_CHAIN_ID]: {
+    [spokeChainConfig[KAIA_MAINNET_CHAIN_ID].nativeToken]: {
+      asset: '0x1950c088bc12398240224808167a166f220c8d0e',
+      decimal: 18,
+      symbol: 'KAIA',
+      name: 'Kaia',
+      vault: SodaTokens.sodaKAIA.address,
+    },
+    [spokeChainConfig[KAIA_MAINNET_CHAIN_ID].bnUSD]: {
+      asset: '0x60cc9bd812bec2fb65242e9cd0a3ead4a8bf7488',
+      decimal: 18,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
+      vault: SodaTokens.bnUSD.address,
+    },
+    [spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
+      asset: '0x99ecd19afce86766a417956971cdc5e026284454',
+      decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: SodaTokens.sodaUSDT.address,
+    },
+    [spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
+      asset: '0x7c5a1f6d39befef7dd2b2be38dd98d323d42ab8d',
+      decimal: 18,
+      symbol: 'SODA',
+      name: 'SODAX',
+      vault: SodaTokens.sodaSODA.address,
+    },
+  },
+  [REDBELLY_MAINNET_CHAIN_ID]: {
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.RBNT.address]: {
+      asset: '0x4081e0676c5137161b61601756e6524058a9c5c5',
+      decimal: 18,
+      symbol: 'RBNT',
+      name: 'RedBelly Native Token',
+      vault: SodaTokens.sodaRBNT.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.bnUSD.address]: {
+      asset: '0x650a42ad3017190399b1797b6a7f65240c258e5d',
+      decimal: 18,
+      symbol: 'bnUSD',
+      name: 'bnUSD',
+      vault: SodaTokens.bnUSD.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.SODA.address]: {
+      asset: '0x855ecace4fe3f9f1e648591af6ba4e9fbd2bf987',
+      decimal: 18,
+      symbol: 'SODA',
+      name: 'SODAX',
+      vault: SodaTokens.sodaSODA.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.USDC.address]: {
+      asset: '0xedbe83a638da53d0f31f51b9f6b65ea0e8c3b4bf',
+      decimal: 6,
+      symbol: 'USDC',
+      name: 'USD Coin',
+      vault: SodaTokens.sodaUSDC.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.USDT.address]: {
+      asset: '0x81afe70d3b8266395b9f508c95cfc05ce7e01609',
+      decimal: 6,
+      symbol: 'USDT',
+      name: 'Tether USD',
+      vault: SodaTokens.sodaUSDT.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rETH.address]: {
+      asset: '0x87baf5eb9c67a86a5260b7ec739d0c4a4a450ae3',
+      decimal: 18,
+      symbol: 'rETH',
+      name: 'RedBelly Ethereum',
+      vault: SodaTokens.sodaETH.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rBTC.address]: {
+      asset: '0xe88e7117a2f84bad69cb35440617cb4cbf5d39d1',
+      decimal: 18,
+      symbol: 'rBTC',
+      name: 'RedBelly Bitcoin',
+      vault: SodaTokens.sodaBTC.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rSOL.address]: {
+      asset: '0x12cb9f7ea402a75dc0b670097c9c376e778b3480',
+      decimal: 18,
+      symbol: 'rSOL',
+      name: 'RedBelly SOL',
+      vault: SodaTokens.sodaSOL.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rBNB.address]: {
+      asset: '0x1926ea1492bc849865b9dc40576226d0f2ac2865',
+      decimal: 18,
+      symbol: 'rBNB',
+      name: 'RedBelly BNB',
+      vault: SodaTokens.sodaBNB.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rHYPE.address]: {
+      asset: '0xc01d5d8fed35e897be5b402c96edb3b6cee50223',
+      decimal: 18,
+      symbol: 'rHYPE',
+      name: 'RedBelly HYPE',
+      vault: SodaTokens.sodaHYPE.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rAVAX.address]: {
+      asset: '0x9cb238c213d490d64e9be025e3e9f80c49068b74',
+      decimal: 18,
+      symbol: 'rAVAX',
+      name: 'RedBelly AVAX',
+      vault: SodaTokens.sodaAVAX.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rXLM.address]: {
+      asset: '0x38e2866396e5246072450fdde24b67cec6113987',
+      decimal: 18,
+      symbol: 'rXLM',
+      name: 'RedBelly XLM',
+      vault: SodaTokens.sodaXLM.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rSUI.address]: {
+      asset: '0xa98bf33d2bc3fdf851c3d680db4676bba33b7142',
+      decimal: 18,
+      symbol: 'rSUI',
+      name: 'RedBelly SUI',
+      vault: SodaTokens.sodaSUI.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rS.address]: {
+      asset: '0x8f3a13d920fe2e0b80fe4981c430e9ee528e80aa',
+      decimal: 18,
+      symbol: 'rS',
+      name: 'RedBelly S',
+      vault: SodaTokens.sodaS.address,
+    },
+    [spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rPOL.address]: {
+      asset: '0x3afeb3584649342a967629bb39a135dce2db8ebf',
+      decimal: 18,
+      symbol: 'rPOL',
+      name: 'RedBelly POL',
+      vault: SodaTokens.sodaPOL.address,
+    },
   },
   [BITCOIN_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BTC.symbol]: {
@@ -2234,6 +2694,7 @@ export const solverConfig = {
   [SONIC_MAINNET_CHAIN_ID]: {
     intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
     solverApiEndpoint: 'https://api.sodax.com/v1/intent',
+    protocolIntentsContract: '0xaFf2EDb3057ed6f9C1dA6c930b8ddDf2beE573A5' as const,
   } satisfies SolverConfig,
 };
 
@@ -2247,6 +2708,7 @@ export const swapSupportedTokens = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS,
+    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
   ] as const satisfies XToken[],
   [AVALANCHE_MAINNET_CHAIN_ID]: [
@@ -2254,6 +2716,7 @@ export const swapSupportedTokens = {
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const satisfies XToken[],
   [ARBITRUM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
@@ -2264,6 +2727,7 @@ export const swapSupportedTokens = {
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.tBTC,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const satisfies XToken[],
   [BASE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.ETH,
@@ -2272,6 +2736,7 @@ export const swapSupportedTokens = {
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.wstETH,
     spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.cbBTC,
+    spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const satisfies XToken[],
   [OPTIMISM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.ETH,
@@ -2280,11 +2745,13 @@ export const swapSupportedTokens = {
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
     // spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.weETH, // NOTE: Not Implemented
     spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[OPTIMISM_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const satisfies XToken[],
   [POLYGON_MAINNET_CHAIN_ID]: [
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.POL,
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const satisfies XToken[],
   [BSC_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.BNB,
@@ -2293,17 +2760,18 @@ export const swapSupportedTokens = {
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[BSC_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const satisfies XToken[],
   [HYPEREVM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.HYPE,
     spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
-    // spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[HYPEREVM_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies XToken[],
   [LIGHTLINK_MAINNET_CHAIN_ID]: [
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.ETH,
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
-    // spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['BTC.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['AVAX.LL'],
@@ -2320,6 +2788,7 @@ export const swapSupportedTokens = {
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL,
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const satisfies XToken[],
   [ICON_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ICON_MAINNET_CHAIN_ID].supportedTokens.ICX,
@@ -2332,11 +2801,13 @@ export const swapSupportedTokens = {
     spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.XLM,
     spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
     spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const satisfies XToken[],
   [SUI_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.SUI,
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.afSUI,
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.mSUI,
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.haSUI,
@@ -2348,16 +2819,42 @@ export const swapSupportedTokens = {
     // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ,
     // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
     // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const satisfies XToken[],
   [BITCOIN_MAINNET_CHAIN_ID]: [
     
   ] as const satisfies XToken[],
+  [NEAR_MAINNET_CHAIN_ID]: [] as const satisfies XToken[],
   [ETHEREUM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDC,
-    // spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.LL,
+  ] as const,
+  [REDBELLY_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.RBNT,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rETH,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rBTC,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rSOL,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rBNB,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rHYPE,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rAVAX,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rXLM,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rSUI,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rS,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rPOL,
+  ] as const satisfies Token[],
+  [KAIA_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.KAIA,
+    spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const satisfies XToken[],
 } as const satisfies Record<SpokeChainId, readonly XToken[]>;
 
@@ -2475,6 +2972,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.XLM,
     spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.USDC,
   ] as const satisfies XToken[],
   [SUI_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.SUI,
@@ -2497,7 +2995,13 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA,
-    spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+  ] as const satisfies XToken[],
+  [NEAR_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.NEAR,
+    spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.USDT,
   ] as const satisfies XToken[],
   [ETHEREUM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
@@ -2507,6 +3011,29 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.weETH,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.wstETH,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.WBTC,
+  ] as const,
+  [REDBELLY_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rETH,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rBTC,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rSOL,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rBNB,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rHYPE,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rAVAX,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rXLM,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rSUI,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rS,
+    spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.rPOL,
+  ] as const satisfies Token[],
+  [KAIA_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.KAIA,
+    spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const satisfies XToken[],
   [BITCOIN_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BTC,
@@ -2536,3 +3063,10 @@ export const defaultSodaxConfig = {
 } satisfies GetAllConfigApiResponse;
 
 export const supportedSpokeChains: SpokeChainId[] = Object.keys(spokeChainConfig) as SpokeChainId[];
+
+export const defaultSharedConfig = {
+  [STELLAR_MAINNET_CHAIN_ID]: {
+    horizonRpcUrl: 'https://horizon.stellar.org',
+    sorobanRpcUrl: 'https://rpc.ankr.com/stellar_soroban',
+  },
+} as const;

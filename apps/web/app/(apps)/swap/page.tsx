@@ -21,6 +21,7 @@ import { calculateMaxAvailableAmount, formatBalance } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { itemVariants, listVariants } from '@/constants/animation';
 import { getSwapTiming } from '@/lib/swap-timing';
+import { DISCORD_ROUTE } from '@/constants/routes';
 
 export default function SwapPage() {
   const { inputToken, outputToken, inputAmount, isSwapAndSend, customDestinationAddress, slippageTolerance } =
@@ -59,6 +60,9 @@ export default function SwapPage() {
 
   const { sodax } = useSodaxContext();
 
+  // Quote request: we send the full input amount here. The SDK (getQuote → adjustAmountByFee)
+  // applies the partner fee once before calling the solver, so the solver receives e.g. 0.999 USDC for 1 USDC (0.1% fee).
+  // Do not subtract the fee here, or it would be applied twice and the solver would get 0.998 (0.2%).
   const quotePayload = useMemo(() => {
     if (
       !inputToken ||
@@ -76,14 +80,12 @@ export default function SwapPage() {
       token_src_blockchain_id: inputToken.xChainId,
       token_dst: outputToken.address,
       token_dst_blockchain_id: outputToken.xChainId,
-      amount:
-        parseUnits(inputAmount, inputToken.decimals) -
-        sodax.swaps.getPartnerFee(parseUnits(inputAmount, inputToken.decimals)),
+      amount: parseUnits(inputAmount, inputToken.decimals),
       quote_type: 'exact_input' as QuoteType,
     };
 
     return payload;
-  }, [inputToken, outputToken, inputAmount, sodax]);
+  }, [inputToken, outputToken, inputAmount]);
 
   const quoteQuery = useQuote(quotePayload);
   const { data: outputTokenPrice } = useTokenPrice(outputToken);
@@ -94,6 +96,8 @@ export default function SwapPage() {
     return undefined;
   }, [quoteQuery.data]);
 
+  // Fee breakdown: partner = sodax fee (e.g. 0.1% of input); solver = solver fee (0.1% of quoted output).
+  // Used for display and for computing min output; actual charge to user is only the partner fee.
   const swapFees = useMemo(() => {
     if (!inputAmount || inputAmount === '' || Number.isNaN(Number(inputAmount)) || Number(inputAmount) <= 0) {
       return undefined;
@@ -124,6 +128,7 @@ export default function SwapPage() {
     };
   }, [swapFees, inputTokenPrice, outputTokenPrice]);
 
+  // Minimum output after slippage tolerance; used as minOutputAmount when creating the swap intent.
   const minOutputAmount = useMemo(() => {
     if (calculatedOutputAmount) {
       return BigInt(
@@ -172,6 +177,11 @@ export default function SwapPage() {
     }, 500);
   }, []);
 
+  useEffect(() => {
+    setIsSwapAndSend(false);
+    setCustomDestinationAddress('');
+  }, [setIsSwapAndSend, setCustomDestinationAddress]);
+
   return (
     <motion.div className="w-full">
       <motion.div
@@ -189,23 +199,23 @@ export default function SwapPage() {
               everywhere
             </span>
           </div>
-          <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) flex gap-1">
+          <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug text-(length:--subtitle)! flex gap-1">
             Access{' '}
             <AnimatedNumber
               to={63}
-              className="text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) min-w-6"
+              className="text-clay-light font-normal font-['InterRegular'] leading-snug text-(length:--subtitle)! min-w-6"
             />
             assets across
             <AnimatedNumber
               to={12}
-              className="text-clay-light font-normal font-['InterRegular'] leading-snug !text-(length:--subtitle) min-w-5"
+              className="text-clay-light font-normal font-['InterRegular'] leading-snug text-(length:--subtitle)! min-w-5"
             />
             networks.
           </div>
         </motion.div>
 
         <motion.div
-          className="inline-flex flex-col justify-start items-start gap-2 w-full mt-(--layout-space-comfortable)"
+          className="inline-flex flex-col justify-start items-start gap-4 sm:gap-2 w-full mt-(--layout-space-comfortable)"
           variants={itemVariants}
           layout={false}
         >
@@ -254,7 +264,7 @@ export default function SwapPage() {
             <div className="mt-(--layout-space-comfortable) text-clay-light text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight flex gap-1 items-center">
               Need help?
               <Link
-                href="https://x.com/sodaxlabs"
+                href={DISCORD_ROUTE}
                 target="_blank"
                 className="flex gap-1 hover:font-bold text-clay items-center leading-[1.4]"
               >

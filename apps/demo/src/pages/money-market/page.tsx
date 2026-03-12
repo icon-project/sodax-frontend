@@ -5,15 +5,16 @@ import { SupplyAssetsList } from '@/components/mm/lists/SupplyAssetsList';
 import { Button } from '@/components/ui/button';
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
-import { useDeriveUserWalletAddress } from '@sodax/dapp-kit';
-import { Wallet } from 'lucide-react';
+import { useGetUserHubWalletAddress } from '@sodax/dapp-kit';
+import { Info, Wallet } from 'lucide-react';
 import { BorrowAssetsList } from '@/components/mm/lists/borrow/BorrowAssetsList';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 export default function MoneyMarketPage() {
   const { openWalletModal, selectedChainId, selectChainId } = useAppStore();
   const xAccount = useXAccount(selectedChainId);
 
-  const { data: walletAddressOnHub } = useDeriveUserWalletAddress(selectedChainId, xAccount?.address);
+  const { data: walletAddressOnHub } = useGetUserHubWalletAddress(selectedChainId, xAccount?.address);
 
   return (
     <main className="min-h-screen bg-linear-to-br from-almost-white via-cream-white to-vibrant-white">
@@ -21,22 +22,40 @@ export default function MoneyMarketPage() {
         {/* Header Section */}
         <div className="my-3">
           <h1 className="text-4xl font-bold text-cherry-dark">Money Market</h1>
-          <p className="text-clay">Supply and borrow assets across multiple chains</p>
-        </div>{' '}
+          <p className="text-clay inline-flex items-center gap-1">
+            Supply and borrow assets across multiple chains.{' '}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Money Market Info"
+                  className="inline-flex items-center text-clay hover:text-cherry-dark "
+                >
+                  <Info className="w-4 h-4 text-clay" />
+                </button>
+              </TooltipTrigger>
+
+              <TooltipContent variant="soft" side="top" align="center" sideOffset={6}>
+                Only assets supported by the SODAX Money Market are shown.
+              </TooltipContent>
+            </Tooltip>
+          </p>
+        </div>
         {/* Controls Bar */}
         <div className="bg-white rounded-xl shadow-sm border border-cherry-grey/20 p-3 my-3">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-clay">Chain:</span>
               <ChainSelector selectedChainId={selectedChainId} selectChainId={selectChainId} />
+              <div className="text-xs text-muted-foreground">
+                This chain is used for collateral (supply) & debt (borrow)
+              </div>{' '}
             </div>
 
             {walletAddressOnHub && (
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-clay">Hub Wallet Address:</span>
-                <span className="px-3 py-1.5 bg-cream rounded-lg text-cherry-dark font-mono text-xs">
-                  {walletAddressOnHub}
-                </span>
+                <span className="px-3 py-1.5 bg-cream rounded-lg text-cherry-dark text-xs">{walletAddressOnHub}</span>
               </div>
             )}
           </div>
@@ -45,7 +64,7 @@ export default function MoneyMarketPage() {
         {xAccount?.address ? (
           <div className="animate-in fade-in duration-500">
             <SupplyAssetsList />
-            <BorrowAssetsList />
+            <BorrowAssetsList initialChainId={selectedChainId} />
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[500px] bg-white rounded-xl shadow-sm border border-cherry-grey/20 p-12">

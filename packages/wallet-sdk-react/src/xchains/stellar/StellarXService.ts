@@ -5,6 +5,24 @@ import CustomSorobanServer from './CustomSorobanServer';
 import { getTokenBalance } from './utils';
 import type { XToken } from '@sodax/types';
 
+/** Base reserve in stroops (0.5 XLM). Each subentry (trustline, signer, data entry, offer) adds one base reserve. */
+const STELLAR_BASE_RESERVE_STROOPS = 5_000_000;
+
+/** Horizon account fields used for minimum balance. Minimum = (2 + subentry_count + num_sponsoring - num_sponsored) * base_reserve + selling_liabilities. */
+interface StellarAccountReserveFields {
+  subentry_count?: number;
+  num_sponsoring?: number;
+  num_sponsored?: number;
+}
+
+/** Parse XLM balance string (e.g. "198.8944970") to stroops (1 XLM = 10^7 stroops). */
+function parseXlmBalanceToStroops(balanceStr: string): bigint {
+  const parts = balanceStr.split('.');
+  const whole = parts[0] ?? '0';
+  const frac = (parts[1] ?? '').padEnd(7, '0').slice(0, 7);
+  return BigInt(whole + frac);
+}
+
 export class StellarXService extends XService {
   private static instance: StellarXService;
 
@@ -39,7 +57,22 @@ export class StellarXService extends XService {
     if (xToken.symbol === 'XLM') {
       const xlmBalance = stellarAccount.balances.find(balance => balance.asset_type === 'native');
       if (xlmBalance) {
-        return BigInt(xlmBalance.balance.replace('.', ''));
+        const rawBalanceStroops = parseXlmBalanceToStroops(xlmBalance.balance);
+        const sellingLiabilitiesStroops = (xlmBalance as { selling_liabilities?: string }).selling_liabilities
+          ? parseXlmBalanceToStroops((xlmBalance as { selling_liabilities: string }).selling_liabilities)
+          : BigInt(0);
+        const reserveFields = stellarAccount as unknown as StellarAccountReserveFields;
+        const subentryCount = reserveFields.subentry_count ?? 0;
+        const numSponsoring = reserveFields.num_sponsoring ?? 0;
+        const numSponsored = reserveFields.num_sponsored ?? 0;
+        // Minimum balance = (2 + subentry_count + num_sponsoring - num_sponsored) * base_reserve + selling_liabilities.
+        // When account has sponsored reserves (num_sponsored > 0), those reserves are paid by the sponsor, so we don't subtract them.
+        const reserveCount = Math.max(0, 2 + subentryCount + numSponsoring - numSponsored);
+        const minBalanceStroops =
+          BigInt(reserveCount) * BigInt(STELLAR_BASE_RESERVE_STROOPS) + sellingLiabilitiesStroops;
+        const availableStroops =
+          rawBalanceStroops > minBalanceStroops ? rawBalanceStroops - minBalanceStroops : BigInt(0);
+        return availableStroops;
       }
     } else {
       try {

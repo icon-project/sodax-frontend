@@ -1,8 +1,26 @@
+'use client';
+
 import { Label } from '@/components/ui/label';
 import { FooterLink } from '@/components/landing/footer-link';
 import Image from 'next/image';
 import { useState } from 'react';
 import TermsModal from '@/components/landing/terms-modal';
+import {
+  BALANCED_DEFI_ROUTE,
+  BRAND_KIT_ROUTE,
+  DISCORD_ROUTE,
+  DOCUMENTATION_GITBOOK_ROUTE,
+  GITHUB_ROUTE,
+  GLOSSARY_ROUTE,
+  HANA_WALLET_ROUTE,
+  LINKTREE_ROUTE,
+  NEWS_ROUTE,
+  PARTNER_DASHBOARD_ROUTE,
+  SODAX_SCAN_ROUTE,
+  SWAP_ROUTE,
+  X_ROUTE,
+} from '@/constants/routes';
+import { showCookiePreferences } from '@/components/cookie-consent/cookie-consent-banner';
 
 interface FooterProps {
   onTermsClick?: () => void;
@@ -16,8 +34,8 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
     onTermsClick?.();
   };
   return (
-    <div className="h-[560px] flex flex-wrap-reverse sm:flex-wrap-reverse lg:justify-center mt-4 bg-almost-white footer pt-[80px]">
-      <div className="p-4 pl-0 min-w-[200px] ml-[32px]">
+    <div className="h-140 flex flex-wrap-reverse sm:flex-wrap-reverse lg:justify-center bg-almost-white footer pt-20">
+      <div className="p-4 pl-0 min-w-50 ml-8">
         <div className="flex items-center">
           <Image src="/symbol2.png" alt="SODAX Symbol" width={32} height={32} />
           <span className="ml-2 font-black text-2xl text-cherry-bright">SODAX</span>
@@ -28,53 +46,59 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           </Label>
         </div>
       </div>
-      <div className="sm:inline-flex sm:justify-start sm:items-start gap-10 p-4 ml-[32px] pl-0 flex flex-wrap lg:ml-[111px]">
-        <div className="inline-flex flex-col justify-start items-start gap-3 w-[152px]">
-          <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
+      <div className="sm:inline-flex sm:justify-start sm:items-start gap-10 p-4 ml-8 pl-0 flex flex-wrap lg:ml-27.75">
+        <div className="inline-flex flex-col justify-start items-start gap-3 w-38">
+          <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">
             using soda
           </div>
-          <FooterLink href="/swap">SODAX Swap</FooterLink>
-          <FooterLink href="https://www.hanawallet.io/" showArrow>
+          <FooterLink href={SWAP_ROUTE}>SODAX Swap</FooterLink>
+          <FooterLink href={HANA_WALLET_ROUTE} showArrow>
             Hana Wallet
           </FooterLink>
-          <FooterLink href="https://app.balanced.network/" showArrow>
+          <FooterLink href={BALANCED_DEFI_ROUTE} showArrow>
             Balanced DeFi
           </FooterLink>
+          <FooterLink href={PARTNER_DASHBOARD_ROUTE} showArrow>
+            <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">
+              partner portal
+            </div>
+          </FooterLink>
         </div>
-        <div className="inline-flex flex-col justify-start items-start gap-3 w-[134px]">
-          <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
+        <div className="inline-flex flex-col justify-start items-start gap-3 w-33.5">
+          <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">
             socials
           </div>
-          <FooterLink href="https://news.sodax.com/">News</FooterLink>
-          <FooterLink href="https://discord.gg/xM2Nh4S6vN" showArrow>
+          <FooterLink href={NEWS_ROUTE}>News</FooterLink>
+          <FooterLink href={DISCORD_ROUTE} showArrow>
             Discord
           </FooterLink>
-          <FooterLink href="https://x.com/gosodax" showArrow>
+          <FooterLink href={X_ROUTE} showArrow>
             X (Twitter)
           </FooterLink>
-          <FooterLink href="https://linktr.ee/go.sodax" showArrow>
+          <FooterLink href={LINKTREE_ROUTE} showArrow>
             Linktree
           </FooterLink>
         </div>
-        <div className="inline-flex flex-col justify-start items-start gap-3 w-[134px]">
-          <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-[16px]">
+        <div className="inline-flex flex-col justify-start items-start gap-3 w-33.5">
+          <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">
             resources
           </div>
-          <FooterLink href="https://sodax-1.gitbook.io/sodax-docs/readme-1" showArrow>
+          <FooterLink href={DOCUMENTATION_GITBOOK_ROUTE} showArrow>
             Documentation
           </FooterLink>
-          <FooterLink href="https://github.com/icon-project/sodax-frontend" showArrow>
+          <FooterLink href={GITHUB_ROUTE} showArrow>
             Github
           </FooterLink>
-          <FooterLink href="https://sodaxscan.com/" showArrow>
+          <FooterLink href={SODAX_SCAN_ROUTE} showArrow>
             SODAX Scan
           </FooterLink>
+          <FooterLink href={GLOSSARY_ROUTE}>Glossary</FooterLink>
           <FooterLink
-            href="/SODAX.logos.and.token.zip"
+            href={BRAND_KIT_ROUTE}
             showArrowDown={true}
             onClick={() => {
               const link = document.createElement('a');
-              link.href = '/SODAX.logos.and.token.zip';
+              link.href = BRAND_KIT_ROUTE;
               link.download = 'SODAX.logos.and.token.zip';
               document.body.appendChild(link);
               link.click();
@@ -85,6 +109,15 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           </FooterLink>
           <FooterLink href="#" onClick={handleTermsClick}>
             Terms
+          </FooterLink>
+          <FooterLink
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              showCookiePreferences();
+            }}
+          >
+            Cookie Settings
           </FooterLink>
         </div>
       </div>

@@ -2,9 +2,10 @@ import { formatUnits } from 'viem';
 import type { XToken } from '@sodax/types';
 import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
-import { useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
+import { useATokensBalances, useSpokeProvider, useUserReservesData } from '@sodax/dapp-kit';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
-
+import { isAddress, type Address } from 'viem';
+import { useMemo } from 'react';
 /**
  * React hook that calculates supply balances for multiple tokens,
  * supporting tokens across multiple chains.
@@ -19,12 +20,23 @@ export function useTokenSupplyBalances(
   formattedReserves: FormatReserveUSDResponse[],
 ): Array<XToken & { supplyBalance: string }> {
   const allBalances: Array<XToken & { supplyBalance: string }> = [];
+  const aTokenAddresses = useMemo(() => {
+    if (!formattedReserves) return [];
+    return formattedReserves
+      .map(reserve => reserve.aTokenAddress)
+      .filter((address): address is `0x${string}` => isAddress(address));
+  }, [formattedReserves]);
 
   tokens.map(t => {
     const { address } = useXAccount(t.xChainId);
     const walletProvider = useWalletProvider(t.xChainId);
     const spokeProvider = useSpokeProvider(t.xChainId, walletProvider);
     const { data: userReserves } = useUserReservesData({ spokeProvider, address });
+    const { data: aTokenBalancesMap } = useATokensBalances({
+      aTokens: aTokenAddresses,
+      spokeProvider,
+      userAddress: address,
+    });
 
     const metrics = useReserveMetrics({
       token: t,
@@ -32,13 +44,18 @@ export function useTokenSupplyBalances(
       userReserves: (userReserves?.[0] as UserReserveData[]) || [],
     });
 
-    const supplyBalance = metrics.userReserve
-      ? Number(formatUnits(metrics.userReserve.scaledATokenBalance, 18)).toFixed(4)
-      : '0';
+    const aTokenAddress = metrics.formattedReserve?.aTokenAddress;
+    const aTokenBalance =
+      aTokenAddress && isAddress(aTokenAddress) && aTokenBalancesMap
+        ? aTokenBalancesMap.get(aTokenAddress as Address)
+        : undefined;
+
+    const formattedBalance =
+      aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, 18)).toFixed(4) : undefined;
 
     allBalances.push({
       ...t,
-      supplyBalance,
+      supplyBalance: formattedBalance || '0',
     });
   });
 

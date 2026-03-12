@@ -1,0 +1,62 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import type { XToken, SpokeChainId } from '@sodax/types';
+import { TokenAsset } from '@/components/shared/token-asset';
+
+interface PartnerDestinationPickerProps {
+  availableTokens: XToken[]; // same token, different chains
+  selectedChainId: SpokeChainId;
+  onChange: (token: XToken) => void;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function PartnerDestinationPicker({
+  availableTokens,
+  selectedChainId,
+  onChange,
+  onOpenChange,
+}: PartnerDestinationPickerProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Notify parent of open state in an effect so we never update parent during our setState.
+  useEffect(() => {
+    onOpenChange?.(isOpen);
+  }, [isOpen, onOpenChange]);
+
+  if (availableTokens.length === 0) return null;
+
+  const firstToken = availableTokens[0];
+
+  if (!firstToken) return null;
+
+  const fallbackToken = firstToken;
+  const selectedToken = availableTokens.find(t => t.xChainId === selectedChainId) ?? fallbackToken;
+
+  return (
+    <div className="relative inline-block">
+      {/* MAIN CLICK TARGET */}
+      <TokenAsset
+        name={selectedToken.symbol}
+        token={selectedToken}
+        isHoldToken={false}
+        isGroup
+        tokenCount={availableTokens.length}
+        tokens={availableTokens}
+        isClicked={isOpen}
+        isHoverDimmed={false}
+        isClickBlurred={false}
+        isHovered={false}
+        onClick={() => {
+          setIsOpen(prev => !prev);
+        }}
+        onChainClick={token => {
+          onChange(token);
+          setIsOpen(false);
+        }}
+        onMouseEnter={() => {}}
+        onMouseLeave={() => {}}
+      />
+    </div>
+  );
+}
