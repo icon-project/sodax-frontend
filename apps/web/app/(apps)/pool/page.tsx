@@ -81,7 +81,7 @@ export default function PoolPage() {
     if (!poolData) {
       return null;
     }
-    const parsedPrice = Number(poolData.price.toSignificant(12));
+    const parsedPrice = Number(poolData.price.toSignificant(6));
     if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
       return null;
     }

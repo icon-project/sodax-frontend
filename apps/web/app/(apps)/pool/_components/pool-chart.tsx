@@ -15,6 +15,13 @@ type TickPoint = {
   liquidity: number;
 };
 
+function normalizeExternalPrice(value: number | null | undefined): number | null {
+  if (value === null || value === undefined || !Number.isFinite(value) || value <= 0) {
+    return null;
+  }
+  return roundPrice(value);
+}
+
 function getPriceDecimals(value: number): number {
   const absValue = Math.abs(value);
   if (absValue >= 1000) {
@@ -147,9 +154,9 @@ const RANGES = [
 ] as const;
 
 const HEIGHT = 132;
-const ML = { top: 24, right: 16, bottom: 8, left: 16 };
+const ML = { top: 24, right: 0, bottom: 8, left: 0 };
 const TICK_W = 90;
-const TM = { top: 20, right: 8, bottom: 36, left: 4 };
+const TM = { top: 20, right: 0, bottom: 36, left: 0 };
 
 type PoolChartProps = {
   pairPrice?: number | null;
@@ -160,6 +167,7 @@ type PoolChartProps = {
 };
 
 export function PoolChart({
+  pairPrice,
   minPrice: propMinPrice,
   maxPrice: propMaxPrice,
   onMinPriceChange,
@@ -202,7 +210,8 @@ export function PoolChart({
   const [zoomTransform, setZoomTransform] = useState<d3.ZoomTransform>(d3.zoomIdentity);
   const [width, setWidth] = useState<number>(700);
   const [allData, setAllData] = useState<PricePoint[]>(ALL_DATA);
-  const [currentPrice, setCurrentPrice] = useState<number>(CURRENT_PRICE);
+  const externalPairPrice = useMemo(() => normalizeExternalPrice(pairPrice), [pairPrice]);
+  const [currentPrice, setCurrentPrice] = useState<number>(externalPairPrice ?? CURRENT_PRICE);
   const [tickData, setTickData] = useState<TickPoint[]>(TICK_DATA);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -222,6 +231,13 @@ export function PoolChart({
   const RANGE_DAYS = { '1D': 1, '1W': 7, '1M': 30, '1Y': 365, 'All time': 730 };
 
   useEffect(() => {
+    if (externalPairPrice === null) {
+      return;
+    }
+    setCurrentPrice(externalPairPrice);
+  }, [externalPairPrice]);
+
+  useEffect(() => {
     let ignore = false;
 
     function buildPairData(): void {
@@ -232,7 +248,8 @@ export function PoolChart({
         if (!data.length || ignore) {
           return;
         }
-        const last = data[data.length - 1]?.price ?? DEFAULT_CURRENT_PRICE;
+        const generatedLast = data[data.length - 1]?.price ?? DEFAULT_CURRENT_PRICE;
+        const last = externalPairPrice ?? generatedLast;
         setAllData(data);
         setCurrentPrice(last);
         setTickData(generateTickData(last, Math.max(80, data.length)));
@@ -245,7 +262,8 @@ export function PoolChart({
         // fallback to generated pair-like data
         const fb = generatePairData(RANGE_DAYS[activeRange]);
         const fallbackLast = fb[fb.length - 1];
-        const last = fallbackLast?.price ?? CURRENT_PRICE;
+        const generatedLast = fallbackLast?.price ?? CURRENT_PRICE;
+        const last = externalPairPrice ?? generatedLast;
         setAllData(fb);
         setCurrentPrice(last);
         setTickData(generateTickData(last));
@@ -262,7 +280,7 @@ export function PoolChart({
     return () => {
       ignore = true;
     };
-  }, [activeRange, setMinPrice, setMaxPrice]);
+  }, [activeRange, externalPairPrice, setMinPrice, setMaxPrice]);
 
   useEffect(() => {
     const obs = new ResizeObserver(entries => {
@@ -440,7 +458,7 @@ export function PoolChart({
         a
           .selectAll('text')
           .attr('fill', C.textDim)
-          .attr('font-family', "'JetBrains Mono',monospace")
+          .attr('font-family', 'InterRegular')
           .attr('font-size', '9px')
           .attr('dy', '-4px'),
       );
@@ -576,7 +594,7 @@ export function PoolChart({
       if (dashed) {
         const pH = 20;
         const pW = 90;
-        const pX = INNER_W - pW + 25;
+        const pX = INNER_W - pW + 10;
         const nowFo = grp
           .append('foreignObject')
           .attr('x', pX)
