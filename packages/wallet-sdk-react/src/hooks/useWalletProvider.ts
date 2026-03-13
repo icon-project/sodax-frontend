@@ -5,6 +5,7 @@ import type {
   IInjectiveWalletProvider,
   INearWalletProvider,
   ISolanaWalletProvider,
+  IStacksWalletProvider,
   IStellarWalletProvider,
   ISuiWalletProvider,
 } from '@sodax/types';
@@ -17,6 +18,7 @@ import {
   StellarWalletProvider,
   SolanaWalletProvider,
   NearWalletProvider,
+  StacksBrowserWalletProvider,
 } from '@sodax/wallet-sdk-core';
 import { getXChainType } from '../actions';
 import { usePublicClient, useWalletClient } from 'wagmi';
@@ -53,6 +55,7 @@ export function useWalletProvider(
   | IStellarWalletProvider
   | ISolanaWalletProvider
   | INearWalletProvider
+  | IStacksWalletProvider
   | undefined {
   const xChainType = getXChainType(spokeChainId);
   // EVM-specific hooks
@@ -152,6 +155,15 @@ export function useWalletProvider(
         }
 
         return new NearWalletProvider({ wallet: nearXService.walletSelector });
+      }
+
+      case 'STACKS': {
+        const address = xAccount.address;
+        if (!address) {
+          return undefined;
+        }
+
+        return new StacksBrowserWalletProvider(address);
       }
 
       default:

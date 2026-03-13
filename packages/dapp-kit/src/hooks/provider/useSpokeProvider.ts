@@ -20,6 +20,8 @@ import {
   type SonicSpokeChainConfig,
   NearSpokeProvider,
   type NearSpokeChainConfig,
+  StacksSpokeProvider,
+  type StacksSpokeChainConfig,
 } from '@sodax/sdk';
 import type {
   IEvmWalletProvider,
@@ -30,6 +32,7 @@ import type {
   IStellarWalletProvider,
   ISolanaWalletProvider,
   INearWalletProvider,
+  IStacksWalletProvider,
 } from '@sodax/types';
 import { useMemo } from 'react';
 
@@ -124,6 +127,13 @@ export function useSpokeProvider(
       return new NearSpokeProvider(
         walletProvider as INearWalletProvider,
         spokeChainConfig[spokeChainId] as NearSpokeChainConfig,
+      );
+    }
+
+    if (xChainType === 'STACKS') {
+      return new StacksSpokeProvider(
+        spokeChainConfig[spokeChainId] as StacksSpokeChainConfig,
+        walletProvider as IStacksWalletProvider,
       );
     }
 

@@ -18,6 +18,7 @@ export class EvmWalletAbstraction {
     address: Hex,
     hubProvider: EvmHubProvider,
   ): Promise<Address> {
+    console.log('chainId', chainId, address);
     return hubProvider.publicClient.readContract({
       address: hubProvider.chainConfig.addresses.hubWallet,
       abi: walletFactoryAbi,

@@ -68,6 +68,7 @@
     "@solana/wallet-adapter-base": "catalog:",
     "@solana/web3.js": "catalog:",
     "@stellar/stellar-sdk": "catalog:",
+    "@stacks/connect": "8.2.2",
     "@stacks/transactions": "catalog:",
     "@stacks/network": "catalog:",
     "icon-sdk-js": "catalog:",

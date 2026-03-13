@@ -300,6 +300,7 @@ export class SpokeService {
       ) satisfies Promise<TxReturnType<StellarSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
     }
     if (isStacksSpokeProviderType(spokeProvider)) {
+      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
       return StacksSpokeService.deposit(
         params as GetSpokeDepositParamsType<StacksSpokeProvider>,
         spokeProvider as StacksSpokeProvider,
@@ -371,6 +372,14 @@ export class SpokeService {
       return NearSpokeService.getSimulateDepositParams(
         params as GetSpokeDepositParamsType<NearSpokeProviderType>,
         spokeProvider,
+        hubProvider,
+      );
+    }
+    if (isStacksSpokeProviderType(spokeProvider)) {
+      console.log('parms', params);
+      return StacksSpokeService.getSimulateDepositParams(
+        params as GetSpokeDepositParamsType<StacksSpokeProvider>,
+        spokeProvider as StacksSpokeProvider,
         hubProvider,
       );
     }
@@ -524,10 +533,14 @@ export class SpokeService {
       )) satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<T, R>;
     }
     if (isStacksSpokeProvider(spokeProvider)) {
-      return (await StacksSpokeService.callWallet(from, payload, spokeProvider, hubProvider)) satisfies TxReturnType<
-        StacksSpokeProvider,
-        R
-      > as TxReturnType<T, R>;
+      await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
+      return (await StacksSpokeService.callWallet(
+        from,
+        payload,
+        spokeProvider,
+        hubProvider,
+        raw,
+      )) satisfies TxReturnType<StacksSpokeProvider, R> as TxReturnType<T, R>;
     }
 
     if (isNearSpokeProviderType(spokeProvider)) {

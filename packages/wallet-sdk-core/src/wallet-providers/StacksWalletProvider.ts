@@ -6,20 +6,11 @@ import {
   fetchCallReadOnlyFunction,
   getAddressFromPrivateKey,
   makeContractCall,
-  PostConditionMode,
   type ClarityValue,
   serializeCV,
 } from '@stacks/transactions';
 
-import type { Hex, IStacksWalletProvider } from '@sodax/types';
-
-export type StacksTransactionParams = {
-  contractAddress: string;
-  contractName: string;
-  functionName: string;
-  functionArgs: ClarityValue[];
-  postConditionMode?: PostConditionMode;
-};
+import type { Hex, IStacksWalletProvider, StacksTransactionParams } from '@sodax/types';
 
 export class StacksWalletProvider implements IStacksWalletProvider {
   private privateKey: string;
@@ -46,7 +37,6 @@ export class StacksWalletProvider implements IStacksWalletProvider {
         transaction,
       });
 
-      console.log(result);
       return result.txid;
   }
 
@@ -68,7 +58,18 @@ export class StacksWalletProvider implements IStacksWalletProvider {
   }
 
   async getBalance(address: string): Promise<bigint> {
-    return 0n;
+    const url = `${this.network.client.baseUrl}/extended/v1/address/${address}/balances`;
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Error fetching data: ${response.statusText}`);
+      }
+      const data = await response.json();
+      return BigInt(data.stx.balance);
+    } catch (error) {
+      console.error('Error fetching STX balance:', error);
+      return 0n;
+    }
   }
 
   async getWalletAddressBytes(): Promise<Hex> {

@@ -14,6 +14,7 @@ import { SuiXService } from './xchains/sui';
 import { IconXService } from './xchains/icon';
 import { IconHanaXConnector } from './xchains/icon/IconHanaXConnector';
 import { NearXService } from './xchains/near/NearXService';
+import { StacksXService, StacksXConnector } from './xchains/stacks';
 
 type XWagmiStore = {
   xServices: Partial<Record<ChainType, XService>>;
@@ -25,7 +26,7 @@ type XWagmiStore = {
 
 const initXServices = () => {
   const xServices = {};
-  ['EVM', 'INJECTIVE', 'STELLAR', 'SUI', 'SOLANA', 'ICON', 'NEAR'].forEach(key => {
+  ['EVM', 'INJECTIVE', 'STELLAR', 'SUI', 'SOLANA', 'ICON', 'NEAR', 'STACKS'].forEach(key => {
     const xChainType = key as ChainType;
 
     switch (xChainType) {
@@ -59,6 +60,10 @@ const initXServices = () => {
       case 'NEAR':
         xServices[xChainType] = NearXService.getInstance();
         xServices[xChainType].setXConnectors([]);
+        break;
+      case 'STACKS':
+        xServices[xChainType] = StacksXService.getInstance();
+        xServices[xChainType].setXConnectors([new StacksXConnector()]);
         break;
       default:
         break;

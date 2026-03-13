@@ -1,16 +1,24 @@
 import type { Address, Hex } from 'viem';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import type { EvmHubProvider, StacksSpokeProvider } from '../../entities/index.js';
-import { Cl, noneCV, parseContractId, PostConditionMode, someCV, uintCV, type ContractIdString } from '@stacks/transactions';
+import {
+  Cl,
+  noneCV,
+  parseContractId,
+  PostConditionMode,
+  someCV,
+  uintCV,
+  type ContractIdString,
+} from '@stacks/transactions';
 import { getIntentRelayChainId } from '@sodax/types';
 import type { HubAddress, StacksTransactionParams } from '@sodax/types';
-import type { PromiseStacksTxReturnType, StacksReturnType } from '../../types.js';
-
+import type { DepositSimulationParams, PromiseStacksTxReturnType, StacksReturnType } from '../../types.js';
+import { encodeAddress } from '../../utils/shared-utils.js';
 
 export type StacksSpokeDepositParams = {
   from: Hex; // The address of the user on the spoke chain
   token: string; // The address of the token to deposit
-  to?: HubAddress
+  to?: HubAddress;
   amount: bigint; // The amount of tokens to deposit
   data: Hex; // The data to send with the deposit
 };
@@ -41,7 +49,7 @@ export class StacksSpokeService {
   ): Promise<string> {
     const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(
       spokeProvider.chainConfig.chain.id,
-      params.from,
+      encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
       hubProvider,
     );
 
@@ -65,10 +73,41 @@ export class StacksSpokeService {
    */
   public static async getDeposit(token: string, spokeProvider: StacksSpokeProvider): Promise<bigint> {
     const assetManager = spokeProvider.chainConfig.addresses.assetManager;
-    if (token.toLowerCase() === 'STX') {
+    if (token.toLowerCase() === 'st000000000000000000002amw42h.nativetoken') {
       return spokeProvider.getSTXBalance(assetManager);
     }
     return spokeProvider.readTokenBalance(token, assetManager);
+  }
+
+  /**
+   * Get the simulation parameters for a deposit.
+   * @param {StacksSpokeDepositParams} params - The deposit parameters.
+   * @param {StacksSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
+   * @returns {Promise<DepositSimulationParams>} The simulation parameters.
+   */
+  public static async getSimulateDepositParams(
+    params: StacksSpokeDepositParams,
+    spokeProvider: StacksSpokeProvider,
+    hubProvider: EvmHubProvider,
+  ): Promise<DepositSimulationParams> {
+    const to =
+      params.to ??
+      (await EvmWalletAbstraction.getUserHubWalletAddress(
+        spokeProvider.chainConfig.chain.id,
+        encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
+        hubProvider,
+      ));
+
+    return {
+      spokeChainID: spokeProvider.chainConfig.chain.id,
+      token: encodeAddress(spokeProvider.chainConfig.chain.id, params.token),
+      from: encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
+      to,
+      amount: params.amount,
+      data: params.data,
+      srcAddress: encodeAddress(spokeProvider.chainConfig.chain.id, spokeProvider.chainConfig.addresses.assetManager),
+    };
   }
 
   /**
@@ -105,13 +144,16 @@ export class StacksSpokeService {
     spokeProvider: StacksSpokeProvider,
     raw?: R,
   ): PromiseStacksTxReturnType<R> {
-    const assetManagerImpl = await spokeProvider.getImplContractAddress(spokeProvider.chainConfig.addresses.assetManager);
+    const assetManagerImpl = await spokeProvider.getImplContractAddress(
+      spokeProvider.chainConfig.addresses.assetManager,
+    );
+    console.log('assetManagerImpl', assetManagerImpl);
     const reqData = {
       contractAddress: parseContractId(assetManagerImpl as ContractIdString)[0] as string,
       contractName: parseContractId(assetManagerImpl as ContractIdString)[1] as string,
       functionName: 'transfer',
       functionArgs: [
-        token === 'STX' ? noneCV() : someCV(Cl.principal(token)),
+        token === 'ST000000000000000000002AMW42H.nativetoken' ? noneCV() : someCV(Cl.principal(token)),
         Cl.bufferFromHex(recipient),
         uintCV(amount),
         Cl.bufferFromHex(data),
@@ -144,7 +186,7 @@ export class StacksSpokeService {
     spokeProvider: StacksSpokeProvider,
     raw?: R,
   ): PromiseStacksTxReturnType<R> {
-    const reqData : StacksTransactionParams = {
+    const reqData: StacksTransactionParams = {
       contractAddress: parseContractId(spokeProvider.chainConfig.addresses.connection as ContractIdString)[0] as string,
       contractName: parseContractId(spokeProvider.chainConfig.addresses.connection as ContractIdString)[1] as string,
       functionName: 'send-message',

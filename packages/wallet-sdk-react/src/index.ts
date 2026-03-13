@@ -9,6 +9,7 @@ export * from './xchains/injective';
 export * from './xchains/solana';
 export * from './xchains/stellar';
 export * from './xchains/sui';
+export * from './xchains/stacks';
 export * from './hooks';
 export * from './useXWagmiStore';
 export * from './SodaxWalletProvider';

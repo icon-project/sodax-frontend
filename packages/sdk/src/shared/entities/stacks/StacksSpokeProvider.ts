@@ -1,15 +1,25 @@
 import type { IStacksWalletProvider, StacksSpokeChainConfig } from '@sodax/types';
 import type { ISpokeProvider } from '../Providers.js';
 import { networkFrom, type StacksNetwork } from '@stacks/network';
-import { Cl, parseContractId, type ContractIdString, type ContractPrincipalCV, type UIntCV } from "@stacks/transactions";
-
+import {
+  Cl,
+  parseContractId,
+  type ContractIdString,
+  type ContractPrincipalCV,
+  type UIntCV,
+} from '@stacks/transactions';
 
 export class StacksSpokeProvider implements ISpokeProvider {
   public readonly walletProvider: IStacksWalletProvider;
   public chainConfig: StacksSpokeChainConfig;
   private network: StacksNetwork;
 
-  constructor(config: StacksSpokeChainConfig, wallet_provider: IStacksWalletProvider, network: 'testnet' | 'mainnet' = 'mainnet', rpcUrl?: string) {
+  constructor(
+    config: StacksSpokeChainConfig,
+    wallet_provider: IStacksWalletProvider,
+    network: 'testnet' | 'mainnet' = 'mainnet',
+    rpcUrl?: string,
+  ) {
     this.chainConfig = config;
     this.walletProvider = wallet_provider;
     this.network = networkFrom(network);
@@ -25,7 +35,7 @@ export class StacksSpokeProvider implements ISpokeProvider {
       }
 
       const data = await response.json();
-      return data.stx.balance;
+      return BigInt(data.stx.balance);
     } catch (error) {
       console.error('Error:', error);
       return 0n;
@@ -40,7 +50,7 @@ export class StacksSpokeProvider implements ISpokeProvider {
       functionArgs: [Cl.principal(address)],
     };
 
-    const balance: UIntCV = await this.walletProvider.readContract(txParams) as UIntCV;
+    const balance: UIntCV = (await this.walletProvider.readContract(txParams)) as UIntCV;
 
     return balance.value as bigint;
   }
@@ -53,7 +63,7 @@ export class StacksSpokeProvider implements ISpokeProvider {
       functionArgs: [],
     };
 
-    const implAddress: string = (await this.walletProvider.readContract(txParams) as ContractPrincipalCV).value;
+    const implAddress: string = ((await this.walletProvider.readContract(txParams)) as ContractPrincipalCV).value;
     return implAddress;
   }
 }
