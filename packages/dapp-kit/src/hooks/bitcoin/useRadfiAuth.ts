@@ -1,8 +1,6 @@
 import type { BitcoinSpokeProvider } from '@sodax/sdk';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
-
-const ACCESS_TOKEN_TTL = 10 * 60 * 1000;        // 10 minutes
-const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+import { ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL } from './radfiConstants';
 
 export type RadfiSession = {
   accessToken: string;
@@ -22,6 +20,7 @@ const SESSION_KEY = (address: string) => `radfi_session_${address}`;
 
 export function saveRadfiSession(address: string, session: RadfiSession): void {
   try {
+    // Radfi tokens are only used for API rate-limiting / anti-spam, not for accessing user assets.
     localStorage.setItem(SESSION_KEY(address), JSON.stringify(session));
   } catch {}
 }
@@ -68,23 +67,8 @@ export function useRadfiAuth(
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
-      if (!spokeProvider.walletProvider.getPublicKey) {
-        throw new Error('Wallet provider does not support getPublicKey');
-      }
-      const publicKey = await spokeProvider.walletProvider.getPublicKey();
-
-      const timestamp = Date.now().toString();
-      const message = timestamp;
-
-      const signature = await spokeProvider.walletProvider.signBip322Message(message);
-
       try {
-        const { accessToken, refreshToken, tradingAddress } = await spokeProvider.radfi.authenticate({
-          message,
-          signature,
-          address: walletAddress,
-          publicKey,
-        });
+        const { accessToken, refreshToken, tradingAddress } = await spokeProvider.authenticateWithWallet();
 
         const session: RadfiSession = {
           accessToken,
@@ -94,7 +78,6 @@ export function useRadfiAuth(
           refreshTokenExpiry: Date.now() + REFRESH_TOKEN_TTL,
         };
 
-        spokeProvider.setRadfiAccessToken(accessToken);
         saveRadfiSession(walletAddress, session);
 
         return { accessToken, refreshToken, tradingAddress };

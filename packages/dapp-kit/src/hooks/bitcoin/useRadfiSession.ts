@@ -10,9 +10,8 @@ import {
   type RadfiSession,
 } from './useRadfiAuth';
 
-const ACCESS_TOKEN_TTL = 10 * 60 * 1000;
-const REFRESH_TOKEN_TTL = 7 * 24 * 60 * 60 * 1000;
-const POLL_INTERVAL = 2000;
+import { ACCESS_TOKEN_TTL } from './radfiConstants';
+const POLL_INTERVAL = 30_000; // 30 s — access tokens expire every 10 min, no need to poll faster
 
 export type UseRadfiSessionReturn = {
   walletAddress: string | undefined;
@@ -84,7 +83,7 @@ export function useRadfiSession(
         accessToken,
         refreshToken,
         accessTokenExpiry: Date.now() + ACCESS_TOKEN_TTL,
-        refreshTokenExpiry: Date.now() + REFRESH_TOKEN_TTL,
+        // Keep the original refreshTokenExpiry — don't roll it forward on every silent refresh
       };
 
       saveRadfiSession(address, updated);

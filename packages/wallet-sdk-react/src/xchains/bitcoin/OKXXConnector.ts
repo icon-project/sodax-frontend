@@ -64,6 +64,9 @@ class OKXWalletProvider implements IBitcoinWalletProvider {
   }
 
   async sendBitcoin(toAddress: string, satoshis: bigint): Promise<string> {
+    if (satoshis > BigInt(Number.MAX_SAFE_INTEGER)) {
+      throw new Error(`Amount ${satoshis} satoshis exceeds safe integer range`);
+    }
     return this.okx.sendBitcoin(toAddress, Number(satoshis));
   }
 }

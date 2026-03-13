@@ -50,7 +50,7 @@ class XverseWalletProvider implements IBitcoinWalletProvider {
     const response = await request('signPsbt', {
       psbt: psbtBase64,
       broadcast: false,
-      signInputs: {},
+      // signInputs omitted — Xverse will prompt user to sign all applicable inputs
     });
 
     if (response.status === 'error') {

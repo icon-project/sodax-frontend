@@ -221,8 +221,13 @@ export class BitcoinBaseSpokeProvider {
     let change = inputSum - outputSum - feeWithChange;
 
     if (change < 0) {
+      const confirmedCount = utxos.filter(u => u.status.confirmed).length;
+      const unconfirmedCount = utxos.length - confirmedCount;
+      const hint = unconfirmedCount > 0
+        ? ` (${unconfirmedCount} unconfirmed UTXO(s) skipped — wait for confirmation)`
+        : '';
       throw new Error(
-        `Insufficient funds. Need ${outputSum + feeWithChange} satoshis, have ${inputSum}`,
+        `Insufficient funds. Need ${outputSum + feeWithChange} satoshis, have ${inputSum}${hint}`,
       );
     }
 
@@ -400,10 +405,7 @@ export class BitcoinBaseSpokeProvider {
 
       return psbt;
     }
-    const psbt = new bitcoin.Psbt({ network: provider.network });
-
-
-    return psbt
+    throw new Error(`Non-BTC token deposits not yet implemented (token: ${token})`);
   }
 
   /**
@@ -568,28 +570,32 @@ export class BitcoinSpokeProvider extends BitcoinBaseSpokeProvider implements IS
   }
 
   /**
-   * Ensure a valid Radfi access token is set on this provider.
-   * If the token is missing, authenticates with Radfi using BIP322 signature.
+   * Authenticate with Radfi: BIP322-sign a login message, then call the Radfi API.
+   * Returns accessToken, refreshToken, and tradingAddress.
    */
-  public async ensureRadfiAccessToken(): Promise<void> {
-    if (this.radfiAccessToken) {
-      console.log('[BitcoinSpokeProvider.ensureRadfiAccessToken] token already set, skipping auth');
-      return;
-    }
-
-    console.log('[BitcoinSpokeProvider.ensureRadfiAccessToken] no token, authenticating with Radfi...');
+  public async authenticateWithWallet(): Promise<{ accessToken: string; refreshToken: string; tradingAddress: string }> {
     const address = await this.walletProvider.getWalletAddress();
-    const message = 'Login to Radfi via Sodax';
-    const signature = await this.walletProvider.signBip322Message(message);
 
     if (!this.walletProvider.getPublicKey) {
       throw new Error('Wallet provider does not support getPublicKey');
     }
     const publicKey = await this.walletProvider.getPublicKey();
 
-    const { accessToken } = await this.radfi.authenticate({ message, signature, address, publicKey });
-    console.log('[BitcoinSpokeProvider.ensureRadfiAccessToken] authenticated, token:', accessToken ? `${accessToken.slice(0, 20)}...` : 'null');
-    this.setRadfiAccessToken(accessToken);
+    const message = `Login to Radfi via Sodax: ${Date.now()}`;
+    const signature = await this.walletProvider.signBip322Message(message);
+
+    const result = await this.radfi.authenticate({ message, signature, address, publicKey });
+    this.setRadfiAccessToken(result.accessToken);
+    return result;
+  }
+
+  /**
+   * Ensure a valid Radfi access token is set on this provider.
+   * No-op if a token is already present.
+   */
+  public async ensureRadfiAccessToken(): Promise<void> {
+    if (this.radfiAccessToken) return;
+    await this.authenticateWithWallet();
   }
 
   /**

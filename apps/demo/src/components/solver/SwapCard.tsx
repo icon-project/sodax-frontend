@@ -101,7 +101,7 @@ export default function SwapCard({
   const { requestTrustline } = useRequestTrustline(destToken?.address);
   const [open, setOpen] = useState(false);
   const [slippage, setSlippage] = useState<string>('0.5');
-  const [isBitcoinReady, setIsBitcoinReady] = useState(true);
+  const [isBitcoinReady, setIsBitcoinReady] = useState(false);
 
   const onChangeDirection = () => {
     setSourceChain(destChain);
