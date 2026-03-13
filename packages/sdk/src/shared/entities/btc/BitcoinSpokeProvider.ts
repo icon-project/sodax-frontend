@@ -573,20 +573,26 @@ export class BitcoinSpokeProvider extends BitcoinBaseSpokeProvider implements IS
    * Authenticate with Radfi: BIP322-sign a login message, then call the Radfi API.
    * Returns accessToken, refreshToken, and tradingAddress.
    */
-  public async authenticateWithWallet(): Promise<{ accessToken: string; refreshToken: string; tradingAddress: string }> {
+  public async authenticateWithWallet(cachedPublicKey?: string): Promise<{ accessToken: string; refreshToken: string; tradingAddress: string; publicKey: string }> {
     const address = await this.walletProvider.getWalletAddress();
 
-    if (!this.walletProvider.getPublicKey) {
-      throw new Error('Wallet provider does not support getPublicKey');
+    let publicKey = cachedPublicKey;
+    if (!publicKey) {
+      if (!this.walletProvider.getPublicKey) {
+        throw new Error('Wallet provider does not support getPublicKey');
+      }
+      publicKey = await this.walletProvider.getPublicKey();
     }
-    const publicKey = await this.walletProvider.getPublicKey();
+    if (!publicKey) {
+      throw new Error('Failed to retrieve public key from wallet. Please unlock your wallet and try again.');
+    }
 
     const message = `Login to Radfi via Sodax: ${Date.now()}`;
     const signature = await this.walletProvider.signBip322Message(message);
 
     const result = await this.radfi.authenticate({ message, signature, address, publicKey });
     this.setRadfiAccessToken(result.accessToken);
-    return result;
+    return { ...result, publicKey };
   }
 
   /**

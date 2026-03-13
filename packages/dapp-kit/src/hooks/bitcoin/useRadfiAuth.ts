@@ -6,6 +6,7 @@ export type RadfiSession = {
   accessToken: string;
   refreshToken: string;
   tradingAddress: string;
+  publicKey: string;
   accessTokenExpiry: number;
   refreshTokenExpiry: number;
 };
@@ -66,14 +67,17 @@ export function useRadfiAuth(
       }
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      const existingSession = loadRadfiSession(walletAddress);
+      const cachedPublicKey = existingSession?.publicKey;
 
       try {
-        const { accessToken, refreshToken, tradingAddress } = await spokeProvider.authenticateWithWallet();
+        const { accessToken, refreshToken, tradingAddress, publicKey } = await spokeProvider.authenticateWithWallet(cachedPublicKey);
 
         const session: RadfiSession = {
           accessToken,
           refreshToken,
           tradingAddress,
+          publicKey,
           accessTokenExpiry: Date.now() + ACCESS_TOKEN_TTL,
           refreshTokenExpiry: Date.now() + REFRESH_TOKEN_TTL,
         };
@@ -89,12 +93,11 @@ export function useRadfiAuth(
           (err.message.includes('duplicatedPubKey') || err.message.includes('4008'));
 
         if (isAlreadyRegistered) {
-          const existing = loadRadfiSession(walletAddress);
-          if (existing && !isRefreshTokenExpired(walletAddress)) {
+          if (existingSession && !isRefreshTokenExpired(walletAddress)) {
             // Try silent refresh
-            const refreshed = await spokeProvider.radfi.refreshAccessToken(existing.refreshToken);
+            const refreshed = await spokeProvider.radfi.refreshAccessToken(existingSession.refreshToken);
             const session: RadfiSession = {
-              ...existing,
+              ...existingSession,
               accessToken: refreshed.accessToken,
               refreshToken: refreshed.refreshToken,
               accessTokenExpiry: Date.now() + ACCESS_TOKEN_TTL,
@@ -102,7 +105,7 @@ export function useRadfiAuth(
             };
             spokeProvider.setRadfiAccessToken(refreshed.accessToken);
             saveRadfiSession(walletAddress, session);
-            return { accessToken: refreshed.accessToken, refreshToken: refreshed.refreshToken, tradingAddress: existing.tradingAddress };
+            return { accessToken: refreshed.accessToken, refreshToken: refreshed.refreshToken, tradingAddress: existingSession.tradingAddress };
           }
         }
 

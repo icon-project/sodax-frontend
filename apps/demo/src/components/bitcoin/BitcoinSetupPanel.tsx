@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useRadfiSession, useBitcoinBalance, useFundTradingWallet } from '@sodax/dapp-kit';
 import type { BitcoinSpokeProvider } from '@sodax/sdk';
 import { formatUnits, parseUnits } from 'viem';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Copy, ExternalLink, Check } from 'lucide-react';
 
 interface BitcoinSetupPanelProps {
   spokeProvider: BitcoinSpokeProvider;
@@ -20,6 +20,14 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange }: BitcoinSetup
 
   const { mutateAsync: fundWallet, isPending: isFunding } = useFundTradingWallet(spokeProvider);
   const [fundAmount, setFundAmount] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const copyAddress = () => {
+    if (!tradingAddress) return;
+    navigator.clipboard.writeText(tradingAddress);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
 
   useEffect(() => {
     const isReady = isAuthed && !!tradingAddress && (btcBalance ? btcBalance > 0n : false);
@@ -71,8 +79,16 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange }: BitcoinSetup
               Trading Wallet
             </span>
             {tradingAddress ? (
-              <span className="text-xs text-muted-foreground font-mono" title={tradingAddress}>
-                {tradingAddress.slice(0, 8)}...{tradingAddress.slice(-6)}
+              <span className="flex items-center gap-1.5">
+                <span className="text-xs text-muted-foreground font-mono" title={tradingAddress}>
+                  {tradingAddress.slice(0, 8)}...{tradingAddress.slice(-6)}
+                </span>
+                <button type="button" onClick={copyAddress} className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors" title="Copy address">
+                  {copied ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                </button>
+                <a href={`https://mempool.space/address/${tradingAddress}`} target="_blank" rel="noopener noreferrer" className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors" title="View on mempool.space">
+                  <ExternalLink className="h-3 w-3" />
+                </a>
               </span>
             ) : (
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
