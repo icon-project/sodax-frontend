@@ -32,7 +32,6 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange }: BitcoinSetup
       await fundWallet(parseUnits(fundAmount, 8));
       setFundAmount('');
     } catch (e) {
-      // Test CICD 1
       console.error('Failed to top up trading wallet', e);
     }
   };

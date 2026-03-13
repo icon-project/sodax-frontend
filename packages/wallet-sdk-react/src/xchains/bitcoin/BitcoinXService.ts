@@ -25,11 +25,9 @@ export class BitcoinXService extends XService {
       if (isNativeToken(xToken)) {
         const response = await fetch(`${this.rpcUrl}/address/${address}/utxo`);
         if (!response.ok) return 0n;
-        const utxos: Array<{ value: number; status: { confirmed: boolean } }> = await response.json();
-        const confirmedBalance = utxos
-          .filter(utxo => utxo.status.confirmed)
-          .reduce((sum, utxo) => sum + utxo.value, 0);
-        return BigInt(confirmedBalance);
+        const utxos: Array<{ value: number }> = await response.json();
+        const totalBalance = utxos.reduce((sum, utxo) => sum + utxo.value, 0);
+        return BigInt(totalBalance);
       }
     } catch {
       return 0n;
