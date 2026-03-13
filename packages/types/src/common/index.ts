@@ -241,6 +241,7 @@ export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
   nid: Hex;
 };
 
+export type AleoAddress = `aleo1${string}`;
 export type AleoSpokeChainConfig = BaseSpokeChainConfig<'ALEO'> & {
   rpcUrl: string;
   addresses: {
