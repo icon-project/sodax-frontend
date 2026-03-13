@@ -1654,7 +1654,11 @@ export const spokeChainConfig = {
       },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
+<<<<<<< HEAD
   [ALEO_MAINNET_CHAIN_ID]: {
+=======
+    [ALEO_MAINNET_CHAIN_ID]: {
+>>>>>>> 5e7a01c3 (feat(types): add Aleo types and configurations)
     chain: baseChainInfo[ALEO_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'ALEO'>,
     addresses: {
       assetManager: 'asset_manager_core_v3.aleo',
@@ -2677,7 +2681,11 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       vault: SodaTokens.sodaPOL.address,
     },
   },
+<<<<<<< HEAD
   [ALEO_MAINNET_CHAIN_ID]: {
+=======
+    [ALEO_MAINNET_CHAIN_ID]: {
+>>>>>>> 5e7a01c3 (feat(types): add Aleo types and configurations)
     [spokeChainConfig[ALEO_MAINNET_CHAIN_ID].nativeToken]: {
       asset: '0x0000000000000000000000000000000000000000',
       decimal: 6,
@@ -3054,7 +3062,11 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const satisfies XToken[],
+<<<<<<< HEAD
   [ALEO_MAINNET_CHAIN_ID]: [
+=======
+    [ALEO_MAINNET_CHAIN_ID]: [
+>>>>>>> 5e7a01c3 (feat(types): add Aleo types and configurations)
     spokeChainConfig[ALEO_MAINNET_CHAIN_ID].supportedTokens.ALEO,
     spokeChainConfig[ALEO_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
   ] as const satisfies XToken[],
