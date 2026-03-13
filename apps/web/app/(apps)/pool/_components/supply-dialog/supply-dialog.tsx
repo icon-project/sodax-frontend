@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { useEffect, useState } from 'react';
-import { ShieldAlertIcon, XIcon } from 'lucide-react';
+import { XIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import SupplyInfoStep from './supply-info-step';
 import SupplyConfirmationStep from './supply-confirmation-step';
