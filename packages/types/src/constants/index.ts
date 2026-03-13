@@ -1770,7 +1770,7 @@ export const spokeChainConfig = {
     },
     rpcUrl: 'https://api.mainnet.hiro.so',
   } as const satisfies StacksSpokeChainConfig,
-  [ALEO_MAINNET_CHAIN_ID]: {
+    [ALEO_MAINNET_CHAIN_ID]: {
     chain: baseChainInfo[ALEO_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'ALEO'>,
     addresses: {
       assetManager: 'asset_manager_core_v3.aleo',
@@ -2853,7 +2853,7 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     }
   },
-  [ALEO_MAINNET_CHAIN_ID]: {
+    [ALEO_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[ALEO_MAINNET_CHAIN_ID].nativeToken]: {
       asset: '0x0000000000000000000000000000000000000000',
       decimal: 6,
@@ -3254,7 +3254,7 @@ export const moneyMarketSupportedTokens = {
   [BITCOIN_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BTC,
   ] as const satisfies XToken[],
-  [ALEO_MAINNET_CHAIN_ID]: [
+    [ALEO_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ALEO_MAINNET_CHAIN_ID].supportedTokens.ALEO,
     spokeChainConfig[ALEO_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
   ] as const satisfies XToken[],
