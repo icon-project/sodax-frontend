@@ -1,3 +1,4 @@
+export * from './AleoSpokeService.js';
 export * from './EvmSpokeService.js';
 export * from './SpokeService.js';
 export * from './IconSpokeService.js';

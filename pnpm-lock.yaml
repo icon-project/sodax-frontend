@@ -51,6 +51,12 @@ catalogs:
     '@mysten/wallet-standard':
       specifier: 0.15.6
       version: 0.15.6
+    '@provablehq/aleo-types':
+      specifier: 0.3.0-alpha.3
+      version: 0.3.0-alpha.3
+    '@provablehq/aleo-wallet-adaptor-core':
+      specifier: 0.3.0-alpha.3
+      version: 0.3.0-alpha.3
     '@provablehq/sdk':
       specifier: 0.9.17
       version: 0.9.17
@@ -723,6 +729,15 @@ importers:
       '@mysten/wallet-standard':
         specifier: 'catalog:'
         version: 0.15.6(typescript@5.5.4)
+      '@provablehq/aleo-types':
+        specifier: 'catalog:'
+        version: 0.3.0-alpha.3
+      '@provablehq/aleo-wallet-adaptor-core':
+        specifier: 'catalog:'
+        version: 0.3.0-alpha.3
+      '@provablehq/sdk':
+        specifier: 'catalog:'
+        version: 0.9.17
       '@sodax/types':
         specifier: workspace:*
         version: link:../types
@@ -3043,6 +3058,15 @@ packages:
 
   '@protobufjs/utf8@1.1.0':
     resolution: {integrity: sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==}
+
+  '@provablehq/aleo-types@0.3.0-alpha.3':
+    resolution: {integrity: sha512-8oQYDfUXn7hOdF2MOXit94j+OWT/MmYq5Hjhfrqv8Ws4/XrqHmRb7mcMVwVobSC5m8qLz7ew9Rg3mvc1pMkqDQ==}
+
+  '@provablehq/aleo-wallet-adaptor-core@0.3.0-alpha.3':
+    resolution: {integrity: sha512-Y29bFJyI/J8B3N04EV7T6lnbOCsaHwFsYN9wISdSzwsTQyP4++1DLiAFRLUAdBAgr73Jd/q0U302+Lxm6F7qVg==}
+
+  '@provablehq/aleo-wallet-standard@0.3.0-alpha.3':
+    resolution: {integrity: sha512-sAfoU0loKa6MiC8AzQ6wm3w/NBZ5613304xaYQ59ZkMqwz8coEK7L1MlVhYdkEw7GnEhYmdB4doIAV0ZggHdNA==}
 
   '@provablehq/sdk@0.9.17':
     resolution: {integrity: sha512-YfBfXHv/lJBL4eVVB0KYuLDJiGqWc8Be5kzYUHLq6cDO0Xl4JS3Mvsem+PGNFPDFDPDEt1cTperZTl6NVLcxnQ==}
@@ -16161,6 +16185,18 @@ snapshots:
   '@protobufjs/pool@1.1.0': {}
 
   '@protobufjs/utf8@1.1.0': {}
+
+  '@provablehq/aleo-types@0.3.0-alpha.3': {}
+
+  '@provablehq/aleo-wallet-adaptor-core@0.3.0-alpha.3':
+    dependencies:
+      '@provablehq/aleo-types': 0.3.0-alpha.3
+      '@provablehq/aleo-wallet-standard': 0.3.0-alpha.3
+
+  '@provablehq/aleo-wallet-standard@0.3.0-alpha.3':
+    dependencies:
+      '@provablehq/aleo-types': 0.3.0-alpha.3
+      eventemitter3: 5.0.4
 
   '@provablehq/sdk@0.9.17':
     dependencies:

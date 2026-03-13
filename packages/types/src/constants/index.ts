@@ -71,7 +71,7 @@ export const CHAIN_IDS = [
   ETHEREUM_MAINNET_CHAIN_ID,
   REDBELLY_MAINNET_CHAIN_ID,
   KAIA_MAINNET_CHAIN_ID,
- ALEO_MAINNET_CHAIN_ID,
+  ALEO_MAINNET_CHAIN_ID,
 ] as const;
 
 export const EVM_CHAIN_IDS = [
@@ -198,7 +198,7 @@ export const baseChainInfo = {
     type: 'EVM',
     chainId: 8217,
   },
-    [ALEO_MAINNET_CHAIN_ID]: {
+  [ALEO_MAINNET_CHAIN_ID]: {
     name: 'Aleo',
     id: ALEO_MAINNET_CHAIN_ID,
     type: 'ALEO',
@@ -430,8 +430,10 @@ export const SodaTokensAsHubAssets: Record<string, HubAsset> = Object.values(Sod
 export const hubChainConfig = {
   chain: baseChainInfo[SONIC_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'EVM'>,
   addresses: {
-    assetManager: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
-    hubWallet: '0xA0ed3047D358648F2C0583B415CffCA571FDB544',
+    // assetManager: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
+    assetManager: '0x1B06762a8B9286f6A1B290579834e555a5F60557',
+    // hubWallet: '0xA0ed3047D358648F2C0583B415CffCA571FDB544',
+    hubWallet: '0x103328BFB6321AD198D5dc4075a171f01c0472E5',
     xTokenManager: '0x5bD2843de9D6b0e6A05d0FB742072274EA3C6CA3',
     icxMigration: '0x8294DE9fc60F5ABCc19245E5857071d7C42B9875',
     balnSwap: '0x610a90B61b89a98b954d5750E94834Aa45d08d10',
@@ -1652,7 +1654,7 @@ export const spokeChainConfig = {
       },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
-    [ALEO_MAINNET_CHAIN_ID]: {
+  [ALEO_MAINNET_CHAIN_ID]: {
     chain: baseChainInfo[ALEO_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'ALEO'>,
     addresses: {
       assetManager: 'asset_manager_core_v3.aleo',
@@ -2675,7 +2677,7 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       vault: SodaTokens.sodaPOL.address,
     },
   },
-    [ALEO_MAINNET_CHAIN_ID]: {
+  [ALEO_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[ALEO_MAINNET_CHAIN_ID].nativeToken]: {
       asset: '0x0000000000000000000000000000000000000000',
       decimal: 6,
@@ -3052,7 +3054,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const satisfies XToken[],
-    [ALEO_MAINNET_CHAIN_ID]: [
+  [ALEO_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ALEO_MAINNET_CHAIN_ID].supportedTokens.ALEO,
     spokeChainConfig[ALEO_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
   ] as const satisfies XToken[],
