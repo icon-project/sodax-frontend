@@ -58,3 +58,29 @@ export function getProtocolDisplayLabel(protocolDisplay: string, category: Roadm
   if (GENERIC_DISPLAY_TERMS.has(lower)) return category.title;
   return trimmed;
 }
+
+// --- Notion roadmap fetch (new, does not affect existing logic above) ---
+
+export interface NotionRoadmapData {
+  protocolDisplay: string;
+  categoryId: CategoryId;
+  why: string[];
+  sdkLayer: string;
+  complexity: string;
+  integrationSteps: string[];
+  chains: string[];
+  blockers: string[];
+  nextSteps: string;
+  tier: string;
+  timeline: string;
+}
+
+export async function fetchNotionRoadmap(protocolSlug: string): Promise<NotionRoadmapData | null> {
+  try {
+    const res = await fetch(`/api/roadmap/${encodeURIComponent(protocolSlug)}`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}

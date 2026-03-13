@@ -125,10 +125,44 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
     setPrintDate(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
   }, []);
 
-  const handleGenerate = (): void => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleGenerate = async (): Promise<void> => {
     const display = protocolName.trim() || 'Your protocol';
+
+    // existing local match still runs immediately
     const { category, matched } = matchCategory(protocolName);
     setRoadmap({ category, protocolDisplay: display, matched });
+
+    // fetch from API in background — enriches roadmap if data exists
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/roadmap/${encodeURIComponent(display)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && !data.error) {
+          // override category if API returned one
+          const notionCategory = CATEGORIES.find(c => c.id === data.categoryId);
+          setRoadmap({
+            category: notionCategory ?? category,
+            protocolDisplay: data.protocolDisplay ?? display,
+            matched: true,
+          });
+          // pre-fill BD config with AI-generated content
+          setBdConfig(prev => ({
+            ...prev,
+            whyOverrides: data.why ?? [],
+            stepsOverrides: data.integrationSteps ?? [],
+            timeline: prev.timeline || data.timeline || '',
+            chains: prev.chains || (data.chains ?? []).join(', '),
+          }));
+        }
+      }
+    } catch {
+      // silently fail — hardcoded content still shows
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChipClick = (name: string): void => {
@@ -257,10 +291,10 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
               <button
                 type="button"
                 onClick={handleGenerate}
-                disabled={!protocolName.trim()}
+                disabled={!protocolName.trim() || isLoading}
                 className="bg-yellow-soda text-espresso font-['Shrikhand'] text-[14px] leading-[1.4] h-12 min-h-12 sm:h-11 sm:min-h-11 px-6 py-3 sm:py-2 rounded-full shrink-0 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer enabled:hover:opacity-90"
               >
-                generate roadmap
+                {isLoading ? 'generating...' : 'generate roadmap'}
               </button>
             </motion.div>
 
