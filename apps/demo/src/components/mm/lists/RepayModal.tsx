@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { ChainSelector } from '@/components/shared/ChainSelector';
 import { getChainsWithThisToken, getTokenOnChain, getNativeTokenSymbol, formatDecimalForDisplay } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 import { useXBalances, useXAccount } from '@sodax/wallet-sdk-react';
 import { getChainName } from '@/constants';
 import { invalidateMmQueries } from '@/lib/invalidateMmQueries';
@@ -227,7 +228,7 @@ export function RepayModal({
         onOpenChange(false);
       }
     } catch (err: unknown) {
-      // console.error('Repay failed:', err);
+      logger.error('Repay failed', err);
       setError(getMmErrorText(err) || 'Transaction failed. Please try again.');
     }
   };
@@ -243,7 +244,7 @@ export function RepayModal({
         spokeProvider: sourceSpokeProvider,
       });
     } catch (err: unknown) {
-      // console.error('Source approval failed:', err);
+      logger.error('Source approval failed', err);
       setError(getMmErrorText(err) || 'Approval failed');
       setIsApprovingLocal(false);
     }
