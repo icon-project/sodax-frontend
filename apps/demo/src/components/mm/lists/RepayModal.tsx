@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { ChainSelector } from '@/components/shared/ChainSelector';
-import { getChainsWithThisToken, getTokenOnChain, getNativeTokenSymbol } from '@/lib/utils';
+import { getChainsWithThisToken, getTokenOnChain, getNativeTokenSymbol, formatDecimalForDisplay } from '@/lib/utils';
 import { useXBalances, useXAccount } from '@sodax/wallet-sdk-react';
 import { getChainName } from '@/constants';
 import { invalidateMmQueries } from '@/lib/invalidateMmQueries';
@@ -339,7 +339,7 @@ export function RepayModal({
             <div className="space-y-1">
               {hasDebt && (
                 <p className="text-xs text-muted-foreground">
-                  Max debt: {Number(maxDebt).toFixed(6)} {token.symbol}
+                  Max debt: {formatDecimalForDisplay(maxDebt, 4)} {token.symbol}
                 </p>
               )}
               {/* Show validation messages only when user enters an amount */}
