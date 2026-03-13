@@ -1,4 +1,3 @@
-// apps/demo/src/lib/logger.ts
 // Central logger for the demo app; uses console in dev, can be extended for prod (e.g. remote logging).
 
 const PREFIX = '[Sodax Demo]';
