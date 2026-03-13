@@ -65,7 +65,7 @@ export function useSpokeProvider(
       return new BitcoinSpokeProvider(
         walletProvider as IBitcoinWalletProvider,
         bitcoinConfig,
-        { url: bitcoinConfig.radfiApiUrl, apiKey: bitcoinConfig.radfiApiKey },
+        { url: bitcoinConfig.radfiApiUrl, apiKey: bitcoinConfig.radfiApiKey, umsUrl: bitcoinConfig.radfiUmsUrl },
         'TRADING',
       );
     }

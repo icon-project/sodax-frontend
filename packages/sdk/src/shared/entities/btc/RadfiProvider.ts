@@ -3,6 +3,7 @@ import type { RadfiDepositTxResponse } from '@sodax/types';
 export type RadfiConfig = {
   url: string;
   apiKey: string;
+  umsUrl?: string;
 };
 
 export type RadfiTradingWallet = {
@@ -15,6 +16,13 @@ export type RadfiAuthResult = {
   accessToken: string;
   refreshToken: string;
   tradingAddress: string;
+};
+
+export type RadfiWalletBalance = {
+  btcSatoshi: bigint;
+  pendingSatoshi: bigint;
+  externalPendingSatoshi: bigint;
+  totalUtxos: number;
 };
 
 export class RadfiProvider {
@@ -98,6 +106,29 @@ export class RadfiProvider {
     const data = await res.json().then(r => r.data);
     if (!data) throw new Error('Trading wallet not found');
     return data;
+  }
+
+  public async getBalance(address: string): Promise<RadfiWalletBalance> {
+    if (!this.config.umsUrl) {
+      throw new Error('RadfiConfig.umsUrl is required for getBalance');
+    }
+    const umsUrl = this.config.umsUrl;
+    const res = await fetch(`${umsUrl}/wallets/balance?address=${address}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch wallet balance');
+    }
+
+    const { data } = await res.json();
+    return {
+      btcSatoshi: BigInt(data.btcSatoshi ?? '0'),
+      pendingSatoshi: BigInt(data.pendingSatoshi ?? '0'),
+      externalPendingSatoshi: BigInt(data.externalPendingSatoshi ?? '0'),
+      totalUtxos: Number(data.totalUtxos ?? 0),
+    };
   }
 
   public async checkIfTradingWalletExists(userAddress: string): Promise<boolean> {

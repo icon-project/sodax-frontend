@@ -35,36 +35,6 @@ export function useRadfiSession(
   const [tradingAddress, setTradingAddress] = useState<string | undefined>();
   const isRefreshingRef = useRef(false);
 
-  // ── Poll wallet address ──────────────────────────────────────────────────
-  useEffect(() => {
-    if (!spokeProvider) return;
-
-    const fetch = () => {
-      spokeProvider.walletProvider.getWalletAddress()
-        .then(setWalletAddress)
-        .catch(() => {});
-    };
-
-    fetch();
-    const id = setInterval(fetch, 3000);
-    return () => clearInterval(id);
-  }, [spokeProvider]);
-
-  // ── Restore session on mount (once walletAddress is known) ───────────────
-  useEffect(() => {
-    if (!walletAddress || !spokeProvider) return;
-
-    const session = loadRadfiSession(walletAddress);
-    if (!session || isRefreshTokenExpired(walletAddress)) return;
-
-    if (!isAccessTokenExpired(walletAddress)) {
-      spokeProvider.setRadfiAccessToken(session.accessToken);
-      setIsAuthed(true);
-      setTradingAddress(session.tradingAddress || undefined);
-    }
-    // If access token expired but refresh valid — polling below handles it
-  }, [walletAddress, spokeProvider]);
-
   // ── Silent refresh helper ────────────────────────────────────────────────
   const silentRefresh = useCallback(async (address: string) => {
     if (!spokeProvider || isRefreshingRef.current) return;
@@ -100,7 +70,36 @@ export function useRadfiSession(
     }
   }, [spokeProvider]);
 
-  // ── Polling: check expiry every 2s ──────────────────────────────────────
+  // ── Poll wallet address + restore session eagerly ────────────────────────
+  useEffect(() => {
+    if (!spokeProvider) return;
+
+    const fetchAndRestore = () => {
+      spokeProvider.walletProvider.getWalletAddress()
+        .then((addr) => {
+          setWalletAddress(addr);
+          // Eagerly restore session in the same tick to avoid extra render cycle
+          const session = loadRadfiSession(addr);
+          if (!session || isRefreshTokenExpired(addr)) return;
+
+          if (!isAccessTokenExpired(addr)) {
+            spokeProvider.setRadfiAccessToken(session.accessToken);
+            setIsAuthed(true);
+            setTradingAddress(session.tradingAddress || undefined);
+          } else {
+            // Access token expired but refresh valid — trigger silent refresh
+            silentRefresh(addr);
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchAndRestore();
+    const id = setInterval(fetchAndRestore, 3000);
+    return () => clearInterval(id);
+  }, [spokeProvider, silentRefresh]);
+
+  // ── Polling: check expiry every 30s ──────────────────────────────────────
   useEffect(() => {
     if (!walletAddress || !spokeProvider) return;
 

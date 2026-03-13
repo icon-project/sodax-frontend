@@ -2,7 +2,7 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useRadfiSession, useBitcoinBalance, useFundTradingWallet } from '@sodax/dapp-kit';
+import { useRadfiSession, useBitcoinBalance, useTradingWalletBalance, useFundTradingWallet } from '@sodax/dapp-kit';
 import type { BitcoinSpokeProvider } from '@sodax/sdk';
 import { formatUnits, parseUnits } from 'viem';
 import { Loader2, Copy, ExternalLink, Check } from 'lucide-react';
@@ -15,7 +15,7 @@ interface BitcoinSetupPanelProps {
 export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange }: BitcoinSetupPanelProps) => {
   const { walletAddress, isAuthed, tradingAddress, login, isLoginPending } = useRadfiSession(spokeProvider);
 
-  const { data: btcBalance, isLoading: isBalanceLoading } = useBitcoinBalance(tradingAddress);
+  const { data: tradingBalance, isLoading: isBalanceLoading } = useTradingWalletBalance(spokeProvider, tradingAddress);
   const { data: nativeBalance, isLoading: isNativeBalanceLoading } = useBitcoinBalance(walletAddress);
 
   const { mutateAsync: fundWallet, isPending: isFunding } = useFundTradingWallet(spokeProvider);
@@ -30,9 +30,9 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange }: BitcoinSetup
   };
 
   useEffect(() => {
-    const isReady = isAuthed && !!tradingAddress && (btcBalance ? btcBalance > 0n : false);
+    const isReady = isAuthed && !!tradingAddress && (tradingBalance ? tradingBalance.btcSatoshi > 0n : false);
     onReadyChange(isReady);
-  }, [isAuthed, tradingAddress, btcBalance, onReadyChange]);
+  }, [isAuthed, tradingAddress, tradingBalance, onReadyChange]);
 
   const handleFund = async () => {
     if (!fundAmount || Number.isNaN(Number(fundAmount)) || Number(fundAmount) <= 0) return;
@@ -101,7 +101,7 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange }: BitcoinSetup
 
               {/* Step badge */}
               <span className="text-sm font-medium flex items-center gap-2">
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs text-white ${btcBalance && btcBalance > 0n ? 'bg-green-500' : 'bg-blue-500'}`}>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs text-white ${tradingBalance && tradingBalance.btcSatoshi > 0n ? 'bg-green-500' : 'bg-blue-500'}`}>
                   3
                 </div>
                 Fund Trading Wallet
@@ -121,11 +121,11 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange }: BitcoinSetup
                 </div>
                 <div className="flex flex-col gap-1 rounded-md border border-border bg-background p-2">
                   <span className="text-xs text-muted-foreground">Trading Wallet</span>
-                  <span className={`text-sm font-medium ${btcBalance && btcBalance > 0n ? 'text-green-500' : ''}`}>
+                  <span className={`text-sm font-medium ${tradingBalance && tradingBalance.btcSatoshi > 0n ? 'text-green-500' : ''}`}>
                     {isBalanceLoading ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
                     ) : (
-                      `${formatUnits(btcBalance ?? 0n, 8)} BTC`
+                      `${formatUnits(tradingBalance?.btcSatoshi ?? 0n, 8)} BTC`
                     )}
                   </span>
                 </div>

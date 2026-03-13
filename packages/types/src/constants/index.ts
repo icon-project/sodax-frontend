@@ -1124,6 +1124,7 @@ export const spokeChainConfig = {
     },
     radfiApiUrl: 'https://staging.api.radfi.co/api',
     radfiApiKey: '',
+    radfiUmsUrl: 'https://staging.ums.radfi.co/api',
     network: 'MAINNET',
     rpcUrl: 'https://mempool.space/api',
   } as const satisfies BitcoinSpokeChainConfig,

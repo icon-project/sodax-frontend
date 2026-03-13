@@ -189,6 +189,7 @@ export type BitcoinSpokeChainConfig = BaseSpokeChainConfig<'BITCOIN'> & {
   network: string;
   radfiApiUrl: string;
   radfiApiKey: string;
+  radfiUmsUrl: string;
 };
 
 export type InjectiveSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
