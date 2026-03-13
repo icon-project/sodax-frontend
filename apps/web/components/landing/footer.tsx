@@ -42,7 +42,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
         </div>
         <div>
           <Label className="text-[12px] font-[InterMedium] text-cherry-bright mt-5">
-            © 2025 ICON Foundation. All rights reserved.
+            © 2026 ICON Foundation. All rights reserved.
           </Label>
         </div>
       </div>
@@ -112,7 +112,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           </FooterLink>
           <FooterLink
             href="#"
-            onClick={(e) => {
+            onClick={e => {
               e.preventDefault();
               showCookiePreferences();
             }}

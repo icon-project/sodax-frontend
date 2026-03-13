@@ -62,7 +62,7 @@ export default function StakePage() {
           {isNetworkPickerOpened && <div className="inset-0 absolute w-full h-full bg-transparent-white z-20" />}
           <StakeInputPanel />
           {/* Tip sits at the bottom of top section, translated down into the seam */}
-          <div className="absolute bottom-1 left-[72px] translate-y-full z-10 pointer-events-none">
+          <div className="absolute bottom-0 left-[72px] translate-y-full z-10 pointer-events-none">
             <Tip fill="var(--color-almost-white)" />{' '}
           </div>
         </div>
