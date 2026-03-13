@@ -17,7 +17,11 @@ import { ExternalLinkIcon, Timer } from 'lucide-react';
 import Link from 'next/link';
 import SwapReviewButton from './_components/swap-review-button';
 import AnimatedNumber from '@/components/shared/animated-number';
-import { calculateMaxAvailableAmount, formatBalance } from '@/lib/utils';
+import { calculateMaxAvailableAmount, formatBalance, getAllSupportedSolverTokens } from '@/lib/utils';
+
+const _allSolverTokens = getAllSupportedSolverTokens();
+const SOLVER_TOKEN_COUNT = _allSolverTokens.length;
+const SOLVER_NETWORK_COUNT = new Set(_allSolverTokens.map(t => t.xChainId)).size;
 import { motion } from 'framer-motion';
 import { itemVariants, listVariants } from '@/constants/animation';
 import { getSwapTiming } from '@/lib/swap-timing';
@@ -202,12 +206,12 @@ export default function SwapPage() {
           <div className="mix-blend-multiply justify-start text-clay-light font-normal font-['InterRegular'] leading-snug text-(length:--subtitle)! flex gap-1">
             Access{' '}
             <AnimatedNumber
-              to={63}
+              to={SOLVER_TOKEN_COUNT}
               className="text-clay-light font-normal font-['InterRegular'] leading-snug text-(length:--subtitle)! min-w-6"
             />
             assets across
             <AnimatedNumber
-              to={12}
+              to={SOLVER_NETWORK_COUNT}
               className="text-clay-light font-normal font-['InterRegular'] leading-snug text-(length:--subtitle)! min-w-5"
             />
             networks.
