@@ -242,10 +242,7 @@ export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
   nid: Hex;
 };
 
-<<<<<<< HEAD
 export type AleoAddress = `aleo1${string}`;
-=======
->>>>>>> 5e7a01c3 (feat(types): add Aleo types and configurations)
 export type AleoSpokeChainConfig = BaseSpokeChainConfig<'ALEO'> & {
   rpcUrl: string;
   addresses: {
@@ -260,10 +257,6 @@ export type AleoSpokeChainConfig = BaseSpokeChainConfig<'ALEO'> & {
   network: AleoNetworkEnv;
 };
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 5e7a01c3 (feat(types): add Aleo types and configurations)
 export type SpokeChainConfig =
   | EvmSpokeChainConfig
   | SonicSpokeChainConfig
