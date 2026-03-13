@@ -16,7 +16,7 @@ export type SpokeChainId = (typeof CHAIN_IDS)[number];
 
 export type ChainId = (typeof CHAIN_IDS)[number];
 
-export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'NEAR','ALEO'] as const;
+export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'NEAR', 'ALEO'] as const;
 export type ChainType = (typeof ChainTypeArr)[number];
 
 export type Chain = {
@@ -103,6 +103,7 @@ export type HubChainInfo<T extends ChainType> = {
   name: string;
   id: HubChainId;
   type: T;
+  chainId: string | number;
 };
 
 export type HubChainConfig = EvmHubChainConfig;
@@ -255,7 +256,6 @@ export type AleoSpokeChainConfig = BaseSpokeChainConfig<'ALEO'> & {
   gasPrice: string;
   network: AleoNetworkEnv;
 };
-
 
 export type SpokeChainConfig =
   | EvmSpokeChainConfig
