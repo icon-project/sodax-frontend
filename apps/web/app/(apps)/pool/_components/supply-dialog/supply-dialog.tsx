@@ -28,6 +28,8 @@ export default function SupplyDialog({
   const [isSupplyApproved, setIsSupplyApproved] = useState<boolean>(false);
   const [isSupplyCompleted, setIsSupplyCompleted] = useState<boolean>(false);
   const [supplyError, setSupplyError] = useState<{ title: string; message: string } | null>(null);
+  const [isSupplyPending, setIsSupplyPending] = useState<boolean>(false);
+  const [isShaking, setIsShaking] = useState<boolean>(false);
 
   useEffect((): void => {
     if (open) {
@@ -35,18 +37,27 @@ export default function SupplyDialog({
       setIsSupplyApproved(false);
       setIsSupplyCompleted(false);
       setSupplyError(null);
+      setIsSupplyPending(false);
+      setIsShaking(false);
     }
   }, [open]);
 
   const handleClose = (): void => {
+    if (isSupplyPending) {
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 500);
+      return;
+    }
     onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
         className="w-full md:max-w-[480px]! p-8 md:p-12 md:pb-8 gap-0 min-h-86 bg-vibrant-white block"
         hideCloseButton
+        enableMotion={true}
+        shake={isShaking}
       >
         <DialogTitle className="flex w-full justify-end h-4 relative p-0">
           <XIcon
@@ -65,6 +76,7 @@ export default function SupplyDialog({
           onCompletedChange={setIsSupplyCompleted}
           onClose={handleClose}
           onError={setSupplyError}
+          onPendingChange={setIsSupplyPending}
           poolData={poolData}
           poolSpokeAssets={poolSpokeAssets}
         />

@@ -2,7 +2,7 @@
 'use client';
 
 import type React from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Check, CheckIcon, FilePenLine, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
@@ -37,6 +37,7 @@ interface SupplyDialogFooterProps {
   onCompletedChange: (completed: boolean) => void;
   onClose: () => void;
   onError: (error: { title: string; message: string } | null) => void;
+  onPendingChange: (pending: boolean) => void;
   poolData: PoolData | null;
   poolSpokeAssets: PoolSpokeAssets | null;
 }
@@ -81,6 +82,7 @@ export default function SupplyDialogFooter({
   onCompletedChange,
   onClose,
   onError,
+  onPendingChange,
   poolData,
   poolSpokeAssets,
 }: SupplyDialogFooterProps): React.JSX.Element {
@@ -96,6 +98,12 @@ export default function SupplyDialogFooter({
   const { mutateAsync: depositAsset, isPending: isDepositing } = useDexDeposit();
   const { mutateAsync: supplyLiquidity, isPending: isSupplying } = useSupplyLiquidity();
   const isMobile = useIsMobile();
+
+  // Notify parent when any async operation is in-flight so it can block close.
+  useEffect((): void => {
+    onPendingChange(isApproving || isDepositing || isSupplying);
+  }, [isApproving, isDepositing, isSupplying, onPendingChange]);
+
   const isTermsStep = currentSupplyStep === SUPPLY_STEP.SUPPLY_TERMS;
   const isApproveStep = currentSupplyStep === SUPPLY_STEP.SUPPLY_APPROVE;
   const isConfirmStep = currentSupplyStep === SUPPLY_STEP.SUPPLY_CONFIRM;
