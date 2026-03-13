@@ -1,5 +1,3 @@
-import { type CustomProvider, type SolverConfigParams, spokeChainConfig } from '@sodax/sdk';
-import type { SpokeChainId } from '@sodax/types';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
   AVALANCHE_MAINNET_CHAIN_ID,
@@ -18,33 +16,6 @@ import {
   KAIA_MAINNET_CHAIN_ID,
   REDBELLY_MAINNET_CHAIN_ID,
 } from '@sodax/types';
-
-declare global {
-  interface Window {
-    hanaWallet: { ethereum: CustomProvider };
-  }
-}
-
-export function chainIdToChainName(chainId: SpokeChainId): string {
-  return spokeChainConfig[chainId].chain.name;
-}
-
-export const stagingSolverConfig = {
-  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
-  protocolIntentsContract: '0xaFf2EDb3057ed6f9C1dA6c930b8ddDf2beE573A5' as const,
-} satisfies SolverConfigParams;
-
-export const productionSolverConfig = {
-  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://api.sodax.com/v1/intent',
-  protocolIntentsContract: '0xaFf2EDb3057ed6f9C1dA6c930b8ddDf2beE573A5' as const,
-} satisfies SolverConfigParams;
-
-export const devSolverConfig = {
-  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://sodax-solver-dev.iconblockchain.xyz',
-} satisfies SolverConfigParams;
 
 export interface ChainUI {
   id: string;
@@ -79,20 +50,47 @@ export const availableChains: ChainUI[] = [
     icon: '/chain/sonic.png',
     explorerTxUrl: 'https://sonicscan.org/tx/',
   },
-  { id: ETHEREUM_MAINNET_CHAIN_ID, name: 'Ethereum', icon: '/chain/ethereum.png' },
-  { id: SOLANA_MAINNET_CHAIN_ID, name: 'Solana', icon: '/chain/solana.png' },
-  { id: BASE_MAINNET_CHAIN_ID, name: 'Base', icon: '/chain/0x2105.base.png' },
+  {
+    id: ETHEREUM_MAINNET_CHAIN_ID,
+    name: 'Ethereum',
+    icon: '/chain/ethereum.png',
+    explorerTxUrl: 'https://etherscan.io/tx/',
+  },
+  {
+    id: SOLANA_MAINNET_CHAIN_ID,
+    name: 'Solana',
+    icon: '/chain/solana.png',
+    explorerTxUrl: 'https://solscan.io/tx/',
+  },
+  {
+    id: BASE_MAINNET_CHAIN_ID,
+    name: 'Base',
+    icon: '/chain/0x2105.base.png',
+    explorerTxUrl: 'https://basescan.org/tx/',
+  },
   {
     id: ARBITRUM_MAINNET_CHAIN_ID,
     name: 'Arbitrum',
     icon: '/chain/0xa4b1.arbitrum.png',
+    explorerTxUrl: 'https://arbiscan.io/tx/',
   },
-  { id: SUI_MAINNET_CHAIN_ID, name: 'Sui', icon: '/chain/sui.png' },
-  { id: BSC_MAINNET_CHAIN_ID, name: 'BNB Chain', icon: '/chain/0x38.bsc.png' },
+  {
+    id: SUI_MAINNET_CHAIN_ID,
+    name: 'Sui',
+    icon: '/chain/sui.png',
+    explorerTxUrl: 'https://suiexplorer.com/tx/',
+  },
+  {
+    id: BSC_MAINNET_CHAIN_ID,
+    name: 'BNB Chain',
+    icon: '/chain/0x38.bsc.png',
+    explorerTxUrl: 'https://bscscan.com/tx/',
+  },
   {
     id: POLYGON_MAINNET_CHAIN_ID,
     name: 'Polygon',
     icon: '/chain/0x89.polygon.png',
+    explorerTxUrl: 'https://polygonscan.com/tx/',
   },
   {
     id: AVALANCHE_MAINNET_CHAIN_ID,
@@ -104,9 +102,20 @@ export const availableChains: ChainUI[] = [
     id: OPTIMISM_MAINNET_CHAIN_ID,
     name: 'Optimism',
     icon: '/chain/0xa.optimism.png',
+    explorerTxUrl: 'https://optimistic.etherscan.io/tx/',
   },
-  { id: STELLAR_MAINNET_CHAIN_ID, name: 'Stellar', icon: '/chain/stellar.png' },
-  { id: ICON_MAINNET_CHAIN_ID, name: 'ICON', icon: '/chain/0x1.icon.png' },
+  {
+    id: STELLAR_MAINNET_CHAIN_ID,
+    name: 'Stellar',
+    icon: '/chain/stellar.png',
+    explorerTxUrl: 'https://stellar.expert/explorer/public/tx/',
+  },
+  {
+    id: ICON_MAINNET_CHAIN_ID,
+    name: 'ICON',
+    icon: '/chain/0x1.icon.png',
+    explorerTxUrl: 'https://tracker.icon.community/transaction/',
+  },
   {
     id: LIGHTLINK_MAINNET_CHAIN_ID,
     name: 'LightLink',
@@ -119,8 +128,18 @@ export const availableChains: ChainUI[] = [
     icon: '/chain/hyper.png',
     explorerTxUrl: 'https://explorer.hyperchain.io/tx/',
   },
-  { id: KAIA_MAINNET_CHAIN_ID, name: 'Kaia', icon: '/chain/0x2019.kaia.png' },
-  { id: REDBELLY_MAINNET_CHAIN_ID, name: 'Redbelly', icon: '/chain/redbelly.png' },
+  {
+    id: KAIA_MAINNET_CHAIN_ID,
+    name: 'Kaia',
+    icon: '/chain/0x2019.kaia.png',
+    explorerTxUrl: 'https://klaytnfinder.io/tx/',
+  },
+  {
+    id: REDBELLY_MAINNET_CHAIN_ID,
+    name: 'Redbelly',
+    icon: '/chain/redbelly.png',
+    explorerTxUrl: 'https://redbelly.routescan.io/tx/',
+  },
 ];
 
 /**

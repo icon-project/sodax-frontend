@@ -3,7 +3,6 @@ import { isNativeToken } from '@/utils';
 import type { XToken } from '@sodax/types';
 import { type Connection, PublicKey } from '@solana/web3.js';
 import { getAccount, getAssociatedTokenAddressSync } from '@solana/spl-token';
-import type { AnchorProvider } from '@coral-xyz/anchor';
 import type { WalletContextState } from '@solana/wallet-adapter-react';
 
 export class SolanaXService extends XService {
@@ -11,7 +10,6 @@ export class SolanaXService extends XService {
 
   public connection: Connection | undefined;
   public wallet: WalletContextState | undefined;
-  public provider: AnchorProvider | undefined;
 
   private constructor() {
     super('SOLANA');
@@ -29,7 +27,7 @@ export class SolanaXService extends XService {
 
     const connection = this.connection;
     if (!connection) {
-      throw new Error('Connection is not initialized');
+      return BigInt(0);
     }
 
     try {
@@ -41,10 +39,8 @@ export class SolanaXService extends XService {
       const tokenAccountPubkey = getAssociatedTokenAddressSync(new PublicKey(xToken.address), new PublicKey(address));
       const tokenAccount = await getAccount(connection, tokenAccountPubkey);
       return BigInt(tokenAccount.amount);
-    } catch (e) {
-      console.log('error', e);
+    } catch {
+      return BigInt(0);
     }
-
-    return BigInt(0);
   }
 }

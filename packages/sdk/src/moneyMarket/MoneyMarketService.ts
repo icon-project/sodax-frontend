@@ -1158,7 +1158,30 @@ export class MoneyMarketService {
       }
 
       return { ok: true, value: [txResult.value, intentTxHash] };
-    } catch (error) {
+    } catch (error: unknown) {
+      // Simulation failure (e.g. hub revert "External call failed") is a known intent failure, not unknown
+      const isSimulationFailure =
+        error instanceof Error &&
+        error.message === 'Simulation failed' &&
+        error.cause != null &&
+        typeof error.cause === 'object' &&
+        'success' in error.cause &&
+        (error.cause as { success?: boolean }).success === false;
+
+      if (isSimulationFailure) {
+        const cause = error.cause as { error?: string };
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_REPAY_INTENT_FAILED',
+            data: {
+              payload: params,
+              error: cause?.error ?? error,
+            },
+          },
+        };
+      }
+
       return {
         ok: false,
         error: {
