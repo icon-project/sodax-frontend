@@ -2,7 +2,7 @@
 
 import type React from 'react';
 import { useEffect, useState } from 'react';
-import { AlertCircle, XIcon } from 'lucide-react';
+import { ShieldAlertIcon, XIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import SupplyInfoStep from './supply-info-step';
 import SupplyConfirmationStep from './supply-confirmation-step';
@@ -55,16 +55,7 @@ export default function SupplyDialog({
           />
         </DialogTitle>
         {currentSupplyStep === SUPPLY_STEP.SUPPLY_TERMS && <SupplyInfoStep />}
-        {currentSupplyStep !== SUPPLY_STEP.SUPPLY_TERMS && <SupplyConfirmationStep />}
-        {supplyError ? (
-          <div className="mt-4 flex items-start gap-3 rounded-lg border border-destructive bg-destructive/10 p-3 text-xs text-destructive">
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-            <div className="flex-1">
-              <div className="font-semibold">{supplyError.title}</div>
-              <div>{supplyError.message}</div>
-            </div>
-          </div>
-        ) : null}
+        {currentSupplyStep !== SUPPLY_STEP.SUPPLY_TERMS && <SupplyConfirmationStep supplyError={supplyError} />}
         <SupplyDialogFooter
           currentSupplyStep={currentSupplyStep}
           onSupplyStepChange={setCurrentSupplyStep}
