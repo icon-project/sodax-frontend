@@ -327,7 +327,7 @@ export default function SwapCard({
         <div className="mix-blend-multiply text-black text-(length:--body-comfortable) font-medium font-['InterRegular'] flex gap-1">
           <span className="hidden sm:inline">Balance:</span>
           <span className="inline">
-            {Number(formatUnits(sourceTokenBalance, sourceToken?.decimals ?? 0)).toFixed(4)}
+            {Number(formatUnits(sourceTokenBalance, sourceToken?.decimals ?? 0)).toFixed(5)}
           </span>
         </div>
         <div className="grow">
@@ -343,9 +343,10 @@ export default function SwapCard({
         </div>
         
         {sourceChain === BITCOIN_MAINNET_CHAIN_ID && sourceProvider && (
-          <BitcoinSetupPanel 
-            spokeProvider={sourceProvider as unknown as BitcoinSpokeProvider} 
-            onReadyChange={setIsBitcoinReady} 
+          <BitcoinSetupPanel
+            spokeProvider={sourceProvider as unknown as BitcoinSpokeProvider}
+            onReadyChange={setIsBitcoinReady}
+            nativeBalance={sourceTokenBalance}
           />
         )}
 

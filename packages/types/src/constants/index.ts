@@ -2352,7 +2352,7 @@ export const swapSupportedTokens = {
   ] as const satisfies XToken[],
   [BITCOIN_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BTC,
-    spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BUSD,
+    // spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BUSD, // TODO: re-enable when trading wallet balance is ready
   ] as const satisfies XToken[],
   [ETHEREUM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.ETH,

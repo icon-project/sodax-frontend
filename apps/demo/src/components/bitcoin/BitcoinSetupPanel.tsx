@@ -2,7 +2,7 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useRadfiSession, useBitcoinBalance, useTradingWalletBalance, useFundTradingWallet } from '@sodax/dapp-kit';
+import { useRadfiSession, useTradingWalletBalance, useFundTradingWallet } from '@sodax/dapp-kit';
 import type { BitcoinSpokeProvider } from '@sodax/sdk';
 import { formatUnits, parseUnits } from 'viem';
 import { Loader2, Copy, ExternalLink, Check } from 'lucide-react';
@@ -10,13 +10,14 @@ import { Loader2, Copy, ExternalLink, Check } from 'lucide-react';
 interface BitcoinSetupPanelProps {
   spokeProvider: BitcoinSpokeProvider;
   onReadyChange: (isReady: boolean) => void;
+  nativeBalance?: bigint;
+  isNativeBalanceLoading?: boolean;
 }
 
-export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange }: BitcoinSetupPanelProps) => {
+export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance, isNativeBalanceLoading }: BitcoinSetupPanelProps) => {
   const { walletAddress, isAuthed, tradingAddress, login, isLoginPending } = useRadfiSession(spokeProvider);
 
   const { data: tradingBalance, isLoading: isBalanceLoading } = useTradingWalletBalance(spokeProvider, tradingAddress);
-  const { data: nativeBalance, isLoading: isNativeBalanceLoading } = useBitcoinBalance(walletAddress);
 
   const { mutateAsync: fundWallet, isPending: isFunding } = useFundTradingWallet(spokeProvider);
   const [fundAmount, setFundAmount] = useState('');

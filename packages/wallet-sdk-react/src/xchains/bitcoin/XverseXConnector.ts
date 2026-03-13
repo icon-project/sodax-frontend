@@ -44,13 +44,49 @@ class XverseWalletProvider implements IBitcoinWalletProvider {
     return 'P2PKH';
   }
 
+  /**
+   * Parse a base64-encoded PSBT to count the number of inputs.
+   * Reads the unsigned transaction from the PSBT global section.
+   */
+  private countPsbtInputs(psbtBase64: string): number {
+    const data = Buffer.from(psbtBase64, 'base64');
+    // Skip 5-byte magic (0x70736274FF = "psbt" + separator)
+    let offset = 5;
+
+    // Global section: first key-value pair should be key 0x00 (unsigned tx)
+    const keyLen = data[offset++]!;
+    if (keyLen !== 1 || data[offset++] !== 0x00) {
+      return 1; // fallback: assume 1 input
+    }
+
+    // Read value length (compact size)
+    const firstByte = data[offset++]!;
+    if (firstByte === 0xfd) offset += 2;
+    else if (firstByte === 0xfe) offset += 4;
+    else if (firstByte === 0xff) offset += 8;
+    // else firstByte IS the length (< 0xfd), no extra bytes
+
+    // Unsigned tx: skip 4-byte version
+    offset += 4;
+
+    // Read input count (varint)
+    const inputByte = data[offset]!;
+    if (inputByte < 0xfd) return inputByte;
+    return 1; // fallback for unusual cases
+  }
+
   async signTransaction(psbtBase64: string, finalize = false): Promise<string> {
     const { request } = await import('sats-connect');
+
+    const inputCount = this.countPsbtInputs(psbtBase64);
+    const signingIndexes = Array.from({ length: inputCount }, (_, i) => i);
 
     const response = await request('signPsbt', {
       psbt: psbtBase64,
       broadcast: false,
-      // signInputs omitted — Xverse will prompt user to sign all applicable inputs
+      signInputs: {
+        [this.address]: signingIndexes,
+      },
     });
 
     if (response.status === 'error') {
@@ -136,6 +172,10 @@ export class XverseXConnector extends BitcoinXConnector {
   }
 
   async connect(): Promise<XAccount | undefined> {
+    if (!XverseXConnector.isAvailable()) {
+      throw new Error('Xverse wallet is not installed');
+    }
+
     const { request } = await import('sats-connect');
 
     const response = await request('getAccounts', {
