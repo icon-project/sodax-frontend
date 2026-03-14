@@ -11,15 +11,19 @@ import { formatCompactNumber } from '@/lib/utils';
  * and their USD equivalents using reserve and user data from the Sodax SDK.
  * Handles special cases like merging `bnUSD` and `bnUSDVault` reserves.
  *
+ * Pool metrics (APY, liquidity, etc.) are looked up by token.xChainId.
+ * User debt (userReserve) is taken from the passed-in userReserves array
+ * (caller should pass market chain user reserves for correct cross-chain debt display).
+ *
  * @param {XToken} token - Target token for which metrics are computed.
  * @param {FormatReserveUSDResponse[]} formattedReserves - USD-normalized reserve data.
- * @param {UserReserveData[][]} userReserves - Nested user reserve data arrays.
+ * @param {UserReserveData[]} userReserves - User reserve data (pass market chain reserves for debt column).
  *
  * @returns {ReserveMetricsResult} Computed reserve metrics, including APRs, APYs,
  * total supply/borrow (in tokens and USD), and user-specific reserve data.
  *
  * @example
- * const metrics = useReserveMetrics({ token, reserves, formattedReserves, userReserves, selectedChainId });
+ * const metrics = useReserveMetrics({ token, formattedReserves, userReserves });
  * console.log(metrics.supplyAPY); // "4.62%"
  * console.log(metrics.totalLiquidityUSD); // "$15,482,100.23"
  */
@@ -58,6 +62,7 @@ export function useReserveMetrics({
   userReserves,
 }: UseReserveMetricsProps): ReserveMetricsResult {
   try {
+    // Always use token.xChainId for hub/reserve lookup so pool metrics (APY, liquidity) work for all assets
     const chainAssets = hubAssets[token.xChainId];
     const hubAsset = chainAssets?.[token.address];
 

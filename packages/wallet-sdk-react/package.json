@@ -30,7 +30,6 @@
     "lint": "biome lint . --write"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "0.30.1",
     "@creit.tech/stellar-wallets-kit": "^1.7.5",
     "@hot-labs/near-connect": "0.10.0",
     "@injectivelabs/networks": "catalog:",

@@ -1,5 +1,5 @@
 import { getXChainType } from '@/actions';
-import { type UseQueryResult, keepPreviousData, useQuery } from '@tanstack/react-query';
+import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import type { ChainId, XToken } from '@sodax/types';
 import { useXService } from './useXService';
 
@@ -59,8 +59,7 @@ export function useXBalances({
 
       return balances;
     },
-    enabled: !!xService,
-    placeholderData: keepPreviousData,
+    enabled: !!xService && !!address && (xTokens?.length ?? 0) > 0,
     refetchInterval: 5_000,
   });
 }
