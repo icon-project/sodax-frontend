@@ -23,7 +23,7 @@
     },
     "build:packages": {
       "dependsOn": ["^build"],
-      "inputs": ["packages/*"],
+      "inputs": ["packages/**"],
       "outputs": ["dist/**"]
     },
     "test": {
@@ -45,6 +45,6 @@
     }
   },
   "remoteCache": {
-    "enabled": true
+    "enabled": false
   }
 }
