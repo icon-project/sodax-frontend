@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import SwapCard from '@/components/solver/SwapCard';
 import LimitOrderCard from '@/components/solver/LimitOrderCard';
-import type { Hex, Intent, IntentDeliveryInfo } from '@sodax/sdk';
-import OrderStatus from '@/components/solver/OrderStatus';
+import OrderStatus, { type Order } from '@/components/solver/OrderStatus';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SolverEnv, useAppStore } from '@/zustand/useAppStore';
 
@@ -13,9 +12,7 @@ enum OrderType {
 
 export default function SolverPage() {
   const { solverEnvironment, setSolverEnvironment } = useAppStore();
-  const [orders, setOrders] = useState<{ intentHash: Hex; intent: Intent; intentDeliveryInfo: IntentDeliveryInfo }[]>(
-    [],
-  );
+  const [orders, setOrders] = useState<Order[]>([]);
 
   const [orderType, setOrderType] = useState<OrderType>(OrderType.Market);
 

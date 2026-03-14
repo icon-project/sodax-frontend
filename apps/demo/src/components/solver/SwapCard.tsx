@@ -18,12 +18,10 @@ import { parseUnits, formatUnits } from 'viem';
 import {
   type CreateIntentParams,
   getSupportedSolverTokens,
-  type Hex,
-  type Intent,
-  type IntentDeliveryInfo,
   type SolverIntentQuoteRequest,
   StellarSpokeProvider,
 } from '@sodax/sdk';
+import type { SubmitSwapTxRequest, SwapIntentData } from '@sodax/types';
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
@@ -36,6 +34,7 @@ import {
   useStellarTrustlineCheck,
   useRequestTrustline,
   useSodaxContext,
+  useBackendSubmitSwapTx,
 } from '@sodax/dapp-kit';
 import {
   getXChainType,
@@ -55,14 +54,15 @@ import {
   STELLAR_MAINNET_CHAIN_ID,
   type XToken,
 } from '@sodax/types';
+import type { Order } from '@/components/solver/OrderStatus';
 import { useAppStore } from '@/zustand/useAppStore';
+
+const SUBMIT_TX_API_CONFIG = { baseURL: 'https://canary-api.sodax.com/v1/bes' } as const;
 
 export default function SwapCard({
   setOrders,
 }: {
-  setOrders: (
-    value: SetStateAction<{ intentHash: Hex; intent: Intent; intentDeliveryInfo: IntentDeliveryInfo }[]>,
-  ) => void;
+  setOrders: (value: SetStateAction<Order[]>) => void;
 }) {
   const { sodax } = useSodaxContext();
   //chain and account states
@@ -98,6 +98,10 @@ export default function SwapCard({
   const { requestTrustline } = useRequestTrustline(destToken?.address);
   const [open, setOpen] = useState(false);
   const [slippage, setSlippage] = useState<string>('0.5');
+  const [useSubmitTxApi, setUseSubmitTxApi] = useState(false);
+  const { mutateAsync: submitSwapTx, isPending: isSubmitting } = useBackendSubmitSwapTx({
+    apiConfig: SUBMIT_TX_API_CONFIG,
+  });
   const onChangeDirection = () => {
     setSourceChain(destChain);
     setDestChain(sourceChain);
@@ -228,14 +232,74 @@ export default function SwapCard({
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceChain as ChainId);
 
+  const handleSubmitTxSwap = async (intentOrderPayload: CreateIntentParams) => {
+    if (!sourceProvider) {
+      console.error('sourceProvider undefined');
+      return;
+    }
+
+    setOpen(false);
+
+    const createIntentResult = await sodax.swaps.createIntent({
+      intentParams: intentOrderPayload,
+      spokeProvider: sourceProvider,
+    });
+
+    if (!createIntentResult.ok) {
+      console.error('Error creating intent:', createIntentResult.error);
+      return;
+    }
+
+    const [spokeTxHash, intent, relayData] = createIntentResult.value;
+    console.log('Intent created. Spoke tx hash:', spokeTxHash);
+
+    const swapIntentData: SwapIntentData = {
+      intentId: intent.intentId.toString(),
+      creator: intent.creator,
+      inputToken: intent.inputToken,
+      outputToken: intent.outputToken,
+      inputAmount: intent.inputAmount.toString(),
+      minOutputAmount: intent.minOutputAmount.toString(),
+      deadline: intent.deadline.toString(),
+      allowPartialFill: intent.allowPartialFill,
+      srcChain: Number(intent.srcChain),
+      dstChain: Number(intent.dstChain),
+      srcAddress: intent.srcAddress,
+      dstAddress: intent.dstAddress,
+      solver: intent.solver,
+      data: intent.data,
+    };
+
+    const request: SubmitSwapTxRequest = {
+      txHash: spokeTxHash,
+      srcChainId: sourceChain,
+      walletAddress: sourceAccount.address ?? '',
+      intent: swapIntentData,
+      relayData,
+    };
+
+    const submitResult = await submitSwapTx(request);
+    console.log('Submit swap tx result:', submitResult);
+
+    setOrders(prev => [
+      ...prev,
+      { mode: 'submit-tx', txHash: spokeTxHash, srcChainId: sourceChain, apiBaseURL: SUBMIT_TX_API_CONFIG.baseURL },
+    ]);
+  };
+
   const handleSwap = async (intentOrderPayload: CreateIntentParams) => {
+    if (useSubmitTxApi) {
+      await handleSubmitTxSwap(intentOrderPayload);
+      return;
+    }
+
     setOpen(false);
     const result = await swap(intentOrderPayload);
 
     if (result.ok) {
       const [response, intent, intentDeliveryInfo] = result.value;
 
-      setOrders(prev => [...prev, { intentHash: response.intent_hash, intent, intentDeliveryInfo }]);
+      setOrders(prev => [...prev, { mode: 'solver', intentHash: response.intent_hash, intent, intentDeliveryInfo }]);
     } else {
       console.error('Error creating and submitting intent:', result.error);
     }
@@ -421,6 +485,19 @@ export default function SwapCard({
           {quoteQuery.data?.ok === false && <div className="text-red-500">{quoteQuery.data.error.detail.message}</div>}
         </div>
 
+        <div className="flex items-center gap-2 w-full">
+          <label htmlFor="submit-tx-toggle" className="text-sm font-medium cursor-pointer">
+            Submit tx to API
+          </label>
+          <input
+            id="submit-tx-toggle"
+            type="checkbox"
+            checked={useSubmitTxApi}
+            onChange={e => setUseSubmitTxApi(e.target.checked)}
+            className="h-4 w-4 cursor-pointer"
+          />
+        </div>
+
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" onClick={() => createIntentOrderPayload()}>
@@ -475,8 +552,13 @@ export default function SwapCard({
 
               {!isWrongChain &&
                 (intentOrderPayload ? (
-                  <Button className="w-full" onClick={() => handleSwap(intentOrderPayload)} disabled={!hasAllowed}>
-                    <ArrowLeftRight className="mr-2 h-4 w-4" /> Swap
+                  <Button
+                    className="w-full"
+                    onClick={() => handleSwap(intentOrderPayload)}
+                    disabled={!hasAllowed || isSubmitting}
+                  >
+                    <ArrowLeftRight className="mr-2 h-4 w-4" />{' '}
+                    {isSubmitting ? 'Submitting...' : useSubmitTxApi ? 'Create Intent & Submit' : 'Swap'}
                   </Button>
                 ) : (
                   <span>Intent Order undefined</span>

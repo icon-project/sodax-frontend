@@ -2,7 +2,7 @@ import React, { useMemo, type ReactNode } from 'react';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SodaxWalletProvider } from '@sodax/wallet-sdk-react';
-import type { RpcConfig } from '@sodax/types';
+import { POLYGON_MAINNET_CHAIN_ID, type RpcConfig } from '@sodax/types';
 import { SodaxProvider } from '@sodax/dapp-kit';
 import { productionSolverConfig, stagingSolverConfig, devSolverConfig } from './constants';
 import type { SodaxConfig, SolverConfigParams } from '@sodax/sdk';
@@ -18,6 +18,7 @@ const rpcConfig: RpcConfig = {
     horizonRpcUrl: 'https://horizon.stellar.org',
     sorobanRpcUrl: 'https://magical-bitter-frost.stellar-mainnet.quiknode.pro/78709b736890cf5a9bcb36e118b9d18e8ecdb7ee',
   },
+  [POLYGON_MAINNET_CHAIN_ID]: 'https://polygon.drpc.org',
 };
 
 const configMap: Record<SolverEnv, SolverConfigParams> = {
