@@ -45,6 +45,6 @@
     }
   },
   "remoteCache": {
-    "enabled": false
+    "enabled": true
   }
 }

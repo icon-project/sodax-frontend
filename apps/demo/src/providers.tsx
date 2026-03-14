@@ -32,7 +32,6 @@ const rpcConfig: RpcConfig = {
     horizonRpcUrl: 'https://horizon.stellar.org',
     sorobanRpcUrl: 'https://magical-bitter-frost.stellar-mainnet.quiknode.pro/78709b736890cf5a9bcb36e118b9d18e8ecdb7ee',
   },
-  '0x89.polygon': 'https://polygon.drpc.org',
 };
 
 
