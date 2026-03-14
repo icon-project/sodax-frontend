@@ -19,6 +19,8 @@ import {
   SONIC_MAINNET_CHAIN_ID,
   SonicSpokeProvider,
   type SonicSpokeChainConfig,
+  NearSpokeProvider,
+  type NearSpokeChainConfig,
 } from '@sodax/sdk';
 import type {
   BitcoinSpokeChainConfig,
@@ -30,6 +32,7 @@ import type {
   IInjectiveWalletProvider,
   IStellarWalletProvider,
   ISolanaWalletProvider,
+  INearWalletProvider,
 } from '@sodax/types';
 import { useMemo } from 'react';
 
@@ -77,9 +80,12 @@ export function useSpokeProvider(
           spokeChainConfig[spokeChainId] as SonicSpokeChainConfig,
         );
       }
+      // EVM RPC: flat RpcConfig keyed by chain id (same shape as app's rpcConfig)
+      const evmRpcUrl = rpcConfig[spokeChainId];
       return new EvmSpokeProvider(
         walletProvider as IEvmWalletProvider,
         spokeChainConfig[spokeChainId] as EvmSpokeChainConfig,
+        typeof evmRpcUrl === 'string' ? evmRpcUrl : undefined,
       );
     }
 
@@ -127,6 +133,13 @@ export function useSpokeProvider(
               rpcUrl: rpcConfig.solana,
             } as SolanaChainConfig)
           : (spokeChainConfig[spokeChainId] as SolanaChainConfig),
+      );
+    }
+
+    if (xChainType === 'NEAR') {
+      return new NearSpokeProvider(
+        walletProvider as INearWalletProvider,
+        spokeChainConfig[spokeChainId] as NearSpokeChainConfig,
       );
     }
 

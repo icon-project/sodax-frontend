@@ -4,6 +4,7 @@ import { BitcoinXService, IconXService, InjectiveXService, SolanaXService, Stell
 import { SuiXService } from '..';
 import { EvmXService } from '..';
 import type { XService } from '../core';
+import { NearXService } from '../xchains/near/NearXService';
 
 export function getXService(xChainType: ChainType): XService {
   switch (xChainType) {
@@ -21,6 +22,8 @@ export function getXService(xChainType: ChainType): XService {
       return InjectiveXService.getInstance();
     case 'STELLAR':
       return StellarXService.getInstance();
+    case 'NEAR':
+      return NearXService.getInstance();
     default:
       throw new Error(`Unsupported chain type: ${xChainType}`);
   }

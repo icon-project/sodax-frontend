@@ -16,7 +16,7 @@ The SDK handles trustlines differently depending on whether Stellar is used as t
 
 ## StellarSpokeService Methods
 
-The SDK provides two methods for managing Stellar trustlines:
+The SDK provides three methods for managing Stellar trustlines:
 
 ### hasSufficientTrustline
 
@@ -29,6 +29,23 @@ const hasTrustline = await StellarSpokeService.hasSufficientTrustline(
   tokenAddress,    // The Stellar token address
   amount,          // The amount you need to receive
   stellarSpokeProvider
+);
+```
+
+**Returns:** `Promise<boolean>` - `true` if trustline exists and has sufficient limit, `false` otherwise
+
+### walletHasSufficientTrustline
+
+Checks if a specific Stellar wallet has a sufficient trustline for a given token and amount without requiring a `StellarSpokeProvider`.
+
+```typescript
+import { StellarSpokeService } from "@sodax/sdk";
+
+const hasTrustline = await StellarSpokeService.walletHasSufficientTrustline(
+  tokenAddress,    // The Stellar token address
+  amount,          // The amount you need to receive
+  walletAddress,   // The Stellar wallet address to check
+  horizonRpcUrl    // Horizon RPC URL to query account balances
 );
 ```
 
@@ -281,8 +298,8 @@ async function swapWithStellarDestination(
 
 ## Related Documentation
 
-- [Swaps](./SWAPS.md) - Cross-chain intent-based swaps
-- [Money Market](./MONEY_MARKET.md) - Cross-chain lending and borrowing
-- [Bridge](./BRIDGE.md) - Cross-chain token bridging
-- [Migration](./MIGRATION.md) - Token migration
-- [Staking](./STAKING.md) - SODA token staking
+- [Swaps](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/SWAPS.md) - Cross-chain intent-based swaps
+- [Money Market](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/MONEY_MARKET.md) - Cross-chain lending and borrowing
+- [Bridge](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/BRIDGE.md) - Cross-chain token bridging
+- [Migration](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/MIGRATION.md) - Token migration
+- [Staking](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/STAKING.md) - SODA token staking

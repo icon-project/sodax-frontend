@@ -17,6 +17,8 @@ import { BitcoinXService } from './xchains/bitcoin';
 import { UnisatXConnector } from './xchains/bitcoin/UnisatXConnector';
 import { XverseXConnector } from './xchains/bitcoin/XverseXConnector';
 import { OKXXConnector } from './xchains/bitcoin/OKXXConnector';
+import { NearXService } from './xchains/near/NearXService';
+
 type XWagmiStore = {
   xServices: Partial<Record<ChainType, XService>>;
   xConnections: Partial<Record<ChainType, XConnection>>;
@@ -27,7 +29,7 @@ type XWagmiStore = {
 
 const initXServices = () => {
   const xServices = {};
-  ['EVM', 'BITCOIN', 'INJECTIVE', 'STELLAR', 'SUI', 'SOLANA', 'ICON'].forEach(key => {
+  ['EVM', 'BITCOIN', 'INJECTIVE', 'STELLAR', 'SUI', 'SOLANA', 'ICON', 'NEAR'].forEach(key => {
     const xChainType = key as ChainType;
 
     switch (xChainType) {
@@ -65,6 +67,10 @@ const initXServices = () => {
       case 'ICON':
         xServices[xChainType] = IconXService.getInstance();
         xServices[xChainType].setXConnectors([new IconHanaXConnector()]);
+        break;
+      case 'NEAR':
+        xServices[xChainType] = NearXService.getInstance();
+        xServices[xChainType].setXConnectors([]);
         break;
       default:
         break;

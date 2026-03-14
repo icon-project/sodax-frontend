@@ -10,13 +10,15 @@ import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@so
 import type { XToken } from '@sodax/types';
 import type { ChainId } from '@sodax/types';
 import { chainIdToChainName } from '@/providers/constants';
-import type { NetworkBalance } from '../../page';
+import type { NetworkBalance } from '@/constants/save';
 import { useSaveActions } from '../../_stores/save-store-provider';
 import { CheckIcon } from 'lucide-react';
 import { cn, formatBalance } from '@/lib/utils';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import type { SpokeProvider } from '@sodax/sdk';
 import { parseUnits } from 'viem';
+import { getChainName } from '@/constants/chains';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface WithdrawDialogFooterProps {
   currentStep: number;
@@ -32,6 +34,7 @@ interface WithdrawDialogFooterProps {
   isTokenSelection: boolean;
   count: number;
   totalBalance?: string;
+  onError: (error: { title: string; message: string } | null) => void;
 }
 
 export default function WithdrawDialogFooter({
@@ -48,12 +51,14 @@ export default function WithdrawDialogFooter({
   isTokenSelection,
   count,
   totalBalance,
+  onError,
 }: WithdrawDialogFooterProps): React.JSX.Element {
   const { setIsSwitchingChain } = useSaveActions();
   const walletProvider = useWalletProvider(selectedToken?.xChainId);
   const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
   const [isApproved, setIsApproved] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const queryClient = useQueryClient();
   // Money market withdraw hooks
   const withdrawAmountString = withdrawValue > 0 ? withdrawValue.toString() : '0';
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({
@@ -71,6 +76,7 @@ export default function WithdrawDialogFooter({
   const handleApprove = async (): Promise<void> => {
     if (!selectedToken || withdrawValue <= 0) return;
     try {
+      onError(null);
       await approve({
         params: {
           token: selectedToken?.address as string,
@@ -82,11 +88,18 @@ export default function WithdrawDialogFooter({
       setIsApproved(true);
     } catch (error) {
       console.error('Error approving withdraw:', error);
+      const errorObj = error as { message?: string; shortMessage?: string };
+      const errorMessage = errorObj?.shortMessage || errorObj?.message || 'Failed to approve withdrawal';
+      onError({
+        title: 'Approval Failed',
+        message: errorMessage,
+      });
     }
   };
 
   const handleWithdraw = async (): Promise<void> => {
     try {
+      onError(null);
       onWithdrawStart();
       const response = await withdraw({
         params: {
@@ -99,10 +112,25 @@ export default function WithdrawDialogFooter({
       if (response?.ok) {
         onWithdrawSuccess();
         setIsCompleted(true);
+        await queryClient.invalidateQueries({ queryKey: ['mm', 'aTokensBalances'] });
+        await queryClient.invalidateQueries({ queryKey: ['mm', 'userReservesData'] });
+        await queryClient.invalidateQueries({ queryKey: ['mm', 'reservesUsdFormat'] });
+      } else {
+        onWithdrawSuccess();
+        onError({
+          title: 'Withdrawal Failed',
+          message: 'Transaction was not successful. Please try again.',
+        });
       }
     } catch (error) {
       console.error('Error withdrawing:', error);
       onWithdrawSuccess();
+      const errorObj = error as { message?: string; shortMessage?: string };
+      const errorMessage = errorObj?.shortMessage || errorObj?.message || 'Failed to withdraw';
+      onError({
+        title: 'Withdrawal Failed',
+        message: errorMessage,
+      });
     }
   };
 
@@ -110,8 +138,9 @@ export default function WithdrawDialogFooter({
     if (!open) {
       setIsApproved(false);
       setIsCompleted(false);
+      onError(null);
     }
-  }, [open]);
+  }, [open, onError]);
 
   return (
     <DialogFooter
@@ -190,7 +219,9 @@ export default function WithdrawDialogFooter({
             <Button
               variant="cherry"
               className="text-white font-['InterRegular'] transition-all duration-300 ease-in-out w-full disabled:bg-cherry-bright disabled:!text-white"
-              onClick={isCompleted ? onClose : handleWithdraw}
+              onClick={
+                isCompleted ? onClose : handleWithdraw
+              }
               disabled={isWithdrawing}
             >
               {isWithdrawing ? (
@@ -204,7 +235,7 @@ export default function WithdrawDialogFooter({
                   <CheckIcon className="w-4 h-4 ml-1" />
                 </>
               ) : (
-                `Withdraw to ${selectedToken?.symbol}`
+                `Withdraw to ${getChainName(selectedToken?.xChainId as ChainId)}`
               )}
             </Button>
           )}

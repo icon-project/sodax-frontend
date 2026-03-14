@@ -12,6 +12,7 @@ import { MainCtaButton } from './main-cta-button';
 import { SodaxIcon } from '../icons/sodax-icon';
 import { Separator } from '@radix-ui/react-separator';
 import { useRouter } from 'next/navigation';
+import { NEWS_ROUTE, PARTNERS_ROUTE, SWAP_ROUTE } from '@/constants/routes';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAppStore } from '@/stores/app-store-provider';
 
@@ -79,27 +80,34 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
               </div>
             </div>
             <div className="justify-center text-cream hidden lg:flex ml-8 gap-1">
-              <span className="text-xs font-bold font-[InterRegular] leading-none">Money, as it</span>
-              <span className="text-xs font-normal font-[Shrikhand] leading-none mt-[1px]">should</span>
-              <span className="text-xs font-bold font-[InterRegular] leading-none">be</span>
+              <span className="text-xs font-bold font-[InterRegular] leading-none">Infrastructure for</span>
+              <span className="text-xs font-normal font-[Shrikhand] leading-none mt-[1px]">modern money</span>
             </div>
           </div>
           <div className="flex items-center gap-8">
             {/* Navigation Menu and Button */}
             <ul className="hidden lg:flex gap-4 z-10">
               <li>
-                <span
+                <a
                   className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
-                  onClick={onSwapClick}
+                  href={NEWS_ROUTE}
                 >
-                  About
-                </span>
+                  News
+                </a>
+              </li>
+              <li>
+                <a
+                  className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
+                  href={PARTNERS_ROUTE}
+                >
+                  Partners
+                </a>
               </li>
             </ul>
             <div className="inline-flex justify-center items-start relative">
               <MainCtaButton
                 onClick={() => {
-                  router.push('/swap');
+                  router.push(SWAP_ROUTE);
                   setShouldTriggerAnimation(true);
                 }}
               >
@@ -210,7 +218,7 @@ const HeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactE
             <div className="inline-flex justify-center items-start relative">
               <MainCtaButton
                 onClick={() => {
-                  router.push('/swap');
+                  router.push(SWAP_ROUTE);
                   setShouldTriggerAnimation(true);
                 }}
               >

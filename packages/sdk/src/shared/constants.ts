@@ -1,5 +1,17 @@
 import { defineChain, type Chain } from 'viem';
-import { arbitrum, avalanche, base, bsc, optimism, polygon, sonic, lightlinkPhoenix, mainnet } from 'viem/chains';
+import {
+  arbitrum,
+  avalanche,
+  base,
+  bsc,
+  optimism,
+  polygon,
+  sonic,
+  lightlinkPhoenix,
+  mainnet,
+  redbellyMainnet,
+  kaia,
+} from 'viem/chains';
 import type { LegacybnUSDChainId, LegacybnUSDToken, NewbnUSDChainId } from '../index.js';
 import {
   type Token,
@@ -16,10 +28,12 @@ import {
   ICON_MAINNET_CHAIN_ID,
   CHAIN_IDS,
   HYPEREVM_MAINNET_CHAIN_ID,
+  KAIA_MAINNET_CHAIN_ID,
   LIGHTLINK_MAINNET_CHAIN_ID,
   spokeChainConfig,
   type EvmChainId,
   ETHEREUM_MAINNET_CHAIN_ID,
+  REDBELLY_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 export const DEFAULT_MAX_RETRY = 3;
@@ -88,6 +102,10 @@ export function getEvmViemChain(id: EvmChainId): Chain {
       return lightlinkPhoenix;
     case ETHEREUM_MAINNET_CHAIN_ID:
       return mainnet;
+    case REDBELLY_MAINNET_CHAIN_ID:
+      return redbellyMainnet;
+    case KAIA_MAINNET_CHAIN_ID:
+      return kaia;
     default:
       throw new Error(`Unsupported EVM chain ID: ${id}`);
   }

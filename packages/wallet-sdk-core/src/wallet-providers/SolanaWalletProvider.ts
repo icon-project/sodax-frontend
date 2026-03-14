@@ -37,7 +37,7 @@ export type PrivateKeySolanaWalletConfig = {
 // Wallet adapter pattern config
 export type BrowserExtensionSolanaWalletConfig = {
   wallet: WalletContextState;
-  connection: Connection;
+  endpoint: string;
 };
 
 // Unified config type
@@ -68,7 +68,7 @@ export class SolanaWalletProvider implements ISolanaWalletProvider {
       this.isAdapterMode = false;
     } else if (isBrowserExtensionSolanaWalletConfig(walletConfig)) {
       this.wallet = walletConfig.wallet;
-      this.connection = walletConfig.connection;
+      this.connection = new Connection(walletConfig.endpoint, 'confirmed');
       this.isAdapterMode = true;
     } else {
       throw new Error('Invalid wallet configuration');

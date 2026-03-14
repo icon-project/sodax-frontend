@@ -5,4 +5,5 @@ export * from './backendApi/index.js';
 export * from './bridge/index.js';
 export * from './staking/index.js';
 export * from './migration/index.js';
+export * from './partner/index.js';
 export * from '@sodax/types';

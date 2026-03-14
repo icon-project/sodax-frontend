@@ -2,6 +2,7 @@ import { type Address, type Hex, fromHex } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
 import type { StellarSpokeProvider } from '../../entities/stellar/StellarSpokeProvider.js';
 import {
+  CustomSorobanServer,
   CustomStellarAccount,
   type DepositSimulationParams,
   type Result,
@@ -10,6 +11,7 @@ import {
   type StellarGasEstimate,
   type StellarSpokeProviderType,
   type TxReturnType,
+  type VerifyTxHashRawStellarConfig,
   encodeAddress,
   isStellarRawSpokeProvider,
   parseToStroops,
@@ -18,10 +20,10 @@ import {
 import { EvmWalletAbstraction } from '../hub/index.js';
 import {
   FeeBumpTransaction,
+  Horizon,
   type Transaction,
   TransactionBuilder,
   rpc,
-  type Horizon,
   Operation,
   Asset,
   BASE_FEE,
@@ -30,6 +32,7 @@ import {
   STELLAR_MAINNET_CHAIN_ID,
   getIntentRelayChainId,
   spokeChainConfig,
+  type HttpUrl,
   type HubAddress,
   type StellarRawTransaction,
 } from '@sodax/types';
@@ -83,6 +86,61 @@ export class StellarSpokeService {
 
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
     const { balances } = await spokeProvider.server.accounts().accountId(walletAddress).call();
+
+    const tokenBalance = balances.find(
+      balance =>
+        'limit' in balance &&
+        'balance' in balance &&
+        'asset_code' in balance &&
+        trustlineConfig.assetCode.toLowerCase() === balance.asset_code?.toLowerCase() &&
+        'asset_issuer' in balance &&
+        trustlineConfig.assetIssuer.toLowerCase() === balance.asset_issuer?.toLowerCase(),
+    ) as Horizon.HorizonApi.BalanceLineAsset<'credit_alphanum4' | 'credit_alphanum12'> | undefined;
+
+    if (!tokenBalance) {
+      console.error(`No token balances found for token: ${token}`);
+      return false;
+    }
+
+    const limit = parseToStroops(tokenBalance.limit);
+    const balance = parseToStroops(tokenBalance.balance);
+    const availableTrustAmount: bigint = limit - balance;
+
+    return availableTrustAmount >= amount;
+  }
+
+  /**
+   * Check if the user has sufficent trustline established for the token.
+   * @param token - The token address to check the trustline for.
+   * @param amount - The amount of tokens to check the trustline for.
+   * @param spokeProvider - The Stellar spoke provider.
+   * @returns True if the user has sufficent trustline established for the token, false otherwise.
+   */
+  public static async walletHasSufficientTrustline(
+    token: string,
+    amount: bigint,
+    walletAddress: string,
+    horizonRpcUrl: HttpUrl,
+  ): Promise<boolean> {
+    const stellarChainConfig = spokeChainConfig[STELLAR_MAINNET_CHAIN_ID];
+    // native token and legacy bnUSD do not require trustline
+    if (
+      token.toLowerCase() === stellarChainConfig.nativeToken.toLowerCase() ||
+      token.toLowerCase() === stellarChainConfig.supportedTokens.legacybnUSD.address.toLowerCase()
+    ) {
+      return true;
+    }
+
+    const trustlineConfig = stellarChainConfig.trustlineConfigs.find(
+      config => config.contractId.toLowerCase() === token.toLowerCase(),
+    );
+
+    if (!trustlineConfig) {
+      throw new Error(`Trustline config not found for token: ${token}`);
+    }
+
+    const server = new Horizon.Server(horizonRpcUrl, { allowHttp: true });
+    const { balances } = await server.accounts().accountId(walletAddress).call();
 
     const tokenBalance = balances.find(
       balance =>
@@ -314,6 +372,43 @@ export class StellarSpokeService {
       spokeProvider,
       raw,
     );
+  }
+
+  public static async waitForTransactionRaw(params: VerifyTxHashRawStellarConfig): Promise<Result<boolean, Error>> {
+    const defaultParams = {
+      pollingTimeout: 750,
+      maxAttempts: 40,
+    } as const;
+    const { pollingTimeout, maxAttempts, sorobanRpcConfig, txHash } = { ...defaultParams, ...params };
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const sorobanServer = new CustomSorobanServer(sorobanRpcConfig.sorobanRpcUrl, sorobanRpcConfig.customHeaders);
+        const tx = await sorobanServer.getTransaction(txHash);
+
+        if (tx && tx.status === 'SUCCESS') {
+          return { ok: true, value: true }; // confirmed
+        }
+
+        if (tx && tx.status === 'FAILED') {
+          return { ok: false, error: new Error(`Transaction failed: ${JSON.stringify(tx)}`) };
+        }
+
+        if (tx && tx.status === 'NOT_FOUND') {
+          // not in a closed ledger yet → poll again
+          await sleep(pollingTimeout);
+          continue;
+        }
+
+        // unknown status or tx undefined -> poll again
+        await sleep(pollingTimeout);
+      } catch (err) {
+        // Network/transient error → back off and retry
+        await sleep(pollingTimeout);
+      }
+    }
+
+    return { ok: false, error: new Error('Transaction was not confirmed within the max attempts') };
   }
 
   public static async waitForTransaction(

@@ -8,7 +8,7 @@ As part of Sodax suite, Wallet SDK is also going to be provided as one example w
 
 The SDK supports the following wallet provider interfaces (`IWalletProvider`):
 
-- `IEvmWalletProvider`: EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, Lightlink) ✅
+- `IEvmWalletProvider`: EVM (Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, HyperEVM, Lightlink, Ethereum, Redbelly, Kaia) ✅
 - `ISuiWalletProvider`: Sui ✅
 - `IIconWalletProvider`: ICON ✅
 - `IStellarWalletProvider`: Stellar ✅
@@ -37,4 +37,4 @@ The `@sodax/wallet-sdk-core` package provides TypeScript implementations of wall
 - **Wallet Provider Interface**: Standardized interface for wallet connectivity across different chains
 - **Core Integration**: Seamless integration with the Core Sodax SDK
 
-For more information, see the [@sodax/wallet-sdk-core README](../../wallet-sdk-core/README.md).
+For more information, see the [@sodax/wallet-sdk-core README](https://github.com/icon-project/sodax-frontend/blob/main/packages/wallet-sdk-core/README.md).

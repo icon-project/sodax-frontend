@@ -33,8 +33,8 @@
     "lint": "biome lint . --write"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "0.30.1",
     "@creit.tech/stellar-wallets-kit": "^1.7.5",
+    "@hot-labs/near-connect": "0.10.0",
     "@injectivelabs/networks": "catalog:",
     "@injectivelabs/sdk-ts": "catalog:",
     "@injectivelabs/ts-types": "catalog:",
@@ -45,6 +45,7 @@
     "@injectivelabs/wallet-strategy": "catalog:",
     "@mysten/dapp-kit": "catalog:",
     "@mysten/sui": "catalog:",
+    "near-api-js": "7.1.1",
     "@sodax/types": "workspace:*",
     "@sodax/wallet-sdk-core": "workspace:*",
     "@solana/spl-token": "catalog:",
@@ -57,7 +58,8 @@
     "sats-connect": "^4.2.1",
     "viem": "catalog:",
     "wagmi": "catalog:",
-    "zustand": "4.5.2"
+    "zustand": "4.5.2",
+    "bs58": "6.0.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.8",

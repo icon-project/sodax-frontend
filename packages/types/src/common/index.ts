@@ -15,7 +15,8 @@ export type SpokeChainId = (typeof CHAIN_IDS)[number];
 
 export type ChainId = (typeof CHAIN_IDS)[number];
 
-export type ChainType = 'ICON' | 'EVM' | 'INJECTIVE' | 'SUI' | 'STELLAR' | 'SOLANA' | 'BITCOIN';
+export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'NEAR', 'BITCOIN'] as const;
+export type ChainType = (typeof ChainTypeArr)[number];
 
 export type Chain = {
   id: string | number;
@@ -230,6 +231,16 @@ export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
   rpc_url: string;
 };
 
+export type NearSpokeChainConfig = BaseSpokeChainConfig<'NEAR'> & {
+  addresses: {
+    assetManager: string;
+    connection: string;
+    rateLimit: string;
+    intentFiller: string;
+  };
+  rpcUrl: string;
+};
+
 export type IconAddress = `hx${string}` | `cx${string}`;
 export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
   addresses: {
@@ -249,11 +260,13 @@ export type SpokeChainConfig =
   | SuiSpokeChainConfig
   | StellarSpokeChainConfig
   | BitcoinSpokeChainConfig
-  | SolanaChainConfig;
+  | SolanaChainConfig
+  | NearSpokeChainConfig;
 
 export type SolverConfig = {
   intentsContract: Address; // Intents Contract (Hub)
   solverApiEndpoint: HttpUrl;
+  protocolIntentsContract?: Address; // Protocol Intents Contract for partner fee claims
 };
 
 export type MoneyMarketConfig = {
@@ -279,4 +292,10 @@ export type TokenInfo = {
   withdrawalFee: bigint;
   maxDeposit: bigint;
   isSupported: boolean;
+};
+
+export type BridgeLimit = {
+  amount: bigint;
+  decimals: number;
+  type: 'DEPOSIT_LIMIT' | 'WITHDRAWAL_LIMIT';
 };

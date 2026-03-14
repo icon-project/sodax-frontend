@@ -13,3 +13,12 @@ public/dist
 .idea
 **/build/**
 .personal-docs
+**/*.testnet.ts
+**/artifacts/**
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Agent skills (local to VSCode)
+.agents/
+.github/skills/

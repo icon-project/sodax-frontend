@@ -5,8 +5,11 @@ import type { ChainId, XToken } from '@sodax/types';
 import { BorrowButton } from '../BorrowButton';
 import { getChainLabel } from '@/lib/borrowUtils';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
-import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
+import type { FormatReserveUSDResponse, FormatUserSummaryResponse, UserReserveData } from '@sodax/sdk';
 import { useAToken } from '@sodax/dapp-kit';
+import { Button } from '@/components/ui/button';
+import { DUST_THRESHOLD, MAX_BORROW_SAFETY_MARGIN, ZERO_ADDRESS } from '../../constants';
+import { isUserReserveDataArray, isValidEvmAddress } from '../../typeGuards';
 
 interface BorrowAssetsListItemProps {
   token: XToken;
@@ -21,7 +24,9 @@ interface BorrowAssetsListItemProps {
   disabled?: boolean;
   formattedReserves: FormatReserveUSDResponse[];
   userReserves: readonly UserReserveData[];
-  onBorrowClick: (token: XToken) => void;
+  onBorrowClick: (token: XToken, maxBorrow: string, priceUSD: number) => void;
+  onRepayClick: (token: XToken, maxDebt: string) => void;
+  userSummary?: FormatUserSummaryResponse;
 }
 
 export function BorrowAssetsListItem({
@@ -32,18 +37,25 @@ export function BorrowAssetsListItem({
   formattedReserves,
   userReserves,
   onBorrowClick,
+  onRepayClick,
+  userSummary,
 }: BorrowAssetsListItemProps) {
+  // Validate userReserves array before passing to useReserveMetrics
+  if (!isUserReserveDataArray(userReserves)) {
+    throw new Error('Invalid type of variable userReserves: expected UserReserveData[]');
+  }
+
   const metrics = useReserveMetrics({
     token,
     formattedReserves,
-    userReserves: userReserves as UserReserveData[],
+    userReserves,
   });
 
-  const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
-
+  // Validate aTokenAddress is a valid EVM address before using
+  const rawATokenAddress = metrics.formattedReserve?.aTokenAddress;
   const aTokenAddress =
-    metrics.formattedReserve?.aTokenAddress && metrics.formattedReserve.aTokenAddress !== ZERO_ADDRESS
-      ? (metrics.formattedReserve.aTokenAddress as `0x${string}`)
+    rawATokenAddress && rawATokenAddress !== ZERO_ADDRESS && isValidEvmAddress(rawATokenAddress)
+      ? rawATokenAddress
       : undefined;
 
   const { data: aToken } = useAToken({
@@ -67,35 +79,155 @@ export function BorrowAssetsListItem({
           ).toFixed(6);
   }
 
+  let maxBorrow = '0';
+
+  if (userSummary && metrics.formattedReserve && availableLiquidity) {
+    let availableBorrowsUSD = Number(userSummary.availableBorrowsUSD);
+    const priceUSD = Number(metrics.formattedReserve.priceInUSD);
+
+    // Fallback calculation if SDK returns 0 but user has collateral
+    // This can happen due to rounding/precision issues with very small amounts
+    // NOTE: Should use currentLoanToValue (LTV), not currentLiquidationThreshold
+    // LTV is the max you can borrow, liquidation threshold is when you get liquidated
+    if (availableBorrowsUSD === 0 && Number(userSummary.totalCollateralUSD) > 0) {
+      const totalCollateralUSD = Number(userSummary.totalCollateralUSD);
+      const totalBorrowsUSD = Number(userSummary.totalBorrowsUSD);
+      const currentLoanToValue = Number(userSummary.currentLoanToValue);
+      const currentLiquidationThreshold = Number(userSummary.currentLiquidationThreshold);
+
+      // Calculate available borrow: (collateral * LTV) - currentBorrows
+      // Use currentLoanToValue (LTV), not liquidation threshold
+      const maxBorrowableUSD = totalCollateralUSD * currentLoanToValue;
+      availableBorrowsUSD = Math.max(0, maxBorrowableUSD - totalBorrowsUSD);
+    }
+
+    if (priceUSD > 0 && availableBorrowsUSD > 0) {
+      const userLimitTokens = availableBorrowsUSD / priceUSD;
+      const poolLimitTokens = Number(availableLiquidity);
+
+      const beforeSafetyMargin = Math.min(userLimitTokens, poolLimitTokens);
+      const afterSafetyMargin = beforeSafetyMargin * MAX_BORROW_SAFETY_MARGIN;
+      maxBorrow = afterSafetyMargin.toFixed(6);
+    }
+  }
+
+  const canBorrow = !!availableLiquidity && Number.parseFloat(availableLiquidity) > 0;
+
+  // Calculate actual debt by applying variable borrow index (similar to how supply applies liquidity index)
+  // scaledVariableDebt needs to be multiplied by variableBorrowIndex to get the actual debt amount
+  let debtExact = '0';
+  if (metrics.userReserve && metrics.formattedReserve) {
+    const scaledDebt = metrics.userReserve.scaledVariableDebt;
+    const variableBorrowIndex = BigInt(metrics.formattedReserve.variableBorrowIndex || '1e27');
+    // Multiply scaled debt by borrow index and divide by ray precision (1e27)
+    const actualDebtRaw = (scaledDebt * variableBorrowIndex) / BigInt(1e27);
+    const tokenDecimals = Number(metrics.formattedReserve.decimals ?? 18);
+    debtExact = formatUnits(actualDebtRaw, tokenDecimals);
+  }
+
+  const formatDecimalForDisplay = (value: string, maxDecimals: number): string => {
+    if (value === '0') return '0';
+    const [intPart, fracPart = ''] = value.split('.');
+    const truncated = fracPart.slice(0, maxDecimals);
+    const combined = truncated.length > 0 ? `${intPart}.${truncated}` : intPart;
+    const trimmed = combined.replace(/\.?0+$/, '');
+
+    // If we truncated to "0" but the value is non-zero, show a "< threshold" hint.
+    if (trimmed === '0' && Number.parseFloat(value) > 0) {
+      const threshold = `0.${'0'.repeat(Math.max(0, maxDecimals - 1))}1`;
+      return `<${threshold}`;
+    }
+
+    return trimmed;
+  };
+
+  const debtNum = Number.parseFloat(debtExact);
+  // Always display debt with 4 decimals, but show "0" when debt is zero or rounds to zero
+  const formattedDebt = Number.isNaN(debtNum) ? '0' : Number(debtExact).toFixed(4);
+  const debtDisplay = Number.parseFloat(formattedDebt) === 0 ? '0' : formattedDebt;
+
+  // Check if user has meaningful debt: must have actual debt amount > 0
+  // Check if debt, when formatted to 4 decimals (same as display), is greater than 0
+  // This prevents enabling repay button when debt displays as "0.0000"
+  const debtDisplayNum = Number.parseFloat(debtDisplay);
+  const hasDebt =
+    metrics.userReserve &&
+    metrics.userReserve.scaledVariableDebt > 0n &&
+    Number.isFinite(debtNum) &&
+    debtDisplayNum > 0;
+
   return (
-    <TableRow className={`hover:bg-cream/30 transition-colors ${disabled ? 'opacity-50' : ''}`}>
-      <TableCell>
-        <span className="font-medium text-cherry-dark">{asset.symbol}</span>
-        <span className="text-clay-light text-xs ml-1">{getChainLabel(token.xChainId)}</span>
+    <TableRow
+      className={`border-b border-cherry-grey/10 hover:bg-cream/20 transition-colors ${disabled ? 'opacity-50' : ''}`}
+    >
+      {/* Asset */}
+      <TableCell className="px-6 py-5">
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col">
+            {/* Use token.symbol (current symbol like "POL") instead of asset.symbol (legacy like "MATIC") */}
+            <span className="font-bold text-cherry-dark">{token.symbol}</span>
+          </div>
+        </div>
       </TableCell>
-      <TableCell>
-        <span className="font-mono text-sm text-clay">{walletBalance}</span>
+
+      {/* Wallet Balance */}
+      <TableCell className="px-6 py-5">
+        <span className="text-sm text-foreground">{walletBalance}</span>
       </TableCell>
-      <TableCell>
-        <span className="font-mono text-sm text-clay">{availableLiquidity ?? '--'}</span>
+
+      {/* Available Liquidity */}
+      <TableCell className="px-6 py-5">
+        <span className="text-sm font-medium text-foreground">{availableLiquidity ?? '--'}</span>
       </TableCell>
-      <TableCell>
-        <span className="font-mono text-sm text-clay">{metrics.borrowAPY}</span>
+
+      {/* Borrow APY */}
+      <TableCell className="px-6 py-5">
+        <span className="text-sm font-medium text-cherry-dark">{metrics.borrowAPY}</span>
       </TableCell>
-      <TableCell>
-        <span className="font-mono text-sm text-clay">{metrics.borrowAPR}</span>
+
+      {/* Borrow APR */}
+      <TableCell className="px-6 py-5">
+        <span className="text-sm font-medium text-cherry-dark">{metrics.borrowAPR}</span>
       </TableCell>
-      <TableCell>
-        <span className="font-mono text-sm text-clay">{metrics.totalBorrow}</span>
+
+      {/* Total Borrow */}
+      <TableCell className="px-6 py-5">
+        <span className="text-sm text-foreground">{metrics.totalBorrow}</span>
       </TableCell>
-      <TableCell>
-        <BorrowButton
-          token={token}
-          disabled={disabled}
-          onClick={clickedToken => {
-            onBorrowClick(clickedToken);
-          }}
-        />
+
+      {/* Borrowed */}
+      <TableCell className="px-6 py-5">
+        <span className="text-sm font-medium text-foreground">{debtDisplay}</span>
+      </TableCell>
+
+      {/* Actions */}
+      <TableCell className="px-6 py-5">
+        <div className="flex items-center gap-2">
+          <BorrowButton
+            token={token}
+            disabled={disabled || !canBorrow}
+            onClick={() => {
+              const priceUSD = metrics.formattedReserve ? Number(metrics.formattedReserve.priceInUSD) : 0;
+              onBorrowClick(token, maxBorrow, priceUSD);
+            }}
+          />
+          <Button
+            variant="cherry"
+            size="sm"
+            onClick={() => {
+              // Prevent opening modal if there's no debt
+              if (!hasDebt) return;
+              // Format debt to 6 decimals to avoid floating point precision issues
+              const debtNum = Number.parseFloat(debtExact);
+              const formattedDebt = Number.isNaN(debtNum) || debtNum === 0 ? debtExact : debtNum.toFixed(6);
+              onRepayClick(token, formattedDebt);
+            }}
+            disabled={!hasDebt}
+            className="flex-1 min-w-[85px]"
+          >
+            Repay
+          </Button>
+        </div>
       </TableCell>
     </TableRow>
   );

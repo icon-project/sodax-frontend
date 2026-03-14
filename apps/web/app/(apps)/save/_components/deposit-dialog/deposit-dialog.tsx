@@ -11,6 +11,7 @@ import DepositInfoStep from './deposit-info-step';
 import DepositConfirmationStep from './deposit-confirmation-step';
 import DepositDialogFooter from './deposit-dialog-footer';
 import { useSaveState, useSaveActions } from '../../_stores/save-store-provider';
+import { DEPOSIT_STEP } from '../../_stores/save-store';
 
 interface DepositDialogProps {
   open: boolean;
@@ -25,12 +26,13 @@ export default function DepositDialog({
   selectedToken,
   tokens,
 }: DepositDialogProps): React.JSX.Element {
-  const { currentStep } = useSaveState();
+  const { currentDepositStep } = useSaveState();
   const { resetSaveState } = useSaveActions();
   const { data: formattedReserves, isLoading: isFormattedReservesLoading } = useReservesUsdFormat();
   const { apy } = useLiquidity(tokens, formattedReserves, isFormattedReservesLoading);
   const [isSupplyPending, setIsSupplyPending] = useState<boolean>(false);
   const [isShaking, setIsShaking] = useState<boolean>(false);
+  const [depositError, setDepositError] = useState<{ title: string; message: string } | null>(null);
 
   const handleClose = (): void => {
     if (isSupplyPending) {
@@ -39,6 +41,7 @@ export default function DepositDialog({
       return;
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    setDepositError(null);
     onOpenChange(false);
     resetSaveState();
   };
@@ -58,9 +61,18 @@ export default function DepositDialog({
           />
         </DialogTitle>
 
-        {currentStep === 1 && <DepositInfoStep apy={apy} selectedToken={selectedToken as XToken} />}
-        {currentStep >= 2 && <DepositConfirmationStep selectedToken={selectedToken as XToken} apy={apy} />}
-        <DepositDialogFooter selectedToken={selectedToken} onPendingChange={setIsSupplyPending} onClose={handleClose} />
+        {currentDepositStep === DEPOSIT_STEP.TERMS && (
+          <DepositInfoStep apy={apy} selectedToken={selectedToken as XToken} />
+        )}
+        {currentDepositStep !== DEPOSIT_STEP.TERMS && (
+          <DepositConfirmationStep selectedToken={selectedToken as XToken} apy={apy} depositError={depositError} />
+        )}
+        <DepositDialogFooter
+          selectedToken={selectedToken}
+          onPendingChange={setIsSupplyPending}
+          onClose={handleClose}
+          onError={setDepositError}
+        />
       </DialogContent>
     </Dialog>
   );

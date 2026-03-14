@@ -21,6 +21,7 @@ import type {
   SolanaRawTransaction,
   SolanaSpokeProviderType,
   TxReturnType,
+  VerifyTxHashRawSolanaConfig,
 } from '../../types.js';
 import { getIntentRelayChainId, type HubAddress, type SolanaBase58PublicKey } from '@sodax/types';
 import { EvmWalletAbstraction } from '../hub/index.js';
@@ -330,11 +331,47 @@ export class SolanaSpokeService {
     > as Promise<TxReturnType<S, R>>;
   }
 
+  public static async waitForConfirmationRaw(params: VerifyTxHashRawSolanaConfig): Promise<Result<boolean>> {
+    try {
+      const defaultParams = {
+        commitment: 'finalized',
+        timeoutMs: 60_000, // total time to wait
+        pollingTimeout: 750, // 750ms retry interval
+      } as const;
+      const { rpcUrl, signature, commitment, timeoutMs, pollingTimeout } = { ...defaultParams, ...params };
+      const connection = new Connection(rpcUrl, commitment);
+      const deadline = Date.now() + timeoutMs;
+
+      while (Date.now() < deadline) {
+        try {
+          const tx = await connection.getTransaction(signature, { commitment, maxSupportedTransactionVersion: 0 });
+          if (tx) {
+            if (tx.meta?.err) {
+              return { ok: false, error: new Error(JSON.stringify(tx.meta.err)) };
+            }
+            return { ok: true, value: true };
+          }
+        } catch {
+          // ignore transient RPC errors and keep polling
+        }
+        await new Promise(r => setTimeout(r, pollingTimeout)); // linear retry interval
+      }
+
+      return {
+        ok: false,
+        error: new Error(`Timed out after ${timeoutMs}ms waiting for ${commitment} confirmation for ${signature}`),
+      };
+    } catch (error) {
+      return { ok: false, error: new Error(`Failed to get transaction confirmation: ${JSON.stringify(error)}`) };
+    }
+  }
+
   public static async waitForConfirmation(
     spokeProvider: SolanaSpokeProvider,
     signature: string,
     commitment: Finality = 'finalized',
-    timeoutMs = 120_000, // total time to wait
+    timeoutMs = 60_000, // total time to wait
+    pollingTimeout = 750,
   ): Promise<Result<boolean>> {
     try {
       const connection = new Connection(spokeProvider.chainConfig.rpcUrl, commitment);
@@ -352,7 +389,7 @@ export class SolanaSpokeService {
         } catch {
           // ignore transient RPC errors and keep polling
         }
-        await new Promise(r => setTimeout(r, 750)); // linear 750ms retry
+        await new Promise(r => setTimeout(r, pollingTimeout)); // linear 750ms retry
       }
 
       return {

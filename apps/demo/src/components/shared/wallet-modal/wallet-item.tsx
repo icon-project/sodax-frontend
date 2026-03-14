@@ -1,25 +1,37 @@
 import { XIcon, Loader2 } from 'lucide-react';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import type { ChainType } from '@sodax/types';
-import type { XConnector } from '@sodax/wallet-sdk-react';
-import { useXAccount, useXConnect, useXConnection, useXConnectors, useXDisconnect } from '@sodax/wallet-sdk-react';
+import {
+  useXAccount,
+  useXConnect,
+  useXConnection,
+  useXConnectors,
+  useXDisconnect,
+  type XConnector,
+} from '@sodax/wallet-sdk-react';
 import { Button } from '@/components/ui/button';
 
 export type WalletItemProps = {
   name: string;
   xChainType: ChainType;
+  /**
+   * Optional callback to close the wallet modal after successful connection.
+   * Used to auto-close the modal when a wallet is connected.
+   */
+  onConnectionSuccess?: () => void;
 };
 
 export function shortenAddress(address: string, chars = 7): string {
   return `${address.substring(0, chars + 2)}...${address.substring(address.length - chars)}`;
 }
 
-const WalletItem = ({ name, xChainType }: WalletItemProps) => {
+const WalletItem = ({ name, xChainType, onConnectionSuccess }: WalletItemProps) => {
   const xConnection = useXConnection(xChainType);
   const { address } = useXAccount(xChainType);
 
   const [connectingXConnector, setConnectingXConnector] = useState<XConnector | null>(null);
+  const [wasConnecting, setWasConnecting] = useState(false);
 
   const xConnectors = useXConnectors(xChainType);
   const { mutateAsync: xConnect, isPending } = useXConnect();
@@ -28,16 +40,32 @@ const WalletItem = ({ name, xChainType }: WalletItemProps) => {
   const handleConnect = useCallback(
     async (xConnector: XConnector) => {
       setConnectingXConnector(xConnector);
+      setWasConnecting(true);
       try {
         await xConnect(xConnector);
+        // Address will be updated via useXAccount hook, useEffect will handle closing
       } catch (error) {
         console.error(error);
+        setWasConnecting(false);
       } finally {
         setConnectingXConnector(null);
       }
     },
     [xConnect],
   );
+
+  // Auto-close modal when address becomes available after a connection attempt
+  // This provides smooth UX: user connects wallet → modal closes automatically → user returns to borrow modal
+  useEffect(() => {
+    if (wasConnecting && address && onConnectionSuccess) {
+      setWasConnecting(false);
+      // Small delay to allow UI to update and show connected state
+      const timeoutId = setTimeout(() => {
+        onConnectionSuccess();
+      }, 300);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [address, wasConnecting, onConnectionSuccess]);
 
   const handleDisconnect = useCallback(() => {
     setConnectingXConnector(null);
@@ -51,10 +79,8 @@ const WalletItem = ({ name, xChainType }: WalletItemProps) => {
 
   const sortedXConnectors = useMemo(() => {
     const hanaWallet = xConnectors.find(connector => connector.name === 'Hana Wallet');
-    if (!hanaWallet) return xConnectors;
-
-    const filteredConnectors = xConnectors.filter(connector => connector.name !== 'Hana Wallet');
-    return [hanaWallet, ...filteredConnectors];
+    const others = xConnectors.filter(connector => connector.name !== 'Hana Wallet');
+    return hanaWallet ? [hanaWallet, ...others] : xConnectors;
   }, [xConnectors]);
 
   return (

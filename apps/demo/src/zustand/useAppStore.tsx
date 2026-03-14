@@ -1,7 +1,14 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { StateCreator } from 'zustand';
 import type { ChainId } from '@sodax/types';
+
+export enum SolverEnv {
+  Production = 'Production',
+  Staging = 'Staging',
+  Dev = 'Dev',
+}
 
 type AppStore = {
   selectedChainId: ChainId;
@@ -9,18 +16,18 @@ type AppStore = {
   isWalletModalOpen: boolean;
   openWalletModal: () => void;
   closeWalletModal: () => void;
-  isSolverProduction: boolean;
-  setIsSolverProduction: (isSolverProduction: boolean) => void;
+  solverEnvironment: SolverEnv;
+  setSolverEnvironment: (env: SolverEnv) => void;
 };
 
 export const useAppStore = create<AppStore>()(
   immer((set, get) => ({
-    selectedChainId: 'injective-1',
+    selectedChainId: 'near',
     selectChainId: (chainId: ChainId) => set({ selectedChainId: chainId }),
     isWalletModalOpen: false,
     openWalletModal: () => set({ isWalletModalOpen: true }),
     closeWalletModal: () => set({ isWalletModalOpen: false }),
-    isSolverProduction: true,
-    setIsSolverProduction: (isSolverProduction: boolean) => set({ isSolverProduction }),
+    solverEnvironment: SolverEnv.Production,
+    setSolverEnvironment: (env: SolverEnv) => set({ solverEnvironment: env }),
   })) as StateCreator<AppStore, [], []>,
 );

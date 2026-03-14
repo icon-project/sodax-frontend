@@ -35,41 +35,58 @@ export const useSaveStore = <T,>(selector: (store: SaveStore) => T): T => {
 
 export const useSaveState = () => {
   const depositValue = useSaveStore(state => state.depositValue);
-  const currentStep = useSaveStore(state => state.currentStep);
-  const tokenCount = useSaveStore(state => state.tokenCount);
+  const currentDepositStep = useSaveStore(state => state.currentDepositStep);
+  const totalDepositedUsdValue = useSaveStore(state => state.totalDepositedUsdValue);
   const isSwitchingChain = useSaveStore(state => state.isSwitchingChain);
-  const openAsset = useSaveStore(state => state.openAsset);
+  const activeAsset = useSaveStore(state => state.activeAsset);
   const scrollToCenter = useSaveStore(state => state.scrollToCenter);
   const isNetworkPickerOpened = useSaveStore(state => state.isNetworkPickerOpened);
+  const isAssetListBlurred = useSaveStore(state => state.isAssetListBlurred);
+  const isShowDeposits = useSaveStore(state => state.isShowDeposits);
+  const selectedToken = useSaveStore(state => state.selectedToken);
+  const suppliedAssetCount = useSaveStore(state => state.suppliedAssetCount);
+  const reset = useSaveStore(state => state.reset);
   return {
     depositValue,
-    currentStep,
-    tokenCount,
+    currentDepositStep,
+    totalDepositedUsdValue,
     isSwitchingChain,
-    openAsset,
+    activeAsset,
     scrollToCenter,
     isNetworkPickerOpened,
+    isAssetListBlurred,
+    isShowDeposits,
+    selectedToken,
+    suppliedAssetCount,
+    reset,
   };
 };
 
 export const useSaveActions = () => {
   const setDepositValue = useSaveStore(state => state.setDepositValue);
-  const setCurrentStep = useSaveStore(state => state.setCurrentStep);
-  const setTokenCount = useSaveStore(state => state.setTokenCount);
+  const setCurrentDepositStep = useSaveStore(state => state.setCurrentDepositStep);
+  const setTotalDepositedUsdValue = useSaveStore(state => state.setTotalDepositedUsdValue);
   const setIsSwitchingChain = useSaveStore(state => state.setIsSwitchingChain);
-  const setOpenAsset = useSaveStore(state => state.setOpenAsset);
+  const setActiveAsset = useSaveStore(state => state.setActiveAsset);
   const setScrollToCenter = useSaveStore(state => state.setScrollToCenter);
   const setIsNetworkPickerOpened = useSaveStore(state => state.setIsNetworkPickerOpened);
+  const setIsAssetListBlurred = useSaveStore(state => state.setIsAssetListBlurred);
+  const setIsShowDeposits = useSaveStore(state => state.setIsShowDeposits);
+  const setSelectedToken = useSaveStore(state => state.setSelectedToken);
   const resetSaveState = useSaveStore(state => state.resetSaveState);
-
+  const reset = useSaveStore(state => state.reset);
   return {
     setDepositValue,
-    setCurrentStep,
-    setTokenCount,
+    setCurrentDepositStep,
+    setTotalDepositedUsdValue,
     setIsSwitchingChain,
-    setOpenAsset,
+    setActiveAsset,
     setScrollToCenter,
     setIsNetworkPickerOpened,
+    setIsAssetListBlurred,
+    setIsShowDeposits,
+    setSelectedToken,
     resetSaveState,
+    reset,
   };
 };

@@ -182,8 +182,8 @@ Make sure your `tsconfig.json` includes the necessary paths for the `@` alias:
 
 Now that you have `@sodax/sdk` set up in your Next.js project, you can:
 
-1. **Explore Solver Features**: Check out the [Solver documentation](./SOLVER.md) for cross-chain swaps
-2. **Explore Money Market Features**: Check out the [Money Market documentation](./MONEY_MARKET.md) for lending and borrowing
+1. **Explore Solver Features**: Check out the [Swaps documentation](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/SWAPS.md) for cross-chain swaps
+2. **Explore Money Market Features**: Check out the [Money Market documentation](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/MONEY_MARKET.md) for lending and borrowing
 3. **Set up Wallet Integration**: Implement wallet providers for the chains you want to support
 4. **Add Error Handling**: Implement proper error handling for SDK operations
 5. **Add Loading States**: Add loading indicators for async operations
@@ -200,8 +200,8 @@ Now that you have `@sodax/sdk` set up in your Next.js project, you can:
 
 If you encounter any issues:
 
-- Check the [main SDK documentation](../../README.md)
-- Review the [Solver documentation](../SOLVER.md) for swap-related features
-- Review the [Money Market documentation](../MONEY_MARKET.md) for lending/borrowing features
+- Check the [main SDK documentation](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/README.md)
+- Review the [Swaps documentation](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/SWAPS.md) for swap-related features
+- Review the [Money Market documentation](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/MONEY_MARKET.md) for lending/borrowing features
 - Open an issue on the [GitHub repository](https://github.com/icon-project/sodax-frontend/issues)
 - Join the [Discord community](https://discord.gg/xM2Nh4S6vN) for support

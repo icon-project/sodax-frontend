@@ -74,7 +74,7 @@ if (result.ok) {
 
 ### Stellar Trustline Requirements
 
-For Stellar-based staking operations, you need to handle trustlines when Stellar is used as the source chain. See [Stellar Trustline Requirements](./STELLAR_TRUSTLINE.md#staking) for detailed information and code examples.
+For Stellar-based staking operations, you need to handle trustlines when Stellar is used as the source chain. See [Stellar Trustline Requirements](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/STELLAR_TRUSTLINE.md#staking) for detailed information and code examples.
 
 **Note**: Staking operations always flow from spoke chains (including Stellar) to the hub chain (Sonic), so Stellar is only used as a source chain for staking operations.
 
@@ -719,7 +719,7 @@ The typical staking operation follows this sequence:
 
 1. **Check allowance** using `isAllowanceValid()`
 2. **Approve tokens** using `approve()` if needed
-3. **For Stellar source chains**: Check and establish trustlines (see [Stellar Trustline Requirements](./STELLAR_TRUSTLINE.md#staking))
+3. **For Stellar source chains**: Check and establish trustlines (see [Stellar Trustline Requirements](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/STELLAR_TRUSTLINE.md#staking))
 4. **Execute staking operation** using `stake()`, `unstake()`, `instantUnstake()`, `claim()`, or `cancelUnstake()`
 5. **Monitor progress** using the returned transaction hashes
 

@@ -8,14 +8,27 @@ import { StrKey } from '@stellar/stellar-sdk';
 import { bech32 } from 'bech32';
 import BigNumber from 'bignumber.js';
 
-import { getSupportedSolverTokens, supportedSpokeChains, moneyMarketSupportedTokens } from '@sodax/sdk';
+import {
+  getSupportedSolverTokens,
+  supportedSpokeChains,
+  moneyMarketSupportedTokens,
+  REDBELLY_MAINNET_CHAIN_ID,
+} from '@sodax/sdk';
 
-import type { Token, XToken, SpokeChainId } from '@sodax/types';
-import { INJECTIVE_MAINNET_CHAIN_ID, hubAssets } from '@sodax/types';
+import type { Token, XToken, SpokeChainId, ChainId, EvmChainId, Address } from '@sodax/types';
+import {
+  INJECTIVE_MAINNET_CHAIN_ID,
+  LIGHTLINK_MAINNET_CHAIN_ID,
+  ICON_MAINNET_CHAIN_ID,
+  hubAssets,
+  EVM_CHAIN_IDS,
+  NEAR_MAINNET_CHAIN_ID,
+} from '@sodax/types';
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
 
-import { availableChains } from '@/constants/chains';
+import { availableChains, getChainUI } from '@/constants/chains';
+// import { CHAIN_TX_EXPLORERS } from '@/constants/chain-explorers';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -26,6 +39,14 @@ export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, 
 export function shortenAddress(address: string, chars = 4): string {
   if (!address) return '';
   return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`;
+}
+
+/**
+ * Type guard to check if a value is an Address type.
+ * Uses viem's isAddress function for validation.
+ */
+export function isValidAddress(value: unknown): value is Address {
+  return typeof value === 'string' && isEvmAddress(value);
 }
 
 function isValidInjectiveAddress(addr: string): boolean {
@@ -174,6 +195,12 @@ export const hasSufficientBalanceWithFee = (
   }
 };
 
+export function formatTokenAmount(amount: number | string | bigint, decimals: number, displayDecimals = 2): string {
+  return new BigNumber(amount.toString())
+    .dividedBy(new BigNumber(10).pow(decimals))
+    .toFixed(displayDecimals, BigNumber.ROUND_DOWN);
+}
+
 export const formatBalance = (amount: string, price: number): string => {
   if (!amount || new BigNumber(amount).isZero() || Number(amount) < 0) return '0';
   const decimals = price >= 10000 ? 6 : 4;
@@ -218,7 +245,7 @@ export const getSwapErrorMessage = (errorCode: string): { title: string; message
   );
 };
 
-export const STABLECOINS = ['bnUSD', 'USDC', 'USDT'];
+export const STABLECOINS = ['bnUSD', 'USDT', 'USDC'];
 
 export function sortStablecoinsFirst(a: { symbol: string }, b: { symbol: string }): number {
   const aStable = STABLECOINS.includes(a.symbol);
@@ -228,16 +255,24 @@ export function sortStablecoinsFirst(a: { symbol: string }, b: { symbol: string 
   return 0;
 }
 
-export function flattenTokens(): XToken[] {
+export function getMoneymarketTokens(): XToken[] {
   return Object.entries(moneyMarketSupportedTokens)
     .flatMap(([chainId, items]) =>
       items.map((t: Token) =>
-        chainId !== INJECTIVE_MAINNET_CHAIN_ID
+        chainId !== INJECTIVE_MAINNET_CHAIN_ID &&
+        chainId !== LIGHTLINK_MAINNET_CHAIN_ID &&
+        chainId !== ICON_MAINNET_CHAIN_ID &&
+        chainId !== REDBELLY_MAINNET_CHAIN_ID &&
+        chainId !== NEAR_MAINNET_CHAIN_ID
           ? ({ ...t, xChainId: chainId as SpokeChainId } satisfies XToken)
           : undefined,
       ),
     )
     .filter(Boolean) as XToken[];
+}
+
+export function getMoneymarketTokensForChain(chainId: SpokeChainId): XToken[] {
+  return getMoneymarketTokens().filter(token => token.xChainId === chainId);
 }
 
 export function getUniqueByChain(tokens: XToken[]): XToken[] {
@@ -279,12 +314,8 @@ export function formatCompactNumber(value: string | number | bigint): string {
  * @param token - The token to calculate APY for
  * @returns Formatted APY string (e.g., "5.25%") or "-" if unavailable
  */
-export function calculateAPY(
-  formattedReserves: FormatReserveUSDResponse[] | undefined,
-  isFormattedReservesLoading: boolean,
-  token: XToken,
-): string {
-  if (isFormattedReservesLoading || !formattedReserves || formattedReserves.length === 0) {
+export function calculateAPY(formattedReserves: FormatReserveUSDResponse[] | undefined, token: XToken): string {
+  if (!formattedReserves || formattedReserves.length === 0) {
     return '-';
   }
 
@@ -306,4 +337,80 @@ export function calculateAPY(
   } catch {
     return '-';
   }
+}
+
+export const getChainExplorerTxUrl = (chainId: string, txHash: string): string | undefined => {
+  const chain = getChainUI(chainId);
+  if (!chain?.explorerTxUrl) return undefined;
+  return `${chain.explorerTxUrl}${txHash}`;
+};
+export function formatCurrencyCompact(value: number): string {
+  const abs = Math.abs(value);
+
+  if (abs < 1000) {
+    return `$${value.toLocaleString()}`;
+  }
+
+  if (abs < 1_000_000) {
+    const num = (value / 1000).toFixed(1);
+    return `$${trimZeros(num)}K`;
+  }
+
+  const num = (value / 1_000_000).toFixed(2);
+  return `$${trimZeros(num)}M`;
+}
+
+function trimZeros(num: string) {
+  return num.replace(/\.?0+$/, '');
+}
+
+/**
+ * Calculates time remaining for unstaking based on start time and unstaking period.
+ * @param startTime - The start time of the unstake request (in seconds, as bigint)
+ * @param unstakingPeriod - The unstaking period duration (in seconds, as bigint)
+ * @returns Formatted string showing time remaining (e.g., "180d 5h 30m remaining" or "Ready to claim")
+ */
+export function getTimeRemaining(startTime: bigint, unstakingPeriod: bigint): string {
+  const now = Math.floor(Date.now() / 1000);
+  const start = Number(startTime);
+  const period = Number(unstakingPeriod);
+  const elapsed = now - start;
+  const remaining = period - elapsed;
+
+  if (remaining <= 0) {
+    return 'Unstake complete';
+  }
+
+  const days = Math.floor(remaining / 86400);
+  const hours = Math.floor((remaining % 86400) / 3600);
+  const minutes = Math.floor((remaining % 3600) / 60);
+
+  if (days > 0) {
+    return `${days} days left`;
+  }
+  if (hours > 0) {
+    return `${hours}h ${minutes}m remaining`;
+  }
+  return `${minutes}m remaining`;
+}
+
+/**
+ * Checks if a given Chain ID corresponds to an EVM-compatible network.
+ *
+ * Use this helper to filter or validate chains before attempting EVM-specific
+ * operations (like switching networks or calling contracts).
+ *
+ * @param chainId - The unique identifier of the chain to check.
+ * @returns `true` if the chain supports the Ethereum Virtual Machine, otherwise `false`.
+ *
+ * @example
+ * if (isEvmChainId(1)) {
+ * console.log("Ethereum Mainnet is EVM"); // true
+ * }
+ */
+export function isEvmChainId(chainId: ChainId): chainId is EvmChainId {
+  for (const evmId of EVM_CHAIN_IDS) {
+    if (chainId === evmId) return true;
+  }
+  return false;
 }

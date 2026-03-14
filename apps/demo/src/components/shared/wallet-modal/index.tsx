@@ -41,6 +41,10 @@ export const xChainTypes: WalletItemProps[] = [
     name: 'Bitcoin',
     xChainType: 'BITCOIN',
   },
+  {
+    name: 'Near',
+    xChainType: 'NEAR',
+  },
 ];
 
 export const WalletModal = ({ isOpen, onDismiss }: WalletModalProps) => {
@@ -59,7 +63,7 @@ export const WalletModal = ({ isOpen, onDismiss }: WalletModalProps) => {
 
                 {xChainTypes.map(wallet => (
                   <div key={wallet.xChainType} className="flex flex-col gap-4">
-                    <WalletItem {...wallet} />
+                    <WalletItem {...wallet} onConnectionSuccess={onDismiss} />
                     <Separator className="h-1 bg-[#ffffff59]" />
                   </div>
                 ))}

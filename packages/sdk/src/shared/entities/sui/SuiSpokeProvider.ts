@@ -244,6 +244,11 @@ export class SuiBaseSpokeProvider {
   }
 }
 
+export type SuiRawSpokeProviderConfig = {
+  chainConfig: SuiSpokeChainConfig;
+  walletAddress: string;
+};
+
 export class SuiRawSpokeProvider extends SuiBaseSpokeProvider implements IRawSpokeProvider {
   public readonly walletProvider: WalletAddressProvider;
   public readonly raw = true;

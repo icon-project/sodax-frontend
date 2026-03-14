@@ -31,10 +31,12 @@ export type RelayError = {
   error: unknown;
 };
 
+export type SubmitTxExtraData = { address: Hex; payload: Hex };
+
 export type SubmitTxParams = {
   chain_id: string; // The ID of the chain where the transaction was submitted
   tx_hash: string; // The transaction hash of the submitted transaction
-  data?: { address: Hex; payload: Hex };
+  data?: SubmitTxExtraData;
 };
 
 export type GetTransactionPacketsParams = {

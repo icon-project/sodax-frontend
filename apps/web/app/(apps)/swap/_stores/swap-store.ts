@@ -55,7 +55,11 @@ export const createSwapStore = (initState: SwapState = defaultSwapState) => {
         setInputToken: (token: XToken) => set({ inputToken: token }),
         setOutputToken: (token: XToken) => set({ outputToken: token }),
         setInputAmount: (amount: string) => set({ inputAmount: amount }),
-        setIsSwapAndSend: (isSwapAndSend: boolean) => set({ isSwapAndSend }),
+        setIsSwapAndSend: (enabled: boolean) =>
+          set({
+            isSwapAndSend: enabled,
+            customDestinationAddress: enabled ? '' : '',
+          }),
         setCustomDestinationAddress: (address: string) => set({ customDestinationAddress: address }),
         setSlippageTolerance: (tolerance: number) => set({ slippageTolerance: tolerance }),
         switchTokens: () => {
@@ -84,8 +88,6 @@ export const createSwapStore = (initState: SwapState = defaultSwapState) => {
         partialize: state => ({
           inputToken: state.inputToken,
           outputToken: state.outputToken,
-          isSwapAndSend: state.isSwapAndSend,
-          customDestinationAddress: state.customDestinationAddress,
           slippageTolerance: state.slippageTolerance,
         }),
       },
