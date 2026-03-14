@@ -21,6 +21,7 @@ const rpcConfig: RpcConfig = {
   [POLYGON_MAINNET_CHAIN_ID]: 'https://polygon.drpc.org',
 };
 
+
 const configMap: Record<SolverEnv, SolverConfigParams> = {
   [SolverEnv.Production]: productionSolverConfig,
   [SolverEnv.Staging]: stagingSolverConfig,
