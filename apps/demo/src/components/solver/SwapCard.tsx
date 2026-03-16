@@ -286,7 +286,7 @@ export default function SwapCard({
   return (
     <Card className="w-full max-w-lg mx-auto">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold text-center">Cross-Chain Swap 111</CardTitle>
+        <CardTitle className="text-2xl font-bold text-center">Cross-Chain Swap</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
