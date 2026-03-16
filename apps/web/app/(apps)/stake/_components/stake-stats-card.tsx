@@ -28,7 +28,6 @@ export function StakeStatsCard(): React.JSX.Element {
 
   // Keep the unstaking period UI stable while config is loading or missing.
   const hasUnstakingPeriod = typeof stakingConfig?.unstakingPeriod === 'bigint';
-  const unstakingPeriodLabel = hasUnstakingPeriod ? `${stakingConfig.unstakingPeriod} seconds` : '-';
   const shouldShowUnstakingPeriodInfo = !isLoadingStakingConfig && hasUnstakingPeriod;
   return (
     <div className="w-full relative flex flex-col justify-start items-start gap-4">
