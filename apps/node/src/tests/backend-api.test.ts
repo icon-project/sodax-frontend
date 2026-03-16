@@ -90,6 +90,42 @@ async function main() {
   } catch (err) {
     console.error('getAllMoneyMarketBorrowers error:', err);
   }
+
+  // 10. RequestOverrideConfig smoke tests
+  console.log('\n--- RequestOverrideConfig smoke tests ---');
+
+  // baseURL override (same default URL — proves param is accepted)
+  try {
+    const orderbookWithConfig = await sodax.backendApi.getOrderbook(
+      { offset: '0', limit: '1' },
+      { baseURL: 'https://api.sodax.com/v1/be' },
+    );
+    console.log('getOrderbook with baseURL override:', orderbookWithConfig.total >= 0 ? 'OK' : 'FAIL');
+  } catch (err) {
+    console.error('getOrderbook with baseURL override error:', err);
+  }
+
+  // headers override
+  try {
+    const orderbookWithHeaders = await sodax.backendApi.getOrderbook(
+      { offset: '0', limit: '1' },
+      { headers: { 'X-Test': 'smoke' } },
+    );
+    console.log('getOrderbook with headers override:', orderbookWithHeaders.total >= 0 ? 'OK' : 'FAIL');
+  } catch (err) {
+    console.error('getOrderbook with headers override error:', err);
+  }
+
+  // getSubmitSwapTxStatus with config override
+  try {
+    const statusWithConfig = await sodax.backendApi.getSubmitSwapTxStatus(
+      { txHash: '0xe6c9496781ef863e7d83ad86265076a633939384d6227bbe8154bea7028191d3' },
+      { timeout: 10000 },
+    );
+    console.log('getSubmitSwapTxStatus with timeout override:', statusWithConfig);
+  } catch (err) {
+    console.error('getSubmitSwapTxStatus with config override error:', err);
+  }
 }
 
 main();
