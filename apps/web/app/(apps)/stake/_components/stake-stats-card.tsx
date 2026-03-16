@@ -28,7 +28,6 @@ export function StakeStatsCard(): React.JSX.Element {
 
   // Keep the unstaking period UI stable while config is loading or missing.
   const hasUnstakingPeriod = typeof stakingConfig?.unstakingPeriod === 'bigint';
-  const unstakingPeriodLabel = hasUnstakingPeriod ? `${stakingConfig.unstakingPeriod} seconds` : '-';
   const shouldShowUnstakingPeriodInfo = !isLoadingStakingConfig && hasUnstakingPeriod;
   return (
     <div className="w-full relative flex flex-col justify-start items-start gap-4">
@@ -104,7 +103,7 @@ export function StakeStatsCard(): React.JSX.Element {
           <div className="justify-center text-clay text-[9px] font-medium uppercase leading-3">UNSTAKING PERIOD</div>
           <div className="flex justify-start items-center gap-1">
             <div className="text-espresso text-(length:--body-comfortable) font-bold leading-5">
-              {isLoadingStakingConfig ? <LoadingThreeDotsJumping /> : unstakingPeriodLabel}
+              {isLoadingStakingConfig ? <LoadingThreeDotsJumping /> : '180 days'}
             </div>
             {shouldShowUnstakingPeriodInfo ? <Info className="w-4 h-4 text-clay-light" /> : null}
           </div>
