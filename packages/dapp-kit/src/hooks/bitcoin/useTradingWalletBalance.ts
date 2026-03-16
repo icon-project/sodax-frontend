@@ -11,7 +11,12 @@ export function useTradingWalletBalance(
 ): UseQueryResult<RadfiWalletBalance, Error> {
   return useQuery<RadfiWalletBalance, Error>({
     queryKey: ['trading-wallet-balance', tradingAddress],
-    queryFn: () => spokeProvider!.radfi.getBalance(tradingAddress!),
+    queryFn: () => {
+      if (!spokeProvider || !tradingAddress) {
+        throw new Error('spokeProvider and tradingAddress are required');
+      }
+      return spokeProvider.radfi.getBalance(tradingAddress);
+    },
     enabled: !!spokeProvider && !!tradingAddress,
   });
 }

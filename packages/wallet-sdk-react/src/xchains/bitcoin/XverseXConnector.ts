@@ -54,13 +54,13 @@ class XverseWalletProvider implements IBitcoinWalletProvider {
     let offset = 5;
 
     // Global section: first key-value pair should be key 0x00 (unsigned tx)
-    const keyLen = data[offset++]!;
+    const keyLen = data[offset++] ?? 0;
     if (keyLen !== 1 || data[offset++] !== 0x00) {
       return 1; // fallback: assume 1 input
     }
 
     // Read value length (compact size)
-    const firstByte = data[offset++]!;
+    const firstByte = data[offset++] ?? 0;
     if (firstByte === 0xfd) offset += 2;
     else if (firstByte === 0xfe) offset += 4;
     else if (firstByte === 0xff) offset += 8;
@@ -70,7 +70,7 @@ class XverseWalletProvider implements IBitcoinWalletProvider {
     offset += 4;
 
     // Read input count (varint)
-    const inputByte = data[offset]!;
+    const inputByte = data[offset] ?? 0;
     if (inputByte < 0xfd) return inputByte;
     return 1; // fallback for unusual cases
   }
