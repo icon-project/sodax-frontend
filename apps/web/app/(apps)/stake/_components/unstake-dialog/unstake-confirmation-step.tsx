@@ -5,7 +5,6 @@ import { UNSTAKE_METHOD } from '../../_stores/stake-store';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { CircleArrowRight, ShieldAlertIcon } from 'lucide-react';
 import { cn, formatTokenAmount } from '@/lib/utils';
-import { useStakingConfig } from '@sodax/dapp-kit';
 import { ETHEREUM_MAINNET_CHAIN_ID } from '@sodax/sdk';
 import { DEFAULT_ESTIMATED_TX_TIME, ETHEREUM_ESTIMATED_TX_TIME } from '../constants';
 interface UnstakeConfirmationStepProps {
@@ -20,13 +19,6 @@ export default function UnstakeConfirmationStep({
   unstakeError,
 }: UnstakeConfirmationStepProps): React.JSX.Element {
   const { stakeValue, unstakeMethod } = useStakeState();
-  const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
-  if (isLoadingStakingConfig) {
-    return <div>Loading staking config...</div>;
-  }
-  if (!stakingConfig) {
-    return <div>No staking config found</div>;
-  }
 
   const xSodaToken = {
     ...selectedToken,
@@ -92,7 +84,7 @@ export default function UnstakeConfirmationStep({
               ? selectedToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID
                 ? ETHEREUM_ESTIMATED_TX_TIME
                 : DEFAULT_ESTIMATED_TX_TIME
-              : `~${stakingConfig.unstakingPeriod} s`}
+              : '~180 days'}
           </div>
         </div>
         <div className="w-10 inline-flex flex-col justify-start items-center gap-2">
