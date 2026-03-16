@@ -102,9 +102,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
   const isPartner = isPartnerRoute(pathname);
   const usedTabs = isPartner
     ? partnerTabConfigs
-    : tabConfigs.filter(
-        tab => !((tab.value === 'stake' || tab.value === 'pool') && process.env.NEXT_PUBLIC_APP_ENV === 'production'),
-      );
+    : tabConfigs.filter(tab => !(tab.value === 'pool' && process.env.NEXT_PUBLIC_APP_ENV === 'production'));
 
   const lastSegment = pathname.split('/').filter(Boolean).pop() ?? '';
   const tabValues = usedTabs.map(t => t.value);

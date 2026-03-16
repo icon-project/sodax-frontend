@@ -9,6 +9,7 @@ import { useStakingConfig } from '@sodax/dapp-kit';
 import { UnstakeModeToggle } from './unstake-mode-toggle';
 import { STAKE_MODE } from '../_stores/stake-store';
 import { Loader2 } from 'lucide-react';
+import { useStakeVaultApy } from '@/hooks/useStakeVaultApy';
 
 export function StakeStatsCard(): React.JSX.Element {
   const {
@@ -22,6 +23,9 @@ export function StakeStatsCard(): React.JSX.Element {
 
   const { setStakeMode } = useStakeActions();
   const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
+  const { data: liveApyPercent } = useStakeVaultApy();
+  const displayedApy = liveApyPercent ?? STAKING_APR;
+
   // Keep the unstaking period UI stable while config is loading or missing.
   const hasUnstakingPeriod = typeof stakingConfig?.unstakingPeriod === 'bigint';
   const unstakingPeriodLabel = hasUnstakingPeriod ? `${stakingConfig.unstakingPeriod} seconds` : '-';
@@ -65,7 +69,7 @@ export function StakeStatsCard(): React.JSX.Element {
         <div className="flex flex-col justify-center items-end gap-1">
           <div className="flex justify-end items-center gap-1">
             <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-bold leading-5">
-              {STAKING_APR}% APY
+              {displayedApy.toFixed(2)}% APY
             </div>
             <Info className="w-4 h-4 text-clay-light" />
           </div>
