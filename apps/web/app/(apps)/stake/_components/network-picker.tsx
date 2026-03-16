@@ -133,7 +133,7 @@ export function NetworkPicker({
                   {hoveredBalance !== 0n && formattedHoveredBalance !== null && (
                     <>
                       {' '}
-                      {formattedHoveredBalance} {tokenSymbol}
+                      {formattedHoveredBalance} {stakeMode === STAKE_MODE.UNSTAKING ? 'xSODA' : tokenSymbol}
                     </>
                   )}
                 </>
