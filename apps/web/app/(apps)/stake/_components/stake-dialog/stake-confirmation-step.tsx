@@ -42,7 +42,7 @@ export default function StakeConfirmationStep({
         <div className="flex flex-col text-center">
           <div className="text-espresso text-(length:--body-super-comfortable) leading-[1.4]">Staking SODA</div>
           <div className="text-clay text-(length:--body-small) font-medium leading-[1.4] justify-center">
-            {STAKING_APR}% variable APR
+            {STAKING_APR}% variable APY
           </div>
         </div>
       )}

@@ -65,7 +65,7 @@ export function StakeStatsCard(): React.JSX.Element {
         <div className="flex flex-col justify-center items-end gap-1">
           <div className="flex justify-end items-center gap-1">
             <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-bold leading-5">
-              {STAKING_APR}% APR
+              {STAKING_APR}% APY
             </div>
             <Info className="w-4 h-4 text-clay-light" />
           </div>

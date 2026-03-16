@@ -21,7 +21,7 @@ export function StakeHeader({ apr = STAKING_APR }: StakeHeaderProps): React.JSX.
       <div className="flex self-stretch mix-blend-multiply justify-start text-clay-light text-(length:--subtitle) font-normal font-['InterRegular'] leading-5 gap-1">
         {' '}
         Earn{' '}
-        <div className="flex">
+        <div className="flex tabular-nums">
           <AnimatedNumber to={apr} decimalPlaces={2} className="font-['InterRegular'] text-(length:--subtitle)" />%
         </div>
         {''}from protocol fees.
