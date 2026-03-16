@@ -2,6 +2,7 @@
 
 import { motion } from 'motion/react';
 import { Bot, PackageOpen, Settings2, Users } from 'lucide-react';
+import { Route } from 'lucide-react';
 import { DOCUMENTATION_ROUTE } from '@/constants/routes';
 import { NETWORK_ICON_MAP } from './network-icons';
 
@@ -201,6 +202,14 @@ export default function PartnersHeroSection() {
           >
             Builders MCP
             <Bot size={16} className="text-cherry-bright shrink-0" />
+          </button>
+          <button
+            type="button"
+            className="flex items-center justify-start gap-2 font-['InterRegular'] text-[14px] md:text-[16px] leading-[1.4] text-cream-white hover:text-white transition-colors cursor-pointer"
+            onClick={() => document.getElementById('integration-roadmap')?.scrollIntoView({ behavior: 'smooth' })}
+          >
+            Integration roadmap
+            <Route size={16} className="text-cherry-bright shrink-0" />
           </button>
         </div>
       </motion.div>

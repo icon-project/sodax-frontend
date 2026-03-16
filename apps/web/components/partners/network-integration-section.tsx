@@ -117,7 +117,7 @@ export default function NetworkIntegrationSection() {
                 className="bg-cherry-grey flex h-10 items-center justify-center px-6 py-2 rounded-full w-full cursor-pointer"
               >
                 <span className="font-['InterMedium'] text-[14px] leading-[1.4] text-espresso text-center">
-                  Contact Partnerships
+                  Contact us
                 </span>
               </a>
             </motion.div>

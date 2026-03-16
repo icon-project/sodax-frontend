@@ -3,6 +3,7 @@ import {
   COMMUNITY_ROUTE,
   DISCORD_PAGE_ROUTE,
   GLOSSARY_ROUTE,
+  INTEGRATION_ROADMAP_ROUTE,
   LOANS_ROUTE,
   MIGRATE_ROUTE,
   NEWS_ROUTE,
@@ -81,6 +82,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${SITE_URL}${COMMUNITY_ROUTE}/soda-token`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}${INTEGRATION_ROADMAP_ROUTE}`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
