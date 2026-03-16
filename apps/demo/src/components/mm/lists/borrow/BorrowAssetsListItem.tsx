@@ -3,12 +3,12 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { formatUnits } from 'viem';
 import type { ChainId, XToken } from '@sodax/types';
 import { BorrowButton } from '../BorrowButton';
-import { getChainLabel } from '@/lib/borrowUtils';
+import { formatDecimalForDisplay } from '@/lib/utils';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import type { FormatReserveUSDResponse, FormatUserSummaryResponse, UserReserveData } from '@sodax/sdk';
 import { useAToken } from '@sodax/dapp-kit';
 import { Button } from '@/components/ui/button';
-import { DUST_THRESHOLD, MAX_BORROW_SAFETY_MARGIN, ZERO_ADDRESS } from '../../constants';
+import { MAX_BORROW_SAFETY_MARGIN, ZERO_ADDRESS } from '../../constants';
 import { isUserReserveDataArray, isValidEvmAddress } from '../../typeGuards';
 
 interface BorrowAssetsListItemProps {
@@ -125,36 +125,16 @@ export function BorrowAssetsListItem({
     debtExact = formatUnits(actualDebtRaw, tokenDecimals);
   }
 
-  const formatDecimalForDisplay = (value: string, maxDecimals: number): string => {
-    if (value === '0') return '0';
-    const [intPart, fracPart = ''] = value.split('.');
-    const truncated = fracPart.slice(0, maxDecimals);
-    const combined = truncated.length > 0 ? `${intPart}.${truncated}` : intPart;
-    const trimmed = combined.replace(/\.?0+$/, '');
-
-    // If we truncated to "0" but the value is non-zero, show a "< threshold" hint.
-    if (trimmed === '0' && Number.parseFloat(value) > 0) {
-      const threshold = `0.${'0'.repeat(Math.max(0, maxDecimals - 1))}1`;
-      return `<${threshold}`;
-    }
-
-    return trimmed;
-  };
-
   const debtNum = Number.parseFloat(debtExact);
   // Always display debt with 4 decimals, but show "0" when debt is zero or rounds to zero
   const formattedDebt = Number.isNaN(debtNum) ? '0' : Number(debtExact).toFixed(4);
-  const debtDisplay = Number.parseFloat(formattedDebt) === 0 ? '0' : formattedDebt;
-
+  const debtDisplay = Number.isNaN(debtNum) ? '0' : formatDecimalForDisplay(debtExact, 4);
   // Check if user has meaningful debt: must have actual debt amount > 0
   // Check if debt, when formatted to 4 decimals (same as display), is greater than 0
   // This prevents enabling repay button when debt displays as "0.0000"
   const debtDisplayNum = Number.parseFloat(debtDisplay);
   const hasDebt =
-    metrics.userReserve &&
-    metrics.userReserve.scaledVariableDebt > 0n &&
-    Number.isFinite(debtNum) &&
-    debtDisplayNum > 0;
+    metrics.userReserve && metrics.userReserve.scaledVariableDebt > 0n && Number.isFinite(debtNum) && debtNum > 0;
 
   return (
     <TableRow
@@ -219,8 +199,9 @@ export function BorrowAssetsListItem({
               if (!hasDebt) return;
               // Format debt to 6 decimals to avoid floating point precision issues
               const debtNum = Number.parseFloat(debtExact);
-              const formattedDebt = Number.isNaN(debtNum) || debtNum === 0 ? debtExact : debtNum.toFixed(6);
-              onRepayClick(token, formattedDebt);
+              const maxDebtToRepay =
+                Number.isNaN(debtNum) || debtNum === 0 ? debtExact : formatDecimalForDisplay(debtExact, 6);
+              onRepayClick(token, maxDebtToRepay);
             }}
             disabled={!hasDebt}
             className="flex-1 min-w-[85px]"

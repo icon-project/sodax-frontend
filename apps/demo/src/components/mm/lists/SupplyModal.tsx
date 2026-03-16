@@ -18,6 +18,7 @@ import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 import type { MoneyMarketSupplyParams } from '@sodax/sdk';
 import { getMmErrorText } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 import { ErrorAlert } from '../ErrorAlert';
 import { useQueryClient } from '@tanstack/react-query';
 import { invalidateMmQueries } from '@/lib/invalidateMmQueries';
@@ -111,11 +112,7 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
         onOpenChange(false);
       }
     } catch (err) {
-      // Error is handled by React Query and displayed via the error prop
-      // Log for debugging purposes
-      // console.error('Supply failed:', err);
-      // Ensure error state is properly set - React Query should handle this automatically
-      // but we reset to ensure UI state is clean if needed
+      logger.error('Supply failed', err);
     }
   };
 
@@ -128,7 +125,7 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
         spokeProvider: sourceSpokeProvider,
       });
     } catch (err) {
-      console.error('Approve failed:', err);
+      logger.error('Approve failed', err);
     }
   };
 

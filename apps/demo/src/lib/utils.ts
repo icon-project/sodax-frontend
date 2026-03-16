@@ -42,6 +42,26 @@ export function formatTokenAmount(amount: number | string | bigint, decimals: nu
     .toFixed(displayDecimals, BigNumber.ROUND_DOWN);
 }
 
+/**
+ * Truncates a decimal string to at most maxDecimals fractional digits (no rounding).
+ * Trims trailing zeros. For non-zero values that truncate to "0" (e.g. 0.00005 with 4 decimals),
+ * returns a "< threshold" hint instead so the user knows the value is small but non-zero.
+ */
+export function formatDecimalForDisplay(value: string, maxDecimals: number): string {
+  if (value === '0') return '0';
+  const [intPart, fracPart = ''] = value.split('.');
+  const truncated = fracPart.slice(0, maxDecimals);
+  const combined = truncated.length > 0 ? `${intPart}.${truncated}` : intPart;
+  const trimmed = combined.replace(/\.?0+$/, '');
+
+  if (trimmed === '0' && Number.parseFloat(value) > 0) {
+    const threshold = `0.${'0'.repeat(Math.max(0, maxDecimals - 1))}1`;
+    return `<${threshold}`;
+  }
+
+  return trimmed;
+}
+
 export function calculateExchangeRate(amount: BigNumber, toAmount: BigNumber): BigNumber {
   return new BigNumber(1).dividedBy(amount).multipliedBy(toAmount);
 }

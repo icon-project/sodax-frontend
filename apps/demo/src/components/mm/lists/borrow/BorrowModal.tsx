@@ -19,6 +19,7 @@ import { useBorrow, useSpokeProvider, useReservesUsdFormat, useAToken, useUserRe
 import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 import { getChainsWithThisToken, getMmErrorText, getTokenOnChain, getNativeTokenSymbol } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 import { formatUnits } from 'viem';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import { MIN_BORROW_USD, MAX_BORROW_SAFETY_MARGIN, ZERO_ADDRESS } from '../../constants';
@@ -306,10 +307,9 @@ export function BorrowModal({
         onOpenChange(false);
       }
     } catch (err) {
-      console.error('Borrow failed:', err);
-      // Log more details about the error
+      logger.error('Borrow failed', err);
       if (err && typeof err === 'object' && 'data' in err) {
-        console.error('Borrow error details:', err.data);
+        logger.error('Borrow error details', (err as { data: unknown }).data);
       }
     }
   };
