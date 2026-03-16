@@ -43,9 +43,9 @@ export function useDeriveUserWalletAddress(
       }
 
       // Determine if spokeChainId is a SpokeProvider object or SpokeChainId value
-      spokeChainId = typeof spokeChainId === 'object' ? spokeChainId.chainConfig.chain.id : spokeChainId;
+      const chainId = typeof spokeChainId === 'object' ? spokeChainId.chainConfig.chain.id : spokeChainId;
 
-      return await deriveUserWalletAddress(sodax.hubProvider, spokeChainId, spokeAddress);
+      return await deriveUserWalletAddress(sodax.hubProvider, chainId, spokeAddress);
     },
     enabled: !!spokeChainId && !!spokeAddress,
     refetchInterval: false, // This is a deterministic operation, no need to refetch

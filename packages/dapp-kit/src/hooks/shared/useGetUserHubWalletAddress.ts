@@ -44,9 +44,9 @@ export function useGetUserHubWalletAddress(
       }
 
       // Determine if spokeChainId is a SpokeProvider object or SpokeChainId value
-      spokeChainId = typeof spokeChainId === 'object' ? spokeChainId.chainConfig.chain.id : spokeChainId;
+      const chainId = typeof spokeChainId === 'object' ? spokeChainId.chainConfig.chain.id : spokeChainId;
 
-      return await HubService.getUserHubWalletAddress(spokeAddress, spokeChainId, sodax.hubProvider);
+      return await HubService.getUserHubWalletAddress(spokeAddress, chainId, sodax.hubProvider);
     },
     enabled: !!spokeChainId && !!spokeAddress,
     refetchInterval: false, // This is a deterministic operation, no need to refetch
