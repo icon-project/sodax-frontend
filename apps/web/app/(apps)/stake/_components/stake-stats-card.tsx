@@ -104,7 +104,7 @@ export function StakeStatsCard(): React.JSX.Element {
           <div className="justify-center text-clay text-[9px] font-medium uppercase leading-3">UNSTAKING PERIOD</div>
           <div className="flex justify-start items-center gap-1">
             <div className="text-espresso text-(length:--body-comfortable) font-bold leading-5">
-              {isLoadingStakingConfig ? <LoadingThreeDotsJumping /> : unstakingPeriodLabel}
+              {isLoadingStakingConfig ? <LoadingThreeDotsJumping /> : '180 days'}
             </div>
             {shouldShowUnstakingPeriodInfo ? <Info className="w-4 h-4 text-clay-light" /> : null}
           </div>

@@ -2,6 +2,7 @@ import type React from 'react';
 import type { XToken } from '@sodax/types';
 import { useStakingConfig } from '@sodax/dapp-kit';
 import { STAKING_APR } from '../constants';
+import { useStakeVaultApy } from '@/hooks/useStakeVaultApy';
 
 export default function StakeInfoStep({
   selectedToken,
@@ -9,6 +10,8 @@ export default function StakeInfoStep({
   selectedToken: XToken;
 }): React.JSX.Element {
   const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
+  const { data: liveApyPercent } = useStakeVaultApy();
+  const displayedApy = liveApyPercent ?? STAKING_APR;
   if (isLoadingStakingConfig) {
     return <div>Loading staking config...</div>;
   }
@@ -30,7 +33,7 @@ export default function StakeInfoStep({
       <div className="self-stretch inline-flex justify-start items-start gap-4">
         <div className="flex-1 pl-4 border-l-2 border-cream-white inline-flex flex-col justify-center items-start gap-1">
           <div className="md:w-40 h-4 justify-start text-espresso text-(length:--body-comfortable) font-bold leading-[1.4] overflow-hidden">
-            {STAKING_APR}% variable APY
+            {displayedApy.toFixed(2)}% variable APY
           </div>
           <div className="self-stretch justify-start text-clay text-(length:--body-comfortable) leading-[1.4]">
             Earnings update in cycles, not constantly.
@@ -39,7 +42,7 @@ export default function StakeInfoStep({
 
         <div className="flex-1 pl-4 border-l-2 border-cream-white inline-flex flex-col justify-center items-start gap-1">
           <div className="md:w-40 h-4 justify-start text-espresso text-(length:--body-comfortable) font-bold leading-[1.4]">
-            {stakingConfig.unstakingPeriod}s unstake
+            180 days unstake
           </div>
           <div className="self-stretch justify-start text-clay text-(length:--body-comfortable) leading-[1.4]">
             Wait for full value, or exit early anytime.
