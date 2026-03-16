@@ -2,10 +2,10 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useRadfiSession, useTradingWalletBalance, useFundTradingWallet } from '@sodax/dapp-kit';
+import { useRadfiSession, useTradingWalletBalance, useFundTradingWallet, useExpiredUtxos, useRenewUtxos } from '@sodax/dapp-kit';
 import type { BitcoinSpokeProvider } from '@sodax/sdk';
 import { formatUnits, parseUnits } from 'viem';
-import { Loader2, Copy, ExternalLink, Check } from 'lucide-react';
+import { Loader2, Copy, ExternalLink, Check, AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface BitcoinSetupPanelProps {
   spokeProvider: BitcoinSpokeProvider;
@@ -20,8 +20,11 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
   const { data: tradingBalance, isLoading: isBalanceLoading } = useTradingWalletBalance(spokeProvider, tradingAddress);
 
   const { mutateAsync: fundWallet, isPending: isFunding } = useFundTradingWallet(spokeProvider);
+  const { data: expiredUtxos, isLoading: isExpiredLoading } = useExpiredUtxos(spokeProvider, tradingAddress);
+  const { mutateAsync: renewUtxos, isPending: isRenewing } = useRenewUtxos(spokeProvider);
   const [fundAmount, setFundAmount] = useState('');
   const [copied, setCopied] = useState(false);
+  const [renewError, setRenewError] = useState<string | null>(null);
 
   const copyAddress = () => {
     if (!tradingAddress) return;
@@ -42,6 +45,19 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
       setFundAmount('');
     } catch (e) {
       console.error('Failed to top up trading wallet', e);
+    }
+  };
+
+  const handleRenewUtxos = async () => {
+    if (!expiredUtxos?.length) return;
+    setRenewError(null);
+    try {
+      const txIdVouts = expiredUtxos.map(u => `${u.txId}:${u.vout}`);
+      await renewUtxos({ txIdVouts });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed to renew UTXOs';
+      setRenewError(msg);
+      console.error('Failed to renew UTXOs', e);
     }
   };
 
@@ -146,6 +162,49 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
                   Top Up
                 </Button>
               </div>
+
+              {/* Expired UTXOs — Renew section */}
+              {!isExpiredLoading && expiredUtxos && expiredUtxos.length > 0 && (
+                <div className="flex flex-col gap-2 border-t border-border pt-3 mt-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium flex items-center gap-2 text-amber-600">
+                      <AlertTriangle className="h-4 w-4" />
+                      {expiredUtxos.length} Expired UTXO{expiredUtxos.length > 1 ? 's' : ''}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleRenewUtxos}
+                      disabled={isRenewing}
+                      className="border-amber-500 text-amber-600 hover:bg-amber-50"
+                    >
+                      {isRenewing ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                      )}
+                      Renew All
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    These UTXOs have expired or are within 2 weeks of expiry. Renew them to continue trading.
+                  </p>
+                  {/* List expired UTXOs */}
+                  <div className="max-h-32 overflow-y-auto space-y-1">
+                    {expiredUtxos.map(utxo => (
+                      <div key={`${utxo.txId}:${utxo.vout}`} className="flex items-center justify-between text-xs bg-background rounded px-2 py-1 border border-border">
+                        <span className="font-mono text-muted-foreground truncate max-w-[200px]" title={`${utxo.txId}:${utxo.vout}`}>
+                          {utxo.txId.slice(0, 8)}...:{utxo.vout}
+                        </span>
+                        <span className="font-medium">{formatUnits(BigInt(utxo.value), 8)} BTC</span>
+                      </div>
+                    ))}
+                  </div>
+                  {renewError && (
+                    <p className="text-xs text-red-500">{renewError}</p>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
