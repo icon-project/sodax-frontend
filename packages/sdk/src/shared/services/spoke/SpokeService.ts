@@ -5,7 +5,6 @@ import type {
   EvmSpokeProvider,
   SolanaSpokeProvider,
   SonicSpokeProvider,
-  StacksSpokeProvider,
   SpokeProvider,
   SpokeProviderType,
   StellarSpokeProvider,
@@ -24,6 +23,7 @@ import type {
   IconSpokeProviderType,
   SuiSpokeProviderType,
   SolanaSpokeProviderType,
+  StacksSpokeProviderType,
   StellarSpokeProviderType,
   NearSpokeProviderType,
   VerifyTxHashRawConfig,
@@ -301,8 +301,8 @@ export class SpokeService {
     if (isStacksSpokeProviderType(spokeProvider)) {
       await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
       return StacksSpokeService.deposit(
-        params as GetSpokeDepositParamsType<StacksSpokeProvider>,
-        spokeProvider as StacksSpokeProvider,
+        params as GetSpokeDepositParamsType<StacksSpokeProviderType>,
+        spokeProvider as StacksSpokeProviderType,
         hubProvider,
         raw,
       ) as Promise<TxReturnType<S, R>>;
@@ -376,8 +376,8 @@ export class SpokeService {
     }
     if (isStacksSpokeProviderType(spokeProvider)) {
       return StacksSpokeService.getSimulateDepositParams(
-        params as GetSpokeDepositParamsType<StacksSpokeProvider>,
-        spokeProvider as StacksSpokeProvider,
+        params as GetSpokeDepositParamsType<StacksSpokeProviderType>,
+        spokeProvider as StacksSpokeProviderType,
         hubProvider,
       );
     }
@@ -430,7 +430,7 @@ export class SpokeService {
       return SonicSpokeService.getDeposit(token, spokeProvider);
     }
     if (isStacksSpokeProviderType(spokeProvider)) {
-      return StacksSpokeService.getDeposit(token, spokeProvider as StacksSpokeProvider);
+      return StacksSpokeService.getDeposit(token, spokeProvider as StacksSpokeProviderType);
     }
     if (isNearSpokeProviderType(spokeProvider)) {
       return NearSpokeService.getDeposit(token, spokeProvider);
@@ -538,7 +538,7 @@ export class SpokeService {
         spokeProvider,
         hubProvider,
         raw,
-      )) satisfies TxReturnType<StacksSpokeProvider, R> as TxReturnType<T, R>;
+      )) satisfies TxReturnType<StacksSpokeProviderType, R> as TxReturnType<T, R>;
     }
 
     if (isNearSpokeProviderType(spokeProvider)) {

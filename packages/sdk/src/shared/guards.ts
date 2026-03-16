@@ -23,7 +23,7 @@ import { IconSpokeProvider, type IconRawSpokeProvider } from './entities/icon/Ic
 import { SolanaSpokeProvider, type SolanaRawSpokeProvider, type SolanaRawSpokeProviderConfig } from './entities/solana/SolanaSpokeProvider.js';
 import { SuiSpokeProvider, type SuiRawSpokeProvider } from './entities/sui/SuiSpokeProvider.js';
 import { StellarSpokeProvider, type StellarRawSpokeProvider, type StellarRawSpokeProviderConfig } from './entities/stellar/StellarSpokeProvider.js';
-import { StacksSpokeProvider } from './entities/stacks/StacksSpokeProvider.js';
+import { StacksSpokeProvider, type StacksRawSpokeProvider } from './entities/stacks/StacksSpokeProvider.js';
 import type {
   EvmSpokeProviderType,
   IconSpokeProviderType,
@@ -38,6 +38,7 @@ import type {
   SolanaSpokeProviderType,
   SolverConfigParams,
   SonicSpokeProviderType,
+  StacksSpokeProviderType,
   StellarSpokeProviderType,
   SuiSpokeProviderType,
 } from './types.js';
@@ -261,7 +262,7 @@ export function isSuiSpokeProvider(value: SpokeProviderType): value is SuiSpokeP
   );
 }
 
-export function isStacksSpokeProviderType(value: SpokeProviderType): value is StacksSpokeProvider {
+export function isStacksSpokeProviderType(value: SpokeProviderType): value is StacksSpokeProviderType {
   return typeof value === 'object' && value !== null && (isStacksSpokeProvider(value) || isStacksRawSpokeProvider(value));
 }
 
@@ -275,8 +276,8 @@ export function isStacksSpokeProvider(value: SpokeProviderType): value is Stacks
   );
 }
 
-export function isStacksRawSpokeProvider(value: unknown): value is RawSpokeProvider {
-  return isRawSpokeProvider(value) && (value.chainConfig.chain.type as string) === 'STACKS';
+export function isStacksRawSpokeProvider(value: unknown): value is StacksRawSpokeProvider {
+  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'STACKS';
 }
 
 export function isConfiguredSolverConfig(

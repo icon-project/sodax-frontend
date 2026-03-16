@@ -1,6 +1,7 @@
 import type { Address, Hex } from 'viem';
 import { EvmWalletAbstraction } from '../hub/index.js';
-import type { EvmHubProvider, StacksSpokeProvider } from '../../entities/index.js';
+import type { EvmHubProvider } from '../../entities/index.js';
+import { StacksRawSpokeProvider } from '../../entities/stacks/StacksSpokeProvider.js';
 import {
   Cl,
   noneCV,
@@ -12,7 +13,12 @@ import {
 } from '@stacks/transactions';
 import { getIntentRelayChainId } from '@sodax/types';
 import type { HubAddress, StacksTransactionParams } from '@sodax/types';
-import type { DepositSimulationParams, PromiseStacksTxReturnType, StacksReturnType } from '../../types.js';
+import type {
+  DepositSimulationParams,
+  PromiseStacksTxReturnType,
+  StacksReturnType,
+  StacksSpokeProviderType,
+} from '../../types.js';
 import { encodeAddress } from '../../utils/shared-utils.js';
 
 export type StacksSpokeDepositParams = {
@@ -37,16 +43,16 @@ export class StacksSpokeService {
   /**
    * Deposit tokens to the spoke chain.
    * @param {StacksSpokeDepositParams} params - The parameters for the deposit, including the user's address, token address, amount, and additional data.
-   * @param {StacksSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {StacksSpokeProviderType} spokeProvider - The provider for the spoke chain.
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @returns {Promise<Hash>} A promise that resolves to the transaction hash.
    */
-  public static async deposit(
+  public static async deposit<R extends boolean = false>(
     params: StacksSpokeDepositParams,
-    spokeProvider: StacksSpokeProvider,
+    spokeProvider: StacksSpokeProviderType,
     hubProvider: EvmHubProvider,
-    raw?: boolean,
-  ): Promise<string> {
+    raw?: R,
+  ): PromiseStacksTxReturnType<R> {
     const userWallet: Address = await EvmWalletAbstraction.getUserHubWalletAddress(
       spokeProvider.chainConfig.chain.id,
       encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
@@ -62,16 +68,17 @@ export class StacksSpokeService {
         data: params.data,
       },
       spokeProvider,
+      raw,
     );
   }
 
   /**
    * Get the balance of the token in the spoke chain.
    * @param {Address} token - The address of the token to get the balance of.
-   * @param {StacksSpokeProvider} spokeProvider - The spoke provider.
+   * @param {StacksSpokeProviderType} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The balance of the token.
    */
-  public static async getDeposit(token: string, spokeProvider: StacksSpokeProvider): Promise<bigint> {
+  public static async getDeposit(token: string, spokeProvider: StacksSpokeProviderType): Promise<bigint> {
     const assetManager = spokeProvider.chainConfig.addresses.assetManager;
     if (token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()) {
       return spokeProvider.getSTXBalance(assetManager);
@@ -82,13 +89,13 @@ export class StacksSpokeService {
   /**
    * Get the simulation parameters for a deposit.
    * @param {StacksSpokeDepositParams} params - The deposit parameters.
-   * @param {StacksSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {StacksSpokeProviderType} spokeProvider - The provider for the spoke chain.
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @returns {Promise<DepositSimulationParams>} The simulation parameters.
    */
   public static async getSimulateDepositParams(
     params: StacksSpokeDepositParams,
-    spokeProvider: StacksSpokeProvider,
+    spokeProvider: StacksSpokeProviderType,
     hubProvider: EvmHubProvider,
   ): Promise<DepositSimulationParams> {
     const to =
@@ -114,34 +121,27 @@ export class StacksSpokeService {
    * Calls a contract on the spoke chain using the user's wallet.
    * @param {Hex} from - The address of the user on the spoke chain.
    * @param {Hex} payload - The payload to send to the contract.
-   * @param {StacksSpokeProvider} spokeProvider - The provider for the spoke chain.
+   * @param {StacksSpokeProviderType} spokeProvider - The provider for the spoke chain.
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @returns {Promise<Hash>} A promise that resolves to the transaction hash.
    */
   public static async callWallet<R extends boolean = false>(
     from: Hex,
     payload: Hex,
-    spokeProvider: StacksSpokeProvider,
+    spokeProvider: StacksSpokeProviderType,
     hubProvider: EvmHubProvider,
     raw?: R,
   ): PromiseStacksTxReturnType<R> {
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
-    return StacksSpokeService.call(BigInt(relayId), from, payload, spokeProvider);
+    return StacksSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
   }
 
   /**
    * Transfers tokens to the hub chain.
-   * @param {EvmTransferToHubParams} params - The parameters for the transfer, including:
-   *   - {Address} token: The address of the token to transfer (use address(0) for native token).
-   *   - {Address} recipient: The recipient address on the hub chain.
-   *   - {bigint} amount: The amount to transfer.
-   *   - {Hex} [data="0x"]: Additional data for the transfer.
-   * @param {StacksSpokeProvider} spokeProvider - The provider for the spoke chain.
-   * @returns {Promise<Hash>} A promise that resolves to the transaction hash.
    */
   private static async transfer<R extends boolean = false>(
     { from, token, recipient, amount, data = '0x' }: TransferToHubParams,
-    spokeProvider: StacksSpokeProvider,
+    spokeProvider: StacksSpokeProviderType,
     raw?: R,
   ): PromiseStacksTxReturnType<R> {
     const assetManagerImpl = await spokeProvider.getImplContractAddress(
@@ -165,7 +165,7 @@ export class StacksSpokeService {
       ],
       postConditionMode: PostConditionMode.Allow,
     };
-    if (raw) {
+    if (raw || spokeProvider instanceof StacksRawSpokeProvider) {
       return reqData satisfies StacksReturnType<true> as unknown as StacksReturnType<R>;
     }
     const txId = await spokeProvider.walletProvider.sendTransaction(reqData);
@@ -174,17 +174,12 @@ export class StacksSpokeService {
 
   /**
    * Sends a message to the hub chain.
-   * @param {bigint} dstChainId - The chain ID of the hub chain.
-   * @param {Address} dstAddress - The address on the hub chain.
-   * @param {Hex} payload - The payload to send.
-   * @param {StacksSpokeProvider} spokeProvider - The provider for the spoke chain.
-   * @returns {Promise<Hash>} A promise that resolves to the transaction hash.
    */
   private static async call<R extends boolean = false>(
     dstChainId: bigint,
     dstAddress: Address,
     payload: Hex,
-    spokeProvider: StacksSpokeProvider,
+    spokeProvider: StacksSpokeProviderType,
     raw?: R,
   ): PromiseStacksTxReturnType<R> {
     const reqData: StacksTransactionParams = {
@@ -195,7 +190,7 @@ export class StacksSpokeService {
       postConditionMode: PostConditionMode.Allow,
     };
 
-    if (raw) {
+    if (raw || spokeProvider instanceof StacksRawSpokeProvider) {
       return reqData satisfies StacksReturnType<true> as unknown as StacksReturnType<R>;
     }
     const txId = await spokeProvider.walletProvider.sendTransaction(reqData);

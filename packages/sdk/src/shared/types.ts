@@ -13,6 +13,7 @@ import type {
   SonicSpokeProvider,
   SpokeProvider,
   StacksSpokeProvider,
+  StacksRawSpokeProvider,
   SpokeProviderType,
   StellarRawSpokeProvider,
   StellarSpokeProvider,
@@ -216,7 +217,9 @@ export type GetSpokeDepositParamsType<T extends SpokeProviderType> = T extends E
                             ? SonicSpokeDepositParams
                             : T extends StacksSpokeProvider
                               ? StacksSpokeDepositParams
-                              : T extends NearSpokeProvider
+                              : T extends StacksRawSpokeProvider
+                                ? StacksSpokeDepositParams
+                                : T extends NearSpokeProvider
                                 ? NearSpokeDepositParams
                                 : T extends NearRawSpokeProvider
                                   ? NearSpokeDepositParams
@@ -250,11 +253,15 @@ export type GetAddressType<T extends SpokeProviderType> = T extends EvmSpokeProv
                           ? Address
                           : T extends SonicRawSpokeProvider
                             ? Address
-                            : T extends NearSpokeProvider
-                              ? Address
-                              : T extends NearRawSpokeProvider
-                                ? Address
-                                : never;
+                            : T extends StacksSpokeProvider
+                              ? string
+                              : T extends StacksRawSpokeProvider
+                                ? string
+                                : T extends NearSpokeProvider
+                                  ? Address
+                                  : T extends NearRawSpokeProvider
+                                    ? Address
+                                    : never;
 
 export type SolverConfigParams =
   | Prettify<SolverConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
@@ -386,6 +393,7 @@ export type HashTxReturnType =
   | SuiReturnType<false>
   | InjectiveReturnType<false>
   | StellarReturnType<false>
+  | StacksReturnType<false>
   | NearReturnType<false>;
 
 export type RawTxReturnType =
@@ -416,9 +424,11 @@ export type TxReturnType<T extends SpokeProviderType, Raw extends boolean> = T e
             ? SuiReturnType<true>
             : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
               ? InjectiveReturnType<true>
-              : T['chainConfig']['chain']['type'] extends 'NEAR'
-                ? NearReturnType<true>
-                : RawTxReturnType
+              : T['chainConfig']['chain']['type'] extends 'STACKS'
+                ? StacksReturnType<true>
+                : T['chainConfig']['chain']['type'] extends 'NEAR'
+                  ? NearReturnType<true>
+                  : RawTxReturnType
   : T extends SpokeProvider
     ? T['chainConfig']['chain']['type'] extends 'EVM'
       ? EvmReturnType<Raw>
@@ -432,11 +442,13 @@ export type TxReturnType<T extends SpokeProviderType, Raw extends boolean> = T e
               ? SuiReturnType<Raw>
               : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
                 ? InjectiveReturnType<Raw>
-                : T['chainConfig']['chain']['type'] extends 'NEAR'
-                  ? NearReturnType<Raw>
-                  : Raw extends true
-                    ? RawTxReturnType
-                    : HashTxReturnType
+                : T['chainConfig']['chain']['type'] extends 'STACKS'
+                  ? StacksReturnType<Raw>
+                  : T['chainConfig']['chain']['type'] extends 'NEAR'
+                    ? NearReturnType<Raw>
+                    : Raw extends true
+                      ? RawTxReturnType
+                      : HashTxReturnType
     : Raw extends true
       ? RawTxReturnType
       : HashTxReturnType;
@@ -479,6 +491,7 @@ export type IconSpokeProviderType = IconSpokeProvider | IconRawSpokeProvider;
 export type SuiSpokeProviderType = SuiSpokeProvider | SuiRawSpokeProvider;
 export type InjectiveSpokeProviderType = InjectiveSpokeProvider | InjectiveRawSpokeProvider;
 export type SonicSpokeProviderType = SonicSpokeProvider | SonicRawSpokeProvider;
+export type StacksSpokeProviderType = StacksSpokeProvider | StacksRawSpokeProvider;
 export type NearSpokeProviderType = NearSpokeProvider | NearRawSpokeProvider;
 
 export type Prettify<T> = {

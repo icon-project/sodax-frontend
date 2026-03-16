@@ -1,27 +1,22 @@
-import type { IStacksWalletProvider, StacksSpokeChainConfig } from '@sodax/types';
-import type { ISpokeProvider } from '../Providers.js';
+import type { IStacksWalletProvider, StacksSpokeChainConfig, StacksTransactionParams, WalletAddressProvider } from '@sodax/types';
+import type { IRawSpokeProvider, ISpokeProvider } from '../Providers.js';
 import { networkFrom, type StacksNetwork } from '@stacks/network';
 import {
   Cl,
+  type ClarityValue,
+  fetchCallReadOnlyFunction,
   parseContractId,
   type ContractIdString,
   type ContractPrincipalCV,
   type UIntCV,
 } from '@stacks/transactions';
 
-export class StacksSpokeProvider implements ISpokeProvider {
-  public readonly walletProvider: IStacksWalletProvider;
+class StacksBaseSpokeProvider {
   public chainConfig: StacksSpokeChainConfig;
-  private network: StacksNetwork;
+  protected network: StacksNetwork;
 
-  constructor(
-    config: StacksSpokeChainConfig,
-    wallet_provider: IStacksWalletProvider,
-    network: 'testnet' | 'mainnet' = 'mainnet',
-    rpcUrl?: string,
-  ) {
+  constructor(config: StacksSpokeChainConfig, network: 'testnet' | 'mainnet' = 'mainnet', rpcUrl?: string) {
     this.chainConfig = config;
-    this.walletProvider = wallet_provider;
     this.network = networkFrom(network);
     this.network.client.baseUrl = rpcUrl ?? this.network.client.baseUrl;
   }
@@ -44,16 +39,15 @@ export class StacksSpokeProvider implements ISpokeProvider {
 
   async readTokenBalance(token: string, address: string): Promise<bigint> {
     const [contractAddress, contractName] = parseContractId(token as ContractIdString);
-    const txParams = {
+    const result = (await fetchCallReadOnlyFunction({
       contractAddress: contractAddress as string,
       contractName: contractName as string,
-      functionName: 'balance-of',
+      functionName: 'get-balance',
       functionArgs: [Cl.principal(address)],
-    };
-
-    const balance: UIntCV = (await this.walletProvider.readContract(txParams)) as UIntCV;
-
-    return balance.value as bigint;
+      network: this.network,
+      senderAddress: address,
+    })) as { value: UIntCV };
+    return result.value.value as bigint;
   }
 
   async getImplContractAddress(stateContract: string): Promise<string> {
@@ -65,7 +59,59 @@ export class StacksSpokeProvider implements ISpokeProvider {
       functionArgs: [],
     };
 
-    const implAddress: string = ((await this.walletProvider.readContract(txParams)) as ContractPrincipalCV).value;
+    const implAddress: string = ((await this.walletReadContract(txParams)) as ContractPrincipalCV).value;
     return implAddress;
+  }
+
+  protected async walletReadContract(_txParams: StacksTransactionParams): Promise<ClarityValue> {
+    throw new Error('Not implemented');
+  }
+}
+
+export class StacksSpokeProvider extends StacksBaseSpokeProvider implements ISpokeProvider {
+  public readonly walletProvider: IStacksWalletProvider;
+
+  constructor(
+    config: StacksSpokeChainConfig,
+    wallet_provider: IStacksWalletProvider,
+    network: 'testnet' | 'mainnet' = 'mainnet',
+    rpcUrl?: string,
+  ) {
+    super(config, network, rpcUrl);
+    this.walletProvider = wallet_provider;
+  }
+
+  protected override async walletReadContract(txParams: StacksTransactionParams) {
+    return this.walletProvider.readContract(txParams);
+  }
+}
+
+export type StacksRawSpokeProviderConfig = {
+  walletAddress: string;
+  chainConfig: StacksSpokeChainConfig;
+  network?: 'testnet' | 'mainnet';
+  rpcUrl?: string;
+};
+
+export class StacksRawSpokeProvider extends StacksBaseSpokeProvider implements IRawSpokeProvider {
+  public readonly walletProvider: WalletAddressProvider;
+  public readonly raw = true;
+
+  constructor(walletAddress: string, config: StacksSpokeChainConfig, network: 'testnet' | 'mainnet' = 'mainnet', rpcUrl?: string) {
+    super(config, network, rpcUrl);
+    this.walletProvider = {
+      getWalletAddress: async () => walletAddress,
+    };
+  }
+
+  protected override async walletReadContract(txParams: StacksTransactionParams) {
+    return fetchCallReadOnlyFunction({
+      contractAddress: txParams.contractAddress,
+      contractName: txParams.contractName,
+      functionName: txParams.functionName,
+      functionArgs: txParams.functionArgs,
+      network: this.network,
+      senderAddress: await this.walletProvider.getWalletAddress(),
+    });
   }
 }

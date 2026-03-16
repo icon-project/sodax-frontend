@@ -48,7 +48,7 @@ import type {
   StellarRawSpokeProviderConfig,
   StellarSpokeProvider,
 } from './stellar/StellarSpokeProvider.js';
-import type { StacksSpokeProvider } from './stacks/StacksSpokeProvider.js';
+import type { StacksSpokeProvider, StacksRawSpokeProvider, StacksRawSpokeProviderConfig } from './stacks/StacksSpokeProvider.js';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
 
@@ -241,6 +241,7 @@ export type RawSpokeProvider = (
   | StellarRawSpokeProvider
   | SolanaRawSpokeProvider
   | SonicRawSpokeProvider
+  | StacksRawSpokeProvider
   | NearRawSpokeProvider
 ) &
   IRawSpokeProvider;
@@ -253,6 +254,7 @@ export type RawSpokeProviderConfig = (
   | StellarRawSpokeProviderConfig
   | SolanaRawSpokeProviderConfig
   | SonicRawSpokeProviderConfig
+  | StacksRawSpokeProviderConfig
   | NearRawSpokeProviderConfig
 ) & {
   chainConfig: SpokeChainConfig;
