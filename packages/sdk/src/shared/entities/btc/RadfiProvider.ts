@@ -25,6 +25,31 @@ export type RadfiWalletBalance = {
   totalUtxos: number;
 };
 
+export type RadfiUtxo = {
+  id: string;
+  txId: string;
+  vout: number;
+  value: string;
+  address: string;
+  isSpent: boolean;
+  isExpired: boolean;
+  expiryBlock?: number;
+  currentBlock?: number;
+};
+
+export type RadfiUtxoListResponse = {
+  data: RadfiUtxo[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+export type RadfiBuildTxResponse = {
+  base64Psbt: string;
+  fee: number;
+  txId: string;
+};
+
 export class RadfiProvider {
   constructor(private readonly config: RadfiConfig) {}
 
@@ -190,6 +215,89 @@ export class RadfiProvider {
       throw new Error(err.message || 'Radfi signature request failed');
     }
 
+
+    return res.json().then(r => r.data.txId);
+  }
+
+  /**
+   * Fetch expired (or near-expiry) UTXOs for a trading wallet address from UMS API.
+   */
+  public async getExpiredUtxos(
+    tradingAddress: string,
+    params?: { page?: number; pageSize?: number },
+  ): Promise<RadfiUtxoListResponse> {
+    if (!this.config.umsUrl) {
+      throw new Error('RadfiConfig.umsUrl is required for getExpiredUtxos');
+    }
+    const page = params?.page ?? 1;
+    const pageSize = params?.pageSize ?? 100;
+    const url = `${this.config.umsUrl}/utxos?address_eq=${tradingAddress}&isSpent_eq=false&isExpired_eq=true&page=${page}&pageSize=${pageSize}`;
+
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch expired UTXOs');
+    }
+
+    return res.json();
+  }
+
+  /**
+   * Build a renew-utxo transaction via the Radfi API.
+   * Returns a PSBT that needs to be signed by the user.
+   */
+  public async buildRenewUtxoTransaction(
+    params: { userAddress: string; txIdVouts: string[] },
+    accessToken: string,
+  ): Promise<RadfiBuildTxResponse> {
+    const res = await this.request('/transactions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        type: 'renew-utxo',
+        params: {
+          userAddress: params.userAddress,
+          txIdVouts: params.txIdVouts,
+        },
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Failed to build renew-utxo transaction');
+    }
+
+    return res.json().then(r => r.data);
+  }
+
+  /**
+   * Sign and broadcast a renew-utxo transaction via the Radfi API.
+   * The user signs the PSBT first, then Radfi co-signs and broadcasts.
+   */
+  public async signAndBroadcastRenewUtxo(
+    params: { userAddress: string; signedBase64Tx: string },
+    accessToken: string,
+  ): Promise<string> {
+    const res = await this.request('/transactions/sign', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        type: 'renew-utxo',
+        params,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Failed to sign and broadcast renew-utxo transaction');
+    }
 
     return res.json().then(r => r.data.txId);
   }
