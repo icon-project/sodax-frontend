@@ -8,15 +8,13 @@ import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigat
 import { motion } from 'motion/react';
 import { INTEGRATION_ROADMAP_BD_ROUTE, INTEGRATION_ROADMAP_ROUTE } from '@/constants/routes';
 import { Input } from '@/components/ui/input';
-import type { BdConfig, CategoryId, PartnershipTier, RoadmapCategory } from './types';
+import type { BdConfig, CategoryId, RoadmapCategory } from './types';
 import {
   CATEGORIES,
   DEFAULT_FROM_SUFFIX,
   EMPTY_BD_CONFIG,
   EXAMPLE_CHIPS,
   STEPS_BY_CATEGORY,
-  TIER_BADGE_CLASS,
-  TIER_LABELS,
   TIMELINE_BY_CATEGORY,
   WHY_SODAX_BY_CATEGORY,
 } from './constants';
@@ -70,7 +68,6 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
     const from = get('from');
     const suffix = get('suffix');
     const note = get('note');
-    const tier = get('tier');
     const tl = get('tl');
     const why = get('why');
     const chains = get('chains');
@@ -85,7 +82,6 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
       fromName: from ?? '',
       fromSuffix: suffix ?? DEFAULT_FROM_SUFFIX,
       note: note ?? '',
-      tier: (tier as PartnershipTier) ?? '',
       timeline: tl ?? '',
       customWhy: why ?? '',
       chains: chains ?? '',
@@ -98,7 +94,6 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
       (from ?? '') !== '' ||
       (suffix ?? '') !== '' ||
       (note ?? '') !== '' ||
-      (tier ?? '') !== '' ||
       (tl ?? '') !== '' ||
       (why ?? '') !== '' ||
       (chains ?? '') !== '' ||
@@ -125,41 +120,74 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
     setPrintDate(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
   }, []);
 
+  // useEffect 4 — fetches Notion/API enrichment when protocol is set from URL
+  const protocolDisplay = roadmap?.protocolDisplay ?? null;
+
+  useEffect(() => {
+    if (!protocolDisplay) return;
+
+    fetch(`/api/roadmap/${encodeURIComponent(protocolDisplay)}`)
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => {
+        if (!data || data.error) return;
+        const notionCategory = CATEGORIES.find(c => c.id === data.categoryId);
+        setRoadmap(prev =>
+          prev
+            ? {
+                ...prev,
+                category: notionCategory ?? prev.category,
+                protocolDisplay: data.protocolDisplay ?? prev.protocolDisplay,
+                matched: true,
+              }
+            : prev,
+        );
+        setBdConfig(prev => ({
+          ...prev,
+          whyOverrides: prev.whyOverrides.length > 0 ? prev.whyOverrides : (data.why ?? []),
+          stepsOverrides: prev.stepsOverrides.length > 0 ? prev.stepsOverrides : (data.integrationSteps ?? []),
+          timeline: prev.timeline || data.timeline || '',
+          chains: prev.chains || (data.chains ?? []).join(', '),
+        }));
+      })
+      .catch(() => {});
+  }, [protocolDisplay]); // ← clean, no roadmap object in deps
+
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGenerate = async (): Promise<void> => {
     const display = protocolName.trim() || 'Your protocol';
 
-    // existing local match still runs immediately
+    // 1. Show roadmap immediately with hardcoded match (instant)
     const { category, matched } = matchCategory(protocolName);
     setRoadmap({ category, protocolDisplay: display, matched });
 
-    // fetch from API in background — enriches roadmap if data exists
+    // 2. Fetch Notion data in background
     setIsLoading(true);
     try {
       const res = await fetch(`/api/roadmap/${encodeURIComponent(display)}`);
       if (res.ok) {
         const data = await res.json();
         if (data && !data.error) {
-          // override category if API returned one
+          // Override category if Notion has one
           const notionCategory = CATEGORIES.find(c => c.id === data.categoryId);
           setRoadmap({
             category: notionCategory ?? category,
             protocolDisplay: data.protocolDisplay ?? display,
             matched: true,
           });
-          // pre-fill BD config with AI-generated content
+
+          // Pre-fill BD Composer — only if BD hasn't already edited these fields
           setBdConfig(prev => ({
             ...prev,
-            whyOverrides: data.why ?? [],
-            stepsOverrides: data.integrationSteps ?? [],
+            whyOverrides: prev.whyOverrides.length > 0 ? prev.whyOverrides : (data.why ?? []),
+            stepsOverrides: prev.stepsOverrides.length > 0 ? prev.stepsOverrides : (data.integrationSteps ?? []),
             timeline: prev.timeline || data.timeline || '',
-            chains: prev.chains || (data.chains ?? []).join(', '),
+          chains: prev.chains || (data.chains ?? []).join(', '),
           }));
         }
       }
     } catch {
-      // silently fail — hardcoded content still shows
+      // silently fall back to hardcoded content
     } finally {
       setIsLoading(false);
     }
@@ -238,13 +266,6 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
               integrate with SODAX.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-2 gap-y-1">
-              {bdConfig.tier && (
-                <span
-                  className={`inline-flex items-center h-6 px-3 rounded-full text-[11px] font-medium ${TIER_BADGE_CLASS[bdConfig.tier]}`}
-                >
-                  {TIER_LABELS[bdConfig.tier]}
-                </span>
-              )}
               {displayTimeline && (
                 <span className="font-normal text-[13px] text-clay">
                   {bdConfig.timeline.trim() ? displayTimeline : `Typical integration: ${displayTimeline}`}
@@ -294,7 +315,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
                 disabled={!protocolName.trim() || isLoading}
                 className="bg-yellow-soda text-espresso font-['Shrikhand'] text-[14px] leading-[1.4] h-12 min-h-12 sm:h-11 sm:min-h-11 px-6 py-3 sm:py-2 rounded-full shrink-0 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer enabled:hover:opacity-90"
               >
-                {isLoading ? 'generating...' : 'generate roadmap'}
+                {isLoading ? 'loading...' : 'generate roadmap'}
               </button>
             </motion.div>
 
@@ -365,13 +386,6 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
                   integrate with SODAX.
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-2 gap-y-1">
-                  {bdConfig.tier && (
-                    <span
-                      className={`inline-flex items-center h-6 px-3 rounded-full text-[11px] font-medium ${TIER_BADGE_CLASS[bdConfig.tier]}`}
-                    >
-                      {TIER_LABELS[bdConfig.tier]}
-                    </span>
-                  )}
                   {displayTimeline && (
                     <span className="font-normal text-[13px] text-clay">
                       {bdConfig.timeline.trim() ? displayTimeline : `Typical integration: ${displayTimeline}`}
@@ -406,6 +420,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
               printDate={printDate}
               signature={signature}
               fromFirstName={fromFirstName}
+              readOnly={isProspectView}
             />
           </motion.div>
         )}

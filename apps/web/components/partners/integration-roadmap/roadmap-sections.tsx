@@ -14,15 +14,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import type { BdConfig, CategoryId, RoadmapCategory } from './types';
-import {
-  ALL_CASE_STUDIES,
-  CASE_STUDY_BY_CATEGORY,
-  CATEGORIES,
-  SDK_LAYERS,
-  SUPPORTED_NETWORKS_LIST,
-  TIER_BADGE_CLASS,
-  TIER_LABELS,
-} from './constants';
+import { ALL_CASE_STUDIES, CASE_STUDY_BY_CATEGORY, CATEGORIES, SDK_LAYERS, SUPPORTED_NETWORKS_LIST } from './constants';
 import { slugifyProtocol } from './slug';
 import { getProtocolDisplayLabel } from './utils';
 import { QuickStartInstall } from './quick-start-install';
@@ -44,6 +36,7 @@ export interface RoadmapSectionsProps {
   printDate: string | null;
   signature: string;
   fromFirstName: string;
+  readOnly: boolean;
 }
 
 export function RoadmapSections({
@@ -61,6 +54,7 @@ export function RoadmapSections({
   printDate,
   signature,
   fromFirstName,
+  readOnly = false,
 }: RoadmapSectionsProps): React.JSX.Element {
   const displayLabel = getProtocolDisplayLabel(roadmap.protocolDisplay, roadmap.category);
 
@@ -82,13 +76,6 @@ export function RoadmapSections({
       <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
         <div className="flex items-center gap-3 flex-wrap">
           <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Partner category</h2>
-          {bdConfig.tier && (
-            <span
-              className={`inline-flex items-center h-6 px-3 rounded-full text-[11px] font-medium ${TIER_BADGE_CLASS[bdConfig.tier]}`}
-            >
-              {TIER_LABELS[bdConfig.tier]}
-            </span>
-          )}
         </div>
         <div className="flex gap-3 items-start">
           {(() => {
@@ -116,36 +103,38 @@ export function RoadmapSections({
             })()}
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 mt-2">
-          <span className="font-normal text-[13px] leading-[1.4] text-clay-dark">
-            Not the right fit? Choose category:
-          </span>
-          <Select
-            value={roadmap.category.id}
-            onValueChange={(id: CategoryId) => {
-              const cat = CATEGORIES.find(c => c.id === id);
-              if (cat) setRoadmap({ ...roadmap, category: cat, matched: true });
-            }}
-          >
-            <SelectTrigger
-              aria-label="Choose partner category"
-              className="w-auto min-w-44 h-8 font-normal text-[13px] text-espresso bg-white border border-cherry-grey rounded-lg px-3 focus:ring-2 focus:ring-cherry-soda/30 focus:border-cherry-soda data-[slot=select-trigger]"
+        {!readOnly && (
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            <span className="font-normal text-[13px] leading-[1.4] text-clay-dark">
+              Not the right fit? Choose category:
+            </span>
+            <Select
+              value={roadmap.category.id}
+              onValueChange={(id: CategoryId) => {
+                const cat = CATEGORIES.find(c => c.id === id);
+                if (cat) setRoadmap({ ...roadmap, category: cat, matched: true });
+              }}
             >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="border-cherry-grey/30 bg-white">
-              {CATEGORIES.map(c => (
-                <SelectItem
-                  key={c.id}
-                  value={c.id}
-                  className="text-[13px] text-espresso focus:bg-cherry-soda/10 focus:text-espresso data-highlighted:bg-cherry-soda/10"
-                >
-                  {c.title}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+              <SelectTrigger
+                aria-label="Choose partner category"
+                className="w-auto min-w-44 h-8 font-normal text-[13px] text-espresso bg-white border border-cherry-grey rounded-lg px-3 focus:ring-2 focus:ring-cherry-soda/30 focus:border-cherry-soda data-[slot=select-trigger]"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="border-cherry-grey/30 bg-white">
+                {CATEGORIES.map(c => (
+                  <SelectItem
+                    key={c.id}
+                    value={c.id}
+                    className="text-[13px] text-espresso focus:bg-cherry-soda/10 focus:text-espresso data-highlighted:bg-cherry-soda/10"
+                  >
+                    {c.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       <QuickStartInstall />
@@ -203,18 +192,6 @@ export function RoadmapSections({
           Partners share in revenue on routed volume. Fee structure and payouts are transparent; we align incentives so
           your integration drives value for both sides.
         </p>
-        {bdConfig.tier === 'strategic' && (
-          <p className="font-medium text-[13px] leading-normal text-cherry-soda">
-            Strategic partners receive priority support, co-marketing opportunities, and enhanced revenue share. Get in
-            touch to discuss terms tailored to your protocol.
-          </p>
-        )}
-        {bdConfig.tier === 'standard' && (
-          <p className="font-medium text-[13px] leading-normal text-cherry-soda">
-            Standard partners get access to dedicated integration support and a transparent revenue share on routed
-            volume.
-          </p>
-        )}
         <a
           href={`mailto:partnerships@sodax.com?subject=${encodeURIComponent(`Partnership inquiry - Economics & integration${currentProtocol ? ` - ${currentProtocol}` : ''}`)}`}
           className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"

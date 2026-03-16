@@ -4,7 +4,7 @@
 
 import type { Icon } from '@phosphor-icons/react';
 
-// ─── Category / Tier ─────────────────────────────────────────────────────────
+// ─── Category ────────────────────────────────────────────────────────────────
 
 export type CategoryId =
   | 'wallets'
@@ -13,8 +13,6 @@ export type CategoryId =
   | 'perp-yield'
   | 'new-networks'
   | 'solver-marketplaces';
-
-export type PartnershipTier = '' | 'basic' | 'standard' | 'strategic';
 
 // ─── Data shapes ─────────────────────────────────────────────────────────────
 
@@ -52,7 +50,6 @@ export interface BdConfig {
   fromSuffix: string;
   /** Free-text personal note shown at the top of the prospect's roadmap. */
   note: string;
-  tier: PartnershipTier;
   /** Optional timeline override (e.g. "1–2 weeks (agreed in call)"). */
   timeline: string;
   /** Single extra "Why SODAX" bullet appended to the default list. */

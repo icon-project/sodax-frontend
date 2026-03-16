@@ -71,7 +71,6 @@ export interface NotionRoadmapData {
   chains: string[];
   blockers: string[];
   nextSteps: string;
-  tier: string;
   timeline: string;
 }
 

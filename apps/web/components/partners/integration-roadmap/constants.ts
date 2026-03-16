@@ -4,11 +4,8 @@
 // module to keep tree-shaking effective.
 
 import { WalletIcon, ArrowsLeftRightIcon, VaultIcon, TrendUpIcon, GlobeIcon, PathIcon } from '@phosphor-icons/react';
-import {
-  DOCUMENTATION_ROUTE,
-  PARTNERS_ROUTE,
-} from '@/constants/routes';
-import type { BdConfig, CategoryId, PartnershipTier, ProtocolOverride, RoadmapCategory, SdkLayer } from './types';
+import { DOCUMENTATION_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
+import type { BdConfig, CategoryId, ProtocolOverride, RoadmapCategory, SdkLayer } from './types';
 
 // ─── BD defaults ─────────────────────────────────────────────────────────────
 
@@ -18,29 +15,11 @@ export const EMPTY_BD_CONFIG: BdConfig = {
   fromName: '',
   fromSuffix: DEFAULT_FROM_SUFFIX,
   note: '',
-  tier: '',
   timeline: '',
   customWhy: '',
   chains: '',
   whyOverrides: [],
   stepsOverrides: [],
-};
-
-// ─── Tier display ─────────────────────────────────────────────────────────────
-
-export const TIER_LABELS: Record<PartnershipTier, string> = {
-  '': '',
-  basic: 'Basic Integration',
-  standard: 'Standard Partnership',
-  strategic: 'Strategic Partnership',
-};
-
-// Brand: Espresso or creams in business development; no blue/indigo (Bible 4.2).
-export const TIER_BADGE_CLASS: Record<PartnershipTier, string> = {
-  '': '',
-  basic: 'bg-cream-white text-clay-dark border border-clay-light',
-  standard: 'bg-cherry-brighter/30 text-espresso border border-cherry-grey',
-  strategic: 'bg-cherry-soda/10 text-cherry-soda border border-cherry-soda/30',
 };
 
 // ─── Partner categories ───────────────────────────────────────────────────────

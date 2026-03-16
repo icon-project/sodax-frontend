@@ -1,4 +1,4 @@
-// BD-only panel: personalize prospect link (name, note, tier, timeline, customize bullets/steps), copy prospect/BD links.
+// BD-only panel: personalize prospect link (name, note, timeline, customize bullets/steps), copy prospect/BD links.
 
 'use client';
 
@@ -7,9 +7,8 @@ import { Check, ChevronDown, ChevronUp, Eye, Save, Settings2 } from 'lucide-reac
 import { INTEGRATION_ROADMAP_BD_ROUTE, INTEGRATION_ROADMAP_ROUTE } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import type { BdConfig, CategoryId, PartnershipTier } from './types';
+import type { BdConfig, CategoryId } from './types';
 import { DEFAULT_FROM_SUFFIX } from './constants';
 import { loadDraftFromStorage, saveDraftToStorage } from './draft-storage';
 import { slugifyProtocol } from './slug';
@@ -52,7 +51,6 @@ export function BdComposer({
     if (bdConfig.fromName) params.set('from', bdConfig.fromName);
     if (bdConfig.fromSuffix.trim()) params.set('suffix', bdConfig.fromSuffix.trim());
     if (bdConfig.note) params.set('note', bdConfig.note);
-    if (bdConfig.tier) params.set('tier', bdConfig.tier);
     if (bdConfig.timeline) params.set('tl', bdConfig.timeline);
     if (bdConfig.customWhy) params.set('why', bdConfig.customWhy);
     if (bdConfig.chains) params.set('chains', bdConfig.chains);
@@ -114,7 +112,7 @@ export function BdComposer({
             {(
               [
                 ['1', 'Type partner name', 'Use the field above (e.g. Kraken).'],
-                ['2', 'Optional: personalise', 'Add your name, note, tier, timeline, and chains for your BD link.'],
+                ['2', 'Optional: personalise', 'Add your name, note, timeline, and chains for your BD link.'],
                 ['3', 'Copy links', 'Send the prospect link to the client. Keep the BD link for yourself.'],
               ] as [string, string, string][]
             ).map(([n, title, desc]) => (
@@ -133,9 +131,9 @@ export function BdComposer({
           <div className="rounded-2xl bg-cherry-dark/5 border border-cherry-dark/10 px-4 py-3">
             <p className="font-normal text-[12px] leading-[1.45] text-cherry-dark/90">
               <strong className="font-semibold text-cherry-dark">Tip:</strong> If you ran the BD Scope Assessment skill
-              on the partner&apos;s Notion card, paste the timeline and set the tier here so the prospect link matches
-              your internal assessment. Then send this page — partners see their technical requirements instead of a
-              generic docs link.
+              on the partner&apos;s Notion card, paste the timeline here so the prospect link matches your internal
+              assessment. Then send this page — partners see their technical requirements instead of a generic docs
+              link.
             </p>
           </div>
 
@@ -166,38 +164,6 @@ export function BdComposer({
                   className="h-9 rounded-xl border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus-visible:ring-yellow-soda/50 focus-visible:border-yellow-soda"
                 />
               </label>
-
-            <div className="flex flex-col gap-1">
-              <span className="font-medium text-[12px] text-cherry-dark" id="bd-tier-label">
-                Partnership tier
-              </span>
-              <Select
-                value={bdConfig.tier || '_none'}
-                onValueChange={(v: string) => onChange({ ...bdConfig, tier: (v === '_none' ? '' : v) as PartnershipTier })}
-              >
-                <SelectTrigger
-                  id="bd-tier"
-                  aria-labelledby="bd-tier-label"
-                  className="h-9 rounded-xl border-yellow-soda/60 bg-white text-[13px] text-espresso focus:ring-2 focus:ring-yellow-soda/50 focus:border-yellow-soda data-[slot=select-trigger]"
-                >
-                  <SelectValue placeholder="Not specified" />
-                </SelectTrigger>
-                <SelectContent className="border-cherry-grey/30 bg-white">
-                  <SelectItem value="_none" className="text-[13px] text-espresso data-highlighted:bg-cherry-soda/10">
-                    Not specified
-                  </SelectItem>
-                  <SelectItem value="basic" className="text-[13px] text-espresso data-highlighted:bg-cherry-soda/10">
-                    Basic Integration
-                  </SelectItem>
-                  <SelectItem value="standard" className="text-[13px] text-espresso data-highlighted:bg-cherry-soda/10">
-                    Standard Partnership
-                  </SelectItem>
-                  <SelectItem value="strategic" className="text-[13px] text-espresso data-highlighted:bg-cherry-soda/10">
-                    Strategic Partnership
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
             <label className="flex flex-col gap-1" htmlFor="bd-timeline">
               <span className="font-medium text-[12px] text-cherry-dark">Timeline override</span>

@@ -1,7 +1,7 @@
 // apps/web/components/partners/integration-roadmap/draft-storage.ts
 // Persist BD Composer options to localStorage so they can be restored after reload or when opening the BD page with no URL params.
 
-import type { BdConfig, PartnershipTier } from './types';
+import type { BdConfig } from './types';
 import { DEFAULT_FROM_SUFFIX } from './constants';
 
 export const BD_DRAFT_STORAGE_KEY = 'sodax-bd-composer-draft';
@@ -18,9 +18,6 @@ export function loadDraftFromStorage(): BdConfig | null {
       fromName: typeof o.fromName === 'string' ? o.fromName : '',
       fromSuffix: typeof o.fromSuffix === 'string' ? o.fromSuffix : DEFAULT_FROM_SUFFIX,
       note: typeof o.note === 'string' ? o.note : '',
-      tier: (['', 'basic', 'standard', 'strategic'] as const).includes(o.tier as PartnershipTier)
-        ? (o.tier as PartnershipTier)
-        : '',
       timeline: typeof o.timeline === 'string' ? o.timeline : '',
       customWhy: typeof o.customWhy === 'string' ? o.customWhy : '',
       chains: typeof o.chains === 'string' ? o.chains : '',
