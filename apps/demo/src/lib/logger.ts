@@ -11,9 +11,9 @@ export const logger = {
     }
   },
 
-  warn(message: string, error?: unknown): void {
-    if (error !== undefined) {
-      console.warn(`${PREFIX} ${message}`, error);
+  warn(message: string, detail?: unknown): void {
+    if (detail !== undefined) {
+      console.warn(`${PREFIX} ${message}`, detail);
     } else {
       console.warn(`${PREFIX} ${message}`);
     }

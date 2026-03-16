@@ -87,8 +87,6 @@ export function ActionSuccessContent({ action, data, onClose }: ActionSuccessCon
     }
   };
 
-  const amountNumber = Number(data.amount);
-
   return (
     <div className="flex flex-col gap-3 py-2">
       <DialogHeader className="pb-2">

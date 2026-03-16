@@ -48,17 +48,27 @@ export function formatTokenAmount(amount: number | string | bigint, decimals: nu
  * returns a "< threshold" hint instead so the user knows the value is small but non-zero.
  */
 export function formatDecimalForDisplay(value: string, maxDecimals: number): string {
-  if (value === '0') return '0';
-  const [intPart, fracPart = ''] = value.split('.');
+  const trimmedInput = value.trim();
+  // Reject empty or non-numeric input
+  if (trimmedInput === '') return '0';
+  const num = Number.parseFloat(trimmedInput);
+  if (!Number.isFinite(num)) return '0';
+  if (trimmedInput === '0') return '0';
+  // Use trimmedInput (not value) so spaces and edge cases are handled consistently.
+  const [intPart, fracPart = ''] = trimmedInput.split('.');
   const truncated = fracPart.slice(0, maxDecimals);
   const combined = truncated.length > 0 ? `${intPart}.${truncated}` : intPart;
   const trimmed = combined.replace(/\.?0+$/, '');
 
-  if (trimmed === '0' && Number.parseFloat(value) > 0) {
+  // Tiny positive value that truncates to "0" → show "<0.00...1" so user sees it's non-zero.
+  if (trimmed === '0' && num > 0) {
     const threshold = `0.${'0'.repeat(Math.max(0, maxDecimals - 1))}1`;
     return `<${threshold}`;
   }
 
+  if (trimmed === '-0' || (trimmed.startsWith('-0.') && /^-0\.?0*$/.test(trimmed))) {
+    return '0';
+  }
   return trimmed;
 }
 
@@ -229,7 +239,7 @@ export function getMmErrorText(error: unknown): string {
   if (typeof error === 'string') return error;
   if (error && typeof error === 'object') {
     const o = error as { message?: string; code?: string; data?: { payload?: string; error?: unknown } };
-    
+
     // Handle relay timeout errors with a user-friendly message
     if (o.code === 'RELAY_TIMEOUT') {
       const txHash = o.data?.payload;
@@ -238,7 +248,7 @@ export function getMmErrorText(error: unknown): string {
       }
       return 'Transaction timed out while waiting for relay. The transaction may still be processing. Please check the transaction status on the explorer.';
     }
-    
+
     // Handle submit tx failed errors
     if (o.code === 'SUBMIT_TX_FAILED') {
       return 'Failed to submit transaction to relay. Please try again.';
@@ -258,7 +268,7 @@ export function getMmErrorText(error: unknown): string {
     if (o.code === 'REPAY_UNKNOWN_ERROR') {
       return 'Repay failed. Please try again. If the problem persists, check your balance and allowance.';
     }
-    
+
     const part = o.message ?? o.code;
     if (typeof part === 'string') return part;
   }
@@ -272,12 +282,12 @@ export function getMmErrorText(error: unknown): string {
 export function getNativeTokenSymbol(chainId: ChainId): string {
   const config = spokeChainConfig[chainId as SpokeChainId];
   if (!config) return 'native token';
-  
+
   // Find the token with address matching nativeToken (0x0000... for EVM chains)
   const nativeTokenAddress = config.nativeToken;
   const nativeToken = Object.values(config.supportedTokens).find(
-    token => token.address.toLowerCase() === nativeTokenAddress.toLowerCase()
+    token => token.address.toLowerCase() === nativeTokenAddress.toLowerCase(),
   );
-  
+
   return nativeToken?.symbol ?? 'native token';
 }

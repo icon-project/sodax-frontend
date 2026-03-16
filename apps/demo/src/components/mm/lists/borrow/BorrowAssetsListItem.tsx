@@ -127,12 +127,10 @@ export function BorrowAssetsListItem({
 
   const debtNum = Number.parseFloat(debtExact);
   // Always display debt with 4 decimals, but show "0" when debt is zero or rounds to zero
-  const formattedDebt = Number.isNaN(debtNum) ? '0' : Number(debtExact).toFixed(4);
   const debtDisplay = Number.isNaN(debtNum) ? '0' : formatDecimalForDisplay(debtExact, 4);
   // Check if user has meaningful debt: must have actual debt amount > 0
   // Check if debt, when formatted to 4 decimals (same as display), is greater than 0
   // This prevents enabling repay button when debt displays as "0.0000"
-  const debtDisplayNum = Number.parseFloat(debtDisplay);
   const hasDebt =
     metrics.userReserve && metrics.userReserve.scaledVariableDebt > 0n && Number.isFinite(debtNum) && debtNum > 0;
 
@@ -197,10 +195,10 @@ export function BorrowAssetsListItem({
             onClick={() => {
               // Prevent opening modal if there's no debt
               if (!hasDebt) return;
-              // Format debt to 6 decimals to avoid floating point precision issues
+              // Repay amount must be a parseable number string (e.g. "0.0001"), not a display string.
+              // parseFloat/parseUnits when building the tx. Use toFixed(4) so the value stays numeric.
               const debtNum = Number.parseFloat(debtExact);
-              const maxDebtToRepay =
-                Number.isNaN(debtNum) || debtNum === 0 ? debtExact : formatDecimalForDisplay(debtExact, 6);
+              const maxDebtToRepay = Number.isNaN(debtNum) ? '0' : debtNum.toFixed(4);
               onRepayClick(token, maxDebtToRepay);
             }}
             disabled={!hasDebt}
