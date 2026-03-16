@@ -1,7 +1,19 @@
 import { networkFrom, type StacksNetwork } from '@stacks/network';
-import { Cl, fetchCallReadOnlyFunction, serializeCV, type ClarityValue } from '@stacks/transactions';
+import {
+  Cl,
+  fetchCallReadOnlyFunction,
+  PostConditionMode,
+  serializeCV,
+  type ClarityValue,
+  type PostConditionModeName,
+} from '@stacks/transactions';
 import { request } from '@stacks/connect';
 import type { Hex, IStacksWalletProvider, StacksTransactionParams } from '@sodax/types';
+
+function toPostConditionModeName(mode?: PostConditionMode): PostConditionModeName | undefined {
+  if (mode === undefined) return undefined;
+  return mode === PostConditionMode.Allow ? 'allow' : 'deny';
+}
 
 export class StacksBrowserWalletProvider implements IStacksWalletProvider {
   private address: string;
@@ -22,6 +34,8 @@ export class StacksBrowserWalletProvider implements IStacksWalletProvider {
       functionName: txParams.functionName,
       functionArgs: txParams.functionArgs,
       network: this.networkName,
+      postConditions: txParams.postConditions,
+      postConditionMode: toPostConditionModeName(txParams.postConditionMode),
     });
 
     if (!result.txid) {

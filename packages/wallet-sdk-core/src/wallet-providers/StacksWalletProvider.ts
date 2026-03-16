@@ -30,6 +30,7 @@ export class StacksWalletProvider implements IStacksWalletProvider {
         senderKey: this.privateKey,
         network: this.network,
         postConditionMode: txParams.postConditionMode,
+        postConditions: txParams.postConditions,
       });
 
       const result = await broadcastTransaction({

@@ -1,4 +1,4 @@
-import type { ClarityValue, PostConditionMode } from '@stacks/transactions';
+import type { ClarityValue, PostCondition, PostConditionMode } from '@stacks/transactions';
 import type { WalletAddressProvider } from '../common/index.js';
 
 export type StacksTransactionParams = {
@@ -7,6 +7,7 @@ export type StacksTransactionParams = {
   functionName: string;
   functionArgs: ClarityValue[];
   postConditionMode?: PostConditionMode;
+  postConditions?: PostCondition[];
 };
 
 export interface IStacksWalletProvider extends WalletAddressProvider {
