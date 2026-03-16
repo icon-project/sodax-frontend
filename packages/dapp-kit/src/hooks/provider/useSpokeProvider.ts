@@ -20,8 +20,11 @@ import {
   type SonicSpokeChainConfig,
   NearSpokeProvider,
   type NearSpokeChainConfig,
+  AleoSpokeProvider,
+  type AleoSpokeChainConfig,
 } from '@sodax/sdk';
 import type {
+  IAleoWalletProvider,
   IEvmWalletProvider,
   IIconWalletProvider,
   ISuiWalletProvider,
@@ -127,6 +130,13 @@ export function useSpokeProvider(
       return new NearSpokeProvider(
         walletProvider as INearWalletProvider,
         spokeChainConfig[spokeChainId] as NearSpokeChainConfig,
+      );
+    }
+
+    if (xChainType === 'ALEO') {
+      return new AleoSpokeProvider(
+        spokeChainConfig[spokeChainId] as AleoSpokeChainConfig,
+        walletProvider as IAleoWalletProvider,
       );
     }
 

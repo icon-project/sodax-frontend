@@ -55,6 +55,7 @@
     "@sodax/types": "workspace:*",
     "@solana/spl-token": "catalog:",
     "@solana/web3.js": "catalog:",
+    "@provablehq/sdk": "catalog:",
     "@stellar/stellar-sdk": "catalog:",
     "bn.js": "^5.2.1",
     "icon-sdk-js": "catalog:",
