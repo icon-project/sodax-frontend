@@ -2,8 +2,8 @@ import type React from 'react';
 import Image from 'next/image';
 import { Info } from 'lucide-react';
 import { useStakeState, useStakeActions } from '../_stores/stake-store-provider';
-import { formatTokenAmount } from '@/lib/utils';
-import { STAKING_APR, STAKING_NOW_HOLDERS, STAKING_TOTAL_STAKED } from './constants';
+import { formatCompactNumber, formatTokenAmount } from '@/lib/utils';
+import { STAKING_APR, STAKING_NOW_HOLDERS } from './constants';
 import LoadingThreeDotsJumping from '@/components/shared/loading-three-dots-jumping';
 import { useStakingConfig } from '@sodax/dapp-kit';
 import { UnstakeModeToggle } from './unstake-mode-toggle';
@@ -11,8 +11,15 @@ import { STAKE_MODE } from '../_stores/stake-store';
 import { Loader2 } from 'lucide-react';
 
 export function StakeStatsCard(): React.JSX.Element {
-  const { totalUserXSodaBalance, totalUserXSodaValue, userXSodaBalance, stakeMode, isLoadingBalanceCalculation } =
-    useStakeState();
+  const {
+    totalUserXSodaBalance,
+    totalUserXSodaValue,
+    userXSodaBalance,
+    stakeMode,
+    isLoadingBalanceCalculation,
+    stakingInfo,
+  } = useStakeState();
+
   const { setStakeMode } = useStakeActions();
   const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
   // Keep the unstaking period UI stable while config is loading or missing.
@@ -63,8 +70,7 @@ export function StakeStatsCard(): React.JSX.Element {
             <Info className="w-4 h-4 text-clay-light" />
           </div>
           <div className="justify-center text-clay text-(length:--body-small) font-normal leading-4">
-            {/* {formatTokenAmount(stakingInfo?.totalStaked || 0n, 18)} total staked */}
-            {STAKING_TOTAL_STAKED}
+            {formatCompactNumber(formatTokenAmount(stakingInfo?.totalStaked || 0n, 18))} total staked
           </div>
         </div>
       </div>
