@@ -3,7 +3,7 @@ import 'dotenv/config';
 
 import * as bitcoin from 'bitcoinjs-lib';
 import { ECPairFactory } from 'ecpair';
-import * as ecc from 'tiny-secp256k1';
+import * as ecc from '@bitcoinerlab/secp256k1';
 import { randomBytes } from 'node:crypto';
 import { Signer } from 'bip322-js';
 

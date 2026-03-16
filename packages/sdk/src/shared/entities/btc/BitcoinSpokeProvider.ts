@@ -11,7 +11,7 @@ import type { IRawSpokeProvider, ISpokeProvider } from '../Providers.js';
 import type { BitcoinSpokeProviderType, TxReturnType } from '../../types.js';
 import { isBitcoinRawSpokeProvider } from '../../guards.js';
 
-import * as ecc from 'tiny-secp256k1';
+import * as ecc from '@bitcoinerlab/secp256k1';
 import { RadfiProvider, type RadfiConfig } from './RadfiProvider.js';
 import { keccak256, type Hex } from 'viem';
 

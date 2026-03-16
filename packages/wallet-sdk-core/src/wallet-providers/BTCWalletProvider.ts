@@ -1,7 +1,7 @@
 import type { AddressType, Hex, IBitcoinWalletProvider } from '@sodax/types';
 import * as bitcoin from 'bitcoinjs-lib';
 import type { ECPairInterface } from 'ecpair';
-import * as ecc from 'tiny-secp256k1';
+import * as ecc from '@bitcoinerlab/secp256k1';
 import { ECPairFactory } from 'ecpair';
 import { keccak256 } from 'viem';
 import secp256k1 from 'secp256k1';

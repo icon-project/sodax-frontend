@@ -6,8 +6,6 @@ import { nodePolyfills } from '@bangjelkoski/vite-plugin-node-polyfills';
 import tailwindcss from '@tailwindcss/vite';
 import svgr from 'vite-plugin-svgr';
 import viteTsconfigPaths from 'vite-tsconfig-paths';
-import wasm from 'vite-plugin-wasm';
-import topLevelAwait from 'vite-plugin-top-level-await';
 
 export default defineConfig(({ command, mode }: ConfigEnv) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -16,8 +14,6 @@ export default defineConfig(({ command, mode }: ConfigEnv) => {
     // depending on your application, base can also be "/"
     base: '/',
     plugins: [
-      wasm(),
-      topLevelAwait(),
       tailwindcss(),
       svgr({
         include: '**/*.svg',
