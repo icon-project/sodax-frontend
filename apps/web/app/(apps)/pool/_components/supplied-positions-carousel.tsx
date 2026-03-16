@@ -13,6 +13,9 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Item, ItemContent, ItemMedia } from '@/components/ui/item';
 import { Skeleton } from '@/components/ui/skeleton';
+import { motion } from 'motion/react';
+import { CircleEllipsisIcon } from 'lucide-react';
+import { ManagePositionDialog } from './manage-dialog';
 
 type SuppliedPositionsCarouselProps = {
   positions: SuppliedPositionItem[];
@@ -59,6 +62,8 @@ function PositionCard({
   onLiquidityValueChange,
 }: PositionCardProps): React.JSX.Element {
   const { data, isLoading, isError, error } = usePositionInfo({ tokenId, poolKey });
+  const [isHovered, setIsHovered] = useState<boolean>(false);
+  const [isManageDialogOpen, setIsManageDialogOpen] = useState<boolean>(false);
   const positionKey = `${chainId}-${tokenId}`;
   useEffect((): void => {
     if (isLoading || isError || !data?.isValid) {
@@ -117,80 +122,124 @@ function PositionCard({
   const totalFeeAmount = Number.parseFloat(fees0 || '0') + Number.parseFloat(fees1 || '0');
   const totalFeeText = `+${totalFeeAmount.toFixed(4)}`;
   const isInRange = positionInfo.liquidity > 0n;
+  const minPrice = positionInfo.tickLowerPrice.toSignificant(6);
+  const maxPrice = positionInfo.tickUpperPrice.toSignificant(6);
 
   return (
-    <div className="w-80 min-h-42 px-6 py-6 bg-almost-white mix-blend-multiply rounded-2xl inline-flex flex-col justify-center items-center gap-4">
-      <Item className="self-stretch p-0 gap-3 border-none">
-        <ItemMedia className="w-14 h-14 relative">
-          <div data-property-1="Pair" className="w-14 h-14 relative">
-            <div className="w-14 h-1.5 left-0 top-[50px] absolute opacity-20 bg-[radial-gradient(ellipse_50.00%_50.00%_at_50.00%_50.00%,var(--Espresso,#483534)_0%,rgba(71.72,53.14,52.29,0)_100%)] rounded-full" />
-            <div className="w-9 h-1 left-[10px] top-[51px] absolute opacity-20 bg-[radial-gradient(ellipse_50.00%_50.00%_at_50.00%_50.00%,var(--Espresso,#483534)_0%,rgba(71.72,53.14,52.29,0)_100%)] rounded-full" />
-            <Image
-              className="w-9 h-14 left-[9px] top-0 absolute aspect-27/40"
-              src={'/can1.png'}
-              alt={'can'}
-              width={38}
-              height={56}
+    <div
+      className="w-80 min-h-42 px-6 py-6 bg-almost-white mix-blend-multiply rounded-2xl inline-flex flex-col justify-center items-center gap-4 relative overflow-hidden"
+      onMouseEnter={(): void => setIsHovered(true)}
+      onMouseLeave={(): void => setIsHovered(false)}
+    >
+      <motion.div
+        className="w-full flex flex-col gap-4"
+        animate={{ y: isHovered ? 0 : 20 }}
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+      >
+        <Item className="self-stretch p-0 gap-3 border-none">
+          <ItemMedia className="w-14 h-14 relative">
+            <div data-property-1="Pair" className="w-14 h-14 relative">
+              <div className="w-14 h-1.5 left-0 top-[50px] absolute opacity-20 bg-[radial-gradient(ellipse_50.00%_50.00%_at_50.00%_50.00%,var(--Espresso,#483534)_0%,rgba(71.72,53.14,52.29,0)_100%)] rounded-full" />
+              <div className="w-9 h-1 left-[10px] top-[51px] absolute opacity-20 bg-[radial-gradient(ellipse_50.00%_50.00%_at_50.00%_50.00%,var(--Espresso,#483534)_0%,rgba(71.72,53.14,52.29,0)_100%)] rounded-full" />
+              <Image
+                className="w-9 h-14 left-[9px] top-0 absolute aspect-27/40"
+                src={'/can1.png'}
+                alt={'can'}
+                width={38}
+                height={56}
+              />
+              <div className="w-4 h-5 left-[12.33px] top-[14px] absolute overflow-hidden">
+                <Image
+                  data-property-1="SODA"
+                  className="w-5 h-5 left-[-3px] top-0 absolute mix-blend-multiply rounded-[320px]"
+                  src={'/coin/soda.png'}
+                  alt={'soda'}
+                  width={20}
+                  height={20}
+                />
+              </div>
+              <div className="w-5 h-5 left-5 top-[14px] absolute overflow-hidden outline-2 outline-almost-white rounded-full">
+                <Image
+                  data-property-1="xSODA"
+                  className="w-5 h-5 left-0 top-0 absolute mix-blend-multiply rounded-[320px]"
+                  src={'/coin/xsoda.png'}
+                  alt={'xsoda'}
+                  width={20}
+                  height={20}
+                />
+              </div>
+            </div>
+            <div className="h-4 min-w-4 left-[36px] top-[36px] absolute bg-white rounded shadow-[-2px_0px_8px_0px_rgba(175,145,145,0.40)] outline-2 outline-white inline-flex flex-col justify-center items-center overflow-hidden">
+              <Image className="w-4 h-4" src={`/chain/${spokeChainId}.png`} alt={'chain icon'} width={16} height={16} />
+            </div>
+          </ItemMedia>
+          <ItemContent className="gap-1">
+            <div className="self-stretch inline-flex justify-between items-center">
+              <div className="flex justify-start items-center gap-1">
+                <div className="text-espresso text-(length:--body-super-comfortable) leading-5 font-['InterBold']">
+                  {positionValueText}
+                </div>
+              </div>
+              <div className="flex justify-center items-center gap-1">
+                <div className="text-espresso text-(length:--body-small) font-normal leading-4 font-['InterRegular']">
+                  {totalFeeText}
+                </div>
+              </div>
+            </div>
+            <div className="self-stretch h-4 inline-flex justify-between items-center">
+              <div className="flex justify-start items-center gap-1.5">
+                <div className="text-clay text-(length:--body-small) font-normal leading-4 font-['InterRegular']">
+                  {isInRange ? 'In range' : 'Out of range'}
+                </div>
+                <div className={`w-2 h-2 rounded-full ${isInRange ? 'bg-green-500' : 'bg-cherry-bright'}`} />
+              </div>
+              <Badge className="h-4 min-w-[70px] mix-blend-multiply text-white bg-linear-to-br from-cherry-bright to-cherry-brighter px-2">
+                <span className="text-(length:--body-fine-print) font-['InterBold'] mt-px">11.48% APY</span>
+              </Badge>
+            </div>
+          </ItemContent>
+        </Item>
+        <div className="w-full h-1 relative pl-16">
+          <div className="w-full h-1 bg-[#eee7e7] rounded-[40px]">
+            <div
+              className="w-1 h-2 top-[-3px] absolute bg-espresso rounded-[256px]"
+              style={{ left: 'calc(50% - 2px)' }}
             />
-            <div className="w-4 h-5 left-[12.33px] top-[14px] absolute overflow-hidden">
-              <Image
-                data-property-1="SODA"
-                className="w-5 h-5 left-[-3px] top-0 absolute mix-blend-multiply rounded-[320px]"
-                src={'/coin/soda.png'}
-                alt={'soda'}
-                width={20}
-                height={20}
-              />
-            </div>
-            <div className="w-5 h-5 left-5 top-[14px] absolute overflow-hidden outline-2 outline-almost-white rounded-full">
-              <Image
-                data-property-1="xSODA"
-                className="w-5 h-5 left-0 top-0 absolute mix-blend-multiply rounded-[320px]"
-                src={'/coin/xsoda.png'}
-                alt={'xsoda'}
-                width={20}
-                height={20}
-              />
-            </div>
           </div>
-          <div className="h-4 min-w-4 left-[36px] top-[36px] absolute bg-white rounded shadow-[-2px_0px_8px_0px_rgba(175,145,145,0.40)] outline-2 outline-white inline-flex flex-col justify-center items-center overflow-hidden">
-            <Image className="w-4 h-4" src={`/chain/${spokeChainId}.png`} alt={'chain icon'} width={16} height={16} />
-          </div>
-        </ItemMedia>
-        <ItemContent className="gap-1">
-          <div className="self-stretch inline-flex justify-between items-center">
-            <div className="flex justify-start items-center gap-1">
-              <div className="text-espresso text-(length:--body-super-comfortable) leading-5 font-['InterBold']">
-                {positionValueText}
-              </div>
-            </div>
-            <div className="flex justify-center items-center gap-1">
-              <div className="text-espresso text-(length:--body-small) font-normal leading-4 font-['InterRegular']">
-                {totalFeeText}
-              </div>
-            </div>
-          </div>
-          <div className="self-stretch h-4 inline-flex justify-between items-center">
-            <div className="flex justify-start items-center gap-1.5">
-              <div className="text-clay text-(length:--body-small) font-normal leading-4 font-['InterRegular']">
-                {isInRange ? 'In range' : 'Out of range'}
-              </div>
-              <div className={`w-2 h-2 rounded-full ${isInRange ? 'bg-green-500' : 'bg-cherry-bright'}`} />
-            </div>
-            <Badge className="h-4 min-w-[70px] mix-blend-multiply text-white bg-linear-to-br from-cherry-bright to-cherry-brighter px-2">
-              <span className="text-(length:--body-fine-print) font-['InterBold'] mt-px">11.48% APY</span>
-            </Badge>
-          </div>
-        </ItemContent>
-      </Item>
-      <div className="w-full h-1 relative pl-16 mix-blend-multiply">
-        <div className="w-full h-1 bg-almost-white rounded-[40px]">
-          <div
-            className="w-1 h-2 top-[-3px] absolute bg-espresso rounded-[256px]"
-            style={{ left: 'calc(50% - 2px)' }}
-          />
         </div>
-      </div>
+      </motion.div>
+      <motion.div
+        className="content-stretch flex items-center relative shrink-0 pl-16 w-full justify-end"
+        initial={{ y: 40, opacity: 0 }}
+        animate={{
+          y: isHovered ? 0 : 40,
+          opacity: isHovered ? 1 : 0,
+        }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+      >
+        <div
+          className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer transition-all duration-200 hover:opacity-100! hover:text-espresso!"
+          onClick={(): void => setIsManageDialogOpen(true)}
+        >
+          <CircleEllipsisIcon className="w-4 h-4 text-espresso transition-opacity duration-200" />
+          Manage
+        </div>
+      </motion.div>
+      <ManagePositionDialog
+        open={isManageDialogOpen}
+        onOpenChange={setIsManageDialogOpen}
+        tokenId={tokenId}
+        poolKey={poolKey}
+        poolData={poolData}
+        chainId={chainId}
+        unclaimedFees0={positionInfo.unclaimedFees0}
+        unclaimedFees1={positionInfo.unclaimedFees1}
+        token0FeeText={fees0}
+        token1FeeText={fees1}
+        initialMinPrice={minPrice}
+        initialMaxPrice={maxPrice}
+        positionInfo={positionInfo}
+      />
     </div>
   );
 }
