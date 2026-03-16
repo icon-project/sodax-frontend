@@ -40,7 +40,6 @@ import {
   isSolanaSpokeProvider,
   isSonicSpokeProvider,
   isStellarSpokeProvider,
-  isStacksSpokeProvider,
   isStacksSpokeProviderType,
   isSonicRawSpokeProvider,
   isSolanaSpokeProviderType,
@@ -376,7 +375,6 @@ export class SpokeService {
       );
     }
     if (isStacksSpokeProviderType(spokeProvider)) {
-      console.log('parms', params);
       return StacksSpokeService.getSimulateDepositParams(
         params as GetSpokeDepositParamsType<StacksSpokeProvider>,
         spokeProvider as StacksSpokeProvider,
@@ -532,7 +530,7 @@ export class SpokeService {
         raw,
       )) satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<T, R>;
     }
-    if (isStacksSpokeProvider(spokeProvider)) {
+    if (isStacksSpokeProviderType(spokeProvider)) {
       await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
       return (await StacksSpokeService.callWallet(
         from,

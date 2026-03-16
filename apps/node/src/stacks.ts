@@ -292,7 +292,7 @@ async function main() {
     const amount = BigInt(process.argv[4]); // Get amount from command line argument
     await repay(token, amount);
   } else {
-    console.log('Function not recognized. Please use "deposit" or "anotherFunction".');
+    console.log('Function not recognized. Please use "deposit", "supply", "borrow", "withdraw", or "repay".');
   }
 }
 

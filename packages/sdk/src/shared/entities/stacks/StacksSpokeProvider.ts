@@ -42,10 +42,11 @@ export class StacksSpokeProvider implements ISpokeProvider {
     }
   }
 
-  async readTokenBalance(token: String, address: string): Promise<bigint> {
+  async readTokenBalance(token: string, address: string): Promise<bigint> {
+    const [contractAddress, contractName] = parseContractId(token as ContractIdString);
     const txParams = {
-      contractAddress: parseContractId(token as `${string}.${string}` as ContractIdString)[0] as string,
-      contractName: parseContractId(token as `${string}.${string}` as ContractIdString)[1] as string,
+      contractAddress: contractAddress as string,
+      contractName: contractName as string,
       functionName: 'balance-of',
       functionArgs: [Cl.principal(address)],
     };
@@ -55,10 +56,11 @@ export class StacksSpokeProvider implements ISpokeProvider {
     return balance.value as bigint;
   }
 
-  async getImplContractAddress(stateContract: String): Promise<string> {
+  async getImplContractAddress(stateContract: string): Promise<string> {
+    const [contractAddress, contractName] = parseContractId(stateContract as ContractIdString);
     const txParams = {
-      contractAddress: parseContractId(stateContract as `${string}.${string}` as ContractIdString)[0] as string,
-      contractName: parseContractId(stateContract as `${string}.${string}` as ContractIdString)[1] as string,
+      contractAddress: contractAddress as string,
+      contractName: contractName as string,
       functionName: 'get-asset-manager-impl',
       functionArgs: [],
     };

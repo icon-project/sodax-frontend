@@ -1,7 +1,7 @@
 import { Cl, serializeCV } from '@stacks/transactions';
 import type { Hex } from 'viem';
 
-export async function waitForStacksTransaction(txid: string, rpc_url: string): Promise<Boolean> {
+export async function waitForStacksTransaction(txid: string, rpc_url: string): Promise<boolean> {
   const url = `${rpc_url}/extended/v1/tx/${txid}`;
 
   for (let i = 1; i <= 5; i++) {

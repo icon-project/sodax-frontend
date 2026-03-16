@@ -367,8 +367,8 @@ export type SuiRawTransaction = {
 };
 
 export type StacksRawTransaction = {
-    [key: string]: string | object | number;
-}
+  [key: string]: string | object | number;
+};
 
 export type EvmReturnType<Raw extends boolean> = Raw extends true ? EvmRawTransaction : Hex;
 export type SolanaReturnType<Raw extends boolean> = Raw extends true ? SolanaRawTransaction : string;
@@ -376,7 +376,7 @@ export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarR
 export type IconReturnType<Raw extends boolean> = Raw extends true ? IconRawTransaction : Hex;
 export type SuiReturnType<Raw extends boolean> = Raw extends true ? SuiRawTransaction : string;
 export type InjectiveReturnType<Raw extends boolean> = Raw extends true ? InjectiveRawTransaction : string;
-export type StacksReturnType<Raw extends boolean> = Raw extends true ? StacksRawTransaction : Hex;
+export type StacksReturnType<Raw extends boolean> = Raw extends true ? StacksRawTransaction : string;
 export type NearReturnType<Raw extends boolean> = Raw extends true ? NearRawTransaction : string;
 
 export type HashTxReturnType =

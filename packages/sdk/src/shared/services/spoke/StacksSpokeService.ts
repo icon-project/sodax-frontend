@@ -73,7 +73,7 @@ export class StacksSpokeService {
    */
   public static async getDeposit(token: string, spokeProvider: StacksSpokeProvider): Promise<bigint> {
     const assetManager = spokeProvider.chainConfig.addresses.assetManager;
-    if (token.toLowerCase() === 'st000000000000000000002amw42h.nativetoken') {
+    if (token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()) {
       return spokeProvider.getSTXBalance(assetManager);
     }
     return spokeProvider.readTokenBalance(token, assetManager);
@@ -147,13 +147,14 @@ export class StacksSpokeService {
     const assetManagerImpl = await spokeProvider.getImplContractAddress(
       spokeProvider.chainConfig.addresses.assetManager,
     );
-    console.log('assetManagerImpl', assetManagerImpl);
     const reqData = {
       contractAddress: parseContractId(assetManagerImpl as ContractIdString)[0] as string,
       contractName: parseContractId(assetManagerImpl as ContractIdString)[1] as string,
       functionName: 'transfer',
       functionArgs: [
-        token === 'ST000000000000000000002AMW42H.nativetoken' ? noneCV() : someCV(Cl.principal(token)),
+        token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()
+          ? noneCV()
+          : someCV(Cl.principal(token)),
         Cl.bufferFromHex(recipient),
         uintCV(amount),
         Cl.bufferFromHex(data),
