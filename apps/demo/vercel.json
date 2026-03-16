@@ -2,7 +2,6 @@
   "headers": [
     {
       "source": "/(.*)",
-
       "headers": [
         {
           "key": "X-Content-Type-Options",
@@ -11,6 +10,15 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*).wasm",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/wasm"
         }
       ]
     }
