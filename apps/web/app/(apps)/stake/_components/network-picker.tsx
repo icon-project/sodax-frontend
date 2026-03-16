@@ -127,7 +127,8 @@ export function NetworkPicker({
                   {BigInt(hoveredBalance) === 0n && (
                     <>
                       {' '}
-                      {tokenSymbol} <span className="font-bold">on {chainIdToChainName(hoveredToken.xChainId)}</span>
+                      {stakeMode === STAKE_MODE.UNSTAKING ? 'xSODA' : tokenSymbol}{' '}
+                      <span className="font-bold">on {chainIdToChainName(hoveredToken.xChainId)}</span>
                     </>
                   )}
                   {hoveredBalance !== 0n && formattedHoveredBalance !== null && (
