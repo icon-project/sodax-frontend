@@ -12,6 +12,7 @@ public/dist
 .history
 .idea
 **/build/**
+.personal-docs
 **/*.testnet.ts
 **/artifacts/**
 
@@ -21,4 +22,3 @@ public/dist
 # Agent skills (local to VSCode)
 .agents/
 .github/skills/
-

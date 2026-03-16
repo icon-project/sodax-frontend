@@ -53,9 +53,12 @@ import {
   type ChainType,
   ICON_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
+  BITCOIN_MAINNET_CHAIN_ID,
   type XToken,
 } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
+import { BitcoinSetupPanel } from '@/components/bitcoin/BitcoinSetupPanel';
+import type { BitcoinSpokeProvider } from '@sodax/sdk';
 
 export default function SwapCard({
   setOrders,
@@ -98,6 +101,8 @@ export default function SwapCard({
   const { requestTrustline } = useRequestTrustline(destToken?.address);
   const [open, setOpen] = useState(false);
   const [slippage, setSlippage] = useState<string>('0.5');
+  const [isBitcoinReady, setIsBitcoinReady] = useState(false);
+
   const onChangeDirection = () => {
     setSourceChain(destChain);
     setDestChain(sourceChain);
@@ -322,7 +327,7 @@ export default function SwapCard({
         <div className="mix-blend-multiply text-black text-(length:--body-comfortable) font-medium font-['InterRegular'] flex gap-1">
           <span className="hidden sm:inline">Balance:</span>
           <span className="inline">
-            {Number(formatUnits(sourceTokenBalance, sourceToken?.decimals ?? 0)).toFixed(4)}
+            {Number(formatUnits(sourceTokenBalance, sourceToken?.decimals ?? 0)).toFixed(5)}
           </span>
         </div>
         <div className="grow">
@@ -336,6 +341,15 @@ export default function SwapCard({
             )}
           </div>
         </div>
+        
+        {sourceChain === BITCOIN_MAINNET_CHAIN_ID && sourceProvider && (
+          <BitcoinSetupPanel
+            spokeProvider={sourceProvider as unknown as BitcoinSpokeProvider}
+            onReadyChange={setIsBitcoinReady}
+            nativeBalance={sourceTokenBalance}
+          />
+        )}
+
         <div className="flex justify-center">
           <Button variant="outline" size="icon" onClick={() => onChangeDirection()}>
             <ArrowDownUp className="h-4 w-4" />
@@ -457,15 +471,17 @@ export default function SwapCard({
               </div>
             </div>
             <DialogFooter>
-              <Button
-                className="w-full"
-                type="button"
-                variant="default"
-                onClick={handleApprove}
-                disabled={isAllowanceLoading || hasAllowed || isApproving}
-              >
-                {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
-              </Button>
+              {sourceChain !== BITCOIN_MAINNET_CHAIN_ID && (
+                <Button
+                  className="w-full"
+                  type="button"
+                  variant="default"
+                  onClick={handleApprove}
+                  disabled={isAllowanceLoading || hasAllowed || isApproving}
+                >
+                  {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
+                </Button>
+              )}
 
               {isWrongChain && (
                 <Button className="w-full" type="button" variant="default" onClick={handleSwitchChain}>
@@ -475,7 +491,11 @@ export default function SwapCard({
 
               {!isWrongChain &&
                 (intentOrderPayload ? (
-                  <Button className="w-full" onClick={() => handleSwap(intentOrderPayload)} disabled={!hasAllowed}>
+                  <Button 
+                    className="w-full" 
+                    onClick={() => handleSwap(intentOrderPayload)} 
+                    disabled={(sourceChain !== BITCOIN_MAINNET_CHAIN_ID && !hasAllowed) || (sourceChain === BITCOIN_MAINNET_CHAIN_ID && !isBitcoinReady)}
+                  >
                     <ArrowLeftRight className="mr-2 h-4 w-4" /> Swap
                   </Button>
                 ) : (
