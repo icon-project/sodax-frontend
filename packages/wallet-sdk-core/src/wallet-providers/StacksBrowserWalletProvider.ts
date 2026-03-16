@@ -7,6 +7,7 @@ import {
   type ClarityValue,
   type PostConditionModeName,
 } from '@stacks/transactions';
+import type { StacksProvider } from '@stacks/connect';
 import { request } from '@stacks/connect';
 import type { Hex, IStacksWalletProvider, StacksTransactionParams } from '@sodax/types';
 
@@ -19,24 +20,30 @@ export class StacksBrowserWalletProvider implements IStacksWalletProvider {
   private address: string;
   private networkName: 'testnet' | 'mainnet';
   private network: StacksNetwork;
+  private provider?: StacksProvider;
 
-  constructor(address: string, network: 'testnet' | 'mainnet' = 'mainnet') {
+  constructor(address: string, network: 'testnet' | 'mainnet' = 'mainnet', provider?: StacksProvider) {
     this.address = address;
     this.networkName = network;
     this.network = networkFrom(network);
+    this.provider = provider;
   }
 
   async sendTransaction(txParams: StacksTransactionParams): Promise<string> {
     const contract = `${txParams.contractAddress}.${txParams.contractName}` as `${string}.${string}`;
 
-    const result = await request('stx_callContract', {
+    const params = {
       contract,
       functionName: txParams.functionName,
       functionArgs: txParams.functionArgs,
       network: this.networkName,
       postConditions: txParams.postConditions,
       postConditionMode: toPostConditionModeName(txParams.postConditionMode),
-    });
+    };
+
+    const result = this.provider
+      ? await request({ provider: this.provider }, 'stx_callContract', params)
+      : await request('stx_callContract', params);
 
     if (!result.txid) {
       throw new Error('Transaction failed: no txid returned');

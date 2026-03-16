@@ -27,6 +27,9 @@ import type { SuiXService } from '../xchains/sui/SuiXService';
 import { CHAIN_INFO, SupportedChainId } from '../xchains/icon/IconXService';
 import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
 import type { NearXService } from '../xchains/near/NearXService';
+import { useXConnection } from './useXConnection';
+import { useXConnectors } from './useXConnectors';
+import type { StacksXConnector } from '../xchains/stacks';
 
 /**
  * Hook to get the appropriate wallet provider based on the chain type.
@@ -66,6 +69,8 @@ export function useWalletProvider(
   // Cross-chain hooks
   const xService = useXService(getXChainType(spokeChainId));
   const xAccount = useXAccount(spokeChainId);
+  const stacksConnection = useXConnection('STACKS');
+  const stacksConnectors = useXConnectors('STACKS');
 
   return useMemo(() => {
     switch (xChainType) {
@@ -163,11 +168,15 @@ export function useWalletProvider(
           return undefined;
         }
 
-        return new StacksBrowserWalletProvider(address);
+        const activeStacksConnector = stacksConnectors.find(
+          c => c.id === stacksConnection?.xConnectorId,
+        ) as StacksXConnector | undefined;
+
+        return new StacksBrowserWalletProvider(address, 'mainnet', activeStacksConnector?.getProvider());
       }
 
       default:
         return undefined;
     }
-  }, [xChainType, evmPublicClient, evmWalletClient, xService, xAccount]);
+  }, [xChainType, evmPublicClient, evmWalletClient, xService, xAccount, stacksConnection, stacksConnectors]);
 }

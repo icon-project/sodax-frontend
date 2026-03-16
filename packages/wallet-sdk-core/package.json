@@ -7,13 +7,7 @@
   "version": "0.0.1-rc.5",
   "license": "MIT",
   "description": "Sodax Wallet SDK Core",
-  "keywords": [
-    "sodax",
-    "wallet",
-    "sdk",
-    "frontend",
-    "interface"
-  ],
+  "keywords": ["sodax", "wallet", "sdk", "frontend", "interface"],
   "homepage": "https://github.com/icon-project/sodax-frontend/tree/main/packages/wallet-sdk-core",
   "bugs": {
     "url": "https://github.com/icon-project/sodax-frontend/issues"
@@ -36,9 +30,7 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsup",
     "test": "vitest run --exclude ./src/tests/e2e",
@@ -68,7 +60,7 @@
     "@solana/wallet-adapter-base": "catalog:",
     "@solana/web3.js": "catalog:",
     "@stellar/stellar-sdk": "catalog:",
-    "@stacks/connect": "8.2.2",
+    "@stacks/connect": "8.2.6",
     "@stacks/transactions": "catalog:",
     "@stacks/network": "catalog:",
     "icon-sdk-js": "catalog:",
