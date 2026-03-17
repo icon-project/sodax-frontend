@@ -109,14 +109,9 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
   const tabValues = usedTabs.map(t => t.value);
 
   // "current" drives arrow position + active tab styling. It's derived from the URL (last path segment).
-  const currentCandidate = tabValues.includes(lastSegment)
+  const current = tabValues.includes(lastSegment)
     ? lastSegment // e.g. "swap", "migrate", "home"
     : (usedTabs[0]?.value ?? 'migrate'); // fallback = first tab (Home for partner)
-
-  // If the URL matches a disabled tab (SOON), don't treat it as current for nav/arrow styling.
-  const currentTab = usedTabs.find(tab => tab.value === currentCandidate);
-  const current =
-    currentTab && !currentTab.enabled ? (usedTabs.find(tab => tab.enabled)?.value ?? usedTabs[0]?.value ?? 'migrate') : currentCandidate;
 
   const suppliedAssetCount = useSaveStore(state => state.suppliedAssetCount);
   const totalDepositedUsdValue = useSaveStore(state => state.totalDepositedUsdValue);
@@ -162,28 +157,12 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
 
   useEffect(() => {
     const onResize = () => {
-      const container = tabsContainerRef.current;
-      const activeDesktop = desktopTabRefs.current[current];
-
-      if (container && activeDesktop) {
-        const containerRect = container.getBoundingClientRect();
-        const tabRect = activeDesktop.getBoundingClientRect();
-        setArrowPosition(tabRect.top - containerRect.top - 30);
-      }
-
-      const mContainer = mobileTabsContainerRef.current;
-      const activeMobile = mobileTabRefs.current[current];
-
-      if (mContainer && activeMobile) {
-        const mobileRect = mContainer.getBoundingClientRect();
-        const tabRect = activeMobile.getBoundingClientRect();
-        setMobileArrowPosition(tabRect.left - mobileRect.left + tabRect.width / 2 - 40);
-      }
+      updateArrows();
     };
 
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
-  }, [current]);
+  }, [updateArrows]);
 
   return (
     <>
