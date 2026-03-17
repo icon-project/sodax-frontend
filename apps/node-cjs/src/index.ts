@@ -1,4 +1,3 @@
-import { IconWalletProvider } from '@sodax/wallet-sdk-core';
 /**
  * CommonJS reproduction for issue #939
  * https://github.com/icon-project/sodax-frontend/issues/939
@@ -6,7 +5,11 @@ import { IconWalletProvider } from '@sodax/wallet-sdk-core';
  * When @sodax/sdk is consumed from a CommonJS application,
  * Node.js throws ERR_PACKAGE_PATH_NOT_EXPORTED because near-api-js
  * is ESM-only and has no "require" export path.
+ *
+ * This app should be kept in order to reproduce and test cjs related issues.
+ * IMPORTANT: Do not remove it unless you have a good reason to do so.
  */
+import { IconWalletProvider } from '@sodax/wallet-sdk-core';
 import { IconSpokeProvider, Sodax, ICON_MAINNET_CHAIN_ID, NEAR_MAINNET_CHAIN_ID, spokeChainConfig } from '@sodax/sdk';
 
 console.log('Attempting to load @sodax/sdk in CommonJS...');
