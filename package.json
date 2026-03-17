@@ -30,7 +30,8 @@
   "pnpm": {
     "overrides": {
       "@hpke/core": ">=1.8.0",
-      "valibot": ">=1.2.0"
+      "valibot": ">=1.2.0",
+      "undici": ">=7.24.4"
     }
   }
 }

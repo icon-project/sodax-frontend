@@ -16,11 +16,11 @@ const ECPair = ECPairFactory(ecc);
 
 const RADFI_API_BASE_URL = IS_TESTNET
   ? 'https://api.signet.radfi.co/api'
-  : 'https://api.radfi.co/api';
+  : 'https://staging.api.radfi.co/api';
 
 const RADFI_UMS_BASE_URL = IS_TESTNET
   ? 'https://signet.ums.radfi.co/api'
-  : 'https://ums.radfi.co/api';
+  : 'https://staging.ums.radfi.co/api';
 
 /**
  * Generate a new Bitcoin private key in HEX format
