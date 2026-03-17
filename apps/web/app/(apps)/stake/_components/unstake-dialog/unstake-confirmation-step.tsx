@@ -5,8 +5,8 @@ import { UNSTAKE_METHOD } from '../../_stores/stake-store';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { CircleArrowRight, ShieldAlertIcon } from 'lucide-react';
 import { cn, formatTokenAmount } from '@/lib/utils';
-import { useStakingConfig } from '@sodax/dapp-kit';
 import { ETHEREUM_MAINNET_CHAIN_ID } from '@sodax/sdk';
+import { DEFAULT_ESTIMATED_TX_TIME, ETHEREUM_ESTIMATED_TX_TIME } from '../constants';
 interface UnstakeConfirmationStepProps {
   selectedToken: XToken;
   receivedSodaAmount: string;
@@ -19,13 +19,6 @@ export default function UnstakeConfirmationStep({
   unstakeError,
 }: UnstakeConfirmationStepProps): React.JSX.Element {
   const { stakeValue, unstakeMethod } = useStakeState();
-  const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
-  if (isLoadingStakingConfig) {
-    return <div>Loading staking config...</div>;
-  }
-  if (!stakingConfig) {
-    return <div>No staking config found</div>;
-  }
 
   const xSodaToken = {
     ...selectedToken,
@@ -41,20 +34,20 @@ export default function UnstakeConfirmationStep({
         <div className="flex flex-col text-center">
           <div className="flex justify-center gap-1 w-full items-center">
             <ShieldAlertIcon className="w-4 h-4 text-negative" />
-            <span className="font-['InterBold'] text-(length:--body-super-comfortable) leading-[1.4] text-negative">
+            <span className="font-bold text-(length:--body-super-comfortable) leading-[1.4] text-negative">
               {unstakeError.title}
             </span>
           </div>
-          <div className="text-espresso text-(length:--body-small) font-medium font-['InterRegular'] text-center leading-[1.4]">
+          <div className="text-espresso text-(length:--body-small) font-medium text-center leading-[1.4]">
             {unstakeError.message}
           </div>
         </div>
       ) : (
         <div className="flex flex-col text-center">
-          <div className="text-espresso text-(length:--body-super-comfortable) font-['InterBold'] ">
+          <div className="text-espresso text-(length:--body-super-comfortable) font-bold ">
             {unstakeMethod === UNSTAKE_METHOD.INSTANT ? 'Instant unstake' : 'Unstaking'} xSODA
           </div>
-          <div className="text-clay text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4] justify-center">
+          <div className="text-clay text-(length:--body-small) leading-[1.4] justify-center">
             {unstakeMethod === UNSTAKE_METHOD.INSTANT
               ? 'Exit early to receive SODA immediately.'
               : 'You can change your mind later'}
@@ -67,10 +60,8 @@ export default function UnstakeConfirmationStep({
           <CurrencyLogo currency={xSodaToken} />
           <div className="flex flex-col justify-start items-center gap-2">
             <div className="inline-flex justify-start items-center gap-1">
-              <div className="justify-start text-espresso text-base font-normal font-['InterRegular'] leading-5">
-                {formattedStakeValue}
-              </div>
-              <div className="justify-start text-clay text-base font-normal font-['InterRegular'] leading-5">xSODA</div>
+              <div className="justify-start text-espresso text-base leading-5">{formattedStakeValue}</div>
+              <div className="justify-start text-clay text-base leading-5">xSODA</div>
             </div>
           </div>
         </div>
@@ -85,25 +76,23 @@ export default function UnstakeConfirmationStep({
           </div>
           <div
             className={cn(
-              "justify-start text-xs font-normal font-['InterRegular'] leading-4",
+              'justify-start text-xs leading-4',
               selectedToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID ? 'text-cherry-bright' : 'text-clay',
             )}
           >
             {unstakeMethod === UNSTAKE_METHOD.INSTANT
               ? selectedToken.xChainId === ETHEREUM_MAINNET_CHAIN_ID
-                ? '~30s'
-                : '~10s'
-              : `~${stakingConfig.unstakingPeriod} s`}
+                ? ETHEREUM_ESTIMATED_TX_TIME
+                : DEFAULT_ESTIMATED_TX_TIME
+              : '~180 days'}
           </div>
         </div>
         <div className="w-10 inline-flex flex-col justify-start items-center gap-2">
           <CurrencyLogo currency={selectedToken} />
           <div className="flex flex-col justify-start items-center gap-2">
             <div className="inline-flex justify-start items-center gap-1">
-              <div className="justify-start text-espresso text-base font-normal font-['InterRegular'] leading-5">
-                {receivedSodaAmount}
-              </div>
-              <div className="justify-start text-clay text-base font-normal font-['InterRegular'] leading-5">SODA</div>
+              <div className="justify-start text-espresso text-base leading-5">{receivedSodaAmount}</div>
+              <div className="justify-start text-clay text-base leading-5">SODA</div>
             </div>
           </div>
         </div>
