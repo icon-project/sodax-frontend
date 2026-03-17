@@ -25,6 +25,7 @@ import type {
   SolanaSpokeProviderType,
   StellarSpokeProviderType,
   NearSpokeProviderType,
+  AleoSpokeProviderType,
   VerifyTxHashRawConfig,
 } from '../../types.js';
 import { getIntentRelayChainId, type Address, type ChainType, type Hex, type HubAddress } from '@sodax/types';
@@ -35,6 +36,7 @@ import { SolanaSpokeService } from './SolanaSpokeService.js';
 import { StellarSpokeService } from './StellarSpokeService.js';
 import { SuiSpokeService } from './SuiSpokeService.js';
 import { SonicSpokeService, type SonicSpokeDepositParams } from './SonicSpokeService.js';
+import { AleoSpokeService } from './AleoSpokeService.js';
 import {
   isSolanaSpokeProvider,
   isSonicSpokeProvider,
@@ -49,6 +51,8 @@ import {
   isSonicSpokeProviderType,
   isNearSpokeProviderType,
   isNearSpokeProvider,
+  isAleoSpokeProviderType,
+  isAleoSpokeProvider,
 } from '../../guards.js';
 import * as rlp from 'rlp';
 import { encodeFunctionData } from 'viem';
@@ -115,6 +119,12 @@ export class SpokeService {
         params as TxReturnType<StellarSpokeProviderType, true>,
         spokeProvider,
       ) satisfies Promise<GetEstimateGasReturnType<StellarSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
+    }
+    if (isAleoSpokeProviderType(spokeProvider)) {
+      return AleoSpokeService.estimateGas(
+        params as TxReturnType<AleoSpokeProviderType, true>,
+        spokeProvider,
+      ) satisfies Promise<GetEstimateGasReturnType<AleoSpokeProviderType>> as Promise<GetEstimateGasReturnType<T>>;
     }
 
     throw new Error('Invalid spoke provider');
@@ -304,6 +314,15 @@ export class SpokeService {
         raw,
       ) satisfies Promise<TxReturnType<NearSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
     }
+    if (isAleoSpokeProviderType(spokeProvider)) {
+      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
+      return AleoSpokeService.deposit(
+        params as GetSpokeDepositParamsType<AleoSpokeProviderType>,
+        spokeProvider,
+        hubProvider,
+        raw,
+      ) satisfies Promise<TxReturnType<AleoSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
+    }
 
     throw new Error('Invalid spoke provider');
   }
@@ -362,7 +381,13 @@ export class SpokeService {
         hubProvider,
       );
     }
-
+    if (isAleoSpokeProviderType(spokeProvider)) {
+      return AleoSpokeService.getSimulateDepositParams(
+        params as GetSpokeDepositParamsType<AleoSpokeProviderType>,
+        spokeProvider,
+        hubProvider,
+      );
+    }
     throw new Error('[getSimulateDepositParams] Invalid spoke provider');
   }
 
@@ -413,7 +438,9 @@ export class SpokeService {
     if (isNearSpokeProviderType(spokeProvider)) {
       return NearSpokeService.getDeposit(token, spokeProvider);
     }
-
+    if (isAleoSpokeProviderType(spokeProvider)) {
+      return AleoSpokeService.getDeposit(token as string, spokeProvider);
+    }
     throw new Error('Invalid spoke provider');
   }
 
@@ -516,6 +543,13 @@ export class SpokeService {
         R
       > as TxReturnType<T, R>;
     }
+    if (isAleoSpokeProviderType(spokeProvider)) {
+      await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
+      return (await AleoSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
+        AleoSpokeProviderType,
+        R
+      > as TxReturnType<T, R>;
+    }
 
     throw new Error('[callWallet] Invalid spoke provider');
   }
@@ -601,6 +635,9 @@ export class SpokeService {
     }
     if (isStellarSpokeProvider(spokeProvider)) {
       return StellarSpokeService.waitForTransaction(spokeProvider, txHash);
+    }
+    if (isAleoSpokeProvider(spokeProvider)) {
+      return AleoSpokeService.waitForConfirmation(spokeProvider, txHash);
     }
 
     // only stellar and solana need to be verified
