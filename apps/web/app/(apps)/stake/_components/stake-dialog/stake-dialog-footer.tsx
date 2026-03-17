@@ -154,7 +154,7 @@ export default function StakeDialogFooter({
         : true) && (
         <Button
           variant="cherry"
-          className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
+          className={`text-white transition-all duration-300 ease-in-out ${
             isMobile
               ? 'w-full'
               : currentStakeStep !== STAKE_STEP.STAKE_TERMS
@@ -183,7 +183,7 @@ export default function StakeDialogFooter({
           <>
             <Button
               variant="cherry"
-              className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
+              className={`text-white transition-all duration-300 ease-in-out ${
                 isMobile ? 'w-full' : currentStakeStep === STAKE_STEP.STAKE_APPROVE ? 'flex-1' : 'w-[40px]'
               }`}
               onClick={handleApprove}
@@ -208,7 +208,7 @@ export default function StakeDialogFooter({
         (isCompleted ? (
           <Button
             variant="cherry"
-            className={`text-white font-['InterRegular'] rounded-full p-0 flex items-center justify-center gap-1 ${
+            className={`text-white rounded-full p-0 flex items-center justify-center gap-1 ${
               isMobile ? 'w-full' : 'flex-1'
             }`}
             onClick={() => {
@@ -221,7 +221,7 @@ export default function StakeDialogFooter({
         ) : (
           <Button
             variant="cherry"
-            className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
+            className={`text-white transition-all duration-300 ease-in-out ${
               isMobile
                 ? 'w-full'
                 : currentStakeStep === STAKE_STEP.STAKE_CONFIRM || isApproved

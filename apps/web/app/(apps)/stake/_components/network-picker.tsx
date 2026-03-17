@@ -34,6 +34,7 @@ export function NetworkPicker({
   const chainIds = useMemo(() => tokens.map(token => token.xChainId), [tokens]);
   const allChainXSodaBalances = useAllChainXSodaBalances(chainIds);
 
+  // STAKING: SODA per chain; UNSTAKING: xSODA per chain.
   const tokenBalances = useMemo(() => {
     const balances: Map<string, bigint> = new Map();
 
@@ -69,6 +70,7 @@ export function NetworkPicker({
     if (!isClicked) hasScrolledRef.current = false;
   }, [isClicked]);
 
+  // One-time scroll so picker stays in view when opened near viewport edge.
   useEffect(() => {
     if (!isClicked || !reference || x == null || y == null || hasScrolledRef.current) return;
 
@@ -95,6 +97,7 @@ export function NetworkPicker({
 
   if (!isClicked || !reference) return null;
 
+  // Portal to body so picker isn't clipped and sits above blur overlay.
   return createPortal(
     <div
       ref={refs.setFloating}
@@ -103,7 +106,7 @@ export function NetworkPicker({
     >
       <div
         className={cn(
-          "font-['InterRegular'] text-(length:--body-small) font-medium text-espresso mb-2",
+          'text-(length:--body-small) font-medium text-espresso mb-2',
           isMobile && isSingle ? 'text-left ml-5' : 'text-center',
         )}
       >
@@ -124,11 +127,15 @@ export function NetworkPicker({
                   {BigInt(hoveredBalance) === 0n && (
                     <>
                       {' '}
-                      {tokenSymbol} <span className="font-bold">on {chainIdToChainName(hoveredToken.xChainId)}</span>
+                      {stakeMode === STAKE_MODE.UNSTAKING ? 'xSODA' : tokenSymbol}{' '}
+                      <span className="font-bold">on {chainIdToChainName(hoveredToken.xChainId)}</span>
                     </>
                   )}
                   {hoveredBalance !== 0n && formattedHoveredBalance !== null && (
-                    <> Balance: {formattedHoveredBalance}</>
+                    <>
+                      {' '}
+                      {formattedHoveredBalance} {stakeMode === STAKE_MODE.UNSTAKING ? 'xSODA' : tokenSymbol}
+                    </>
                   )}
                 </>
               );
@@ -141,7 +148,7 @@ export function NetworkPicker({
 
       <div
         className={cn(
-          'flex flex-wrap justify-center w-[140px] network-picker-container',
+          'flex flex-wrap justify-center network-picker-container w-[150px] gap-0.5', // class used by useClickAway to exclude from "away"
           isMobile && isSingle && 'ml-4',
         )}
       >
@@ -153,7 +160,8 @@ export function NetworkPicker({
             <motion.div
               key={token.xChainId}
               className={cn(
-                'p-1.5 cursor-pointer rounded-full ',
+                'relative flex shrink-0 w-7 h-7 min-w-6 min-h-6 items-center justify-center cursor-pointer rounded-full p-0',
+                hoveredIcon === index && 'z-50',
                 hoveredIcon !== null && hoveredIcon !== index && 'opacity-60 grayscale-[0.5]',
               )}
               whileHover={{ scale: 1.3 }}
@@ -162,7 +170,7 @@ export function NetworkPicker({
               onMouseLeave={() => setHoveredIcon(null)}
               onMouseDown={e => {
                 e.preventDefault();
-                e.stopPropagation();
+                e.stopPropagation(); // Select before click-away runs; avoid toggling picker.
                 onSelect?.(token);
               }}
             >

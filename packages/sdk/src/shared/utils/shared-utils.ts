@@ -149,9 +149,6 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
     case 'sonic':
       return address as Hex;
 
-    case 'injective-1':
-      return toHex(Buffer.from(address, 'utf-8'));
-
     case '0x1.icon':
       return toHex(Buffer.from(address.replace('cx', '01').replace('hx', '00') ?? 'f8', 'hex'));
 
@@ -165,8 +162,8 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
       return `0x${StellarAddress.fromString(address).toScVal().toXDR('hex')}`;
 
     case 'bitcoin':
-      return toHex(Buffer.from(address, 'utf-8'));
     case 'near':
+    case 'injective-1':
       return toHex(Buffer.from(address, 'utf-8'));
 
     default:
