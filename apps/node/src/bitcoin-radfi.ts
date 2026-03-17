@@ -7,14 +7,20 @@ import * as ecc from '@bitcoinerlab/secp256k1';
 import { randomBytes } from 'node:crypto';
 import { Signer } from 'bip322-js';
 
-// Bitcoin network (mainnet only)
-const network = bitcoin.networks.bitcoin;
+const IS_TESTNET = process.env.IS_TESTNET === 'true';
+
+const network = IS_TESTNET ? bitcoin.networks.testnet : bitcoin.networks.bitcoin;
 
 // Initialize ECPair with the elliptic curve library
 const ECPair = ECPairFactory(ecc);
 
-// Radfi API base URL - using staging for now, can be updated to mainnet when available
-const RADFI_API_BASE_URL = 'https://staging.api.radfi.co/api';
+const RADFI_API_BASE_URL = IS_TESTNET
+  ? 'https://api.signet.radfi.co/api'
+  : 'https://staging.api.radfi.co/api';
+
+const RADFI_UMS_BASE_URL = IS_TESTNET
+  ? 'https://signet.ums.radfi.co/api'
+  : 'https://staging.ums.radfi.co/api';
 
 /**
  * Generate a new Bitcoin private key in HEX format
@@ -662,6 +668,127 @@ async function withdrawWithSign(
 }
 
 /**
+ * Fetch expired UTXOs for a trading wallet address
+ * @param tradingAddress - Trading wallet address
+ * @returns Array of expired UTXOs
+ */
+async function getExpiredUtxos(tradingAddress: string): Promise<{ txId: string; vout: number; value: string }[]> {
+  const url = `${RADFI_UMS_BASE_URL}/utxos?address_eq=${tradingAddress}&isSpent_eq=false&isExpired_eq=true&page=1&pageSize=100`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorText}`);
+    }
+
+    const result = await response.json();
+    const utxos = result.data || [];
+
+    console.log(`\n--- Expired UTXOs for ${tradingAddress} ---`);
+    console.log(`Network: ${IS_TESTNET ? 'SIGNET (testnet)' : 'MAINNET (staging)'}`);
+    console.log(`UMS URL: ${RADFI_UMS_BASE_URL}`);
+    console.log(`Total: ${utxos.length}`);
+
+    if (utxos.length === 0) {
+      console.log('No expired UTXOs found.');
+    } else {
+      for (const utxo of utxos) {
+        console.log(`  ${utxo.txId}:${utxo.vout} — ${utxo.value} sats (expired: ${utxo.isExpired}, expiryBlock: ${utxo.expiryBlock || 'N/A'})`);
+      }
+      console.log(`\nTo renew, run:`);
+      const txIdVouts = utxos.map((u: { txId: string; vout: number }) => `${u.txId}:${u.vout}`).join(',');
+      console.log(`  pnpm run bitcoin-radfi renew <private_key_hex> ${txIdVouts}`);
+    }
+
+    return utxos;
+  } catch (error) {
+    console.error('Error fetching expired UTXOs:', error instanceof Error ? error.message : String(error));
+    throw error;
+  }
+}
+
+/**
+ * Renew expired UTXOs: auth → build → sign → co-sign & broadcast
+ * @param privateKeyHex - Private key in HEX format
+ * @param txIdVoutsStr - Comma-separated txId:vout pairs (e.g. "abc:0,def:1")
+ */
+async function renewUtxos(privateKeyHex: string, txIdVoutsStr: string): Promise<void> {
+  const txIdVouts = txIdVoutsStr.split(',').map(s => s.trim());
+  console.log(`\n--- Renewing ${txIdVouts.length} UTXO(s) ---`);
+  console.log(`Network: ${IS_TESTNET ? 'SIGNET (testnet)' : 'MAINNET (staging)'}`);
+  console.log('UTXOs:', txIdVouts);
+
+  // Step 1: Authenticate
+  console.log('\n[1/4] Authenticating...');
+  const { accessToken } = await authenticate(privateKeyHex);
+  const { address: userAddress } = createBitcoinWallet(privateKeyHex);
+
+  // Step 2: Build renew-utxo transaction
+  console.log('\n[2/4] Building renew-utxo transaction...');
+  const buildUrl = `${RADFI_API_BASE_URL}/transactions`;
+  const buildResponse = await fetch(buildUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      type: 'renew-utxo',
+      params: { userAddress, txIdVouts },
+    }),
+  });
+
+  if (!buildResponse.ok) {
+    const errText = await buildResponse.text();
+    throw new Error(`Failed to build renew transaction: ${errText}`);
+  }
+
+  const buildResult = await buildResponse.json();
+  const { base64Psbt, fee, txId: provisionalTxId } = buildResult.data;
+  console.log('Unsigned PSBT received');
+  console.log('Fee:', fee, 'sats');
+  console.log('Provisional TxId:', provisionalTxId);
+
+  // Step 3: Sign PSBT
+  console.log('\n[3/4] Signing PSBT...');
+  const signedBase64Tx = signBitcoinTransaction(base64Psbt, privateKeyHex);
+  console.log('PSBT signed successfully');
+
+  // Step 4: Submit for co-signing and broadcast
+  console.log('\n[4/4] Submitting for co-sign & broadcast...');
+  const signUrl = `${RADFI_API_BASE_URL}/transactions/sign`;
+  const signResponse = await fetch(signUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      type: 'renew-utxo',
+      params: { userAddress, signedBase64Tx },
+    }),
+  });
+
+  if (!signResponse.ok) {
+    const errText = await signResponse.text();
+    throw new Error(`Failed to co-sign & broadcast: ${errText}`);
+  }
+
+  const signResult = await signResponse.json();
+  const finalTxId = signResult.data?.txId || signResult.data;
+
+  console.log('\n--- Renewal Complete ---');
+  console.log('Transaction ID:', finalTxId);
+  const explorerBase = IS_TESTNET ? 'https://mempool.space/signet' : 'https://mempool.space';
+  console.log(`Explorer: ${explorerBase}/tx/${finalTxId}`);
+}
+
+/**
  * Main function with command-line argument parsing
  */
 async function main(): Promise<void> {
@@ -760,8 +887,27 @@ async function main(): Promise<void> {
       process.exit(1);
     }
     await refreshToken(refreshTokenValue);
+  } else if (command === 'expired') {
+    const tradingAddress = process.argv[3];
+    if (!tradingAddress) {
+      console.error('Error: Trading address is required for expired command');
+      console.log('Usage: pnpm run bitcoin-radfi expired <trading_address>');
+      process.exit(1);
+    }
+    await getExpiredUtxos(tradingAddress);
+  } else if (command === 'renew') {
+    const privateKeyHex = process.argv[3];
+    const txIdVoutsStr = process.argv[4];
+    if (!privateKeyHex || !txIdVoutsStr) {
+      console.error('Error: Missing required parameters for renew command');
+      console.log('Usage: pnpm run bitcoin-radfi renew <private_key_hex> <txId:vout,txId:vout,...>');
+      console.log('Example: pnpm run bitcoin-radfi renew abc123... txid1:0,txid2:1');
+      console.log('\nTip: Run "pnpm run bitcoin-radfi expired <trading_address>" first to find expired UTXOs');
+      process.exit(1);
+    }
+    await renewUtxos(privateKeyHex, txIdVoutsStr);
   } else {
-    console.log('Usage:');
+    console.log(`Usage: (network: ${IS_TESTNET ? 'SIGNET' : 'MAINNET staging'})`);
     console.log('  pnpm run bitcoin-radfi generate                    - Generate a new Bitcoin private key and wallet');
     console.log('  pnpm run bitcoin-radfi dump <private_key_hex>      - Dump all key information and address formats');
     console.log('  pnpm run bitcoin-radfi create <private_key_hex>    - Create a trading wallet using private key');
@@ -777,6 +923,9 @@ async function main(): Promise<void> {
       '  pnpm run bitcoin-radfi auth <private_key_hex> - Authenticate with BIP322 signature (signs automatically)',
     );
     console.log('  pnpm run bitcoin-radfi refresh-token <refresh_token> - Refresh access token');
+    console.log('  pnpm run bitcoin-radfi expired <trading_address>   - List expired UTXOs');
+    console.log('  pnpm run bitcoin-radfi renew <private_key_hex> <txId:vout,...> - Renew expired UTXOs');
+    console.log('\nSet IS_TESTNET=true to use signet (testnet) instead of mainnet staging.');
     process.exit(1);
   }
 }

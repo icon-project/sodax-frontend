@@ -6,6 +6,7 @@ import type {
   HubVaultSymbols,
   ETHEREUM_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
+  BITCOIN_MAINNET_CHAIN_ID,
 } from '../constants/index.js';
 import type { InjectiveNetworkEnv } from '../injective/index.js';
 
@@ -67,10 +68,21 @@ export type StellarRpcConfig = {
   sorobanRpcUrl?: HttpUrl;
 };
 
+// Type for Bitcoin RPC configuration with Radfi API endpoints
+export type BitcoinRpcConfig = {
+  rpcUrl?: string;
+  radfiApiUrl?: string;
+  radfiUmsUrl?: string;
+};
+
 // Mapped type that uses ChainId as keys and assigns appropriate value types
-// Stellar uses StellarRpcConfig, all other chains use string
+// Stellar uses StellarRpcConfig, Bitcoin uses BitcoinRpcConfig, all other chains use string
 export type RpcConfig = Partial<{
-  [K in ChainId]: K extends typeof STELLAR_MAINNET_CHAIN_ID ? StellarRpcConfig : string;
+  [K in ChainId]: K extends typeof STELLAR_MAINNET_CHAIN_ID
+    ? StellarRpcConfig
+    : K extends typeof BITCOIN_MAINNET_CHAIN_ID
+      ? BitcoinRpcConfig
+      : string;
 }> & { [ETHEREUM_MAINNET_CHAIN_ID]?: string | undefined };
 
 export type IntentRelayChainId = (typeof ChainIdToIntentRelayChainId)[keyof typeof ChainIdToIntentRelayChainId];

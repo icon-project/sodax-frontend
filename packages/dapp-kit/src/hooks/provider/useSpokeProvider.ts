@@ -24,6 +24,7 @@ import {
 } from '@sodax/sdk';
 import type {
   BitcoinSpokeChainConfig,
+  BitcoinRpcConfig,
   IBitcoinWalletProvider,
   IEvmWalletProvider,
   IIconWalletProvider,
@@ -65,11 +66,17 @@ export function useSpokeProvider(
 
     if (xChainType === 'BITCOIN') {
       const bitcoinConfig = spokeChainConfig[spokeChainId] as BitcoinSpokeChainConfig;
+      const btcRpcOverride = rpcConfig[spokeChainId] as BitcoinRpcConfig | undefined;
       return new BitcoinSpokeProvider(
         walletProvider as IBitcoinWalletProvider,
         bitcoinConfig,
-        { url: bitcoinConfig.radfiApiUrl, apiKey: bitcoinConfig.radfiApiKey, umsUrl: bitcoinConfig.radfiUmsUrl },
+        {
+          url: btcRpcOverride?.radfiApiUrl || bitcoinConfig.radfiApiUrl,
+          apiKey: bitcoinConfig.radfiApiKey,
+          umsUrl: btcRpcOverride?.radfiUmsUrl || bitcoinConfig.radfiUmsUrl,
+        },
         'TRADING',
+        btcRpcOverride?.rpcUrl || bitcoinConfig.rpcUrl,
       );
     }
 

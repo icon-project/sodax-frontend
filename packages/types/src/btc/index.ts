@@ -12,6 +12,7 @@ export function detectBitcoinAddressType(address: string): AddressType {
   if (address.startsWith('1') || address.startsWith('m') || address.startsWith('n')) return 'P2PKH';
   throw new Error(`Unknown Bitcoin address type: ${address}`);
 }
+
 // Type definitions for @sodax/types - Bitcoin Wallet Provider
 export interface BitcoinTransactionStatus {
   confirmed: boolean;
