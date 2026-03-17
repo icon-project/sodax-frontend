@@ -26,7 +26,7 @@ export async function waitForStacksTransaction(txid: string, rpc_url: string): P
 }
 
 export function serializeAddressData(address: string): Hex {
-  return (`0x${serializeCV(Cl.principal(address))}`) as Hex;
+  return `0x${serializeCV(Cl.principal(address))}` as Hex;
 }
 
 async function sleep(s: number): Promise<void> {
