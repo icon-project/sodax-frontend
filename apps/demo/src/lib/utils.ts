@@ -72,6 +72,42 @@ export function formatDecimalForDisplay(value: string, maxDecimals: number): str
   return trimmed;
 }
 
+/**
+ * Safely truncates a decimal string for "Max" form-fill without rounding up.
+ *
+ * Purpose:
+ * - Keep the value parseable by `parseUnits` while avoiding floating-point rounding that could
+ *   produce a value slightly greater than the true max (and fail "exceeds max" validation ).
+ *
+ * Behavior:
+ * - If `value` has a fractional part, keep the first non-zero fractional digit plus a few extra
+ *   digits (default: +3), with a minimum number of decimals (default: 6).
+ * - Trims trailing zeros and removes the trailing dot if needed.
+ */
+export function getSafeMaxAmountForInput(
+  value: string,
+  {
+    minDecimals = 6,
+    extraDecimalsAfterFirstNonZero = 3,
+  }: { minDecimals?: number; extraDecimalsAfterFirstNonZero?: number } = {},
+): string {
+  const trimmed = value.trim();
+  if (trimmed === '') return '';
+
+  const dotIndex = trimmed.indexOf('.');
+  if (dotIndex < 0) return trimmed;
+
+  const intPart = trimmed.slice(0, dotIndex);
+  const fracPart = trimmed.slice(dotIndex + 1);
+
+  const firstNonZero = fracPart.search(/[1-9]/);
+  const decimalsFromFirstNonZero = firstNonZero < 0 ? minDecimals : firstNonZero + 1 + extraDecimalsAfterFirstNonZero;
+  const decimalPlaces = Math.max(minDecimals, decimalsFromFirstNonZero);
+
+  const next = `${intPart}.${fracPart.slice(0, decimalPlaces)}`;
+  return next.replace(/\.?0+$/, '');
+}
+
 export function calculateExchangeRate(amount: BigNumber, toAmount: BigNumber): BigNumber {
   return new BigNumber(1).dividedBy(amount).multipliedBy(toAmount);
 }

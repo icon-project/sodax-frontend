@@ -17,7 +17,7 @@ import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@so
 import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 import type { MoneyMarketWithdrawParams } from '@sodax/sdk';
-import { getMmErrorText, formatDecimalForDisplay } from '@/lib/utils';
+import { getMmErrorText, formatDecimalForDisplay, getSafeMaxAmountForInput } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { ErrorAlert } from '../ErrorAlert';
 import { useQueryClient } from '@tanstack/react-query';
@@ -163,8 +163,8 @@ export function WithdrawModal({
       logger.error('Withdraw failed', err);
     }
   };
-  const handleMaxclick = () => {
-    setAmount(maxWithdraw);
+  const handleMaxclick = (): void => {
+    setAmount(getSafeMaxAmountForInput(maxWithdraw));
   };
 
   const handleOpenChangeInternal = (nextOpen: boolean) => {
@@ -236,7 +236,7 @@ export function WithdrawModal({
                   if (maxWithdraw && maxWithdraw !== '0' && amountNum > Number.parseFloat(maxWithdraw) && !isBusy) {
                     return (
                       <ErrorAlert
-                        text={`Amount exceeds maximum withdrawable: ${formatDecimalForDisplay(maxWithdraw, 4)} ${token.symbol}`}
+                        text={`Amount exceeds maximum withdrawable: ${formatDecimalForDisplay(maxWithdraw, 6)} ${token.symbol}`}
                         variant="compact"
                       />
                     );

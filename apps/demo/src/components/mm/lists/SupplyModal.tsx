@@ -17,7 +17,7 @@ import { useMMAllowance, useMMApprove, useSpokeProvider, useSupply } from '@soda
 import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 import type { MoneyMarketSupplyParams } from '@sodax/sdk';
-import { getMmErrorText, formatDecimalForDisplay } from '@/lib/utils';
+import { getMmErrorText, formatDecimalForDisplay, getSafeMaxAmountForInput } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { ErrorAlert } from '../ErrorAlert';
 import { useQueryClient } from '@tanstack/react-query';
@@ -129,8 +129,8 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
     }
   };
 
-  const handleMaxclick = () => {
-    setAmount(maxSupply);
+  const handleMaxclick = (): void => {
+    setAmount(getSafeMaxAmountForInput(maxSupply));
   };
 
   const handleOpenChangeInternal = (nextOpen: boolean) => {
@@ -211,7 +211,7 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
                   if (maxSupply && maxSupply !== '0' && amountNum > Number.parseFloat(maxSupply) && !isBusy) {
                     return (
                       <ErrorAlert
-                        text={`Amount exceeds maximum supply: ${formatDecimalForDisplay(maxSupply, 4)} ${token.symbol}`}
+                        text={`Amount exceeds maximum supply: ${formatDecimalForDisplay(maxSupply, 6)} ${token.symbol}`}
                         variant="compact"
                       />
                     );

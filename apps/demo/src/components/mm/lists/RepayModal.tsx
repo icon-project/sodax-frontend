@@ -18,7 +18,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { ChainSelector } from '@/components/shared/ChainSelector';
-import { getChainsWithThisToken, getTokenOnChain, getNativeTokenSymbol, formatDecimalForDisplay } from '@/lib/utils';
+import {
+  getChainsWithThisToken,
+  getTokenOnChain,
+  getNativeTokenSymbol,
+  formatDecimalForDisplay,
+  getSafeMaxAmountForInput,
+} from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { useXBalances, useXAccount } from '@sodax/wallet-sdk-react';
 import { getChainName } from '@/constants';
@@ -141,10 +147,7 @@ export function RepayModal({
   });
 
   // Check user balance on source chain
-  const {
-    data: balances,
-    isLoading: isBalancesLoading,
-  } = useXBalances({
+  const { data: balances, isLoading: isBalancesLoading } = useXBalances({
     xChainId: fromChainId,
     xTokens: sourceToken ? [sourceToken] : [],
     address: fromAddress,
@@ -249,18 +252,7 @@ export function RepayModal({
   const handleMax = () => {
     const maxDebtNum = Number.parseFloat(maxDebt);
     if (!Number.isNaN(maxDebtNum) && maxDebtNum > 0) {
-      // Truncate (not round) to just enough decimal places to show the first significant digit
-      // plus 3 more, with a minimum of 6. String-slicing avoids floating-point rounding up,
-      // which would produce a value > maxDebt and trigger the "exceeds max debt" validation error.
-      const dotIndex = maxDebt.indexOf('.');
-      if (dotIndex < 0) {
-        setAmount(maxDebt);
-        return;
-      }
-      const fracPart = maxDebt.slice(dotIndex + 1);
-      const firstNonZero = fracPart.search(/[1-9]/);
-      const decimalPlaces = Math.max(6, firstNonZero < 0 ? 6 : firstNonZero + 4);
-      setAmount(maxDebt.slice(0, dotIndex + 1 + decimalPlaces));
+      setAmount(getSafeMaxAmountForInput(maxDebt));
     }
   };
 
@@ -369,7 +361,7 @@ export function RepayModal({
                   if (!Number.isNaN(maxDebtNum) && amountNum > maxDebtNum) {
                     return (
                       <ErrorAlert
-                        text={`Amount exceeds maximum debt: ${Number(maxDebt).toFixed(6)} ${token.symbol}`}
+                        text={`Amount exceeds maximum debt: ${formatDecimalForDisplay(maxDebt, 6)} ${token.symbol}`}
                         variant="compact"
                       />
                     );
