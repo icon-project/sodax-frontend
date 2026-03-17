@@ -1,12 +1,12 @@
 'use client';
 
 import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   createDecreaseLiquidityParamsProps,
-  createSupplyLiquidityParamsProps,
   useClaimRewards,
   useDecreaseLiquidity,
+  useLiquidityAmounts,
   useSpokeProvider,
   useSupplyLiquidity,
 } from '@sodax/dapp-kit';
@@ -21,6 +21,7 @@ import { ClaimTabContent } from '@/app/(apps)/pool/_components/manage-dialog/cla
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WithdrawTabContent } from '@/app/(apps)/pool/_components/manage-dialog/withdraw-tab-content';
+import { formatUnits, parseUnits } from 'viem';
 
 type ManagePositionDialogProps = {
   open: boolean;
@@ -31,8 +32,6 @@ type ManagePositionDialogProps = {
   chainId: string;
   unclaimedFees0: bigint;
   unclaimedFees1: bigint;
-  token0FeeText: string;
-  token1FeeText: string;
   initialMinPrice: string;
   initialMaxPrice: string;
   positionInfo: ClPositionInfo;
@@ -54,8 +53,6 @@ export function ManagePositionDialog({
   chainId,
   unclaimedFees0,
   unclaimedFees1,
-  token0FeeText,
-  token1FeeText,
   initialMinPrice,
   initialMaxPrice,
   positionInfo,
@@ -63,30 +60,98 @@ export function ManagePositionDialog({
   const [activeTab, setActiveTab] = useState<'claim' | 'add' | 'withdraw'>('claim');
   const [minPrice, setMinPrice] = useState<string>(initialMinPrice);
   const [maxPrice, setMaxPrice] = useState<string>(initialMaxPrice);
-  const [liquidityToken0Amount, setLiquidityToken0Amount] = useState<string>('');
-  const [liquidityToken1Amount, setLiquidityToken1Amount] = useState<string>('');
+  const [sodaInputAmount, setSodaInputAmount] = useState<string>('');
+  const [lastEditedAmount, setLastEditedAmount] = useState<'soda' | 'xsoda' | null>(null);
   const [slippageTolerance, setSlippageTolerance] = useState<string>('0.5');
-  const [withdrawPercentage, setWithdrawPercentage] = useState<string>('25');
-  const [error, setError] = useState<string>('');
-  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [withdrawPercentage, setWithdrawPercentage] = useState<string>('0');
+  const [, setError] = useState<string>('');
   const spokeChainId = resolveSpokeChainId(chainId);
   const walletProvider = useWalletProvider(spokeChainId);
   const spokeProvider = useSpokeProvider(spokeChainId, walletProvider);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(spokeChainId);
+  const { liquidityToken0Amount, liquidityToken1Amount, handleToken0AmountChange, handleToken1AmountChange } =
+    useLiquidityAmounts(minPrice, maxPrice, poolData);
   const claimRewardsMutation = useClaimRewards();
   const supplyLiquidityMutation = useSupplyLiquidity();
   const decreaseLiquidityMutation = useDecreaseLiquidity();
+  const convertSodaToPoolTokenAmount = useCallback(
+    (underlyingAmount: string): string => {
+      if (underlyingAmount.trim() === '' || !poolData.token0IsStatAToken || !poolData.token0ConversionRate) {
+        return underlyingAmount;
+      }
+
+      try {
+        const underlyingDecimals = poolData.token0UnderlyingToken?.decimals ?? 18;
+        const underlyingRawAmount = parseUnits(underlyingAmount, underlyingDecimals);
+        const wrappedRawAmount = (underlyingRawAmount * 10n ** 18n) / poolData.token0ConversionRate;
+
+        return formatUnits(wrappedRawAmount, poolData.token0.decimals);
+      } catch {
+        return underlyingAmount;
+      }
+    },
+    [poolData],
+  );
+  const convertPoolTokenToSodaAmount = useCallback(
+    (wrappedAmount: string): string => {
+      if (wrappedAmount.trim() === '' || !poolData.token0IsStatAToken || !poolData.token0ConversionRate) {
+        return wrappedAmount;
+      }
+
+      try {
+        const underlyingDecimals = poolData.token0UnderlyingToken?.decimals ?? 18;
+        const wrappedRawAmount = parseUnits(wrappedAmount, poolData.token0.decimals);
+        const underlyingRawAmount = (wrappedRawAmount * poolData.token0ConversionRate) / 10n ** 18n;
+
+        return formatUnits(underlyingRawAmount, underlyingDecimals);
+      } catch {
+        return wrappedAmount;
+      }
+    },
+    [poolData],
+  );
+  const displaySodaAmount = useMemo((): string => {
+    if (lastEditedAmount === 'soda') {
+      return sodaInputAmount;
+    }
+    return convertPoolTokenToSodaAmount(liquidityToken0Amount);
+  }, [convertPoolTokenToSodaAmount, lastEditedAmount, liquidityToken0Amount, sodaInputAmount]);
+
+  const handleSodaAmountChange = useCallback(
+    (value: string): void => {
+      setLastEditedAmount('soda');
+      setSodaInputAmount(value);
+      handleToken0AmountChange(convertSodaToPoolTokenAmount(value));
+    },
+    [convertSodaToPoolTokenAmount, handleToken0AmountChange],
+  );
+  const handleXSodaAmountChange = useCallback(
+    (value: string): void => {
+      setLastEditedAmount('xsoda');
+      handleToken1AmountChange(value);
+    },
+    [handleToken1AmountChange],
+  );
 
   useEffect((): void => {
     if (!open) {
       return;
     }
     setError('');
-    setSuccessMessage('');
     setActiveTab('claim');
     setMinPrice(initialMinPrice);
     setMaxPrice(initialMaxPrice);
-  }, [initialMaxPrice, initialMinPrice, open]);
+    setLastEditedAmount(null);
+    setSodaInputAmount('');
+    handleToken0AmountChange('');
+    handleToken1AmountChange('');
+  }, [handleToken0AmountChange, handleToken1AmountChange, initialMaxPrice, initialMinPrice, open]);
+
+  useEffect((): void => {
+    if (lastEditedAmount !== 'soda') {
+      setSodaInputAmount(convertPoolTokenToSodaAmount(liquidityToken0Amount));
+    }
+  }, [convertPoolTokenToSodaAmount, lastEditedAmount, liquidityToken0Amount]);
 
   const hasUnclaimedFees = unclaimedFees0 > 0n || unclaimedFees1 > 0n;
   const isPending =
@@ -102,7 +167,6 @@ export function ManagePositionDialog({
       return;
     }
     setError('');
-    setSuccessMessage('');
     try {
       await claimRewardsMutation.mutateAsync({
         params: {
@@ -113,7 +177,6 @@ export function ManagePositionDialog({
         },
         spokeProvider,
       });
-      setSuccessMessage('Fee claim submitted.');
     } catch (claimError) {
       const message = claimError instanceof Error ? claimError.message : 'Fee claim failed.';
       setError(message);
@@ -133,6 +196,8 @@ export function ManagePositionDialog({
     const maxPriceNumber = Number.parseFloat(maxPrice);
     const amount0 = Number.parseFloat(liquidityToken0Amount);
     const amount1 = Number.parseFloat(liquidityToken1Amount);
+    console.log(minPriceNumber, maxPriceNumber);
+    console.log(amount0, amount1);
     if (!Number.isFinite(minPriceNumber) || !Number.isFinite(maxPriceNumber) || minPriceNumber >= maxPriceNumber) {
       setError('Enter a valid price range where min price is less than max price.');
       return;
@@ -142,30 +207,30 @@ export function ManagePositionDialog({
       return;
     }
 
-    setError('');
-    setSuccessMessage('');
-    try {
-      await supplyLiquidityMutation.mutateAsync({
-        params: createSupplyLiquidityParamsProps({
-          poolData,
-          poolKey,
-          minPrice,
-          maxPrice,
-          liquidityToken0Amount,
-          liquidityToken1Amount,
-          slippageTolerance,
-          positionId: tokenId,
-          isValidPosition: true,
-        }),
-        spokeProvider,
-      });
-      setSuccessMessage('Add liquidity transaction submitted.');
-      setLiquidityToken0Amount('');
-      setLiquidityToken1Amount('');
-    } catch (supplyError) {
-      const message = supplyError instanceof Error ? supplyError.message : 'Add liquidity failed.';
-      setError(message);
-    }
+    // setError('');
+    // try {
+    //   await supplyLiquidityMutation.mutateAsync({
+    //     params: createSupplyLiquidityParamsProps({
+    //       poolData,
+    //       poolKey,
+    //       minPrice,
+    //       maxPrice,
+    //       liquidityToken0Amount,
+    //       liquidityToken1Amount,
+    //       slippageTolerance,
+    //       positionId: tokenId,
+    //       isValidPosition: true,
+    //     }),
+    //     spokeProvider,
+    //   });
+    //   setLastEditedAmount(null);
+    //   handleToken0AmountChange('');
+    //   handleToken1AmountChange('');
+    //   setSodaInputAmount('');
+    // } catch (supplyError) {
+    //   const message = supplyError instanceof Error ? supplyError.message : 'Add liquidity failed.';
+    //   setError(message);
+    // }
   };
 
   const handleWithdrawLiquidity = async (): Promise<void> => {
@@ -184,7 +249,6 @@ export function ManagePositionDialog({
     }
 
     setError('');
-    setSuccessMessage('');
     try {
       await decreaseLiquidityMutation.mutateAsync({
         params: createDecreaseLiquidityParamsProps({
@@ -196,7 +260,6 @@ export function ManagePositionDialog({
         }),
         spokeProvider,
       });
-      setSuccessMessage('Withdraw liquidity transaction submitted.');
     } catch (withdrawError) {
       const message = withdrawError instanceof Error ? withdrawError.message : 'Withdraw liquidity failed.';
       setError(message);
@@ -208,15 +271,27 @@ export function ManagePositionDialog({
       <DialogContent className="sm:max-w-120 h-106 p-12" hideCloseButton={true}>
         <Tabs value={activeTab} onValueChange={value => setActiveTab(value as 'claim' | 'add' | 'withdraw')}>
           <div className="flex justify-between items-center">
-            <TabsList className="flex bg-transparent gap-4">
-              <TabsTrigger value="claim" className="text-clay hover:text-espresso shadow-none! data-[state=active]:text-espresso! cursor-pointer p-0 text-(length:--body-small) gap-1">
-                  <CircleEllipsisIcon className={activeTab === 'claim' ? 'text-espresso' : 'text-clay-light'} size={14} /> Fee
+            <TabsList className="flex bg-transparent gap-4 p-0 h-4">
+              <TabsTrigger
+                value="claim"
+                className="text-clay hover:text-espresso shadow-none! data-[state=active]:text-espresso! cursor-pointer p-0 text-(length:--body-small) gap-1"
+              >
+                <CircleEllipsisIcon className={activeTab === 'claim' ? 'text-espresso' : 'text-clay-light'} size={14} />{' '}
+                Fee
               </TabsTrigger>
-              <TabsTrigger value="add" className="text-clay hover:text-espresso shadow-none! data-[state=active]:text-espresso! cursor-pointer p-0 text-(length:--body-small) gap-1">
-                  <PlusCircleIcon className={activeTab === 'add' ? 'text-espresso' : 'text-clay-light'} size={14} /> Add Liquidity
+              <TabsTrigger
+                value="add"
+                className="text-clay hover:text-espresso shadow-none! data-[state=active]:text-espresso! cursor-pointer p-0 text-(length:--body-small) gap-1"
+              >
+                <PlusCircleIcon className={activeTab === 'add' ? 'text-espresso' : 'text-clay-light'} size={14} /> Add
+                Liquidity
               </TabsTrigger>
-              <TabsTrigger value="withdraw" className="text-clay hover:text-espresso shadow-none! data-[state=active]:text-espresso! cursor-pointer p-0 text-(length:--body-small) gap-1">
-                  <MinusCircleIcon className={activeTab === 'withdraw' ? 'text-espresso' : 'text-clay-light'} size={14} /> Withdraw
+              <TabsTrigger
+                value="withdraw"
+                className="text-clay hover:text-espresso shadow-none! data-[state=active]:text-espresso! cursor-pointer p-0 text-(length:--body-small) gap-1"
+              >
+                <MinusCircleIcon className={activeTab === 'withdraw' ? 'text-espresso' : 'text-clay-light'} size={14} />{' '}
+                Withdraw
               </TabsTrigger>
             </TabsList>
             <XIcon
@@ -224,37 +299,52 @@ export function ManagePositionDialog({
               onClick={() => onOpenChange(false)}
             />
           </div>
+          {/* {error ? (
+            <div className="mt-4 flex flex-col text-center">
+              <div className="flex justify-center gap-1 w-full items-center">
+                <ShieldAlertIcon className="w-4 h-4 text-negative" />
+                <span className="font-bold text-(length:--body-super-comfortable) leading-[1.4] text-negative">
+                  Transaction failed
+                </span>
+              </div>
+              <div className="text-espresso text-(length:--body-small) text-center leading-[1.4]">{error}</div>
+            </div>
+          ) : null} */}
           <ClaimTabContent
+            chainId={spokeChainId}
             hasUnclaimedFees={hasUnclaimedFees}
+            unclaimedFees0={unclaimedFees0}
+            unclaimedFees1={unclaimedFees1}
             isPending={isPending}
             isClaimPending={claimRewardsMutation.isPending}
             onClaimFees={() => void handleClaimFees()}
           />
           <AddLiquidityTabContent
+            chainId={spokeChainId}
             tokenId={tokenId}
             poolData={poolData}
             minPrice={minPrice}
             maxPrice={maxPrice}
-            liquidityToken0Amount={liquidityToken0Amount}
+            liquidityToken0Amount={displaySodaAmount}
             liquidityToken1Amount={liquidityToken1Amount}
             slippageTolerance={slippageTolerance}
             isPending={isPending}
             isSupplyPending={supplyLiquidityMutation.isPending}
             onMinPriceChange={setMinPrice}
             onMaxPriceChange={setMaxPrice}
-            onToken0AmountChange={setLiquidityToken0Amount}
-            onToken1AmountChange={setLiquidityToken1Amount}
+            onToken0AmountChange={handleSodaAmountChange}
+            onToken1AmountChange={handleXSodaAmountChange}
             onSlippageChange={setSlippageTolerance}
             onAddLiquidity={() => void handleAddLiquidity()}
           />
           <WithdrawTabContent
-            tokenId={tokenId}
+            chainId={spokeChainId}
+            poolData={poolData}
+            positionInfo={positionInfo}
             withdrawPercentage={withdrawPercentage}
-            slippageTolerance={slippageTolerance}
             isPending={isPending}
             isWithdrawPending={decreaseLiquidityMutation.isPending}
             onWithdrawPercentageChange={setWithdrawPercentage}
-            onSlippageChange={setSlippageTolerance}
             onWithdrawLiquidity={() => void handleWithdrawLiquidity()}
           />
         </Tabs>
@@ -263,8 +353,6 @@ export function ManagePositionDialog({
             Switch Network
           </Button>
         ) : null}
-        {error ? <p className="text-sm text-cherry-bright">{error}</p> : null}
-        {successMessage ? <p className="text-sm text-green-600">{successMessage}</p> : null}
       </DialogContent>
     </Dialog>
   );

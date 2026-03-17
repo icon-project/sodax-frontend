@@ -1,97 +1,146 @@
+// apps/web/app/(apps)/pool/_components/manage-dialog/claim-tab-content.tsx
+'use client';
+
 import type React from 'react';
+import { useMemo } from 'react';
+import BigNumber from 'bignumber.js';
 import { Loader2 } from 'lucide-react';
+import { spokeChainConfig } from '@sodax/sdk';
 import { Button } from '@/components/ui/button';
 import { TabsContent } from '@/components/ui/tabs';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
+import { formatBalance, formatTokenAmount } from '@/lib/utils';
+import type { SpokeChainId, XToken } from '@sodax/types';
+import Image from 'next/image';
+import Tip from '@/app/(apps)/stake/_components/icons/tip';
+import { PairBalanceHeader } from '@/app/(apps)/pool/_components/manage-dialog/pair-balance-header';
+
+const sodaToken: XToken = {
+  name: 'SODA',
+  symbol: 'SODA',
+  address: '0x0',
+  decimals: 18,
+  xChainId: 'sonic',
+};
+
+const xSodaToken: XToken = {
+  name: 'xSODA',
+  symbol: 'xSODA',
+  address: '0x1',
+  decimals: 18,
+  xChainId: 'sonic',
+};
 
 type ClaimTabContentProps = {
+  chainId: SpokeChainId;
   hasUnclaimedFees: boolean;
+  unclaimedFees0: bigint;
+  unclaimedFees1: bigint;
   isPending: boolean;
   isClaimPending: boolean;
   onClaimFees: () => void;
 };
 
 export function ClaimTabContent({
+  chainId,
   hasUnclaimedFees,
+  unclaimedFees0,
+  unclaimedFees1,
   isPending,
   isClaimPending,
   onClaimFees,
 }: ClaimTabContentProps): React.JSX.Element {
+  const xSodaTokenOnCurrentChain: XToken = {
+    ...xSodaToken,
+    xChainId: chainId,
+  };
+  const selectedSodaToken = useMemo((): XToken | undefined => {
+    const selectedChainConfig = spokeChainConfig[chainId];
+    if (!selectedChainConfig?.supportedTokens || !('SODA' in selectedChainConfig.supportedTokens)) {
+      return undefined;
+    }
+    return selectedChainConfig.supportedTokens.SODA as XToken;
+  }, [chainId]);
+  const { data: sodaPrice } = useTokenPrice(selectedSodaToken ?? sodaToken);
+  const { data: xSodaPrice } = useTokenPrice(xSodaTokenOnCurrentChain);
+  const unclaimedSodaText = formatTokenAmount(unclaimedFees0, selectedSodaToken?.decimals ?? 18, 2);
+  const unclaimedXSodaText = formatTokenAmount(unclaimedFees1, 18, 2);
+  const unclaimedSodaUsdText = useMemo((): string => {
+    const usdValue = new BigNumber(unclaimedSodaText).multipliedBy(sodaPrice ?? 0);
+    return `$${formatBalance(usdValue.toString(), sodaPrice ?? 0)}`;
+  }, [unclaimedSodaText, sodaPrice]);
+  const unclaimedXSodaUsdText = useMemo((): string => {
+    const usdValue = new BigNumber(unclaimedXSodaText).multipliedBy(xSodaPrice ?? 0);
+    return `$${formatBalance(usdValue.toString(), xSodaPrice ?? 0)}`;
+  }, [unclaimedXSodaText, xSodaPrice]);
+
   return (
-    <TabsContent value="claim" className="space-y-3">
-      <div className="self-stretch flex justify-between items-start">
-        <div className="flex justify-start items-center gap-3">
-          <div data-property-1="Pair" className="inline-flex flex-col justify-start items-center gap-2">
-            <div className="inline-flex justify-start items-center">
-              <div className="w-12 h-12 relative">
-                <div className="w-12 h-12 left-0 top-0 absolute bg-gradient-to-br from-white to-zinc-100 rounded-[80px] shadow-[0px_8px_20px_0px_rgba(175,145,145,0.20)]" />
-                <div className="h-6 left-[12px] top-[12px] absolute bg-white rounded-[256px] inline-flex flex-col justify-center items-center overflow-hidden">
-                  <img data-property-1="SODA" className="w-6 h-6 rounded-[256px]" src="https://placehold.co/24x24" />
-                </div>
-              </div>
-              <div className="w-12 h-12 relative">
-                <div className="w-12 h-12 left-0 top-0 absolute bg-gradient-to-br from-white to-zinc-100 rounded-[80px] shadow-[0px_8px_20px_0px_rgba(175,145,145,0.20)]" />
-                <div className="h-6 left-[12px] top-[12px] absolute bg-white rounded-[256px] inline-flex flex-col justify-center items-center overflow-hidden">
-                  <img data-property-1="xSODA" className="w-6 h-6 rounded-[256px]" src="https://placehold.co/24x24" />
-                </div>
-                <div className="h-4 left-[30px] top-[30px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,0.10)] outline outline-2 outline-white inline-flex flex-col justify-center items-center overflow-hidden">
-                  <img data-property-1="Solana" className="w-4 h-4" src="https://placehold.co/16x16" />
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="inline-flex flex-col justify-center items-start gap-0.5">
-            <div className="inline-flex justify-start items-center gap-2">
-              <div className="justify-center text-espresso text-base font-normal font-['Inter'] leading-5">SODA / xSODA</div>
-            </div>
-            <div className="inline-flex justify-start items-center gap-1">
-              <div className="justify-center text-espresso text-xs font-bold font-['Inter'] leading-4">10,002.71</div>
-              <div className="justify-center text-clay text-xs font-normal font-['Inter'] leading-4">/</div>
-              <div className="justify-center text-espresso text-xs font-bold font-['Inter'] leading-4">6,981.48</div>
-            </div>
-          </div>
-        </div>
-        <div className="h-12 px-2 bg-blend-multiply bg-almost-white rounded-lg flex flex-col justify-center items-end">
-          <div className="text-center justify-start text-clay text-[9px] font-medium font-['Inter'] uppercase leading-3"> current APR</div>
-          <div className="text-center justify-start text-espresso text-base font-bold font-['Inter'] leading-5">8.49%</div>
-        </div>
+    <TabsContent value="claim">
+      <div className="mt-4">
+        <PairBalanceHeader chainId={chainId} />
       </div>
-      <div className="self-stretch inline-flex flex-col justify-start items-start">
-        <div className="pl-8 opacity-80 flex flex-col justify-start items-start gap-2">
-          <div className="w-4 h-20 relative origin-top-left rotate-90">
-            <div className="w-4 h-20 left-[80px] top-0 absolute origin-top-left rotate-90 bg-blend-multiply bg-Almost-white" />
-          </div>
+      <div className="relative self-stretch inline-flex flex-col justify-start items-start w-full mt-10">
+        <div className="absolute -top-7 left-8 translate-y-full z-10 pointer-events-none rotate-180">
+          <Tip fill="var(--color-almost-white)" />{' '}
         </div>
-        <div className="self-stretch px-8 py-6 bg-blend-multiply bg-Almost-white rounded-2xl flex flex-col justify-start items-start gap-4">
+        <div className="self-stretch px-8 py-6 bg-blend-multiply bg-almost-white rounded-2xl flex flex-col justify-start items-start gap-4">
           <div className="inline-flex justify-start items-center gap-6">
-            <div className="text-right justify-start text-clay text-[9px] font-medium font-['Inter'] uppercase leading-3">your      fees</div>
+            <div className="text-right justify-start text-clay text-[9px] font-medium font-['Inter'] uppercase leading-3">
+              your fees
+            </div>
             <div className="flex justify-start items-center gap-3">
-              <div className="w-0 h-10 outline outline-2 outline-offset-[-1px] outline-cherry-grey" />
+              <div className="w-0 h-10 outline outline-cherry-grey" />
               <div className="inline-flex flex-col justify-start items-start">
                 <div className="inline-flex justify-center items-center gap-2">
                   <div className="bg-white rounded-[384px] shadow-[-4.5px_0px_6px_0px_rgba(175,145,145,0.20)] outline outline-[3px] outline-white inline-flex flex-col justify-center items-center overflow-hidden">
-                    <img data-property-1="SODA" className="w-3 h-3 rounded-[384px]" src="https://placehold.co/12x12" />
+                    <Image
+                      data-property-1="SODA"
+                      className="w-3 h-3 rounded-[384px]"
+                      src="/coin/soda.png"
+                      alt="SODA"
+                      width={12}
+                      height={12}
+                    />
                   </div>
-                  <div className="justify-start text-espresso text-base font-bold font-['Inter'] leading-5">0.0021</div>
+                  <div className="justify-start text-espresso text-(length:--body-super-comfortable) font-bold font-['Inter'] leading-5">
+                    {unclaimedSodaText}
+                  </div>
                 </div>
-                <div className="justify-start text-clay text-xs font-normal font-['Inter'] leading-4">$0.0005</div>
+                <div className="justify-start text-clay text-(length:--body-small) font-normal font-['Inter'] leading-4">
+                  {unclaimedSodaUsdText}
+                </div>
               </div>
             </div>
             <div className="flex justify-start items-center gap-3">
-              <div className="w-0 h-10 outline outline-2 outline-offset-[-1px] outline-cherry-grey" />
+              <div className="w-0 h-10 outline outline-cherry-grey" />
               <div className="inline-flex flex-col justify-start items-start">
                 <div className="inline-flex justify-center items-center gap-2">
-                  <div data-property-1="Default" className="bg-white rounded-[384px] shadow-[-4.5px_0px_6px_0px_rgba(175,145,145,0.20)] outline outline-[3px] outline-white inline-flex flex-col justify-center items-center overflow-hidden">
-                    <img data-property-1="xSODA" className="w-3 h-3 rounded-[384px]" src="https://placehold.co/12x12" />
+                  <div
+                    data-property-1="Default"
+                    className="bg-white rounded-[384px] shadow-[-4.5px_0px_6px_0px_rgba(175,145,145,0.20)] outline outline-[3px] outline-white inline-flex flex-col justify-center items-center overflow-hidden"
+                  >
+                    <Image
+                      data-property-1="xSODA"
+                      className="w-3 h-3 rounded-[384px]"
+                      src="/coin/xsoda.png"
+                      alt="xSODA"
+                      width={12}
+                      height={12}
+                    />
                   </div>
-                  <div className="justify-start text-espresso text-base font-bold font-['Inter'] leading-5">0.0038</div>
+                  <div className="justify-start text-espresso text-(length:--body-super-comfortable) font-bold font-['Inter'] leading-5">
+                    {unclaimedXSodaText}
+                  </div>
                 </div>
-                <div className="justify-start text-clay text-xs font-normal font-['Inter'] leading-4">$0.0003</div>
+                <div className="justify-start text-clay text-(length:--body-small) font-normal font-['Inter'] leading-4">
+                  {unclaimedXSodaUsdText}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <Button variant="cherry" className="w-full" onClick={onClaimFees} disabled={isPending || !hasUnclaimedFees}>
+      <Button variant="cherry" className="w-full mt-2" onClick={onClaimFees} disabled={isPending || !hasUnclaimedFees}>
         {isClaimPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
         {hasUnclaimedFees ? 'Claim Fee' : 'No Fee to Claim'}
       </Button>

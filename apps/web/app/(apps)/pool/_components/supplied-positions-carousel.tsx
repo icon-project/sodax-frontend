@@ -5,10 +5,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePositionInfo } from '@sodax/dapp-kit';
 import { spokeChainConfig } from '@sodax/sdk';
 import type { PoolData, PoolKey } from '@sodax/sdk';
-import type { SpokeChainId } from '@sodax/types';
+import type { ChainId, SpokeChainId } from '@sodax/types';
+import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { formatTokenAmount } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { chainIdToChainName } from '@/providers/constants';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Item, ItemContent, ItemMedia } from '@/components/ui/item';
@@ -16,6 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'motion/react';
 import { CircleEllipsisIcon } from 'lucide-react';
 import { ManagePositionDialog } from './manage-dialog';
+import { SwitchChainDialog } from '@/components/shared/switch-chain-dialog';
 
 type SuppliedPositionsCarouselProps = {
   positions: SuppliedPositionItem[];
@@ -64,7 +67,24 @@ function PositionCard({
   const { data, isLoading, isError, error } = usePositionInfo({ tokenId, poolKey });
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isManageDialogOpen, setIsManageDialogOpen] = useState<boolean>(false);
+  const [isSwitchChainDialogOpen, setIsSwitchChainDialogOpen] = useState<boolean>(false);
   const positionKey = `${chainId}-${tokenId}`;
+  const spokeChainId = resolveSpokeChainId(chainId);
+  const chainName = chainIdToChainName(spokeChainId as ChainId);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(spokeChainId);
+
+  const handleManageClick = (): void => {
+    if (isWrongChain) {
+      setIsSwitchChainDialogOpen(true);
+      return;
+    }
+    setIsManageDialogOpen(true);
+  };
+
+  const handleSwitchChainClick = (): void => {
+    void handleSwitchChain();
+  };
+
   useEffect((): void => {
     if (isLoading || isError || !data?.isValid) {
       onLiquidityValueChange(positionKey, 0);
@@ -112,7 +132,6 @@ function PositionCard({
   }
 
   const { positionInfo } = data;
-  const spokeChainId = resolveSpokeChainId(chainId);
   const amount0 = formatTokenAmount(positionInfo.amount0, poolData.token0.decimals, 6);
   const amount1 = formatTokenAmount(positionInfo.amount1, poolData.token1.decimals, 6);
   const fees0 = formatTokenAmount(positionInfo.unclaimedFees0, poolData.token0.decimals, 6);
@@ -219,12 +238,19 @@ function PositionCard({
       >
         <div
           className="gap-1 text-(length:--body-small) text-clay font-medium flex cursor-pointer transition-all duration-200 hover:opacity-100! hover:text-espresso!"
-          onClick={(): void => setIsManageDialogOpen(true)}
+          onClick={handleManageClick}
         >
           <CircleEllipsisIcon className="w-4 h-4 text-espresso transition-opacity duration-200" />
           Manage
         </div>
       </motion.div>
+      <SwitchChainDialog
+        open={isSwitchChainDialogOpen}
+        onOpenChange={setIsSwitchChainDialogOpen}
+        chainName={chainName}
+        onSwitchChain={handleSwitchChainClick}
+        description={`This position is on ${chainName}. Switch network to continue managing it.`}
+      />
       <ManagePositionDialog
         open={isManageDialogOpen}
         onOpenChange={setIsManageDialogOpen}
@@ -234,8 +260,6 @@ function PositionCard({
         chainId={chainId}
         unclaimedFees0={positionInfo.unclaimedFees0}
         unclaimedFees1={positionInfo.unclaimedFees1}
-        token0FeeText={fees0}
-        token1FeeText={fees1}
         initialMinPrice={minPrice}
         initialMaxPrice={maxPrice}
         positionInfo={positionInfo}
