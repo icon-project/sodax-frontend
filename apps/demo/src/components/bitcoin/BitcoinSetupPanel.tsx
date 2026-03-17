@@ -58,34 +58,24 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
     <div className="flex flex-col gap-4 p-4 mt-4 bg-muted/30 rounded-lg border border-border">
       <h3 className="font-semibold text-sm">Bitcoin Trading Setup</h3>
 
-      {/* Step 1: Authentication */}
-      <div className="flex items-center justify-between">
-        <span className="text-sm font-medium flex items-center gap-2">
-          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs text-white ${isAuthed ? 'bg-green-500' : 'bg-blue-500'}`}>
-            1
-          </div>
-          Radfi Authentication
-        </span>
-        {isAuthed ? (
-          <span className="text-xs text-green-500 font-medium">Authenticated ✓</span>
-        ) : (
+      {/* Sign in — only shown before authenticated */}
+      {!isAuthed && (
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium">Sign in to trade</span>
           <Button size="sm" onClick={login} disabled={isLoginPending || !walletAddress}>
             {isLoginPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Sign Login Message
+            Sign In
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Step 2: Trading Wallet + Balance (shown after auth) */}
+      {/* Trading Wallet (shown after auth — sign in step hidden) */}
       {isAuthed && (
-        <div className="flex flex-col gap-3 border-t border-border pt-4 mt-2">
+        <div className="flex flex-col gap-3">
 
           {/* Trading wallet address + Top Up */}
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium flex items-center gap-2">
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs text-white ${tradingAddress ? 'bg-green-500' : 'bg-blue-500'}`}>
-                2
-              </div>
+            <span className="text-sm font-medium">
               Trading Wallet
             </span>
             {tradingAddress ? (
