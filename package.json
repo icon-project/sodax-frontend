@@ -26,5 +26,10 @@
   },
   "commitlint": {
     "extends": ["@commitlint/config-conventional"]
+  },
+  "pnpm": {
+    "overrides": {
+      "@hpke/core": ">=1.8.0"
+    }
   }
 }
