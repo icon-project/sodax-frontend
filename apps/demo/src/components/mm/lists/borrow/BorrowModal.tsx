@@ -18,7 +18,14 @@ import type { MoneyMarketBorrowParams } from '@sodax/sdk';
 import { useBorrow, useSpokeProvider, useReservesUsdFormat, useAToken, useUserReservesData } from '@sodax/dapp-kit';
 import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
-import { getChainsWithThisToken, getMmErrorText, getTokenOnChain, getNativeTokenSymbol, formatDecimalForDisplay } from '@/lib/utils';
+import {
+  getChainsWithThisToken,
+  getMmErrorText,
+  getTokenOnChain,
+  getNativeTokenSymbol,
+  formatDecimalForDisplay,
+  getSafeMaxAmountForInput,
+} from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { formatUnits } from 'viem';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
@@ -313,10 +320,10 @@ export function BorrowModal({
     }
   };
 
-  const handleMaxClick = () => {
+  const handleMaxClick = (): void => {
     const maxBorrowNum = Number.parseFloat(maxBorrow);
     if (maxBorrowNum > 0 && !Number.isNaN(maxBorrowNum)) {
-      setAmount(maxBorrow);
+      setAmount(getSafeMaxAmountForInput(maxBorrow));
     }
   };
 
