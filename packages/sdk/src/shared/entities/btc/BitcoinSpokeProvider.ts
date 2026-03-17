@@ -6,6 +6,7 @@ import {
   type AddressType,
   type HubChainId,
   getIntentRelayChainId,
+  detectBitcoinAddressType,
 } from '@sodax/types';
 import type { IRawSpokeProvider, ISpokeProvider } from '../Providers.js';
 import type { BitcoinSpokeProviderType, TxReturnType } from '../../types.js';
@@ -55,6 +56,16 @@ export interface OnDemandPayload {
 
 const BITCOIN_DEFAULT_FEE_RATE = 3;
 const DUST_THRESHOLD = 546;
+
+/**
+ * Normalize a signed PSBT to base64 format.
+ * Unisat/OKX wallets return hex, Xverse returns base64.
+ * Radfi API expects base64.
+ */
+export function normalizePsbtToBase64(signedPsbt: string): string {
+  const isHex = /^[0-9a-fA-F]+$/.test(signedPsbt);
+  return isHex ? Buffer.from(signedPsbt, 'hex').toString('base64') : signedPsbt;
+}
 
 export class BitcoinBaseSpokeProvider {
   public readonly rpcUrl: string;
@@ -314,12 +325,7 @@ export class BitcoinBaseSpokeProvider {
             false
           );
 
-        // Normalize to base64 — Radfi expects base64 PSBT.
-        // Unisat/OKX return hex, Xverse returns base64.
-        const isHex = /^[0-9a-fA-F]+$/.test(signedTx);
-        const signedBase64Tx = isHex
-          ? Buffer.from(signedTx, 'hex').toString('base64')
-          : signedTx;
+        const signedBase64Tx = normalizePsbtToBase64(signedTx);
 
         return (await provider.radfi.requestRadfiSignature({
           userAddress: walletAddress,
@@ -392,9 +398,15 @@ export class BitcoinBaseSpokeProvider {
         Buffer.from(data.slice(2), 'hex'),
       ]);
 
+      const OP_RETURN = bitcoin.opcodes.OP_RETURN;
+      const OP_12 = bitcoin.opcodes.OP_12;
+      if (OP_RETURN === undefined || OP_12 === undefined) {
+        throw new Error('bitcoinjs-lib opcodes OP_RETURN or OP_12 are undefined');
+      }
+
       const script = bitcoin.script.compile([
-        bitcoin.opcodes.OP_RETURN!,
-        bitcoin.opcodes.OP_12!,
+        OP_RETURN,
+        OP_12,
         payload
       ]);
 
@@ -442,32 +454,7 @@ export class BitcoinBaseSpokeProvider {
   }
 
   public getAddressType(address: string): AddressType {
-    // Taproot (bech32m)
-    if (
-      address.startsWith('bc1p') ||
-      address.startsWith('tb1p')
-    ) {
-      return 'P2TR';
-    }
-
-    // Native SegWit (bech32)
-    if (
-      address.startsWith('bc1') ||
-      address.startsWith('tb1')
-    ) {
-      return 'P2WPKH';
-    }
-
-    // Legacy P2PKH
-    if (
-      address.startsWith('1') ||
-      address.startsWith('m') ||
-      address.startsWith('n')
-    ) {
-      return 'P2PKH';
-    }
-
-    throw new Error(`Unknown address type: ${address}`);
+    return detectBitcoinAddressType(address);
   }
 
   public encodePayloadToBytes(payload: Payload): string {

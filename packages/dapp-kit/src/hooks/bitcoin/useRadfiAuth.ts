@@ -107,6 +107,13 @@ export function useRadfiAuth(
             saveRadfiSession(walletAddress, session);
             return { accessToken: refreshed.accessToken, refreshToken: refreshed.refreshToken, tradingAddress: existingSession.tradingAddress };
           }
+
+          // No valid session to refresh — guide the user
+          throw new Error(
+            'This wallet is already registered with Radfi from another session. ' +
+            'Please clear your browser storage for this site and try again, ' +
+            'or wait for the previous session to expire.',
+          );
         }
 
         throw err;

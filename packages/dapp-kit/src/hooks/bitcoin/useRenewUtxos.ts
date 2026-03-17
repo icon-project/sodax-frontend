@@ -1,4 +1,4 @@
-import type { BitcoinSpokeProvider } from '@sodax/sdk';
+import { normalizePsbtToBase64, type BitcoinSpokeProvider } from '@sodax/sdk';
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
 import { loadRadfiSession } from './useRadfiAuth';
 
@@ -56,11 +56,7 @@ export function useRenewUtxos(
         false,
       );
 
-      // Normalize to base64 (Unisat/OKX return hex, Xverse returns base64)
-      const isHex = /^[0-9a-fA-F]+$/.test(signedTx);
-      const signedBase64Tx = isHex
-        ? Buffer.from(signedTx, 'hex').toString('base64')
-        : signedTx;
+      const signedBase64Tx = normalizePsbtToBase64(signedTx);
 
       // Step 3: Submit to Radfi for co-signing and broadcasting
       return spokeProvider.radfi.signAndBroadcastRenewUtxo(

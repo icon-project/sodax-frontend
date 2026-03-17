@@ -58,7 +58,7 @@ import {
 } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 import { BitcoinSetupPanel } from '@/components/bitcoin/BitcoinSetupPanel';
-import type { BitcoinSpokeProvider } from '@sodax/sdk';
+import { isBitcoinSpokeProvider, type BitcoinSpokeProvider } from '@sodax/sdk';
 
 export default function SwapCard({
   setOrders,
@@ -342,9 +342,9 @@ export default function SwapCard({
           </div>
         </div>
         
-        {sourceChain === BITCOIN_MAINNET_CHAIN_ID && sourceProvider && (
+        {sourceChain === BITCOIN_MAINNET_CHAIN_ID && sourceProvider && isBitcoinSpokeProvider(sourceProvider) && (
           <BitcoinSetupPanel
-            spokeProvider={sourceProvider as unknown as BitcoinSpokeProvider}
+            spokeProvider={sourceProvider}
             onReadyChange={setIsBitcoinReady}
             nativeBalance={sourceTokenBalance}
           />

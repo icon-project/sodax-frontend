@@ -14,6 +14,8 @@ export class BitcoinXService extends XService {
   public static getInstance(rpcUrl?: string): BitcoinXService {
     if (!BitcoinXService.instance) {
       BitcoinXService.instance = new BitcoinXService(rpcUrl);
+    } else if (rpcUrl && rpcUrl !== BitcoinXService.instance.rpcUrl) {
+      BitcoinXService.instance.rpcUrl = rpcUrl;
     }
     return BitcoinXService.instance;
   }

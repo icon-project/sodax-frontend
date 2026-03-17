@@ -1,4 +1,4 @@
-import type { AddressType, Hex, IBitcoinWalletProvider } from '@sodax/types';
+import { detectBitcoinAddressType, type AddressType, type Hex, type IBitcoinWalletProvider } from '@sodax/types';
 import * as bitcoin from 'bitcoinjs-lib';
 import type { ECPairInterface } from 'ecpair';
 import * as ecc from '@bitcoinerlab/secp256k1';
@@ -142,32 +142,7 @@ export class BitcoinWalletProvider implements IBitcoinWalletProvider {
   }
 
   async getAddressType(address: string): Promise<AddressType> {
-    // Taproot (bech32m)
-    if (
-      address.startsWith('bc1p') ||
-      address.startsWith('tb1p')
-    ) {
-      return 'P2TR';
-    }
-
-    // Native SegWit (bech32)
-    if (
-      address.startsWith('bc1') ||
-      address.startsWith('tb1')
-    ) {
-      return 'P2WPKH';
-    }
-
-    // Legacy P2PKH
-    if (
-      address.startsWith('1') ||
-      address.startsWith('m') ||
-      address.startsWith('n')
-    ) {
-      return 'P2PKH';
-    }
-
-    throw new BitcoinWalletError(`Unknown address type: ${address}`);
+    return detectBitcoinAddressType(address);
   }
 
 

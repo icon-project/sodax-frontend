@@ -2,6 +2,16 @@ import type { WalletAddressProvider } from "../common/index.js";
 
 export type AddressType = "P2PKH" | "P2WPKH" | "P2TR"
 
+/**
+ * Detect Bitcoin address type from its prefix.
+ * Shared utility — use this instead of duplicating prefix checks.
+ */
+export function detectBitcoinAddressType(address: string): AddressType {
+  if (address.startsWith('bc1p') || address.startsWith('tb1p')) return 'P2TR';
+  if (address.startsWith('bc1') || address.startsWith('tb1')) return 'P2WPKH';
+  if (address.startsWith('1') || address.startsWith('m') || address.startsWith('n')) return 'P2PKH';
+  throw new Error(`Unknown Bitcoin address type: ${address}`);
+}
 // Type definitions for @sodax/types - Bitcoin Wallet Provider
 export interface BitcoinTransactionStatus {
   confirmed: boolean;

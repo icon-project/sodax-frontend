@@ -1,5 +1,5 @@
 import type { XAccount } from '@/types';
-import type { IBitcoinWalletProvider, AddressType } from '@sodax/types';
+import { detectBitcoinAddressType, type IBitcoinWalletProvider, type AddressType } from '@sodax/types';
 import { AddressPurpose, MessageSigningProtocols } from 'sats-connect';
 import { BitcoinXConnector } from './BitcoinXConnector';
 
@@ -38,10 +38,7 @@ class XverseWalletProvider implements IBitcoinWalletProvider {
   }
 
   async getAddressType(_address: string): Promise<AddressType> {
-    const address = this.address;
-    if (address.startsWith('bc1p') || address.startsWith('tb1p')) return 'P2TR';
-    if (address.startsWith('bc1') || address.startsWith('tb1')) return 'P2WPKH';
-    return 'P2PKH';
+    return detectBitcoinAddressType(this.address);
   }
 
   /**

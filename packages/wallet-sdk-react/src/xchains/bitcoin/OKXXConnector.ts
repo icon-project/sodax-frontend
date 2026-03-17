@@ -1,5 +1,5 @@
 import type { XAccount } from '@/types';
-import type { IBitcoinWalletProvider, AddressType } from '@sodax/types';
+import { detectBitcoinAddressType, type IBitcoinWalletProvider, type AddressType } from '@sodax/types';
 import { BitcoinXConnector } from './BitcoinXConnector';
 
 // OKX Bitcoin wallet window API types
@@ -45,9 +45,7 @@ class OKXWalletProvider implements IBitcoinWalletProvider {
 
   async getAddressType(_address: string): Promise<AddressType> {
     const address = await this.getWalletAddress();
-    if (address.startsWith('bc1p') || address.startsWith('tb1p')) return 'P2TR';
-    if (address.startsWith('bc1') || address.startsWith('tb1')) return 'P2WPKH';
-    return 'P2PKH';
+    return detectBitcoinAddressType(address);
   }
 
   async signTransaction(psbtBase64: string, finalize = false): Promise<string> {
