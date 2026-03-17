@@ -24,7 +24,7 @@ interface RouteTabItemProps {
 
 const RouteTabItem: React.FC<RouteTabItemProps> = ({
   href,
-  value,
+  // value,
   type,
   label,
   isActive,
@@ -32,7 +32,7 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
   setRef,
   className = '',
   enabled,
-  badgeCount,
+  // badgeCount,
   showIcon = true,
   totalDepositedUsdValue,
   apr,

@@ -9,7 +9,7 @@ import type { TabIconType } from './tab-icon';
 import { cn } from '@/lib/utils';
 import { STAKING_APR } from '@/app/(apps)/stake/_components/constants';
 import {
-  LOANS_ROUTE,
+  BORROW_ROUTE,
   MIGRATE_ROUTE,
   PARTNER_DASHBOARD_ROUTE,
   POOL_ROUTE,
@@ -49,10 +49,18 @@ export const tabConfigs: TabConfig[] = [
   {
     value: 'loans',
     type: 'loans',
-    label: 'Loans',
-    content: 'a quick loans',
+    label: 'Borrow',
+    content: 'a quick borrow',
     enabled: false,
-    href: LOANS_ROUTE,
+    href: BORROW_ROUTE,
+  },
+  {
+    value: 'migrate',
+    type: 'migrate',
+    label: 'Migrate',
+    content: 'a quick migrate',
+    enabled: true,
+    href: MIGRATE_ROUTE,
   },
   {
     value: 'stake',
@@ -62,21 +70,14 @@ export const tabConfigs: TabConfig[] = [
     enabled: true,
     href: STAKE_ROUTE,
   },
+
   {
     value: 'pool',
     type: 'pool',
     label: 'Pool',
     content: 'a quick pool',
-    enabled: true,
+    enabled: false,
     href: POOL_ROUTE,
-  },
-  {
-    value: 'migrate',
-    type: 'migrate',
-    label: 'Migrate',
-    content: 'a quick migrate',
-    enabled: true,
-    href: MIGRATE_ROUTE,
   },
 ];
 
@@ -107,9 +108,15 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
   const lastSegment = pathname.split('/').filter(Boolean).pop() ?? '';
   const tabValues = usedTabs.map(t => t.value);
 
-  const current = tabValues.includes(lastSegment)
+  // "current" drives arrow position + active tab styling. It's derived from the URL (last path segment).
+  const currentCandidate = tabValues.includes(lastSegment)
     ? lastSegment // e.g. "swap", "migrate", "home"
     : (usedTabs[0]?.value ?? 'migrate'); // fallback = first tab (Home for partner)
+
+  // If the URL matches a disabled tab (SOON), don't treat it as current for nav/arrow styling.
+  const currentTab = usedTabs.find(tab => tab.value === currentCandidate);
+  const current =
+    currentTab && !currentTab.enabled ? (usedTabs.find(tab => tab.enabled)?.value ?? usedTabs[0]?.value ?? 'migrate') : currentCandidate;
 
   const suppliedAssetCount = useSaveStore(state => state.suppliedAssetCount);
   const totalDepositedUsdValue = useSaveStore(state => state.totalDepositedUsdValue);
@@ -176,7 +183,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
 
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
-  }, [updateArrows]);
+  }, [current]);
 
   return (
     <>
@@ -192,11 +199,14 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
         )}
         style={{ height: '-webkit-fill-available' }}
       >
+        {/* Desktop sidebar tabs (order = tabConfigs/partnerTabConfigs). */}
         <div className="grid min-w-25 gap-y-8 shrink-0 bg-transparent p-0">
           {usedTabs.map(tab => {
             // If tab.href is missing (like in Swap/Save), use /value
             const href = tab.href ?? `/${tab.value}`;
-            const active = pathname === href || pathname.startsWith(`${href}/`) || pathname.endsWith(`/${tab.value}`);
+            // Disabled tabs can never be "active" (prevents SOON tabs looking selected).
+            const active =
+              tab.enabled && (pathname === href || pathname.startsWith(`${href}/`) || pathname.endsWith(`/${tab.value}`));
 
             return (
               <RouteTabItem
@@ -224,16 +234,20 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
         />
       </div>
 
+      {/* Mobile bottom tab bar (explicit order; can differ from desktop). */}
       <div className="md:hidden fixed -bottom-24 left-0 right-0 z-50 h-24">
         <div className="relative">
           <div ref={mobileTabsContainerRef} className="w-full px-4 py-4 bg-cream-white h-24 flex">
             <div className="grid grid-cols-4 gap-4 bg-transparent py-0 w-full">
-              {usedTabs
-                .filter(tab => !(tab.value === 'loans'))
-                .filter(tab => tab.value !== 'pool')
-                .map(tab => {
+              {(isPartner
+                ? usedTabs
+                : (['swap', 'migrate', 'stake', 'pool'] as const)
+                    .map(value => usedTabs.find(tab => tab.value === value))
+                    .filter((tab): tab is TabConfig => Boolean(tab))
+              ).map(tab => {
                   const href = tab.href ?? `/${tab.value}`;
-                  const active = current === tab.value;
+                  // Mobile active uses `current` (URL-derived) and also respects disabled tabs.
+                  const active = tab.enabled && current === tab.value;
                   return (
                     <RouteTabItem
                       key={tab.value}
