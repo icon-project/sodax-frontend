@@ -11,7 +11,7 @@ import {
   type UIntCV,
 } from '@stacks/transactions';
 
-class StacksBaseSpokeProvider {
+abstract class StacksBaseSpokeProvider {
   public chainConfig: StacksSpokeChainConfig;
   protected network: StacksNetwork;
 
@@ -23,18 +23,12 @@ class StacksBaseSpokeProvider {
 
   async getSTXBalance(address: string): Promise<bigint> {
     const url = `${this.network.client.baseUrl}/extended/v1/address/${address}/balances`;
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Error fetching data: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return BigInt(data.stx.balance);
-    } catch (error) {
-      console.error('Error:', error);
-      return 0n;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Error fetching STX balance: ${response.statusText}`);
     }
+    const data = await response.json();
+    return BigInt(data.stx.balance);
   }
 
   async readTokenBalance(token: string, address: string): Promise<bigint> {
@@ -63,9 +57,7 @@ class StacksBaseSpokeProvider {
     return implAddress;
   }
 
-  protected async walletReadContract(_txParams: StacksTransactionParams): Promise<ClarityValue> {
-    throw new Error('Not implemented');
-  }
+  protected abstract walletReadContract(txParams: StacksTransactionParams): Promise<ClarityValue>;
 }
 
 export class StacksSpokeProvider extends StacksBaseSpokeProvider implements ISpokeProvider {
@@ -73,12 +65,12 @@ export class StacksSpokeProvider extends StacksBaseSpokeProvider implements ISpo
 
   constructor(
     config: StacksSpokeChainConfig,
-    wallet_provider: IStacksWalletProvider,
+    walletProvider: IStacksWalletProvider,
     network: 'testnet' | 'mainnet' = 'mainnet',
     rpcUrl?: string,
   ) {
     super(config, network, rpcUrl);
-    this.walletProvider = wallet_provider;
+    this.walletProvider = walletProvider;
   }
 
   protected override async walletReadContract(txParams: StacksTransactionParams) {

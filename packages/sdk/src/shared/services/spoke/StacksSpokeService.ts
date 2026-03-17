@@ -147,9 +147,13 @@ export class StacksSpokeService {
     const assetManagerImpl = await spokeProvider.getImplContractAddress(
       spokeProvider.chainConfig.addresses.assetManager,
     );
+    const [implAddress, implName] = parseContractId(assetManagerImpl as ContractIdString);
+    const [connectionAddress, connectionName] = parseContractId(
+      spokeProvider.chainConfig.addresses.connection as ContractIdString,
+    );
     const reqData = {
-      contractAddress: parseContractId(assetManagerImpl as ContractIdString)[0] as string,
-      contractName: parseContractId(assetManagerImpl as ContractIdString)[1] as string,
+      contractAddress: implAddress as string,
+      contractName: implName as string,
       functionName: 'transfer',
       functionArgs: [
         token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()
@@ -158,10 +162,7 @@ export class StacksSpokeService {
         Cl.bufferFromHex(recipient),
         uintCV(amount),
         Cl.bufferFromHex(data),
-        Cl.contractPrincipal(
-          parseContractId(spokeProvider.chainConfig.addresses.connection as ContractIdString)[0] as string,
-          parseContractId(spokeProvider.chainConfig.addresses.connection as ContractIdString)[1] as string,
-        ),
+        Cl.contractPrincipal(connectionAddress as string, connectionName as string),
       ],
       postConditionMode: PostConditionMode.Allow,
     };
@@ -182,9 +183,12 @@ export class StacksSpokeService {
     spokeProvider: StacksSpokeProviderType,
     raw?: R,
   ): PromiseStacksTxReturnType<R> {
+    const [connectionAddress, connectionName] = parseContractId(
+      spokeProvider.chainConfig.addresses.connection as ContractIdString,
+    );
     const reqData: StacksTransactionParams = {
-      contractAddress: parseContractId(spokeProvider.chainConfig.addresses.connection as ContractIdString)[0] as string,
-      contractName: parseContractId(spokeProvider.chainConfig.addresses.connection as ContractIdString)[1] as string,
+      contractAddress: connectionAddress as string,
+      contractName: connectionName as string,
       functionName: 'send-message',
       functionArgs: [uintCV(dstChainId), Cl.bufferFromHex(dstAddress), Cl.bufferFromHex(payload)],
       postConditionMode: PostConditionMode.Allow,
