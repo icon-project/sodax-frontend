@@ -2,6 +2,7 @@ import type { GetAllConfigApiResponse } from '../backend/index.js';
 import type {
   Address,
   BaseSpokeChainInfo,
+  BitcoinSpokeChainConfig,
   ChainId,
   ChainType,
   EvmHubChainConfig,
@@ -44,6 +45,7 @@ export const HYPEREVM_MAINNET_CHAIN_ID = 'hyper';
 export const LIGHTLINK_MAINNET_CHAIN_ID = 'lightlink';
 export const NEAR_MAINNET_CHAIN_ID = 'near';
 export const ETHEREUM_MAINNET_CHAIN_ID = 'ethereum';
+export const BITCOIN_MAINNET_CHAIN_ID = 'bitcoin';
 export const REDBELLY_MAINNET_CHAIN_ID = 'redbelly';
 export const KAIA_MAINNET_CHAIN_ID = '0x2019.kaia';
 
@@ -67,6 +69,7 @@ export const CHAIN_IDS = [
   LIGHTLINK_MAINNET_CHAIN_ID,
   NEAR_MAINNET_CHAIN_ID,
   ETHEREUM_MAINNET_CHAIN_ID,
+  BITCOIN_MAINNET_CHAIN_ID,
   REDBELLY_MAINNET_CHAIN_ID,
   KAIA_MAINNET_CHAIN_ID,
 ] as const;
@@ -183,6 +186,12 @@ export const baseChainInfo = {
     type: 'EVM',
     chainId: 1,
   },
+  [BITCOIN_MAINNET_CHAIN_ID]: {
+    name: 'Bitcoin',
+    id: BITCOIN_MAINNET_CHAIN_ID,
+    type: 'BITCOIN',
+    chainId: 'bitcoin',
+  },
   [REDBELLY_MAINNET_CHAIN_ID]: {
     name: 'Redbelly',
     id: REDBELLY_MAINNET_CHAIN_ID,
@@ -215,6 +224,7 @@ export const ChainIdToIntentRelayChainId = {
   [LIGHTLINK_MAINNET_CHAIN_ID]: 27756n,
   [NEAR_MAINNET_CHAIN_ID]: 15n,
   [ETHEREUM_MAINNET_CHAIN_ID]: 2n,
+  [BITCOIN_MAINNET_CHAIN_ID]: 627463n,
   [REDBELLY_MAINNET_CHAIN_ID]: 726564n,
   [KAIA_MAINNET_CHAIN_ID]: 27489n,
 } as const;
@@ -1136,6 +1146,42 @@ export const spokeChainConfig = {
     rpcUrl: 'https://injective-rpc.publicnode.com:443',
     walletAddress: '',
   } as const satisfies InjectiveSpokeChainConfig,
+  [BITCOIN_MAINNET_CHAIN_ID]: {
+    addresses: {
+      assetManager: 'bc1p4z9555xw0266vhq2x5un4zdmm9dt9zyet32fs7wa7u5ckdxusd9qsw4xfx',
+    },
+    chain: baseChainInfo[BITCOIN_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'BITCOIN'>,
+    bnUSD: 'no',
+    nativeToken: 'BTC' as const,
+    supportedTokens: {
+      BTC: {
+        symbol: 'BTC',
+        name: 'Bitcoin',
+        decimals: 8,
+        address: '0:0',
+        xChainId: BITCOIN_MAINNET_CHAIN_ID,
+      },
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 18,
+        address: '0:0',
+        xChainId: BITCOIN_MAINNET_CHAIN_ID,
+      },
+      BUSD: {
+        symbol: 'BUSD',
+        name: 'BUSDSTABLECOIN',
+        decimals: 6,
+        address: '897442:43',
+        xChainId: BITCOIN_MAINNET_CHAIN_ID,
+      }
+    },
+    radfiApiUrl: 'https://staging.api.radfi.co/api',
+    radfiApiKey: '',
+    radfiUmsUrl: 'https://staging.ums.radfi.co/api',
+    network: 'MAINNET',
+    rpcUrl: 'https://mempool.space/api',
+  } as const satisfies BitcoinSpokeChainConfig,
   [STELLAR_MAINNET_CHAIN_ID]: {
     addresses: {
       connection: 'CDFQDDPUPAM3XPGORHDOEFRNLMKOH3N3X6XTXNLSXJQXIU3RVCM3OPEP',
@@ -2627,6 +2673,22 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       vault: SodaTokens.sodaPOL.address,
     },
   },
+  [BITCOIN_MAINNET_CHAIN_ID]: {
+    [spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BTC.address]: {
+      asset: '0xeb0393893b5bf98a50073d6740738b08e575058b',
+      decimal: 8,
+      symbol: 'BTC',
+      name: 'Bitcoin',
+      vault: '0x7A1A5555842Ad2D0eD274d09b5c4406a95799D5d',
+    },
+    [spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BUSD.address]: {
+      asset: '0xdb41c7d09406026d4582bc2fc6d6319c323fe1bb',
+      decimal: 6,
+      symbol: 'BUSD',
+      name: 'BUSD.BUSD.BUSD',
+      vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
+    }
+  }
 } as const;
 
 export const solverConfig = {
@@ -2766,6 +2828,10 @@ export const swapSupportedTokens = {
     spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.USDT,
+  ] as const satisfies XToken[],
+  [BITCOIN_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BTC,
+    // spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BUSD, // TODO: re-enable when trading wallet balance is ready
   ] as const satisfies XToken[],
   [ETHEREUM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
@@ -2976,6 +3042,9 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.SODA,
+  ] as const satisfies XToken[],
+  [BITCOIN_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BTC,
   ] as const satisfies XToken[],
 } as const satisfies Record<SpokeChainId, readonly XToken[]>;
 

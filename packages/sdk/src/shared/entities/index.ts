@@ -6,3 +6,4 @@ export * from './sui/index.js';
 export * from './near/index.js';
 export * from './Sodax.js';
 export * from './Providers.js';
+export * from './btc/index.js';
