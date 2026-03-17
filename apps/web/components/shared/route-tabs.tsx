@@ -105,6 +105,8 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
     ? partnerTabConfigs
     : tabConfigs.filter(tab => !(tab.value === 'pool' && process.env.NEXT_PUBLIC_APP_ENV === 'production'));
 
+  const mobileTabOrder = ['swap', 'migrate', 'stake', 'pool'] satisfies ReadonlyArray<TabIconType>;
+
   const lastSegment = pathname.split('/').filter(Boolean).pop() ?? '';
   const tabValues = usedTabs.map(t => t.value);
 
@@ -220,7 +222,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
             <div className="grid grid-cols-4 gap-4 bg-transparent py-0 w-full">
               {(isPartner
                 ? usedTabs
-                : (['swap', 'migrate', 'stake', 'pool'] as const)
+                : mobileTabOrder
                     .map(value => usedTabs.find(tab => tab.value === value))
                     .filter((tab): tab is TabConfig => Boolean(tab))
               ).map(tab => {
