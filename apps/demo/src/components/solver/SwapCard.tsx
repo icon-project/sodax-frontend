@@ -44,6 +44,8 @@ import {
   useXDisconnect,
   useWalletProvider,
   useXBalances,
+  useXConnection,
+  useXService,
 } from '@sodax/wallet-sdk-react';
 import {
   type ChainId,
@@ -102,6 +104,14 @@ export default function SwapCard({
   const [open, setOpen] = useState(false);
   const [slippage, setSlippage] = useState<string>('0.5');
   const [isBitcoinReady, setIsBitcoinReady] = useState(false);
+
+  // Bitcoin connector info for fund dialog
+  const sourceChainType = getXChainType(sourceChain);
+  const sourceBtcConnection = useXConnection(sourceChainType);
+  const sourceBtcService = useXService(sourceChainType);
+  const sourceBtcConnector = sourceChainType === 'BITCOIN' && sourceBtcConnection?.xConnectorId && sourceBtcService
+    ? sourceBtcService.getXConnectorById(sourceBtcConnection.xConnectorId)
+    : undefined;
 
   const onChangeDirection = () => {
     setSourceChain(destChain);
@@ -347,6 +357,8 @@ export default function SwapCard({
             spokeProvider={sourceProvider}
             onReadyChange={setIsBitcoinReady}
             nativeBalance={sourceTokenBalance}
+            connectorName={sourceBtcConnector?.name}
+            connectorIcon={sourceBtcConnector?.icon}
           />
         )}
 

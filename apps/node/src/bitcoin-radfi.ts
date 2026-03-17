@@ -700,7 +700,7 @@ async function getExpiredUtxos(tradingAddress: string): Promise<{ txId: string; 
       for (const utxo of utxos) {
         console.log(`  ${utxo.txId}:${utxo.vout} — ${utxo.value} sats (expired: ${utxo.isExpired}, expiryBlock: ${utxo.expiryBlock || 'N/A'})`);
       }
-      console.log(`\nTo renew, run:`);
+      console.log('\nTo renew, run:');
       const txIdVouts = utxos.map((u: { txId: string; vout: number }) => `${u.txId}:${u.vout}`).join(',');
       console.log(`  pnpm run bitcoin-radfi renew <private_key_hex> ${txIdVouts}`);
     }

@@ -1,20 +1,22 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useRadfiSession, useTradingWalletBalance, useFundTradingWallet, useExpiredUtxos, useRenewUtxos } from '@sodax/dapp-kit';
 import type { BitcoinSpokeProvider } from '@sodax/sdk';
-import { formatUnits, parseUnits } from 'viem';
+import { formatUnits } from 'viem';
 import { Loader2, Copy, ExternalLink, Check, AlertTriangle, RefreshCw } from 'lucide-react';
+import { FundTradingWalletDialog } from './FundTradingWalletDialog';
 
 interface BitcoinSetupPanelProps {
   spokeProvider: BitcoinSpokeProvider;
   onReadyChange: (isReady: boolean) => void;
   nativeBalance?: bigint;
   isNativeBalanceLoading?: boolean;
+  connectorName?: string;
+  connectorIcon?: string;
 }
 
-export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance, isNativeBalanceLoading }: BitcoinSetupPanelProps) => {
+export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance, isNativeBalanceLoading, connectorName = 'Wallet', connectorIcon = '' }: BitcoinSetupPanelProps) => {
   const { walletAddress, isAuthed, tradingAddress, login, isLoginPending } = useRadfiSession(spokeProvider);
 
   const { data: tradingBalance, isLoading: isBalanceLoading } = useTradingWalletBalance(spokeProvider, tradingAddress);
@@ -22,9 +24,9 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
   const { mutateAsync: fundWallet, isPending: isFunding } = useFundTradingWallet(spokeProvider);
   const { data: expiredUtxos, isLoading: isExpiredLoading } = useExpiredUtxos(spokeProvider, tradingAddress);
   const { mutateAsync: renewUtxos, isPending: isRenewing } = useRenewUtxos(spokeProvider);
-  const [fundAmount, setFundAmount] = useState('');
   const [copied, setCopied] = useState(false);
   const [renewError, setRenewError] = useState<string | null>(null);
+  const [showFundDialog, setShowFundDialog] = useState(false);
 
   const copyAddress = () => {
     if (!tradingAddress) return;
@@ -37,16 +39,6 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
     const isReady = isAuthed && !!tradingAddress && (tradingBalance ? tradingBalance.btcSatoshi > 0n : false);
     onReadyChange(isReady);
   }, [isAuthed, tradingAddress, tradingBalance, onReadyChange]);
-
-  const handleFund = async () => {
-    if (!fundAmount || Number.isNaN(Number(fundAmount)) || Number(fundAmount) <= 0) return;
-    try {
-      await fundWallet(parseUnits(fundAmount, 8));
-      setFundAmount('');
-    } catch (e) {
-      console.error('Failed to top up trading wallet', e);
-    }
-  };
 
   const handleRenewUtxos = async () => {
     if (!expiredUtxos?.length) return;
@@ -87,7 +79,7 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
       {isAuthed && (
         <div className="flex flex-col gap-3 border-t border-border pt-4 mt-2">
 
-          {/* Trading wallet address */}
+          {/* Trading wallet address + Top Up */}
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium flex items-center gap-2">
               <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs text-white ${tradingAddress ? 'bg-green-500' : 'bg-blue-500'}`}>
@@ -110,21 +102,17 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
             ) : (
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             )}
+            {tradingAddress && (
+              <Button size="sm" onClick={() => setShowFundDialog(true)} disabled={isFunding}>
+                {isFunding ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : null}
+                Top Up
+              </Button>
+            )}
           </div>
 
-          {/* Balance + fund */}
+          {/* Trading wallet balance */}
           {tradingAddress && (
             <div className="flex flex-col gap-3 border-t border-border pt-3 mt-1">
-
-              {/* Step badge */}
-              <span className="text-sm font-medium flex items-center gap-2">
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs text-white ${tradingBalance && tradingBalance.btcSatoshi > 0n ? 'bg-green-500' : 'bg-blue-500'}`}>
-                  3
-                </div>
-                Fund Trading Wallet
-              </span>
-
-              {/* Balance comparison */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="flex flex-col gap-1 rounded-md border border-border bg-background p-2">
                   <span className="text-xs text-muted-foreground">Your Wallet</span>
@@ -148,20 +136,23 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
                 </div>
               </div>
 
-              {/* Fund input */}
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  placeholder="Top up trading wallet (e.g. 0.001 BTC)"
-                  value={fundAmount}
-                  onChange={e => setFundAmount(e.target.value)}
-                  className="h-8 text-sm"
+              {/* Fund dialog */}
+              {walletAddress && tradingAddress && (
+                <FundTradingWalletDialog
+                  open={showFundDialog}
+                  onOpenChange={setShowFundDialog}
+                  walletAddress={walletAddress}
+                  tradingAddress={tradingAddress}
+                  walletBalance={nativeBalance ?? 0n}
+                  tradingBalance={tradingBalance?.btcSatoshi ?? 0n}
+                  connectorName={connectorName}
+                  connectorIcon={connectorIcon}
+                  onFund={async (amount) => {
+                    await fundWallet(amount);
+                  }}
+                  isFunding={isFunding}
                 />
-                <Button size="sm" onClick={handleFund} disabled={isFunding || !fundAmount}>
-                  {isFunding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Top Up
-                </Button>
-              </div>
+              )}
 
               {/* Expired UTXOs — Renew section */}
               {!isExpiredLoading && expiredUtxos && expiredUtxos.length > 0 && (
@@ -189,7 +180,6 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
                   <p className="text-xs text-muted-foreground">
                     These UTXOs have expired or are within 2 weeks of expiry. Renew them to continue trading.
                   </p>
-                  {/* List expired UTXOs */}
                   <div className="max-h-32 overflow-y-auto space-y-1">
                     {expiredUtxos.map(utxo => (
                       <div key={`${utxo.txId}:${utxo.vout}`} className="flex items-center justify-between text-xs bg-background rounded px-2 py-1 border border-border">
