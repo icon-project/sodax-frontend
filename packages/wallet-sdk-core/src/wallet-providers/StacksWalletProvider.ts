@@ -21,24 +21,24 @@ export class StacksWalletProvider implements IStacksWalletProvider {
     this.network = networkFrom(network);
   }
 
- async sendTransaction(txParams: StacksTransactionParams): Promise<string> {
-      const transaction = await makeContractCall({
-        contractAddress: txParams.contractAddress,
-        contractName: txParams.contractName,
-        functionName: txParams.functionName,
-        functionArgs: txParams.functionArgs,
-        senderKey: this.privateKey,
-        network: this.network,
-        postConditionMode: txParams.postConditionMode,
-        postConditions: txParams.postConditions,
-      });
+  async sendTransaction(txParams: StacksTransactionParams): Promise<string> {
+    const transaction = await makeContractCall({
+      contractAddress: txParams.contractAddress,
+      contractName: txParams.contractName,
+      functionName: txParams.functionName,
+      functionArgs: txParams.functionArgs,
+      senderKey: this.privateKey,
+      network: this.network,
+      postConditionMode: txParams.postConditionMode,
+      postConditions: txParams.postConditions,
+    });
 
-      const result = await broadcastTransaction({
-        network: this.network,
-        transaction,
-      });
+    const result = await broadcastTransaction({
+      network: this.network,
+      transaction,
+    });
 
-      return result.txid;
+    return result.txid;
   }
 
   async readContract(txParams: StacksTransactionParams): Promise<ClarityValue> {
@@ -48,7 +48,7 @@ export class StacksWalletProvider implements IStacksWalletProvider {
       functionName: txParams.functionName,
       functionArgs: txParams.functionArgs,
       network: this.network,
-      senderAddress: (await this.getWalletAddress()),
+      senderAddress: await this.getWalletAddress(),
     });
 
     return result;
@@ -77,5 +77,3 @@ export class StacksWalletProvider implements IStacksWalletProvider {
     return `0x${serializeCV(Cl.principal(await this.getWalletAddress()))}` as Hex;
   }
 }
-
-

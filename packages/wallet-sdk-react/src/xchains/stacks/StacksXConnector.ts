@@ -36,10 +36,8 @@ export class StacksXConnector extends XConnector {
     }
 
     const response = await request({ provider }, 'stx_getAddresses');
-    console.log('response', response);
     // @ts-ignore
     const stxAddress = response.addresses.find(a => a.purpose === 'stacks');
-    console.log('stxAddress', stxAddress, response);
 
     if (!stxAddress) {
       return undefined;
