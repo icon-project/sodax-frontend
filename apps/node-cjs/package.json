@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@sodax/sdk": "workspace:*",
-    "@sodax/types": "workspace:*"
+    "@sodax/wallet-sdk-core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",
