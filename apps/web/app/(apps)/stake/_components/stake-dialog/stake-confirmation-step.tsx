@@ -8,6 +8,7 @@ import { parseUnits } from 'viem';
 import { cn } from '@/lib/utils';
 import { ETHEREUM_MAINNET_CHAIN_ID } from '@sodax/sdk';
 import { DEFAULT_ESTIMATED_TX_TIME, ETHEREUM_ESTIMATED_TX_TIME, STAKING_APR } from '../constants';
+import { useStakeVaultApy } from '@/hooks/useStakeVaultApy';
 interface StakeConfirmationStepProps {
   selectedToken: XToken;
   receivedXSodaAmount: string;
@@ -20,6 +21,8 @@ export default function StakeConfirmationStep({
   stakeError,
 }: StakeConfirmationStepProps): React.JSX.Element {
   const { stakeValue } = useStakeState();
+  const { data: liveApyPercent } = useStakeVaultApy();
+  const displayedApy = liveApyPercent ?? STAKING_APR;
   const xSodaToken = {
     ...selectedToken,
     symbol: 'xsoda',
@@ -42,7 +45,7 @@ export default function StakeConfirmationStep({
         <div className="flex flex-col text-center">
           <div className="text-espresso text-(length:--body-super-comfortable) leading-[1.4]">Staking SODA</div>
           <div className="text-clay text-(length:--body-small) font-medium leading-[1.4] justify-center">
-            {STAKING_APR}% variable APY
+            {displayedApy.toFixed(2)}% variable APY
           </div>
         </div>
       )}

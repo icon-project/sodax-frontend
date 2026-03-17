@@ -3,20 +3,17 @@
 import { StakeHeader, StakeInputPanel, StakeSelectorPanel, StakeStatsCard } from './_components';
 import { useStakeActions, useStakeState } from './_stores/stake-store-provider';
 import { UnstakeRequests } from './_components/unstake-requests';
-import { STAKING_APR } from './_components/constants';
 import Tip from './_components/icons/tip';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { itemVariants, listVariants } from '@/constants/animation';
+import { useStakeVaultApy } from '@/hooks/useStakeVaultApy';
 
 export default function StakePage() {
-  if (process.env.NEXT_PUBLIC_APP_ENV === 'production') {
-    return null;
-  }
-
   const { isNetworkPickerOpened } = useStakeState();
   const { reset } = useStakeActions();
+  const { data: liveApyPercent } = useStakeVaultApy();
 
   const [isOpen, setIsOpen] = useState(false);
   // Delay drives entrance animation (listVariants + itemVariants).
@@ -38,7 +35,7 @@ export default function StakePage() {
       initial={false}
       animate={isOpen ? 'open' : 'closed'}
     >
-      <StakeHeader apr={STAKING_APR} />
+      <StakeHeader apr={liveApyPercent} />
       <motion.div
         className="relative group w-full flex flex-col justify-start items-start gap-0"
         variants={itemVariants}
