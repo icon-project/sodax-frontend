@@ -35,6 +35,7 @@ import {
   StacksRawSpokeProvider,
 } from '../entities/index.js';
 import { SuiRawSpokeProvider } from '../entities/sui/SuiSpokeProvider.js';
+import { Address as AleoAddress } from '@provablehq/sdk';
 
 export async function retry<T>(
   action: (retryCount: number) => Promise<T>,
@@ -174,6 +175,11 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
     case 'near':
     case 'injective-1':
       return toHex(Buffer.from(address, 'utf-8'));
+
+    case 'aleo': {
+      const bytesLe = Array.from(AleoAddress.from_string(address).toBytesLe());
+      return toHex(new Uint8Array(bytesLe.reverse()));
+    }
 
     default:
       return address as Hex;

@@ -1,3 +1,4 @@
+import type { AleoNetworkEnv } from '../aleo/index.js';
 import type {
   HUB_CHAIN_IDS,
   CHAIN_IDS,
@@ -16,7 +17,7 @@ export type SpokeChainId = (typeof CHAIN_IDS)[number];
 
 export type ChainId = (typeof CHAIN_IDS)[number];
 
-export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'STACKS', 'NEAR', 'BITCOIN'] as const;
+export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'STACKS', 'NEAR', 'BITCOIN', 'ALEO'] as const;
 export type ChainType = (typeof ChainTypeArr)[number];
 
 export type Chain = {
@@ -115,6 +116,7 @@ export type HubChainInfo<T extends ChainType> = {
   name: string;
   id: HubChainId;
   type: T;
+  chainId: string | number;
 };
 
 export type HubChainConfig = EvmHubChainConfig;
@@ -272,6 +274,21 @@ export type StacksSpokeChainConfig = BaseSpokeChainConfig<'STACKS'> & {
   nativeToken: string;
 };
 
+export type AleoAddress = `aleo1${string}`;
+export type AleoSpokeChainConfig = BaseSpokeChainConfig<'ALEO'> & {
+  rpcUrl: string;
+  addresses: {
+    assetManager: string;
+    connection: string;
+    xTokenManager: string;
+    rateLimit: string;
+    testToken: string;
+  };
+  nativeToken: string;
+  gasPrice: string;
+  network: AleoNetworkEnv;
+};
+
 export type SpokeChainConfig =
   | EvmSpokeChainConfig
   | SonicSpokeChainConfig
@@ -282,7 +299,8 @@ export type SpokeChainConfig =
   | BitcoinSpokeChainConfig
   | SolanaChainConfig
   | StacksSpokeChainConfig
-  | NearSpokeChainConfig;
+  | NearSpokeChainConfig
+  | AleoSpokeChainConfig;
 
 export type SolverConfig = {
   intentsContract: Address; // Intents Contract (Hub)

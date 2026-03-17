@@ -48,7 +48,7 @@
     "@injectivelabs/wallet-strategy": "catalog:",
     "@mysten/dapp-kit": "catalog:",
     "@mysten/sui": "catalog:",
-    "near-api-js": "catalog:",
+    "near-api-js": "7.1.1",
     "@sodax/types": "workspace:*",
     "@sodax/wallet-sdk-core": "workspace:*",
     "@solana/spl-token": "catalog:",

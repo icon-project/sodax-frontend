@@ -6,6 +6,7 @@
     "btc": "pnpm run build && node dist/btc.js",
     "evm": "pnpm run build && node dist/evm.js",
     "injective": "pnpm run build && node dist/injective.js",
+    "aleo": "pnpm run build && node dist/aleo.js",
     "sonic": "pnpm run build && node dist/sonic.js",
     "sui": "pnpm run build && node dist/sui.js",
     "moneyMarket": "pnpm run build && node dist/moneymarket.js",

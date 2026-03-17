@@ -33,6 +33,7 @@ import {
   type StellarRawSpokeProviderConfig,
 } from './entities/stellar/StellarSpokeProvider.js';
 import { StacksSpokeProvider, type StacksRawSpokeProvider, type StacksRawSpokeProviderConfig } from './entities/stacks/StacksSpokeProvider.js';
+import { AleoSpokeProvider, type AleoRawSpokeProvider } from './entities/aleo/AleoSpokeProvider.js';
 import type {
   BitcoinSpokeProviderType,
   EvmSpokeProviderType,
@@ -53,6 +54,7 @@ import type {
   SpokeProviderObjectType,
   StellarSpokeProviderType,
   SuiSpokeProviderType,
+  AleoSpokeProviderType
 } from './types.js';
 import type { EvmHubChainConfig, HubChainConfig } from '@sodax/types';
 import type { IntentError } from '../swap/SwapService.js';
@@ -312,6 +314,20 @@ export function isStacksSpokeProvider(value: SpokeProviderType): value is Stacks
 
 export function isStacksRawSpokeProvider(value: unknown): value is StacksRawSpokeProvider {
   return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'STACKS';
+}
+
+export function isAleoSpokeProviderType(value: SpokeProviderType): value is AleoSpokeProviderType {
+  return typeof value === 'object' && value !== null && (isAleoSpokeProvider(value) || isAleoRawSpokeProvider(value));
+}
+
+export function isAleoSpokeProvider(value: SpokeProviderType): value is AleoSpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof AleoSpokeProvider &&
+    !('raw' in value) &&
+    value.chainConfig.chain.type === 'ALEO'
+  );
 }
 
 export function isConfiguredSolverConfig(
@@ -664,4 +680,7 @@ export function isSubmitSwapTxStatusResponse(value: unknown): value is SubmitSwa
     if (typeof result.dstIntentTxHash !== 'string') return false;
   }
   return true;
+}
+export function isAleoRawSpokeProvider(value: unknown): value is AleoRawSpokeProvider {
+  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'ALEO';
 }
