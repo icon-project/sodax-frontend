@@ -93,7 +93,6 @@ export function BorrowAssetsListItem({
       const totalCollateralUSD = Number(userSummary.totalCollateralUSD);
       const totalBorrowsUSD = Number(userSummary.totalBorrowsUSD);
       const currentLoanToValue = Number(userSummary.currentLoanToValue);
-      const currentLiquidationThreshold = Number(userSummary.currentLiquidationThreshold);
 
       // Calculate available borrow: (collateral * LTV) - currentBorrows
       // Use currentLoanToValue (LTV), not liquidation threshold
@@ -195,11 +194,8 @@ export function BorrowAssetsListItem({
             onClick={() => {
               // Prevent opening modal if there's no debt
               if (!hasDebt) return;
-              // Repay amount must be a parseable number string (e.g. "0.0001"), not a display string.
-              // parseFloat/parseUnits when building the tx. Use toFixed(4) so the value stays numeric.
-              const debtNum = Number.parseFloat(debtExact);
-              const maxDebtToRepay = Number.isNaN(debtNum) ? '0' : debtNum.toFixed(4);
-              onRepayClick(token, maxDebtToRepay);
+              // Pass the full-precision raw value from formatUnits — display formatting is separate from tx amount.
+              onRepayClick(token, debtExact);
             }}
             disabled={!hasDebt}
             className="flex-1 min-w-[85px]"

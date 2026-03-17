@@ -27,7 +27,6 @@ import { extractTxHash } from '@/lib/extractTxHash';
 import { ActionSuccessContent, type ActionSuccessData } from './ActionSuccessContent';
 import { Loader2 } from 'lucide-react';
 import { isValidEvmAddress } from '../typeGuards';
-import { isAddress } from 'viem';
 import { ErrorAlert } from '../ErrorAlert';
 import { getMmErrorText } from '@/lib/utils';
 
@@ -88,7 +87,6 @@ export function RepayModal({
   const queryClient = useQueryClient();
 
   const sourceToken = getTokenOnChain(token.symbol, fromChainId);
-  const targetToken = token; // Debt token on target chain
 
   // Wallet provider for the source (repay) chain
   const sourceWalletProvider = useWalletProvider(fromChainId);
@@ -146,7 +144,6 @@ export function RepayModal({
   const {
     data: balances,
     isLoading: isBalancesLoading,
-    isFetching: isBalancesFetching,
   } = useXBalances({
     xChainId: fromChainId,
     xTokens: sourceToken ? [sourceToken] : [],
@@ -172,8 +169,6 @@ export function RepayModal({
   // Don't show approval needed while approving or refetching allowance (to prevent button flicker)
   const needsSourceApproval =
     (sourceAllowed === false || (sourceAllowed === undefined && !isSourceAllowanceLoading)) && !isActuallyApproving;
-  const isInApprovalFlow =
-    isActuallyApproving || (isSourceAllowanceLoading && !hasSourceAllowance && sourceAllowed !== false);
 
   // Reset local approving state when allowance is confirmed
   useEffect(() => {
@@ -252,12 +247,20 @@ export function RepayModal({
   };
 
   const handleMax = () => {
-    // Format maxDebt to 6 decimal places to avoid floating point precision issues
     const maxDebtNum = Number.parseFloat(maxDebt);
     if (!Number.isNaN(maxDebtNum) && maxDebtNum > 0) {
-      setAmount(maxDebtNum.toFixed(6));
-    } else {
-      setAmount(maxDebt);
+      // Truncate (not round) to just enough decimal places to show the first significant digit
+      // plus 3 more, with a minimum of 6. String-slicing avoids floating-point rounding up,
+      // which would produce a value > maxDebt and trigger the "exceeds max debt" validation error.
+      const dotIndex = maxDebt.indexOf('.');
+      if (dotIndex < 0) {
+        setAmount(maxDebt);
+        return;
+      }
+      const fracPart = maxDebt.slice(dotIndex + 1);
+      const firstNonZero = fracPart.search(/[1-9]/);
+      const decimalPlaces = Math.max(6, firstNonZero < 0 ? 6 : firstNonZero + 4);
+      setAmount(maxDebt.slice(0, dotIndex + 1 + decimalPlaces));
     }
   };
 

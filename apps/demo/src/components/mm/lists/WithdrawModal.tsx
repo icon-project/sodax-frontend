@@ -17,7 +17,7 @@ import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@so
 import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 import type { MoneyMarketWithdrawParams } from '@sodax/sdk';
-import { getMmErrorText } from '@/lib/utils';
+import { getMmErrorText, formatDecimalForDisplay } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { ErrorAlert } from '../ErrorAlert';
 import { useQueryClient } from '@tanstack/react-query';
@@ -86,12 +86,6 @@ export function WithdrawModal({
   // Note: Withdraw actions don't require approval even on EVM chains (per SDK implementation)
   const isEvmChain = sourceSpokeProvider?.chainConfig?.chain?.type === 'EVM';
 
-  // useMMAllowance already disables itself for 'withdraw' actions (per hook implementation)
-  // So hasAllowed will be undefined for withdraw actions, which is correct
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({
-    params,
-    spokeProvider: sourceSpokeProvider,
-  });
   const {
     mutateAsync: approve,
     isPending: isApproving,
@@ -230,7 +224,7 @@ export function WithdrawModal({
             <div className="space-y-1">
               {maxWithdraw && maxWithdraw !== '0' && (
                 <p className="text-xs text-muted-foreground">
-                  Max withdraw: {Number(maxWithdraw).toFixed(6)} {token.symbol}
+                  Max withdraw: {formatDecimalForDisplay(maxWithdraw, 4)} {token.symbol}
                 </p>
               )}
               {/* Show validation messages only when user enters an amount */}
@@ -239,15 +233,10 @@ export function WithdrawModal({
                   const amountNum = Number.parseFloat(amount.replace(',', '.'));
                   if (Number.isNaN(amountNum) || amountNum <= 0) return null;
 
-                  if (
-                    maxWithdraw &&
-                    maxWithdraw !== '0' &&
-                    amountNum > Number.parseFloat(maxWithdraw) &&
-                    !isBusy
-                  ) {
+                  if (maxWithdraw && maxWithdraw !== '0' && amountNum > Number.parseFloat(maxWithdraw) && !isBusy) {
                     return (
                       <ErrorAlert
-                        text={`Amount exceeds maximum withdrawable: ${Number(maxWithdraw).toFixed(6)} ${token.symbol}`}
+                        text={`Amount exceeds maximum withdrawable: ${formatDecimalForDisplay(maxWithdraw, 4)} ${token.symbol}`}
                         variant="compact"
                       />
                     );
