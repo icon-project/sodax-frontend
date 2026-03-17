@@ -36,9 +36,10 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
   };
 
   useEffect(() => {
-    const isReady = isAuthed && !!tradingAddress && (tradingBalance ? tradingBalance.btcSatoshi > 0n : false);
+    const hasNoExpiredUtxos = !expiredUtxos || expiredUtxos.length === 0;
+    const isReady = isAuthed && !!tradingAddress && (tradingBalance ? tradingBalance.btcSatoshi > 0n : false) && hasNoExpiredUtxos;
     onReadyChange(isReady);
-  }, [isAuthed, tradingAddress, tradingBalance, onReadyChange]);
+  }, [isAuthed, tradingAddress, tradingBalance, expiredUtxos, onReadyChange]);
 
   const handleRenewUtxos = async () => {
     if (!expiredUtxos?.length) return;
