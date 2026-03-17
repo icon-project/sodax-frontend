@@ -67,9 +67,12 @@ export function useSpokeProvider(
           spokeChainConfig[spokeChainId] as SonicSpokeChainConfig,
         );
       }
+      // EVM RPC: flat RpcConfig keyed by chain id (same shape as app's rpcConfig)
+      const evmRpcUrl = rpcConfig[spokeChainId];
       return new EvmSpokeProvider(
         walletProvider as IEvmWalletProvider,
         spokeChainConfig[spokeChainId] as EvmSpokeChainConfig,
+        typeof evmRpcUrl === 'string' ? evmRpcUrl : undefined,
       );
     }
 

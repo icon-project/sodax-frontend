@@ -2760,7 +2760,13 @@ export const swapSupportedTokens = {
     // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const satisfies XToken[],
-  [NEAR_MAINNET_CHAIN_ID]: [] as const satisfies XToken[],
+  [NEAR_MAINNET_CHAIN_ID]: [
+    spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.NEAR,
+    spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.USDT,
+  ] as const satisfies XToken[],
   [ETHEREUM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.bnUSD,

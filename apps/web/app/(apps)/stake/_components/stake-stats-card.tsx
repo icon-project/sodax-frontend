@@ -1,22 +1,34 @@
 import type React from 'react';
 import Image from 'next/image';
 import { Info } from 'lucide-react';
-import { useStakeState } from '../_stores/stake-store-provider';
-import { formatTokenAmount } from '@/lib/utils';
-import { STAKING_APR } from './constants';
+import { useStakeState, useStakeActions } from '../_stores/stake-store-provider';
+import { formatCompactNumber, formatTokenAmount } from '@/lib/utils';
+import { STAKING_APR, STAKING_NOW_HOLDERS } from './constants';
 import LoadingThreeDotsJumping from '@/components/shared/loading-three-dots-jumping';
 import { useStakingConfig } from '@sodax/dapp-kit';
 import { UnstakeModeToggle } from './unstake-mode-toggle';
 import { STAKE_MODE } from '../_stores/stake-store';
-import { useStakeActions } from '../_stores/stake-store-provider';
 import { Loader2 } from 'lucide-react';
+import { useStakeVaultApy } from '@/hooks/useStakeVaultApy';
 
 export function StakeStatsCard(): React.JSX.Element {
-  const { totalUserXSodaBalance, totalUserXSodaValue, userXSodaBalance, stakeMode, isLoadingBalanceCalculation } =
-    useStakeState();
+  const {
+    totalUserXSodaBalance,
+    totalUserXSodaValue,
+    userXSodaBalance,
+    stakeMode,
+    isLoadingBalanceCalculation,
+    stakingInfo,
+  } = useStakeState();
+
   const { setStakeMode } = useStakeActions();
   const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
+  const { data: liveApyPercent } = useStakeVaultApy();
+  const displayedApy = liveApyPercent ?? STAKING_APR;
 
+  // Keep the unstaking period UI stable while config is loading or missing.
+  const hasUnstakingPeriod = typeof stakingConfig?.unstakingPeriod === 'bigint';
+  const shouldShowUnstakingPeriodInfo = !isLoadingStakingConfig && hasUnstakingPeriod;
   return (
     <div className="w-full relative flex flex-col justify-start items-start gap-4">
       <div className="w-full flex justify-between items-center gap-(--layout-space-small)">
@@ -39,17 +51,14 @@ export function StakeStatsCard(): React.JSX.Element {
             {isLoadingBalanceCalculation ? (
               <Loader2 className="w-4 h-4 text-espresso animate-spin" />
             ) : (
-              <span className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] leading-5">
+              <span className="text-espresso text-(length:--body-super-comfortable) font-bold leading-5">
                 {formatTokenAmount(totalUserXSodaBalance, 18)}
               </span>
             )}
-            <span className="text-clay text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-5">
-              {' '}
-              xSODA
-            </span>
+            <span className="text-clay text-(length:--body-super-comfortable) font-normal leading-5"> xSODA</span>
           </div>
           <div className="flex justify-center items-center gap-1">
-            <div className="justify-center text-clay text-(length:--body-small) font-normal font-['InterRegular'] leading-4">
+            <div className="justify-center text-clay text-(length:--body-small) leading-4">
               ~{formatTokenAmount(totalUserXSodaValue, 18)} SODA
             </div>
             <Info className="w-4 h-4 text-clay-light" />
@@ -58,14 +67,13 @@ export function StakeStatsCard(): React.JSX.Element {
         </div>
         <div className="flex flex-col justify-center items-end gap-1">
           <div className="flex justify-end items-center gap-1">
-            <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] leading-5">
-              {STAKING_APR}% APR
+            <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-bold leading-5">
+              {displayedApy.toFixed(2)}% APY
             </div>
             <Info className="w-4 h-4 text-clay-light" />
           </div>
-          <div className="justify-center text-clay text-(length:--body-small) font-normal font-['InterRegular'] leading-4">
-            {/* {formatTokenAmount(stakingInfo?.totalStaked || 0n, 18)} total staked */}
-            15.8M total staked
+          <div className="justify-center text-clay text-(length:--body-small) font-normal leading-4">
+            {formatCompactNumber(formatTokenAmount(stakingInfo?.totalStaked || 0n, 18))} total staked
           </div>
         </div>
       </div>
@@ -84,24 +92,20 @@ export function StakeStatsCard(): React.JSX.Element {
 
       <div className="w-full flex justify-between items-center">
         <div className="flex flex-col gap-1">
-          <div className="justify-center text-clay text-[9px] font-medium font-['InterRegular'] uppercase leading-3">
-            STAKING NOW
-          </div>
+          <div className="justify-center text-clay text-[9px] font-medium uppercase leading-3">STAKING NOW</div>
           <div className="flex justify-start items-center gap-1">
-            <div className="text-espresso text-(length:--body-comfortable) font-bold font-['InterRegular'] leading-5">
-              1,289 holders
+            <div className="text-espresso text-(length:--body-comfortable) font-bold leading-5">
+              {STAKING_NOW_HOLDERS}
             </div>
           </div>
         </div>
         <div className="flex flex-col justify-center items-end gap-1">
-          <div className="justify-center text-clay text-[9px] font-medium font-['InterRegular'] uppercase leading-3">
-            UNSTAKING PERIOD
-          </div>
+          <div className="justify-center text-clay text-[9px] font-medium uppercase leading-3">UNSTAKING PERIOD</div>
           <div className="flex justify-start items-center gap-1">
-            <div className="text-espresso text-(length:--body-comfortable) font-bold font-['InterRegular'] leading-5">
-              {!isLoadingStakingConfig ? `${stakingConfig?.unstakingPeriod} seconds` : '-'}
+            <div className="text-espresso text-(length:--body-comfortable) font-bold leading-5">
+              {isLoadingStakingConfig ? <LoadingThreeDotsJumping /> : '180 days'}
             </div>
-            <Info className="w-4 h-4 text-clay-light" />
+            {shouldShowUnstakingPeriodInfo ? <Info className="w-4 h-4 text-clay-light" /> : null}
           </div>
         </div>
       </div>

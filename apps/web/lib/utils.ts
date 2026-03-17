@@ -8,7 +8,12 @@ import { StrKey } from '@stellar/stellar-sdk';
 import { bech32 } from 'bech32';
 import BigNumber from 'bignumber.js';
 
-import { getSupportedSolverTokens, supportedSpokeChains, moneyMarketSupportedTokens, REDBELLY_MAINNET_CHAIN_ID } from '@sodax/sdk';
+import {
+  getSupportedSolverTokens,
+  supportedSpokeChains,
+  moneyMarketSupportedTokens,
+  REDBELLY_MAINNET_CHAIN_ID,
+} from '@sodax/sdk';
 
 import type { Token, XToken, SpokeChainId, ChainId, EvmChainId, Address } from '@sodax/types';
 import {
@@ -17,6 +22,7 @@ import {
   ICON_MAINNET_CHAIN_ID,
   hubAssets,
   EVM_CHAIN_IDS,
+  NEAR_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
@@ -256,7 +262,8 @@ export function getMoneymarketTokens(): XToken[] {
         chainId !== INJECTIVE_MAINNET_CHAIN_ID &&
         chainId !== LIGHTLINK_MAINNET_CHAIN_ID &&
         chainId !== ICON_MAINNET_CHAIN_ID &&
-        chainId !== REDBELLY_MAINNET_CHAIN_ID
+        chainId !== REDBELLY_MAINNET_CHAIN_ID &&
+        chainId !== NEAR_MAINNET_CHAIN_ID
           ? ({ ...t, xChainId: chainId as SpokeChainId } satisfies XToken)
           : undefined,
       ),
@@ -288,13 +295,13 @@ export function formatCompactNumber(value: string | number | bigint): string {
 
   if (!Number.isFinite(num)) return '-';
 
-  if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(4).replace(/\.?0+$/, '')}B`;
+  if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(2).replace(/\.?0+$/, '')}B`;
 
-  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(4).replace(/\.?0+$/, '')}M`;
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(2).replace(/\.?0+$/, '')}M`;
 
-  if (num >= 1_000) return `${(num / 1_000).toFixed(4).replace(/\.?0+$/, '')}K`;
+  if (num >= 1_000) return `${(num / 1_000).toFixed(2).replace(/\.?0+$/, '')}K`;
 
-  return num.toFixed(4);
+  return num.toFixed(2);
 }
 
 /**

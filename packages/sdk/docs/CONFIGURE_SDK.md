@@ -24,7 +24,7 @@ await sodax.initialize();
 
 ### Partner Fees
 
-Configure partner fees for swaps and/or money market operations. See [Monetize SDK](./MONETIZE_SDK.md) for detailed fee configuration options.
+Configure partner fees for swaps and/or money market operations. See [Monetize SDK](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/MONETIZE_SDK.md) for detailed fee configuration options.
 
 ```typescript
 import { Sodax, PartnerFee } from '@sodax/sdk';
@@ -204,5 +204,5 @@ await sodax.initialize();
 ## Additional Resources
 
 - [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/types/src/constants/index.ts) - Additional static constants and configurations
-- [Monetize SDK](./MONETIZE_SDK.md) - Detailed fee configuration guide
+- [Monetize SDK](https://github.com/icon-project/sodax-frontend/blob/main/packages/sdk/docs/MONETIZE_SDK.md) - Detailed fee configuration guide
 
