@@ -1,0 +1,23 @@
+{
+  "name": "sodax-commonjs-test",
+  "version": "0.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "checkTs": "tsc --noEmit",
+    "pretty": "biome format . --write",
+    "lint": "biome lint . --write",
+    "test": "tsc && node dist/index.js",
+    "clean": "rm -rf node_modules && rm -rf dist && rm -rf .turbo"
+  },
+  "dependencies": {
+    "@sodax/sdk": "workspace:*",
+    "@sodax/wallet-sdk-core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

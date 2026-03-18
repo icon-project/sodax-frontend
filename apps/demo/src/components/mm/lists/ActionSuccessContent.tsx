@@ -87,8 +87,6 @@ export function ActionSuccessContent({ action, data, onClose }: ActionSuccessCon
     }
   };
 
-  const amountNumber = Number(data.amount);
-
   return (
     <div className="flex flex-col gap-3 py-2">
       <DialogHeader className="pb-2">
@@ -98,7 +96,7 @@ export function ActionSuccessContent({ action, data, onClose }: ActionSuccessCon
       <div className="bg-cream rounded-lg p-4 text-center">
         <p className="text-sm uppercase tracking-wider text-clay mb-2">{currentConfig.label}</p>
         <p className="text-2xl font-bold text-cherry-dark font-mono">
-          {Number.isFinite(amountNumber) ? amountNumber.toFixed(4) : data.amount} {data.token.symbol}
+          {data.amount} {data.token.symbol}
         </p>
       </div>
 

@@ -18,7 +18,15 @@ import type { MoneyMarketBorrowParams } from '@sodax/sdk';
 import { useBorrow, useSpokeProvider, useReservesUsdFormat, useAToken, useUserReservesData } from '@sodax/dapp-kit';
 import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
-import { getChainsWithThisToken, getMmErrorText, getTokenOnChain, getNativeTokenSymbol } from '@/lib/utils';
+import {
+  getChainsWithThisToken,
+  getMmErrorText,
+  getTokenOnChain,
+  getNativeTokenSymbol,
+  formatDecimalForDisplay,
+  getSafeMaxAmountForInput,
+} from '@/lib/utils';
+import { logger } from '@/lib/logger';
 import { formatUnits } from 'viem';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import { MIN_BORROW_USD, MAX_BORROW_SAFETY_MARGIN, ZERO_ADDRESS } from '../../constants';
@@ -142,7 +150,6 @@ export function BorrowModal({
       const totalCollateralUSD = Number(userSummary.totalCollateralUSD);
       const totalBorrowsUSD = Number(userSummary.totalBorrowsUSD);
       const currentLoanToValue = Number(userSummary.currentLoanToValue);
-      const currentLiquidationThreshold = Number(userSummary.currentLiquidationThreshold);
 
       // Use LTV (not liquidation threshold) for max borrowable amount
       const maxBorrowableUSD = totalCollateralUSD * currentLoanToValue;
@@ -306,18 +313,17 @@ export function BorrowModal({
         onOpenChange(false);
       }
     } catch (err) {
-      console.error('Borrow failed:', err);
-      // Log more details about the error
+      logger.error('Borrow failed', err);
       if (err && typeof err === 'object' && 'data' in err) {
-        console.error('Borrow error details:', err.data);
+        logger.error('Borrow error details', (err as { data: unknown }).data);
       }
     }
   };
 
-  const handleMaxClick = () => {
+  const handleMaxClick = (): void => {
     const maxBorrowNum = Number.parseFloat(maxBorrow);
     if (maxBorrowNum > 0 && !Number.isNaN(maxBorrowNum)) {
-      setAmount(maxBorrow);
+      setAmount(getSafeMaxAmountForInput(maxBorrow));
     }
   };
 
@@ -420,7 +426,7 @@ export function BorrowModal({
             <div className="space-y-1">
               {!isMaxBorrowEffectivelyZero && (
                 <p className="text-xs text-muted-foreground">
-                  Max borrow: {Number(maxBorrow).toFixed(6)} {token.symbol}
+                  Max borrow: {formatDecimalForDisplay(maxBorrow, 4)} {token.symbol}
                 </p>
               )}
               {/* Show validation messages only when user enters an amount */}
@@ -442,7 +448,7 @@ export function BorrowModal({
                   if (!Number.isNaN(maxBorrowNum) && amountNum > maxBorrowNum && !isBusy) {
                     return (
                       <ErrorAlert
-                        text={`Amount exceeds maximum borrowable: ${Number(maxBorrow).toFixed(6)} ${token.symbol}`}
+                        text={`Amount exceeds maximum borrowable: ${formatDecimalForDisplay(maxBorrow, 4)} ${token.symbol}`}
                         variant="compact"
                       />
                     );

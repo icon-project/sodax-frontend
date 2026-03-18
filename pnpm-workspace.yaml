@@ -36,3 +36,4 @@ catalog:
   "@solana/spl-token": "0.4.9"
   "@solana/wallet-adapter-base": "0.9.26"
   "@solana/web3.js": "1.98.0"
+  "near-api-js": "7.2.0"
