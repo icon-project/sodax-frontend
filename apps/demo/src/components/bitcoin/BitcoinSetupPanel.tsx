@@ -1,8 +1,10 @@
 import React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useRadfiSession, useTradingWalletBalance, useFundTradingWallet, useExpiredUtxos, useRenewUtxos } from '@sodax/dapp-kit';
+import { useXConnection, useXConnectors, useXConnect, useXDisconnect, XverseXConnector, type BtcWalletAddressType } from '@sodax/wallet-sdk-react';
 import type { BitcoinSpokeProvider } from '@sodax/sdk';
+import { detectBitcoinAddressType } from '@sodax/types';
 import { formatUnits } from 'viem';
 import { Loader2, Copy, ExternalLink, Check, AlertTriangle, RefreshCw } from 'lucide-react';
 import { FundTradingWalletDialog } from './FundTradingWalletDialog';
@@ -18,6 +20,8 @@ interface BitcoinSetupPanelProps {
   isDestination?: boolean;
 }
 
+type BtcAddressType = BtcWalletAddressType;
+
 export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance, isNativeBalanceLoading, connectorName = 'Wallet', connectorIcon = '', isDestination = false }: BitcoinSetupPanelProps) => {
   const { walletAddress, isAuthed, tradingAddress, login, isLoginPending } = useRadfiSession(spokeProvider);
 
@@ -29,6 +33,36 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
   const [copied, setCopied] = useState(false);
   const [renewError, setRenewError] = useState<string | null>(null);
   const [showFundDialog, setShowFundDialog] = useState(false);
+
+  // Address type selector (Xverse only)
+  const xConnection = useXConnection('BITCOIN');
+  const xConnectors = useXConnectors('BITCOIN');
+  const { mutateAsync: xConnect } = useXConnect();
+  const xDisconnect = useXDisconnect();
+  const [isSwitching, setIsSwitching] = useState(false);
+
+  const activeConnector = xConnectors.find(c => c.id === xConnection?.xConnectorId);
+  const isXverse = activeConnector instanceof XverseXConnector;
+
+  // Detect current address type from connected address
+  const currentAddressType: BtcAddressType = walletAddress
+    ? (detectBitcoinAddressType(walletAddress) === 'P2TR' ? 'taproot' : 'segwit')
+    : 'taproot';
+
+  const handleAddressTypeChange = useCallback(async (newType: BtcAddressType) => {
+    if (!isXverse || !activeConnector || newType === currentAddressType) return;
+    setIsSwitching(true);
+    try {
+      const xverseConnector = activeConnector as XverseXConnector;
+      xverseConnector.setAddressPurpose(newType);
+      xDisconnect('BITCOIN');
+      await xConnect(xverseConnector);
+    } catch (e) {
+      console.error('Failed to switch address type', e);
+    } finally {
+      setIsSwitching(false);
+    }
+  }, [isXverse, activeConnector, currentAddressType, xConnect, xDisconnect]);
 
   const copyAddress = () => {
     if (!tradingAddress) return;
@@ -64,7 +98,32 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
 
   return (
     <div className="flex flex-col gap-4 p-4 mt-4 bg-muted/30 rounded-lg border border-border">
-      <h3 className="font-semibold text-sm">Bitcoin Trading Setup</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold text-sm">Bitcoin Trading Setup</h3>
+
+        {/* Address type selector — Xverse only */}
+        {isXverse && (
+          <div className="flex items-center gap-1 text-xs">
+            {isSwitching && <Loader2 className="h-3 w-3 animate-spin mr-1" />}
+            <button
+              type="button"
+              onClick={() => handleAddressTypeChange('taproot')}
+              disabled={isSwitching}
+              className={`px-2 py-0.5 rounded-l border cursor-pointer ${currentAddressType === 'taproot' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background border-border hover:bg-muted'}`}
+            >
+              Taproot
+            </button>
+            <button
+              type="button"
+              onClick={() => handleAddressTypeChange('segwit')}
+              disabled={isSwitching}
+              className={`px-2 py-0.5 rounded-r border cursor-pointer ${currentAddressType === 'segwit' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background border-border hover:bg-muted'}`}
+            >
+              Segwit
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Sign in — only shown before authenticated */}
       {!isAuthed && (
