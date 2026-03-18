@@ -72,3 +72,5 @@ export interface RoadmapState {
   /** Whether we found a confident category match; false shows a "couldn't identify" notice. */
   matched: boolean;
 }
+
+export type RoadmapView = 'public' | 'prospect' | 'bd';

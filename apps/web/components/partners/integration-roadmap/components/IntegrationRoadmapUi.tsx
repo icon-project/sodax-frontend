@@ -8,7 +8,7 @@ import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigat
 import { motion } from 'motion/react';
 import { INTEGRATION_ROADMAP_BD_ROUTE, INTEGRATION_ROADMAP_ROUTE } from '@/constants/routes';
 import { Input } from '@/components/ui/input';
-import type { BdConfig, CategoryId, RoadmapCategory } from '../types';
+import type { BdConfig, CategoryId, RoadmapCategory, RoadmapView } from '../types';
 import {
   CATEGORIES,
   DEFAULT_FROM_SUFFIX,
@@ -100,7 +100,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
       (chains ?? '') !== '' ||
       (whys ?? '') !== '' ||
       (steps ?? '') !== '';
-    const draft = hasBdParamsFromUrl ? null : loadDraftFromStorage();
+    const draft = isBdPath && !hasBdParamsFromUrl ? loadDraftFromStorage() : null;
     setBdConfig(draft ?? fromUrl);
 
     if (protocolDisplay != null && protocolDisplay.trim() !== '') {
@@ -240,6 +240,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
   const fromFirstName = fromName.split(' ')[0] ?? '';
 
   const isProspectView = Boolean(params?.protocol) && !bdMode;
+  const view: RoadmapView = bdMode ? 'bd' : isProspectView ? 'prospect' : 'public';
 
   return (
     <section className="bg-cream-white overflow-clip px-4 md:px-8 py-16" aria-label="Integration Roadmap">
@@ -421,6 +422,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
               signature={signature}
               fromFirstName={fromFirstName}
               readOnly={isProspectView}
+              view={view}
             />
           </motion.div>
         )}
