@@ -1,6 +1,6 @@
 import type React from 'react';
 import Image from 'next/image';
-import { Info } from 'lucide-react';
+import { Info, InfoIcon } from 'lucide-react';
 import { useStakeState, useStakeActions } from '../_stores/stake-store-provider';
 import { formatCompactNumber, formatTokenAmount } from '@/lib/utils';
 import { STAKING_APR, STAKING_NOW_HOLDERS } from './constants';
@@ -10,6 +10,7 @@ import { UnstakeModeToggle } from './unstake-mode-toggle';
 import { STAKE_MODE } from '../_stores/stake-store';
 import { Loader2 } from 'lucide-react';
 import { useStakeVaultApy } from '@/hooks/useStakeVaultApy';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function StakeStatsCard(): React.JSX.Element {
   const {
@@ -61,7 +62,20 @@ export function StakeStatsCard(): React.JSX.Element {
             <div className="justify-center text-clay text-(length:--body-small) leading-4">
               ~{formatTokenAmount(totalUserXSodaValue, 18)} SODA
             </div>
-            <Info className="w-4 h-4 text-clay-light" />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button">
+                  <Info className="w-4 h-4 text-clay-light" />{' '}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                sideOffset={10}
+                className="bg-white px-4 py-2 text-espresso rounded-full text-(length:--body-small)"
+              >
+                Approximate equivalent value in SODA{' '}
+              </TooltipContent>
+            </Tooltip>
             {userXSodaBalance > 0n && <LoadingThreeDotsJumping />}
           </div>
         </div>
@@ -70,7 +84,20 @@ export function StakeStatsCard(): React.JSX.Element {
             <div className="justify-center text-espresso text-(length:--body-super-comfortable) font-bold leading-5">
               {displayedApy.toFixed(2)}% APY
             </div>
-            <Info className="w-4 h-4 text-clay-light" />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button">
+                  <Info className="w-4 h-4 text-clay-light" />{' '}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                sideOffset={10}
+                className="bg-white px-4 py-2 text-espresso rounded-full text-(length:--body-small)"
+              >
+                APY will change over time{' '}
+              </TooltipContent>
+            </Tooltip>{' '}
           </div>
           <div className="justify-center text-clay text-(length:--body-small) font-normal leading-4">
             {formatCompactNumber(formatTokenAmount(stakingInfo?.totalStaked || 0n, 18))} total staked
@@ -105,7 +132,30 @@ export function StakeStatsCard(): React.JSX.Element {
             <div className="text-espresso text-(length:--body-comfortable) font-bold leading-5">
               {isLoadingStakingConfig ? <LoadingThreeDotsJumping /> : '180 days'}
             </div>
-            {shouldShowUnstakingPeriodInfo ? <Info className="w-4 h-4 text-clay-light" /> : null}
+            {shouldShowUnstakingPeriodInfo ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button">
+                    <Info className="w-4 h-4 text-clay-light" />{' '}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="top"
+                  sideOffset={10}
+                  className="bg-white px-4 py-2 text-espresso rounded-full text-(length:--body-small)"
+                >
+                  <a
+                    href="https://support.sodax.com/en/articles/13918114-how-do-i-unstake-soda-on-sodax-stake"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-yellow-dark font-bold"
+                  >
+                    Faster unstaking options
+                  </a>{' '}
+                  available
+                </TooltipContent>
+              </Tooltip>
+            ) : null}
           </div>
         </div>
       </div>

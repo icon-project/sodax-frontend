@@ -231,7 +231,7 @@ export function StakeInputPanel(): React.JSX.Element {
                       onClick={handleActivateStellarAccount}
                       disabled={isActivatingStellarAccount}
                     >
-                      {isActivatingStellarAccount ? 'Activating Stellar Account' : 'Activate Stellar Account'}
+                      {isActivatingStellarAccount ? 'Activating Stellar Account' : 'Activate Stellar'}
                       {isActivatingStellarAccount && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
                     </Button>
                   ) : isStellarChain &&
@@ -275,7 +275,7 @@ export function StakeInputPanel(): React.JSX.Element {
                     onClick={handleActivateStellarAccount}
                     disabled={isActivatingStellarAccount}
                   >
-                    {isActivatingStellarAccount ? 'Activating Stellar Account' : 'Activate Stellar Account'}
+                    {isActivatingStellarAccount ? 'Activating Stellar Account' : 'Activate Stellar'}
                     {isActivatingStellarAccount && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
                   </Button>
                 ) : isStellarChain &&
