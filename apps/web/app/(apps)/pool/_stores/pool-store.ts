@@ -1,7 +1,7 @@
 // apps/web/app/(apps)/pool/_stores/pool-store.ts
 import { createStore } from 'zustand/vanilla';
 import { persist } from 'zustand/middleware';
-import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
+import type { SpokeChainId } from '@sodax/types';
 import type { XToken } from '@sodax/types';
 
 export const INITIAL_PRICE = 1;
@@ -9,7 +9,7 @@ export const INITIAL_MIN_PRICE = +(INITIAL_PRICE * 0.85).toFixed(2);
 export const INITIAL_MAX_PRICE = +(INITIAL_PRICE * 1.15).toFixed(2);
 
 export type PoolState = {
-  selectedNetworkChainId: SpokeChainId;
+  selectedNetworkChainId: SpokeChainId | null;
   selectedToken: XToken | null;
   minPrice: number;
   maxPrice: number;
@@ -31,7 +31,7 @@ export type PoolActions = {
 export type PoolStore = PoolState & PoolActions;
 
 export const defaultPoolState: PoolState = {
-  selectedNetworkChainId: SONIC_MAINNET_CHAIN_ID,
+  selectedNetworkChainId: null,
   selectedToken: null,
   minPrice: INITIAL_MIN_PRICE,
   maxPrice: INITIAL_MAX_PRICE,

@@ -25,7 +25,7 @@ import { formatUnits, parseUnits } from 'viem';
 import { SupplyDialog } from './supply-dialog';
 
 type LiquidityInputsProps = {
-  selectedNetworkChainId: SpokeChainId;
+  selectedNetworkChainId: SpokeChainId | null;
   sodaAmount: string;
   xSodaAmount: string;
   onSodaAmountChange: (value: string) => void;
@@ -46,11 +46,16 @@ export function LiquidityInputs({
   const router = useRouter();
   const openModal = useModalStore(state => state.openModal);
   const [isSupplyDialogOpen, setIsSupplyDialogOpen] = useState<boolean>(false);
-  const { address } = useXAccount(selectedNetworkChainId);
+  const { address } = useXAccount(selectedNetworkChainId ?? undefined);
   const allChainSodaBalances = useAllChainBalances({ onlySodaTokens: true });
-  const allChainXSodaBalances = useAllChainXSodaBalances([selectedNetworkChainId]);
+  const allChainXSodaBalances = useAllChainXSodaBalances(
+    selectedNetworkChainId ? [selectedNetworkChainId] : [],
+  );
   const isWalletConnected = Boolean(address);
   const selectedSodaBalance = useMemo((): bigint => {
+    if (!selectedNetworkChainId) {
+      return 0n;
+    }
     const selectedChainConfig = spokeChainConfig[selectedNetworkChainId];
     const selectedSodaToken =
       selectedChainConfig?.supportedTokens && 'SODA' in selectedChainConfig.supportedTokens
@@ -67,7 +72,7 @@ export function LiquidityInputs({
 
     return selectedSodaBalanceEntry?.balance ?? 0n;
   }, [allChainSodaBalances, selectedNetworkChainId]);
-  const selectedXSodaBalance = allChainXSodaBalances.get(selectedNetworkChainId) ?? 0n;
+  const selectedXSodaBalance = selectedNetworkChainId ? (allChainXSodaBalances.get(selectedNetworkChainId) ?? 0n) : 0n;
   const hasNoSodaBalance = isWalletConnected && selectedSodaBalance <= 0n;
   const hasNoXSodaBalance = isWalletConnected && selectedXSodaBalance <= 0n;
   const hasSodaBalance = isWalletConnected && selectedSodaBalance > 0n;
@@ -79,9 +84,13 @@ export function LiquidityInputs({
   const hasValidXSodaInput = xSodaAmount.trim().length > 0 && xSodaValue > 0n && xSodaValue <= selectedXSodaBalance;
   const isOverMax = sodaValue > selectedSodaBalance || xSodaValue > selectedXSodaBalance;
   const hasPoolContext = poolData !== null && poolSpokeAssets !== null;
-  const canContinue = isWalletConnected && hasPoolContext && hasValidSodaInput && hasValidXSodaInput;
+  const hasSelectedNetwork = selectedNetworkChainId !== null;
+  const canContinue = isWalletConnected && hasSelectedNetwork && hasPoolContext && hasValidSodaInput && hasValidXSodaInput;
 
   const handleOpenWalletModal = (): void => {
+    if (!selectedNetworkChainId) {
+      return;
+    }
     openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getXChainType(selectedNetworkChainId) });
   };
   const handleBuySoda = (): void => {
@@ -248,8 +257,8 @@ export function LiquidityInputs({
             </Button>
           )
         ) : (
-          <Button variant="cherry" onClick={handleOpenWalletModal} className="px-6">
-            Connect {chainIdToChainName(selectedNetworkChainId)}
+          <Button variant="cherry" onClick={handleOpenWalletModal} className="px-6" disabled={!selectedNetworkChainId}>
+            {selectedNetworkChainId ? `Connect ${chainIdToChainName(selectedNetworkChainId)}` : 'Select network'}
           </Button>
         )}
       </div>

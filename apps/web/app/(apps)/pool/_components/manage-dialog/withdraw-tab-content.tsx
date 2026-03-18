@@ -47,6 +47,7 @@ type WithdrawTabContentProps = {
   withdrawPercentage: string;
   isPending: boolean;
   isWithdrawPending: boolean;
+  isSuccess: boolean;
   /** Error message to display when withdraw fails */
   error?: string;
   onWithdrawPercentageChange: (value: string) => void;
@@ -60,6 +61,7 @@ export function WithdrawTabContent({
   withdrawPercentage,
   isPending,
   isWithdrawPending,
+  isSuccess,
   error,
   onWithdrawPercentageChange,
   onWithdrawLiquidity,
@@ -201,10 +203,10 @@ export function WithdrawTabContent({
         className="w-full mt-2"
         variant="cherry"
         onClick={onWithdrawLiquidity}
-        disabled={isPending || !hasValidWithdrawSelection}
+        disabled={!isSuccess && (isPending || !hasValidWithdrawSelection)}
       >
-        Withdraw
-        {isWithdrawPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+        {isSuccess ? 'Withdrawal Completed' : 'Withdraw'}
+        {!isSuccess && isWithdrawPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
       </Button>
     </TabsContent>
   );

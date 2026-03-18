@@ -1,7 +1,7 @@
 import type React from 'react';
 import { useMemo } from 'react';
 import Image from 'next/image';
-import { Loader2, ShieldAlertIcon } from 'lucide-react';
+import { CheckIcon, Loader2, ShieldAlertIcon } from 'lucide-react';
 import { spokeChainConfig, type PoolData } from '@sodax/sdk';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { formatUnits, parseUnits } from 'viem';
@@ -27,12 +27,13 @@ type AddLiquidityTabContentProps = {
   liquidityToken0Amount: string;
   liquidityToken1Amount: string;
   isPending: boolean;
-  isSupplyPending: boolean;
+  isSuccess: boolean;
   /** Error message to display when add-liquidity fails */
   error?: string;
   onToken0AmountChange: (value: string) => void;
   onToken1AmountChange: (value: string) => void;
   onAddLiquidity: () => void;
+  onSuccessClick: () => void;
 };
 
 type LiquidityAmountInputProps = {
@@ -141,11 +142,12 @@ export function AddLiquidityTabContent({
   liquidityToken0Amount,
   liquidityToken1Amount,
   isPending,
-  isSupplyPending,
+  isSuccess,
   error,
   onToken0AmountChange,
   onToken1AmountChange,
   onAddLiquidity,
+  onSuccessClick,
 }: AddLiquidityTabContentProps): React.JSX.Element {
   const allChainSodaBalances = useAllChainBalances({ onlySodaTokens: true });
   const allChainXSodaBalances = useAllChainXSodaBalances([chainId]);
@@ -257,9 +259,15 @@ export function AddLiquidityTabContent({
           onAmountChange={onToken1AmountChange}
         />
       </div>
-      <Button className="w-full mt-2" variant="cherry" onClick={onAddLiquidity} disabled={!canAddLiquidity}>
-        Add
-        {isSupplyPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+      <Button
+        className="w-full mt-2 gap-2"
+        variant="cherry"
+        onClick={isSuccess ? onSuccessClick : onAddLiquidity}
+        disabled={isSuccess ? false : !canAddLiquidity}
+      >
+        {isSuccess ? 'Liquidity added' : 'Add'}
+        {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+        {isSuccess ? <CheckIcon className="w-4 h-4" /> : null}
       </Button>
     </TabsContent>
   );

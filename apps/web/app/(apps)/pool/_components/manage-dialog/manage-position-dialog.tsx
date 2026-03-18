@@ -2,12 +2,18 @@
 
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
+  createDepositParamsProps,
   createDecreaseLiquidityParamsProps,
   createSupplyLiquidityParamsProps,
+  createWithdrawParamsProps,
   useClaimRewards,
+  useDexAllowance,
   useDecreaseLiquidity,
   useDexApprove,
+  useDexDeposit,
+  useDexWithdraw,
   useLiquidityAmounts,
   useSodaxContext,
   useSpokeProvider,
@@ -25,6 +31,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WithdrawTabContent } from '@/app/(apps)/pool/_components/manage-dialog/withdraw-tab-content';
 import { formatUnits, parseUnits } from 'viem';
+import type { CreateAssetDepositParams } from '@sodax/sdk';
 
 type ManagePositionDialogProps = {
   open: boolean;
@@ -63,6 +70,7 @@ export function ManagePositionDialog({
   positionInfo,
 }: ManagePositionDialogProps): React.JSX.Element {
   const { sodax } = useSodaxContext();
+  const queryClient = useQueryClient();
   const wasOpenRef = useRef<boolean>(open);
   const [activeTab, setActiveTab] = useState<'claim' | 'add' | 'withdraw'>('claim');
   const [minPrice, setMinPrice] = useState<string>(initialMinPrice);
@@ -71,7 +79,9 @@ export function ManagePositionDialog({
   const [lastEditedAmount, setLastEditedAmount] = useState<'soda' | 'xsoda' | null>(null);
   const [withdrawPercentage, setWithdrawPercentage] = useState<string>('0');
   const [addLiquidityError, setAddLiquidityError] = useState<string>('');
+  const [isAddLiquiditySuccess, setIsAddLiquiditySuccess] = useState<boolean>(false);
   const [withdrawError, setWithdrawError] = useState<string>('');
+  const [isWithdrawSuccess, setIsWithdrawSuccess] = useState<boolean>(false);
   const [claimError, setClaimError] = useState<string>('');
   const [isClaimActionPending, setIsClaimActionPending] = useState<boolean>(false);
   const spokeChainId = resolveSpokeChainId(chainId);
@@ -82,6 +92,8 @@ export function ManagePositionDialog({
     useLiquidityAmounts(minPrice, maxPrice, poolData);
   const claimRewardsMutation = useClaimRewards();
   const approveMutation = useDexApprove();
+  const depositMutation = useDexDeposit();
+  const withdrawMutation = useDexWithdraw();
   const supplyLiquidityMutation = useSupplyLiquidity();
   const decreaseLiquidityMutation = useDecreaseLiquidity();
   const poolSpokeAssets = useMemo((): PoolSpokeAssets | null => {
@@ -139,6 +151,7 @@ export function ManagePositionDialog({
 
   const handleSodaAmountChange = useCallback(
     (value: string): void => {
+      setIsAddLiquiditySuccess(false);
       setLastEditedAmount('soda');
       setSodaInputAmount(value);
       handleToken0AmountChange(convertSodaToPoolTokenAmount(value));
@@ -147,6 +160,7 @@ export function ManagePositionDialog({
   );
   const handleXSodaAmountChange = useCallback(
     (value: string): void => {
+      setIsAddLiquiditySuccess(false);
       setLastEditedAmount('xsoda');
       handleToken1AmountChange(value);
     },
@@ -158,7 +172,9 @@ export function ManagePositionDialog({
       setClaimError('');
       setIsClaimActionPending(false);
       setAddLiquidityError('');
+      setIsAddLiquiditySuccess(false);
       setWithdrawError('');
+      setIsWithdrawSuccess(false);
       setActiveTab('claim');
       setMinPrice(initialMinPrice);
       setMaxPrice(initialMaxPrice);
@@ -178,9 +194,32 @@ export function ManagePositionDialog({
   }, [convertPoolTokenToSodaAmount, lastEditedAmount, liquidityToken0Amount]);
 
   const hasUnclaimedFees = unclaimedFees0 > 0n || unclaimedFees1 > 0n;
+  const token0DepositParams = useMemo((): CreateAssetDepositParams | undefined => {
+    if (!poolSpokeAssets || !poolData.token0IsStatAToken || Number.parseFloat(sodaInputAmount) <= 0) {
+      return undefined;
+    }
+    try {
+      return createDepositParamsProps({
+        tokenIndex: 0,
+        amount: sodaInputAmount,
+        poolData,
+        poolSpokeAssets,
+      });
+    } catch {
+      return undefined;
+    }
+  }, [poolData, poolSpokeAssets, sodaInputAmount]);
+
+  const { data: hasToken0Allowance } = useDexAllowance({
+    params: token0DepositParams,
+    spokeProvider: spokeProvider ?? null,
+  });
+
   const isPending =
     isClaimActionPending ||
     approveMutation.isPending ||
+    depositMutation.isPending ||
+    withdrawMutation.isPending ||
     supplyLiquidityMutation.isPending ||
     decreaseLiquidityMutation.isPending;
   const claimErrorMessage =
@@ -259,8 +298,27 @@ export function ManagePositionDialog({
     }
 
     setAddLiquidityError('');
+    setIsAddLiquiditySuccess(false);
 
     try {
+      if (poolData.token0IsStatAToken) {
+        if (!token0DepositParams) {
+          setAddLiquidityError('Enter a valid first token amount before adding liquidity.');
+          return;
+        }
+        
+        if (!hasToken0Allowance) {
+          await approveMutation.mutateAsync({
+            params: token0DepositParams,
+            spokeProvider,
+          });
+        }
+        await depositMutation.mutateAsync({
+          params: token0DepositParams,
+          spokeProvider,
+        });
+      }
+
       await supplyLiquidityMutation.mutateAsync({
         params: createSupplyLiquidityParamsProps({
           poolData,
@@ -279,13 +337,19 @@ export function ManagePositionDialog({
       handleToken0AmountChange('');
       handleToken1AmountChange('');
       setSodaInputAmount('');
+      setIsAddLiquiditySuccess(true);
     } catch (supplyError) {
       const message = supplyError instanceof Error ? supplyError.message : 'Add liquidity failed.';
       setAddLiquidityError(message);
+      setIsAddLiquiditySuccess(false);
     }
   };
 
   const handleWithdrawLiquidity = async (): Promise<void> => {
+    if (isWithdrawSuccess) {
+      onOpenChange(false);
+      return;
+    }
     if (!spokeProvider) {
       setWithdrawError('Wallet is not connected to this chain.');
       return;
@@ -295,6 +359,7 @@ export function ManagePositionDialog({
       return;
     }
     setWithdrawError('');
+    setIsWithdrawSuccess(false);
     const parsedPercentage = Number.parseFloat(withdrawPercentage);
     if (!(parsedPercentage > 0) || parsedPercentage > 100) {
       return;
@@ -311,9 +376,34 @@ export function ManagePositionDialog({
         }),
         spokeProvider,
       });
+      if (poolData.token0IsStatAToken && poolSpokeAssets) {
+        const percentageBasisPoints = parsedPercentage === 100 ? 10000n : BigInt(Math.floor(parsedPercentage * 100));
+        const decreasedToken0Amount =
+          percentageBasisPoints >= 10000n
+            ? positionInfo.amount0
+            : (positionInfo.amount0 * percentageBasisPoints) / 10000n;
+        const withdrawToken0Amount = decreasedToken0Amount + positionInfo.unclaimedFees0;
+        if (withdrawToken0Amount > 0n) {
+          await withdrawMutation.mutateAsync({
+            params: createWithdrawParamsProps({
+              tokenIndex: 0,
+              amount: formatUnits(withdrawToken0Amount, poolData.token0.decimals),
+              poolData,
+              poolSpokeAssets,
+            }),
+            spokeProvider,
+          });
+        }
+      }
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['allChainBalances'] }),
+        queryClient.invalidateQueries({ queryKey: ['allChainXSodaBalances'] }),
+      ]);
+      setIsWithdrawSuccess(true);
     } catch (withdrawErr) {
-      const message = withdrawErr instanceof Error ? withdrawErr.message : 'Decrease liquidity failed.';
+      const message = withdrawErr instanceof Error ? withdrawErr.message : 'Withdraw liquidity failed.';
       setWithdrawError(message);
+      setIsWithdrawSuccess(false);
     }
   };
 
@@ -368,11 +458,12 @@ export function ManagePositionDialog({
             liquidityToken0Amount={displaySodaAmount}
             liquidityToken1Amount={liquidityToken1Amount}
             isPending={isPending}
-            isSupplyPending={supplyLiquidityMutation.isPending}
+            isSuccess={isAddLiquiditySuccess}
             error={addLiquidityError}
             onToken0AmountChange={handleSodaAmountChange}
             onToken1AmountChange={handleXSodaAmountChange}
             onAddLiquidity={() => void handleAddLiquidity()}
+            onSuccessClick={() => onOpenChange(false)}
           />
           <WithdrawTabContent
             chainId={spokeChainId}
@@ -380,9 +471,13 @@ export function ManagePositionDialog({
             positionInfo={positionInfo}
             withdrawPercentage={withdrawPercentage}
             isPending={isPending}
-            isWithdrawPending={decreaseLiquidityMutation.isPending}
+            isWithdrawPending={decreaseLiquidityMutation.isPending || withdrawMutation.isPending}
+            isSuccess={isWithdrawSuccess}
             error={withdrawError}
-            onWithdrawPercentageChange={setWithdrawPercentage}
+            onWithdrawPercentageChange={(value: string) => {
+              setIsWithdrawSuccess(false);
+              setWithdrawPercentage(value);
+            }}
             onWithdrawLiquidity={() => void handleWithdrawLiquidity()}
           />
         </Tabs>

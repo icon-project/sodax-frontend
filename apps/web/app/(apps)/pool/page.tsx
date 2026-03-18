@@ -72,7 +72,7 @@ export default function PoolPage() {
   const { selectedNetworkChainId, minPrice, maxPrice, isNetworkPickerOpened } = usePoolState();
   const { setSelectedToken, setMinPrice, setMaxPrice, setSodaAmount, setXSodaAmount, setIsNetworkPickerOpened } =
     usePoolActions();
-  const { address } = useXAccount(selectedNetworkChainId);
+  const { address } = useXAccount(selectedNetworkChainId ?? undefined);
   const [savedPositions, setSavedPositions] = useState<SavedDexPosition[]>([]);
   const fixedPoolKey = dexPools.ASODA_XSODA;
   const { data: poolDataRaw } = usePoolData({ poolKey: fixedPoolKey });
@@ -89,8 +89,8 @@ export default function PoolPage() {
   }, [poolData]);
 
   const { sodax } = useSodaxContext();
-  const walletProvider = useWalletProvider(selectedNetworkChainId);
-  const spokeProvider = useSpokeProvider(selectedNetworkChainId, walletProvider);
+  const walletProvider = useWalletProvider(selectedNetworkChainId ?? undefined);
+  const spokeProvider = useSpokeProvider(selectedNetworkChainId ?? undefined, walletProvider);
   const poolSpokeAssets = useMemo((): PoolSpokeAssets | null => {
     if (!spokeProvider) {
       return null;

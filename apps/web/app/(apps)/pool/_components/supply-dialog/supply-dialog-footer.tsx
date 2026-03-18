@@ -91,10 +91,10 @@ export default function SupplyDialogFooter({
   const [lockedSupplyAmounts, setLockedSupplyAmounts] = useState<{ token0: string; token1: string } | null>(null);
   const [isTransferred, setIsTransferred] = useState<boolean>(false);
   const [isSupplySubmitting, setIsSupplySubmitting] = useState<boolean>(false);
-  const walletProvider = useWalletProvider(selectedNetworkChainId);
-  const spokeProvider = useSpokeProvider(selectedNetworkChainId, walletProvider);
+  const walletProvider = useWalletProvider(selectedNetworkChainId ?? undefined);
+  const spokeProvider = useSpokeProvider(selectedNetworkChainId ?? undefined, walletProvider);
   const activeSpokeProvider = spokeProvider ?? null;
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedNetworkChainId);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedNetworkChainId ?? undefined);
   const fixedPoolKey = dexPools.ASODA_XSODA;
   const { mutateAsync: approveAsset, isPending: isApproving } = useDexApprove();
   const { mutateAsync: depositAsset, isPending: isDepositing } = useDexDeposit();
@@ -361,7 +361,9 @@ export default function SupplyDialogFooter({
           const [, hubTxHash] = result;
           const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
           const mintPositionEvent = await sodax.dex.clService.getMintPositionEvent(hubTxHash as Hash);
-          saveTokenIdToLocalStorage(walletAddress, selectedNetworkChainId, mintPositionEvent.tokenId.toString());
+          if (selectedNetworkChainId) {
+            saveTokenIdToLocalStorage(walletAddress, selectedNetworkChainId, mintPositionEvent.tokenId.toString());
+          }
         } catch (saveError) {
           // Keep supply successful even if local position indexing fails.
           console.warn('Failed to save minted position ID to local storage', saveError);
@@ -417,7 +419,7 @@ export default function SupplyDialogFooter({
         }
       >
         {isApproveStep && isWrongChain ? (
-          <>Switch to {chainIdToChainName(selectedNetworkChainId)}</>
+          <>Switch to {selectedNetworkChainId ? chainIdToChainName(selectedNetworkChainId) : 'selected network'}</>
         ) : isApproved ? (
           <Check className="w-5 h-5" />
         ) : isApproving ? (
@@ -450,7 +452,7 @@ export default function SupplyDialogFooter({
         }
       >
         {isTransferStep && isWrongChain ? (
-          <>Switch to {chainIdToChainName(selectedNetworkChainId)}</>
+          <>Switch to {selectedNetworkChainId ? chainIdToChainName(selectedNetworkChainId) : 'selected network'}</>
         ) : isTransferred ? (
           <Check className="w-5 h-5" />
         ) : !isApproved ? (
