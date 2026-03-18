@@ -18,7 +18,14 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { ChainSelector } from '@/components/shared/ChainSelector';
-import { getChainsWithThisToken, getTokenOnChain, getNativeTokenSymbol } from '@/lib/utils';
+import {
+  getChainsWithThisToken,
+  getTokenOnChain,
+  getNativeTokenSymbol,
+  formatDecimalForDisplay,
+  getSafeMaxAmountForInput,
+} from '@/lib/utils';
+import { logger } from '@/lib/logger';
 import { useXBalances, useXAccount } from '@sodax/wallet-sdk-react';
 import { getChainName } from '@/constants';
 import { invalidateMmQueries } from '@/lib/invalidateMmQueries';
@@ -26,7 +33,6 @@ import { extractTxHash } from '@/lib/extractTxHash';
 import { ActionSuccessContent, type ActionSuccessData } from './ActionSuccessContent';
 import { Loader2 } from 'lucide-react';
 import { isValidEvmAddress } from '../typeGuards';
-import { isAddress } from 'viem';
 import { ErrorAlert } from '../ErrorAlert';
 import { getMmErrorText } from '@/lib/utils';
 
@@ -87,7 +93,6 @@ export function RepayModal({
   const queryClient = useQueryClient();
 
   const sourceToken = getTokenOnChain(token.symbol, fromChainId);
-  const targetToken = token; // Debt token on target chain
 
   // Wallet provider for the source (repay) chain
   const sourceWalletProvider = useWalletProvider(fromChainId);
@@ -142,11 +147,7 @@ export function RepayModal({
   });
 
   // Check user balance on source chain
-  const {
-    data: balances,
-    isLoading: isBalancesLoading,
-    isFetching: isBalancesFetching,
-  } = useXBalances({
+  const { data: balances, isLoading: isBalancesLoading } = useXBalances({
     xChainId: fromChainId,
     xTokens: sourceToken ? [sourceToken] : [],
     address: fromAddress,
@@ -171,8 +172,6 @@ export function RepayModal({
   // Don't show approval needed while approving or refetching allowance (to prevent button flicker)
   const needsSourceApproval =
     (sourceAllowed === false || (sourceAllowed === undefined && !isSourceAllowanceLoading)) && !isActuallyApproving;
-  const isInApprovalFlow =
-    isActuallyApproving || (isSourceAllowanceLoading && !hasSourceAllowance && sourceAllowed !== false);
 
   // Reset local approving state when allowance is confirmed
   useEffect(() => {
@@ -227,7 +226,7 @@ export function RepayModal({
         onOpenChange(false);
       }
     } catch (err: unknown) {
-      // console.error('Repay failed:', err);
+      logger.error('Repay failed', err);
       setError(getMmErrorText(err) || 'Transaction failed. Please try again.');
     }
   };
@@ -243,7 +242,7 @@ export function RepayModal({
         spokeProvider: sourceSpokeProvider,
       });
     } catch (err: unknown) {
-      // console.error('Source approval failed:', err);
+      logger.error('Source approval failed', err);
       setError(getMmErrorText(err) || 'Approval failed');
       setIsApprovingLocal(false);
     }
@@ -251,12 +250,9 @@ export function RepayModal({
   };
 
   const handleMax = () => {
-    // Format maxDebt to 6 decimal places to avoid floating point precision issues
     const maxDebtNum = Number.parseFloat(maxDebt);
     if (!Number.isNaN(maxDebtNum) && maxDebtNum > 0) {
-      setAmount(maxDebtNum.toFixed(6));
-    } else {
-      setAmount(maxDebt);
+      setAmount(getSafeMaxAmountForInput(maxDebt));
     }
   };
 
@@ -339,7 +335,7 @@ export function RepayModal({
             <div className="space-y-1">
               {hasDebt && (
                 <p className="text-xs text-muted-foreground">
-                  Max debt: {Number(maxDebt).toFixed(6)} {token.symbol}
+                  Max debt: {formatDecimalForDisplay(maxDebt, 4)} {token.symbol}
                 </p>
               )}
               {/* Show validation messages only when user enters an amount */}
@@ -365,7 +361,7 @@ export function RepayModal({
                   if (!Number.isNaN(maxDebtNum) && amountNum > maxDebtNum) {
                     return (
                       <ErrorAlert
-                        text={`Amount exceeds maximum debt: ${Number(maxDebt).toFixed(6)} ${token.symbol}`}
+                        text={`Amount exceeds maximum debt: ${formatDecimalForDisplay(maxDebt, 6)} ${token.symbol}`}
                         variant="compact"
                       />
                     );

@@ -20,9 +20,17 @@ import {
 } from './entities/Providers.js';
 import { InjectiveSpokeProvider, type InjectiveRawSpokeProvider } from './entities/injective/InjectiveSpokeProvider.js';
 import { IconSpokeProvider, type IconRawSpokeProvider } from './entities/icon/IconSpokeProvider.js';
-import { SolanaSpokeProvider, type SolanaRawSpokeProvider, type SolanaRawSpokeProviderConfig } from './entities/solana/SolanaSpokeProvider.js';
+import {
+  SolanaSpokeProvider,
+  type SolanaRawSpokeProvider,
+  type SolanaRawSpokeProviderConfig,
+} from './entities/solana/SolanaSpokeProvider.js';
 import { SuiSpokeProvider, type SuiRawSpokeProvider } from './entities/sui/SuiSpokeProvider.js';
-import { StellarSpokeProvider, type StellarRawSpokeProvider, type StellarRawSpokeProviderConfig } from './entities/stellar/StellarSpokeProvider.js';
+import {
+  StellarSpokeProvider,
+  type StellarRawSpokeProvider,
+  type StellarRawSpokeProviderConfig,
+} from './entities/stellar/StellarSpokeProvider.js';
 import type {
   BitcoinSpokeProviderType,
   EvmSpokeProviderType,
@@ -56,10 +64,15 @@ import {
   type IntentRelayChainId,
   SONIC_MAINNET_CHAIN_ID,
   ChainIdToIntentRelayChainId,
+  type SubmitSwapTxResponse,
+  type SubmitSwapTxStatusResponse,
 } from '@sodax/types';
 import { BitcoinSpokeProvider, type BitcoinRawSpokeProvider } from './entities/btc/BitcoinSpokeProvider.js';
-import { type NearRawSpokeProvider, type NearRawSpokeProviderConfig, NearSpokeProvider } from './entities/near/NearSpokeProvider.js';
-
+import {
+    type NearRawSpokeProvider,
+    type NearRawSpokeProviderConfig,
+    NearSpokeProvider,
+} from './entities/near/NearSpokeProvider.js';
 export function isEvmHubChainConfig(value: HubChainConfig): value is EvmHubChainConfig {
   return typeof value === 'object' && value.chain.type === 'EVM';
 }
@@ -562,4 +575,32 @@ export function isNearRawSpokeProviderConfig(value: RawSpokeProviderConfig): val
     'chainConfig' in value &&
     value.chainConfig.chain.type === 'NEAR'
   );
+}
+
+// Backend API response guards
+export function isSubmitSwapTxResponse(value: unknown): value is SubmitSwapTxResponse {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as Record<string, unknown>).success === 'boolean' &&
+    typeof (value as Record<string, unknown>).message === 'string'
+  );
+}
+
+export function isSubmitSwapTxStatusResponse(value: unknown): value is SubmitSwapTxStatusResponse {
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  if (typeof obj.success !== 'boolean') return false;
+  if (typeof obj.data !== 'object' || obj.data === null) return false;
+  const data = obj.data as Record<string, unknown>;
+  if (typeof data.txHash !== 'string') return false;
+  if (typeof data.srcChainId !== 'string') return false;
+  if (typeof data.status !== 'string') return false;
+  if (typeof data.failedAttempts !== 'number') return false;
+  if (data.result !== undefined) {
+    if (typeof data.result !== 'object' || data.result === null) return false;
+    const result = data.result as Record<string, unknown>;
+    if (typeof result.dstIntentTxHash !== 'string') return false;
+  }
+  return true;
 }

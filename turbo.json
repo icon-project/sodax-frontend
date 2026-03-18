@@ -23,7 +23,7 @@
     },
     "build:packages": {
       "dependsOn": ["^build"],
-      "inputs": ["packages/*"],
+      "inputs": ["packages/**"],
       "outputs": ["dist/**"]
     },
     "test": {

@@ -1,10 +1,10 @@
-import { useMemo } from 'react';
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { XToken } from '@sodax/types';
 import { Input } from '@/components/ui/input';
 import { formatUnits } from 'viem';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { ChevronDownIcon } from '@/components/icons/chevron-down-icon';
 import TokenSelectDialog from './token-select-dialog';
@@ -16,6 +16,11 @@ import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline
 import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
 import { STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { chainIdToChainName } from '@/providers/constants';
+import {
+  ENTER_DESTINATION_ADDRESS_PLACEHOLDER,
+  getInvalidDestinationAddressMessage,
+} from '../_constants/swap-messages';
 
 export enum CurrencyInputPanelType {
   INPUT = 'INPUT',
@@ -58,8 +63,15 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
   const [isTokenSelectorOpen, setIsTokenSelectorOpen] = useState<boolean>(false);
-  const [isValidAddress, setIsValidAddress] = useState<boolean>(false);
+  const [shouldShowInvalidAddressTooltip, setShouldShowInvalidAddressTooltip] = useState<boolean>(false);
   const { outputToken } = useSwapState();
+  const destinationChainType = getXChainType(outputToken.xChainId) || '';
+  const destinationChainName = chainIdToChainName(outputToken.xChainId);
+  const hasDestinationAddress = customDestinationAddress.trim() !== '';
+  const isDestinationAddressValid =
+    !hasDestinationAddress || validateChainAddress(customDestinationAddress, destinationChainType);
+  const showInvalidAddressFeedback =
+    shouldShowInvalidAddressTooltip && hasDestinationAddress && !isDestinationAddressValid;
 
   const handleTokenSelect = (selectedToken: XToken): void => {
     if (onCurrencyChange) {
@@ -68,16 +80,40 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
   };
 
   const handleChange = (value: string): void => {
-    if (validateChainAddress(value, getXChainType(outputToken.xChainId) || '')) {
-      setIsValidAddress(true);
-    } else {
-      setIsValidAddress(false);
-    }
-
     if (onCustomDestinationAddressChange) {
       onCustomDestinationAddressChange(value);
     }
   };
+
+  const handleDestinationAddressBlur = (): void => {
+    if (hasDestinationAddress && !isDestinationAddressValid) {
+      setShouldShowInvalidAddressTooltip(true);
+      return;
+    }
+
+    setShouldShowInvalidAddressTooltip(false);
+  };
+
+  // shouldShowInvalidAddressTooltip is in deps intentionally: once set to true,
+  // the effect re-runs and returns early, ensuring no duplicate timer is queued.
+  useEffect(() => {
+    if (!isSwapAndSend || !hasDestinationAddress || isDestinationAddressValid) {
+      setShouldShowInvalidAddressTooltip(false);
+      return;
+    }
+
+    if (shouldShowInvalidAddressTooltip) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setShouldShowInvalidAddressTooltip(true);
+    }, 600);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [hasDestinationAddress, isDestinationAddressValid, isSwapAndSend, shouldShowInvalidAddressTooltip]);
 
   const usdValue = useMemo(() => {
     return inputValue === '' ? 0 : new BigNumber(inputValue).multipliedBy(usdPrice).toFixed(2);
@@ -195,16 +231,32 @@ const CurrencyInputPanel: React.FC<CurrencyInputPanelProps> = ({
         {type === CurrencyInputPanelType.OUTPUT && isSwapAndSend && onCustomDestinationAddressChange && (
           <>
             <div className="inline-flex justify-start items-center gap-2 mt-2 w-full">
-              <Input
-                autoFocus
-                type="text"
-                placeholder="Enter destination address"
-                value={customDestinationAddress}
-                onChange={e => handleChange(e.target.value)}
-                onClick={e => e.stopPropagation()}
-                onFocus={e => e.stopPropagation()}
-                className={`h-10 flex-1 text-(length:--body-small) border-cream-white focus:border-cream-white! rounded-full border-4 px-8 py-3 shadow-none focus:shadow-none focus-visible:border-4 focus:outline-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 ${!isValidAddress ? 'text-negative focus-visible:text-negative' : ''}`}
-              />
+              <Tooltip open={showInvalidAddressFeedback}>
+                <TooltipTrigger asChild>
+                  <div className="w-full">
+                    <Input
+                      autoFocus
+                      type="text"
+                      placeholder={ENTER_DESTINATION_ADDRESS_PLACEHOLDER}
+                      value={customDestinationAddress}
+                      onChange={e => handleChange(e.target.value)}
+                      onBlur={handleDestinationAddressBlur}
+                      onClick={e => e.stopPropagation()}
+                      onFocus={e => e.stopPropagation()}
+                      className={`h-10 flex-1 text-(length:--body-small) border-cream-white focus:border-cream-white! rounded-full border-4 px-8 py-3 shadow-none focus:shadow-none focus-visible:border-4 focus:outline-none focus-visible:ring-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-inner-spin-button]:m-0 ${
+                        showInvalidAddressFeedback ? 'text-negative focus-visible:text-negative' : ''
+                      }`}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="top"
+                  sideOffset={10}
+                  className="bg-white px-4 py-2 text-espresso rounded-full text-(length:--body-small)"
+                >
+                  {getInvalidDestinationAddressMessage(destinationChainName)}
+                </TooltipContent>
+              </Tooltip>
             </div>
             {stellarAccountValidation?.ok === false && validateChainAddress(customDestinationAddress, 'STELLAR') && (
               <div className="p-2 text-negative text-(length:--body-small) font-medium font-['InterRegular'] leading-none">
