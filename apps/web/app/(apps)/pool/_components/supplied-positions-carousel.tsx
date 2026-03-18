@@ -19,7 +19,6 @@ import { motion } from 'motion/react';
 import { CircleEllipsisIcon } from 'lucide-react';
 import { ManagePositionDialog } from './manage-dialog';
 import { SwitchChainDialog } from '@/components/shared/switch-chain-dialog';
-import { bigint } from 'zod';
 
 type SuppliedPositionsCarouselProps = {
   positions: SuppliedPositionItem[];

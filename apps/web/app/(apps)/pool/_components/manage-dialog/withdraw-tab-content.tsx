@@ -94,7 +94,7 @@ export function WithdrawTabContent({
         <div className="absolute -top-8 left-8 translate-y-full z-10 pointer-events-none rotate-180">
           <Tip fill="var(--color-almost-white)" />
         </div>
-        <div className="text-center justify-center text-clay text-[9px] font-medium font-['Inter'] uppercase leading-3">
+        <div className="text-clay text-[9px] font-medium font-['Inter'] uppercase leading-3">
           {error ? (
             <span className="text-negative flex gap-2 items-center">
               <ShieldAlertIcon className="w-4 h-4" /> {error}
@@ -203,8 +203,8 @@ export function WithdrawTabContent({
         onClick={onWithdrawLiquidity}
         disabled={isPending || !hasValidWithdrawSelection}
       >
-        {isWithdrawPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
         Withdraw
+        {isWithdrawPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
       </Button>
     </TabsContent>
   );

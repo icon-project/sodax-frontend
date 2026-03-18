@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/pool/_components/supply-dialog/supply-dialog-footer.tsx
 'use client';
 
 import type React from 'react';

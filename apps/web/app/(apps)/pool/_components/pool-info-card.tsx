@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/pool/_components/pool-info-card.tsx
 import type React from 'react';
 import PoolChart from './pool-chart';
 

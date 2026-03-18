@@ -258,8 +258,8 @@ export function AddLiquidityTabContent({
         />
       </div>
       <Button className="w-full mt-2" variant="cherry" onClick={onAddLiquidity} disabled={!canAddLiquidity}>
-        {isSupplyPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
         Add
+        {isSupplyPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
       </Button>
     </TabsContent>
   );

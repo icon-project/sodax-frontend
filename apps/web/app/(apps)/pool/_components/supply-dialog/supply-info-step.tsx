@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/pool/_components/supply-dialog/supply-info-step.tsx
 import type React from 'react';
 
 export default function SupplyInfoStep(): React.JSX.Element {

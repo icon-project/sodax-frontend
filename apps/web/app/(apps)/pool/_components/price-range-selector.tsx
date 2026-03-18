@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/pool/_components/price-range-selector.tsx
 import { useEffect, useState } from 'react';
 import type React from 'react';
 import { PlusCircleIcon, MinusCircleIcon } from 'lucide-react';

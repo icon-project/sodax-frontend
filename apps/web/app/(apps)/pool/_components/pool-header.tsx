@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/pool/_components/pool-header.tsx
 import type React from 'react';
 
 export function PoolHeader(): React.JSX.Element {

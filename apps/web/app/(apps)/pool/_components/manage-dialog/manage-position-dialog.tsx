@@ -3,13 +3,11 @@
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  createDepositParamsProps,
+  createDecreaseLiquidityParamsProps,
   createSupplyLiquidityParamsProps,
-  createWithdrawParamsProps,
   useClaimRewards,
+  useDecreaseLiquidity,
   useDexApprove,
-  useDexDeposit,
-  useDexWithdraw,
   useLiquidityAmounts,
   useSodaxContext,
   useSpokeProvider,
@@ -49,24 +47,7 @@ function resolveSpokeChainId(chainId: string): SpokeChainId {
   return chainId as SpokeChainId;
 }
 
-const MAX_WITHDRAW_PERCENTAGE = 100;
-const PERCENTAGE_BASIS_POINTS = 10000n;
 const CLAIM_REQUEST_TIMEOUT_MS = 15_000;
-
-function toBasisPoints(percentage: number): bigint {
-  const clampedPercentage = Math.min(Math.max(percentage, 0), MAX_WITHDRAW_PERCENTAGE);
-  if (clampedPercentage === MAX_WITHDRAW_PERCENTAGE) {
-    return PERCENTAGE_BASIS_POINTS;
-  }
-  return BigInt(Math.floor(clampedPercentage * 100));
-}
-
-function calculateProportionalAmount(amount: bigint, percentageBasisPoints: bigint): bigint {
-  if (percentageBasisPoints >= PERCENTAGE_BASIS_POINTS) {
-    return amount;
-  }
-  return (amount * percentageBasisPoints) / PERCENTAGE_BASIS_POINTS;
-}
 
 export function ManagePositionDialog({
   open,
@@ -102,7 +83,7 @@ export function ManagePositionDialog({
   const claimRewardsMutation = useClaimRewards();
   const approveMutation = useDexApprove();
   const supplyLiquidityMutation = useSupplyLiquidity();
-  const withdrawMutation = useDexWithdraw();
+  const decreaseLiquidityMutation = useDecreaseLiquidity();
   const poolSpokeAssets = useMemo((): PoolSpokeAssets | null => {
     if (!spokeProvider) {
       return null;
@@ -201,7 +182,7 @@ export function ManagePositionDialog({
     isClaimActionPending ||
     approveMutation.isPending ||
     supplyLiquidityMutation.isPending ||
-    withdrawMutation.isPending;
+    decreaseLiquidityMutation.isPending;
   const claimErrorMessage =
     claimError || (claimRewardsMutation.error instanceof Error ? claimRewardsMutation.error.message : '');
 
@@ -318,43 +299,20 @@ export function ManagePositionDialog({
     if (!(parsedPercentage > 0) || parsedPercentage > 100) {
       return;
     }
-    if (!poolSpokeAssets) {
-      return;
-    }
-
-    const withdrawBasisPoints = toBasisPoints(parsedPercentage);
-    const token0WithdrawAmount = calculateProportionalAmount(positionInfo.amount0, withdrawBasisPoints);
-    const token1WithdrawAmount = calculateProportionalAmount(positionInfo.amount1, withdrawBasisPoints);
-
-    if (token0WithdrawAmount <= 0n && token1WithdrawAmount <= 0n) {
-      return;
-    }
 
     try {
-      if (token0WithdrawAmount > 0n) {
-        await withdrawMutation.mutateAsync({
-          params: createWithdrawParamsProps({
-            tokenIndex: 0,
-            amount: formatUnits(token0WithdrawAmount, poolData.token0.decimals),
-            poolData,
-            poolSpokeAssets,
-          }),
-          spokeProvider,
-        });
-      }
-      if (token1WithdrawAmount > 0n) {
-        await withdrawMutation.mutateAsync({
-          params: createWithdrawParamsProps({
-            tokenIndex: 1,
-            amount: formatUnits(token1WithdrawAmount, poolData.token1.decimals),
-            poolData,
-            poolSpokeAssets,
-          }),
-          spokeProvider,
-        });
-      }
+      await decreaseLiquidityMutation.mutateAsync({
+        params: createDecreaseLiquidityParamsProps({
+          poolKey,
+          tokenId,
+          percentage: parsedPercentage,
+          positionInfo,
+          slippageTolerance: '0.5',
+        }),
+        spokeProvider,
+      });
     } catch (withdrawErr) {
-      const message = withdrawErr instanceof Error ? withdrawErr.message : 'Withdraw failed.';
+      const message = withdrawErr instanceof Error ? withdrawErr.message : 'Decrease liquidity failed.';
       setWithdrawError(message);
     }
   };
@@ -422,7 +380,7 @@ export function ManagePositionDialog({
             positionInfo={positionInfo}
             withdrawPercentage={withdrawPercentage}
             isPending={isPending}
-            isWithdrawPending={withdrawMutation.isPending}
+            isWithdrawPending={decreaseLiquidityMutation.isPending}
             error={withdrawError}
             onWithdrawPercentageChange={setWithdrawPercentage}
             onWithdrawLiquidity={() => void handleWithdrawLiquidity()}

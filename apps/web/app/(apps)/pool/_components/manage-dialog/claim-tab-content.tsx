@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/pool/_components/manage-dialog/claim-tab-content.tsx
 'use client';
 
 import type React from 'react';
@@ -151,8 +150,8 @@ export function ClaimTabContent({
         </div>
       </div>
       <Button variant="cherry" className="w-full mt-2" onClick={onClaimFees} disabled={isPending || !hasUnclaimedFees}>
-        {isClaimPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
         {hasUnclaimedFees ? 'Claim Fee' : 'No Fee to Claim'}
+        {isClaimPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
       </Button>
     </TabsContent>
   );
