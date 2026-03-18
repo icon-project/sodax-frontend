@@ -1,5 +1,6 @@
 import { useSodaxContext } from '@/index';
 import {
+  BitcoinSpokeProvider,
   EvmSpokeProvider,
   spokeChainConfig,
   type SuiSpokeChainConfig,
@@ -24,6 +25,9 @@ import {
   type AleoSpokeChainConfig,
 } from '@sodax/sdk';
 import type {
+  IBitcoinWalletProvider,
+  BitcoinSpokeChainConfig,
+  BitcoinRpcConfig,
   IAleoWalletProvider,
   IEvmWalletProvider,
   IIconWalletProvider,
@@ -62,6 +66,22 @@ export function useSpokeProvider(
     if (!spokeChainId) return undefined;
     if (!xChainType) return undefined;
     if (!rpcConfig) return undefined;
+
+    if (xChainType === 'BITCOIN') {
+      const bitcoinConfig = spokeChainConfig[spokeChainId] as BitcoinSpokeChainConfig;
+      const btcRpcOverride = rpcConfig[spokeChainId] as BitcoinRpcConfig | undefined;
+      return new BitcoinSpokeProvider(
+        walletProvider as IBitcoinWalletProvider,
+        bitcoinConfig,
+        {
+          url: btcRpcOverride?.radfiApiUrl || bitcoinConfig.radfiApiUrl,
+          apiKey: bitcoinConfig.radfiApiKey,
+          umsUrl: btcRpcOverride?.radfiUmsUrl || bitcoinConfig.radfiUmsUrl,
+        },
+        'TRADING',
+        btcRpcOverride?.rpcUrl || bitcoinConfig.rpcUrl,
+      );
+    }
 
     if (xChainType === 'EVM') {
       if (spokeChainId === SONIC_MAINNET_CHAIN_ID) {

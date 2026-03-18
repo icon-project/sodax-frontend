@@ -7,6 +7,7 @@ import type {
   HubVaultSymbols,
   ETHEREUM_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
+  BITCOIN_MAINNET_CHAIN_ID,
 } from '../constants/index.js';
 import type { InjectiveNetworkEnv } from '../injective/index.js';
 
@@ -16,7 +17,7 @@ export type SpokeChainId = (typeof CHAIN_IDS)[number];
 
 export type ChainId = (typeof CHAIN_IDS)[number];
 
-export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'NEAR', 'ALEO'] as const;
+export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'NEAR', 'BITCOIN', 'ALEO'] as const;
 export type ChainType = (typeof ChainTypeArr)[number];
 
 export type Chain = {
@@ -57,6 +58,7 @@ export type OriginalAssetAddress = string;
 
 export interface WalletAddressProvider {
   getWalletAddress(): Promise<string>; // The wallet address as a string
+  getPublicKey?: () => Promise<string>;
 }
 
 export type HttpUrl = `http://${string}` | `https://${string}`;
@@ -67,10 +69,21 @@ export type StellarRpcConfig = {
   sorobanRpcUrl?: HttpUrl;
 };
 
+// Type for Bitcoin RPC configuration with Radfi API endpoints
+export type BitcoinRpcConfig = {
+  rpcUrl?: string;
+  radfiApiUrl?: string;
+  radfiUmsUrl?: string;
+};
+
 // Mapped type that uses ChainId as keys and assigns appropriate value types
-// Stellar uses StellarRpcConfig, all other chains use string
+// Stellar uses StellarRpcConfig, Bitcoin uses BitcoinRpcConfig, all other chains use string
 export type RpcConfig = Partial<{
-  [K in ChainId]: K extends typeof STELLAR_MAINNET_CHAIN_ID ? StellarRpcConfig : string;
+  [K in ChainId]: K extends typeof STELLAR_MAINNET_CHAIN_ID
+    ? StellarRpcConfig
+    : K extends typeof BITCOIN_MAINNET_CHAIN_ID
+      ? BitcoinRpcConfig
+      : string;
 }> & { [ETHEREUM_MAINNET_CHAIN_ID]?: string | undefined };
 
 export type IntentRelayChainId = (typeof ChainIdToIntentRelayChainId)[keyof typeof ChainIdToIntentRelayChainId];
@@ -183,6 +196,17 @@ export type StellarSpokeChainConfig = BaseSpokeChainConfig<'STELLAR'> & {
   trustlineConfigs: StellarAssetTrustline[];
 };
 
+export type BitcoinSpokeChainConfig = BaseSpokeChainConfig<'BITCOIN'> & {
+  addresses: {
+    assetManager: string;
+  };
+  rpcUrl: string;
+  network: string;
+  radfiApiUrl: string;
+  radfiApiKey: string;
+  radfiUmsUrl: string;
+};
+
 export type InjectiveSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
   rpcUrl: string;
   walletAddress: string;
@@ -264,6 +288,7 @@ export type SpokeChainConfig =
   | IconSpokeChainConfig
   | SuiSpokeChainConfig
   | StellarSpokeChainConfig
+  | BitcoinSpokeChainConfig
   | SolanaChainConfig
   | NearSpokeChainConfig
   | AleoSpokeChainConfig;

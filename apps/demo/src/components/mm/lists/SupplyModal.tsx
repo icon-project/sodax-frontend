@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -17,7 +17,8 @@ import { useMMAllowance, useMMApprove, useSpokeProvider, useSupply } from '@soda
 import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 import type { MoneyMarketSupplyParams } from '@sodax/sdk';
-import { getMmErrorText } from '@/lib/utils';
+import { getMmErrorText, formatDecimalForDisplay, getSafeMaxAmountForInput } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 import { ErrorAlert } from '../ErrorAlert';
 import { useQueryClient } from '@tanstack/react-query';
 import { invalidateMmQueries } from '@/lib/invalidateMmQueries';
@@ -111,11 +112,7 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
         onOpenChange(false);
       }
     } catch (err) {
-      // Error is handled by React Query and displayed via the error prop
-      // Log for debugging purposes
-      // console.error('Supply failed:', err);
-      // Ensure error state is properly set - React Query should handle this automatically
-      // but we reset to ensure UI state is clean if needed
+      logger.error('Supply failed', err);
     }
   };
 
@@ -128,12 +125,12 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
         spokeProvider: sourceSpokeProvider,
       });
     } catch (err) {
-      console.error('Approve failed:', err);
+      logger.error('Approve failed', err);
     }
   };
 
-  const handleMaxclick = () => {
-    setAmount(maxSupply);
+  const handleMaxclick = (): void => {
+    setAmount(getSafeMaxAmountForInput(maxSupply));
   };
 
   const handleOpenChangeInternal = (nextOpen: boolean) => {
@@ -202,7 +199,7 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
             <div className="space-y-1">
               {maxSupply && maxSupply !== '0' && (
                 <p className="text-xs text-muted-foreground">
-                  Max supply: {Number(maxSupply).toFixed(6)} {token.symbol}
+                  Max supply: {formatDecimalForDisplay(maxSupply, 4)} {token.symbol}
                 </p>
               )}
               {/* Show validation messages only when user enters an amount */}
@@ -214,7 +211,7 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
                   if (maxSupply && maxSupply !== '0' && amountNum > Number.parseFloat(maxSupply) && !isBusy) {
                     return (
                       <ErrorAlert
-                        text={`Amount exceeds maximum supply: ${Number(maxSupply).toFixed(6)} ${token.symbol}`}
+                        text={`Amount exceeds maximum supply: ${formatDecimalForDisplay(maxSupply, 6)} ${token.symbol}`}
                         variant="compact"
                       />
                     );

@@ -4,5 +4,6 @@ export * from './IconWalletProvider.js';
 export * from './InjectiveWalletProvider.js';
 export * from './SolanaWalletProvider.js';
 export * from './StellarWalletProvider.js';
+export * from './BTCWalletProvider.js';
 export * from './NearWalletProvider.js';
-export * from "./AleoWalletProvider.js"
+export * from './AleoWalletProvider.js';

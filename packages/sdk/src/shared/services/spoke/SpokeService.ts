@@ -24,6 +24,7 @@ import type {
   SuiSpokeProviderType,
   SolanaSpokeProviderType,
   StellarSpokeProviderType,
+  BitcoinSpokeProviderType,
   NearSpokeProviderType,
   AleoSpokeProviderType,
   VerifyTxHashRawConfig,
@@ -49,6 +50,8 @@ import {
   isInjectiveSpokeProviderType,
   isEvmSpokeProviderType,
   isSonicSpokeProviderType,
+  isBitcoinSpokeProviderType,
+  isBitcoinSpokeProvider,
   isNearSpokeProviderType,
   isNearSpokeProvider,
   isAleoSpokeProviderType,
@@ -57,6 +60,7 @@ import {
 import * as rlp from 'rlp';
 import { encodeFunctionData } from 'viem';
 import { encodeAddress } from '../../utils/shared-utils.js';
+import { BitcoinSpokeService } from './BitcoinSpokeService.js';
 import { NearSpokeProvider } from '../../entities/near/NearSpokeProvider.js';
 import { NearSpokeService } from './NearSpokeService.js';
 
@@ -66,7 +70,7 @@ import { NearSpokeService } from './NearSpokeService.js';
  */
 
 export class SpokeService {
-  private constructor() {}
+  private constructor() { }
 
   /**
    * Estimate the gas for a raw transaction.
@@ -143,6 +147,7 @@ export class SpokeService {
   public static encodeTransfer(token: Hex, from: Hex, to: Hex, amount: bigint, data: Hex): Hex {
     // Create RLP input array matching Solidity Transfer struct:
     // bytes token, bytes from, bytes to, uint256 amount, bytes data
+
     const rlpInput: rlp.Input = [
       token, // token (bytes)
       from, // from (bytes)
@@ -305,6 +310,14 @@ export class SpokeService {
         raw,
       ) satisfies Promise<TxReturnType<StellarSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
     }
+    if (isBitcoinSpokeProviderType(spokeProvider)) {
+      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
+      return BitcoinSpokeService.deposit(
+        params as GetSpokeDepositParamsType<BitcoinSpokeProviderType>,
+        spokeProvider,
+        raw,
+      ) satisfies Promise<TxReturnType<BitcoinSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
+    }
     if (isNearSpokeProviderType(spokeProvider)) {
       await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
       return NearSpokeService.deposit(
@@ -374,6 +387,13 @@ export class SpokeService {
         hubProvider,
       );
     }
+    if (isBitcoinSpokeProviderType(spokeProvider)) {
+      return BitcoinSpokeService.getSimulateDepositParams(
+        params as GetSpokeDepositParamsType<BitcoinSpokeProviderType>,
+        spokeProvider,
+        hubProvider,
+      ) as Promise<DepositSimulationParams>;
+    }
     if (isNearSpokeProviderType(spokeProvider)) {
       return NearSpokeService.getSimulateDepositParams(
         params as GetSpokeDepositParamsType<NearSpokeProviderType>,
@@ -435,6 +455,9 @@ export class SpokeService {
     if (isSonicSpokeProviderType(spokeProvider)) {
       return SonicSpokeService.getDeposit(token, spokeProvider);
     }
+    if (isBitcoinSpokeProviderType(spokeProvider)) {
+      return BitcoinSpokeService.getDeposit(token, spokeProvider);
+    }
     if (isNearSpokeProviderType(spokeProvider)) {
       return NearSpokeService.getDeposit(token, spokeProvider);
     }
@@ -467,15 +490,26 @@ export class SpokeService {
       > as TxReturnType<T, R>;
     }
 
+    let srcAddress = encodeAddress(
+      spokeProvider.chainConfig.chain.id,
+      await spokeProvider.walletProvider.getWalletAddress(),
+    )
+
+    if (isBitcoinSpokeProvider(spokeProvider)) {
+      if (spokeProvider.walletMode === 'TRADING') {
+        const tradingWalletAddress = await spokeProvider.radfi.getTradingWallet(
+          await spokeProvider.walletProvider.getWalletAddress()
+        );
+        srcAddress = encodeAddress(spokeProvider.chainConfig.chain.id, tradingWalletAddress.tradingAddress as Address);
+      }
+    }
+
     if (!skipSimulation) {
       const result = await SpokeService.simulateRecvMessage(
         {
           target: from,
           srcChainId: getIntentRelayChainId(spokeProvider.chainConfig.chain.id),
-          srcAddress: encodeAddress(
-            spokeProvider.chainConfig.chain.id,
-            await spokeProvider.walletProvider.getWalletAddress(),
-          ),
+          srcAddress,
           payload,
         },
         hubProvider,
@@ -535,6 +569,16 @@ export class SpokeService {
         raw,
       )) satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<T, R>;
     }
+    if (isBitcoinSpokeProviderType(spokeProvider)) {
+      await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
+      return (await BitcoinSpokeService.callWallet(
+        from,
+        payload,
+        spokeProvider,
+        hubProvider,
+        raw,
+      )) satisfies TxReturnType<BitcoinSpokeProviderType, R> as TxReturnType<T, R>;
+    }
 
     if (isNearSpokeProviderType(spokeProvider)) {
       await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
@@ -562,14 +606,26 @@ export class SpokeService {
     skipSimulation: boolean,
   ): Promise<void> {
     if (!skipSimulation) {
+
+      let srcAddress = encodeAddress(
+        spokeProvider.chainConfig.chain.id,
+        await spokeProvider.walletProvider.getWalletAddress(),
+      )
+
+      if (isBitcoinSpokeProvider(spokeProvider)) {
+        if (spokeProvider.walletMode === 'TRADING') {
+          const tradingWalletAddress = await spokeProvider.radfi.getTradingWallet(
+            await spokeProvider.walletProvider.getWalletAddress()
+          );
+          srcAddress = encodeAddress(spokeProvider.chainConfig.chain.id, tradingWalletAddress.tradingAddress as Address);
+        }
+      }
+
       const result = await SpokeService.simulateRecvMessage(
         {
           target: from,
           srcChainId: getIntentRelayChainId(spokeProvider.chainConfig.chain.id),
-          srcAddress: encodeAddress(
-            spokeProvider.chainConfig.chain.id,
-            await spokeProvider.walletProvider.getWalletAddress(),
-          ),
+          srcAddress,
           payload,
         },
         hubProvider,

@@ -3,6 +3,7 @@ export * from './core';
 
 export * from './utils';
 
+export * from './xchains/bitcoin';
 export * from './xchains/evm';
 export * from './xchains/aleo';
 export * from './xchains/icon';
