@@ -1,12 +1,13 @@
 import type React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, MinusIcon, CopyIcon, Loader2 } from 'lucide-react';
+import { PlusIcon, MinusIcon, CopyIcon, Loader2, InfoIcon } from 'lucide-react';
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { shortenAddress } from '@/lib/utils';
 import { useState } from 'react';
 import type { ChainType } from '@sodax/types';
 import { EVM_CHAIN_ICONS } from '@/constants/chains';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export type EVMChainItemProps = {
   selectedChainIcon?: string;
@@ -32,6 +33,8 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({
   const allIcons = EVM_CHAIN_ICONS;
 
   const remainingIcons = selectedChainIcon ? allIcons.filter(icon => icon !== selectedChainIcon) : allIcons;
+
+  const tooltipContent = 'One address, many networks.';
 
   const onCopyAddress = () => {
     if (!address) return;
@@ -91,8 +94,22 @@ export const EVMChainItem: React.FC<EVMChainItemProps> = ({
               )}
             </div>
           ) : (
-            <div className="justify-between text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold flex items-center w-full">
+            <div className="justify-start gap-1 text-espresso text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-tight group-hover:font-bold flex items-center w-full">
               EVM multi-connect
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button">
+                    <InfoIcon className="w-4 h-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="top"
+                  sideOffset={10}
+                  className="bg-white px-4 py-2 text-espresso rounded-full text-(length:--body-small)"
+                >
+                  {tooltipContent}
+                </TooltipContent>
+              </Tooltip>
             </div>
           )}
           {address ? (

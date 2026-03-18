@@ -14,6 +14,7 @@ import { CheckIcon, Loader2Icon } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import type { SpokeProvider } from '@sodax/sdk';
 import { useQueryClient } from '@tanstack/react-query';
+import { SAVE_DEFAULT_CHAIN_ID } from '../constants';
 interface DepositDialogFooterProps {
   selectedToken: XToken | null;
   onPendingChange?: (isPending: boolean) => void;
@@ -47,7 +48,7 @@ export default function DepositDialogFooter({
   });
 
   const { isWrongChain, handleSwitchChain: originalHandleSwitchChain } = useEvmSwitchChain(
-    (selectedToken?.xChainId || 'sonic') as ChainId,
+    (selectedToken?.xChainId || SAVE_DEFAULT_CHAIN_ID) as ChainId,
   );
 
   const handleSwitchChain = (): void => {
