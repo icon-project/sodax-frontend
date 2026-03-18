@@ -122,9 +122,10 @@ export default function CurrencySearchPanel({
                 </div>
               </TooltipTrigger>
               <TooltipContent
+                variant="bubble"
                 side="top"
                 sideOffset={20}
-                className="bg-white px-8 py-4 items-center gap-2 text-espresso rounded-full h-[54px] text-(length:--body-comfortable)"
+                className="h-[54px] items-center gap-2 px-8 py-4 text-(length:--body-comfortable)"
               >
                 {chain.name}
               </TooltipContent>
