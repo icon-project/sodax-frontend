@@ -6,6 +6,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BackendApiService } from './BackendApiService.js';
+import type { SubmitSwapTxRequest } from '@sodax/types';
 
 // Mock fetch
 const mockFetch = vi.fn();
@@ -116,6 +117,235 @@ describe('BackendApiService', () => {
         }),
       );
       expect(result).toEqual(mockData);
+    });
+  });
+
+  describe('Swap submit-tx endpoints', () => {
+    const mockSubmitRequest: SubmitSwapTxRequest = {
+      txHash: '0x1e68359c3b541ac4aa0239bdfed9356f79969392d7893b44d206d1f408be4fe9',
+      srcChainId: '146',
+      walletAddress: '0x152740b9dB0C232a2909d4BeE5Ee83F565785813',
+      intent: {
+        intentId: '123456789',
+        creator: '0x152740b9dB0C232a2909d4BeE5Ee83F565785813',
+        inputToken: '0xb66cB7D841272AF6BaA8b8119007EdEE35d2C24F',
+        outputToken: '0x9Ee17486571917837210824b0d4CAdfe3B324D12',
+        inputAmount: '5000000000000000000',
+        minOutputAmount: '1965353839071625320',
+        deadline: '0',
+        allowPartialFill: false,
+        srcChain: 1768124270,
+        dstChain: 5,
+        srcAddress: '0x000136a591b8bf330f129fd75686199ee34f09ebbd',
+        dstAddress: '0x33bad609fd656df90fb9da00058c59a54a5d7a6f',
+        solver: '0x0000000000000000000000000000000000000000',
+        data: '0x',
+      },
+      relayData: '0x',
+    };
+
+    describe('submitSwapTx', () => {
+      it('should submit swap tx successfully (inserted)', async () => {
+        const mockData = { success: true, message: 'Swap transaction submitted successfully' };
+        mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+        const result = await backendApiService.submitSwapTx(mockSubmitRequest);
+
+        expect(mockFetch).toHaveBeenCalledWith(
+          'https://api.sodax.com/v1/be/swaps/submit-tx',
+          expect.objectContaining({
+            method: 'POST',
+            headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
+            body: JSON.stringify(mockSubmitRequest),
+          }),
+        );
+        expect(result).toEqual(mockData);
+      });
+
+      it('should submit swap tx successfully (duplicate)', async () => {
+        const mockData = { success: true, message: 'Swap transaction already exists' };
+        mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+        const result = await backendApiService.submitSwapTx(mockSubmitRequest);
+
+        expect(result).toEqual(mockData);
+      });
+
+      it('should throw on HTTP error response', async () => {
+        mockFetch.mockResolvedValue({ ok: false, status: 429, text: vi.fn().mockResolvedValue('Too Many Requests') });
+
+        await expect(backendApiService.submitSwapTx(mockSubmitRequest)).rejects.toThrow('HTTP 429');
+      });
+
+      it('should throw on malformed response (missing success)', async () => {
+        mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({ message: 'ok' }) });
+
+        await expect(backendApiService.submitSwapTx(mockSubmitRequest)).rejects.toThrow(
+          'Invalid submitSwapTx response: unexpected response shape',
+        );
+      });
+
+      it('should throw on malformed response (missing message)', async () => {
+        mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({ success: true }) });
+
+        await expect(backendApiService.submitSwapTx(mockSubmitRequest)).rejects.toThrow(
+          'Invalid submitSwapTx response: unexpected response shape',
+        );
+      });
+
+      it('should throw on timeout', async () => {
+        const service = new BackendApiService({ timeout: 10 });
+        mockFetch.mockImplementation(
+          (_url: string, init: { signal: AbortSignal }) =>
+            new Promise((_resolve, reject) => {
+              init.signal.addEventListener('abort', () => {
+                const err = new Error('The operation was aborted');
+                err.name = 'AbortError';
+                reject(err);
+              });
+            }),
+        );
+
+        await expect(service.submitSwapTx(mockSubmitRequest)).rejects.toThrow('Request timeout after 10ms');
+      });
+    });
+
+    describe('getSubmitSwapTxStatus', () => {
+      it('should get status with txHash only', async () => {
+        const mockData = {
+          success: true,
+          data: { txHash: '0xabc', srcChainId: '146', status: 'pending', failedAttempts: 0 },
+        };
+        mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+        await backendApiService.getSubmitSwapTxStatus({ txHash: '0xabc' });
+
+        expect(mockFetch).toHaveBeenCalledWith(
+          'https://api.sodax.com/v1/be/swaps/submit-tx/status?txHash=0xabc',
+          expect.objectContaining({ method: 'GET' }),
+        );
+      });
+
+      it('should get status with txHash and srcChainId', async () => {
+        const mockData = {
+          success: true,
+          data: { txHash: '0xabc', srcChainId: '42161', status: 'pending', failedAttempts: 0 },
+        };
+        mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+        await backendApiService.getSubmitSwapTxStatus({ txHash: '0xabc', srcChainId: '42161' });
+
+        expect(mockFetch).toHaveBeenCalledWith(
+          'https://api.sodax.com/v1/be/swaps/submit-tx/status?txHash=0xabc&srcChainId=42161',
+          expect.objectContaining({ method: 'GET' }),
+        );
+      });
+
+      it('should return pending status', async () => {
+        const mockData = {
+          success: true,
+          data: { txHash: '0xabc', srcChainId: '146', status: 'pending', failedAttempts: 0 },
+        };
+        mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+        const result = await backendApiService.getSubmitSwapTxStatus({ txHash: '0xabc' });
+
+        expect(result).toEqual(mockData);
+        expect(result.data.result).toBeUndefined();
+      });
+
+      it('should return executed status with result', async () => {
+        const mockData = {
+          success: true,
+          data: {
+            txHash: '0xabc',
+            srcChainId: '146',
+            status: 'executed',
+            failedAttempts: 0,
+            result: {
+              dstIntentTxHash: '0xdef',
+              packetData: { src_chain_id: 146, dst_chain_id: 42161 },
+              intent_hash: '0x999',
+            },
+          },
+        };
+        mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+        const result = await backendApiService.getSubmitSwapTxStatus({ txHash: '0xabc' });
+
+        expect(result).toEqual(mockData);
+        expect(result.data.result?.dstIntentTxHash).toBe('0xdef');
+      });
+
+      it('should return failed status with failure details', async () => {
+        const mockData = {
+          success: true,
+          data: {
+            txHash: '0xabc',
+            srcChainId: '146',
+            status: 'failed',
+            failedAtStep: 'relaying',
+            failureReason: 'Relay timeout',
+            failedAttempts: 3,
+          },
+        };
+        mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+        const result = await backendApiService.getSubmitSwapTxStatus({ txHash: '0xabc' });
+
+        expect(result.data.status).toBe('failed');
+        expect(result.data.failedAtStep).toBe('relaying');
+        expect(result.data.failureReason).toBe('Relay timeout');
+        expect(result.data.failedAttempts).toBe(3);
+      });
+
+      it('should throw on HTTP 404', async () => {
+        mockFetch.mockResolvedValue({
+          ok: false,
+          status: 404,
+          text: vi.fn().mockResolvedValue('Swap transaction not found'),
+        });
+
+        await expect(backendApiService.getSubmitSwapTxStatus({ txHash: '0xabc' })).rejects.toThrow('HTTP 404');
+      });
+
+      it('should throw on malformed response (missing data)', async () => {
+        mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue({ success: true }) });
+
+        await expect(backendApiService.getSubmitSwapTxStatus({ txHash: '0xabc' })).rejects.toThrow(
+          'Invalid submitSwapTxStatus response: unexpected response shape',
+        );
+      });
+
+      it('should throw on malformed response (invalid data.status)', async () => {
+        const mockData = {
+          success: true,
+          data: { txHash: '0xabc', srcChainId: '146', status: 123, failedAttempts: 0 },
+        };
+        mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+        await expect(backendApiService.getSubmitSwapTxStatus({ txHash: '0xabc' })).rejects.toThrow(
+          'Invalid submitSwapTxStatus response: unexpected response shape',
+        );
+      });
+
+      it('should throw on malformed result (missing dstIntentTxHash)', async () => {
+        const mockData = {
+          success: true,
+          data: {
+            txHash: '0xabc',
+            srcChainId: '146',
+            status: 'executed',
+            failedAttempts: 0,
+            result: { packetData: {} },
+          },
+        };
+        mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+        await expect(backendApiService.getSubmitSwapTxStatus({ txHash: '0xabc' })).rejects.toThrow(
+          'Invalid submitSwapTxStatus response: unexpected response shape',
+        );
+      });
     });
   });
 
@@ -384,6 +614,146 @@ describe('BackendApiService', () => {
       const baseURL = backendApiService.getBaseURL();
 
       expect(baseURL).toBe('https://api.sodax.com/v1/be');
+    });
+  });
+
+  describe('RequestOverrideConfig', () => {
+    it('should override baseURL for GET methods', async () => {
+      const mockData = { total: 0, data: [] };
+      mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+      await backendApiService.getOrderbook({ offset: '0', limit: '5' }, { baseURL: 'https://custom.example.com' });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://custom.example.com/solver/orderbook?offset=0&limit=5',
+        expect.objectContaining({ method: 'GET' }),
+      );
+    });
+
+    it('should override baseURL for POST methods', async () => {
+      const mockSubmitRequest: SubmitSwapTxRequest = {
+        txHash: '0xabc',
+        srcChainId: '146',
+        walletAddress: '0x123',
+        intent: {
+          intentId: '1',
+          creator: '0x123',
+          inputToken: '0x456',
+          outputToken: '0x789',
+          inputAmount: '100',
+          minOutputAmount: '90',
+          deadline: '0',
+          allowPartialFill: false,
+          srcChain: 1,
+          dstChain: 2,
+          srcAddress: '0xaaa',
+          dstAddress: '0xbbb',
+          solver: '0x000',
+          data: '0x',
+        },
+        relayData: '0x',
+      };
+      const mockData = { success: true, message: 'ok' };
+      mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+      await backendApiService.submitSwapTx(mockSubmitRequest, { baseURL: 'https://custom.example.com' });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://custom.example.com/swaps/submit-tx',
+        expect.objectContaining({ method: 'POST' }),
+      );
+    });
+
+    it('should merge custom headers with defaults', async () => {
+      const mockData = { total: 0, data: [] };
+      mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+      await backendApiService.getOrderbook({ offset: '0', limit: '5' }, { headers: { 'X-Custom': 'test-value' } });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'X-Custom': 'test-value',
+          }),
+        }),
+      );
+    });
+
+    it('should allow overriding a default header', async () => {
+      const mockData = { total: 0, data: [] };
+      mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+      await backendApiService.getOrderbook({ offset: '0', limit: '5' }, { headers: { Accept: 'text/plain' } });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            Accept: 'text/plain',
+          }),
+        }),
+      );
+    });
+
+    it('should override timeout', async () => {
+      mockFetch.mockImplementation(
+        (_url: string, init: { signal: AbortSignal }) =>
+          new Promise((_resolve, reject) => {
+            init.signal.addEventListener('abort', () => {
+              const err = new Error('The operation was aborted');
+              err.name = 'AbortError';
+              reject(err);
+            });
+          }),
+      );
+
+      await expect(
+        backendApiService.getOrderbook({ offset: '0', limit: '5' }, { timeout: 5 }),
+      ).rejects.toThrow('Request timeout after 5ms');
+    });
+
+    it('should apply all overrides together', async () => {
+      const mockData = { total: 0, data: [] };
+      mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+      await backendApiService.getOrderbook(
+        { offset: '0', limit: '5' },
+        {
+          baseURL: 'https://custom.example.com',
+          headers: { 'X-Request-Id': '12345' },
+        },
+      );
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://custom.example.com/solver/orderbook?offset=0&limit=5',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            'X-Request-Id': '12345',
+          }),
+        }),
+      );
+    });
+
+    it('should use defaults when no config is provided', async () => {
+      const mockData = { total: 0, data: [] };
+      mockFetch.mockResolvedValue({ ok: true, json: vi.fn().mockResolvedValue(mockData) });
+
+      await backendApiService.getOrderbook({ offset: '0', limit: '5' });
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://api.sodax.com/v1/be/solver/orderbook?offset=0&limit=5',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          }),
+        }),
+      );
     });
   });
 });

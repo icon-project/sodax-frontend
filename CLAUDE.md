@@ -39,6 +39,11 @@ pnpm test                 # Run tests across all packages
 pnpm clean                # Remove all node_modules, dist, .turbo, .next
 ```
 
+## Common Pitfalls
+
+- **Never use `bigint` in types that will be passed to `JSON.stringify`** — it throws `TypeError` at runtime. Use `string` for numeric fields in API request/response types. If `bigint` is needed in domain types, convert to string before serialization.
+
+
 ### Running tests for a specific package
 
 ```bash
