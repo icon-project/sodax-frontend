@@ -1148,7 +1148,7 @@ export const spokeChainConfig = {
   } as const satisfies InjectiveSpokeChainConfig,
   [BITCOIN_MAINNET_CHAIN_ID]: {
     addresses: {
-      assetManager: 'bc1p4z9555xw0266vhq2x5un4zdmm9dt9zyet32fs7wa7u5ckdxusd9qsw4xfx',
+      assetManager: 'bc1pxguu2r4p9jcxp3gj7dh4r4jd9qzccwpyap3nj5nlapy28s76lhrqw522fz',
     },
     chain: baseChainInfo[BITCOIN_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'BITCOIN'>,
     bnUSD: 'no',
@@ -1176,9 +1176,9 @@ export const spokeChainConfig = {
         xChainId: BITCOIN_MAINNET_CHAIN_ID,
       }
     },
-    radfiApiUrl: 'https://staging.api.radfi.co/api',
+    radfiApiUrl: 'https://api.radfi.co/api',
     radfiApiKey: '',
-    radfiUmsUrl: 'https://staging.ums.radfi.co/api',
+    radfiUmsUrl: 'https://ums.radfi.co/api',
     network: 'MAINNET',
     rpcUrl: 'https://mempool.space/api',
   } as const satisfies BitcoinSpokeChainConfig,
