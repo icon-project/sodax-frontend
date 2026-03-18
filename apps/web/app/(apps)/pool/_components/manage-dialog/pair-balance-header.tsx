@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/pool/_components/manage-dialog/pair-balance-header.tsx
 'use client';
 
 import type React from 'react';
@@ -66,7 +65,6 @@ export function PairBalanceHeader({
   const selectedXSodaBalance = allChainXSodaBalances.get(chainId) ?? 0n;
   const projectedSodaBalance = BigInt(selectedSodaBalance) + sodaBalanceDelta;
   const projectedXSodaBalance = selectedXSodaBalance + xSodaBalanceDelta;
-  console.log('projectedSodaBalance', projectedSodaBalance);
   const sodaBalanceText =
     sodaBalanceOverride ?? formatTokenAmount(projectedSodaBalance, selectedSodaToken?.decimals ?? 18, 2);
   const xSodaBalanceText = xSodaBalanceOverride ?? formatTokenAmount(projectedXSodaBalance, 18, 2);
@@ -109,7 +107,7 @@ export function PairBalanceHeader({
       <div className="h-12 px-2 bg-blend-multiply bg-almost-white rounded-lg flex flex-col justify-center items-end">
         <div className="text-center justify-start text-clay text-[9px] font-medium font-['Inter'] uppercase leading-3">
           {' '}
-          current APR
+          current APY
         </div>
         <div className="text-center justify-start text-espresso text-(length:--body-super-comfortable) font-bold font-['Inter'] leading-5">
           8.49%

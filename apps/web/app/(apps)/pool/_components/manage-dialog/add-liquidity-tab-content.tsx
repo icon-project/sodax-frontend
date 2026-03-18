@@ -1,7 +1,7 @@
 import type React from 'react';
 import { useMemo } from 'react';
 import Image from 'next/image';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldAlertIcon } from 'lucide-react';
 import { spokeChainConfig, type PoolData } from '@sodax/sdk';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { formatUnits, parseUnits } from 'viem';
@@ -24,18 +24,14 @@ type AddLiquidityTabContentProps = {
   chainId: SpokeChainId;
   tokenId: string;
   poolData: PoolData;
-  minPrice: string;
-  maxPrice: string;
   liquidityToken0Amount: string;
   liquidityToken1Amount: string;
-  slippageTolerance: string;
   isPending: boolean;
   isSupplyPending: boolean;
-  onMinPriceChange: (value: string) => void;
-  onMaxPriceChange: (value: string) => void;
+  /** Error message to display when add-liquidity fails */
+  error?: string;
   onToken0AmountChange: (value: string) => void;
   onToken1AmountChange: (value: string) => void;
-  onSlippageChange: (value: string) => void;
   onAddLiquidity: () => void;
 };
 
@@ -142,18 +138,13 @@ export function AddLiquidityTabContent({
   chainId,
   tokenId,
   poolData,
-  minPrice,
-  maxPrice,
   liquidityToken0Amount,
   liquidityToken1Amount,
-  slippageTolerance,
   isPending,
   isSupplyPending,
-  onMinPriceChange,
-  onMaxPriceChange,
+  error,
   onToken0AmountChange,
   onToken1AmountChange,
-  onSlippageChange,
   onAddLiquidity,
 }: AddLiquidityTabContentProps): React.JSX.Element {
   const allChainSodaBalances = useAllChainBalances({ onlySodaTokens: true });
@@ -236,8 +227,14 @@ export function AddLiquidityTabContent({
         <div className="absolute -top-8 left-8 translate-y-full z-10 pointer-events-none rotate-180">
           <Tip fill="var(--color-almost-white)" />
         </div>
-        <div className="text-center justify-center text-clay text-[9px] font-medium font-['Inter'] uppercase leading-3">
-          Add liquidity
+        <div className="text-clay text-[9px] font-medium font-['Inter'] uppercase leading-3">
+          {error ? (
+            <span className="text-negative flex gap-2">
+              <ShieldAlertIcon className="w-4 h-4" /> {error}
+            </span>
+          ) : (
+            'Add liquidity'
+          )}
         </div>
         <LiquidityAmountInput
           tokenId={tokenId}

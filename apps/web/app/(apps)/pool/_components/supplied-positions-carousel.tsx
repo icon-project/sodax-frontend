@@ -326,6 +326,8 @@ export function SuppliedPositionsCarousel({
     return null;
   }
 
+  console.log('normalizedPositions', normalizedPositions);
+
   return (
     <div className="w-full flex flex-col gap-3">
       <div className="inline-flex justify-start items-center gap-2">

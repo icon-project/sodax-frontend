@@ -80,7 +80,7 @@ export function ClaimTabContent({
         <PairBalanceHeader chainId={chainId} />
       </div>
       <div className="relative self-stretch inline-flex flex-col justify-start items-start w-full mt-10">
-        <div className="absolute -top-7 left-8 translate-y-full z-10 pointer-events-none rotate-180">
+        <div className="absolute -top-8 left-8 translate-y-full z-10 pointer-events-none rotate-180">
           <Tip fill="var(--color-almost-white)" />{' '}
         </div>
         <div className="self-stretch px-8 py-6 bg-blend-multiply bg-almost-white rounded-2xl flex flex-col justify-start items-start gap-4">

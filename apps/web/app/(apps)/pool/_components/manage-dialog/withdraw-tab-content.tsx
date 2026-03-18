@@ -1,6 +1,5 @@
-// apps/web/app/(apps)/pool/_components/manage-dialog/withdraw-tab-content.tsx
 import type React from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldAlertIcon } from 'lucide-react';
 import type { ClPositionInfo, PoolData } from '@sodax/sdk';
 import type { SpokeChainId } from '@sodax/types';
 import Image from 'next/image';
@@ -48,6 +47,8 @@ type WithdrawTabContentProps = {
   withdrawPercentage: string;
   isPending: boolean;
   isWithdrawPending: boolean;
+  /** Error message to display when withdraw fails */
+  error?: string;
   onWithdrawPercentageChange: (value: string) => void;
   onWithdrawLiquidity: () => void;
 };
@@ -59,6 +60,7 @@ export function WithdrawTabContent({
   withdrawPercentage,
   isPending,
   isWithdrawPending,
+  error,
   onWithdrawPercentageChange,
   onWithdrawLiquidity,
 }: WithdrawTabContentProps): React.JSX.Element {
@@ -78,7 +80,7 @@ export function WithdrawTabContent({
   const withdrawToken1Text = formatTokenAmount(withdrawToken1Total, poolData.token1.decimals, 2);
   const earnedToken0Text = formatTokenAmount(positionInfo.unclaimedFees0, poolData.token0.decimals, 4);
   const earnedToken1Text = formatTokenAmount(positionInfo.unclaimedFees1, poolData.token1.decimals, 4);
-  console.log('withdrawToken0Total', withdrawToken0Total);
+
   return (
     <TabsContent value="withdraw">
       <div className="self-stretch mt-4">
@@ -93,7 +95,13 @@ export function WithdrawTabContent({
           <Tip fill="var(--color-almost-white)" />
         </div>
         <div className="text-center justify-center text-clay text-[9px] font-medium font-['Inter'] uppercase leading-3">
-          withdraw liquidity
+          {error ? (
+            <span className="text-negative flex gap-2">
+              <ShieldAlertIcon className="w-4 h-4" /> {error}
+            </span>
+          ) : (
+            'withdraw liquidity'
+          )}
         </div>
         <div className="self-stretch inline-flex justify-center items-center gap-2">
           <div className="flex justify-start items-center gap-1">
