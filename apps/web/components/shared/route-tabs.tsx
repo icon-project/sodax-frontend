@@ -102,9 +102,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
   const isPartner = isPartnerRoute(pathname);
   const usedTabs = isPartner
     ? partnerTabConfigs
-    : tabConfigs.filter(
-        tab => !((tab.value === 'stake' || tab.value === 'pool') && process.env.NEXT_PUBLIC_APP_ENV === 'production'),
-      );
+    : tabConfigs.filter(tab => !(tab.value === 'pool' && process.env.NEXT_PUBLIC_APP_ENV === 'production'));
 
   const lastSegment = pathname.split('/').filter(Boolean).pop() ?? '';
   const tabValues = usedTabs.map(t => t.value);
@@ -231,7 +229,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
           <div ref={mobileTabsContainerRef} className="w-full px-4 py-4 bg-cream-white h-24 flex">
             <div className="grid grid-cols-4 gap-4 bg-transparent py-0 w-full">
               {usedTabs
-                .filter(tab => !(tab.value === 'loans' && process.env.NEXT_PUBLIC_APP_ENV !== 'production'))
+                .filter(tab => !(tab.value === 'loans'))
                 .filter(tab => tab.value !== 'pool')
                 .map(tab => {
                   const href = tab.href ?? `/${tab.value}`;

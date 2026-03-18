@@ -10,10 +10,12 @@ export default defineConfig(options => ({
   clean: true,
   target: 'node18', // ✅ Use Node 18 baseline (modern features)
   treeshake: true,
-  external: [], // Bundle everything (especially CJS like icon-sdk-js)
+  external: [], // tsup still externalizes all dependencies by default; this is additive, not a replacement
+  noExternal: ['near-api-js', '@sodax/types'], // Force-bundle ESM-only packages for CJS compatibility
   esbuildOptions(options) {
     options.platform = 'neutral'; // Don't assume node/browser — supports both
     options.mainFields = ['module', 'main'];
+    options.conditions = ['import']; // Required because near-api-js is ESM-only. Only affects bundled (noExternal) packages.
   },
   outExtension({ format }) {
     return {

@@ -1,5 +1,6 @@
 export * from './shared';
 export * from './provider';
+export * from './bitcoin';
 export * from './mm';
 export * from './swap';
 export * from './backend';

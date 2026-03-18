@@ -32,6 +32,7 @@ import {
   type StellarRawSpokeProviderConfig,
 } from './entities/stellar/StellarSpokeProvider.js';
 import type {
+  BitcoinSpokeProviderType,
   EvmSpokeProviderType,
   IconSpokeProviderType,
   InjectiveSpokeProviderType,
@@ -66,12 +67,12 @@ import {
   type SubmitSwapTxResponse,
   type SubmitSwapTxStatusResponse,
 } from '@sodax/types';
+import { BitcoinSpokeProvider, type BitcoinRawSpokeProvider } from './entities/btc/BitcoinSpokeProvider.js';
 import {
-  type NearRawSpokeProvider,
-  type NearRawSpokeProviderConfig,
-  NearSpokeProvider,
+    type NearRawSpokeProvider,
+    type NearRawSpokeProviderConfig,
+    NearSpokeProvider,
 } from './entities/near/NearSpokeProvider.js';
-
 export function isEvmHubChainConfig(value: HubChainConfig): value is EvmHubChainConfig {
   return typeof value === 'object' && value.chain.type === 'EVM';
 }
@@ -214,6 +215,12 @@ export function isStellarSpokeProviderType(value: SpokeProviderType): value is S
   );
 }
 
+export function isBitcoinSpokeProviderType(value: SpokeProviderType): value is BitcoinSpokeProviderType {
+  return (
+    typeof value === 'object' && value !== null && (isBitcoinSpokeProvider(value) || isBitcoinRawSpokeProvider(value))
+  );
+}
+
 export function isStellarSpokeProvider(value: SpokeProviderType): value is StellarSpokeProvider {
   return (
     typeof value === 'object' &&
@@ -221,6 +228,16 @@ export function isStellarSpokeProvider(value: SpokeProviderType): value is Stell
     value instanceof StellarSpokeProvider &&
     !('raw' in value) &&
     value.chainConfig.chain.type === 'STELLAR'
+  );
+}
+
+export function isBitcoinSpokeProvider(value: SpokeProviderType): value is BitcoinSpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof BitcoinSpokeProvider &&
+    !('raw' in value) &&
+    value.chainConfig.chain.type === 'BITCOIN'
   );
 }
 
@@ -474,6 +491,10 @@ export function isSolanaRawSpokeProvider(value: unknown): value is SolanaRawSpok
 
 export function isStellarRawSpokeProvider(value: unknown): value is StellarRawSpokeProvider {
   return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'STELLAR';
+}
+
+export function isBitcoinRawSpokeProvider(value: unknown): value is BitcoinRawSpokeProvider {
+  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'BITCOIN';
 }
 
 export function isIconRawSpokeProvider(value: unknown): value is IconRawSpokeProvider {

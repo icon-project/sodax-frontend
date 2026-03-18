@@ -12,6 +12,7 @@ import {
   type EvmHubProvider,
   relayTxAndWaitPacket,
   SolanaSpokeProvider,
+  BitcoinSpokeProvider,
   DEFAULT_RELAY_TX_TIMEOUT,
   type HubTxHash,
   type SpokeTxHash,
@@ -376,7 +377,7 @@ export class BridgeService {
 
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
-        spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
+        (spokeProvider instanceof SolanaSpokeProvider || spokeProvider instanceof BitcoinSpokeProvider) ? txResult.data : undefined,
         spokeProvider,
         this.relayerApiEndpoint,
         timeout,
@@ -458,7 +459,14 @@ export class BridgeService {
       // destination
       invariant(dstAssetInfo, `Unsupported spoke chain (${params.dstChainId}) token: ${params.dstAsset}`);
 
-      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      let walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+
+      // Bitcoin TRADING mode: hub wallet must be derived from trading wallet address
+      if (spokeProvider instanceof BitcoinSpokeProvider && spokeProvider.walletMode === 'TRADING') {
+        const tradingWallet = await spokeProvider.radfi.getTradingWallet(walletAddress);
+        walletAddress = tradingWallet.tradingAddress;
+      }
+
       const hubWallet = await WalletAbstractionService.getUserAbstractedWalletAddress(
         walletAddress,
         spokeProvider,

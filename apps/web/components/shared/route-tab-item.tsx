@@ -79,11 +79,11 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
             {formatCurrencyCompact(Math.floor(totalDepositedUsdValue))}
           </Badge>
         )}
-        {isMobile && enabled && apr !== undefined && (
+        {/* {isMobile && enabled && apr !== undefined && (
           <Badge variant="desktop" className="text-clay font-bold font-['InterRegular'] text-[9px] h-[16px] ml-2">
             {apr.toFixed(2)}%
           </Badge>
-        )}
+        )} */}
       </div>
       {!isMobile && !enabled && <Badge variant="desktop">SOON</Badge>}
       {!isMobile && enabled && totalDepositedUsdValue !== undefined && Math.floor(totalDepositedUsdValue) > 0 && (
@@ -91,11 +91,11 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
           {formatCurrencyCompact(Math.floor(totalDepositedUsdValue))}
         </Badge>
       )}
-      {!isMobile && enabled && apr !== undefined && (
+      {/* {!isMobile && enabled && apr !== undefined && (
         <Badge variant="desktop" className="text-clay font-bold font-['InterRegular'] text-[9px] h-[16px]">
           {apr.toFixed(2)}%
         </Badge>
-      )}
+      )} */}
     </div>
   );
   // 1. Disabled feature (SOON)
