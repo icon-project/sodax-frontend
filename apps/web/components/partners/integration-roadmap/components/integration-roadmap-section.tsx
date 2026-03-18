@@ -12,23 +12,20 @@ import { INTEGRATION_ROADMAP_COPY } from '@/components/partners/integration-road
 const features = [
   {
     icon: Route,
-    title: 'Partner category',
-    description:
-      'Enter your protocol name and get matched to the right integration path: Wallets, DEXs, Lending, Perp DEXs & Yield, New networks, or Solver marketplaces.',
+    title: 'Your integration lane',
+    description: 'Matched path for your protocol: Wallets, DEXs, Lending, Perp, New networks, or Solver.',
     badges: ['Wallets', 'DEXs', 'Lending', 'Yield'],
   },
   {
     icon: Layers,
-    title: 'SDK stack',
-    description:
-      'See which SODAX layers fit your use case: Foundation (@sodax/sdk), Connection (wallet-sdk-react), and Experience (dapp-kit) with the hooks you need.',
+    title: 'SODAX layers you plug in',
+    description: 'Foundation (@sodax/sdk) + Connection (wallet-sdk-react) + Experience (dapp-kit).',
     badges: ['Foundation', 'Connection', 'Experience'],
   },
   {
     icon: ListChecks,
-    title: 'Integration steps',
-    description:
-      'Get a clear, step-by-step roadmap so your team knows exactly how to integrate—from wallet connection to cross-network execution.',
+    title: 'Implementation checklist',
+    description: 'Step-by-step flow to ship cross-network execution.',
     badges: ['Steps', 'Hooks', 'Docs'],
   },
 ];
@@ -54,7 +51,7 @@ export default function IntegrationRoadmapSection(): React.JSX.Element {
             <h2 className="font-bold text-[26px] sm:text-[32px] leading-[1.1] text-espresso">Integration Roadmap</h2>
           </div>
           <p className="font-normal text-[14px] sm:text-[16px] leading-[1.4] text-espresso text-center max-w-full md:max-w-140">
-            {INTEGRATION_ROADMAP_COPY.partnersSectionDescription}
+            {INTEGRATION_ROADMAP_COPY.publicDescription}
           </p>
         </motion.div>
 
@@ -111,7 +108,7 @@ export default function IntegrationRoadmapSection(): React.JSX.Element {
             href={INTEGRATION_ROADMAP_ROUTE}
             className="bg-yellow-soda text-cherry-dark font-['Shrikhand'] text-[14px] h-10 px-6 py-2 rounded-full cursor-pointer hover:opacity-90 transition-opacity w-full sm:w-auto text-center lowercase"
           >
-            generate your roadmap
+            generate your roadmap preview
           </Link>
         </motion.div>
       </div>

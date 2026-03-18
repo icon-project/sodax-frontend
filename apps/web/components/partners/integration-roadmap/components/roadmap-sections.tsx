@@ -3,7 +3,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Check, Code2, Coins, ExternalLink, FileDown, Link2, Mail, Network, Sparkles } from 'lucide-react';
+import { Check, Code2, Coins, ExternalLink, FileDown, Link2, Mail, Network } from 'lucide-react';
 import {
   CHAIN_DOCUMENTATION_ROUTE,
   DOCUMENTATION_ROUTE,
@@ -13,7 +13,7 @@ import {
 } from '@/constants/routes';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import type { BdConfig, CategoryId, RoadmapCategory, RoadmapView } from '../types';
+import type { BdConfig, CategoryId, RoadmapCategory, RoadmapView, WhyBullet } from '../types';
 import {
   ALL_CASE_STUDIES,
   CASE_STUDY_BY_CATEGORY,
@@ -30,7 +30,7 @@ export interface RoadmapSectionsProps {
   setRoadmap: (next: { category: RoadmapCategory; protocolDisplay: string; matched: boolean }) => void;
   bdConfig: BdConfig;
   displayTimeline: string;
-  whyBullets: string[];
+  whyBullets: WhyBullet[];
   displaySteps: string[];
   currentProtocol: string;
   protocolName: string;
@@ -150,13 +150,20 @@ export function RoadmapSections({
         <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
           Why SODAX for <span className="text-cherry-soda">{displayLabel}</span>
         </h2>
-        <ul className="flex flex-col gap-2 list-disc list-inside font-normal text-[14px] leading-normal text-clay-dark">
+        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {whyBullets.map((bullet, i) => (
             <li
               key={i}
-              className={`pl-1 ${i === whyBullets.length - 1 && bdConfig.customWhy.trim() ? 'font-medium text-espresso' : ''}`}
+              className={`flex flex-col gap-1 rounded-xl bg-cream-white px-4 pt-3.5 pb-4${!bullet.headline ? ' sm:col-span-2' : ''}`}
             >
-              {bullet}
+              {bullet.headline ? (
+                <>
+                  <span className="font-bold text-[14px] leading-snug text-espresso">{bullet.headline}</span>
+                  <span className="font-normal text-[13px] leading-[1.45] text-clay">{bullet.copy}</span>
+                </>
+              ) : (
+                <span className="font-normal text-[14px] leading-normal text-clay-dark">{bullet.copy}</span>
+              )}
             </li>
           ))}
         </ul>
@@ -175,10 +182,18 @@ export function RoadmapSections({
           </div>
         )}
         <p className="font-normal text-[14px] leading-normal text-clay-dark">
-          One integration gives you access to 17+ networks. Route swaps, deposits, and settlements across EVM, Solana,
-          Sui, Stellar, and more.
+          One integration. Swaps, deposits, and settlements across every major ecosystem.
         </p>
-        <p className="font-normal text-[13px] leading-[1.4] text-clay-dark">{SUPPORTED_NETWORKS_LIST}.</p>
+        <div className="flex flex-wrap gap-2">
+          {SUPPORTED_NETWORKS_LIST.split(', ').map(network => (
+            <span
+              key={network}
+              className="inline-flex items-center h-7 px-3 rounded-full bg-cream-white text-[12px] font-medium text-espresso"
+            >
+              {network}
+            </span>
+          ))}
+        </div>
         <a
           href={CHAIN_DOCUMENTATION_ROUTE}
           target="_blank"
@@ -195,18 +210,20 @@ export function RoadmapSections({
           <Coins className="w-5 h-5 text-cherry-soda shrink-0" aria-hidden />
           Partner economics
         </h2>
-        <p className="font-normal text-[14px] leading-normal text-clay-dark">
-          Partners share in revenue on routed volume. Fee structure and payouts are transparent; we align incentives so
-          your integration drives value for both sides.
-        </p>
-        <a
-          href={`mailto:partnerships@sodax.com?subject=${encodeURIComponent(
-            `Partnership inquiry - Economics & integration${currentProtocol ? ` - ${currentProtocol}` : ''}`,
-          )}`}
-          className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"
-        >
-          Contact us for details →
-        </a>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {(
+            [
+              { headline: 'Revenue share', copy: 'Earn on every swap and deposit routed through your integration.' },
+              { headline: 'Transparent payouts', copy: 'Fee structure is open. No hidden cuts, no surprises.' },
+              { headline: 'Aligned incentives', copy: 'We only grow when your integration drives volume.' },
+            ] as const
+          ).map(item => (
+            <div key={item.headline} className="flex flex-col gap-1 rounded-xl bg-cream-white px-4 pt-3.5 pb-4">
+              <span className="font-bold text-[14px] leading-snug text-espresso">{item.headline}</span>
+              <span className="font-normal text-[13px] leading-[1.45] text-clay">{item.copy}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {!isPublic && (
@@ -316,23 +333,19 @@ export function RoadmapSections({
         </div>
       )}
 
-      <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-        <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
-          {isPublic && <Sparkles className="w-5 h-5 text-cherry-soda shrink-0" aria-hidden />}
-          {isPublic ? 'Get your full integration plan' : 'Next steps'}
+      <div className={`rounded-3xl flex flex-col gap-5 p-6 md:p-8 ${isPublic ? 'bg-espresso' : 'bg-white border border-cherry-grey/20'}`}>
+        <h2 className={`font-black text-[18px] sm:text-[20px] leading-[1.2] ${isPublic ? 'text-white' : 'text-espresso'}`}>
+          {isPublic ? 'Ready to integrate?' : 'Next steps'}
         </h2>
-        <p className="font-normal text-[14px] leading-normal text-clay-dark">
+        <p className={`font-normal text-[14px] leading-normal ${isPublic ? 'text-clay-light' : 'text-clay-dark'}`}>
           {isPublic
-            ? 'Send protocol + chains — we’ll reply with a tailored plan.'
+            ? 'Share your protocol and we\u2019ll send a custom plan \u2014 SDK steps, timeline, and revenue share estimate \u2014 within 24 hours.'
             : 'Open the docs to follow the integration guide, get help in Discord, or reach out to discuss your use case.'}
         </p>
         {isPublic && (
-          <div className="flex flex-wrap gap-2 -mt-1">
-            {(['Timeline estimate', 'Integration steps', 'Partner economics'] as const).map(label => (
-              <span
-                key={label}
-                className="inline-flex items-center justify-center h-6 px-2 rounded-full font-medium text-[11px] leading-[1.3] text-cherry-dark bg-yellow-soda/15 border border-yellow-soda/40"
-              >
+          <div className="flex flex-wrap gap-2">
+            {(['Timeline & SDK steps', 'Revenue share estimates', 'Dedicated tech review'] as const).map(label => (
+              <span key={label} className="inline-flex items-center h-7 px-3 rounded-full bg-white/10 text-[12px] font-medium text-cream-white">
                 {label}
               </span>
             ))}
@@ -349,36 +362,37 @@ export function RoadmapSections({
               Open documentation
             </a>
           )}
-          <a
-            href={(() => {
-              const subject = `Partnership inquiry - Integration roadmap${currentProtocol ? ` - ${currentProtocol}` : ''}`;
-              if (!isPublic) return `mailto:partnerships@sodax.com?subject=${encodeURIComponent(subject)}`;
-              const protocol = currentProtocol?.trim() || '';
-              const chains = bdConfig.chains.trim() || '';
-              const protocolLine = protocol ? `Protocol: ${protocol}\n` : '';
-              const chainsLine = chains ? `Target chains: ${chains}\n` : '';
-              const body = `Hi SODAX team,\n\n${protocolLine}${chainsLine}\nWe’d like the full integration plan (category fit, steps, timeline, partner economics).\n\nThanks,`;
-              return `mailto:partnerships@sodax.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            })()}
-            className={
-              isPublic
-                ? 'bg-yellow-soda text-espresso flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer font-medium text-[14px] text-center shrink-0 hover:opacity-90 transition-opacity'
-                : secondaryButtonClass
-            }
-          >
-            {isPublic ? 'Email us for the full plan' : fromFirstName ? `Contact ${fromFirstName}` : 'Contact us'}
-          </a>
+          {isPublic ? (
+            <a
+              href={(() => {
+                const protocol = currentProtocol?.trim() || '';
+                const chains = bdConfig.chains.trim() || '';
+                const subject = `Partnership inquiry - Integration roadmap${protocol ? ` - ${protocol}` : ''}`;
+                const protocolLine = protocol ? `Protocol: ${protocol}\n` : '';
+                const chainsLine = chains ? `Target chains: ${chains}\n` : '';
+                const body = `Hi SODAX team,\n\n${protocolLine}${chainsLine}We'd like the tailored integration plan (category fit, SDK stack, and integration steps).\n\nThanks,`;
+                return `mailto:partnerships@sodax.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+              })()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-yellow-soda text-espresso flex h-11 items-center justify-center gap-2 px-8 py-2 rounded-full cursor-pointer font-semibold text-[15px] text-center shrink-0 hover:opacity-90 transition-opacity"
+            >
+              Request via email
+            </a>
+          ) : (
+            <a
+              href={`mailto:partnerships@sodax.com?subject=${encodeURIComponent(`Partnership inquiry - Integration roadmap${currentProtocol ? ` - ${currentProtocol}` : ''}`)}`}
+              className={secondaryButtonClass}
+            >
+              {fromFirstName ? `Contact ${fromFirstName}` : 'Contact us'}
+            </a>
+          )}
           {!isPublic && (
             <a href={DISCORD_ROUTE} target="_blank" rel="noopener noreferrer" className={secondaryButtonClass}>
               Join Discord
             </a>
           )}
         </div>
-        {isPublic && (
-          <p className="font-normal text-[12px] leading-[1.45] text-clay mt-1">
-            Typical response: &lt;24h · We&apos;ll share a PDF + checklist
-          </p>
-        )}
       </div>
 
       {!isPublic && (
@@ -419,7 +433,9 @@ export function RoadmapSections({
                   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sodax.com';
                   const rawProtocol = roadmap?.protocolDisplay ?? (protocolName.trim() || '');
                   const slug = rawProtocol ? slugifyProtocol(rawProtocol) : '';
-                  const url = slug ? `${origin}${INTEGRATION_ROADMAP_ROUTE}/${slug}` : `${origin}${INTEGRATION_ROADMAP_ROUTE}`;
+                  const url = slug
+                    ? `${origin}${INTEGRATION_ROADMAP_ROUTE}/${slug}`
+                    : `${origin}${INTEGRATION_ROADMAP_ROUTE}`;
                   const label = getProtocolDisplayLabel(roadmap.protocolDisplay, roadmap.category);
                   const subject = encodeURIComponent(`SODAX integration roadmap for ${label}`);
                   const senderLine = signature ? `\n\nBest,\n${signature}` : '';

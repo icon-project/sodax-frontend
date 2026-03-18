@@ -8,7 +8,7 @@ import { INTEGRATION_ROADMAP_BD_ROUTE, INTEGRATION_ROADMAP_ROUTE } from '@/const
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import type { BdConfig, CategoryId } from '../types';
+import type { BdConfig, CategoryId, WhyBullet } from '../types';
 import { DEFAULT_FROM_SUFFIX } from '../data/constants';
 import { loadDraftFromStorage, saveDraftToStorage } from '../lib/draft-storage';
 import { slugifyProtocol } from '../lib/slug';
@@ -18,7 +18,7 @@ export interface BdComposerProps {
   onChange: (cfg: BdConfig) => void;
   currentProtocol: string;
   selectedCategoryId: CategoryId | null;
-  defaultWhyBullets: string[];
+  defaultWhyBullets: WhyBullet[];
   defaultSteps: string[];
 }
 
@@ -229,7 +229,7 @@ export function BdComposer({
                     ) : (
                       <button
                         type="button"
-                        onClick={() => onChange({ ...bdConfig, whyOverrides: [...defaultWhyBullets] })}
+                        onClick={() => onChange({ ...bdConfig, whyOverrides: defaultWhyBullets.map(b => b.headline ? `${b.headline} — ${b.copy}` : b.copy) })}
                         className="text-[11px] font-medium text-cherry-soda hover:underline cursor-pointer"
                       >
                         Edit bullets
@@ -237,10 +237,11 @@ export function BdComposer({
                     )}
                   </div>
                   {bdConfig.whyOverrides.length === 0 ? (
-                    <ul className="flex flex-col gap-1 list-disc list-inside text-[12px] text-cherry-dark/60 pl-1">
+                    <ul className="flex flex-col gap-1.5 pl-1">
                       {defaultWhyBullets.map((b, i) => (
-                        <li key={i} className="leading-[1.4]">
-                          {b}
+                        <li key={i} className="flex flex-col leading-[1.4]">
+                          {b.headline && <span className="font-medium text-[12px] text-cherry-dark/80">{b.headline}</span>}
+                          <span className="text-[11px] text-cherry-dark/50">{b.copy}</span>
                         </li>
                       ))}
                     </ul>

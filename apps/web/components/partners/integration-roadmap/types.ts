@@ -16,6 +16,12 @@ export type CategoryId =
 
 // ─── Data shapes ─────────────────────────────────────────────────────────────
 
+/** A single "Why SODAX" bullet with a scannable headline and supporting copy. */
+export interface WhyBullet {
+  headline: string;
+  copy: string;
+}
+
 export interface RoadmapCategory {
   id: CategoryId;
   title: string;
@@ -37,7 +43,7 @@ export interface SdkLayer {
 export interface ProtocolOverride {
   categoryId: CategoryId;
   /** If provided, replaces the default "Why SODAX" bullets for this protocol. */
-  customWhy?: string[];
+  customWhy?: WhyBullet[];
 }
 
 // ─── BD Composer state ───────────────────────────────────────────────────────

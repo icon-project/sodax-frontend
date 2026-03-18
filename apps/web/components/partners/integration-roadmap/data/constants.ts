@@ -2,7 +2,7 @@
 
 import { WalletIcon, ArrowsLeftRightIcon, VaultIcon, TrendUpIcon, GlobeIcon, PathIcon } from '@phosphor-icons/react';
 import { DOCUMENTATION_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
-import type { BdConfig, CategoryId, ProtocolOverride, RoadmapCategory, SdkLayer } from '../types';
+import type { BdConfig, CategoryId, ProtocolOverride, RoadmapCategory, SdkLayer, WhyBullet } from '../types';
 
 // ─── BD defaults ─────────────────────────────────────────────────────────────
 
@@ -275,42 +275,42 @@ export const SDK_LAYERS: SdkLayer[] = [
 // ─── Why SODAX bullets ────────────────────────────────────────────────────────
 // One list per category; BD can override or append via the Composer panel.
 
-export const WHY_SODAX_BY_CATEGORY: Record<CategoryId, string[]> = {
+export const WHY_SODAX_BY_CATEGORY: Record<CategoryId, WhyBullet[]> = {
   wallets: [
-    'No bridge UX to manage — users swap and spend without tracking asset locations.',
-    'Intent-based settlement in ~22s across 17+ networks including Solana, Sui, and Stellar.',
-    'Single SDK integration covers all chains; no per-chain maintenance overhead.',
-    'Revenue share on routed volume: you bring the users, SODAX provides the cross-chain rails.',
+    { headline: 'No bridge UX', copy: 'Users swap and spend without tracking asset locations.' },
+    { headline: 'Intent-based settlement in ~22s', copy: 'Across 17+ networks including Solana, Sui, and Stellar.' },
+    { headline: 'Single SDK integration', copy: 'Covers all chains; no per-chain maintenance overhead.' },
+    { headline: 'Revenue share on routed volume', copy: 'You bring the users, SODAX provides the cross-chain rails.' },
   ],
   dexs: [
-    'Route to best execution across 17+ networks from a single integration.',
-    'Intent-based execution removes bridge slippage compounding; SODAX handles all settlement.',
-    'Cover exotic cross-chain pairs (e.g. Solana ↔ EVM) that single-chain DEXs cannot reach.',
-    'Composable with your existing aggregator or UI — no UX overhaul required.',
+    { headline: 'Best execution across 17+ networks', copy: 'Route from a single integration point.' },
+    { headline: 'Intent-based execution', copy: 'Removes bridge slippage compounding; SODAX handles all settlement.' },
+    { headline: 'Exotic cross-chain pairs', copy: 'Cover Solana ↔ EVM and more that single-chain DEXs cannot reach.' },
+    { headline: 'Composable with your existing UI', copy: 'No UX overhaul required; plug SODAX into your current stack.' },
   ],
   lending: [
-    'Cross-network collateral: users supply on one chain and borrow on another in a single flow.',
-    'Hub Wallet Abstraction manages cross-chain state invisibly; you focus on UX.',
-    'Extend your money market to chains not yet supported natively.',
-    'Unified liquidity reduces fragmentation and improves utilisation across your supported networks.',
+    { headline: 'Cross-network collateral', copy: 'Users supply on one chain and borrow on another in a single flow.' },
+    { headline: 'Hub Wallet Abstraction', copy: 'Manages cross-chain state invisibly so you can focus on UX.' },
+    { headline: 'Extend to new chains', copy: "Reach chains your money market doesn't natively support yet." },
+    { headline: 'Unified liquidity', copy: 'Reduces fragmentation and improves utilisation across your networks.' },
   ],
   'perp-yield': [
-    'Accept deposits from any SODAX-supported network; settle into your native asset seamlessly.',
-    'Intent-based execution removes bridge delays and eliminates failed cross-chain transfers.',
-    'Expand your addressable market to all 17+ networks with a single integration.',
-    'Same SDK hooks for deposits and redemptions across every supported chain.',
+    { headline: 'Deposits from any network', copy: 'Accept from any SODAX-supported chain; settle into your native asset seamlessly.' },
+    { headline: 'Intent-based execution', copy: 'Removes bridge delays and eliminates failed cross-chain transfers.' },
+    { headline: '17+ networks, one integration', copy: 'Expand your addressable market without rebuilding per-chain.' },
+    { headline: 'Unified SDK hooks', copy: 'Same hooks for deposits and redemptions across every supported chain.' },
   ],
   'new-networks': [
-    'Launch with cross-network swaps, bridging, and stablecoin utility from day one.',
-    'Proven deployment across EVM, Cosmos SDK, and custom stacks; 4–12 weeks depending on architecture.',
-    'Solver liquidity and relay integration included — no need to bootstrap cross-chain flow from scratch.',
-    'Your users can transact with the entire SODAX-connected ecosystem immediately after launch.',
+    { headline: 'Cross-network from day one', copy: 'Launch with swaps, bridging, and stablecoin utility built in.' },
+    { headline: 'Proven multi-stack deployment', copy: 'Works across EVM, Cosmos SDK, and custom stacks; 4–12 weeks depending on architecture.' },
+    { headline: 'Solver liquidity included', copy: 'Relay integration ready — no need to bootstrap cross-chain flow from scratch.' },
+    { headline: 'Instant ecosystem access', copy: 'Users transact with the entire SODAX-connected ecosystem from launch day.' },
   ],
   'solver-marketplaces': [
-    'Add 17+ network routes as a composable route source; improve fill rates on exotic pairs.',
-    'Core API for quote fetching and execution coordination — minimal integration surface.',
-    'Intent-based settlement benefits end users with better prices and fewer failed orders.',
-    'Shared liquidity reduces fragmentation and strengthens outcomes across the solver ecosystem.',
+    { headline: '17+ network routes', copy: 'Add as a composable route source; improve fill rates on exotic pairs.' },
+    { headline: 'Minimal integration surface', copy: 'Core API handles quote fetching and execution coordination.' },
+    { headline: 'Intent-based settlement', copy: 'End users get better prices and fewer failed orders.' },
+    { headline: 'Shared liquidity', copy: 'Reduces fragmentation and strengthens outcomes across the solver ecosystem.' },
   ],
 };
 
@@ -361,19 +361,19 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
   uniswap: {
     categoryId: 'dexs',
     customWhy: [
-      "Expand Uniswap's routing to 17+ networks without rebuilding cross-chain infrastructure.",
-      'Intent-based execution handles settlement; your existing hooks and UI stay untouched.',
-      'Route Solana ↔ EVM and other exotic pairs that Uniswap v4 cannot reach natively.',
-      'Revenue share on every cross-chain swap routed through SODAX from your interface.',
+      { headline: 'Expand routing to 17+ networks', copy: 'No need to rebuild cross-chain infrastructure.' },
+      { headline: 'Intent-based execution', copy: 'Handles settlement; your existing hooks and UI stay untouched.' },
+      { headline: "Exotic pairs Uniswap can't reach", copy: 'Route Solana ↔ EVM and more natively.' },
+      { headline: 'Revenue share', copy: 'Earn on every cross-chain swap routed through SODAX from your interface.' },
     ],
   },
   '1inch': {
     categoryId: 'dexs',
     customWhy: [
-      'Add SODAX as a route source for cross-network pairs; users see best execution across 17+ chains.',
-      'Intent-based settlement avoids bridge failures and slippage compounding.',
-      'Complement Fusion Mode with cross-chain intent routing in a single API call.',
-      'No UX change required — SODAX plugs into your existing aggregation stack.',
+      { headline: 'Best execution across 17+ chains', copy: 'Add SODAX as a route source; users see the best price on any pair.' },
+      { headline: 'Intent-based settlement', copy: 'Avoids bridge failures and slippage compounding.' },
+      { headline: 'Complements Fusion Mode', copy: 'Add cross-chain intent routing in a single API call.' },
+      { headline: 'No UX change required', copy: 'SODAX plugs directly into your existing aggregation stack.' },
     ],
   },
   kyberswap: { categoryId: 'dexs' },
@@ -389,10 +389,10 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
   aave: {
     categoryId: 'lending',
     customWhy: [
-      'Let Aave users supply collateral on Solana or Base and borrow on Ethereum — single flow.',
-      'No bridge UX: Hub Wallet Abstraction handles cross-chain state invisibly.',
-      'Extend the Aave money market to chains not yet covered by native deployments.',
-      'Increase total protocol TVL by capturing cross-chain collateral that currently goes elsewhere.',
+      { headline: 'Cross-chain collateral', copy: 'Users supply on Solana or Base and borrow on Ethereum in a single flow.' },
+      { headline: 'No bridge UX', copy: 'Hub Wallet Abstraction handles cross-chain state invisibly.' },
+      { headline: 'Extend to new chains', copy: 'Reach chains not yet covered by native Aave deployments.' },
+      { headline: 'Increase protocol TVL', copy: 'Capture cross-chain collateral that currently flows to competitors.' },
     ],
   },
   compound: { categoryId: 'lending' },
@@ -406,19 +406,19 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
   metamask: {
     categoryId: 'wallets',
     customWhy: [
-      'Let MetaMask users swap across 17+ networks without leaving the wallet — no bridge tabs.',
-      'Intent-based settlement in ~22s; covers Solana, Sui, Stellar alongside all EVM chains.',
-      'Revenue share on routed volume: MetaMask already has the users, SODAX adds the cross-chain rails.',
-      'Single SDK integration; no per-network wallet adapters to maintain.',
+      { headline: 'Swap across 17+ networks in-wallet', copy: 'No bridge tabs; users never leave MetaMask.' },
+      { headline: 'Intent-based settlement in ~22s', copy: 'Covers Solana, Sui, Stellar alongside all EVM chains.' },
+      { headline: 'Revenue share on routed volume', copy: 'MetaMask brings the users, SODAX adds the cross-chain rails.' },
+      { headline: 'Single SDK integration', copy: 'No per-network wallet adapters to maintain.' },
     ],
   },
   phantom: {
     categoryId: 'wallets',
     customWhy: [
-      'Expand Phantom beyond Solana — users swap Solana ↔ EVM, Sui, and Stellar natively.',
-      'SODAX handles multi-network settlement; Phantom retains full control of UX and branding.',
-      'Single SDK integration across all supported chains with minimal maintenance surface.',
-      'Revenue share on every cross-chain flow routed from the Phantom interface.',
+      { headline: 'Expand beyond Solana', copy: 'Users swap Solana ↔ EVM, Sui, and Stellar natively.' },
+      { headline: 'Phantom keeps full UX control', copy: 'SODAX handles multi-network settlement invisibly.' },
+      { headline: 'Single SDK integration', copy: 'Covers all supported chains with minimal maintenance surface.' },
+      { headline: 'Revenue share', copy: 'Earn on every cross-chain flow routed from the Phantom interface.' },
     ],
   },
   rainbow: { categoryId: 'wallets' },
@@ -431,19 +431,19 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
   gmx: {
     categoryId: 'perp-yield',
     customWhy: [
-      'Accept USDC deposits from Solana, Base, or Sui directly into GMX vaults — no manual bridging.',
-      'Intent-based execution removes bridge delays; deposits settle in ~22s.',
-      "Expand GMX's addressable market to all 17+ SODAX-supported networks from one integration.",
-      'Same SDK hooks for deposits and redemptions — minimal development lift for your team.',
+      { headline: 'Cross-chain vault deposits', copy: 'Accept USDC from Solana, Base, or Sui directly — no manual bridging.' },
+      { headline: 'Deposits settle in ~22s', copy: 'Intent-based execution removes bridge delays entirely.' },
+      { headline: '17+ networks, one integration', copy: "Expand GMX's addressable market without per-chain work." },
+      { headline: 'Minimal development lift', copy: 'Same SDK hooks for deposits and redemptions across all chains.' },
     ],
   },
   dydx: {
     categoryId: 'perp-yield',
     customWhy: [
-      'Accept collateral from any SODAX-supported network; settle into dYdX native assets seamlessly.',
-      'Intent-based settlement improves fill rates vs. traditional bridge-then-deposit flows.',
-      'One SDK integration covers all chains; no per-chain bridge maintenance.',
-      "Increase accessible TVL by removing friction for users on chains dYdX doesn't natively support.",
+      { headline: 'Cross-network collateral', copy: 'Accept from any SODAX-supported chain; settle into dYdX assets seamlessly.' },
+      { headline: 'Better fill rates', copy: 'Intent-based settlement beats traditional bridge-then-deposit flows.' },
+      { headline: 'One SDK, all chains', copy: 'No per-chain bridge maintenance needed.' },
+      { headline: 'Increase accessible TVL', copy: "Remove friction for users on chains dYdX doesn't natively support." },
     ],
   },
   hyperliquid: { categoryId: 'perp-yield' },
@@ -453,10 +453,10 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
   near: {
     categoryId: 'solver-marketplaces',
     customWhy: [
-      "Add SODAX's 17+ network routes to NEAR Intents for broader cross-chain coverage.",
-      'Shared intent-based settlement improves fill rates on exotic pairs.',
-      'SODAX integrates as a composable route source with minimal engineering overhead.',
-      "Expand NEAR's solver ecosystem reach without rebuilding cross-chain infrastructure.",
+      { headline: '17+ network routes', copy: "Add to NEAR Intents for broader cross-chain coverage." },
+      { headline: 'Better fill rates', copy: 'Shared intent-based settlement improves outcomes on exotic pairs.' },
+      { headline: 'Minimal engineering overhead', copy: 'SODAX integrates as a composable route source.' },
+      { headline: 'Expand solver ecosystem reach', copy: 'No need to rebuild cross-chain infrastructure.' },
     ],
   },
   'cow protocol': { categoryId: 'solver-marketplaces' },

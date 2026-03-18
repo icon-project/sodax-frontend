@@ -60,6 +60,8 @@ export const DOCUMENTATION_GITBOOK_ROUTE = 'https://sodax-1.gitbook.io/sodax-doc
 
 // ── Social & community (external) ──────────────────────────────────────────
 export const DISCORD_ROUTE = 'https://discord.com/invite/xM2Nh4S6vN';
+// TODO: Replace with the real Telegram partnerships handle/link before launch.
+export const TELEGRAM_PARTNERSHIPS_ROUTE = 'https://t.me/PLACEHOLDER_sodax_partnerships';
 export const X_ROUTE = 'https://x.com/gosodax';
 /** X (Twitter) “follow” intent URL. */
 export const X_INTENT_FOLLOW_ROUTE = 'https://x.com/intent/user?screen_name=gosodax';

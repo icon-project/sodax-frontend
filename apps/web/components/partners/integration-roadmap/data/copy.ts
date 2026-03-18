@@ -2,11 +2,10 @@
 
 export const INTEGRATION_ROADMAP_COPY = {
   publicDescription:
-    'See how your protocol can integrate with SODAX. Enter your protocol name and generate a tailored roadmap of partner category, SDK stack, and integration steps.',
+    'Get matched to your SODAX integration path in seconds! Generate a public preview of partner category fit, “why SODAX”, and supported networks. Request the full roadmap (SDK layers + integration steps + timelines).',
   partnersSectionDescription:
-    'See how your protocol can integrate with SODAX. Type your protocol name and get a visual roadmap of partner category, SDK stack, and integration steps. After a partner call, direct them here so they see their technical requirements in one place.',
+    'Type your protocol name to get a visual preview of partner category fit, “why SODAX”, and supported networks. After a partner call, direct them to the prospect link to view the full technical roadmap in one place.',
   metaDescription:
-    'See how your protocol can integrate with SODAX. Enter your protocol name and get a visual roadmap of SDK layers, partner category, and integration steps.',
-  metaDescriptionShort:
-    'See how your protocol can integrate with SODAX. Enter your protocol name and get a visual roadmap.',
+    'Generate a public preview of partner category fit, “why SODAX”, and supported networks. Request the full integration roadmap (SDK layers + integration steps) after contact.',
+  metaDescriptionShort: 'Generate a public preview of partner category fit and supported networks.',
 } as const;

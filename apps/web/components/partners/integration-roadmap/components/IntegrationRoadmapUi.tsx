@@ -8,7 +8,7 @@ import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigat
 import { motion } from 'motion/react';
 import { INTEGRATION_ROADMAP_BD_ROUTE, INTEGRATION_ROADMAP_ROUTE } from '@/constants/routes';
 import { Input } from '@/components/ui/input';
-import type { BdConfig, CategoryId, RoadmapCategory, RoadmapView } from '../types';
+import type { BdConfig, CategoryId, RoadmapCategory, RoadmapView, WhyBullet } from '../types';
 import {
   CATEGORIES,
   DEFAULT_FROM_SUFFIX,
@@ -21,7 +21,7 @@ import {
 import { INTEGRATION_ROADMAP_COPY } from '../data/copy';
 import { loadDraftFromStorage } from '../lib/draft-storage';
 import { slugifyProtocol, slugToDisplay } from '../lib/slug';
-import { findProtocolOverride, getProtocolDisplayLabel, matchCategory } from '../lib/utils';
+import { getProtocolDisplayLabel, matchCategory } from '../lib/utils';
 import { BdComposer } from './bd-composer';
 import { PersonalIntroCard } from './personal-intro-card';
 import { RoadmapSections } from './roadmap-sections';
@@ -143,7 +143,9 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
         );
         setBdConfig(prev => ({
           ...prev,
-          whyOverrides: prev.whyOverrides.length > 0 ? prev.whyOverrides : (data.why ?? []),
+          // Always show the full selected category benefits by default.
+          // If the user already edited bullets (or loaded a draft), keep their overrides.
+          whyOverrides: prev.whyOverrides.length > 0 ? prev.whyOverrides : [],
           stepsOverrides: prev.stepsOverrides.length > 0 ? prev.stepsOverrides : (data.integrationSteps ?? []),
           timeline: prev.timeline || data.timeline || '',
           chains: prev.chains || (data.chains ?? []).join(', '),
@@ -179,7 +181,9 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
           // Pre-fill BD Composer — only if BD hasn't already edited these fields
           setBdConfig(prev => ({
             ...prev,
-            whyOverrides: prev.whyOverrides.length > 0 ? prev.whyOverrides : (data.why ?? []),
+            // Always show the full selected category benefits by default.
+            // If the user already edited bullets (or loaded a draft), keep their overrides.
+            whyOverrides: prev.whyOverrides.length > 0 ? prev.whyOverrides : [],
             stepsOverrides: prev.stepsOverrides.length > 0 ? prev.stepsOverrides : (data.integrationSteps ?? []),
             timeline: prev.timeline || data.timeline || '',
             chains: prev.chains || (data.chains ?? []).join(', '),
@@ -212,17 +216,15 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
     window.print();
   };
 
-  const defaultWhyBullets = (() => {
-    const lower = (roadmap?.protocolDisplay ?? '').trim().toLowerCase();
-    const override = findProtocolOverride(lower);
-    return override?.customWhy ?? (roadmap ? WHY_SODAX_BY_CATEGORY[roadmap.category.id] : []);
-  })();
+  const defaultWhyBullets: WhyBullet[] = roadmap ? WHY_SODAX_BY_CATEGORY[roadmap.category.id] : [];
   const defaultSteps = roadmap ? STEPS_BY_CATEGORY[roadmap.category.id] : [];
 
-  const whyBullets = ((): string[] => {
-    if (bdConfig.whyOverrides.length > 0) return bdConfig.whyOverrides.filter(Boolean);
+  const whyBullets = ((): WhyBullet[] => {
+    if (bdConfig.whyOverrides.length > 0) {
+      return bdConfig.whyOverrides.filter(Boolean).map(s => ({ headline: '', copy: s }));
+    }
     const base = defaultWhyBullets;
-    return bdConfig.customWhy.trim() ? [...base, bdConfig.customWhy.trim()] : base;
+    return bdConfig.customWhy.trim() ? [...base, { headline: '', copy: bdConfig.customWhy.trim() }] : base;
   })();
 
   const displaySteps = bdConfig.stepsOverrides.length > 0 ? bdConfig.stepsOverrides.filter(Boolean) : defaultSteps;
