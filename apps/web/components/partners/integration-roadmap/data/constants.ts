@@ -1,11 +1,8 @@
-// ─── Integration Roadmap — static data ────────────────────────────────────────
-// All lookup tables and copy live here so they can be updated without touching
-// components or business logic. Import individual exports rather than the whole
-// module to keep tree-shaking effective.
+// Integration Roadmap — static data
 
 import { WalletIcon, ArrowsLeftRightIcon, VaultIcon, TrendUpIcon, GlobeIcon, PathIcon } from '@phosphor-icons/react';
 import { DOCUMENTATION_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
-import type { BdConfig, CategoryId, ProtocolOverride, RoadmapCategory, SdkLayer } from './types';
+import type { BdConfig, CategoryId, ProtocolOverride, RoadmapCategory, SdkLayer } from '../types';
 
 // ─── BD defaults ─────────────────────────────────────────────────────────────
 
@@ -33,8 +30,18 @@ export const CATEGORIES: RoadmapCategory[] = [
     description: 'Let users swap and spend across networks without managing bridges or tracking asset locations.',
     icon: WalletIcon,
     keywords: [
-      'wallet', 'hana', 'metamask', 'trust', 'rainbow', 'rabby', 'phantom',
-      'backpack', 'okx wallet', 'bitget', 'zerion', 'coinbase wallet',
+      'wallet',
+      'hana',
+      'metamask',
+      'trust',
+      'rainbow',
+      'rabby',
+      'phantom',
+      'backpack',
+      'okx wallet',
+      'bitget',
+      'zerion',
+      'coinbase wallet',
     ],
   },
   {
@@ -43,9 +50,25 @@ export const CATEGORIES: RoadmapCategory[] = [
     description: 'Quote and execute cross-network swaps. Expand routing beyond single-network liquidity.',
     icon: ArrowsLeftRightIcon,
     keywords: [
-      'dex', 'aggregator', 'uniswap', '1inch', 'balanced', 'swap', 'routing',
-      'kyberswap', 'paraswap', 'openocean', 'jupiter', 'orca', 'raydium',
-      'curve', 'sushi', 'pancakeswap', 'velodrome', 'aerodrome', 'camelot',
+      'dex',
+      'aggregator',
+      'uniswap',
+      '1inch',
+      'balanced',
+      'swap',
+      'routing',
+      'kyberswap',
+      'paraswap',
+      'openocean',
+      'jupiter',
+      'orca',
+      'raydium',
+      'curve',
+      'sushi',
+      'pancakeswap',
+      'velodrome',
+      'aerodrome',
+      'camelot',
     ],
   },
   {
@@ -54,8 +77,20 @@ export const CATEGORIES: RoadmapCategory[] = [
     description: 'Support multi-network user flows for collateral and borrowing across chains.',
     icon: VaultIcon,
     keywords: [
-      'lending', 'borrow', 'aave', 'compound', 'venus', 'collateral',
-      'morpho', 'euler', 'benqi', 'radiant', 'seamless', 'moonwell', 'ionic', 'spark',
+      'lending',
+      'borrow',
+      'aave',
+      'compound',
+      'venus',
+      'collateral',
+      'morpho',
+      'euler',
+      'benqi',
+      'radiant',
+      'seamless',
+      'moonwell',
+      'ionic',
+      'spark',
       'bonzo',
     ],
   },
@@ -65,9 +100,24 @@ export const CATEGORIES: RoadmapCategory[] = [
     description: 'Accept deposits from any supported network. Complete settlement into your native assets.',
     icon: TrendUpIcon,
     keywords: [
-      'perp', 'yield', 'gmx', 'dydx', 'amped', 'derivatives', 'hyperliquid',
-      'vertex', 'kwenta', 'synthetix', 'gains', 'drift', 'aevo',
-      'vault', 'farm', 'staking', 'restaking', 'liquid staking',
+      'perp',
+      'yield',
+      'gmx',
+      'dydx',
+      'amped',
+      'derivatives',
+      'hyperliquid',
+      'vertex',
+      'kwenta',
+      'synthetix',
+      'gains',
+      'drift',
+      'aevo',
+      'vault',
+      'farm',
+      'staking',
+      'restaking',
+      'liquid staking',
     ],
   },
   {
@@ -76,8 +126,19 @@ export const CATEGORIES: RoadmapCategory[] = [
     description: 'Launch with ready-made cross-network capabilities and liquidity access from day one.',
     icon: GlobeIcon,
     keywords: [
-      'network', 'lightlink', 'sonic', 'l1', 'l2', 'chain', 'rollup',
-      'appchain', 'subnet', 'parachain', 'cosmos', 'op stack', 'zkstack',
+      'network',
+      'lightlink',
+      'sonic',
+      'l1',
+      'l2',
+      'chain',
+      'rollup',
+      'appchain',
+      'subnet',
+      'parachain',
+      'cosmos',
+      'op stack',
+      'zkstack',
     ],
   },
   {
@@ -181,7 +242,6 @@ export const CASE_STUDY_BY_CATEGORY: Partial<Record<CategoryId, { name: string; 
   'new-networks': { name: 'LightLink Network', href: `${PARTNERS_ROUTE}/lightlink-network` },
 };
 
-/** All featured case studies listed in the Case Studies section. */
 /** Case study taglines must match partner page metadata (marketing source of truth). */
 export const ALL_CASE_STUDIES: { name: string; href: string; tagline: string }[] = [
   { name: 'Hana Wallet', href: `${PARTNERS_ROUTE}/hana`, tagline: 'Multi-Network Wallet & Payments App' },
@@ -296,11 +356,8 @@ export const STEPS_BY_CATEGORY: Record<CategoryId, string[]> = {
 };
 
 // ─── Protocol overrides ───────────────────────────────────────────────────────
-// Precise category + optional custom "Why SODAX" bullets for well-known protocols.
-// BD can still append a custom bullet on top of these via the Composer panel.
 
 export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
-  // ── DEXs ──────────────────────────────────────────────────────────────────
   uniswap: {
     categoryId: 'dexs',
     customWhy: [
@@ -329,7 +386,6 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
   velodrome: { categoryId: 'dexs' },
   aerodrome: { categoryId: 'dexs' },
 
-  // ── Lending ────────────────────────────────────────────────────────────────
   aave: {
     categoryId: 'lending',
     customWhy: [
@@ -347,7 +403,6 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
   'bonzo finance': { categoryId: 'lending' },
   bonzo: { categoryId: 'lending' },
 
-  // ── Wallets ────────────────────────────────────────────────────────────────
   metamask: {
     categoryId: 'wallets',
     customWhy: [
@@ -373,7 +428,6 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
   zerion: { categoryId: 'wallets' },
   backpack: { categoryId: 'wallets' },
 
-  // ── Perp / Yield ──────────────────────────────────────────────────────────
   gmx: {
     categoryId: 'perp-yield',
     customWhy: [
@@ -396,7 +450,6 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
   drift: { categoryId: 'perp-yield' },
   vertex: { categoryId: 'perp-yield' },
 
-  // ── Solver marketplaces ────────────────────────────────────────────────────
   near: {
     categoryId: 'solver-marketplaces',
     customWhy: [
@@ -428,6 +481,16 @@ export const EXAMPLE_CHIPS = ['MetaMask', 'Uniswap', 'Aave', 'GMX', 'LightLink',
  * verbatim (e.g. typing "wallet" shows "Wallets", not "Wallet").
  */
 export const GENERIC_DISPLAY_TERMS = new Set([
-  'wallet', 'dex', 'aggregator', 'lending', 'borrow', 'collateral',
-  'perp', 'yield', 'network', 'chain', 'solver', 'marketplace',
+  'wallet',
+  'dex',
+  'aggregator',
+  'lending',
+  'borrow',
+  'collateral',
+  'perp',
+  'yield',
+  'network',
+  'chain',
+  'solver',
+  'marketplace',
 ]);

@@ -3,9 +3,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Copy, Check } from 'lucide-react';
+import { Check, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { QUICK_START_INSTALL } from './constants';
+import { QUICK_START_INSTALL } from '../data/constants';
 
 export function QuickStartInstall(): React.JSX.Element {
   const [copied, setCopied] = useState(false);

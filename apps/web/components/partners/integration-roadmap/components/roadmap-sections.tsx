@@ -5,24 +5,28 @@
 import Link from 'next/link';
 import { Check, Code2, Coins, ExternalLink, FileDown, Link2, Mail, Network } from 'lucide-react';
 import {
+  CHAIN_DOCUMENTATION_ROUTE,
   DOCUMENTATION_ROUTE,
   DISCORD_ROUTE,
   GITHUB_SODAX_REPO_ROUTE,
   INTEGRATION_ROADMAP_ROUTE,
-  CHAIN_DOCUMENTATION_ROUTE,
 } from '@/constants/routes';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import type { BdConfig, CategoryId, RoadmapCategory } from './types';
-import { ALL_CASE_STUDIES, CASE_STUDY_BY_CATEGORY, CATEGORIES, SDK_LAYERS, SUPPORTED_NETWORKS_LIST } from './constants';
-import { slugifyProtocol } from './slug';
-import { getProtocolDisplayLabel } from './utils';
+import type { BdConfig, CategoryId, RoadmapCategory } from '../types';
+import {
+  ALL_CASE_STUDIES,
+  CASE_STUDY_BY_CATEGORY,
+  CATEGORIES,
+  SDK_LAYERS,
+  SUPPORTED_NETWORKS_LIST,
+} from '../data/constants';
+import { slugifyProtocol } from '../lib/slug';
+import { getProtocolDisplayLabel } from '../lib/utils';
 import { QuickStartInstall } from './quick-start-install';
 
 export interface RoadmapSectionsProps {
-  /** Current roadmap result (category + display name + matched). */
   roadmap: { category: RoadmapCategory; protocolDisplay: string; matched: boolean };
-  /** Replace category (e.g. from dropdown). */
   setRoadmap: (next: { category: RoadmapCategory; protocolDisplay: string; matched: boolean }) => void;
   bdConfig: BdConfig;
   displayTimeline: string;
@@ -58,7 +62,6 @@ export function RoadmapSections({
 }: RoadmapSectionsProps): React.JSX.Element {
   const displayLabel = getProtocolDisplayLabel(roadmap.protocolDisplay, roadmap.category);
 
-  // Single secondary style for all non-primary actions (Next steps + Share) — clarity over distinction.
   const secondaryButtonClass =
     'h-10 px-5 rounded-full border border-cherry-grey bg-white text-espresso cursor-pointer font-medium text-[14px] hover:bg-cream-white transition-colors shrink-0 inline-flex items-center justify-center gap-2';
 
@@ -193,7 +196,9 @@ export function RoadmapSections({
           your integration drives value for both sides.
         </p>
         <a
-          href={`mailto:partnerships@sodax.com?subject=${encodeURIComponent(`Partnership inquiry - Economics & integration${currentProtocol ? ` - ${currentProtocol}` : ''}`)}`}
+          href={`mailto:partnerships@sodax.com?subject=${encodeURIComponent(
+            `Partnership inquiry - Economics & integration${currentProtocol ? ` - ${currentProtocol}` : ''}`,
+          )}`}
           className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"
         >
           Contact us for details →
@@ -314,7 +319,9 @@ export function RoadmapSections({
             Open documentation
           </a>
           <a
-            href={`mailto:partnerships@sodax.com?subject=${encodeURIComponent(`Partnership inquiry - Integration roadmap${currentProtocol ? ` - ${currentProtocol}` : ''}`)}`}
+            href={`mailto:partnerships@sodax.com?subject=${encodeURIComponent(
+              `Partnership inquiry - Integration roadmap${currentProtocol ? ` - ${currentProtocol}` : ''}`,
+            )}`}
             className={secondaryButtonClass}
           >
             {fromFirstName ? `Contact ${fromFirstName}` : 'Contact us'}

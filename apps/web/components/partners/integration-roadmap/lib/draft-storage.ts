@@ -1,8 +1,7 @@
-// apps/web/components/partners/integration-roadmap/draft-storage.ts
 // Persist BD Composer options to localStorage so they can be restored after reload or when opening the BD page with no URL params.
 
-import type { BdConfig } from './types';
-import { DEFAULT_FROM_SUFFIX } from './constants';
+import type { BdConfig } from '../types';
+import { DEFAULT_FROM_SUFFIX } from '@/components/partners/integration-roadmap/data/constants';
 
 export const BD_DRAFT_STORAGE_KEY = 'sodax-bd-composer-draft';
 

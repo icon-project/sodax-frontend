@@ -4,8 +4,9 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
-import { IntegrationRoadmapUi } from '@/components/partners/integration-roadmap-ui';
-import { slugToDisplay } from '@/components/partners/integration-roadmap/slug';
+import { IntegrationRoadmapUi } from '@/components/partners/integration-roadmap';
+import { slugToDisplay } from '@/components/partners/integration-roadmap/lib/slug';
+import { INTEGRATION_ROADMAP_COPY } from '@/components/partners/integration-roadmap/data/copy';
 import { INTEGRATION_ROADMAP_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
 
 type PageProps = { params: Promise<{ protocol: string }> };
@@ -16,11 +17,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = partnerName ? `Integration roadmap – ${partnerName}` : 'Integration Roadmap';
   return {
     title: `${title} | SODAX Partners`,
-    description:
-      'See how your protocol can integrate with SODAX. Tailored roadmap of SDK layers, partner category, and integration steps.',
+    description: INTEGRATION_ROADMAP_COPY.publicDescription,
     openGraph: {
       title: `${title} | SODAX Partners`,
-      description: 'See how your protocol can integrate with SODAX. Tailored integration roadmap.',
+      description: INTEGRATION_ROADMAP_COPY.publicDescription,
       url: `https://sodax.com${INTEGRATION_ROADMAP_ROUTE}/${protocol}`,
     },
   };

@@ -1,4 +1,3 @@
-// apps/web/components/partners/integration-roadmap/slug.ts
 // Server-safe protocol slug helpers (no UI/icon imports).
 
 /** Slug for URL path: e.g. "Hana Wallet" → "hana-wallet", "Uniswap" → "uniswap". */
@@ -22,4 +21,3 @@ export function slugToDisplay(slug: string): string {
     .filter(Boolean)
     .join(' ');
 }
-

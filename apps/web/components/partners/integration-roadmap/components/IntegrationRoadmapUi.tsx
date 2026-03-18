@@ -3,12 +3,12 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'motion/react';
 import { INTEGRATION_ROADMAP_BD_ROUTE, INTEGRATION_ROADMAP_ROUTE } from '@/constants/routes';
 import { Input } from '@/components/ui/input';
-import type { BdConfig, CategoryId, RoadmapCategory } from './types';
+import type { BdConfig, CategoryId, RoadmapCategory } from '../types';
 import {
   CATEGORIES,
   DEFAULT_FROM_SUFFIX,
@@ -17,10 +17,11 @@ import {
   STEPS_BY_CATEGORY,
   TIMELINE_BY_CATEGORY,
   WHY_SODAX_BY_CATEGORY,
-} from './constants';
-import { loadDraftFromStorage } from './draft-storage';
-import { slugifyProtocol, slugToDisplay } from './slug';
-import { findProtocolOverride, getProtocolDisplayLabel, matchCategory } from './utils';
+} from '../data/constants';
+import { INTEGRATION_ROADMAP_COPY } from '../data/copy';
+import { loadDraftFromStorage } from '../lib/draft-storage';
+import { slugifyProtocol, slugToDisplay } from '../lib/slug';
+import { findProtocolOverride, getProtocolDisplayLabel, matchCategory } from '../lib/utils';
 import { BdComposer } from './bd-composer';
 import { PersonalIntroCard } from './personal-intro-card';
 import { RoadmapSections } from './roadmap-sections';
@@ -47,11 +48,11 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
     const bd = searchParams.get('bd');
     if (bd === '1') {
       router.replace(INTEGRATION_ROADMAP_BD_ROUTE);
-      return;
     }
   }, [pathname, searchParams, router]);
 
-  // Sync from URL when path or search actually changes. We use searchString (not searchParams) so the effect does not run on every render and overwrite BD Composer local edits (e.g. "Edit bullets").
+  // Sync from URL when path or search actually changes. We use searchString (not searchParams) so the effect does not
+  // run on every render and overwrite BD Composer local edits (e.g. "Edit bullets").
   const searchString = searchParams.toString();
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: searchString intentionally replaces searchParams so URL sync only runs when query string changes, preserving BD Composer edits.
@@ -120,7 +121,6 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
     setPrintDate(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }));
   }, []);
 
-  // useEffect 4 — fetches Notion/API enrichment when protocol is set from URL
   const protocolDisplay = roadmap?.protocolDisplay ?? null;
 
   useEffect(() => {
@@ -150,7 +150,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
         }));
       })
       .catch(() => {});
-  }, [protocolDisplay]); // ← clean, no roadmap object in deps
+  }, [protocolDisplay]);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -182,7 +182,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
             whyOverrides: prev.whyOverrides.length > 0 ? prev.whyOverrides : (data.why ?? []),
             stepsOverrides: prev.stepsOverrides.length > 0 ? prev.stepsOverrides : (data.integrationSteps ?? []),
             timeline: prev.timeline || data.timeline || '',
-          chains: prev.chains || (data.chains ?? []).join(', '),
+            chains: prev.chains || (data.chains ?? []).join(', '),
           }));
         }
       }
@@ -290,7 +290,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
               <p className="font-normal text-[14px] sm:text-[16px] leading-[1.4] text-espresso text-center max-w-full md:max-w-140">
                 {bdMode
                   ? 'Enter the partner name, generate the roadmap, then personalize in the BD Composer and copy the prospect link to send after your call.'
-                  : 'See how your protocol can integrate with SODAX. Enter your protocol name and generate a tailored roadmap of SDK layers, partner category, and integration steps.'}
+                  : INTEGRATION_ROADMAP_COPY.publicDescription}
               </p>
             </motion.div>
 
@@ -369,7 +369,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
                 </p>
               </div>
             )}
-            {bdMode && roadmap && (
+            {bdMode && (
               <div className="flex flex-col gap-4 items-center px-4 w-full max-w-4xl print:hidden">
                 <div className="flex gap-2 items-center">
                   <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="shrink-0" />

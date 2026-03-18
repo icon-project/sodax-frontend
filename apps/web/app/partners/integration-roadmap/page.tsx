@@ -4,16 +4,16 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
-import { IntegrationRoadmapUi } from '@/components/partners/integration-roadmap-ui';
+import { IntegrationRoadmapUi } from '@/components/partners/integration-roadmap';
+import { INTEGRATION_ROADMAP_COPY } from '@/components/partners/integration-roadmap/data/copy';
 import { INTEGRATION_ROADMAP_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
 
 export const metadata: Metadata = {
   title: 'Integration Roadmap | SODAX Partners',
-  description:
-    'See how your protocol can integrate with SODAX. Enter your protocol name and get a visual roadmap of SDK layers, partner category, and integration steps.',
+  description: INTEGRATION_ROADMAP_COPY.metaDescription,
   openGraph: {
     title: 'Integration Roadmap | SODAX Partners',
-    description: 'See how your protocol can integrate with SODAX. Enter your protocol name and get a visual roadmap.',
+    description: INTEGRATION_ROADMAP_COPY.metaDescriptionShort,
     url: `https://sodax.com${INTEGRATION_ROADMAP_ROUTE}`,
   },
 };

@@ -6,9 +6,9 @@ import { cookies } from 'next/headers';
 import { Suspense } from 'react';
 import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
-import { IntegrationRoadmapUi } from '@/components/partners/integration-roadmap-ui';
-import { BdLoginForm } from '@/components/partners/integration-roadmap/BdLoginForm';
-import { slugToDisplay } from '@/components/partners/integration-roadmap/slug';
+import { IntegrationRoadmapUi } from '@/components/partners/integration-roadmap';
+import { BdLoginForm } from '@/components/partners/integration-roadmap/components/BdLoginForm';
+import { slugToDisplay } from '@/components/partners/integration-roadmap/lib/slug';
 import { INTEGRATION_ROADMAP_BD_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
 
 const BD_COOKIE = 'bd_auth';

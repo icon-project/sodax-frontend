@@ -8,10 +8,10 @@ import { INTEGRATION_ROADMAP_BD_ROUTE, INTEGRATION_ROADMAP_ROUTE } from '@/const
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import type { BdConfig, CategoryId } from './types';
-import { DEFAULT_FROM_SUFFIX } from './constants';
-import { loadDraftFromStorage, saveDraftToStorage } from './draft-storage';
-import { slugifyProtocol } from './slug';
+import type { BdConfig, CategoryId } from '../types';
+import { DEFAULT_FROM_SUFFIX } from '../data/constants';
+import { loadDraftFromStorage, saveDraftToStorage } from '../lib/draft-storage';
+import { slugifyProtocol } from '../lib/slug';
 
 export interface BdComposerProps {
   bdConfig: BdConfig;
@@ -143,27 +143,28 @@ export function BdComposer({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="flex flex-col gap-1 min-w-0" htmlFor="bd-from-name">
-                <span className="font-medium text-[12px] text-cherry-dark">Your name</span>
-                <Input
-                  id="bd-from-name"
-                  type="text"
-                  placeholder="e.g. Gosia"
-                  value={bdConfig.fromName}
-                  onChange={e => onChange({ ...bdConfig, fromName: e.target.value })}
-                  className="h-9 rounded-xl border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus-visible:ring-yellow-soda/50 focus-visible:border-yellow-soda"
-                />
-              </label>
-              <label className="flex flex-col gap-1 min-w-0" htmlFor="bd-from-suffix">
-                <span className="font-medium text-[12px] text-cherry-dark">Team / company</span>
-                <Input
-                  id="bd-from-suffix"
-                  type="text"
-                  placeholder={DEFAULT_FROM_SUFFIX}
-                  value={bdConfig.fromSuffix}
-                  onChange={e => onChange({ ...bdConfig, fromSuffix: e.target.value })}
-                  className="h-9 rounded-xl border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus-visible:ring-yellow-soda/50 focus-visible:border-yellow-soda"
-                />
-              </label>
+              <span className="font-medium text-[12px] text-cherry-dark">Your name</span>
+              <Input
+                id="bd-from-name"
+                type="text"
+                placeholder="e.g. Gosia"
+                value={bdConfig.fromName}
+                onChange={e => onChange({ ...bdConfig, fromName: e.target.value })}
+                className="h-9 rounded-xl border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus-visible:ring-yellow-soda/50 focus-visible:border-yellow-soda"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1 min-w-0" htmlFor="bd-from-suffix">
+              <span className="font-medium text-[12px] text-cherry-dark">Team / company</span>
+              <Input
+                id="bd-from-suffix"
+                type="text"
+                placeholder={DEFAULT_FROM_SUFFIX}
+                value={bdConfig.fromSuffix}
+                onChange={e => onChange({ ...bdConfig, fromSuffix: e.target.value })}
+                className="h-9 rounded-xl border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus-visible:ring-yellow-soda/50 focus-visible:border-yellow-soda"
+              />
+            </label>
 
             <label className="flex flex-col gap-1" htmlFor="bd-timeline">
               <span className="font-medium text-[12px] text-cherry-dark">Timeline override</span>

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { motion } from 'motion/react';
 import { Route, Layers, ListChecks } from 'lucide-react';
 import { INTEGRATION_ROADMAP_ROUTE } from '@/constants/routes';
+import { INTEGRATION_ROADMAP_COPY } from '@/components/partners/integration-roadmap/data/copy';
 
 const features = [
   {
@@ -53,9 +54,7 @@ export default function IntegrationRoadmapSection(): React.JSX.Element {
             <h2 className="font-bold text-[26px] sm:text-[32px] leading-[1.1] text-espresso">Integration Roadmap</h2>
           </div>
           <p className="font-normal text-[14px] sm:text-[16px] leading-[1.4] text-espresso text-center max-w-full md:max-w-140">
-            See how your protocol can integrate with SODAX. Type your protocol name and get a visual roadmap of partner
-            category, SDK stack, and integration steps. After a partner call, direct them here so they see their
-            technical requirements in one place.
+            {INTEGRATION_ROADMAP_COPY.partnersSectionDescription}
           </p>
         </motion.div>
 

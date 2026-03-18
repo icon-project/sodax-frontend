@@ -1,13 +1,14 @@
+// apps/web/components/partners/integration-roadmap/lib/utils.ts
 // Helpers for protocol display label and category matching. Keep server-safe slug helpers in `slug.ts`.
 
-import type { CategoryId, ProtocolOverride, RoadmapCategory } from './types';
+import type { CategoryId, ProtocolOverride, RoadmapCategory } from '../types';
 import {
   CATEGORIES,
   DEFAULT_CATEGORY,
   GENERIC_DISPLAY_TERMS,
   NOTION_CATEGORY_TO_SCANNER_ID,
   PROTOCOL_OVERRIDES,
-} from './constants';
+} from '@/components/partners/integration-roadmap/data/constants';
 
 /** Find a protocol override by exact or prefix match (handles "Uniswap v4", "Aave v3", etc.). */
 export function findProtocolOverride(lowerName: string): ProtocolOverride | undefined {
@@ -59,7 +60,7 @@ export function getProtocolDisplayLabel(protocolDisplay: string, category: Roadm
   return trimmed;
 }
 
-// --- Notion roadmap fetch (new, does not affect existing logic above) ---
+// --- Notion roadmap fetch (used by the UI; does not affect category matching logic above) ---
 
 export interface NotionRoadmapData {
   protocolDisplay: string;
