@@ -1176,7 +1176,7 @@ export const spokeChainConfig = {
         xChainId: BITCOIN_MAINNET_CHAIN_ID,
       }
     },
-    radfiApiUrl: 'https://api.radfi.co/api',
+    radfiApiUrl: 'https://api.canary.radfi.co/api',
     radfiApiKey: '',
     radfiUmsUrl: 'https://ums.radfi.co/api',
     network: 'MAINNET',
