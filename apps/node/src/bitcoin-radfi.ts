@@ -14,13 +14,9 @@ const network = IS_TESTNET ? bitcoin.networks.testnet : bitcoin.networks.bitcoin
 // Initialize ECPair with the elliptic curve library
 const ECPair = ECPairFactory(ecc);
 
-const RADFI_API_BASE_URL = IS_TESTNET
-  ? 'https://api.signet.radfi.co/api'
-  : 'https://staging.api.radfi.co/api';
+const RADFI_API_BASE_URL = IS_TESTNET ? 'https://api.signet.radfi.co/api' : 'https://api.canary.radfi.co/api';
 
-const RADFI_UMS_BASE_URL = IS_TESTNET
-  ? 'https://signet.ums.radfi.co/api'
-  : 'https://staging.ums.radfi.co/api';
+const RADFI_UMS_BASE_URL = IS_TESTNET ? 'https://signet.ums.radfi.co/api' : 'https://ums.radfi.co/api';
 
 /**
  * Generate a new Bitcoin private key in HEX format
@@ -698,7 +694,9 @@ async function getExpiredUtxos(tradingAddress: string): Promise<{ txId: string; 
       console.log('No expired UTXOs found.');
     } else {
       for (const utxo of utxos) {
-        console.log(`  ${utxo.txId}:${utxo.vout} — ${utxo.value} sats (expired: ${utxo.isExpired}, expiryBlock: ${utxo.expiryBlock || 'N/A'})`);
+        console.log(
+          `  ${utxo.txId}:${utxo.vout} — ${utxo.value} sats (expired: ${utxo.isExpired}, expiryBlock: ${utxo.expiryBlock || 'N/A'})`,
+        );
       }
       console.log('\nTo renew, run:');
       const txIdVouts = utxos.map((u: { txId: string; vout: number }) => `${u.txId}:${u.vout}`).join(',');
