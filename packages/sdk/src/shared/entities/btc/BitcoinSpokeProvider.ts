@@ -557,6 +557,20 @@ export class BitcoinSpokeProvider extends BitcoinBaseSpokeProvider implements IS
   }
 
   /**
+   * Get the effective wallet address for hub wallet derivation and relay submission.
+   * In TRADING mode, returns the trading wallet address (not the personal wallet).
+   * This must be used everywhere a wallet address is needed for hub interaction.
+   */
+  public async getEffectiveWalletAddress(): Promise<string> {
+    const personalAddress = await this.walletProvider.getWalletAddress();
+    if (this.walletMode === 'TRADING') {
+      const tradingWallet = await this.radfi.getTradingWallet(personalAddress);
+      return tradingWallet.tradingAddress;
+    }
+    return personalAddress;
+  }
+
+  /**
    * Authenticate with Radfi: BIP322-sign a login message, then call the Radfi API.
    * Returns accessToken, refreshToken, and tradingAddress.
    */

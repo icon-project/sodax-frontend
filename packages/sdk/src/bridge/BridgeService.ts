@@ -459,13 +459,11 @@ export class BridgeService {
       // destination
       invariant(dstAssetInfo, `Unsupported spoke chain (${params.dstChainId}) token: ${params.dstAsset}`);
 
-      let walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-
-      // Bitcoin TRADING mode: hub wallet must be derived from trading wallet address
-      if (spokeProvider instanceof BitcoinSpokeProvider && spokeProvider.walletMode === 'TRADING') {
-        const tradingWallet = await spokeProvider.radfi.getTradingWallet(walletAddress);
-        walletAddress = tradingWallet.tradingAddress;
-      }
+      // Bitcoin TRADING mode: must use trading wallet address for hub wallet derivation,
+      // since BTC is deposited from trading wallet — hub wallet is derived via CREATE3(chainId + address).
+      const walletAddress = spokeProvider instanceof BitcoinSpokeProvider
+        ? await spokeProvider.getEffectiveWalletAddress()
+        : await spokeProvider.walletProvider.getWalletAddress();
 
       const hubWallet = await WalletAbstractionService.getUserAbstractedWalletAddress(
         walletAddress,

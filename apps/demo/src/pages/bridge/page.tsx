@@ -387,6 +387,7 @@ export default function BridgePage() {
               nativeBalance={toTradingBal?.btcSatoshi}
               connectorName={toBtcConnector?.name}
               connectorIcon={toBtcConnector?.icon}
+              isDestination
             />
           )}
         </CardContent>

@@ -466,6 +466,7 @@ export default function SwapCard({
             nativeBalance={destTokenBalance}
             connectorName={destBtcConnector?.name}
             connectorIcon={destBtcConnector?.icon}
+            isDestination
           />
         )}
       </CardContent>

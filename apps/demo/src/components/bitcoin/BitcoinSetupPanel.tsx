@@ -14,9 +14,11 @@ interface BitcoinSetupPanelProps {
   isNativeBalanceLoading?: boolean;
   connectorName?: string;
   connectorIcon?: string;
+  /** When true, skip balance > 0 check (destination side doesn't need existing balance) */
+  isDestination?: boolean;
 }
 
-export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance, isNativeBalanceLoading, connectorName = 'Wallet', connectorIcon = '' }: BitcoinSetupPanelProps) => {
+export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance, isNativeBalanceLoading, connectorName = 'Wallet', connectorIcon = '', isDestination = false }: BitcoinSetupPanelProps) => {
   const { walletAddress, isAuthed, tradingAddress, login, isLoginPending } = useRadfiSession(spokeProvider);
 
   const { data: tradingBalance, isLoading: isBalanceLoading } = useTradingWalletBalance(spokeProvider, tradingAddress);
@@ -35,11 +37,17 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
     setTimeout(() => setCopied(false), 1500);
   };
 
+  // Destination side: only needs auth + trading wallet (receiving BTC, no spend required).
+  // Source side: additionally needs balance > 0 and no expired UTXOs (spending from trading wallet).
   useEffect(() => {
-    const hasNoExpiredUtxos = !expiredUtxos || expiredUtxos.length === 0;
-    const isReady = isAuthed && !!tradingAddress && (tradingBalance ? tradingBalance.btcSatoshi > 0n : false) && hasNoExpiredUtxos;
+    const isReady = isAuthed && !!tradingAddress && (
+      isDestination || (
+        (tradingBalance?.btcSatoshi ?? 0n) > 0n &&
+        (!expiredUtxos || expiredUtxos.length === 0)
+      )
+    );
     onReadyChange(isReady);
-  }, [isAuthed, tradingAddress, tradingBalance, expiredUtxos, onReadyChange]);
+  }, [isAuthed, tradingAddress, tradingBalance, expiredUtxos, isDestination, onReadyChange]);
 
   const handleRenewUtxos = async () => {
     if (!expiredUtxos?.length) return;
