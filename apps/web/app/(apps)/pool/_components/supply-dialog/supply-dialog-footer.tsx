@@ -24,6 +24,7 @@ import { type CreateAssetDepositParams, type PoolData, type PoolSpokeAssets, dex
 import type { Hash } from '@sodax/types';
 import { chainIdToChainName } from '@/providers/constants';
 import { formatUnits, parseUnits } from 'viem';
+import { cn } from '@/lib/utils';
 
 const DEX_POSITIONS_UPDATED_EVENT = 'sodax-dex-positions-updated';
 
@@ -88,6 +89,8 @@ export default function SupplyDialogFooter({
   const { sodax } = useSodaxContext();
   const { selectedNetworkChainId, minPrice, maxPrice, sodaAmount, xSodaAmount } = usePoolState();
   const [lockedSupplyAmounts, setLockedSupplyAmounts] = useState<{ token0: string; token1: string } | null>(null);
+  const [isTransferred, setIsTransferred] = useState<boolean>(false);
+  const [isSupplySubmitting, setIsSupplySubmitting] = useState<boolean>(false);
   const walletProvider = useWalletProvider(selectedNetworkChainId);
   const spokeProvider = useSpokeProvider(selectedNetworkChainId, walletProvider);
   const activeSpokeProvider = spokeProvider ?? null;
@@ -105,7 +108,9 @@ export default function SupplyDialogFooter({
 
   const isTermsStep = currentSupplyStep === SUPPLY_STEP.SUPPLY_TERMS;
   const isApproveStep = currentSupplyStep === SUPPLY_STEP.SUPPLY_APPROVE;
+  const isTransferStep = currentSupplyStep === SUPPLY_STEP.SUPPLY_TRANSFER;
   const isConfirmStep = currentSupplyStep === SUPPLY_STEP.SUPPLY_CONFIRM;
+  const isSupplyInProgress = isSupplying || isSupplySubmitting;
 
   const token0DepositParams = useMemo((): CreateAssetDepositParams | undefined => {
     if (!poolData || !poolSpokeAssets || !sodaAmount || Number.parseFloat(sodaAmount) <= 0) {
@@ -166,18 +171,6 @@ export default function SupplyDialogFooter({
     spokeProvider: activeSpokeProvider,
   });
 
-  const canShowLeftButton = useMemo((): boolean => {
-    return isMobile ? isTermsStep || isApproveStep : true;
-  }, [isMobile, isTermsStep, isApproveStep]);
-
-  const canShowMiddleButton = useMemo((): boolean => {
-    return isMobile ? isApproveStep : true;
-  }, [isMobile, isApproveStep]);
-
-  const canShowRightButton = useMemo((): boolean => {
-    return isMobile ? isConfirmStep || isCompleted : true;
-  }, [isMobile, isConfirmStep, isCompleted]);
-
   const handleContinue = (): void => {
     if (isTermsStep) {
       onSupplyStepChange(SUPPLY_STEP.SUPPLY_APPROVE);
@@ -187,7 +180,21 @@ export default function SupplyDialogFooter({
   const handleBack = (): void => {
     if (isApproveStep) {
       setLockedSupplyAmounts(null);
+      setIsTransferred(false);
+      onApprovedChange(false);
       onSupplyStepChange(SUPPLY_STEP.SUPPLY_TERMS);
+      return;
+    }
+
+    if (isTransferStep) {
+      setLockedSupplyAmounts(null);
+      setIsTransferred(false);
+      onSupplyStepChange(SUPPLY_STEP.SUPPLY_APPROVE);
+      return;
+    }
+
+    if (isConfirmStep) {
+      onSupplyStepChange(SUPPLY_STEP.SUPPLY_TRANSFER);
     }
   };
 
@@ -227,8 +234,53 @@ export default function SupplyDialogFooter({
             spokeProvider,
           });
         }
+        onApprovedChange(true);
+        onSupplyStepChange(SUPPLY_STEP.SUPPLY_TRANSFER);
+      } catch (error) {
+        const errorObj = error as { message?: string; shortMessage?: string };
+        onError({
+          title: 'Approve Failed',
+          message:
+            errorObj.shortMessage || errorObj.message || 'Failed to approve assets for pool supply.',
+        });
+      }
+    };
 
-        // Demo flow: finish SODA -> aSODA preparation in approve step before moving to supply.
+    void runApprove();
+  };
+
+  const handleTransfer = (): void => {
+    const runTransfer = async (): Promise<void> => {
+      if (!spokeProvider || !poolData) {
+        onError({
+          title: 'Pool Unavailable',
+          message: 'Pool data is not available. Please try again.',
+        });
+        return;
+      }
+      if (!token0DepositParams || !token1DepositParams) {
+        onError({
+          title: 'Invalid Input',
+          message: 'Enter valid SODA and xSODA amounts before transferring.',
+        });
+        return;
+      }
+      if (!isApproved) {
+        onError({
+          title: 'Approve Required',
+          message: 'Approve both assets before transferring SODA.',
+        });
+        return;
+      }
+      if (isWrongChain) {
+        await handleSwitchChain();
+        return;
+      }
+
+      try {
+        onError(null);
+
+        // Demo flow: finish SODA -> aSODA preparation before moving to supply.
         await depositAsset({
           params: token0DepositParams,
           spokeProvider,
@@ -239,19 +291,18 @@ export default function SupplyDialogFooter({
           token0: liquidityToken0Amount,
           token1: xSodaAmount,
         });
-        onApprovedChange(true);
+        setIsTransferred(true);
         onSupplyStepChange(SUPPLY_STEP.SUPPLY_CONFIRM);
       } catch (error) {
         const errorObj = error as { message?: string; shortMessage?: string };
         onError({
-          title: 'Approve / Deposit Failed',
-          message:
-            errorObj.shortMessage || errorObj.message || 'Failed to approve assets and deposit SODA for pool supply.',
+          title: 'Transfer Failed',
+          message: errorObj.shortMessage || errorObj.message || 'Failed to transfer SODA for pool supply.',
         });
       }
     };
 
-    void runApprove();
+    void runTransfer();
   };
 
   const handleSupply = (): void => {
@@ -288,6 +339,7 @@ export default function SupplyDialogFooter({
       }
 
       try {
+        setIsSupplySubmitting(true);
         onError(null);
 
         const result = await supplyLiquidity({
@@ -317,6 +369,7 @@ export default function SupplyDialogFooter({
 
         onCompletedChange(true);
       } catch (error) {
+        setIsSupplySubmitting(false);
         const errorObj = error as { message?: string; shortMessage?: string };
         onError({
           title: 'Supply Failed',
@@ -330,103 +383,116 @@ export default function SupplyDialogFooter({
 
   return (
     <DialogFooter className="flex justify-between gap-2 overflow-hidden bottom-8 md:inset-x-12 inset-x-8 absolute">
-      {canShowLeftButton && (
+      <Button
+        variant="cherry"
+        className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
+          isMobile
+            ? 'w-full'
+            : !isTermsStep
+              ? 'w-10 h-10 rounded-full p-0 flex items-center justify-center bg-cream-white text-clay-light'
+              : 'flex-1'
+        }`}
+        onClick={isTermsStep ? handleContinue : handleBack}
+        disabled={!isTermsStep && !isApproveStep}
+      >
+        {!isTermsStep && isApproveStep ? <ArrowLeft className="w-5 h-5" /> : isTermsStep ? 'Continue' : <CheckIcon className="w-5 h-5" />}
+      </Button>
+
+      <Button
+        variant="cherry"
+        className={cn(
+          "text-white font-['InterRegular'] transition-all duration-300 ease-in-out",
+          isMobile ? 'w-full' : isTermsStep || isApproved ? 'w-[40px]' : 'flex-1',
+        )}
+        onClick={isApproveStep && isWrongChain ? handleSwitchChain : handleApprove}
+        disabled={
+          !isApproveStep ||
+          (isApproved ||
+            isApproving ||
+            isDepositing ||
+            isToken0AllowanceLoading ||
+            isToken1AllowanceLoading ||
+            !token0DepositParams ||
+            !token1DepositParams)
+        }
+      >
+        {isApproveStep && isWrongChain ? (
+          <>Switch to {chainIdToChainName(selectedNetworkChainId)}</>
+        ) : isApproved ? (
+          <Check className="w-5 h-5" />
+        ) : isApproving ? (
+          <>
+            Approving <Loader2 className="w-4 h-4 animate-spin ml-2" />
+          </>
+        ) : (
+          isTermsStep ? <FilePenLine className="w-5 h-5" /> :
+          'Approve'
+        )}
+      </Button>
+
+      <Button
+        variant="cherry"
+        className={cn(
+          "text-white font-['InterRegular'] transition-all duration-300 ease-in-out",
+          isMobile ? 'w-full' : isTermsStep || isApproveStep || isTransferred ? 'w-[40px]' : 'flex-1',
+        )}
+        onClick={isTransferStep && isWrongChain ? handleSwitchChain : handleTransfer}
+        disabled={
+          !isTransferStep ||
+          (!isApproved ||
+            isApproving ||
+            isDepositing ||
+            isToken0AllowanceLoading ||
+            isToken1AllowanceLoading ||
+            !token0DepositParams ||
+            !token1DepositParams ||
+            isTransferred)
+        }
+      >
+        {isTransferStep && isWrongChain ? (
+          <>Switch to {chainIdToChainName(selectedNetworkChainId)}</>
+        ) : isTransferred ? (
+          <Check className="w-5 h-5" />
+        ) : !isApproved ? (
+          <FilePenLine className="w-5 h-5" />
+        ) : isDepositing ? (
+          <>
+            Transferring <Loader2 className="w-4 h-4 animate-spin ml-2" />
+          </>
+        ) : (
+          'Transfer'
+        )}
+      </Button>
+
+      {isCompleted ? (
+        <Button
+          variant="cherry"
+          className={`text-white font-['InterRegular'] rounded-full p-0 flex items-center justify-center gap-1 ${
+            isMobile ? 'w-full' : 'flex-1'
+          }`}
+          onClick={onClose}
+        >
+          Supplied
+          <CheckIcon className="w-4 h-4" />
+        </Button>
+      ) : (
         <Button
           variant="cherry"
           className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
-            isMobile
-              ? 'w-full'
-              : !isTermsStep
-                ? 'w-10 h-10 rounded-full p-0 flex items-center justify-center'
-                : 'flex flex-1'
+            isMobile ? 'w-full' : 'h-10 rounded-full p-0 flex-1 items-center justify-center'
           }`}
-          onClick={isApproveStep ? handleBack : handleContinue}
-          disabled={isConfirmStep}
+          onClick={handleSupply}
+          disabled={!isConfirmStep || isSupplyInProgress}
         >
-          {isApproveStep ? (
-            <ArrowLeft className="w-5 h-5" />
-          ) : !isTermsStep ? (
-            <Check className="w-5 h-5" />
+          {isSupplyInProgress ? (
+            <>
+              Supplying <Loader2 className="w-4 h-4 animate-spin ml-2" />
+            </>
           ) : (
-            'Continue'
+            'Supply'
           )}
         </Button>
       )}
-
-      {canShowMiddleButton &&
-        (isApproveStep && isWrongChain ? (
-          <Button variant="cherry" className={isMobile ? 'w-full' : 'flex-1'} onClick={handleSwitchChain}>
-            Switch to {chainIdToChainName(selectedNetworkChainId)}
-          </Button>
-        ) : (
-          <Button
-            variant="cherry"
-            className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
-              isMobile ? 'w-full' : isApproveStep ? 'flex-1' : 'w-[40px]'
-            }`}
-            onClick={handleApprove}
-            disabled={
-              !isApproveStep ||
-              isApproved ||
-              isApproving ||
-              isToken0AllowanceLoading ||
-              isToken1AllowanceLoading ||
-              !token0DepositParams ||
-              !token1DepositParams
-            }
-          >
-            {isApproved ? (
-              <Check className="w-5 h-5" />
-            ) : isTermsStep ? (
-              <FilePenLine />
-            ) : isApproving ? (
-              <>
-                Approving <Loader2 className="w-4 h-4 animate-spin ml-2" />
-              </>
-            ) : isDepositing ? (
-              <>
-                Depositing <Loader2 className="w-4 h-4 animate-spin ml-2" />
-              </>
-            ) : (
-              'Approve Join the pool'
-            )}
-          </Button>
-        ))}
-
-      {canShowRightButton &&
-        (isCompleted ? (
-          <Button
-            variant="cherry"
-            className={`text-white font-['InterRegular'] rounded-full p-0 flex items-center justify-center gap-1 ${
-              isMobile ? 'w-full' : 'flex-1'
-            }`}
-            onClick={onClose}
-          >
-            Liquidity position created
-            <CheckIcon className="w-4 h-4" />
-          </Button>
-        ) : (
-          <Button
-            variant="cherry"
-            className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
-              isMobile
-                ? 'w-full'
-                : isConfirmStep || isApproved
-                  ? 'h-10 rounded-full p-0 flex flex-1 items-center justify-center'
-                  : 'w-[140px]'
-            }`}
-            onClick={handleSupply}
-            disabled={!isConfirmStep || isSupplying}
-          >
-            {isSupplying ? (
-              <>
-                Supplying <Loader2 className="w-4 h-4 animate-spin ml-2" />
-              </>
-            ) : (
-              'Supply'
-            )}
-          </Button>
-        ))}
     </DialogFooter>
   );
 }

@@ -354,14 +354,16 @@ export function SuppliedPositionsCarousel({
 
   return (
     <div className="w-full flex flex-col gap-3">
-      <div className="inline-flex justify-start items-center gap-2">
-        <div className="text-center justify-center text-espresso text-(length:--body-super-comfortable) font-['InterBold'] leading-5">
-          {totalLiquidityText}
+      {normalizedPositions.length > 1 ? (
+        <div className="inline-flex justify-start items-center gap-2">
+          <div className="text-center justify-center text-espresso text-(length:--body-super-comfortable) font-['InterBold'] leading-5">
+            {totalLiquidityText}
+          </div>
+          <div className="text-center justify-center text-clay text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-5">
+            Total liquidity
+          </div>
         </div>
-        <div className="text-center justify-center text-clay text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-5">
-          Total liquidity
-        </div>
-      </div>
+      ) : null}
       <Carousel
         className="w-full"
         opts={{
