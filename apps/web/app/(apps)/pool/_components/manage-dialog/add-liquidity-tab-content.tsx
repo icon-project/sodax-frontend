@@ -229,7 +229,7 @@ export function AddLiquidityTabContent({
         </div>
         <div className="text-clay text-[9px] font-medium font-['Inter'] uppercase leading-3">
           {error ? (
-            <span className="text-negative flex gap-2">
+            <span className="text-negative flex gap-2 items-center">
               <ShieldAlertIcon className="w-4 h-4" /> {error}
             </span>
           ) : (

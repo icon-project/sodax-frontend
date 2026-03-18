@@ -4,7 +4,7 @@
 import type React from 'react';
 import { useMemo } from 'react';
 import BigNumber from 'bignumber.js';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ShieldAlertIcon } from 'lucide-react';
 import { spokeChainConfig } from '@sodax/sdk';
 import { Button } from '@/components/ui/button';
 import { TabsContent } from '@/components/ui/tabs';
@@ -36,6 +36,7 @@ type ClaimTabContentProps = {
   hasUnclaimedFees: boolean;
   unclaimedFees0: bigint;
   unclaimedFees1: bigint;
+  error?: string;
   isPending: boolean;
   isClaimPending: boolean;
   onClaimFees: () => void;
@@ -46,6 +47,7 @@ export function ClaimTabContent({
   hasUnclaimedFees,
   unclaimedFees0,
   unclaimedFees1,
+  error,
   isPending,
   isClaimPending,
   onClaimFees,
@@ -84,56 +86,64 @@ export function ClaimTabContent({
           <Tip fill="var(--color-almost-white)" />{' '}
         </div>
         <div className="self-stretch px-8 py-6 bg-blend-multiply bg-almost-white rounded-2xl flex flex-col justify-start items-start gap-4">
-          <div className="inline-flex justify-start items-center gap-6">
-            <div className="text-right justify-start text-clay text-[9px] font-medium font-['Inter'] uppercase leading-3">
-              your fees
+          <div className="flex-col flex gap-4">
+            <div className="text-clay text-[9px] font-medium font-['Inter'] uppercase leading-3">
+              {error ? (
+                <span className="text-negative flex gap-2 items-center">
+                  <ShieldAlertIcon className="w-4 h-4" /> {error}
+                </span>
+              ) : (
+                'your fees'
+              )}
             </div>
-            <div className="flex justify-start items-center gap-3">
-              <div className="w-0 h-10 outline outline-cherry-grey" />
-              <div className="inline-flex flex-col justify-start items-start">
-                <div className="inline-flex justify-center items-center gap-2">
-                  <div className="bg-white rounded-[384px] shadow-[-4.5px_0px_6px_0px_rgba(175,145,145,0.20)] outline outline-[3px] outline-white inline-flex flex-col justify-center items-center overflow-hidden">
-                    <Image
-                      data-property-1="SODA"
-                      className="w-3 h-3 rounded-[384px]"
-                      src="/coin/soda.png"
-                      alt="SODA"
-                      width={12}
-                      height={12}
-                    />
+            <div className="flex gap-6">
+              <div className="flex justify-start items-center gap-3">
+                <div className="w-0 h-10 outline outline-cherry-grey" />
+                <div className="inline-flex flex-col justify-start items-start">
+                  <div className="inline-flex justify-center items-center gap-2">
+                    <div className="bg-white rounded-[384px] shadow-[-4.5px_0px_6px_0px_rgba(175,145,145,0.20)] outline outline-[3px] outline-white inline-flex flex-col justify-center items-center overflow-hidden">
+                      <Image
+                        data-property-1="SODA"
+                        className="w-3 h-3 rounded-[384px]"
+                        src="/coin/soda.png"
+                        alt="SODA"
+                        width={12}
+                        height={12}
+                      />
+                    </div>
+                    <div className="justify-start text-espresso text-(length:--body-super-comfortable) font-bold font-['Inter'] leading-5">
+                      {unclaimedSodaText}
+                    </div>
                   </div>
-                  <div className="justify-start text-espresso text-(length:--body-super-comfortable) font-bold font-['Inter'] leading-5">
-                    {unclaimedSodaText}
+                  <div className="justify-start text-clay text-(length:--body-small) font-normal font-['Inter'] leading-4">
+                    {unclaimedSodaUsdText}
                   </div>
-                </div>
-                <div className="justify-start text-clay text-(length:--body-small) font-normal font-['Inter'] leading-4">
-                  {unclaimedSodaUsdText}
                 </div>
               </div>
-            </div>
-            <div className="flex justify-start items-center gap-3">
-              <div className="w-0 h-10 outline outline-cherry-grey" />
-              <div className="inline-flex flex-col justify-start items-start">
-                <div className="inline-flex justify-center items-center gap-2">
-                  <div
-                    data-property-1="Default"
-                    className="bg-white rounded-[384px] shadow-[-4.5px_0px_6px_0px_rgba(175,145,145,0.20)] outline outline-[3px] outline-white inline-flex flex-col justify-center items-center overflow-hidden"
-                  >
-                    <Image
-                      data-property-1="xSODA"
-                      className="w-3 h-3 rounded-[384px]"
-                      src="/coin/xsoda.png"
-                      alt="xSODA"
-                      width={12}
-                      height={12}
-                    />
+              <div className="flex justify-start items-center gap-3">
+                <div className="w-0 h-10 outline outline-cherry-grey" />
+                <div className="inline-flex flex-col justify-start items-start">
+                  <div className="inline-flex justify-center items-center gap-2">
+                    <div
+                      data-property-1="Default"
+                      className="bg-white rounded-[384px] shadow-[-4.5px_0px_6px_0px_rgba(175,145,145,0.20)] outline outline-[3px] outline-white inline-flex flex-col justify-center items-center overflow-hidden"
+                    >
+                      <Image
+                        data-property-1="xSODA"
+                        className="w-3 h-3 rounded-[384px]"
+                        src="/coin/xsoda.png"
+                        alt="xSODA"
+                        width={12}
+                        height={12}
+                      />
+                    </div>
+                    <div className="justify-start text-espresso text-(length:--body-super-comfortable) font-bold font-['Inter'] leading-5">
+                      {unclaimedXSodaText}
+                    </div>
                   </div>
-                  <div className="justify-start text-espresso text-(length:--body-super-comfortable) font-bold font-['Inter'] leading-5">
-                    {unclaimedXSodaText}
+                  <div className="justify-start text-clay text-(length:--body-small) font-normal font-['Inter'] leading-4">
+                    {unclaimedXSodaUsdText}
                   </div>
-                </div>
-                <div className="justify-start text-clay text-(length:--body-small) font-normal font-['Inter'] leading-4">
-                  {unclaimedXSodaUsdText}
                 </div>
               </div>
             </div>

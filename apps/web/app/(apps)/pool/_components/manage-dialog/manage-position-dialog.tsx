@@ -1,11 +1,14 @@
 'use client';
 
 import type React from 'react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  createDepositParamsProps,
   createSupplyLiquidityParamsProps,
   createWithdrawParamsProps,
   useClaimRewards,
+  useDexApprove,
+  useDexDeposit,
   useDexWithdraw,
   useLiquidityAmounts,
   useSodaxContext,
@@ -48,6 +51,7 @@ function resolveSpokeChainId(chainId: string): SpokeChainId {
 
 const MAX_WITHDRAW_PERCENTAGE = 100;
 const PERCENTAGE_BASIS_POINTS = 10000n;
+const CLAIM_REQUEST_TIMEOUT_MS = 15_000;
 
 function toBasisPoints(percentage: number): bigint {
   const clampedPercentage = Math.min(Math.max(percentage, 0), MAX_WITHDRAW_PERCENTAGE);
@@ -78,6 +82,7 @@ export function ManagePositionDialog({
   positionInfo,
 }: ManagePositionDialogProps): React.JSX.Element {
   const { sodax } = useSodaxContext();
+  const wasOpenRef = useRef<boolean>(open);
   const [activeTab, setActiveTab] = useState<'claim' | 'add' | 'withdraw'>('claim');
   const [minPrice, setMinPrice] = useState<string>(initialMinPrice);
   const [maxPrice, setMaxPrice] = useState<string>(initialMaxPrice);
@@ -86,6 +91,8 @@ export function ManagePositionDialog({
   const [withdrawPercentage, setWithdrawPercentage] = useState<string>('0');
   const [addLiquidityError, setAddLiquidityError] = useState<string>('');
   const [withdrawError, setWithdrawError] = useState<string>('');
+  const [claimError, setClaimError] = useState<string>('');
+  const [isClaimActionPending, setIsClaimActionPending] = useState<boolean>(false);
   const spokeChainId = resolveSpokeChainId(chainId);
   const walletProvider = useWalletProvider(spokeChainId);
   const spokeProvider = useSpokeProvider(spokeChainId, walletProvider);
@@ -93,6 +100,7 @@ export function ManagePositionDialog({
   const { liquidityToken0Amount, liquidityToken1Amount, handleToken0AmountChange, handleToken1AmountChange } =
     useLiquidityAmounts(minPrice, maxPrice, poolData);
   const claimRewardsMutation = useClaimRewards();
+  const approveMutation = useDexApprove();
   const supplyLiquidityMutation = useSupplyLiquidity();
   const withdrawMutation = useDexWithdraw();
   const poolSpokeAssets = useMemo((): PoolSpokeAssets | null => {
@@ -165,18 +173,21 @@ export function ManagePositionDialog({
   );
 
   useEffect((): void => {
-    if (!open) {
-      return;
+    if (open && !wasOpenRef.current) {
+      setClaimError('');
+      setIsClaimActionPending(false);
+      setAddLiquidityError('');
+      setWithdrawError('');
+      setActiveTab('claim');
+      setMinPrice(initialMinPrice);
+      setMaxPrice(initialMaxPrice);
+      setLastEditedAmount(null);
+      setSodaInputAmount('');
+      handleToken0AmountChange('');
+      handleToken1AmountChange('');
     }
-    setAddLiquidityError('');
-    setWithdrawError('');
-    setActiveTab('claim');
-    setMinPrice(initialMinPrice);
-    setMaxPrice(initialMaxPrice);
-    setLastEditedAmount(null);
-    setSodaInputAmount('');
-    handleToken0AmountChange('');
-    handleToken1AmountChange('');
+
+    wasOpenRef.current = open;
   }, [handleToken0AmountChange, handleToken1AmountChange, initialMaxPrice, initialMinPrice, open]);
 
   useEffect((): void => {
@@ -186,32 +197,58 @@ export function ManagePositionDialog({
   }, [convertPoolTokenToSodaAmount, lastEditedAmount, liquidityToken0Amount]);
 
   const hasUnclaimedFees = unclaimedFees0 > 0n || unclaimedFees1 > 0n;
-  const isPending = claimRewardsMutation.isPending || supplyLiquidityMutation.isPending || withdrawMutation.isPending;
+  const isPending =
+    isClaimActionPending ||
+    approveMutation.isPending ||
+    supplyLiquidityMutation.isPending ||
+    withdrawMutation.isPending;
+  const claimErrorMessage =
+    claimError || (claimRewardsMutation.error instanceof Error ? claimRewardsMutation.error.message : '');
 
   const handleClaimFees = async (): Promise<void> => {
     if (!spokeProvider) {
+      setClaimError('Wallet is not connected to this chain.');
       return;
     }
     if (isWrongChain) {
       await handleSwitchChain();
       return;
     }
+    if (isClaimActionPending) {
+      return;
+    }
+    setClaimError('');
+    setIsClaimActionPending(true);
+
+    const timeoutErrorMessage = 'Claim request timed out. Please check your wallet and try again.';
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
     try {
-      await claimRewardsMutation.mutateAsync({
-        params: {
-          poolKey,
-          tokenId: BigInt(tokenId),
-          tickLower: BigInt(positionInfo.tickLower),
-          tickUpper: BigInt(positionInfo.tickUpper),
-        },
-        spokeProvider,
-      });
-    } catch {
-      // errors are surfaced via mutation state
+      await Promise.race([
+        claimRewardsMutation.mutateAsync({
+          params: {
+            poolKey,
+            tokenId: BigInt(tokenId),
+            tickLower: BigInt(positionInfo.tickLower),
+            tickUpper: BigInt(positionInfo.tickUpper),
+          },
+          spokeProvider,
+        }),
+        new Promise<never>((_, reject): void => {
+          timeoutId = setTimeout((): void => {
+            reject(new Error(timeoutErrorMessage));
+          }, CLAIM_REQUEST_TIMEOUT_MS);
+        }),
+      ]);
+    } catch (claimErr) {
+      const message = claimErr instanceof Error ? claimErr.message : 'Claim fee failed.';
+      setClaimError(message);
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      setIsClaimActionPending(false);
     }
   };
-
-  console.log('tokenid', tokenId);
 
   const handleAddLiquidity = async (): Promise<void> => {
     if (!spokeProvider) {
@@ -235,8 +272,13 @@ export function ManagePositionDialog({
       setAddLiquidityError('Enter valid token amounts to add liquidity.');
       return;
     }
+    if (!poolSpokeAssets) {
+      setAddLiquidityError('Pool assets are unavailable for this network.');
+      return;
+    }
 
     setAddLiquidityError('');
+
     try {
       await supplyLiquidityMutation.mutateAsync({
         params: createSupplyLiquidityParamsProps({
@@ -356,8 +398,9 @@ export function ManagePositionDialog({
             hasUnclaimedFees={hasUnclaimedFees}
             unclaimedFees0={unclaimedFees0}
             unclaimedFees1={unclaimedFees1}
+            error={claimErrorMessage}
             isPending={isPending}
-            isClaimPending={claimRewardsMutation.isPending}
+            isClaimPending={isClaimActionPending}
             onClaimFees={() => void handleClaimFees()}
           />
           <AddLiquidityTabContent

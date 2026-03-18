@@ -19,6 +19,7 @@ import { motion } from 'motion/react';
 import { CircleEllipsisIcon } from 'lucide-react';
 import { ManagePositionDialog } from './manage-dialog';
 import { SwitchChainDialog } from '@/components/shared/switch-chain-dialog';
+import { bigint } from 'zod';
 
 type SuppliedPositionsCarouselProps = {
   positions: SuppliedPositionItem[];
@@ -140,9 +141,23 @@ function PositionCard({
   const positionValueText = formatApproxValue(positionTotal.toFixed(6));
   const totalFeeAmount = Number.parseFloat(fees0 || '0') + Number.parseFloat(fees1 || '0');
   const totalFeeText = `+${totalFeeAmount.toFixed(4)}`;
-  const isInRange = positionInfo.liquidity > 0n;
-  const minPrice = positionInfo.tickLowerPrice.toSignificant(6);
-  const maxPrice = positionInfo.tickUpperPrice.toSignificant(6);
+  const minPrice = positionInfo.tickLowerPrice.toSignificant(4);
+  const maxPrice = positionInfo.tickUpperPrice.toSignificant(4);
+  const minPriceValue = Number.parseFloat(minPrice);
+  const maxPriceValue = Number.parseFloat(maxPrice);
+  const currentPriceValue = Number.parseFloat(poolData.price.toSignificant(18));
+  const hasValidRange =
+    Number.isFinite(minPriceValue) && Number.isFinite(maxPriceValue) && maxPriceValue > minPriceValue;
+  const isInRange =
+    hasValidRange &&
+    Number.isFinite(currentPriceValue) &&
+    currentPriceValue >= minPriceValue &&
+    currentPriceValue <= maxPriceValue;
+  const currentPriceTickLeft =
+    hasValidRange && Number.isFinite(currentPriceValue)
+      ? ((currentPriceValue - minPriceValue) / (maxPriceValue - minPriceValue)) * 100
+      : 0;
+  const clampedCurrentPriceTickLeft = Math.min(100, Math.max(0, currentPriceTickLeft));
 
   return (
     <div
@@ -219,11 +234,21 @@ function PositionCard({
           </ItemContent>
         </Item>
         <div className="w-full h-1 relative pl-16">
-          <div className="w-full h-1 bg-[#eee7e7] rounded-[40px]">
-            <div
-              className="w-1 h-2 top-[-3px] absolute bg-espresso rounded-[256px]"
-              style={{ left: 'calc(50% - 2px)' }}
-            />
+          <div
+            className={`absolute left-16 right-0 -top-5 inline-flex justify-between text-(length:--body-fine-print) text-clay font-['InterRegular'] transition-opacity duration-200 ${
+              isHovered ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <span>{minPrice}</span>
+            <span>{maxPrice}</span>
+          </div>
+          <div className={`w-full h-1 rounded-[40px] relative ${isInRange ? 'bg-[#eee7e7]' : 'bg-negative'}`}>
+            {isInRange ? (
+              <div
+                className="w-1 h-2 top-[-3px] absolute bg-espresso rounded-[256px] -translate-x-1/2"
+                style={{ left: `${clampedCurrentPriceTickLeft}%` }}
+              />
+            ) : null}
           </div>
         </div>
       </motion.div>

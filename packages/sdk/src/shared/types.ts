@@ -47,8 +47,8 @@ import type {
   SolanaChainConfig,
   BaseSpokeChainConfig,
   ConcentratedLiquidityConfig,
-    NearRawTransaction,
-    EvmChainId,
+  NearRawTransaction,
+  EvmChainId,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 import type { BitcoinRawSpokeProvider, BitcoinSpokeProvider } from './entities/btc/BitcoinSpokeProvider.js';
@@ -200,74 +200,74 @@ export type SpokeDepositParams =
 export type GetSpokeDepositParamsType<T extends SpokeProviderType> = T extends EvmSpokeProvider
   ? EvmSpokeDepositParams
   : T extends EvmRawSpokeProvider
-  ? EvmSpokeDepositParams
-  : T extends InjectiveSpokeProvider
-  ? InjectiveSpokeDepositParams
-  : T extends InjectiveRawSpokeProvider
-  ? InjectiveSpokeDepositParams
-  : T extends SuiSpokeProvider
-  ? SuiSpokeDepositParams
-  : T extends SuiRawSpokeProvider
-  ? SuiSpokeDepositParams
-  : T extends IconSpokeProvider
-  ? IconSpokeDepositParams
-  : T extends IconRawSpokeProvider
-  ? IconSpokeDepositParams
-  : T extends StellarSpokeProvider
-  ? StellarSpokeDepositParams
-  : T extends StellarRawSpokeProvider
-  ? StellarSpokeDepositParams
-  : T extends SolanaSpokeProvider
-  ? SolanaSpokeDepositParams
-  : T extends SolanaRawSpokeProvider
-  ? SolanaSpokeDepositParams
-  : T extends SonicSpokeProvider
-  ? SonicSpokeDepositParams
-  : T extends SonicRawSpokeProvider
-  ? SonicSpokeDepositParams
-  : T extends BitcoinSpokeProvider
-  ? BitcoinSpokeDepositParams
-  : T extends BitcoinRawSpokeProvider
-  ? BitcoinSpokeDepositParams
-  : T extends NearSpokeProvider
-  ? NearSpokeDepositParams
-  : T extends NearRawSpokeProvider
-  ? NearSpokeDepositParams
-  : never;
+    ? EvmSpokeDepositParams
+    : T extends InjectiveSpokeProvider
+      ? InjectiveSpokeDepositParams
+      : T extends InjectiveRawSpokeProvider
+        ? InjectiveSpokeDepositParams
+        : T extends SuiSpokeProvider
+          ? SuiSpokeDepositParams
+          : T extends SuiRawSpokeProvider
+            ? SuiSpokeDepositParams
+            : T extends IconSpokeProvider
+              ? IconSpokeDepositParams
+              : T extends IconRawSpokeProvider
+                ? IconSpokeDepositParams
+                : T extends StellarSpokeProvider
+                  ? StellarSpokeDepositParams
+                  : T extends StellarRawSpokeProvider
+                    ? StellarSpokeDepositParams
+                    : T extends SolanaSpokeProvider
+                      ? SolanaSpokeDepositParams
+                      : T extends SolanaRawSpokeProvider
+                        ? SolanaSpokeDepositParams
+                        : T extends SonicSpokeProvider
+                          ? SonicSpokeDepositParams
+                          : T extends SonicRawSpokeProvider
+                            ? SonicSpokeDepositParams
+                            : T extends BitcoinSpokeProvider
+                              ? BitcoinSpokeDepositParams
+                              : T extends BitcoinRawSpokeProvider
+                                ? BitcoinSpokeDepositParams
+                                : T extends NearSpokeProvider
+                                  ? NearSpokeDepositParams
+                                  : T extends NearRawSpokeProvider
+                                    ? NearSpokeDepositParams
+                                    : never;
 
 export type GetAddressType<T extends SpokeProviderType> = T extends EvmSpokeProvider
   ? Address
   : T extends EvmRawSpokeProvider
-  ? Address
-  : T extends InjectiveSpokeProvider
-  ? string
-  : T extends InjectiveRawSpokeProvider
-  ? string
-  : T extends StellarSpokeProvider
-  ? Hex
-  : T extends StellarRawSpokeProvider
-  ? Hex
-  : T extends IconSpokeProvider
-  ? IconAddress
-  : T extends IconRawSpokeProvider
-  ? IconAddress
-  : T extends SuiSpokeProvider
-  ? Hex
-  : T extends SuiRawSpokeProvider
-  ? Hex
-  : T extends SolanaSpokeProvider
-  ? Hex
-  : T extends SolanaRawSpokeProvider
-  ? Hex
-  : T extends SonicSpokeProvider
-  ? Address
-  : T extends SonicRawSpokeProvider
-  ? Address
-  : T extends NearSpokeProvider
-  ? Address
-  : T extends NearRawSpokeProvider
-  ? Address
-  : never;
+    ? Address
+    : T extends InjectiveSpokeProvider
+      ? string
+      : T extends InjectiveRawSpokeProvider
+        ? string
+        : T extends StellarSpokeProvider
+          ? Hex
+          : T extends StellarRawSpokeProvider
+            ? Hex
+            : T extends IconSpokeProvider
+              ? IconAddress
+              : T extends IconRawSpokeProvider
+                ? IconAddress
+                : T extends SuiSpokeProvider
+                  ? Hex
+                  : T extends SuiRawSpokeProvider
+                    ? Hex
+                    : T extends SolanaSpokeProvider
+                      ? Hex
+                      : T extends SolanaRawSpokeProvider
+                        ? Hex
+                        : T extends SonicSpokeProvider
+                          ? Address
+                          : T extends SonicRawSpokeProvider
+                            ? Address
+                            : T extends NearSpokeProvider
+                              ? Address
+                              : T extends NearRawSpokeProvider
+                                ? Address
+                                : never;
 
 export type SolverConfigParams =
   | Prettify<SolverConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
@@ -412,41 +412,41 @@ export type RawTxReturnType =
  */
 export type TxReturnType<T extends SpokeProviderType, Raw extends boolean> = T extends RawSpokeProvider
   ? T['chainConfig']['chain']['type'] extends 'EVM'
-  ? EvmReturnType<true>
-  : T['chainConfig']['chain']['type'] extends 'SOLANA'
-  ? SolanaReturnType<true>
-  : T['chainConfig']['chain']['type'] extends 'STELLAR'
-  ? StellarReturnType<true>
-  : T['chainConfig']['chain']['type'] extends 'ICON'
-  ? IconReturnType<true>
-  : T['chainConfig']['chain']['type'] extends 'SUI'
-  ? SuiReturnType<true>
-  : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
-  ? InjectiveReturnType<true>
-  : T['chainConfig']['chain']['type'] extends 'NEAR'
-  ? NearReturnType<true>
-  : RawTxReturnType
+    ? EvmReturnType<true>
+    : T['chainConfig']['chain']['type'] extends 'SOLANA'
+      ? SolanaReturnType<true>
+      : T['chainConfig']['chain']['type'] extends 'STELLAR'
+        ? StellarReturnType<true>
+        : T['chainConfig']['chain']['type'] extends 'ICON'
+          ? IconReturnType<true>
+          : T['chainConfig']['chain']['type'] extends 'SUI'
+            ? SuiReturnType<true>
+            : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
+              ? InjectiveReturnType<true>
+              : T['chainConfig']['chain']['type'] extends 'NEAR'
+                ? NearReturnType<true>
+                : RawTxReturnType
   : T extends SpokeProvider
-  ? T['chainConfig']['chain']['type'] extends 'EVM'
-  ? EvmReturnType<Raw>
-  : T['chainConfig']['chain']['type'] extends 'SOLANA'
-  ? SolanaReturnType<Raw>
-  : T['chainConfig']['chain']['type'] extends 'STELLAR'
-  ? StellarReturnType<Raw>
-  : T['chainConfig']['chain']['type'] extends 'ICON'
-  ? IconReturnType<Raw>
-  : T['chainConfig']['chain']['type'] extends 'SUI'
-  ? SuiReturnType<Raw>
-  : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
-  ? InjectiveReturnType<Raw>
-  : T['chainConfig']['chain']['type'] extends 'NEAR'
-  ? NearReturnType<Raw>
-  : Raw extends true
-  ? RawTxReturnType
-  : HashTxReturnType
-  : Raw extends true
-  ? RawTxReturnType
-  : HashTxReturnType;
+    ? T['chainConfig']['chain']['type'] extends 'EVM'
+      ? EvmReturnType<Raw>
+      : T['chainConfig']['chain']['type'] extends 'SOLANA'
+        ? SolanaReturnType<Raw>
+        : T['chainConfig']['chain']['type'] extends 'STELLAR'
+          ? StellarReturnType<Raw>
+          : T['chainConfig']['chain']['type'] extends 'ICON'
+            ? IconReturnType<Raw>
+            : T['chainConfig']['chain']['type'] extends 'SUI'
+              ? SuiReturnType<Raw>
+              : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
+                ? InjectiveReturnType<Raw>
+                : T['chainConfig']['chain']['type'] extends 'NEAR'
+                  ? NearReturnType<Raw>
+                  : Raw extends true
+                    ? RawTxReturnType
+                    : HashTxReturnType
+    : Raw extends true
+      ? RawTxReturnType
+      : HashTxReturnType;
 
 // @deprecated - kept for backward compatible reasons of version 1, to be removed in version 2
 export type PromiseEvmTxReturnType<Raw extends boolean> = Promise<TxReturnType<EvmSpokeProvider, Raw>>;
@@ -465,18 +465,18 @@ export type PromiseTxReturnType<
 > = T['chainConfig']['chain']['type'] extends 'EVM'
   ? Promise<TxReturnType<EvmSpokeProviderType, Raw>>
   : T['chainConfig']['chain']['type'] extends 'SOLANA'
-  ? Promise<TxReturnType<SolanaSpokeProviderType, Raw>>
-  : T['chainConfig']['chain']['type'] extends 'STELLAR'
-  ? Promise<TxReturnType<StellarSpokeProviderType, Raw>>
-  : T['chainConfig']['chain']['type'] extends 'ICON'
-  ? Promise<TxReturnType<IconSpokeProviderType, Raw>>
-  : T['chainConfig']['chain']['type'] extends 'SUI'
-  ? Promise<TxReturnType<SuiSpokeProviderType, Raw>>
-  : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
-  ? Promise<TxReturnType<InjectiveSpokeProviderType, Raw>>
-  : T['chainConfig']['chain']['type'] extends 'NEAR'
-  ? Promise<TxReturnType<NearSpokeProviderType, Raw>>
-  : never;
+    ? Promise<TxReturnType<SolanaSpokeProviderType, Raw>>
+    : T['chainConfig']['chain']['type'] extends 'STELLAR'
+      ? Promise<TxReturnType<StellarSpokeProviderType, Raw>>
+      : T['chainConfig']['chain']['type'] extends 'ICON'
+        ? Promise<TxReturnType<IconSpokeProviderType, Raw>>
+        : T['chainConfig']['chain']['type'] extends 'SUI'
+          ? Promise<TxReturnType<SuiSpokeProviderType, Raw>>
+          : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
+            ? Promise<TxReturnType<InjectiveSpokeProviderType, Raw>>
+            : T['chainConfig']['chain']['type'] extends 'NEAR'
+              ? Promise<TxReturnType<NearSpokeProviderType, Raw>>
+              : never;
 
 export type EvmSpokeProviderType = EvmSpokeProvider | EvmRawSpokeProvider;
 export type SolanaSpokeProviderType = SolanaSpokeProvider | SolanaRawSpokeProvider;
@@ -528,16 +528,16 @@ export type GasEstimateType =
 export type GetEstimateGasReturnType<T extends SpokeProviderType> = T['chainConfig']['chain']['type'] extends 'EVM'
   ? EvmGasEstimate
   : T['chainConfig']['chain']['type'] extends 'SOLANA'
-  ? SolanaGasEstimate
-  : T['chainConfig']['chain']['type'] extends 'STELLAR'
-  ? StellarGasEstimate
-  : T['chainConfig']['chain']['type'] extends 'ICON'
-  ? IconGasEstimate
-  : T['chainConfig']['chain']['type'] extends 'SUI'
-  ? SuiGasEstimate
-  : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
-  ? InjectiveGasEstimate
-  : GasEstimateType; // default to all gas estimate types union type
+    ? SolanaGasEstimate
+    : T['chainConfig']['chain']['type'] extends 'STELLAR'
+      ? StellarGasEstimate
+      : T['chainConfig']['chain']['type'] extends 'ICON'
+        ? IconGasEstimate
+        : T['chainConfig']['chain']['type'] extends 'SUI'
+          ? SuiGasEstimate
+          : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
+            ? InjectiveGasEstimate
+            : GasEstimateType; // default to all gas estimate types union type
 
 export type OptionalRaw<R extends boolean> = { raw?: R };
 export type OptionalTimeout = { timeout?: number };
@@ -553,39 +553,31 @@ export type RateLimitConfig = {
 export type GetChainConfigType<T extends ChainType> = T extends 'EVM'
   ? EvmSpokeChainConfig
   : T extends 'SOLANA'
-  ? SolanaChainConfig
-  : T extends 'STELLAR'
-  ? StellarSpokeChainConfig
-  : T extends 'ICON'
-  ? IconSpokeChainConfig
-  : T extends 'SUI'
-  ? SuiSpokeChainConfig
-  : T extends 'INJECTIVE'
-  ? InjectiveSpokeChainConfig
-  : BaseSpokeChainConfig<T>;
+    ? SolanaChainConfig
+    : T extends 'STELLAR'
+      ? StellarSpokeChainConfig
+      : T extends 'ICON'
+        ? IconSpokeChainConfig
+        : T extends 'SUI'
+          ? SuiSpokeChainConfig
+          : T extends 'INJECTIVE'
+            ? InjectiveSpokeChainConfig
+            : BaseSpokeChainConfig<T>;
 
-<<<<<<< HEAD
 export type RawDestinationParams = {
-    toChainId: SpokeChainId;
-    toAddress: string;
+  toChainId: SpokeChainId;
+  toAddress: string;
 };
 export type SpokeProviderObjectType = { spokeProvider: SpokeProviderType };
 export type DestinationParamsType = RawDestinationParams | SpokeProviderObjectType;
-export type SonicAddressOrSpokeType = {
-    address: Address;
-} | {
-    spokeProvider: SonicSpokeProviderType;
-};
 
-=======
 export type SonicAddressOrSpokeType =
   | {
-    address: Address;
-  }
+      address: Address;
+    }
   | {
-    spokeProvider: SonicSpokeProviderType;
-  };
->>>>>>> main
+      spokeProvider: SonicSpokeProviderType;
+    };
 
 export type VerifyTxHashRawSolanaConfig = {
   chainType: 'SOLANA';
@@ -626,14 +618,19 @@ export type VerifyTxHashRawEvmConfig = {
 };
 
 export type VerifyTxHashRawConfigType = Prettify<
-  (VerifyTxHashRawSolanaConfig | VerifyTxHashRawStellarConfig | VerifyTxHashRawEvmConfig | VerifyTxHashRawNearConfig) & { chainType: ChainType }
+  (
+    | VerifyTxHashRawSolanaConfig
+    | VerifyTxHashRawStellarConfig
+    | VerifyTxHashRawEvmConfig
+    | VerifyTxHashRawNearConfig
+  ) & { chainType: ChainType }
 >;
 export type VerifyTxHashRawConfig<T extends ChainType> = T extends 'SOLANA'
   ? VerifyTxHashRawSolanaConfig
   : T extends 'STELLAR'
-  ? VerifyTxHashRawStellarConfig
-  : T extends 'EVM'
-  ? VerifyTxHashRawEvmConfig
-  : T extends 'NEAR'
-  ? VerifyTxHashRawNearConfig
-  : VerifyTxHashRawConfigType;
+    ? VerifyTxHashRawStellarConfig
+    : T extends 'EVM'
+      ? VerifyTxHashRawEvmConfig
+      : T extends 'NEAR'
+        ? VerifyTxHashRawNearConfig
+        : VerifyTxHashRawConfigType;
