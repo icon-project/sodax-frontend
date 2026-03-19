@@ -26,6 +26,7 @@ import { ErrorDialog } from '@/components/shared/error-dialog';
 import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
 import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
 import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
+import { trackMigrationCompleted } from '@/lib/analytics';
 
 export const MigrateButton = () => {
   const openModal = useModalStore(state => state.openModal);
@@ -145,7 +146,17 @@ export const MigrateButton = () => {
 
   const handleMigrate = async () => {
     try {
-      await migrate(migrateIntentParams);
+      const { spokeTxHash, hubTxHash } = await migrate(migrateIntentParams);
+      trackMigrationCompleted({
+        migration_mode: migrationMode,
+        input_token_symbol: currencies.from.symbol,
+        output_token_symbol: currencies.to.symbol,
+        input_amount: typedValue,
+        source_chain: chainIdToChainName(direction.from),
+        destination_chain: chainIdToChainName(direction.to),
+        spoke_transaction_hash: spokeTxHash,
+        hub_transaction_hash: hubTxHash,
+      });
       setTypedValue('');
       setShowSuccessDialog(true);
     } catch (error) {
