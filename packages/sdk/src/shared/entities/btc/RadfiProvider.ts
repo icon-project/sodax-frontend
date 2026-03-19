@@ -175,7 +175,7 @@ export class RadfiProvider {
     const res = await this.request('/sodax/transaction', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${accessToken??this.config.apiKey}`,
+        Authorization: `Bearer ${accessToken || this.config.apiKey}`,
       },
       body: JSON.stringify({
         type: 'sodax-withdraw',
@@ -202,7 +202,7 @@ export class RadfiProvider {
     const res = await this.request('/sodax/transaction/sign', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${accessToken??this.config.apiKey}`,
+        Authorization: `Bearer ${accessToken || this.config.apiKey}`,
       },
       body: JSON.stringify({
         type: 'sodax-withdraw',

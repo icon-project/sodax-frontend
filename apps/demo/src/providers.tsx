@@ -34,8 +34,14 @@ const rpcConfig: RpcConfig = {
   },
 
   // bitcoin — override radfi endpoints (canary)
+  // bitcoin: {
+  //   rpcUrl: 'https://mempool.space/signet/api',
+  //   radfiApiUrl: 'https://staging.api.radfi.co/api', // https://api.canary.radfi.co/api for prod
+  //   radfiUmsUrl: 'https://staging.ums.radfi.co/api', // https://ums.radfi.co/api for prod
+  // },
   bitcoin: {
     radfiApiUrl: 'https://api.canary.radfi.co/api',
+    radfiUmsUrl: 'https://ums.radfi.co/api'
   },
 };
 

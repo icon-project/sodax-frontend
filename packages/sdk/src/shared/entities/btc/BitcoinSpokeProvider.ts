@@ -74,6 +74,7 @@ export class BitcoinBaseSpokeProvider {
   public readonly radfi: RadfiProvider;
   public readonly walletMode: WalletMode;
   public radfiAccessToken = '';
+  public radfiRefreshToken = '';
 
 
   constructor(config: BitcoinSpokeChainConfig, radfiConfig: RadfiConfig, walletMode: WalletMode = "USER", rpcURL?: string) {
@@ -86,8 +87,11 @@ export class BitcoinBaseSpokeProvider {
     this.walletMode = walletMode
   }
 
-  public setRadfiAccessToken(token: string) {
+  public setRadfiAccessToken(token: string, refreshToken?: string) {
     this.radfiAccessToken = token;
+    if (refreshToken !== undefined) {
+      this.radfiRefreshToken = refreshToken;
+    }
   }
 
   /**
@@ -592,16 +596,33 @@ export class BitcoinSpokeProvider extends BitcoinBaseSpokeProvider implements IS
     const signature = await this.walletProvider.signBip322Message(message);
 
     const result = await this.radfi.authenticate({ message, signature, address, publicKey });
-    this.setRadfiAccessToken(result.accessToken);
+    this.setRadfiAccessToken(result.accessToken, result.refreshToken);
     return { ...result, publicKey };
   }
 
   /**
    * Ensure a valid Radfi access token is set on this provider.
-   * No-op if a token is already present.
+   * If a token exists, validates it via the Radfi API.
+   * If invalid, tries refreshing with the refresh token first.
+   * If refresh also fails, falls back to full re-authentication (BIP322 sign).
    */
   public async ensureRadfiAccessToken(): Promise<void> {
-    if (this.radfiAccessToken) return;
+    // Try refreshing with refresh token to get a fresh access token
+    if (this.radfiRefreshToken) {
+      try {
+        const { accessToken, refreshToken } = await this.radfi.refreshAccessToken(this.radfiRefreshToken);
+        this.setRadfiAccessToken(accessToken, refreshToken);
+        console.log('[ensureRadfiAccessToken] token refreshed successfully');
+        return;
+      } catch (error) {
+        console.warn('[ensureRadfiAccessToken] refresh failed, falling back to full re-auth', error);
+      }
+    }
+
+    // Full re-authentication (requires user wallet signature)
+    console.log('[ensureRadfiAccessToken] performing full re-authentication (BIP322 sign)');
+    this.radfiAccessToken = '';
+    this.radfiRefreshToken = '';
     await this.authenticateWithWallet();
   }
 

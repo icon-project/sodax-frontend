@@ -461,6 +461,9 @@ export class BridgeService {
 
       // Bitcoin TRADING mode: must use trading wallet address for hub wallet derivation,
       // since BTC is deposited from trading wallet — hub wallet is derived via CREATE3(chainId + address).
+      if (spokeProvider instanceof BitcoinSpokeProvider) {
+        await spokeProvider.ensureRadfiAccessToken();
+      }
       const walletAddress = spokeProvider instanceof BitcoinSpokeProvider
         ? await spokeProvider.getEffectiveWalletAddress()
         : await spokeProvider.walletProvider.getWalletAddress();
