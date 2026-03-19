@@ -30,7 +30,7 @@
     "lint": "biome lint . --write"
   },
   "dependencies": {
-    "@stacks/connect": "8.2.6",
+    "@stacks/connect": "catalog:",
     "@stacks/network": "catalog:",
     "@stacks/transactions": "catalog:",
     "@creit.tech/stellar-wallets-kit": "^1.7.5",
