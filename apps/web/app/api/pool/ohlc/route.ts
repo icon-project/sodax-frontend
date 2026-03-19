@@ -5,6 +5,7 @@ const SODAX_ANALYTICS_API_BASE = 'https://api.sodax.com/v1/a/v1';
 const DEFAULT_LIMIT = 500;
 const MAX_LIMIT = 500;
 const DEFAULT_INTERVAL = '1h';
+const POOL_ID_PATTERN = /^[A-Za-z0-9_-]{1,128}$/;
 
 type OhlcInterval = '1h' | '1d';
 
@@ -25,6 +26,10 @@ function isValidIsoDate(dateString: string): boolean {
   return Number.isFinite(Date.parse(dateString));
 }
 
+function isValidPoolId(poolId: string): boolean {
+  return POOL_ID_PATTERN.test(poolId);
+}
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const { searchParams } = new URL(request.url);
   const poolId = searchParams.get('poolId')?.trim() ?? '';
@@ -39,6 +44,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   if (!poolId) {
     return NextResponse.json({ error: 'poolId is required' }, { status: 400 });
   }
+  if (!isValidPoolId(poolId)) {
+    return NextResponse.json(
+      { error: 'poolId must be 1-128 characters and contain only letters, numbers, hyphens, or underscores' },
+      { status: 400 },
+    );
+  }
   if (!from || !to || !isValidIsoDate(from) || !isValidIsoDate(to)) {
     return NextResponse.json({ error: 'Valid from and to ISO dates are required' }, { status: 400 });
   }
@@ -52,7 +63,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     to,
     limit: String(limit),
   });
-  const endpoint = `${SODAX_ANALYTICS_API_BASE}/prices/ohlc/${poolId}?${upstreamParams.toString()}`;
+  const endpoint = `${SODAX_ANALYTICS_API_BASE}/prices/ohlc/${encodeURIComponent(poolId)}?${upstreamParams.toString()}`;
 
   try {
     const response = await fetch(endpoint, { method: 'GET', cache: 'no-store' });
