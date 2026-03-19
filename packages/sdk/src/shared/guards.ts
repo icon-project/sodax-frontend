@@ -14,9 +14,10 @@ import {
   type SonicRawSpokeProvider,
   type RawSpokeProvider,
   type SpokeProviderType,
-  type EvmRawSpokeProviderConfig,
-  type SonicRawSpokeProviderConfig,
-  type RawSpokeProviderConfig,
+  type SpokeProvider,
+    type EvmRawSpokeProviderConfig,
+    type SonicRawSpokeProviderConfig,
+    type RawSpokeProviderConfig,
 } from './entities/Providers.js';
 import { InjectiveSpokeProvider, type InjectiveRawSpokeProvider } from './entities/injective/InjectiveSpokeProvider.js';
 import { IconSpokeProvider, type IconRawSpokeProvider } from './entities/icon/IconSpokeProvider.js';
@@ -43,9 +44,11 @@ import type {
   PartnerFeeConfig,
   PartnerFeePercentage,
   Prettify,
+  RawDestinationParams,
   SolanaSpokeProviderType,
   SolverConfigParams,
   SonicSpokeProviderType,
+  SpokeProviderObjectType,
   StellarSpokeProviderType,
   SuiSpokeProviderType,
 } from './types.js';
@@ -481,6 +484,20 @@ export function isRawSpokeProvider(value: unknown): value is RawSpokeProvider {
   );
 }
 
+export function isSpokeProvider(value: unknown): value is SpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletProvider' in value &&
+    'chainConfig' in value &&
+    (!('raw' in value) || value.raw === false)
+  );
+}
+
+export function isSpokeProviderType(value: unknown): value is SpokeProviderType {
+  return isSpokeProvider(value) || isRawSpokeProvider(value);
+}
+
 export function isEvmRawSpokeProvider(value: unknown): value is EvmRawSpokeProvider {
   return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'EVM';
 }
@@ -523,6 +540,20 @@ export function isNearRawSpokeProvider(value: unknown): value is NearRawSpokePro
 
 export function isAddressString(value: unknown): value is string {
   return typeof value === 'string';
+}
+
+export function isSpokeProviderObjectType(value: unknown): value is SpokeProviderObjectType {
+    return (
+        typeof value === 'object' &&
+        value !== null &&
+        'spokeProvider' in value &&
+        value.spokeProvider !== undefined &&
+        isSpokeProviderType(value.spokeProvider)
+    );
+}
+
+export function isRawDestinationParams(value: unknown): value is RawDestinationParams {
+    return typeof value === 'object' && value !== null && 'toChainId' in value && 'toAddress' in value;
 }
 
 export function isEvmRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is EvmRawSpokeProviderConfig {

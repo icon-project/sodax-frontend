@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/pool/_components/supply-dialog/supply-info-step.tsx
 import type React from 'react';
 
 export default function SupplyInfoStep(): React.JSX.Element {
@@ -19,7 +18,7 @@ export default function SupplyInfoStep(): React.JSX.Element {
             Fees are variable
           </div>
           <div className="self-stretch justify-start text-clay text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4]">
-            Returns adjust in real-time based on trade activity.
+          Returns adjust in real-time based on markets.
           </div>
         </div>
 
