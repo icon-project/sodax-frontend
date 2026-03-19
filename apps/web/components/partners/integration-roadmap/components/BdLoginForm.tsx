@@ -43,7 +43,7 @@ export function BdLoginForm(): React.JSX.Element {
         onKeyDown={e => e.key === 'Enter' && handleSubmit()}
         className="h-11 px-4 rounded-2xl border-2 border-cherry-grey bg-white text-espresso focus:outline-none focus:border-cherry-soda"
       />
-      {error && <p className="text-sm text-red-500">Incorrect passcode.</p>}
+      {error && <p className="text-sm text-negative">Incorrect passcode.</p>}
       <button
         type="button"
         onClick={handleSubmit}

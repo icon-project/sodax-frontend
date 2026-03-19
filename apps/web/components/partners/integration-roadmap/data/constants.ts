@@ -340,7 +340,10 @@ export const WHY_SODAX_BY_CATEGORY: Record<CategoryId, WhyBullet[]> = {
     { headline: 'Best execution across 17+ networks', copy: 'Route from a single integration point.' },
     { headline: 'Intent-based execution', copy: 'Removes bridge slippage compounding; SODAX handles all settlement.' },
     { headline: 'Exotic cross-chain pairs', copy: 'Cover Solana ↔ EVM and more that single-chain DEXs cannot reach.' },
-    { headline: 'Composable with your existing UI', copy: 'No UX overhaul required; plug SODAX into your current stack.' },
+    {
+      headline: 'Composable with your existing UI',
+      copy: 'No UX overhaul required; plug SODAX into your current stack.',
+    },
   ],
   lending: [
     { headline: 'Cross-network collateral', copy: 'Users supply on one chain and borrow on another in a single flow.' },
@@ -349,22 +352,37 @@ export const WHY_SODAX_BY_CATEGORY: Record<CategoryId, WhyBullet[]> = {
     { headline: 'Unified liquidity', copy: 'Reduces fragmentation and improves utilisation across your networks.' },
   ],
   'perp-yield': [
-    { headline: 'Deposits from any network', copy: 'Accept from any SODAX-supported chain; settle into your native asset seamlessly.' },
+    {
+      headline: 'Deposits from any network',
+      copy: 'Accept from any SODAX-supported chain; settle into your native asset seamlessly.',
+    },
     { headline: 'Intent-based execution', copy: 'Removes bridge delays and eliminates failed cross-chain transfers.' },
     { headline: '17+ networks, one integration', copy: 'Expand your addressable market without rebuilding per-chain.' },
     { headline: 'Unified SDK hooks', copy: 'Same hooks for deposits and redemptions across every supported chain.' },
   ],
   'new-networks': [
     { headline: 'Cross-network from day one', copy: 'Launch with swaps, bridging, and stablecoin utility built in.' },
-    { headline: 'Proven multi-stack deployment', copy: 'Works across EVM, Cosmos SDK, and custom stacks; 4–12 weeks depending on architecture.' },
-    { headline: 'Solver liquidity included', copy: 'Relay integration ready — no need to bootstrap cross-chain flow from scratch.' },
-    { headline: 'Instant ecosystem access', copy: 'Users transact with the entire SODAX-connected ecosystem from launch day.' },
+    {
+      headline: 'Proven multi-stack deployment',
+      copy: 'Works across EVM, Cosmos SDK, and custom stacks; 4–12 weeks depending on architecture.',
+    },
+    {
+      headline: 'Solver liquidity included',
+      copy: 'Relay integration ready — no need to bootstrap cross-chain flow from scratch.',
+    },
+    {
+      headline: 'Instant ecosystem access',
+      copy: 'Users transact with the entire SODAX-connected ecosystem from launch day.',
+    },
   ],
   'solver-marketplaces': [
     { headline: '17+ network routes', copy: 'Add as a composable route source; improve fill rates on exotic pairs.' },
     { headline: 'Minimal integration surface', copy: 'Core API handles quote fetching and execution coordination.' },
     { headline: 'Intent-based settlement', copy: 'End users get better prices and fewer failed orders.' },
-    { headline: 'Shared liquidity', copy: 'Reduces fragmentation and strengthens outcomes across the solver ecosystem.' },
+    {
+      headline: 'Shared liquidity',
+      copy: 'Reduces fragmentation and strengthens outcomes across the solver ecosystem.',
+    },
   ],
 };
 
@@ -435,7 +453,10 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
   '1inch': {
     categoryId: 'dexs',
     customWhy: [
-      { headline: 'Best execution across 17+ chains', copy: 'Add SODAX as a route source; users see the best price on any pair.' },
+      {
+        headline: 'Best execution across 17+ chains',
+        copy: 'Add SODAX as a route source; users see the best price on any pair.',
+      },
       { headline: 'Intent-based settlement', copy: 'Avoids bridge failures and slippage compounding.' },
       { headline: 'Complements Fusion Mode', copy: 'Add cross-chain intent routing in a single API call.' },
       { headline: 'No UX change required', copy: 'SODAX plugs directly into your existing aggregation stack.' },
@@ -465,10 +486,16 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
   aave: {
     categoryId: 'lending',
     customWhy: [
-      { headline: 'Cross-chain collateral', copy: 'Users supply on Solana or Base and borrow on Ethereum in a single flow.' },
+      {
+        headline: 'Cross-chain collateral',
+        copy: 'Users supply on Solana or Base and borrow on Ethereum in a single flow.',
+      },
       { headline: 'No bridge UX', copy: 'Hub Wallet Abstraction handles cross-chain state invisibly.' },
       { headline: 'Extend to new chains', copy: 'Reach chains not yet covered by native Aave deployments.' },
-      { headline: 'Increase protocol TVL', copy: 'Capture cross-chain collateral that currently flows to competitors.' },
+      {
+        headline: 'Increase protocol TVL',
+        copy: 'Capture cross-chain collateral that currently flows to competitors.',
+      },
     ],
   },
   compound: { categoryId: 'lending' },
@@ -497,7 +524,10 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
     customWhy: [
       { headline: 'Swap across 17+ networks in-wallet', copy: 'No bridge tabs; users never leave MetaMask.' },
       { headline: 'Intent-based settlement in ~22s', copy: 'Covers Solana, Sui, Stellar alongside all EVM chains.' },
-      { headline: 'Revenue share on routed volume', copy: 'MetaMask brings the users, SODAX adds the cross-chain rails.' },
+      {
+        headline: 'Revenue share on routed volume',
+        copy: 'MetaMask brings the users, SODAX adds the cross-chain rails.',
+      },
       { headline: 'Single SDK integration', copy: 'No per-network wallet adapters to maintain.' },
     ],
   },
@@ -525,7 +555,10 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
   gmx: {
     categoryId: 'perp-yield',
     customWhy: [
-      { headline: 'Cross-chain vault deposits', copy: 'Accept USDC from Solana, Base, or Sui directly — no manual bridging.' },
+      {
+        headline: 'Cross-chain vault deposits',
+        copy: 'Accept USDC from Solana, Base, or Sui directly — no manual bridging.',
+      },
       { headline: 'Deposits settle in ~22s', copy: 'Intent-based execution removes bridge delays entirely.' },
       { headline: '17+ networks, one integration', copy: "Expand GMX's addressable market without per-chain work." },
       { headline: 'Minimal development lift', copy: 'Same SDK hooks for deposits and redemptions across all chains.' },
@@ -535,58 +568,64 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
   dydx: {
     categoryId: 'perp-yield',
     customWhy: [
-      { headline: 'Cross-network collateral', copy: 'Accept from any SODAX-supported chain; settle into dYdX assets seamlessly.' },
+      {
+        headline: 'Cross-network collateral',
+        copy: 'Accept from any SODAX-supported chain; settle into dYdX assets seamlessly.',
+      },
       { headline: 'Better fill rates', copy: 'Intent-based settlement beats traditional bridge-then-deposit flows.' },
       { headline: 'One SDK, all chains', copy: 'No per-chain bridge maintenance needed.' },
-      { headline: 'Increase accessible TVL', copy: "Remove friction for users on chains dYdX doesn't natively support." },
+      {
+        headline: 'Increase accessible TVL',
+        copy: "Remove friction for users on chains dYdX doesn't natively support.",
+      },
     ],
   },
   // Perp DEXs
   hyperliquid: { categoryId: 'perp-yield' }, // high-performance on-chain perps
-  drift: { categoryId: 'perp-yield' },       // Solana perps
-  vertex: { categoryId: 'perp-yield' },      // Arbitrum perps + spot
-  synthetix: { categoryId: 'perp-yield' },   // synthetic assets & perps
-  kwenta: { categoryId: 'perp-yield' },      // Synthetix-powered perps UI
-  gains: { categoryId: 'perp-yield' },       // gTrade — leveraged trading
-  aevo: { categoryId: 'perp-yield' },        // options & perps exchange
+  drift: { categoryId: 'perp-yield' }, // Solana perps
+  vertex: { categoryId: 'perp-yield' }, // Arbitrum perps + spot
+  synthetix: { categoryId: 'perp-yield' }, // synthetic assets & perps
+  kwenta: { categoryId: 'perp-yield' }, // Synthetix-powered perps UI
+  gains: { categoryId: 'perp-yield' }, // gTrade — leveraged trading
+  aevo: { categoryId: 'perp-yield' }, // options & perps exchange
   // Options
-  ribbon: { categoryId: 'perp-yield' },      // structured products / options vaults
-  opyn: { categoryId: 'perp-yield' },        // on-chain options protocol
-  lyra: { categoryId: 'perp-yield' },        // options AMM
-  premia: { categoryId: 'perp-yield' },      // decentralised options
+  ribbon: { categoryId: 'perp-yield' }, // structured products / options vaults
+  opyn: { categoryId: 'perp-yield' }, // on-chain options protocol
+  lyra: { categoryId: 'perp-yield' }, // options AMM
+  premia: { categoryId: 'perp-yield' }, // decentralised options
   // Liquid staking
-  lido: { categoryId: 'perp-yield' },        // stETH — largest liquid staking protocol
+  lido: { categoryId: 'perp-yield' }, // stETH — largest liquid staking protocol
   'rocket pool': { categoryId: 'perp-yield' }, // rETH — decentralised ETH staking
   rocketpool: { categoryId: 'perp-yield' },
-  jito: { categoryId: 'perp-yield' },        // jitoSOL — Solana liquid staking + MEV
+  jito: { categoryId: 'perp-yield' }, // jitoSOL — Solana liquid staking + MEV
   // Restaking
-  eigenlayer: { categoryId: 'perp-yield' },  // pioneered ETH restaking
-  'ether.fi': { categoryId: 'perp-yield' },  // eETH — largest restaking LST
+  eigenlayer: { categoryId: 'perp-yield' }, // pioneered ETH restaking
+  'ether.fi': { categoryId: 'perp-yield' }, // eETH — largest restaking LST
   etherfi: { categoryId: 'perp-yield' },
-  renzo: { categoryId: 'perp-yield' },       // ezETH restaking
-  kerneldao: { categoryId: 'perp-yield' },   // multi-asset restaking
+  renzo: { categoryId: 'perp-yield' }, // ezETH restaking
+  kerneldao: { categoryId: 'perp-yield' }, // multi-asset restaking
   kernel: { categoryId: 'perp-yield' },
-  karak: { categoryId: 'perp-yield' },       // universal restaking network
-  symbiotic: { categoryId: 'perp-yield' },   // permissionless restaking
+  karak: { categoryId: 'perp-yield' }, // universal restaking network
+  symbiotic: { categoryId: 'perp-yield' }, // permissionless restaking
   // Yield
-  pendle: { categoryId: 'perp-yield' },      // yield trading & fixed-income tokenisation
-  ethena: { categoryId: 'perp-yield' },      // USDe synthetic dollar / yield
-  convex: { categoryId: 'perp-yield' },      // Curve yield booster
-  yearn: { categoryId: 'perp-yield' },       // yield aggregator vaults
-  syrup: { categoryId: 'perp-yield' },       // yield protocol
-  barnbridge: { categoryId: 'perp-yield' },  // risk tokenisation / tranching
+  pendle: { categoryId: 'perp-yield' }, // yield trading & fixed-income tokenisation
+  ethena: { categoryId: 'perp-yield' }, // USDe synthetic dollar / yield
+  convex: { categoryId: 'perp-yield' }, // Curve yield booster
+  yearn: { categoryId: 'perp-yield' }, // yield aggregator vaults
+  syrup: { categoryId: 'perp-yield' }, // yield protocol
+  barnbridge: { categoryId: 'perp-yield' }, // risk tokenisation / tranching
   // RWAs — tokenised real-world assets; closest fit is perp-yield (institutional yield deposits)
-  ondo: { categoryId: 'perp-yield' },        // tokenised US Treasuries
-  usual: { categoryId: 'perp-yield' },       // USD0 stablecoin backed by RWAs
-  hashnote: { categoryId: 'perp-yield' },    // USYC — tokenised T-bills
-  spiko: { categoryId: 'perp-yield' },       // tokenised money market funds
-  buidl: { categoryId: 'perp-yield' },       // BlackRock tokenised fund
+  ondo: { categoryId: 'perp-yield' }, // tokenised US Treasuries
+  usual: { categoryId: 'perp-yield' }, // USD0 stablecoin backed by RWAs
+  hashnote: { categoryId: 'perp-yield' }, // USYC — tokenised T-bills
+  spiko: { categoryId: 'perp-yield' }, // tokenised money market funds
+  buidl: { categoryId: 'perp-yield' }, // BlackRock tokenised fund
 
   // ── Solver marketplaces & intent-based protocols ─────────────────────────
   near: {
     categoryId: 'solver-marketplaces',
     customWhy: [
-      { headline: '17+ network routes', copy: "Add to NEAR Intents for broader cross-chain coverage." },
+      { headline: '17+ network routes', copy: 'Add to NEAR Intents for broader cross-chain coverage.' },
       { headline: 'Better fill rates', copy: 'Shared intent-based settlement improves outcomes on exotic pairs.' },
       { headline: 'Minimal engineering overhead', copy: 'SODAX integrates as a composable route source.' },
       { headline: 'Expand solver ecosystem reach', copy: 'No need to rebuild cross-chain infrastructure.' },
@@ -598,17 +637,17 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
 
   // ── New networks, bridges, oracles & infrastructure ──────────────────────
   // Bridges
-  layerzero: { categoryId: 'new-networks' },  // omnichain messaging protocol
+  layerzero: { categoryId: 'new-networks' }, // omnichain messaging protocol
   'layer zero': { categoryId: 'new-networks' },
-  wormhole: { categoryId: 'new-networks' },   // cross-chain messaging & bridge
-  stargate: { categoryId: 'new-networks' },   // LayerZero-powered liquidity bridge
-  across: { categoryId: 'new-networks' },     // fast intent-based bridge
-  hop: { categoryId: 'new-networks' },        // rollup-to-rollup bridge
-  synapse: { categoryId: 'new-networks' },    // cross-chain bridge & AMM
-  socket: { categoryId: 'new-networks' },     // cross-chain middleware / aggregator
-  celer: { categoryId: 'new-networks' },      // cBridge + inter-chain messaging
+  wormhole: { categoryId: 'new-networks' }, // cross-chain messaging & bridge
+  stargate: { categoryId: 'new-networks' }, // LayerZero-powered liquidity bridge
+  across: { categoryId: 'new-networks' }, // fast intent-based bridge
+  hop: { categoryId: 'new-networks' }, // rollup-to-rollup bridge
+  synapse: { categoryId: 'new-networks' }, // cross-chain bridge & AMM
+  socket: { categoryId: 'new-networks' }, // cross-chain middleware / aggregator
+  celer: { categoryId: 'new-networks' }, // cBridge + inter-chain messaging
   // Oracles & data
-  chainlink: { categoryId: 'new-networks' },  // most widely used oracle network
+  chainlink: { categoryId: 'new-networks' }, // most widely used oracle network
   'the graph': { categoryId: 'new-networks' }, // blockchain data indexing
   thegraph: { categoryId: 'new-networks' },
 };

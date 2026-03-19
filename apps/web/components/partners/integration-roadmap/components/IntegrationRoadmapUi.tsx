@@ -290,13 +290,6 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
               Here&apos;s the integration roadmap we prepared for you — SDK layers, partner category, and steps to
               integrate with SODAX.
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-2 gap-y-1">
-              {displayTimeline && (
-                <span className="font-normal text-[13px] text-clay">
-                  {bdConfig.timeline.trim() ? displayTimeline : `Typical integration: ${displayTimeline}`}
-                </span>
-              )}
-            </div>
           </motion.div>
         ) : (
           <>
@@ -323,25 +316,27 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
-              className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center w-full max-w-120 print:hidden"
+              className="w-full max-w-120 print:hidden"
             >
-              <Input
-                type="text"
-                placeholder="e.g. Uniswap, Aave, Hana Wallet"
-                value={protocolName}
-                onChange={e => setProtocolName(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleGenerate()}
-                className="flex-1 min-w-0 h-12 min-h-12 sm:h-11 sm:min-h-11 px-4 py-3 sm:py-2 rounded-2xl border-2 border-cherry-grey bg-white font-normal text-[14px] text-espresso placeholder:text-clay focus-visible:border-cherry-soda"
-                aria-label="Protocol name"
-              />
-              <button
-                type="button"
-                onClick={handleGenerate}
-                disabled={!protocolName.trim() || isLoading}
-                className="bg-yellow-soda text-espresso font-['Shrikhand'] text-[14px] leading-[1.4] h-12 min-h-12 sm:h-11 sm:min-h-11 px-6 py-3 sm:py-2 rounded-full shrink-0 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer enabled:hover:opacity-90"
-              >
-                {isLoading ? 'loading...' : 'generate roadmap'}
-              </button>
+              <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center bg-white rounded-2xl border border-cherry-grey/40 shadow-sm p-2">
+                <Input
+                  type="text"
+                  placeholder="e.g. Uniswap, Aave, Hana Wallet"
+                  value={protocolName}
+                  onChange={e => setProtocolName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleGenerate()}
+                  className="flex-1 min-w-0 h-11 px-3 py-2 rounded-xl border-0 bg-transparent font-normal text-[14px] text-espresso placeholder:text-clay focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                  aria-label="Protocol name"
+                />
+                <button
+                  type="button"
+                  onClick={handleGenerate}
+                  disabled={!protocolName.trim() || isLoading}
+                  className="bg-yellow-soda text-espresso font-['Shrikhand'] text-[14px] leading-[1.4] h-11 px-6 rounded-xl shrink-0 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed enabled:cursor-pointer enabled:hover:opacity-90"
+                >
+                  {isLoading ? 'loading...' : 'generate roadmap'}
+                </button>
+              </div>
             </motion.div>
 
             {!bdMode && (
@@ -383,8 +378,9 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="w-full min-w-0 flex flex-col gap-6 md:gap-8 max-w-4xl roadmap-print-area"
+            className="w-full min-w-0 max-w-4xl roadmap-print-area"
           >
+            <div className="bg-white rounded-3xl border border-cherry-grey/20 shadow-[0_4px_32px_rgb(0_0_0/0.06)] p-4 sm:p-5 flex flex-col gap-4 sm:gap-5">
             {bdMode && (
               <div className="w-full text-center rounded-2xl bg-yellow-soda/10 border border-yellow-soda/40 px-4 py-3 flex flex-col gap-1 print:hidden">
                 <p className="font-semibold text-[13px] text-cherry-dark">Preview for partner</p>
@@ -410,13 +406,6 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
                   Here&apos;s the integration roadmap we prepared for you — SDK layers, partner category, and steps to
                   integrate with SODAX.
                 </p>
-                <div className="flex flex-wrap items-center justify-center gap-2 gap-y-1">
-                  {displayTimeline && (
-                    <span className="font-normal text-[13px] text-clay">
-                      {bdConfig.timeline.trim() ? displayTimeline : `Typical integration: ${displayTimeline}`}
-                    </span>
-                  )}
-                </div>
               </div>
             )}
             <div className="hidden print:flex flex-col gap-3 pb-6 border-b border-cherry-grey/30" aria-hidden>
@@ -448,6 +437,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
               readOnly={isProspectView}
               view={view}
             />
+            </div>
           </motion.div>
         )}
       </div>

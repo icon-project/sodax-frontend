@@ -15,7 +15,7 @@ export function QuickStartInstall(): React.JSX.Element {
     setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION_MS);
   };
   return (
-    <div className="bg-white rounded-3xl flex flex-col gap-3 p-6 md:p-8 border border-cherry-grey/20">
+    <div className="bg-white rounded-3xl flex flex-col gap-3 p-6 md:p-8">
       <h2 className="font-bold text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Quick start</h2>
       <p className="font-normal text-[14px] leading-normal text-clay-dark">
         Install the SDK packages, then follow the docs for your integration category.

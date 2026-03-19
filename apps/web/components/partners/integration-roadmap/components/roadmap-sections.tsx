@@ -3,7 +3,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Check, Code2, Coins, ExternalLink, FileDown, Link2, Mail, Network } from 'lucide-react';
+import { ArrowUpRight, BookOpen, Check, Code2, Coins, ExternalLink, FileDown, Link2, Mail, Network } from 'lucide-react';
+import { GithubLogo } from '@phosphor-icons/react';
 import {
   CHAIN_DOCUMENTATION_ROUTE,
   DOCUMENTATION_ROUTE,
@@ -26,6 +27,7 @@ import {
 } from '../data/constants';
 import { slugifyProtocol } from '../lib/slug';
 import { getProtocolDisplayLabel } from '../lib/utils';
+import { IntegrationStepper } from './integration-stepper';
 import { QuickStartInstall } from './quick-start-install';
 
 export interface RoadmapSectionsProps {
@@ -83,45 +85,58 @@ export function RoadmapSections({
         </div>
       )}
 
-      <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Partner category</h2>
-        </div>
-
-
-        <div className="flex gap-3 items-start">
+      <div className="bg-cream-white rounded-3xl flex flex-col gap-5 p-6 md:p-8 border border-cherry-grey/20">
+        {/* Icon + title */}
+        <div className="flex items-start gap-4">
           {(() => {
             const Icon = roadmap.category.icon;
-            return <Icon weight="regular" className="w-5 h-5 shrink-0 text-cherry-soda mt-0.5" aria-hidden />;
+            return (
+              <div className="w-11 h-11 rounded-xl bg-white border border-cherry-grey/30 flex items-center justify-center shrink-0">
+                <Icon weight="regular" className="w-5 h-5 text-cherry-soda" aria-hidden />
+              </div>
+            );
           })()}
-          <div className="flex flex-col gap-1 min-w-0">
-            <p className="font-bold text-[16px] leading-[1.2] text-espresso">{roadmap.category.title}</p>
-            <p className="font-normal text-[14px] leading-[1.4] text-clay-dark">{roadmap.category.description}</p>
-            <p className="font-normal text-[13px] leading-[1.4] text-clay mt-1">
-              Typical integration:{' '}
-              <span className={bdConfig.timeline.trim() ? 'font-medium text-cherry-soda' : ''}>{displayTimeline}</span>
-              {bdConfig.timeline.trim() && <span className="text-clay"> (updated by BD)</span>}
+          <div className="flex flex-col gap-1.5 min-w-0">
+            <p className="font-normal text-[12px] text-clay uppercase tracking-wide leading-none">
+              Your integration track
             </p>
-            {(() => {
-              const caseStudy = CASE_STUDY_BY_CATEGORY[roadmap.category.id];
-              return caseStudy ? (
-                <Link
-                  href={caseStudy.href}
-                  className="font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer mt-1 w-fit"
-                >
-                  See how {caseStudy.name} did it →
-                </Link>
-              ) : null;
-            })()}
+            <h2 className="font-black text-[22px] sm:text-[26px] leading-[1.1] text-espresso">
+              {roadmap.category.title}
+            </h2>
           </div>
         </div>
 
+        {/* Description */}
+        <p className="font-normal text-[14px] leading-[1.55] text-clay-dark">
+          {roadmap.category.description}
+        </p>
+
+        {/* Meta chips */}
+        <div className="flex flex-wrap gap-2">
+          <span className="inline-flex items-center h-7 px-3 rounded-full bg-white border border-cherry-grey/40 text-[12px] font-medium text-espresso gap-1.5">
+            ⏱ {displayTimeline}
+            {bdConfig.timeline.trim() && (
+              <span className="font-normal text-clay"> · BD updated</span>
+            )}
+          </span>
+          {(() => {
+            const caseStudy = CASE_STUDY_BY_CATEGORY[roadmap.category.id];
+            return caseStudy ? (
+              <Link
+                href={caseStudy.href}
+                className="inline-flex items-center h-7 px-3 rounded-full bg-cherry-soda/10 border border-cherry-soda/15 text-[12px] font-medium text-cherry-dark hover:bg-cherry-soda/20 transition-colors gap-1"
+              >
+                {caseStudy.name} built with us
+                <ArrowUpRight className="w-3 h-3 shrink-0" aria-hidden />
+              </Link>
+            ) : null;
+          })()}
+        </div>
+
+        {/* BD-only category selector — separated so it doesn't compete */}
         {!readOnly && (
-          <div className="flex flex-wrap items-center gap-2 mt-1">
-            <span className="font-semibold text-[13px] leading-[1.4] text-cherry-soda">
-              Not the right fit?
-            </span>
-            <span className="font-normal text-[13px] leading-[1.4] text-clay-dark">Choose category:</span>
+          <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-cherry-grey/30">
+            <span className="font-normal text-[13px] text-clay">Not your track? Pick the right one:</span>
             <Select
               value={roadmap.category.id}
               onValueChange={(id: CategoryId) => {
@@ -153,15 +168,18 @@ export function RoadmapSections({
 
       {!isPublic && <QuickStartInstall />}
 
-      <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
-        <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
-          Why SODAX for <span className="text-cherry-soda">{displayLabel}</span>
-        </h2>
+      <div className="bg-cherry-soda/6 rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-soda/15">
+        <div className="flex items-center gap-3">
+          <div className="w-1 h-7 rounded-full bg-cherry-soda shrink-0" aria-hidden />
+          <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
+            Why SODAX for <span className="text-cherry-soda">{displayLabel}</span>
+          </h2>
+        </div>
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {whyBullets.map((bullet, i) => (
             <li
               key={i}
-              className="flex flex-col gap-1 rounded-xl bg-cream-white px-4 pt-3.5 pb-4"
+              className="flex flex-col gap-1 rounded-xl bg-white px-4 pt-3.5 pb-4 border border-cherry-grey/10"
             >
               {bullet.headline ? (
                 <>
@@ -176,7 +194,7 @@ export function RoadmapSections({
         </ul>
       </div>
 
-      <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
+      <div className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
         <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
           <Network className="w-5 h-5 text-cherry-soda shrink-0" aria-hidden />
           Supported networks
@@ -195,7 +213,7 @@ export function RoadmapSections({
           {SUPPORTED_NETWORKS_LIST.split(', ').map(network => (
             <span
               key={network}
-              className="inline-flex items-center h-7 px-3 rounded-full bg-cream-white text-[12px] font-medium text-espresso"
+              className="inline-flex items-center h-7 px-3 rounded-full bg-white text-[12px] font-medium text-espresso border border-cherry-grey/20"
             >
               {network}
             </span>
@@ -212,14 +230,14 @@ export function RoadmapSections({
         </a>
       </div>
 
-      <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
+      <div className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
         <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
           <Coins className="w-5 h-5 text-cherry-soda shrink-0" aria-hidden />
           Partner economics
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {PARTNER_ECONOMICS.map(item => (
-            <div key={item.headline} className="flex flex-col gap-1 rounded-xl bg-cream-white px-4 pt-3.5 pb-4">
+            <div key={item.headline} className="flex flex-col gap-1 rounded-xl bg-white px-4 pt-3.5 pb-4 border border-cherry-grey/15">
               <span className="font-bold text-[14px] leading-snug text-espresso">{item.headline}</span>
               <span className="font-normal text-[13px] leading-[1.45] text-clay">{item.copy}</span>
             </div>
@@ -228,15 +246,15 @@ export function RoadmapSections({
       </div>
 
       {!isPublic && (
-        <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
+        <div className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
           <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
             SDK stack for <span className="text-cherry-dark">{displayLabel}</span>
           </h2>
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             {SDK_LAYERS.map(layer => (
               <div
                 key={layer.name}
-                className="flex flex-col sm:grid sm:grid-cols-[7rem_12rem_1fr] gap-2 sm:gap-6 p-4 rounded-xl bg-cream-white border border-cherry-grey/10 sm:items-center"
+                className="flex flex-col sm:grid sm:grid-cols-[7rem_12rem_1fr] gap-2 sm:gap-6 p-4 rounded-xl bg-white border border-cherry-grey/15 sm:items-center"
               >
                 <span className="font-bold text-[14px] text-cherry-soda">{layer.name}</span>
                 <a
@@ -266,76 +284,94 @@ export function RoadmapSections({
       )}
 
       {!isPublic && (
-        <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
+        <div className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
           <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
             <Code2 className="w-5 h-5 text-cherry-soda shrink-0" aria-hidden />
             Code &amp; resources
           </h2>
-          <p className="font-normal text-[14px] leading-normal text-clay-dark">
-            Explore the SDK source and follow step-by-step guides for your category.
-          </p>
-          <div className="flex flex-col sm:flex-row flex-wrap gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <a
               href={GITHUB_SODAX_REPO_ROUTE}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"
+              className="group flex items-start gap-3 p-4 rounded-xl bg-white border border-cherry-grey/15 hover:border-cherry-soda/25 hover:bg-cherry-soda/5 transition-colors cursor-pointer"
             >
-              View on GitHub
-              <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
+              <div className="w-9 h-9 rounded-lg bg-white border border-cherry-grey/20 flex items-center justify-center shrink-0 group-hover:border-cherry-soda/20 transition-colors">
+                <GithubLogo className="w-4 h-4 text-cherry-soda" aria-hidden />
+              </div>
+              <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                <span className="font-bold text-[14px] text-espresso group-hover:text-cherry-soda transition-colors">
+                  SDK on GitHub
+                </span>
+                <span className="font-normal text-[12px] text-clay leading-snug">
+                  Source code, packages, and integration examples.
+                </span>
+              </div>
+              <ExternalLink className="w-3.5 h-3.5 text-clay shrink-0 mt-0.5 group-hover:text-cherry-soda transition-colors" aria-hidden />
             </a>
             <a
               href={DOCUMENTATION_ROUTE}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"
+              className="group flex items-start gap-3 p-4 rounded-xl bg-white border border-cherry-grey/15 hover:border-cherry-soda/25 hover:bg-cherry-soda/5 transition-colors cursor-pointer"
             >
-              Documentation &amp; guides
-              <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
+              <div className="w-9 h-9 rounded-lg bg-white border border-cherry-grey/20 flex items-center justify-center shrink-0 group-hover:border-cherry-soda/20 transition-colors">
+                <BookOpen className="w-4 h-4 text-cherry-soda" aria-hidden />
+              </div>
+              <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                <span className="font-bold text-[14px] text-espresso group-hover:text-cherry-soda transition-colors">
+                  Docs &amp; guides
+                </span>
+                <span className="font-normal text-[12px] text-clay leading-snug">
+                  Step-by-step integration guides for your stack.
+                </span>
+              </div>
+              <ExternalLink className="w-3.5 h-3.5 text-clay shrink-0 mt-0.5 group-hover:text-cherry-soda transition-colors" aria-hidden />
             </a>
           </div>
         </div>
       )}
 
       {!isPublic && (
-        <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
+        <div className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
           <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Integration steps</h2>
-          <ol className="flex flex-col gap-3 list-decimal list-inside font-normal text-[14px] leading-normal text-clay-dark">
-            {displaySteps.map((step, i) => (
-              <li key={i} className="pl-1">
-                {step}
-              </li>
-            ))}
-          </ol>
+          <IntegrationStepper steps={displaySteps} />
         </div>
       )}
 
       {!isPublic && (
-        <div className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
+        <div className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
           <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Case studies</h2>
-          <p className="font-normal text-[14px] leading-normal text-clay-dark">
-            See how partners built with SODAX across wallets, DeFi apps, and networks.
-          </p>
-          <div className="flex flex-col gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {ALL_CASE_STUDIES.map(study => (
               <Link
                 key={study.name}
                 href={study.href}
-                className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 p-3 rounded-xl bg-cream-white border border-cherry-grey/10 hover:border-cherry-grey/30 transition-colors cursor-pointer group"
+                aria-label={`Read ${study.name} case study`}
+                className="group flex flex-col gap-2 p-4 rounded-xl bg-white border border-cherry-grey/15 hover:border-cherry-soda/25 hover:bg-cherry-soda/5 transition-colors cursor-pointer"
               >
-                <span className="font-bold text-[14px] text-espresso group-hover:text-cherry-soda transition-colors">
-                  {study.name}
-                </span>
-                <span className="font-normal text-[13px] text-clay-dark">{study.tagline}</span>
-                <span className="font-medium text-[12px] text-cherry-soda sm:ml-auto">Read case study →</span>
+                <div className="flex items-start justify-between gap-2">
+                  <span className="font-black text-[15px] leading-snug text-espresso group-hover:text-cherry-soda transition-colors">
+                    {study.name}
+                  </span>
+                  <ArrowUpRight
+                    className="w-3.5 h-3.5 text-clay shrink-0 mt-0.5 transition-[color,transform] group-hover:text-cherry-soda group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    aria-hidden
+                  />
+                </div>
+                <span className="font-normal text-[12px] leading-snug text-clay">{study.tagline}</span>
               </Link>
             ))}
           </div>
         </div>
       )}
 
-      <div className={`rounded-3xl flex flex-col gap-5 p-6 md:p-8 ${isPublic ? 'bg-espresso' : 'bg-white border border-cherry-grey/20'}`}>
-        <h2 className={`font-black text-[18px] sm:text-[20px] leading-[1.2] ${isPublic ? 'text-white' : 'text-espresso'}`}>
+      <div
+        className={`rounded-3xl flex flex-col gap-5 p-6 md:p-8 ${isPublic ? 'bg-espresso' : 'bg-cream-white border border-cherry-grey/20'}`}
+      >
+        <h2
+          className={`font-black text-[18px] sm:text-[20px] leading-[1.2] ${isPublic ? 'text-white' : 'text-espresso'}`}
+        >
           {isPublic ? 'Ready to integrate?' : 'Next steps'}
         </h2>
         <p className={`font-normal text-[14px] leading-normal ${isPublic ? 'text-clay-light' : 'text-clay-dark'}`}>
@@ -346,7 +382,10 @@ export function RoadmapSections({
         {isPublic && (
           <div className="flex flex-wrap gap-2">
             {ROADMAP_CTA_CHIPS.map(label => (
-              <span key={label} className="inline-flex items-center h-7 px-3 rounded-full bg-white/10 text-[12px] font-medium text-cream-white">
+              <span
+                key={label}
+                className="inline-flex items-center h-7 px-3 rounded-full bg-white/10 text-[12px] font-medium text-cream-white"
+              >
                 {label}
               </span>
             ))}
@@ -397,7 +436,7 @@ export function RoadmapSections({
       </div>
 
       {!isPublic && (
-        <div className="rounded-3xl border border-cherry-grey/20 bg-white p-6 md:p-8 flex flex-col gap-4 print:hidden">
+        <div className="rounded-3xl border border-cherry-grey/20 bg-cream-white p-6 md:p-8 flex flex-col gap-4 print:hidden">
           <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Share roadmap</h2>
           <p className="font-normal text-[13px] leading-[1.4] text-clay-dark">
             Share the link with your team or contacts — they&apos;ll see this roadmap for{' '}
@@ -462,7 +501,8 @@ export function RoadmapSections({
         className="hidden print:block pt-6 mt-4 border-t border-cherry-grey/30 text-center font-normal text-[11px] text-clay"
         aria-hidden
       >
-        {ROADMAP_PRINT_FOOTER}{printDate ? ` · ${printDate}` : ''}
+        {ROADMAP_PRINT_FOOTER}
+        {printDate ? ` · ${printDate}` : ''}
       </div>
     </>
   );

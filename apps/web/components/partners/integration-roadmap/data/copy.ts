@@ -1,8 +1,7 @@
 // Centralized marketing/public copy for the Integration Roadmap tool.
 
 export const INTEGRATION_ROADMAP_COPY = {
-  publicDescription:
-    'Get matched to your SODAX integration path in seconds! Generate a public preview of partner category fit, “why SODAX”, and supported networks. Request the full roadmap (SDK layers + integration steps + timelines).',
+  publicDescription: 'Your integration already has a plan. Enter your protocol name to see it.',
   partnersSectionDescription:
     'Type your protocol name to get a visual preview of partner category fit, “why SODAX”, and supported networks. After a partner call, direct them to the prospect link to view the full technical roadmap in one place.',
   metaDescription:
