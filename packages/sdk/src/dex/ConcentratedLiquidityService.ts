@@ -276,11 +276,11 @@ export type GetConcentratedLiquidityParams<T extends ConcentratedLiquidityUnknow
           ? ConcentratedLiquidityIncreaseLiquidityParams
           : T extends 'DECREASE_LIQUIDITY_UNKNOWN_ERROR'
             ? ConcentratedLiquidityDecreaseLiquidityParams
-              : T extends 'CLAIM_REWARDS_UNKNOWN_ERROR'
-                ? ConcentratedLiquidityClaimRewardsParams
-                : T extends 'GET_POOL_REWARD_CONFIG_UNKNOWN_ERROR'
-                  ? PoolKey
-                  : never;
+            : T extends 'CLAIM_REWARDS_UNKNOWN_ERROR'
+              ? ConcentratedLiquidityClaimRewardsParams
+              : T extends 'GET_POOL_REWARD_CONFIG_UNKNOWN_ERROR'
+                ? PoolKey
+                : never;
 
 export type ConcentratedLiquidityErrorCode =
   | ConcentratedLiquidityUnknownErrorCode
@@ -345,13 +345,13 @@ export type GetConcentratedLiquidityError<T extends ConcentratedLiquidityErrorCo
           ? ConcentratedLiquidityIncreaseLiquidityFailedError
           : T extends 'CREATE_DECREASE_LIQUIDITY_INTENT_FAILED'
             ? ConcentratedLiquidityDecreaseLiquidityFailedError
-              : T extends 'CREATE_CLAIM_REWARDS_INTENT_FAILED'
-                ? ConcentratedLiquidityClaimRewardsFailedError
-                : T extends 'GET_POOL_REWARD_CONFIG_FAILED'
-                  ? ConcentratedLiquidityGetPoolRewardConfigFailedError
-                  : T extends ConcentratedLiquidityUnknownErrorCode
-                    ? ConcentratedLiquidityUnknownError<T>
-                    : never;
+            : T extends 'CREATE_CLAIM_REWARDS_INTENT_FAILED'
+              ? ConcentratedLiquidityClaimRewardsFailedError
+              : T extends 'GET_POOL_REWARD_CONFIG_FAILED'
+                ? ConcentratedLiquidityGetPoolRewardConfigFailedError
+                : T extends ConcentratedLiquidityUnknownErrorCode
+                  ? ConcentratedLiquidityUnknownError<T>
+                  : never;
 
 export type ConcentratedLiquidityError<T extends ConcentratedLiquidityErrorCode> = {
   code: T;
@@ -404,8 +404,6 @@ export class ClService {
       token1SpokeAddress,
       spokeProvider.chainConfig.chain.id,
     );
-    console.log('token0', token0);
-    console.log('token1', token1);
 
     if (!token0) {
       throw new Error(`[getAssetsForPool] Token0 ${token0SpokeAddress} not found`);

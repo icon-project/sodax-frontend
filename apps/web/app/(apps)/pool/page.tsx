@@ -74,6 +74,7 @@ export default function PoolPage() {
     usePoolActions();
   const { address } = useXAccount(selectedNetworkChainId ?? undefined);
   const [savedPositions, setSavedPositions] = useState<SavedDexPosition[]>([]);
+  console.log('dex pools', dexPools);
   const fixedPoolKey = dexPools.ASODA_XSODA;
   const { data: poolDataRaw } = usePoolData({ poolKey: fixedPoolKey });
   const poolData = poolDataRaw ?? null;
@@ -282,6 +283,7 @@ export default function PoolPage() {
             <div className={cn('self-stretch transition-[filter] duration-300', isNetworkPickerOpened && 'blur-sm')}>
               <PoolInfoCard
                 pairPrice={pairPrice}
+                poolId={'0x1fbed2bab018dd01756162d135964186addbab00158eda8013de8a15948995cd'}
                 minPrice={minPrice}
                 maxPrice={maxPrice}
                 onMinPriceChange={setMinPrice}
