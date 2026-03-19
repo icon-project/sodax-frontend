@@ -350,8 +350,6 @@ export function SuppliedPositionsCarousel({
     return null;
   }
 
-  console.log('normalizedPositions', normalizedPositions);
-
   return (
     <div className="w-full flex flex-col gap-3">
       {normalizedPositions.length > 1 ? (

@@ -306,13 +306,14 @@ export function ManagePositionDialog({
           setAddLiquidityError('Enter a valid first token amount before adding liquidity.');
           return;
         }
-        
+
         if (!hasToken0Allowance) {
           await approveMutation.mutateAsync({
             params: token0DepositParams,
             spokeProvider,
           });
         }
+
         await depositMutation.mutateAsync({
           params: token0DepositParams,
           spokeProvider,

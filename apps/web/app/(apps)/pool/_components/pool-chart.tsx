@@ -15,6 +15,13 @@ type TickPoint = {
   liquidity: number;
 };
 
+type OhlcInterval = '1h' | '1d';
+
+type OhlcApiPoint = {
+  bucket: string;
+  close_sqrt: string;
+};
+
 function normalizeExternalPrice(value: number | null | undefined): number | null {
   if (value === null || value === undefined || !Number.isFinite(value) || value <= 0) {
     return null;
@@ -117,6 +124,98 @@ function generateTickData(currentPrice: number, count = 80): TickPoint[] {
   return ticks;
 }
 
+const Q96 = 2n ** 96n;
+const SQRT_PRECISION = 1_000_000_000n;
+
+function sqrtPriceX96ToPrice(value: string): number | null {
+  if (!/^\d+$/.test(value)) {
+    return null;
+  }
+  const sqrtX96 = BigInt(value);
+  if (sqrtX96 <= 0n) {
+    return null;
+  }
+
+  const integerPart = sqrtX96 / Q96;
+  const fractionPart = ((sqrtX96 % Q96) * SQRT_PRECISION) / Q96;
+  const sqrtAsNumber = Number(integerPart) + Number(fractionPart) / Number(SQRT_PRECISION);
+  if (!Number.isFinite(sqrtAsNumber) || sqrtAsNumber <= 0) {
+    return null;
+  }
+
+  const price = sqrtAsNumber * sqrtAsNumber;
+  return Number.isFinite(price) && price > 0 ? roundPrice(price) : null;
+}
+
+function parseOhlcPricePoints(payload: unknown): PricePoint[] {
+  if (!Array.isArray(payload)) {
+    return [];
+  }
+
+  const points = payload
+    .map((item): PricePoint | null => {
+      if (!item || typeof item !== 'object') {
+        return null;
+      }
+      const ohlc = item as Partial<OhlcApiPoint>;
+      const bucketTime = ohlc.bucket ? Date.parse(ohlc.bucket) : Number.NaN;
+      const price = ohlc.close_sqrt ? sqrtPriceX96ToPrice(ohlc.close_sqrt) : null;
+      if (!Number.isFinite(bucketTime) || price === null) {
+        return null;
+      }
+      return { time: bucketTime, price };
+    })
+    .filter((point): point is PricePoint => point !== null)
+    .sort((a, b) => a.time - b.time);
+
+  if (!points.length) {
+    return points;
+  }
+
+  const deduped: PricePoint[] = [];
+  let lastTime: number | null = null;
+  for (const point of points) {
+    if (point.time !== lastTime) {
+      deduped.push(point);
+      lastTime = point.time;
+    } else {
+      deduped[deduped.length - 1] = point;
+    }
+  }
+  return deduped;
+}
+
+function getInitialPriceBand(prices: PricePoint[], fallbackPrice: number): { min: number; max: number } {
+  const validPrices = prices.map(point => point.price).filter(price => Number.isFinite(price) && price > 0);
+  const latestValidPrice = validPrices.length > 0 ? validPrices[validPrices.length - 1] : undefined;
+
+  const basePrice =
+    latestValidPrice !== undefined
+      ? latestValidPrice
+      : Number.isFinite(fallbackPrice) && fallbackPrice > 0
+        ? fallbackPrice
+        : DEFAULT_CURRENT_PRICE;
+
+  const seriesMin = validPrices.length > 0 ? Math.min(...validPrices) : basePrice;
+  const seriesMax = validPrices.length > 0 ? Math.max(...validPrices) : basePrice;
+  const marketSpan = Math.max(seriesMax - seriesMin, 0);
+  const minSpan = Math.max(basePrice * 0.006, 0.000001);
+  const bandSpan = Math.max(marketSpan * 2.5, minSpan);
+
+  const computedMin = Math.max(basePrice - bandSpan / 2, 0.00000001);
+  const computedMax = basePrice + bandSpan / 2;
+  const roundedMin = roundPrice(computedMin);
+  const roundedMax = roundPrice(computedMax);
+
+  if (!Number.isFinite(roundedMin) || !Number.isFinite(roundedMax) || roundedMax <= roundedMin) {
+    const fallbackMin = roundPrice(Math.max(basePrice * 0.997, 0.00000001));
+    const fallbackMax = roundPrice(basePrice * 1.003);
+    return { min: fallbackMin, max: fallbackMax };
+  }
+
+  return { min: roundedMin, max: roundedMax };
+}
+
 const ALL_DATA = generatePairData(730);
 const LATEST_POINT: PricePoint = ALL_DATA[ALL_DATA.length - 1] ?? { time: Date.now(), price: DEFAULT_CURRENT_PRICE };
 const CURRENT_PRICE = LATEST_POINT.price;
@@ -153,6 +252,17 @@ const RANGES = [
   { label: 'All time', ms: null },
 ] as const;
 
+const RANGE_FETCH_CONFIG: Record<
+  (typeof RANGES)[number]['label'],
+  { interval: OhlcInterval; lookbackMs: number; limit: number }
+> = {
+  '1D': { interval: '1h', lookbackMs: 1 * 86400000, limit: 200 },
+  '1W': { interval: '1h', lookbackMs: 7 * 86400000, limit: 300 },
+  '1M': { interval: '1d', lookbackMs: 30 * 86400000, limit: 300 },
+  '1Y': { interval: '1d', lookbackMs: 365 * 86400000, limit: 400 },
+  'All time': { interval: '1d', lookbackMs: 730 * 86400000, limit: 500 },
+};
+
 const HEIGHT = 132;
 const ML = { top: 24, right: 0, bottom: 8, left: 0 };
 const TICK_W = 90;
@@ -160,6 +270,7 @@ const TM = { top: 20, right: 0, bottom: 36, left: 0 };
 
 type PoolChartProps = {
   pairPrice?: number | null;
+  poolId?: string | null;
   minPrice?: number;
   maxPrice?: number;
   onMinPriceChange?: (price: number) => void;
@@ -168,6 +279,7 @@ type PoolChartProps = {
 
 export function PoolChart({
   pairPrice,
+  poolId,
   minPrice: propMinPrice,
   maxPrice: propMaxPrice,
   onMinPriceChange,
@@ -240,35 +352,67 @@ export function PoolChart({
   useEffect(() => {
     let ignore = false;
 
-    function buildPairData(): void {
+    async function buildPairData(): Promise<void> {
       setLoading(true);
       try {
-        const days = RANGE_DAYS[activeRange];
-        const data = generatePairData(days);
-        if (!data.length || ignore) {
+        const resolvedPoolId = typeof poolId === 'string' ? poolId.trim() : '';
+        if (!resolvedPoolId) {
+          const mockData = generatePairData(RANGE_DAYS[activeRange]);
+          if (ignore || !mockData.length) {
+            return;
+          }
+          const last = mockData[mockData.length - 1]?.price ?? DEFAULT_CURRENT_PRICE;
+          const initialBand = getInitialPriceBand(mockData, last);
+          setAllData(mockData);
+          setCurrentPrice(last);
+          setTickData(generateTickData(last, Math.max(80, mockData.length)));
+          setMinPrice(initialBand.min);
+          setMaxPrice(initialBand.max);
           return;
         }
-        const generatedLast = data[data.length - 1]?.price ?? DEFAULT_CURRENT_PRICE;
-        const last = externalPairPrice ?? generatedLast;
+
+        const rangeConfig = RANGE_FETCH_CONFIG[activeRange];
+        const toDate = new Date();
+        const fromDate = new Date(toDate.getTime() - rangeConfig.lookbackMs);
+        const params = new URLSearchParams({
+          poolId: resolvedPoolId,
+          interval: rangeConfig.interval,
+          from: fromDate.toISOString(),
+          to: toDate.toISOString(),
+          limit: String(rangeConfig.limit),
+        });
+        const response = await fetch(`/api/pool/ohlc?${params.toString()}`, { method: 'GET', cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error(`OHLC request failed (${response.status})`);
+        }
+
+        const payload: unknown = await response.json();
+        const data = parseOhlcPricePoints(payload);
+        if (!data.length || ignore) {
+          throw new Error('No valid OHLC points');
+        }
+
+        const last = data[data.length - 1]?.price ?? DEFAULT_CURRENT_PRICE;
+        const initialBand = getInitialPriceBand(data, last);
         setAllData(data);
         setCurrentPrice(last);
         setTickData(generateTickData(last, Math.max(80, data.length)));
-        setMinPrice(roundPrice(last * 0.85));
-        setMaxPrice(roundPrice(last * 1.15));
-      } catch (e) {
+        setMinPrice(initialBand.min);
+        setMaxPrice(initialBand.max);
+      } catch {
         if (ignore) {
           return;
         }
         // fallback to generated pair-like data
         const fb = generatePairData(RANGE_DAYS[activeRange]);
         const fallbackLast = fb[fb.length - 1];
-        const generatedLast = fallbackLast?.price ?? CURRENT_PRICE;
-        const last = externalPairPrice ?? generatedLast;
+        const last = fallbackLast?.price ?? CURRENT_PRICE;
+        const initialBand = getInitialPriceBand(fb, last);
         setAllData(fb);
         setCurrentPrice(last);
         setTickData(generateTickData(last));
-        setMinPrice(roundPrice(last * 0.85));
-        setMaxPrice(roundPrice(last * 1.15));
+        setMinPrice(initialBand.min);
+        setMaxPrice(initialBand.max);
       } finally {
         if (!ignore) {
           setLoading(false);
@@ -280,7 +424,7 @@ export function PoolChart({
     return () => {
       ignore = true;
     };
-  }, [activeRange, externalPairPrice, setMinPrice, setMaxPrice]);
+  }, [activeRange, poolId, setMinPrice, setMaxPrice]);
 
   useEffect(() => {
     const obs = new ResizeObserver(entries => {
@@ -317,8 +461,27 @@ export function PoolChart({
 
   const xScale = useMemo(() => zoomTransform.rescaleX(xScaleBase), [zoomTransform, xScaleBase]);
 
-  const yDomainMin = MOCK_CHART_MIN_PRICE;
-  const yDomainMax = MOCK_CHART_MAX_PRICE;
+  const [yDomainMin, yDomainMax] = useMemo((): [number, number] => {
+    const allPrices = visibleData.map(point => point.price);
+    allPrices.push(minPrice, maxPrice, currentPrice);
+
+    const finitePrices = allPrices.filter(price => Number.isFinite(price) && price > 0);
+    const defaultMin = MOCK_CHART_MIN_PRICE;
+    const defaultMax = MOCK_CHART_MAX_PRICE;
+    if (!finitePrices.length) {
+      return [defaultMin, defaultMax];
+    }
+
+    const minValue = Math.min(...finitePrices);
+    const maxValue = Math.max(...finitePrices);
+    const span = Math.max(maxValue - minValue, maxValue * 0.002, 0.000001);
+    const paddedMin = Math.max(minValue - span * 0.15, 0);
+    const paddedMax = maxValue + span * 0.15;
+    if (!Number.isFinite(paddedMin) || !Number.isFinite(paddedMax) || paddedMax <= paddedMin) {
+      return [defaultMin, defaultMax];
+    }
+    return [roundPrice(paddedMin), roundPrice(paddedMax)];
+  }, [visibleData, minPrice, maxPrice, currentPrice]);
 
   const yScale = useMemo(
     () => d3.scaleLinear().domain([yDomainMin, yDomainMax]).range([INNER_H, 0]),
