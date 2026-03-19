@@ -1,14 +1,11 @@
 import type { BitcoinSpokeProvider } from '@sodax/sdk';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
-import { ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL } from './radfiConstants';
 
 export type RadfiSession = {
   accessToken: string;
   refreshToken: string;
   tradingAddress: string;
   publicKey: string;
-  accessTokenExpiry: number;
-  refreshTokenExpiry: number;
 };
 
 type RadfiAuthResult = {
@@ -41,21 +38,9 @@ export function clearRadfiSession(address: string): void {
   } catch {}
 }
 
-export function isAccessTokenExpired(address: string): boolean {
-  const session = loadRadfiSession(address);
-  if (!session) return true;
-  return Date.now() >= session.accessTokenExpiry;
-}
-
-export function isRefreshTokenExpired(address: string): boolean {
-  const session = loadRadfiSession(address);
-  if (!session) return true;
-  return Date.now() >= session.refreshTokenExpiry;
-}
-
 /**
  * Hook to authenticate with Radfi using BIP322 message signing.
- * Saves full session (accessToken, refreshToken, tradingAddress, expiry) to localStorage.
+ * Saves session (accessToken, refreshToken, tradingAddress, publicKey) to localStorage.
  */
 export function useRadfiAuth(
   spokeProvider: BitcoinSpokeProvider | undefined,
@@ -78,8 +63,6 @@ export function useRadfiAuth(
           refreshToken,
           tradingAddress,
           publicKey,
-          accessTokenExpiry: Date.now() + ACCESS_TOKEN_TTL,
-          refreshTokenExpiry: Date.now() + REFRESH_TOKEN_TTL,
         };
 
         saveRadfiSession(walletAddress, session);
@@ -92,23 +75,22 @@ export function useRadfiAuth(
           err instanceof Error &&
           (err.message.includes('duplicatedPubKey') || err.message.includes('4008'));
 
-        if (isAlreadyRegistered) {
-          if (existingSession && !isRefreshTokenExpired(walletAddress)) {
-            // Try silent refresh
+        if (isAlreadyRegistered && existingSession?.refreshToken) {
+          try {
             const refreshed = await spokeProvider.radfi.refreshAccessToken(existingSession.refreshToken);
             const session: RadfiSession = {
               ...existingSession,
               accessToken: refreshed.accessToken,
               refreshToken: refreshed.refreshToken,
-              accessTokenExpiry: Date.now() + ACCESS_TOKEN_TTL,
-              refreshTokenExpiry: Date.now() + REFRESH_TOKEN_TTL,
             };
-            spokeProvider.setRadfiAccessToken(refreshed.accessToken);
+            spokeProvider.setRadfiAccessToken(refreshed.accessToken, refreshed.refreshToken);
             saveRadfiSession(walletAddress, session);
             return { accessToken: refreshed.accessToken, refreshToken: refreshed.refreshToken, tradingAddress: existingSession.tradingAddress };
+          } catch {
+            // Refresh also failed — clear stale session and guide user
+            clearRadfiSession(walletAddress);
           }
 
-          // No valid session to refresh — guide the user
           throw new Error(
             'This wallet is already registered with Radfi from another session. ' +
             'Please clear your browser storage for this site and try again, ' +

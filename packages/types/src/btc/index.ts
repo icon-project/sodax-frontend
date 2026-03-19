@@ -2,6 +2,9 @@ import type { WalletAddressProvider } from "../common/index.js";
 
 export type AddressType = "P2PKH" | "P2WPKH" | "P2TR"
 
+/** User-friendly Bitcoin address type for wallet connection. */
+export type BtcWalletAddressType = 'taproot' | 'segwit';
+
 /**
  * Detect Bitcoin address type from its prefix.
  * Shared utility — use this instead of duplicating prefix checks.

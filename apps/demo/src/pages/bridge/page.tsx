@@ -48,6 +48,7 @@ import {
   useRequestTrustline,
   loadRadfiSession,
   useTradingWalletBalance,
+  useBitcoinBalance,
 } from '@sodax/dapp-kit';
 import { BitcoinSetupPanel } from '@/components/bitcoin/BitcoinSetupPanel';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -167,19 +168,11 @@ export default function BridgePage() {
   const { mutateAsync: bridge, isPending: isBridging } = useBridge(fromProvider);
   const destProvider = useSpokeProvider(order?.dstChainId, useWalletProvider(order?.dstChainId));
 
-  // Bitcoin trading wallet balances (must be after fromProvider/destProvider)
-  const fromTradingAddr = fromToken.xChainId === BITCOIN_MAINNET_CHAIN_ID && fromAccount.address
-    ? loadRadfiSession(fromAccount.address)?.tradingAddress : undefined;
-  const { data: fromTradingBal } = useTradingWalletBalance(
-    fromToken.xChainId === BITCOIN_MAINNET_CHAIN_ID && fromProvider && isBitcoinSpokeProvider(fromProvider) ? fromProvider : undefined,
-    fromTradingAddr,
-  );
-  const toTradingAddr = toTokenChainId === BITCOIN_MAINNET_CHAIN_ID && toAccount.address
-    ? loadRadfiSession(toAccount.address)?.tradingAddress : undefined;
-  const { data: toTradingBal } = useTradingWalletBalance(
-    toTokenChainId === BITCOIN_MAINNET_CHAIN_ID && destProvider && isBitcoinSpokeProvider(destProvider) ? destProvider : undefined,
-    toTradingAddr,
-  );
+  // Bitcoin personal wallet balances
+  const fromBtcAddress = fromToken.xChainId === BITCOIN_MAINNET_CHAIN_ID ? fromAccount.address : undefined;
+  const { data: fromBtcBalance } = useBitcoinBalance(fromBtcAddress);
+  const toBtcAddress = toTokenChainId === BITCOIN_MAINNET_CHAIN_ID ? toAccount.address : undefined;
+  const { data: toBtcBalance } = useBitcoinBalance(toBtcAddress);
 
   const {
     data: hasSufficientTrustline,
@@ -314,7 +307,7 @@ export default function BridgePage() {
             <BitcoinSetupPanel
               spokeProvider={fromProvider}
               onReadyChange={setIsFromBtcReady}
-              nativeBalance={fromTradingBal?.btcSatoshi}
+              nativeBalance={fromBtcBalance}
               connectorName={fromBtcConnector?.name}
               connectorIcon={fromBtcConnector?.icon}
             />
@@ -384,9 +377,10 @@ export default function BridgePage() {
             <BitcoinSetupPanel
               spokeProvider={destProvider}
               onReadyChange={setIsToBtcReady}
-              nativeBalance={toTradingBal?.btcSatoshi}
+              nativeBalance={toBtcBalance}
               connectorName={toBtcConnector?.name}
               connectorIcon={toBtcConnector?.icon}
+              isDestination
             />
           )}
         </CardContent>

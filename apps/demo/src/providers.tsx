@@ -33,12 +33,16 @@ const rpcConfig: RpcConfig = {
     sorobanRpcUrl: 'https://magical-bitter-frost.stellar-mainnet.quiknode.pro/78709b736890cf5a9bcb36e118b9d18e8ecdb7ee',
   },
 
-  // bitcoin — uncomment to use signet (testnet)
+  // bitcoin — override radfi endpoints (canary)
   // bitcoin: {
   //   rpcUrl: 'https://mempool.space/signet/api',
-  //   radfiApiUrl: 'https://api.signet.radfi.co/api',
-  //   radfiUmsUrl: 'https://signet.ums.radfi.co/api',
+  //   radfiApiUrl: 'https://staging.api.radfi.co/api', // https://api.canary.radfi.co/api for prod
+  //   radfiUmsUrl: 'https://staging.ums.radfi.co/api', // https://ums.radfi.co/api for prod
   // },
+  bitcoin: {
+    radfiApiUrl: 'https://api.canary.radfi.co/api',
+    radfiUmsUrl: 'https://ums.radfi.co/api'
+  },
 };
 
 

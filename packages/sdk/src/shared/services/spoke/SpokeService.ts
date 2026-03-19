@@ -463,19 +463,11 @@ export class SpokeService {
       > as TxReturnType<T, R>;
     }
 
-    let srcAddress = encodeAddress(
-      spokeProvider.chainConfig.chain.id,
-      await spokeProvider.walletProvider.getWalletAddress(),
-    )
-
-    if (isBitcoinSpokeProvider(spokeProvider)) {
-      if (spokeProvider.walletMode === 'TRADING') {
-        const tradingWalletAddress = await spokeProvider.radfi.getTradingWallet(
-          await spokeProvider.walletProvider.getWalletAddress()
-        );
-        srcAddress = encodeAddress(spokeProvider.chainConfig.chain.id, tradingWalletAddress.tradingAddress as Address);
-      }
-    }
+    // Bitcoin TRADING mode: srcAddress must match trading wallet (deposit origin)
+    const effectiveAddress = isBitcoinSpokeProvider(spokeProvider)
+      ? await spokeProvider.getEffectiveWalletAddress()
+      : await spokeProvider.walletProvider.getWalletAddress();
+    const srcAddress = encodeAddress(spokeProvider.chainConfig.chain.id, effectiveAddress);
 
     if (!skipSimulation) {
       const result = await SpokeService.simulateRecvMessage(
@@ -572,20 +564,11 @@ export class SpokeService {
     skipSimulation: boolean,
   ): Promise<void> {
     if (!skipSimulation) {
-
-      let srcAddress = encodeAddress(
-        spokeProvider.chainConfig.chain.id,
-        await spokeProvider.walletProvider.getWalletAddress(),
-      )
-
-      if (isBitcoinSpokeProvider(spokeProvider)) {
-        if (spokeProvider.walletMode === 'TRADING') {
-          const tradingWalletAddress = await spokeProvider.radfi.getTradingWallet(
-            await spokeProvider.walletProvider.getWalletAddress()
-          );
-          srcAddress = encodeAddress(spokeProvider.chainConfig.chain.id, tradingWalletAddress.tradingAddress as Address);
-        }
-      }
+      // Bitcoin TRADING mode: srcAddress must match trading wallet (deposit origin)
+      const effectiveAddr = isBitcoinSpokeProvider(spokeProvider)
+        ? await spokeProvider.getEffectiveWalletAddress()
+        : await spokeProvider.walletProvider.getWalletAddress();
+      const srcAddress = encodeAddress(spokeProvider.chainConfig.chain.id, effectiveAddr);
 
       const result = await SpokeService.simulateRecvMessage(
         {
