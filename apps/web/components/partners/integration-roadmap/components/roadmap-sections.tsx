@@ -202,32 +202,57 @@ export function RoadmapSections({
         {bdConfig.chains.trim() && (
           <div className="rounded-xl bg-cherry-soda/5 border border-cherry-soda/20 px-4 py-3">
             <p className="font-medium text-[13px] leading-normal text-espresso">
-              Your chains — {bdConfig.chains.trim()} — are all supported. One integration reaches every network below.
+              Your chains — {bdConfig.chains.trim()} — are all supported.
             </p>
           </div>
         )}
-        <p className="font-normal text-[14px] leading-normal text-clay-dark">
-          One integration. Swaps, deposits, and settlements across every major ecosystem.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {SUPPORTED_NETWORKS_LIST.split(', ').map(network => (
-            <span
-              key={network}
-              className="inline-flex items-center h-7 px-3 rounded-full bg-white text-[12px] font-medium text-espresso border border-cherry-grey/20"
-            >
-              {network}
-            </span>
-          ))}
+        <div className="flex items-baseline gap-2">
+          <span className="font-black text-[36px] leading-none text-espresso">17+</span>
+          <span className="font-normal text-[14px] text-clay-dark">networks across EVM, Solana, Sui, Stellar and more.</span>
         </div>
-        <a
-          href={CHAIN_DOCUMENTATION_ROUTE}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"
-        >
-          Full list &amp; chain config in docs
-          <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
-        </a>
+        {isPublic ? (
+          <div className="flex flex-wrap gap-2">
+            {['Ethereum', 'Solana', 'Base', 'Arbitrum', 'Sui'].map(network => (
+              <span
+                key={network}
+                className="inline-flex items-center h-7 px-3 rounded-full bg-white text-[12px] font-medium text-espresso border border-cherry-grey/20"
+              >
+                {network}
+              </span>
+            ))}
+            <a
+              href={CHAIN_DOCUMENTATION_ROUTE}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-white text-[12px] font-medium text-cherry-soda border border-cherry-grey/20 hover:border-cherry-soda/40 transition-colors"
+            >
+              +10 more
+              <ExternalLink className="w-3 h-3 shrink-0" aria-hidden />
+            </a>
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {SUPPORTED_NETWORKS_LIST.split(', ').map(network => (
+              <span
+                key={network}
+                className="inline-flex items-center h-7 px-3 rounded-full bg-white text-[12px] font-medium text-espresso border border-cherry-grey/20"
+              >
+                {network}
+              </span>
+            ))}
+          </div>
+        )}
+        {!isPublic && (
+          <a
+            href={CHAIN_DOCUMENTATION_ROUTE}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"
+          >
+            Full list &amp; chain config in docs
+            <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
+          </a>
+        )}
       </div>
 
       <div className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
@@ -367,20 +392,25 @@ export function RoadmapSections({
       )}
 
       <div
-        className={`rounded-3xl flex flex-col gap-5 p-6 md:p-8 ${isPublic ? 'bg-espresso' : 'bg-cream-white border border-cherry-grey/20'}`}
+        className={`rounded-3xl flex flex-col gap-5 p-6 md:p-8 ${isPublic ? 'bg-espresso items-center text-center' : 'bg-cream-white border border-cherry-grey/20'}`}
       >
+        {isPublic && (
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-yellow-soda/70 uppercase tracking-wider">
+            ⚡ We respond within 24 hours
+          </span>
+        )}
         <h2
-          className={`font-black text-[18px] sm:text-[20px] leading-[1.2] ${isPublic ? 'text-white' : 'text-espresso'}`}
+          className={`font-black text-[22px] sm:text-[26px] leading-[1.1] ${isPublic ? 'text-white' : 'text-espresso'}`}
         >
           {isPublic ? 'Ready to integrate?' : 'Next steps'}
         </h2>
-        <p className={`font-normal text-[14px] leading-normal ${isPublic ? 'text-clay-light' : 'text-clay-dark'}`}>
+        <p className={`font-normal text-[14px] leading-normal ${isPublic ? 'text-clay-light max-w-md' : 'text-clay-dark'}`}>
           {isPublic
-            ? 'Share your protocol and we\u2019ll send a custom plan \u2014 SDK steps, timeline, and revenue share estimate \u2014 within 24 hours.'
+            ? 'Tell us about your protocol — what you build, your chains, and what you want to unlock. We\u2019ll come back with a plan built around your stack.'
             : 'Open the docs to follow the integration guide, get help in Discord, or reach out to discuss your use case.'}
         </p>
         {isPublic && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 justify-center">
             {ROADMAP_CTA_CHIPS.map(label => (
               <span
                 key={label}
@@ -391,7 +421,7 @@ export function RoadmapSections({
             ))}
           </div>
         )}
-        <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+        <div className={`flex flex-col sm:flex-row flex-wrap gap-3 ${isPublic ? 'justify-center' : ''}`}>
           {!isPublic && (
             <a
               href={DOCUMENTATION_ROUTE}
@@ -415,9 +445,9 @@ export function RoadmapSections({
               })()}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-yellow-soda text-espresso flex h-11 items-center justify-center gap-2 px-8 py-2 rounded-full cursor-pointer font-semibold text-[15px] text-center shrink-0 hover:opacity-90 transition-opacity"
+              className="bg-yellow-soda text-espresso flex h-11 items-center justify-center gap-2 px-8 py-2 rounded-full cursor-pointer font-['Shrikhand'] text-[15px] text-center shrink-0 hover:opacity-90 transition-opacity"
             >
-              Request via email
+              let's build together
             </a>
           ) : (
             <a
@@ -433,6 +463,11 @@ export function RoadmapSections({
             </a>
           )}
         </div>
+        {isPublic && (
+          <p className="font-normal text-[12px] text-clay-light/60">
+            Expect a plan, not a pitch.
+          </p>
+        )}
       </div>
 
       {!isPublic && (

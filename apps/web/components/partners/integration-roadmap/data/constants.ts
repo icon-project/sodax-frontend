@@ -672,16 +672,16 @@ export const COPY_FEEDBACK_DURATION_MS = 2000;
  * Shown to all visitors regardless of category — this is the universal revenue pitch.
  */
 export const PARTNER_ECONOMICS: { headline: string; copy: string }[] = [
-  { headline: 'Revenue share', copy: 'Earn on every swap and deposit routed through your integration.' },
-  { headline: 'Transparent payouts', copy: 'Fee structure is open. No hidden cuts, no surprises.' },
-  { headline: 'Aligned incentives', copy: 'We only grow when your integration drives volume.' },
+  { headline: 'Revenue share on every route', copy: 'Earn on every cross-chain swap and deposit your integration drives. Volume-based, no cap.' },
+  { headline: 'Fixed fee split, visible upfront', copy: 'The fee structure is open before you integrate. No hidden deductions, no surprises after launch.' },
+  { headline: 'We only win when you do', copy: 'No upfront fees. We earn from the same volume you do — our growth depends on yours.' },
 ];
 
 /**
  * Chips shown in the public CTA "Ready to integrate?" card — what the partner gets
  * after they submit the contact form.
  */
-export const ROADMAP_CTA_CHIPS = ['Timeline & SDK steps', 'Revenue share estimates', 'Dedicated tech review'] as const;
+export const ROADMAP_CTA_CHIPS = ['Custom SDK steps for your stack', 'Fee structure breakdown', 'Dedicated tech review'] as const;
 
 /**
  * Text shown at the bottom of a printed roadmap PDF.

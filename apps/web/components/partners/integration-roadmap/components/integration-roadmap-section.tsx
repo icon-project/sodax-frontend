@@ -5,9 +5,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'motion/react';
-import { Route, Layers, ListChecks } from 'lucide-react';
+import { ArrowRight, Route, Layers, ListChecks } from 'lucide-react';
 import { INTEGRATION_ROADMAP_ROUTE } from '@/constants/routes';
 import { INTEGRATION_ROADMAP_COPY } from '@/components/partners/integration-roadmap/data/copy';
+import { EXAMPLE_CHIPS } from '@/components/partners/integration-roadmap/data/constants';
+import { slugifyProtocol } from '@/components/partners/integration-roadmap/lib/slug';
 
 const features = [
   {
@@ -51,8 +53,28 @@ export default function IntegrationRoadmapSection(): React.JSX.Element {
             <h2 className="font-bold text-[26px] sm:text-[32px] leading-[1.1] text-espresso">Integration Roadmap</h2>
           </div>
           <p className="font-normal text-[14px] sm:text-[16px] leading-[1.4] text-espresso text-center max-w-full md:max-w-140">
-            {INTEGRATION_ROADMAP_COPY.publicDescription}
+            {INTEGRATION_ROADMAP_COPY.partnersSectionTagline}
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+            <span className="font-normal text-[12px] text-clay">Try:</span>
+            {EXAMPLE_CHIPS.map((name, i) => (
+              <motion.div
+                key={name}
+                initial={{ opacity: 0, y: 6 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1], delay: 0.05 * i }}
+              >
+                <Link
+                  href={`${INTEGRATION_ROADMAP_ROUTE}/${slugifyProtocol(name)}`}
+                  className="inline-flex items-center gap-1 h-7 px-3 rounded-full border border-cherry-grey bg-white font-normal text-[12px] text-espresso hover:border-cherry-soda hover:text-cherry-soda transition-colors"
+                >
+                  {name}
+                  <ArrowRight className="w-3 h-3 shrink-0 opacity-40" aria-hidden />
+                </Link>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
 
         {/* Feature Cards */}
