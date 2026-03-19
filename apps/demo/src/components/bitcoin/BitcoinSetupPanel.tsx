@@ -49,9 +49,8 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
   const isXverse = activeConnector instanceof XverseXConnector;
 
   // Detect current address type from connected address
-  const currentAddressType: BtcAddressType = walletAddress
-    ? (detectBitcoinAddressType(walletAddress) === 'P2TR' ? 'taproot' : 'segwit')
-    : 'taproot';
+  const detectedAddressType = walletAddress ? detectBitcoinAddressType(walletAddress) : null;
+  const currentAddressType: BtcAddressType = detectedAddressType === 'P2TR' ? 'taproot' : 'segwit';
 
   const handleAddressTypeChange = useCallback(async (newType: BtcAddressType) => {
     if (!isXverse || !activeConnector || newType === currentAddressType) return;

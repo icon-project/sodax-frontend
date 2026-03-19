@@ -151,6 +151,8 @@ export class BitcoinBaseSpokeProvider {
   ): Promise<bitcoin.Psbt> {
     const psbt = new bitcoin.Psbt({ network: provider.network });
     const effectiveFeeRate = feeRate ?? await provider.getFeeEstimate();
+    const walletAddress = await provider.walletProvider.getWalletAddress();
+    const addressType = provider.getAddressType(walletAddress);
 
     let inputSum = 0;
     const outputSum = outputs.reduce((sum, o) => sum + o.value, 0);
@@ -163,6 +165,7 @@ export class BitcoinBaseSpokeProvider {
       const scriptPubKey = await provider.fetchScriptPubKey(utxo, provider);
       const isTaproot = scriptPubKey.startsWith('51');
       const isSegwitV0 = scriptPubKey.startsWith('00');
+      const isP2SH = scriptPubKey.startsWith('a9');
 
       if (isTaproot) {
         if (!provider.walletProvider.getPublicKey) {
@@ -177,6 +180,26 @@ export class BitcoinBaseSpokeProvider {
             value: utxo.value,
           },
           tapInternalKey: Buffer.from(tapInternalKey, 'hex'),
+        });
+      }
+      else if (isP2SH) {
+        // P2SH-P2WPKH (Nested SegWit): needs witnessUtxo + redeemScript
+        if (!provider.walletProvider.getPublicKey) {
+          throw new Error('Missing public key for P2SH-P2WPKH input');
+        }
+        const pubKeyHex = await provider.walletProvider.getPublicKey();
+        const redeemScript = bitcoin.payments.p2wpkh({
+          pubkey: Buffer.from(pubKeyHex, 'hex'),
+          network: provider.network,
+        }).output;
+        psbt.addInput({
+          hash: utxo.txid,
+          index: utxo.vout,
+          witnessUtxo: {
+            script: Buffer.from(scriptPubKey, 'hex'),
+            value: utxo.value,
+          },
+          redeemScript,
         });
       }
       else if (isSegwitV0) {
@@ -204,6 +227,7 @@ export class BitcoinBaseSpokeProvider {
       const estimatedSize = provider.estimateTxSize(
         psbt.inputCount,
         outputs.length,
+        addressType,
       );
       const estimatedFee = Math.ceil(effectiveFeeRate * estimatedSize);
 
@@ -224,10 +248,12 @@ export class BitcoinBaseSpokeProvider {
     const sizeWithChange = provider.estimateTxSize(
       psbt.inputCount,
       outputs.length + 1,
+      addressType,
     );
     const sizeWithoutChange = provider.estimateTxSize(
       psbt.inputCount,
       outputs.length,
+      addressType,
     );
 
     const feeWithChange = Math.ceil(effectiveFeeRate * sizeWithChange);
@@ -447,14 +473,23 @@ export class BitcoinBaseSpokeProvider {
   }
 
   /**
-   * Estimate transaction size in vbytes
+   * Estimate transaction size in vbytes.
+   * @param addressType — caller's address type for accurate per-input weight.
+   *   P2PKH ≈ 148 vB, P2SH-P2WPKH ≈ 91 vB, P2WPKH ≈ 68 vB, P2TR ≈ 58 vB.
+   *   Defaults to P2WPKH (68 vB) when omitted.
    */
-  public estimateTxSize(inputCount: number, outputCount: number): number {
-    // SegWit (P2WPKH) tx size estimate:
+  public estimateTxSize(inputCount: number, outputCount: number, addressType?: AddressType): number {
     // 10.5 vB fixed overhead
     // +44 vB for one OP_RETURN (~33-byte payload), not included in outputCount
-    // 68 vB per input, 31 vB per non-OP_RETURN output
-    return Math.ceil(10.5 + 44 + (inputCount * 68) + (outputCount * 31));
+    // 31 vB per non-OP_RETURN output
+    let inputWeight: number;
+    switch (addressType) {
+      case 'P2PKH':  inputWeight = 148; break;
+      case 'P2SH':   inputWeight = 91;  break;
+      case 'P2TR':   inputWeight = 58;  break;
+      default:        inputWeight = 68;  break;
+    }
+    return Math.ceil(10.5 + 44 + (inputCount * inputWeight) + (outputCount * 31));
   }
 
   public getAddressType(address: string): AddressType {
@@ -593,7 +628,11 @@ export class BitcoinSpokeProvider extends BitcoinBaseSpokeProvider implements IS
     }
 
     const message = `Login to Radfi via Sodax: ${Date.now()}`;
-    const signature = await this.walletProvider.signBip322Message(message);
+    const addressType = this.getAddressType(address);
+    // BIP322 signing is supported for P2WPKH and P2TR; P2SH and P2PKH use ECDSA
+    const signature = addressType === 'P2WPKH' || addressType === 'P2TR'
+      ? await this.walletProvider.signBip322Message(message)
+      : await this.walletProvider.signEcdsaMessage(message);
 
     const result = await this.radfi.authenticate({ message, signature, address, publicKey });
     this.setRadfiAccessToken(result.accessToken, result.refreshToken);
