@@ -5,14 +5,14 @@
 import { useState } from 'react';
 import { Check, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { QUICK_START_INSTALL } from '../data/constants';
+import { COPY_FEEDBACK_DURATION_MS, QUICK_START_INSTALL } from '../data/constants';
 
 export function QuickStartInstall(): React.JSX.Element {
   const [copied, setCopied] = useState(false);
   const handleCopy = async (): Promise<void> => {
     await navigator.clipboard.writeText(QUICK_START_INSTALL);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), COPY_FEEDBACK_DURATION_MS);
   };
   return (
     <div className="bg-white rounded-3xl flex flex-col gap-3 p-6 md:p-8 border border-cherry-grey/20">

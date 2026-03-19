@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import type { BdConfig, CategoryId, WhyBullet } from '../types';
-import { DEFAULT_FROM_SUFFIX } from '../data/constants';
+import { COPY_FEEDBACK_DURATION_MS, DEFAULT_FROM_SUFFIX } from '../data/constants';
 import { loadDraftFromStorage, saveDraftToStorage } from '../lib/draft-storage';
 import { slugifyProtocol } from '../lib/slug';
 
@@ -63,20 +63,20 @@ export function BdComposer({
   const handleCopyProspect = async (): Promise<void> => {
     await navigator.clipboard.writeText(buildUrl(false));
     setCopiedProspect(true);
-    setTimeout(() => setCopiedProspect(false), 2000);
+    setTimeout(() => setCopiedProspect(false), COPY_FEEDBACK_DURATION_MS);
   };
 
   const handleCopyBd = async (): Promise<void> => {
     await navigator.clipboard.writeText(buildUrl(true));
     saveDraftToStorage(bdConfig);
     setCopiedBd(true);
-    setTimeout(() => setCopiedBd(false), 2000);
+    setTimeout(() => setCopiedBd(false), COPY_FEEDBACK_DURATION_MS);
   };
 
   const handleSaveDraft = (): void => {
     saveDraftToStorage(bdConfig);
     setDraftSaved(true);
-    setTimeout(() => setDraftSaved(false), 2000);
+    setTimeout(() => setDraftSaved(false), COPY_FEEDBACK_DURATION_MS);
   };
 
   const handleLoadDraft = (): void => {

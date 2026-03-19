@@ -1,4 +1,22 @@
 // Integration Roadmap — static data
+//
+// HOW CATEGORY MATCHING WORKS (3 tiers, in priority order):
+//
+//   1. PROTOCOL_OVERRIDES (bottom of this file) — exact protocol name → category.
+//      Checked first. Use this for well-known protocols whose names contain no
+//      obvious keywords (e.g. "Lido", "Pendle", "EigenLayer").
+//      Also use this to add custom why-bullets for VIP prospects.
+//
+//   2. CATEGORIES[n].keywords — substring match against what the user typed.
+//      If the input contains any keyword, that category wins.
+//      Catches descriptive inputs like "yield aggregator" or "lending protocol".
+//
+//   3. AI classify (/api/roadmap/classify) — fires only when both tiers above
+//      return no confident match. Calls Claude Haiku to classify the name.
+//      Requires ANTHROPIC_API_KEY in env vars.
+//
+// To add a new protocol: add it to PROTOCOL_OVERRIDES with its categoryId.
+// To support a new descriptive term: add it to the relevant keywords array.
 
 import { WalletIcon, ArrowsLeftRightIcon, VaultIcon, TrendUpIcon, GlobeIcon, PathIcon } from '@phosphor-icons/react';
 import { DOCUMENTATION_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
@@ -20,8 +38,12 @@ export const EMPTY_BD_CONFIG: BdConfig = {
 };
 
 // ─── Partner categories ───────────────────────────────────────────────────────
-// Order matters: keyword matching iterates this array top-to-bottom, so place
-// more specific categories before generic ones.
+// Each category has:
+//   id       — the internal key used everywhere (URLs, overrides, BD config)
+//   title    — shown to partners in the UI
+//   keywords — if the user's input contains any of these substrings, this category
+//              is auto-selected. Order matters: first match wins, so keep more
+//              specific categories before generic ones (e.g. wallets before dexs).
 
 export const CATEGORIES: RoadmapCategory[] = [
   {
@@ -42,6 +64,13 @@ export const CATEGORIES: RoadmapCategory[] = [
       'bitget',
       'zerion',
       'coinbase wallet',
+      'safe',
+      'ledger',
+      'trezor',
+      'keystore',
+      'custodial',
+      'mpc wallet',
+      'smart wallet',
     ],
   },
   {
@@ -92,6 +121,16 @@ export const CATEGORIES: RoadmapCategory[] = [
       'ionic',
       'spark',
       'bonzo',
+      'cdp',
+      'credit',
+      'money market',
+      'interest rate',
+      'overcollateral',
+      'liquidation',
+      'rwa',
+      'real world asset',
+      'tokenized',
+      'treasury',
     ],
   },
   {
@@ -118,6 +157,14 @@ export const CATEGORIES: RoadmapCategory[] = [
       'staking',
       'restaking',
       'liquid staking',
+      'lst',
+      'lsd',
+      'options',
+      'perpetual',
+      'leverage',
+      'synthetic',
+      'fixed income',
+      'yield trading',
     ],
   },
   {
@@ -139,6 +186,13 @@ export const CATEGORIES: RoadmapCategory[] = [
       'cosmos',
       'op stack',
       'zkstack',
+      'bridge',
+      'oracle',
+      'interoperability',
+      'cross-chain',
+      'data availability',
+      'middleware',
+      'modular',
     ],
   },
   {
@@ -356,8 +410,19 @@ export const STEPS_BY_CATEGORY: Record<CategoryId, string[]> = {
 };
 
 // ─── Protocol overrides ───────────────────────────────────────────────────────
+// Maps a protocol's brand name (lowercase) to a category and optional custom
+// why-bullets. Checked before keyword matching, so it always wins.
+//
+// Keys are lowercase exact names — e.g. 'uniswap', 'lido', 'cow protocol'.
+// Prefix matching also works: 'uniswap' matches "Uniswap v4", "Uniswap v3", etc.
+// (handled in findProtocolOverride() in lib/utils.ts)
+//
+// customWhy is optional — only add it for VIP prospects where generic bullets
+// aren't compelling enough. Leave it out for a simple category assignment.
 
 export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
+  // ── DEXs & Aggregators ────────────────────────────────────────────────────
+  // Protocols whose names don't contain "swap", "dex", etc. but are clearly DEXs.
   uniswap: {
     categoryId: 'dexs',
     customWhy: [
@@ -376,16 +441,27 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
       { headline: 'No UX change required', copy: 'SODAX plugs directly into your existing aggregation stack.' },
     ],
   },
+  // These have custom why-bullets above (Uniswap, 1inch). The rest just need a category pin.
   kyberswap: { categoryId: 'dexs' },
   paraswap: { categoryId: 'dexs' },
   jupiter: { categoryId: 'dexs' },
+  meteora: { categoryId: 'dexs' },
   orca: { categoryId: 'dexs' },
   raydium: { categoryId: 'dexs' },
+  'pump.fun': { categoryId: 'dexs' },
   sushiswap: { categoryId: 'dexs' },
   pancakeswap: { categoryId: 'dexs' },
   velodrome: { categoryId: 'dexs' },
   aerodrome: { categoryId: 'dexs' },
+  balancer: { categoryId: 'dexs' },
+  bancor: { categoryId: 'dexs' },
+  dodo: { categoryId: 'dexs' },
+  maverick: { categoryId: 'dexs' },
+  'li.fi': { categoryId: 'dexs' },
+  lifi: { categoryId: 'dexs' },
 
+  // ── Lending & Money Markets ───────────────────────────────────────────────
+  // Includes CDP stablecoins (Maker/Sky, Frax) and RWA-adjacent lenders.
   aave: {
     categoryId: 'lending',
     customWhy: [
@@ -400,9 +476,22 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
   venus: { categoryId: 'lending' },
   euler: { categoryId: 'lending' },
   spark: { categoryId: 'lending' },
+  maker: { categoryId: 'lending' },
+  makerdao: { categoryId: 'lending' },
+  sky: { categoryId: 'lending' },
+  frax: { categoryId: 'lending' },
+  kamino: { categoryId: 'lending' },
+  justlend: { categoryId: 'lending' },
+  gearbox: { categoryId: 'lending' },
+  huma: { categoryId: 'lending' },
+  creditcoin: { categoryId: 'lending' },
+  ctc: { categoryId: 'lending' },
+  'summer.fi': { categoryId: 'lending' },
+  summerfi: { categoryId: 'lending' },
   'bonzo finance': { categoryId: 'lending' },
   bonzo: { categoryId: 'lending' },
 
+  // ── Wallets ───────────────────────────────────────────────────────────────
   metamask: {
     categoryId: 'wallets',
     customWhy: [
@@ -428,6 +517,11 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
   zerion: { categoryId: 'wallets' },
   backpack: { categoryId: 'wallets' },
 
+  // ── Perp DEXs, Yield, Staking & RWAs ─────────────────────────────────────
+  // Perp DEXs (GMX, dYdX, Hyperliquid), yield vaults (Yearn, Convex),
+  // liquid staking (Lido, Rocket Pool, Jito), restaking (EigenLayer, Renzo, Karak),
+  // yield trading (Pendle), synthetic dollars (Ethena), and RWA yield (Ondo, Usual).
+  // All route deposits from any chain into their native asset — same SDK pattern.
   gmx: {
     categoryId: 'perp-yield',
     customWhy: [
@@ -437,6 +531,7 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
       { headline: 'Minimal development lift', copy: 'Same SDK hooks for deposits and redemptions across all chains.' },
     ],
   },
+  // dYdX — perpetual and margin trading platform (Cosmos app-chain)
   dydx: {
     categoryId: 'perp-yield',
     customWhy: [
@@ -446,10 +541,48 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
       { headline: 'Increase accessible TVL', copy: "Remove friction for users on chains dYdX doesn't natively support." },
     ],
   },
-  hyperliquid: { categoryId: 'perp-yield' },
-  drift: { categoryId: 'perp-yield' },
-  vertex: { categoryId: 'perp-yield' },
+  // Perp DEXs
+  hyperliquid: { categoryId: 'perp-yield' }, // high-performance on-chain perps
+  drift: { categoryId: 'perp-yield' },       // Solana perps
+  vertex: { categoryId: 'perp-yield' },      // Arbitrum perps + spot
+  synthetix: { categoryId: 'perp-yield' },   // synthetic assets & perps
+  kwenta: { categoryId: 'perp-yield' },      // Synthetix-powered perps UI
+  gains: { categoryId: 'perp-yield' },       // gTrade — leveraged trading
+  aevo: { categoryId: 'perp-yield' },        // options & perps exchange
+  // Options
+  ribbon: { categoryId: 'perp-yield' },      // structured products / options vaults
+  opyn: { categoryId: 'perp-yield' },        // on-chain options protocol
+  lyra: { categoryId: 'perp-yield' },        // options AMM
+  premia: { categoryId: 'perp-yield' },      // decentralised options
+  // Liquid staking
+  lido: { categoryId: 'perp-yield' },        // stETH — largest liquid staking protocol
+  'rocket pool': { categoryId: 'perp-yield' }, // rETH — decentralised ETH staking
+  rocketpool: { categoryId: 'perp-yield' },
+  jito: { categoryId: 'perp-yield' },        // jitoSOL — Solana liquid staking + MEV
+  // Restaking
+  eigenlayer: { categoryId: 'perp-yield' },  // pioneered ETH restaking
+  'ether.fi': { categoryId: 'perp-yield' },  // eETH — largest restaking LST
+  etherfi: { categoryId: 'perp-yield' },
+  renzo: { categoryId: 'perp-yield' },       // ezETH restaking
+  kerneldao: { categoryId: 'perp-yield' },   // multi-asset restaking
+  kernel: { categoryId: 'perp-yield' },
+  karak: { categoryId: 'perp-yield' },       // universal restaking network
+  symbiotic: { categoryId: 'perp-yield' },   // permissionless restaking
+  // Yield
+  pendle: { categoryId: 'perp-yield' },      // yield trading & fixed-income tokenisation
+  ethena: { categoryId: 'perp-yield' },      // USDe synthetic dollar / yield
+  convex: { categoryId: 'perp-yield' },      // Curve yield booster
+  yearn: { categoryId: 'perp-yield' },       // yield aggregator vaults
+  syrup: { categoryId: 'perp-yield' },       // yield protocol
+  barnbridge: { categoryId: 'perp-yield' },  // risk tokenisation / tranching
+  // RWAs — tokenised real-world assets; closest fit is perp-yield (institutional yield deposits)
+  ondo: { categoryId: 'perp-yield' },        // tokenised US Treasuries
+  usual: { categoryId: 'perp-yield' },       // USD0 stablecoin backed by RWAs
+  hashnote: { categoryId: 'perp-yield' },    // USYC — tokenised T-bills
+  spiko: { categoryId: 'perp-yield' },       // tokenised money market funds
+  buidl: { categoryId: 'perp-yield' },       // BlackRock tokenised fund
 
+  // ── Solver marketplaces & intent-based protocols ─────────────────────────
   near: {
     categoryId: 'solver-marketplaces',
     customWhy: [
@@ -462,6 +595,22 @@ export const PROTOCOL_OVERRIDES: Record<string, ProtocolOverride> = {
   'cow protocol': { categoryId: 'solver-marketplaces' },
   bebop: { categoryId: 'solver-marketplaces' },
   hashflow: { categoryId: 'solver-marketplaces' },
+
+  // ── New networks, bridges, oracles & infrastructure ──────────────────────
+  // Bridges
+  layerzero: { categoryId: 'new-networks' },  // omnichain messaging protocol
+  'layer zero': { categoryId: 'new-networks' },
+  wormhole: { categoryId: 'new-networks' },   // cross-chain messaging & bridge
+  stargate: { categoryId: 'new-networks' },   // LayerZero-powered liquidity bridge
+  across: { categoryId: 'new-networks' },     // fast intent-based bridge
+  hop: { categoryId: 'new-networks' },        // rollup-to-rollup bridge
+  synapse: { categoryId: 'new-networks' },    // cross-chain bridge & AMM
+  socket: { categoryId: 'new-networks' },     // cross-chain middleware / aggregator
+  celer: { categoryId: 'new-networks' },      // cBridge + inter-chain messaging
+  // Oracles & data
+  chainlink: { categoryId: 'new-networks' },  // most widely used oracle network
+  'the graph': { categoryId: 'new-networks' }, // blockchain data indexing
+  thegraph: { categoryId: 'new-networks' },
 };
 
 // ─── Miscellaneous copy ───────────────────────────────────────────────────────
@@ -473,8 +622,64 @@ export const SUPPORTED_NETWORKS_LIST =
 /** Command shown in the Quick Start install block. */
 export const QUICK_START_INSTALL = 'pnpm add @sodax/sdk @sodax/wallet-sdk-react @sodax/dapp-kit';
 
+/**
+ * How long (ms) a "Copied!" confirmation stays visible before reverting.
+ * Used in bd-composer, quick-start-install, and IntegrationRoadmapUi copy buttons.
+ */
+export const COPY_FEEDBACK_DURATION_MS = 2000;
+
+/**
+ * Partner economics bullets shown in the roadmap "Partner economics" card.
+ * Shown to all visitors regardless of category — this is the universal revenue pitch.
+ */
+export const PARTNER_ECONOMICS: { headline: string; copy: string }[] = [
+  { headline: 'Revenue share', copy: 'Earn on every swap and deposit routed through your integration.' },
+  { headline: 'Transparent payouts', copy: 'Fee structure is open. No hidden cuts, no surprises.' },
+  { headline: 'Aligned incentives', copy: 'We only grow when your integration drives volume.' },
+];
+
+/**
+ * Chips shown in the public CTA "Ready to integrate?" card — what the partner gets
+ * after they submit the contact form.
+ */
+export const ROADMAP_CTA_CHIPS = ['Timeline & SDK steps', 'Revenue share estimates', 'Dedicated tech review'] as const;
+
+/**
+ * Text shown at the bottom of a printed roadmap PDF.
+ * Year is kept dynamic so it doesn't go stale on a new year.
+ */
+export const ROADMAP_PRINT_FOOTER = `sodax.com/partners · © ${new Date().getFullYear()} ICON Foundation`;
+
 /** One representative example per category, shown as clickable chips below the input. */
-export const EXAMPLE_CHIPS = ['MetaMask', 'Uniswap', 'Aave', 'GMX', 'LightLink', 'NEAR'] as const;
+export const EXAMPLE_CHIPS = ['MetaMask', 'Uniswap', 'Aave', 'Lido', 'LightLink', 'NEAR'] as const;
+
+/**
+ * Protocol name badges shown on the partner category cards (public-facing).
+ * These are display names only — not used for matching. Pick well-known names
+ * that a builder in that vertical would immediately recognise.
+ */
+export const CATEGORY_EXAMPLES: Record<CategoryId, string[]> = {
+  wallets: ['MetaMask', 'Phantom', 'Trust Wallet', 'Hana Wallet'],
+  dexs: ['Uniswap', '1inch', 'Jupiter', 'Balancer'],
+  lending: ['Aave', 'Morpho', 'Compound', 'Sky'],
+  'perp-yield': ['Lido', 'Pendle', 'EigenLayer', 'Hyperliquid'],
+  'new-networks': ['LayerZero', 'Wormhole', 'LightLink', 'Stargate'],
+  'solver-marketplaces': ['NEAR Intents', 'CoW Protocol', '1inch Fusion', 'Bebop'],
+};
+
+/**
+ * Short punchy tagline per category — shown on the public partner categories section.
+ * Answers "what's immediately in it for me?" for a builder scanning the page.
+ * Keep each under ~60 characters.
+ */
+export const CATEGORY_TAGLINES: Record<CategoryId, string> = {
+  wallets: 'In-wallet swaps across 17+ networks. No bridge UX.',
+  dexs: 'Cross-chain routing from a single integration point.',
+  lending: 'Cross-network collateral and borrowing in one flow.',
+  'perp-yield': 'Accept deposits from any chain. Settle in ~22 seconds.',
+  'new-networks': 'Launch cross-chain-ready from day one.',
+  'solver-marketplaces': '17+ networks as composable route sources.',
+};
 
 /**
  * Generic terms that should resolve to the category title rather than be shown

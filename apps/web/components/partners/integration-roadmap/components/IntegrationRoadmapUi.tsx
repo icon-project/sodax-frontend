@@ -17,6 +17,7 @@ import {
   STEPS_BY_CATEGORY,
   TIMELINE_BY_CATEGORY,
   WHY_SODAX_BY_CATEGORY,
+  COPY_FEEDBACK_DURATION_MS,
 } from '../data/constants';
 import { INTEGRATION_ROADMAP_COPY } from '../data/copy';
 import { loadDraftFromStorage } from '../lib/draft-storage';
@@ -160,7 +161,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
   const handleGenerate = async (): Promise<void> => {
     const display = protocolName.trim() || 'Your protocol';
 
-    // 1. Show roadmap immediately with hardcoded match (instant)
+    // 1. Show roadmap immediately with keyword/override match (instant)
     const { category, matched } = matchCategory(protocolName);
     setRoadmap({ category, protocolDisplay: display, matched });
 
@@ -168,9 +169,11 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
     setIsLoading(true);
     try {
       const res = await fetch(`/api/roadmap/${encodeURIComponent(display)}`);
+      let notionResolved = false;
       if (res.ok) {
         const data = await res.json();
         if (data && !data.error) {
+          notionResolved = true;
           // Override category if Notion has one
           const notionCategory = CATEGORIES.find(c => c.id === data.categoryId);
           setRoadmap({
@@ -190,8 +193,27 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
           setNotionWhyBullets(data.whyBullets ?? []);
         }
       }
+
+      // 3. AI classification fallback — only when keyword match wasn't confident and Notion had nothing.
+      //    Handles protocols whose names don't contain obvious keywords (e.g. "Lido", "Frax", "Pendle").
+      if (!matched && !notionResolved) {
+        const classifyRes = await fetch('/api/roadmap/classify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: display }),
+        });
+        if (classifyRes.ok) {
+          const classifyData = await classifyRes.json();
+          if (classifyData.categoryId) {
+            const aiCategory = CATEGORIES.find(c => c.id === classifyData.categoryId);
+            if (aiCategory) {
+              setRoadmap(prev => (prev ? { ...prev, category: aiCategory, matched: true } : prev));
+            }
+          }
+        }
+      }
     } catch {
-      // silently fall back to hardcoded content
+      // silently fall back to keyword match result
     } finally {
       setIsLoading(false);
     }
@@ -209,7 +231,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
     const path = protocol ? `${INTEGRATION_ROADMAP_ROUTE}/${slugifyProtocol(protocol)}` : INTEGRATION_ROADMAP_ROUTE;
     await navigator.clipboard.writeText(`${origin}${path}`);
     setLinkCopied(true);
-    setTimeout(() => setLinkCopied(false), 2000);
+    setTimeout(() => setLinkCopied(false), COPY_FEEDBACK_DURATION_MS);
   };
 
   const handleDownloadPdf = (): void => {

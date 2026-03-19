@@ -18,6 +18,9 @@ import {
   ALL_CASE_STUDIES,
   CASE_STUDY_BY_CATEGORY,
   CATEGORIES,
+  PARTNER_ECONOMICS,
+  ROADMAP_CTA_CHIPS,
+  ROADMAP_PRINT_FOOTER,
   SDK_LAYERS,
   SUPPORTED_NETWORKS_LIST,
 } from '../data/constants';
@@ -71,11 +74,11 @@ export function RoadmapSections({
 
   return (
     <>
-      {!roadmap.matched && (
-        <div className="rounded-xl bg-negative/40 border border-cherry-grey/20 px-4 py-3">
+      {!roadmap.matched && view === 'bd' && (
+        <div className="rounded-xl bg-negative/40 border border-cherry-grey/20 px-4 py-3 print:hidden">
           <p className="font-normal text-[13px] leading-[1.45] text-espresso">
-            We couldn&apos;t identify a protocol type for &ldquo;{roadmap.protocolDisplay}&rdquo;. Choose your category
-            below to see the right roadmap.
+            Couldn&apos;t auto-match a category for &ldquo;{roadmap.protocolDisplay}&rdquo; — pick the right one below
+            before sharing the prospect link.
           </p>
         </div>
       )}
@@ -84,6 +87,8 @@ export function RoadmapSections({
         <div className="flex items-center gap-3 flex-wrap">
           <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Partner category</h2>
         </div>
+
+
         <div className="flex gap-3 items-start">
           {(() => {
             const Icon = roadmap.category.icon;
@@ -110,11 +115,13 @@ export function RoadmapSections({
             })()}
           </div>
         </div>
+
         {!readOnly && (
-          <div className="flex flex-wrap items-center gap-2 mt-2">
-            <span className="font-normal text-[13px] leading-[1.4] text-clay-dark">
-              Not the right fit? Choose category:
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            <span className="font-semibold text-[13px] leading-[1.4] text-cherry-soda">
+              Not the right fit?
             </span>
+            <span className="font-normal text-[13px] leading-[1.4] text-clay-dark">Choose category:</span>
             <Select
               value={roadmap.category.id}
               onValueChange={(id: CategoryId) => {
@@ -211,13 +218,7 @@ export function RoadmapSections({
           Partner economics
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {(
-            [
-              { headline: 'Revenue share', copy: 'Earn on every swap and deposit routed through your integration.' },
-              { headline: 'Transparent payouts', copy: 'Fee structure is open. No hidden cuts, no surprises.' },
-              { headline: 'Aligned incentives', copy: 'We only grow when your integration drives volume.' },
-            ] as const
-          ).map(item => (
+          {PARTNER_ECONOMICS.map(item => (
             <div key={item.headline} className="flex flex-col gap-1 rounded-xl bg-cream-white px-4 pt-3.5 pb-4">
               <span className="font-bold text-[14px] leading-snug text-espresso">{item.headline}</span>
               <span className="font-normal text-[13px] leading-[1.45] text-clay">{item.copy}</span>
@@ -344,7 +345,7 @@ export function RoadmapSections({
         </p>
         {isPublic && (
           <div className="flex flex-wrap gap-2">
-            {(['Timeline & SDK steps', 'Revenue share estimates', 'Dedicated tech review'] as const).map(label => (
+            {ROADMAP_CTA_CHIPS.map(label => (
               <span key={label} className="inline-flex items-center h-7 px-3 rounded-full bg-white/10 text-[12px] font-medium text-cream-white">
                 {label}
               </span>
@@ -461,7 +462,7 @@ export function RoadmapSections({
         className="hidden print:block pt-6 mt-4 border-t border-cherry-grey/30 text-center font-normal text-[11px] text-clay"
         aria-hidden
       >
-        sodax.com/partners · © 2025 ICON Foundation{printDate ? ` · ${printDate}` : ''}
+        {ROADMAP_PRINT_FOOTER}{printDate ? ` · ${printDate}` : ''}
       </div>
     </>
   );
