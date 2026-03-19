@@ -46,8 +46,14 @@ export type RadfiUtxoListResponse = {
 
 export type RadfiBuildTxResponse = {
   base64Psbt: string;
-  fee: number;
+  fee: { feeRate: number; totalFee: number };
   txId: string;
+};
+
+export type RadfiMaxSpentResponse = {
+  maxSatsAmt: number;
+  feeRate: number;
+  fee: number;
 };
 
 export class RadfiProvider {
@@ -300,6 +306,93 @@ export class RadfiProvider {
     }
 
     return res.json().then(r => r.data.txId);
+  }
+
+  /**
+   * Withdraw BTC from trading wallet to user's personal wallet.
+   * Returns an unsigned PSBT for the user to sign.
+   */
+  public async withdrawToUser(params: {
+    userAddress: string;
+    amount: string;
+    tokenId: string;
+    withdrawTo: string;
+  }, accessToken: string): Promise<RadfiBuildTxResponse> {
+    const res = await this.request('/transactions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        type: 'withdraw',
+        params,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Failed to build withdraw transaction');
+    }
+
+    return res.json().then(r => r.data);
+  }
+
+  /**
+   * Sign and broadcast a withdraw transaction via Radfi.
+   */
+  public async signAndBroadcastWithdraw(
+    params: { userAddress: string; signedBase64Tx: string },
+    accessToken: string,
+  ): Promise<string> {
+    const res = await this.request('/transactions/sign', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        type: 'withdraw',
+        params,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Failed to sign and broadcast withdraw transaction');
+    }
+
+    return res.json().then(r => {
+      const txId = r.data?.txId;
+      // API may return nested response: { txId: { data: "actualTxId" } }
+      return typeof txId === 'object' && txId?.data ? txId.data : txId;
+    });
+  }
+
+  /**
+   * Get max spendable amount for a withdraw transaction (amount after fee).
+   */
+  public async getMaxWithdrawable(params: {
+    userAddress: string;
+    amount: string;
+    tokenId: string;
+    withdrawTo: string;
+  }, accessToken: string): Promise<RadfiMaxSpentResponse> {
+    const res = await this.request('/transactions/max-spent', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        type: 'withdraw',
+        params,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Failed to get max withdrawable amount');
+    }
+
+    return res.json().then(r => r.data);
   }
 
   private async request(

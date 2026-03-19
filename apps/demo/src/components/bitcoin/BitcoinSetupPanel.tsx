@@ -1,13 +1,15 @@
 import React from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { useRadfiSession, useTradingWalletBalance, useFundTradingWallet, useExpiredUtxos, useRenewUtxos } from '@sodax/dapp-kit';
+import { useRadfiSession, useTradingWalletBalance, useFundTradingWallet, useExpiredUtxos, useRenewUtxos, useRadfiWithdraw } from '@sodax/dapp-kit';
 import { useXConnection, useXConnectors, useXConnect, useXDisconnect, XverseXConnector, type BtcWalletAddressType } from '@sodax/wallet-sdk-react';
 import type { BitcoinSpokeProvider } from '@sodax/sdk';
 import { detectBitcoinAddressType } from '@sodax/types';
 import { formatUnits } from 'viem';
 import { Loader2, Copy, ExternalLink, Check, AlertTriangle, RefreshCw } from 'lucide-react';
 import { FundTradingWalletDialog } from './FundTradingWalletDialog';
+import { WithdrawTradingWalletDialog } from './WithdrawTradingWalletDialog';
+import { loadRadfiSession } from '@sodax/dapp-kit';
 
 interface BitcoinSetupPanelProps {
   spokeProvider: BitcoinSpokeProvider;
@@ -30,9 +32,11 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
   const { mutateAsync: fundWallet, isPending: isFunding } = useFundTradingWallet(spokeProvider);
   const { data: expiredUtxos, isLoading: isExpiredLoading } = useExpiredUtxos(spokeProvider, tradingAddress);
   const { mutateAsync: renewUtxos, isPending: isRenewing } = useRenewUtxos(spokeProvider);
+  const { mutateAsync: withdrawFromTradingWallet, isPending: isWithdrawing } = useRadfiWithdraw(spokeProvider);
   const [copied, setCopied] = useState(false);
   const [renewError, setRenewError] = useState<string | null>(null);
   const [showFundDialog, setShowFundDialog] = useState(false);
+  const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
 
   // Address type selector (Xverse only)
   const xConnection = useXConnection('BITCOIN');
@@ -82,6 +86,19 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
     );
     onReadyChange(isReady);
   }, [isAuthed, tradingAddress, tradingBalance, expiredUtxos, isDestination, onReadyChange]);
+
+  const handleFetchMax = useCallback(async (withdrawTo: string) => {
+    if (!spokeProvider || !walletAddress) return undefined;
+    const session = loadRadfiSession(walletAddress);
+    const accessToken = session?.accessToken;
+    if (!accessToken) return undefined;
+    const balance = tradingBalance?.btcSatoshi ?? 0n;
+    if (balance <= 0n) return undefined;
+    return spokeProvider.radfi.getMaxWithdrawable(
+      { userAddress: walletAddress, amount: balance.toString(), tokenId: '0:0', withdrawTo },
+      accessToken,
+    );
+  }, [spokeProvider, walletAddress, tradingBalance]);
 
   const handleRenewUtxos = async () => {
     if (!expiredUtxos?.length) return;
@@ -141,12 +158,26 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
         <div className="flex flex-col gap-3">
 
           {/* Trading wallet address + Top Up */}
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">
-              Trading Wallet
-            </span>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">
+                Trading Wallet
+              </span>
+              {tradingAddress && (
+                <div className="flex items-center gap-1.5">
+                  <Button size="sm" onClick={() => setShowFundDialog(true)} disabled={isFunding}>
+                    {isFunding ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : null}
+                    Top Up
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setShowWithdrawDialog(true)} disabled={isWithdrawing}>
+                    {isWithdrawing ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : null}
+                    Withdraw
+                  </Button>
+                </div>
+              )}
+            </div>
             {tradingAddress ? (
-              <span className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5">
                 <span className="text-xs text-muted-foreground font-mono" title={tradingAddress}>
                   {tradingAddress.slice(0, 8)}...{tradingAddress.slice(-6)}
                 </span>
@@ -156,15 +187,9 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
                 <a href={`https://mempool.space/address/${tradingAddress}`} target="_blank" rel="noopener noreferrer" className="cursor-pointer text-muted-foreground hover:text-foreground transition-colors" title="View on mempool.space">
                   <ExternalLink className="h-3 w-3" />
                 </a>
-              </span>
+              </div>
             ) : (
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            )}
-            {tradingAddress && (
-              <Button size="sm" onClick={() => setShowFundDialog(true)} disabled={isFunding}>
-                {isFunding ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : null}
-                Top Up
-              </Button>
             )}
           </div>
 
@@ -209,6 +234,23 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
                     await fundWallet(amount);
                   }}
                   isFunding={isFunding}
+                />
+              )}
+
+              {/* Withdraw dialog */}
+              {walletAddress && tradingAddress && (
+                <WithdrawTradingWalletDialog
+                  open={showWithdrawDialog}
+                  onOpenChange={setShowWithdrawDialog}
+                  tradingAddress={tradingAddress}
+                  tradingBalance={tradingBalance?.btcSatoshi ?? 0n}
+                  connectorName={connectorName}
+                  connectorIcon={connectorIcon}
+                  onWithdraw={async (amount, withdrawTo) => {
+                    return withdrawFromTradingWallet({ amount, tokenId: '0:0', withdrawTo });
+                  }}
+                  isWithdrawing={isWithdrawing}
+                  onFetchMax={handleFetchMax}
                 />
               )}
 
