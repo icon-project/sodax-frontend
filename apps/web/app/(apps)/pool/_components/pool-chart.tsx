@@ -15,15 +15,96 @@ type TickPoint = {
   liquidity: number;
 };
 
-function generateETHData(): PricePoint[] {
-  const data: PricePoint[] = [];
-  let price = 2800;
-  const now = Date.now();
+type OhlcInterval = '1h' | '1d';
 
-  for (let i = 730; i >= 0; i--) {
-    price += (Math.random() - 0.47) * 55;
-    price = Math.max(1200, Math.min(4800, price));
-    data.push({ time: now - i * 24 * 60 * 60 * 1000, price: +price.toFixed(2) });
+type OhlcApiPoint = {
+  bucket: string;
+  close_sqrt: string;
+};
+
+function normalizeExternalPrice(value: number | null | undefined): number | null {
+  if (value === null || value === undefined || !Number.isFinite(value) || value <= 0) {
+    return null;
+  }
+  return roundPrice(value);
+}
+
+function getPriceDecimals(value: number): number {
+  const absValue = Math.abs(value);
+  if (absValue >= 1000) {
+    return 2;
+  }
+  if (absValue >= 1) {
+    return 4;
+  }
+  if (absValue >= 0.1) {
+    return 5;
+  }
+  if (absValue >= 0.01) {
+    return 6;
+  }
+  if (absValue >= 0.001) {
+    return 7;
+  }
+  return 8;
+}
+
+function roundPrice(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return +value.toFixed(getPriceDecimals(value));
+}
+
+function formatPairPrice(value: number): string {
+  const decimals = Math.abs(value) >= 1 ? 2 : getPriceDecimals(value);
+  return d3.format(`,.${decimals}f`)(value);
+}
+
+const DEFAULT_CURRENT_PRICE = 0.78;
+const MOCK_CHART_MIN_PRICE = 0.1;
+const MOCK_CHART_MAX_PRICE = 1.5;
+
+function clampMockPrice(value: number): number {
+  return Math.max(MOCK_CHART_MIN_PRICE, Math.min(MOCK_CHART_MAX_PRICE, value));
+}
+
+function createSeededRandom(seed: number): () => number {
+  let state = seed >>> 0;
+  return (): number => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 4294967296;
+  };
+}
+
+function generatePairData(days: number): PricePoint[] {
+  const data: PricePoint[] = [];
+  const now = Date.now();
+  const intervalMs = days <= 1 ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+  const totalIntervals = Math.max(2, Math.floor((days * 24 * 60 * 60 * 1000) / intervalMs) + 1);
+  const random = createSeededRandom(days * 9973 + 17);
+
+  let price = DEFAULT_CURRENT_PRICE * (0.92 + random() * 0.16);
+  let velocity = 0;
+  let regimeDrift = (random() - 0.5) * 0.02;
+  let regimeSpan = Math.max(8, Math.floor(totalIntervals * (0.08 + random() * 0.12)));
+
+  for (let i = totalIntervals - 1; i >= 0; i--) {
+    const index = totalIntervals - 1 - i;
+    if (index > 0 && index % regimeSpan === 0) {
+      regimeDrift = (random() - 0.5) * 0.03;
+      regimeSpan = Math.max(8, Math.floor(totalIntervals * (0.06 + random() * 0.18)));
+    }
+
+    const shock = random() < 0.04 ? (random() - 0.5) * 0.22 : 0;
+    const noise = (random() - 0.5) * 0.04;
+    const meanReversion = (DEFAULT_CURRENT_PRICE - price) * 0.08;
+    velocity = velocity * 0.6 + regimeDrift + noise + shock + meanReversion;
+
+    price = clampMockPrice(price + velocity);
+    const isLast = i === 0;
+    const nextPrice = isLast ? DEFAULT_CURRENT_PRICE : price;
+    data.push({ time: now - i * intervalMs, price: roundPrice(nextPrice) });
   }
 
   return data;
@@ -43,8 +124,100 @@ function generateTickData(currentPrice: number, count = 80): TickPoint[] {
   return ticks;
 }
 
-const ALL_DATA = generateETHData();
-const LATEST_POINT: PricePoint = ALL_DATA[ALL_DATA.length - 1] ?? { time: Date.now(), price: 2800 };
+const Q96 = 2n ** 96n;
+const SQRT_PRECISION = 1_000_000_000n;
+
+function sqrtPriceX96ToPrice(value: string): number | null {
+  if (!/^\d+$/.test(value)) {
+    return null;
+  }
+  const sqrtX96 = BigInt(value);
+  if (sqrtX96 <= 0n) {
+    return null;
+  }
+
+  const integerPart = sqrtX96 / Q96;
+  const fractionPart = ((sqrtX96 % Q96) * SQRT_PRECISION) / Q96;
+  const sqrtAsNumber = Number(integerPart) + Number(fractionPart) / Number(SQRT_PRECISION);
+  if (!Number.isFinite(sqrtAsNumber) || sqrtAsNumber <= 0) {
+    return null;
+  }
+
+  const price = sqrtAsNumber * sqrtAsNumber;
+  return Number.isFinite(price) && price > 0 ? roundPrice(price) : null;
+}
+
+function parseOhlcPricePoints(payload: unknown): PricePoint[] {
+  if (!Array.isArray(payload)) {
+    return [];
+  }
+
+  const points = payload
+    .map((item): PricePoint | null => {
+      if (!item || typeof item !== 'object') {
+        return null;
+      }
+      const ohlc = item as Partial<OhlcApiPoint>;
+      const bucketTime = ohlc.bucket ? Date.parse(ohlc.bucket) : Number.NaN;
+      const price = ohlc.close_sqrt ? sqrtPriceX96ToPrice(ohlc.close_sqrt) : null;
+      if (!Number.isFinite(bucketTime) || price === null) {
+        return null;
+      }
+      return { time: bucketTime, price };
+    })
+    .filter((point): point is PricePoint => point !== null)
+    .sort((a, b) => a.time - b.time);
+
+  if (!points.length) {
+    return points;
+  }
+
+  const deduped: PricePoint[] = [];
+  let lastTime: number | null = null;
+  for (const point of points) {
+    if (point.time !== lastTime) {
+      deduped.push(point);
+      lastTime = point.time;
+    } else {
+      deduped[deduped.length - 1] = point;
+    }
+  }
+  return deduped;
+}
+
+function getInitialPriceBand(prices: PricePoint[], fallbackPrice: number): { min: number; max: number } {
+  const validPrices = prices.map(point => point.price).filter(price => Number.isFinite(price) && price > 0);
+  const latestValidPrice = validPrices.length > 0 ? validPrices[validPrices.length - 1] : undefined;
+
+  const basePrice =
+    latestValidPrice !== undefined
+      ? latestValidPrice
+      : Number.isFinite(fallbackPrice) && fallbackPrice > 0
+        ? fallbackPrice
+        : DEFAULT_CURRENT_PRICE;
+
+  const seriesMin = validPrices.length > 0 ? Math.min(...validPrices) : basePrice;
+  const seriesMax = validPrices.length > 0 ? Math.max(...validPrices) : basePrice;
+  const marketSpan = Math.max(seriesMax - seriesMin, 0);
+  const minSpan = Math.max(basePrice * 0.006, 0.000001);
+  const bandSpan = Math.max(marketSpan * 2.5, minSpan);
+
+  const computedMin = Math.max(basePrice - bandSpan / 2, 0.00000001);
+  const computedMax = basePrice + bandSpan / 2;
+  const roundedMin = roundPrice(computedMin);
+  const roundedMax = roundPrice(computedMax);
+
+  if (!Number.isFinite(roundedMin) || !Number.isFinite(roundedMax) || roundedMax <= roundedMin) {
+    const fallbackMin = roundPrice(Math.max(basePrice * 0.997, 0.00000001));
+    const fallbackMax = roundPrice(basePrice * 1.003);
+    return { min: fallbackMin, max: fallbackMax };
+  }
+
+  return { min: roundedMin, max: roundedMax };
+}
+
+const ALL_DATA = generatePairData(730);
+const LATEST_POINT: PricePoint = ALL_DATA[ALL_DATA.length - 1] ?? { time: Date.now(), price: DEFAULT_CURRENT_PRICE };
 const CURRENT_PRICE = LATEST_POINT.price;
 const TICK_DATA = generateTickData(CURRENT_PRICE);
 
@@ -76,15 +249,28 @@ const RANGES = [
   { label: '1W', ms: 7 * 86400000 },
   { label: '1M', ms: 30 * 86400000 },
   { label: '1Y', ms: 365 * 86400000 },
-  { label: 'All', ms: null },
+  { label: 'All time', ms: null },
 ] as const;
 
+const RANGE_FETCH_CONFIG: Record<
+  (typeof RANGES)[number]['label'],
+  { interval: OhlcInterval; lookbackMs: number; limit: number }
+> = {
+  '1D': { interval: '1h', lookbackMs: 1 * 86400000, limit: 200 },
+  '1W': { interval: '1h', lookbackMs: 7 * 86400000, limit: 300 },
+  '1M': { interval: '1d', lookbackMs: 30 * 86400000, limit: 300 },
+  '1Y': { interval: '1d', lookbackMs: 365 * 86400000, limit: 400 },
+  'All time': { interval: '1d', lookbackMs: 730 * 86400000, limit: 500 },
+};
+
 const HEIGHT = 132;
-const ML = { top: 24, right: 16, bottom: 8, left: 16 };
+const ML = { top: 24, right: 0, bottom: 8, left: 0 };
 const TICK_W = 90;
-const TM = { top: 20, right: 8, bottom: 36, left: 4 };
+const TM = { top: 20, right: 0, bottom: 36, left: 0 };
 
 type PoolChartProps = {
+  pairPrice?: number | null;
+  poolId?: string | null;
   minPrice?: number;
   maxPrice?: number;
   onMinPriceChange?: (price: number) => void;
@@ -92,6 +278,8 @@ type PoolChartProps = {
 };
 
 export function PoolChart({
+  pairPrice,
+  poolId,
   minPrice: propMinPrice,
   maxPrice: propMaxPrice,
   onMinPriceChange,
@@ -103,8 +291,8 @@ export function PoolChart({
   const zoomBehRef = useRef<d3.Selection<SVGRectElement, unknown, null, undefined> | null>(null);
   const zoomObjRef = useRef<d3.ZoomBehavior<SVGRectElement, unknown> | null>(null);
 
-  const [internalMinPrice, setInternalMinPrice] = useState<number>(+(CURRENT_PRICE * 0.85).toFixed(2));
-  const [internalMaxPrice, setInternalMaxPrice] = useState<number>(+(CURRENT_PRICE * 1.15).toFixed(2));
+  const [internalMinPrice, setInternalMinPrice] = useState<number>(roundPrice(CURRENT_PRICE * 0.85));
+  const [internalMaxPrice, setInternalMaxPrice] = useState<number>(roundPrice(CURRENT_PRICE * 1.15));
 
   const minPrice = propMinPrice ?? internalMinPrice;
   const maxPrice = propMaxPrice ?? internalMaxPrice;
@@ -134,7 +322,8 @@ export function PoolChart({
   const [zoomTransform, setZoomTransform] = useState<d3.ZoomTransform>(d3.zoomIdentity);
   const [width, setWidth] = useState<number>(700);
   const [allData, setAllData] = useState<PricePoint[]>(ALL_DATA);
-  const [currentPrice, setCurrentPrice] = useState<number>(CURRENT_PRICE);
+  const externalPairPrice = useMemo(() => normalizeExternalPrice(pairPrice), [pairPrice]);
+  const [currentPrice, setCurrentPrice] = useState<number>(externalPairPrice ?? CURRENT_PRICE);
   const [tickData, setTickData] = useState<TickPoint[]>(TICK_DATA);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -151,57 +340,91 @@ export function PoolChart({
   const INNER_H = HEIGHT - ML.top - ML.bottom;
   const TICK_IH = HEIGHT - TM.top - TM.bottom;
   const TICK_IW = TICK_W - TM.left - TM.right;
-  const RANGE_DAYS = { '1D': 1, '1W': 7, '1M': 30, '1Y': 365, All: 730 };
+  const RANGE_DAYS = { '1D': 1, '1W': 7, '1M': 30, '1Y': 365, 'All time': 730 };
+
+  useEffect(() => {
+    if (externalPairPrice === null) {
+      return;
+    }
+    setCurrentPrice(externalPairPrice);
+  }, [externalPairPrice]);
 
   useEffect(() => {
     let ignore = false;
 
-    async function fetchData() {
+    async function buildPairData(): Promise<void> {
       setLoading(true);
       try {
-        const days = RANGE_DAYS[activeRange];
-        const url = `https://api.coingecko.com/api/v3/coins/ethereum/market_chart?vs_currency=usd&days=${days}&interval=${days <= 1 ? 'hourly' : 'daily'}`;
-        const res = await fetch(url);
-        if (!res.ok) {
-          throw new Error(`CoinGecko request failed (${res.status})`);
-        }
-        const json = await res.json();
-        const prices = Array.isArray(json?.prices) ? json.prices : [];
-        const data = prices.map(([time, price]: [number, number]) => ({ time, price: +price.toFixed(2) }));
-        if (!data.length || ignore) {
+        const resolvedPoolId = typeof poolId === 'string' ? poolId.trim() : '';
+        if (!resolvedPoolId) {
+          const mockData = generatePairData(RANGE_DAYS[activeRange]);
+          if (ignore || !mockData.length) {
+            return;
+          }
+          const last = mockData[mockData.length - 1]?.price ?? DEFAULT_CURRENT_PRICE;
+          const initialBand = getInitialPriceBand(mockData, last);
+          setAllData(mockData);
+          setCurrentPrice(last);
+          setTickData(generateTickData(last, Math.max(80, mockData.length)));
+          setMinPrice(initialBand.min);
+          setMaxPrice(initialBand.max);
           return;
         }
-        const last = data[data.length - 1].price;
+
+        const rangeConfig = RANGE_FETCH_CONFIG[activeRange];
+        const toDate = new Date();
+        const fromDate = new Date(toDate.getTime() - rangeConfig.lookbackMs);
+        const params = new URLSearchParams({
+          poolId: resolvedPoolId,
+          interval: rangeConfig.interval,
+          from: fromDate.toISOString(),
+          to: toDate.toISOString(),
+          limit: String(rangeConfig.limit),
+        });
+        const response = await fetch(`/api/pool/ohlc?${params.toString()}`, { method: 'GET', cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error(`OHLC request failed (${response.status})`);
+        }
+
+        const payload: unknown = await response.json();
+        const data = parseOhlcPricePoints(payload);
+        if (!data.length || ignore) {
+          throw new Error('No valid OHLC points');
+        }
+
+        const last = data[data.length - 1]?.price ?? DEFAULT_CURRENT_PRICE;
+        const initialBand = getInitialPriceBand(data, last);
         setAllData(data);
         setCurrentPrice(last);
         setTickData(generateTickData(last, Math.max(80, data.length)));
-        setMinPrice(+(last * 0.85).toFixed(2));
-        setMaxPrice(+(last * 1.15).toFixed(2));
-      } catch (e) {
+        setMinPrice(initialBand.min);
+        setMaxPrice(initialBand.max);
+      } catch {
         if (ignore) {
           return;
         }
-        // fallback to generated data
-        const fb = generateETHData();
+        // fallback to generated pair-like data
+        const fb = generatePairData(RANGE_DAYS[activeRange]);
         const fallbackLast = fb[fb.length - 1];
         const last = fallbackLast?.price ?? CURRENT_PRICE;
+        const initialBand = getInitialPriceBand(fb, last);
         setAllData(fb);
         setCurrentPrice(last);
         setTickData(generateTickData(last));
-        setMinPrice(+(last * 0.85).toFixed(2));
-        setMaxPrice(+(last * 1.15).toFixed(2));
+        setMinPrice(initialBand.min);
+        setMaxPrice(initialBand.max);
       } finally {
         if (!ignore) {
           setLoading(false);
         }
       }
     }
-    fetchData();
+    buildPairData();
 
     return () => {
       ignore = true;
     };
-  }, [activeRange, setMinPrice, setMaxPrice]);
+  }, [activeRange, poolId, setMinPrice, setMaxPrice]);
 
   useEffect(() => {
     const obs = new ResizeObserver(entries => {
@@ -238,11 +461,27 @@ export function PoolChart({
 
   const xScale = useMemo(() => zoomTransform.rescaleX(xScaleBase), [zoomTransform, xScaleBase]);
 
-  const priceMin = d3.min(visibleData, d => d.price) ?? 0;
-  const priceMax = d3.max(visibleData, d => d.price) ?? 0;
-  const pad = (priceMax - priceMin) * 0.3;
-  const yDomainMin = Math.min(priceMin - pad, minPrice - 80);
-  const yDomainMax = Math.max(priceMax + pad, maxPrice + 80);
+  const [yDomainMin, yDomainMax] = useMemo((): [number, number] => {
+    const allPrices = visibleData.map(point => point.price);
+    allPrices.push(minPrice, maxPrice, currentPrice);
+
+    const finitePrices = allPrices.filter(price => Number.isFinite(price) && price > 0);
+    const defaultMin = MOCK_CHART_MIN_PRICE;
+    const defaultMax = MOCK_CHART_MAX_PRICE;
+    if (!finitePrices.length) {
+      return [defaultMin, defaultMax];
+    }
+
+    const minValue = Math.min(...finitePrices);
+    const maxValue = Math.max(...finitePrices);
+    const span = Math.max(maxValue - minValue, maxValue * 0.002, 0.000001);
+    const paddedMin = Math.max(minValue - span * 0.15, 0);
+    const paddedMax = maxValue + span * 0.15;
+    if (!Number.isFinite(paddedMin) || !Number.isFinite(paddedMax) || paddedMax <= paddedMin) {
+      return [defaultMin, defaultMax];
+    }
+    return [roundPrice(paddedMin), roundPrice(paddedMax)];
+  }, [visibleData, minPrice, maxPrice, currentPrice]);
 
   const yScale = useMemo(
     () => d3.scaleLinear().domain([yDomainMin, yDomainMax]).range([INNER_H, 0]),
@@ -312,12 +551,6 @@ export function PoolChart({
       .attr('stop-color', C.bandFill)
       .attr('stop-opacity', C.bandOpacityBot);
 
-    const glow = defs.append('filter').attr('id', 'glow-f');
-    glow.append('feGaussianBlur').attr('stdDeviation', '2.5').attr('result', 'b');
-    const glowMerge = glow.append('feMerge');
-    glowMerge.append('feMergeNode').attr('in', 'b');
-    glowMerge.append('feMergeNode').attr('in', 'SourceGraphic');
-
     defs
       .append('clipPath')
       .attr('id', 'clip-band-in')
@@ -368,7 +601,6 @@ export function PoolChart({
       .attr('fill', 'none')
       .attr('stroke', C.lineInside)
       .attr('stroke-width', C.lineWidthIn)
-      .attr('filter', 'url(#glow-f)')
       .attr('clip-path', 'url(#clip-band-in)');
 
     g.append('g')
@@ -377,7 +609,11 @@ export function PoolChart({
         d3
           .axisTop(xScale)
           .ticks(5)
-          .tickFormat(d => d3.timeFormat(activeRange === '1D' ? '%H:%M' : '%b %d')(new Date(d as number))),
+          .tickFormat(d =>
+            d3
+              .timeFormat(activeRange === '1D' ? '%H:%M' : '%b %d')(new Date(d as number))
+              .toUpperCase(),
+          ),
       )
       .call(a => a.select('.domain').remove())
       .call(a => a.selectAll('line').remove())
@@ -385,7 +621,7 @@ export function PoolChart({
         a
           .selectAll('text')
           .attr('fill', C.textDim)
-          .attr('font-family', "'JetBrains Mono',monospace")
+          .attr('font-family', 'InterRegular')
           .attr('font-size', '9px')
           .attr('dy', '-4px'),
       );
@@ -416,7 +652,7 @@ export function PoolChart({
         .attr('pointer-events', 'none');
 
       if (!dashed) {
-        const pct = ((price - currentPrice) / currentPrice) * 100;
+        const pct = currentPrice === 0 ? 0 : ((price - currentPrice) / currentPrice) * 100;
         const pctStr = `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
         const cx = INNER_W / 2;
 
@@ -521,7 +757,7 @@ export function PoolChart({
       if (dashed) {
         const pH = 20;
         const pW = 90;
-        const pX = INNER_W - pW - 8;
+        const pX = INNER_W - pW + 10;
         const nowFo = grp
           .append('foreignObject')
           .attr('x', pX)
@@ -548,7 +784,7 @@ export function PoolChart({
           .style('font-family', 'Inter, sans-serif')
           .style('font-weight', '700')
           .style('line-height', '14.3px')
-          .text(`$${d3.format(',.2f')(price)}`);
+          .text(formatPairPrice(price));
       }
     }
 
@@ -727,16 +963,20 @@ export function PoolChart({
       const y = cy - rect.top - ML.top;
       const p = yScale.invert(Math.max(0, Math.min(INNER_H, y)));
 
+      const dynamicPriceGap = Math.max(Math.abs(currentPrice) * 0.02, 0.000001);
+      const clampedPrice = Math.max(p, 0);
+      const minCap = Math.max(currentPrice - dynamicPriceGap, 0);
+
       if (draggingRef.current === 'min') {
-        setMinPrice(+Math.min(p, currentPrice - 20).toFixed(2));
+        setMinPrice(roundPrice(Math.min(clampedPrice, minCap)));
       } else if (draggingRef.current === 'max') {
-        setMaxPrice(+Math.max(p, currentPrice + 20).toFixed(2));
+        setMaxPrice(roundPrice(Math.max(clampedPrice, currentPrice + dynamicPriceGap)));
       } else if (draggingRef.current === 'band' && dragDataRef.current) {
         const dd = dragDataRef.current;
         const priceDelta = (y - dd.anchorY) / dd.pxPerPrice;
-        const newMin = +(dd.anchorMin - priceDelta).toFixed(2);
-        setMinPrice(newMin);
-        setMaxPrice(+(newMin + dd.span).toFixed(2));
+        const newMin = Math.max(dd.anchorMin - priceDelta, 0);
+        setMinPrice(roundPrice(newMin));
+        setMaxPrice(roundPrice(newMin + dd.span));
       }
     };
 
@@ -874,8 +1114,8 @@ export function PoolChart({
                 variant="outline"
                 size="sm"
                 className={cn(
-                  'outline-none border-none shadow-none text-(length:--body-fine-print) px-2 py-1 h-[22px]',
-                  activeRange === range.label ? 'text-espresso font-bold bg-cream-white' : '',
+                  `outline-none border-none shadow-none text-(length:--body-fine-print) px-2 py-1 h-[22px] font-['InterRegular']`,
+                  activeRange === range.label ? `text-espresso font-['InterBold'] bg-cream-white` : '',
                 )}
                 onClick={() => setActiveRange(range.label)}
               >

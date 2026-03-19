@@ -7,3 +7,4 @@ export * from './backend';
 export * from './bridge';
 export * from './staking';
 export * from './migrate';
+export * from './dex';

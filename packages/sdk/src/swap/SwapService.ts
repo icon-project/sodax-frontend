@@ -956,26 +956,19 @@ export class SwapService {
     }
 
     try {
-      console.log('[SwapService.createIntent] start', { srcChain: params.srcChain, dstChain: params.dstChain, inputToken: params.inputToken, inputAmount: params.inputAmount.toString() });
-
-      let walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-      console.log('[SwapService.createIntent] walletAddress', walletAddress, 'srcAddress', params.srcAddress);
+      const personalAddress = await spokeProvider.walletProvider.getWalletAddress();
       invariant(
-        params.srcAddress.toLowerCase() === walletAddress.toLowerCase(),
+        params.srcAddress.toLowerCase() === personalAddress.toLowerCase(),
         'srcAddress must be the same as wallet address',
       );
 
+      // Bitcoin TRADING mode: use trading wallet for hub wallet derivation (see getEffectiveWalletAddress)
+      const walletAddress = isBitcoinSpokeProvider(spokeProvider)
+        ? await spokeProvider.getEffectiveWalletAddress()
+        : personalAddress;
+
       if (isBitcoinSpokeProvider(spokeProvider)) {
-        console.log('[SwapService.createIntent] Bitcoin detected, walletMode:', spokeProvider.walletMode, 'hasToken:', !!spokeProvider.radfiAccessToken);
         await spokeProvider.ensureRadfiAccessToken();
-        console.log('[SwapService.createIntent] ensureRadfiAccessToken done, hasToken:', !!spokeProvider.radfiAccessToken);
-        if (spokeProvider.walletMode === 'TRADING') {
-          const tradingWalletAddress = await spokeProvider.radfi.getTradingWallet(
-            await spokeProvider.walletProvider.getWalletAddress()
-          );
-          console.log('[SwapService.createIntent] tradingWalletAddress', tradingWalletAddress);
-          walletAddress = tradingWalletAddress.tradingAddress as Address;
-        }
       }
 
       // derive users hub wallet address
@@ -984,8 +977,6 @@ export class SwapService {
         spokeProvider.chainConfig.chain.id,
         walletAddress,
       );
-      console.log('[SwapService.createIntent] creatorHubWalletAddress', creatorHubWalletAddress);
-
       if (
         spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id &&
         isSonicSpokeProviderType(spokeProvider)
@@ -1024,9 +1015,6 @@ export class SwapService {
           this.configService,
           fee,
         );
-        console.log('[SwapService.createIntent] intent data constructed', { data, intentId: intent.intentId?.toString() });
-
-        console.log('[SwapService.createIntent] calling SpokeService.deposit...');
         const txResult = (await SpokeService.deposit(
           {
             from: walletAddress,
@@ -1040,8 +1028,6 @@ export class SwapService {
           raw,
           skipSimulation,
         )) satisfies TxReturnType<S, R>;
-        console.log('[SwapService.createIntent] SpokeService.deposit done, txResult:', txResult);
-
         return {
           ok: true,
           value: [txResult as TxReturnType<S, R>, { ...intent, feeAmount } as Intent & FeeAmount, data],

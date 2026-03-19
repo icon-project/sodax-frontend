@@ -1,8 +1,9 @@
-// apps/web/app/(apps)/pool/_components/pool-info-card.tsx
 import type React from 'react';
 import PoolChart from './pool-chart';
 
 type PoolInfoCardProps = {
+  pairPrice?: number | null;
+  poolId?: string | null;
   minPrice?: number;
   maxPrice?: number;
   onMinPriceChange?: (price: number) => void;
@@ -10,6 +11,8 @@ type PoolInfoCardProps = {
 };
 
 export function PoolInfoCard({
+  pairPrice,
+  poolId,
   minPrice,
   maxPrice,
   onMinPriceChange,
@@ -29,13 +32,15 @@ export function PoolInfoCard({
               <div className="text-center justify-start text-clay text-(length:--body-tiny) font-medium font-['InterRegular'] uppercase leading-3">
                 EST. APR
               </div>
-              <div className="text-center justify-start text-espresso text-(length:--body-super-comfortable) font-bold font-['InterRegular'] leading-6">
+              <div className="text-center justify-start text-espresso text-(length:--body-super-comfortable) font-['InterBold'] leading-6">
                 12.31%
               </div>
             </div>
           </div>
           <div className="self-stretch">
             <PoolChart
+              pairPrice={pairPrice}
+              poolId={poolId}
               minPrice={minPrice}
               maxPrice={maxPrice}
               onMinPriceChange={onMinPriceChange}

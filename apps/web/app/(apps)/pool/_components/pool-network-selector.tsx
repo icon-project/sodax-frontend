@@ -6,7 +6,6 @@ import { motion, useAnimationControls } from 'framer-motion';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import { cn } from '@/lib/utils';
-import { chainIdToChainName } from '@/providers/constants';
 import { PoolNetworkPicker } from './pool-network-picker';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import { supportedSpokeChains, spokeChainConfig } from '@sodax/sdk';
@@ -32,7 +31,7 @@ const xSodaToken: XToken = {
 
 type PoolNetworkSelectorProps = {
   isNetworkPickerOpened: boolean;
-  selectedNetworkChainId: SpokeChainId;
+  selectedNetworkChainId: SpokeChainId | null;
   onNetworkPickerOpenChange: (isOpened: boolean) => void;
   onNetworkSelect: (token: XToken) => void;
 };
@@ -45,13 +44,16 @@ export function PoolNetworkSelector({
 }: PoolNetworkSelectorProps): React.JSX.Element {
   const assetRef = useRef<HTMLDivElement>(null);
   const networkPickerAnchorRef = useRef<HTMLDivElement>(null);
-  const { address } = useXAccount(selectedNetworkChainId);
+  const { address } = useXAccount(selectedNetworkChainId ?? undefined);
   const { selectedToken } = usePoolState();
   const walletConnected = !!address;
   const allChainSodaBalances = useAllChainBalances({ onlySodaTokens: true });
   const subtitleControls = useAnimationControls();
-  const [subtitleText, setSubtitleText] = useState<string>(`on ${chainIdToChainName(selectedNetworkChainId)}`);
+  const [subtitleText, setSubtitleText] = useState<string>('Choose a network');
   const selectedSodaBalance = useMemo((): bigint => {
+    if (!selectedNetworkChainId) {
+      return 0n;
+    }
     const selectedChainConfig = spokeChainConfig[selectedNetworkChainId];
     const selectedSodaToken =
       selectedChainConfig?.supportedTokens && 'SODA' in selectedChainConfig.supportedTokens
@@ -98,7 +100,7 @@ export function PoolNetworkSelector({
       });
     };
 
-    if (isNetworkPickerOpened) {
+    if (isNetworkPickerOpened || !selectedNetworkChainId) {
       setSubtitleText('Choose a network');
       void subtitleControls.start({ scale: 1 });
     } else if (!walletConnected) {
@@ -114,7 +116,7 @@ export function PoolNetworkSelector({
     return (): void => {
       isCancelled = true;
     };
-  }, [isNetworkPickerOpened, walletConnected, selectedSodaBalance, subtitleControls]);
+  }, [isNetworkPickerOpened, selectedNetworkChainId, walletConnected, selectedSodaBalance, subtitleControls]);
 
   const sodaTokens = useMemo((): XToken[] => {
     const tokens: XToken[] = [];

@@ -1,6 +1,20 @@
 import type { WalletAddressProvider } from "../common/index.js";
 
-export type AddressType = "P2PKH" | "P2WPKH" | "P2TR"
+export type AddressType = "P2PKH" | "P2SH" | "P2WPKH" | "P2TR"
+
+/** Subset of AddressType that Sodax can actually sign/spend from. */
+export type SupportedAddressType = "P2PKH" | "P2SH" | "P2WPKH" | "P2TR"
+
+/** User-friendly Bitcoin address type for wallet connection. */
+export type BtcWalletAddressType = 'taproot' | 'segwit';
+
+/** Address types that Sodax supports for transactions. */
+const SUPPORTED_ADDRESS_TYPES: readonly AddressType[] = ['P2PKH', 'P2SH', 'P2WPKH', 'P2TR'] as const;
+
+/** Check whether an AddressType is supported for signing/spending. */
+export function isSupportedBitcoinAddressType(addressType: AddressType): addressType is SupportedAddressType {
+  return (SUPPORTED_ADDRESS_TYPES as readonly string[]).includes(addressType);
+}
 
 /**
  * Detect Bitcoin address type from its prefix.
@@ -9,6 +23,7 @@ export type AddressType = "P2PKH" | "P2WPKH" | "P2TR"
 export function detectBitcoinAddressType(address: string): AddressType {
   if (address.startsWith('bc1p') || address.startsWith('tb1p')) return 'P2TR';
   if (address.startsWith('bc1') || address.startsWith('tb1')) return 'P2WPKH';
+  if (address.startsWith('3') || address.startsWith('2')) return 'P2SH';
   if (address.startsWith('1') || address.startsWith('m') || address.startsWith('n')) return 'P2PKH';
   throw new Error(`Unknown Bitcoin address type: ${address}`);
 }

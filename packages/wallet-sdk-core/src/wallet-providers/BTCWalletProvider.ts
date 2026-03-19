@@ -227,6 +227,15 @@ export class BitcoinWalletProvider implements IBitcoinWalletProvider {
           network: this.network,
         });
 
+      case 'P2SH':
+        return bitcoin.payments.p2sh({
+          redeem: bitcoin.payments.p2wpkh({
+            pubkey: keyPair.publicKey,
+            network: this.network,
+          }),
+          network: this.network,
+        });
+
       case 'P2WPKH':
         return bitcoin.payments.p2wpkh({
           pubkey: keyPair.publicKey,

@@ -1,5 +1,5 @@
 import type { XAccount } from '@/types';
-import { detectBitcoinAddressType, type IBitcoinWalletProvider, type AddressType } from '@sodax/types';
+import { detectBitcoinAddressType, type IBitcoinWalletProvider, type AddressType, type BtcWalletAddressType } from '@sodax/types';
 import { AddressPurpose, MessageSigningProtocols } from 'sats-connect';
 import { BitcoinXConnector } from './BitcoinXConnector';
 
@@ -153,11 +153,27 @@ class XverseWalletProvider implements IBitcoinWalletProvider {
   }
 }
 
+const XVERSE_ADDRESS_TYPE_KEY = 'xverse-address-type';
+
 export class XverseXConnector extends BitcoinXConnector {
   private walletProvider: XverseWalletProvider | undefined;
 
+  /** Address purpose used when connecting. Taproot (Ordinals) by default to match Radfi. */
+  public addressPurpose: AddressPurpose;
+
   constructor() {
     super('Xverse', 'xverse');
+    // Restore saved preference, default to Taproot
+    const saved = typeof window !== 'undefined' ? localStorage.getItem(XVERSE_ADDRESS_TYPE_KEY) : null;
+    this.addressPurpose = saved === 'segwit' ? AddressPurpose.Payment : AddressPurpose.Ordinals;
+  }
+
+  /** Set address purpose and persist to localStorage. */
+  public setAddressPurpose(type: BtcWalletAddressType): void {
+    this.addressPurpose = type === 'taproot' ? AddressPurpose.Ordinals : AddressPurpose.Payment;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(XVERSE_ADDRESS_TYPE_KEY, type);
+    }
   }
 
   public static isAvailable(): boolean {
@@ -176,7 +192,7 @@ export class XverseXConnector extends BitcoinXConnector {
     const { request } = await import('sats-connect');
 
     const response = await request('getAccounts', {
-      purposes: [AddressPurpose.Payment],
+      purposes: [this.addressPurpose],
       message: 'Connect to Sodax',
     });
 
@@ -185,7 +201,7 @@ export class XverseXConnector extends BitcoinXConnector {
     }
 
     const accounts = response.result as GetAccountsResult[];
-    const paymentAccount = accounts.find(a => a.purpose === AddressPurpose.Payment) || accounts[0];
+    const paymentAccount = accounts.find(a => a.purpose === this.addressPurpose) || accounts[0];
 
     if (!paymentAccount) return undefined;
 

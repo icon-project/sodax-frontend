@@ -74,6 +74,7 @@ export class BitcoinBaseSpokeProvider {
   public readonly radfi: RadfiProvider;
   public readonly walletMode: WalletMode;
   public radfiAccessToken = '';
+  public radfiRefreshToken = '';
 
 
   constructor(config: BitcoinSpokeChainConfig, radfiConfig: RadfiConfig, walletMode: WalletMode = "USER", rpcURL?: string) {
@@ -86,8 +87,11 @@ export class BitcoinBaseSpokeProvider {
     this.walletMode = walletMode
   }
 
-  public setRadfiAccessToken(token: string) {
+  public setRadfiAccessToken(token: string, refreshToken?: string) {
     this.radfiAccessToken = token;
+    if (refreshToken !== undefined) {
+      this.radfiRefreshToken = refreshToken;
+    }
   }
 
   /**
@@ -147,6 +151,8 @@ export class BitcoinBaseSpokeProvider {
   ): Promise<bitcoin.Psbt> {
     const psbt = new bitcoin.Psbt({ network: provider.network });
     const effectiveFeeRate = feeRate ?? await provider.getFeeEstimate();
+    const walletAddress = await provider.walletProvider.getWalletAddress();
+    const addressType = provider.getAddressType(walletAddress);
 
     let inputSum = 0;
     const outputSum = outputs.reduce((sum, o) => sum + o.value, 0);
@@ -159,6 +165,7 @@ export class BitcoinBaseSpokeProvider {
       const scriptPubKey = await provider.fetchScriptPubKey(utxo, provider);
       const isTaproot = scriptPubKey.startsWith('51');
       const isSegwitV0 = scriptPubKey.startsWith('00');
+      const isP2SH = scriptPubKey.startsWith('a9');
 
       if (isTaproot) {
         if (!provider.walletProvider.getPublicKey) {
@@ -173,6 +180,26 @@ export class BitcoinBaseSpokeProvider {
             value: utxo.value,
           },
           tapInternalKey: Buffer.from(tapInternalKey, 'hex'),
+        });
+      }
+      else if (isP2SH) {
+        // P2SH-P2WPKH (Nested SegWit): needs witnessUtxo + redeemScript
+        if (!provider.walletProvider.getPublicKey) {
+          throw new Error('Missing public key for P2SH-P2WPKH input');
+        }
+        const pubKeyHex = await provider.walletProvider.getPublicKey();
+        const redeemScript = bitcoin.payments.p2wpkh({
+          pubkey: Buffer.from(pubKeyHex, 'hex'),
+          network: provider.network,
+        }).output;
+        psbt.addInput({
+          hash: utxo.txid,
+          index: utxo.vout,
+          witnessUtxo: {
+            script: Buffer.from(scriptPubKey, 'hex'),
+            value: utxo.value,
+          },
+          redeemScript,
         });
       }
       else if (isSegwitV0) {
@@ -200,6 +227,7 @@ export class BitcoinBaseSpokeProvider {
       const estimatedSize = provider.estimateTxSize(
         psbt.inputCount,
         outputs.length,
+        addressType,
       );
       const estimatedFee = Math.ceil(effectiveFeeRate * estimatedSize);
 
@@ -220,10 +248,12 @@ export class BitcoinBaseSpokeProvider {
     const sizeWithChange = provider.estimateTxSize(
       psbt.inputCount,
       outputs.length + 1,
+      addressType,
     );
     const sizeWithoutChange = provider.estimateTxSize(
       psbt.inputCount,
       outputs.length,
+      addressType,
     );
 
     const feeWithChange = Math.ceil(effectiveFeeRate * sizeWithChange);
@@ -443,14 +473,23 @@ export class BitcoinBaseSpokeProvider {
   }
 
   /**
-   * Estimate transaction size in vbytes
+   * Estimate transaction size in vbytes.
+   * @param addressType — caller's address type for accurate per-input weight.
+   *   P2PKH ≈ 148 vB, P2SH-P2WPKH ≈ 91 vB, P2WPKH ≈ 68 vB, P2TR ≈ 58 vB.
+   *   Defaults to P2WPKH (68 vB) when omitted.
    */
-  public estimateTxSize(inputCount: number, outputCount: number): number {
-    // SegWit (P2WPKH) tx size estimate:
+  public estimateTxSize(inputCount: number, outputCount: number, addressType?: AddressType): number {
     // 10.5 vB fixed overhead
     // +44 vB for one OP_RETURN (~33-byte payload), not included in outputCount
-    // 68 vB per input, 31 vB per non-OP_RETURN output
-    return Math.ceil(10.5 + 44 + (inputCount * 68) + (outputCount * 31));
+    // 31 vB per non-OP_RETURN output
+    let inputWeight: number;
+    switch (addressType) {
+      case 'P2PKH':  inputWeight = 148; break;
+      case 'P2SH':   inputWeight = 91;  break;
+      case 'P2TR':   inputWeight = 58;  break;
+      default:        inputWeight = 68;  break;
+    }
+    return Math.ceil(10.5 + 44 + (inputCount * inputWeight) + (outputCount * 31));
   }
 
   public getAddressType(address: string): AddressType {
@@ -557,6 +596,20 @@ export class BitcoinSpokeProvider extends BitcoinBaseSpokeProvider implements IS
   }
 
   /**
+   * Get the effective wallet address for hub wallet derivation and relay submission.
+   * In TRADING mode, returns the trading wallet address (not the personal wallet).
+   * This must be used everywhere a wallet address is needed for hub interaction.
+   */
+  public async getEffectiveWalletAddress(): Promise<string> {
+    const personalAddress = await this.walletProvider.getWalletAddress();
+    if (this.walletMode === 'TRADING') {
+      const tradingWallet = await this.radfi.getTradingWallet(personalAddress);
+      return tradingWallet.tradingAddress;
+    }
+    return personalAddress;
+  }
+
+  /**
    * Authenticate with Radfi: BIP322-sign a login message, then call the Radfi API.
    * Returns accessToken, refreshToken, and tradingAddress.
    */
@@ -575,19 +628,40 @@ export class BitcoinSpokeProvider extends BitcoinBaseSpokeProvider implements IS
     }
 
     const message = `Login to Radfi via Sodax: ${Date.now()}`;
-    const signature = await this.walletProvider.signBip322Message(message);
+    const addressType = this.getAddressType(address);
+    // BIP322 signing is supported for P2WPKH and P2TR; P2SH and P2PKH use ECDSA
+    const signature = addressType === 'P2WPKH' || addressType === 'P2TR'
+      ? await this.walletProvider.signBip322Message(message)
+      : await this.walletProvider.signEcdsaMessage(message);
 
     const result = await this.radfi.authenticate({ message, signature, address, publicKey });
-    this.setRadfiAccessToken(result.accessToken);
+    this.setRadfiAccessToken(result.accessToken, result.refreshToken);
     return { ...result, publicKey };
   }
 
   /**
    * Ensure a valid Radfi access token is set on this provider.
-   * No-op if a token is already present.
+   * If a token exists, validates it via the Radfi API.
+   * If invalid, tries refreshing with the refresh token first.
+   * If refresh also fails, falls back to full re-authentication (BIP322 sign).
    */
   public async ensureRadfiAccessToken(): Promise<void> {
-    if (this.radfiAccessToken) return;
+    // Try refreshing with refresh token to get a fresh access token
+    if (this.radfiRefreshToken) {
+      try {
+        const { accessToken, refreshToken } = await this.radfi.refreshAccessToken(this.radfiRefreshToken);
+        this.setRadfiAccessToken(accessToken, refreshToken);
+        console.log('[ensureRadfiAccessToken] token refreshed successfully');
+        return;
+      } catch (error) {
+        console.warn('[ensureRadfiAccessToken] refresh failed, falling back to full re-auth', error);
+      }
+    }
+
+    // Full re-authentication (requires user wallet signature)
+    console.log('[ensureRadfiAccessToken] performing full re-authentication (BIP322 sign)');
+    this.radfiAccessToken = '';
+    this.radfiRefreshToken = '';
     await this.authenticateWithWallet();
   }
 
