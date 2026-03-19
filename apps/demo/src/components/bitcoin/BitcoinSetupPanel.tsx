@@ -104,7 +104,7 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
     if (!expiredUtxos?.length) return;
     setRenewError(null);
     try {
-      const txIdVouts = expiredUtxos.map(u => `${u.txId}:${u.vout}`);
+      const txIdVouts = expiredUtxos.map(u => `${u.txId ?? u.id}:${u.vout}`);
       await renewUtxos({ txIdVouts });
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to renew UTXOs';
@@ -282,9 +282,9 @@ export const BitcoinSetupPanel = ({ spokeProvider, onReadyChange, nativeBalance,
                   </p>
                   <div className="max-h-32 overflow-y-auto space-y-1">
                     {expiredUtxos.map(utxo => (
-                      <div key={`${utxo.txId}:${utxo.vout}`} className="flex items-center justify-between text-xs bg-background rounded px-2 py-1 border border-border">
-                        <span className="font-mono text-muted-foreground truncate max-w-[200px]" title={`${utxo.txId}:${utxo.vout}`}>
-                          {utxo.txId.slice(0, 8)}...:{utxo.vout}
+                      <div key={`${utxo.txId ?? utxo.id}:${utxo.vout}`} className="flex items-center justify-between text-xs bg-background rounded px-2 py-1 border border-border">
+                        <span className="font-mono text-muted-foreground truncate max-w-[200px]" title={`${utxo.txId ?? utxo.id}:${utxo.vout}`}>
+                          {(utxo.txId ?? utxo.id)?.slice(0, 8)}...:{utxo.vout}
                         </span>
                         <span className="font-medium">{formatUnits(BigInt(utxo.value), 8)} BTC</span>
                       </div>
