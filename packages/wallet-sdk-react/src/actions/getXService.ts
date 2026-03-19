@@ -6,6 +6,7 @@ import { EvmXService } from '..';
 import type { XService } from '../core';
 import { NearXService } from '../xchains/near/NearXService';
 import { StacksXService } from '../xchains/stacks/StacksXService';
+import { AleoXService } from '../xchains/aleo';
 
 export function getXService(xChainType: ChainType): XService {
   switch (xChainType) {
@@ -27,6 +28,8 @@ export function getXService(xChainType: ChainType): XService {
       return NearXService.getInstance();
     case 'STACKS':
       return StacksXService.getInstance();
+    case 'ALEO':
+      return AleoXService.getInstance();
     default:
       throw new Error(`Unsupported chain type: ${xChainType}`);
   }

@@ -27,12 +27,20 @@ import type { RpcConfig } from '@sodax/types';
 
 import { Hydrate } from './Hydrate';
 import { createWagmiConfig } from './xchains/evm/EvmXService';
+import { AleoXService } from './xchains/aleo';
 import { reconnectIcon } from './xchains/icon/actions';
 import { reconnectStellar } from './xchains/stellar/actions';
 
 export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.ReactNode; rpcConfig: RpcConfig }) => {
   const wagmiConfig = useMemo(() => {
     return createWagmiConfig(rpcConfig);
+  }, [rpcConfig]);
+
+  useMemo(() => {
+    const aleoRpcUrl = rpcConfig['aleo'];
+    if (aleoRpcUrl) {
+      AleoXService.getInstance().setRpcUrl(aleoRpcUrl);
+    }
   }, [rpcConfig]);
 
   const solanaWallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);

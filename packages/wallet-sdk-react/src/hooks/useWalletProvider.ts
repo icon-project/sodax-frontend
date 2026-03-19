@@ -1,5 +1,6 @@
 import type {
   ChainId,
+  IAleoWalletProvider,
   IEvmWalletProvider,
   IIconWalletProvider,
   IInjectiveWalletProvider,
@@ -14,6 +15,7 @@ import { useMemo } from 'react';
 import { BitcoinXService } from '../xchains/bitcoin/BitcoinXService';
 import type { BitcoinXConnector } from '../xchains/bitcoin/BitcoinXConnector';
 import {
+  AleoWalletProvider,
   EvmWalletProvider,
   IconWalletProvider,
   SuiWalletProvider,
@@ -33,6 +35,8 @@ import type { NearXService } from '../xchains/near/NearXService';
 import { useXConnection } from './useXConnection';
 import { useXConnectors } from './useXConnectors';
 import type { StacksXConnector } from '../xchains/stacks';
+import type { AleoXService } from '../xchains/aleo/AleoXService';
+import { useWallet as useAleoWallet } from '@provablehq/aleo-wallet-adaptor-react';
 
 /**
  * Hook to get the appropriate wallet provider based on the chain type.
@@ -63,10 +67,12 @@ export function useWalletProvider(
   | IBitcoinWalletProvider
   | INearWalletProvider
   | IStacksWalletProvider
+  | IAleoWalletProvider
   | undefined {
   const xChainType = getXChainType(spokeChainId);
   // EVM-specific hooks
   const evmPublicClient = usePublicClient();
+  const aleoWallet = useAleoWallet();
 
   const { data: evmWalletClient } = useWalletClient();
 
@@ -190,6 +196,21 @@ export function useWalletProvider(
         return new StacksWalletProvider({ address, provider: activeStacksConnector?.getProvider() });
       }
 
+      case 'ALEO': {
+        const aleoXService = xService as AleoXService;
+        const adapter = aleoWallet.wallet?.adapter;
+
+        if (!adapter) {
+          return undefined;
+        }
+
+        return new AleoWalletProvider({
+          type: 'browserExtension',
+          rpcUrl: aleoXService.rpcUrl,
+          provableAdapter: adapter,
+        });
+      }
+
       default:
         return undefined;
     }
@@ -202,5 +223,5 @@ export function useWalletProvider(
     stacksConnection,
     stacksConnectors,
     xConnection,
-  ]);
+  , aleoWallet]);
 }

@@ -72,6 +72,7 @@
     "@stellar/stellar-sdk": "catalog:",
     "@provablehq/aleo-types": "catalog:",
     "@provablehq/aleo-wallet-adaptor-core": "catalog:",
+    "@provablehq/aleo-wallet-standard": "catalog:",
     "@provablehq/sdk": "catalog:",
     "@stacks/connect": "catalog:",
     "@stacks/transactions": "catalog:",

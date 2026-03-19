@@ -19,6 +19,7 @@ import { XverseXConnector } from './xchains/bitcoin/XverseXConnector';
 import { OKXXConnector } from './xchains/bitcoin/OKXXConnector';
 import { NearXService } from './xchains/near/NearXService';
 import { StacksXService, StacksXConnector, STACKS_PROVIDERS } from './xchains/stacks';
+import { AleoXService } from './xchains/aleo';
 
 type XWagmiStore = {
   xServices: Partial<Record<ChainType, XService>>;
@@ -30,7 +31,7 @@ type XWagmiStore = {
 
 const initXServices = () => {
   const xServices = {};
-  ['EVM', 'BITCOIN', 'INJECTIVE', 'STELLAR', 'SUI', 'SOLANA', 'ICON', 'NEAR', 'STACKS'].forEach(key => {
+  ['EVM', 'BITCOIN', 'INJECTIVE', 'STELLAR', 'SUI', 'SOLANA', 'ICON', 'NEAR', 'STACKS', 'ALEO'].forEach(key => {
     const xChainType = key as ChainType;
 
     switch (xChainType) {
@@ -76,6 +77,10 @@ const initXServices = () => {
       case 'STACKS':
         xServices[xChainType] = StacksXService.getInstance();
         xServices[xChainType].setXConnectors(STACKS_PROVIDERS.map(config => new StacksXConnector(config)));
+        break;
+      case 'ALEO':
+        xServices[xChainType] = AleoXService.getInstance();
+        xServices[xChainType].setXConnectors([]);
         break;
       default:
         break;

@@ -458,10 +458,8 @@ export const SodaTokensAsHubAssets: Record<string, HubAsset> = Object.values(Sod
 export const hubChainConfig = {
   chain: baseChainInfo[SONIC_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'EVM'>,
   addresses: {
-    // assetManager: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
-    assetManager: '0x1B06762a8B9286f6A1B290579834e555a5F60557',
-    // hubWallet: '0xA0ed3047D358648F2C0583B415CffCA571FDB544',
-    hubWallet: '0x103328BFB6321AD198D5dc4075a171f01c0472E5',
+    assetManager: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
+    hubWallet: '0xA0ed3047D358648F2C0583B415CffCA571FDB544',
     xTokenManager: '0x5bD2843de9D6b0e6A05d0FB742072274EA3C6CA3',
     icxMigration: '0x8294DE9fc60F5ABCc19245E5857071d7C42B9875',
     balnSwap: '0x610a90B61b89a98b954d5750E94834Aa45d08d10',

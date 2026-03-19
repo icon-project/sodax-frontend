@@ -24,7 +24,7 @@ export function useXSignMessage(): UseMutationResult<
   const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
 
   const { address: injectiveAddress } = useXAccount('INJECTIVE');
-const { signMessage: aleoSignMessage } = useAleoWallet();
+  const { signMessage: aleoSignMessage } = useAleoWallet();
 
   return useMutation({
     mutationFn: async ({ xChainType, message }: { xChainType: ChainType; message: string }) => {

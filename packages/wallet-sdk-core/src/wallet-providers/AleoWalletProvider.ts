@@ -19,7 +19,7 @@ import type {
   TransactionOptions as ProvableTransactionOptions,
 } from '@provablehq/aleo-types';
 
-import type { BaseAleoWalletAdapter } from '@provablehq/aleo-wallet-adaptor-core';
+import type { WalletAdapter } from '@provablehq/aleo-wallet-standard';
 
 export type AleoNetwork = 'mainnet' | 'testnet';
 
@@ -40,7 +40,7 @@ export type PrivateKeyAleoWalletConfig = {
 export type BrowserExtensionAleoWalletConfig = {
   type: 'browserExtension';
   rpcUrl: string;
-  provableAdapter: BaseAleoWalletAdapter;
+  provableAdapter: WalletAdapter;
   network?: AleoNetwork;
 };
 
@@ -53,7 +53,7 @@ export type PkAleoWallet = {
 
 export type BrowserExtensionAleoWallet = {
   type: 'browserExtension';
-  adapter: BaseAleoWalletAdapter;
+  adapter: WalletAdapter;
   connectedAccount: ProvableAccount | null;
 };
 
