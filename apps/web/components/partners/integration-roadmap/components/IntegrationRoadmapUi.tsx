@@ -40,6 +40,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
   const [linkCopied, setLinkCopied] = useState(false);
   const [bdMode, setBdMode] = useState(false);
   const [bdConfig, setBdConfig] = useState<BdConfig>(EMPTY_BD_CONFIG);
+  const [notionWhyBullets, setNotionWhyBullets] = useState<WhyBullet[]>([]);
   const [printDate, setPrintDate] = useState<string | null>(null);
 
   // Redirect legacy ?bd=1 on base path to canonical BD route so that path is not used.
@@ -143,13 +144,13 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
         );
         setBdConfig(prev => ({
           ...prev,
-          // Always show the full selected category benefits by default.
-          // If the user already edited bullets (or loaded a draft), keep their overrides.
-          whyOverrides: prev.whyOverrides.length > 0 ? prev.whyOverrides : [],
+          // Notion whyBullets takes priority over any stale draft overrides.
+          whyOverrides: data.whyBullets?.length > 0 ? [] : prev.whyOverrides,
           stepsOverrides: prev.stepsOverrides.length > 0 ? prev.stepsOverrides : (data.integrationSteps ?? []),
           timeline: prev.timeline || data.timeline || '',
           chains: prev.chains || (data.chains ?? []).join(', '),
         }));
+        setNotionWhyBullets(data.whyBullets ?? []);
       })
       .catch(() => {});
   }, [protocolDisplay]);
@@ -178,16 +179,15 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
             matched: true,
           });
 
-          // Pre-fill BD Composer — only if BD hasn't already edited these fields
+          // Pre-fill BD Composer — Notion whyBullets takes priority over stale draft overrides.
           setBdConfig(prev => ({
             ...prev,
-            // Always show the full selected category benefits by default.
-            // If the user already edited bullets (or loaded a draft), keep their overrides.
-            whyOverrides: prev.whyOverrides.length > 0 ? prev.whyOverrides : [],
+            whyOverrides: data.whyBullets?.length > 0 ? [] : prev.whyOverrides,
             stepsOverrides: prev.stepsOverrides.length > 0 ? prev.stepsOverrides : (data.integrationSteps ?? []),
             timeline: prev.timeline || data.timeline || '',
             chains: prev.chains || (data.chains ?? []).join(', '),
           }));
+          setNotionWhyBullets(data.whyBullets ?? []);
         }
       }
     } catch {
@@ -223,7 +223,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
     if (bdConfig.whyOverrides.length > 0) {
       return bdConfig.whyOverrides.filter(Boolean).map(s => ({ headline: '', copy: s }));
     }
-    const base = defaultWhyBullets;
+    const base = notionWhyBullets.length > 0 ? notionWhyBullets : defaultWhyBullets;
     return bdConfig.customWhy.trim() ? [...base, { headline: '', copy: bdConfig.customWhy.trim() }] : base;
   })();
 

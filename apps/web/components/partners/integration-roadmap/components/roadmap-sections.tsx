@@ -154,7 +154,7 @@ export function RoadmapSections({
           {whyBullets.map((bullet, i) => (
             <li
               key={i}
-              className={`flex flex-col gap-1 rounded-xl bg-cream-white px-4 pt-3.5 pb-4${!bullet.headline ? ' sm:col-span-2' : ''}`}
+              className="flex flex-col gap-1 rounded-xl bg-cream-white px-4 pt-3.5 pb-4"
             >
               {bullet.headline ? (
                 <>
@@ -370,7 +370,7 @@ export function RoadmapSections({
                 const subject = `Partnership inquiry - Integration roadmap${protocol ? ` - ${protocol}` : ''}`;
                 const protocolLine = protocol ? `Protocol: ${protocol}\n` : '';
                 const chainsLine = chains ? `Target chains: ${chains}\n` : '';
-                const body = `Hi SODAX team,\n\n${protocolLine}${chainsLine}We'd like the tailored integration plan (category fit, SDK stack, and integration steps).\n\nThanks,`;
+                const body = `Hi SODAX team,\n\n${protocolLine}${chainsLine}About our project:\n[Brief description — what your protocol does, stage (live / testnet / pre-launch), TVL or user base if relevant]\n\nWhat we're looking to integrate:\n[e.g. swaps, bridging, money market, staking — and why it fits your product]\n\nTimeline:\n[Target go-live or milestone date]\n\nAnything else we should know:\n[Open questions, technical constraints, preferred contact]\n\nLooking forward to connecting.\n\nBest,\n[Your name & role]\n[Protocol / Company]`;
                 return `mailto:partnerships@sodax.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
               })()}
               target="_blank"
