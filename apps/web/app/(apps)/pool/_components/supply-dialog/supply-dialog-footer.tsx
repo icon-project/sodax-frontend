@@ -21,7 +21,7 @@ import {
 } from '@sodax/dapp-kit';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { type CreateAssetDepositParams, type PoolData, type PoolSpokeAssets, dexPools } from '@sodax/sdk';
-import type { Hash } from '@sodax/types';
+import type { ChainId, Hash } from '@sodax/types';
 import { chainIdToChainName } from '@/providers/constants';
 import { formatUnits, parseUnits } from 'viem';
 import { cn } from '@/lib/utils';
@@ -94,7 +94,7 @@ export default function SupplyDialogFooter({
   const walletProvider = useWalletProvider(selectedNetworkChainId ?? undefined);
   const spokeProvider = useSpokeProvider(selectedNetworkChainId ?? undefined, walletProvider);
   const activeSpokeProvider = spokeProvider ?? null;
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedNetworkChainId ?? undefined);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedNetworkChainId as ChainId);
   const fixedPoolKey = dexPools.ASODA_XSODA;
   const { mutateAsync: approveAsset, isPending: isApproving } = useDexApprove();
   const { mutateAsync: depositAsset, isPending: isDepositing } = useDexDeposit();
@@ -166,10 +166,6 @@ export default function SupplyDialogFooter({
     params: token0DepositParams,
     spokeProvider: activeSpokeProvider,
   });
-  const { data: hasToken1Allowance, isLoading: isToken1AllowanceLoading } = useDexAllowance({
-    params: token1DepositParams,
-    spokeProvider: activeSpokeProvider,
-  });
 
   const handleContinue = (): void => {
     if (isTermsStep) {
@@ -228,20 +224,14 @@ export default function SupplyDialogFooter({
             spokeProvider,
           });
         }
-        if (!hasToken1Allowance) {
-          await approveAsset({
-            params: token1DepositParams,
-            spokeProvider,
-          });
-        }
+
         onApprovedChange(true);
         onSupplyStepChange(SUPPLY_STEP.SUPPLY_TRANSFER);
       } catch (error) {
         const errorObj = error as { message?: string; shortMessage?: string };
         onError({
           title: 'Approve Failed',
-          message:
-            errorObj.shortMessage || errorObj.message || 'Failed to approve assets for pool supply.',
+          message: errorObj.shortMessage || errorObj.message || 'Failed to approve assets for pool supply.',
         });
       }
     };
@@ -397,7 +387,13 @@ export default function SupplyDialogFooter({
         onClick={isTermsStep ? handleContinue : handleBack}
         disabled={!isTermsStep && !isApproveStep}
       >
-        {!isTermsStep && isApproveStep ? <ArrowLeft className="w-5 h-5" /> : isTermsStep ? 'Continue' : <CheckIcon className="w-5 h-5" />}
+        {!isTermsStep && isApproveStep ? (
+          <ArrowLeft className="w-5 h-5" />
+        ) : isTermsStep ? (
+          'Continue'
+        ) : (
+          <CheckIcon className="w-5 h-5" />
+        )}
       </Button>
 
       <Button
@@ -409,13 +405,12 @@ export default function SupplyDialogFooter({
         onClick={isApproveStep && isWrongChain ? handleSwitchChain : handleApprove}
         disabled={
           !isApproveStep ||
-          (isApproved ||
-            isApproving ||
-            isDepositing ||
-            isToken0AllowanceLoading ||
-            isToken1AllowanceLoading ||
-            !token0DepositParams ||
-            !token1DepositParams)
+          isApproved ||
+          isApproving ||
+          isDepositing ||
+          isToken0AllowanceLoading ||
+          !token0DepositParams ||
+          !token1DepositParams
         }
       >
         {isApproveStep && isWrongChain ? (
@@ -426,8 +421,9 @@ export default function SupplyDialogFooter({
           <>
             Approving <Loader2 className="w-4 h-4 animate-spin ml-2" />
           </>
+        ) : isTermsStep ? (
+          <FilePenLine className="w-5 h-5" />
         ) : (
-          isTermsStep ? <FilePenLine className="w-5 h-5" /> :
           'Approve'
         )}
       </Button>
@@ -441,14 +437,13 @@ export default function SupplyDialogFooter({
         onClick={isTransferStep && isWrongChain ? handleSwitchChain : handleTransfer}
         disabled={
           !isTransferStep ||
-          (!isApproved ||
-            isApproving ||
-            isDepositing ||
-            isToken0AllowanceLoading ||
-            isToken1AllowanceLoading ||
-            !token0DepositParams ||
-            !token1DepositParams ||
-            isTransferred)
+          !isApproved ||
+          isApproving ||
+          isDepositing ||
+          isToken0AllowanceLoading ||
+          !token0DepositParams ||
+          !token1DepositParams ||
+          isTransferred
         }
       >
         {isTransferStep && isWrongChain ? (
