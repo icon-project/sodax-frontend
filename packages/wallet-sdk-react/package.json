@@ -48,6 +48,7 @@
     "@injectivelabs/wallet-strategy": "catalog:",
     "@mysten/dapp-kit": "catalog:",
     "@mysten/sui": "catalog:",
+    "@provablehq/aleo-wallet-adaptor-react": "catalog:",
     "near-api-js": "7.1.1",
     "@sodax/types": "workspace:*",
     "@sodax/wallet-sdk-core": "workspace:*",

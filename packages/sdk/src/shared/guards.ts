@@ -684,3 +684,13 @@ export function isSubmitSwapTxStatusResponse(value: unknown): value is SubmitSwa
 export function isAleoRawSpokeProvider(value: unknown): value is AleoRawSpokeProvider {
   return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'ALEO';
 }
+
+export function isAleoRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is AleoRawSpokeProviderConfig {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletAddress' in value &&
+    'chainConfig' in value &&
+    value.chainConfig.chain.type === 'ALEO'
+  );
+}

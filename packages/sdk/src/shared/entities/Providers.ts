@@ -24,7 +24,7 @@ import type {
 } from './solana/SolanaSpokeProvider.js';
 import type { SuiRawSpokeProvider, SuiRawSpokeProviderConfig, SuiSpokeProvider } from './sui/SuiSpokeProvider.js';
 import type { NearRawSpokeProvider, NearRawSpokeProviderConfig, NearSpokeProvider } from './near/NearSpokeProvider.js';
-import type { AleoRawSpokeProvider, AleoSpokeProvider } from './aleo/AleoSpokeProvider.js';
+import type { AleoRawSpokeProvider, AleoRawSpokeProviderConfig, AleoSpokeProvider } from './aleo/AleoSpokeProvider.js';
 import {
   SONIC_MAINNET_CHAIN_ID,
   type IAleoWalletProvider,
@@ -268,6 +268,7 @@ export type RawSpokeProviderConfig = (
   | SonicRawSpokeProviderConfig
   | StacksRawSpokeProviderConfig
   | NearRawSpokeProviderConfig
+  | AleoRawSpokeProviderConfig
 ) & {
   chainConfig: SpokeChainConfig;
 };

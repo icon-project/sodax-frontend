@@ -57,6 +57,9 @@ catalogs:
     '@provablehq/aleo-wallet-adaptor-core':
       specifier: 0.3.0-alpha.3
       version: 0.3.0-alpha.3
+    '@provablehq/aleo-wallet-adaptor-react':
+      specifier: 0.3.0-alpha.3
+      version: 0.3.0-alpha.3
     '@provablehq/sdk':
       specifier: 0.9.17
       version: 0.9.17
@@ -944,6 +947,9 @@ importers:
       '@provablehq/aleo-types':
         specifier: 'catalog:'
         version: 0.3.0-alpha.3
+      '@provablehq/aleo-wallet-adaptor-react':
+        specifier: 'catalog:'
+        version: 0.3.0-alpha.3(react-dom@19.1.4(react@19.1.4))(react@19.1.4)
       '@provablehq/sdk':
         specifier: 'catalog:'
         version: 0.9.17
@@ -3265,6 +3271,12 @@ packages:
 
   '@provablehq/aleo-wallet-adaptor-core@0.3.0-alpha.3':
     resolution: {integrity: sha512-Y29bFJyI/J8B3N04EV7T6lnbOCsaHwFsYN9wISdSzwsTQyP4++1DLiAFRLUAdBAgr73Jd/q0U302+Lxm6F7qVg==}
+
+  '@provablehq/aleo-wallet-adaptor-react@0.3.0-alpha.3':
+    resolution: {integrity: sha512-o/euTbE4whbkHRTpm24LiaATsFVAqJ9+OFyqpv7RZNipR3kkgs0pAQH4ckdv4JILjd1SrapB8Dfy5Cw9D/PJSg==}
+    peerDependencies:
+      react: ^18.0.0
+      react-dom: ^18.0.0
 
   '@provablehq/aleo-wallet-standard@0.3.0-alpha.3':
     resolution: {integrity: sha512-sAfoU0loKa6MiC8AzQ6wm3w/NBZ5613304xaYQ59ZkMqwz8coEK7L1MlVhYdkEw7GnEhYmdB4doIAV0ZggHdNA==}
@@ -16516,6 +16528,14 @@ snapshots:
     dependencies:
       '@provablehq/aleo-types': 0.3.0-alpha.3
       '@provablehq/aleo-wallet-standard': 0.3.0-alpha.3
+
+  '@provablehq/aleo-wallet-adaptor-react@0.3.0-alpha.3(react-dom@19.1.4(react@19.1.4))(react@19.1.4)':
+    dependencies:
+      '@provablehq/aleo-types': 0.3.0-alpha.3
+      '@provablehq/aleo-wallet-adaptor-core': 0.3.0-alpha.3
+      '@provablehq/aleo-wallet-standard': 0.3.0-alpha.3
+      react: 19.1.4
+      react-dom: 19.1.4(react@19.1.4)
 
   '@provablehq/aleo-wallet-standard@0.3.0-alpha.3':
     dependencies:
