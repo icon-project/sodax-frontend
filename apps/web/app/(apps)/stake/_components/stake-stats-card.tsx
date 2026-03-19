@@ -121,16 +121,14 @@ export function StakeStatsCard(): React.JSX.Element {
         <div className="flex flex-col gap-1">
           <div className="justify-center text-clay text-[9px] font-medium uppercase leading-3">MAX PENALTY</div>
           <div className="flex justify-start items-center gap-1">
-            <div className="text-espresso text-(length:--body-comfortable) font-bold leading-5">
-              <div className="text-lg font-semibold">
-                {isLoadingStakingConfig ? (
-                  <LoadingThreeDotsJumping />
-                ) : stakingConfig ? (
-                  `${Number(stakingConfig.maxPenalty)}%`
-                ) : (
-                  '—'
-                )}
-              </div>
+            <div className="text-espresso text-lg font-semibold leading-5">
+              {isLoadingStakingConfig ? (
+                <LoadingThreeDotsJumping />
+              ) : stakingConfig ? (
+                `${Number(stakingConfig.maxPenalty)}%`
+              ) : (
+                '—'
+              )}
             </div>
           </div>
         </div>
