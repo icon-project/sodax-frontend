@@ -8,6 +8,7 @@ import {
   type SpokeProviderType,
 } from '../entities/Providers.js';
 import {
+  isAleoRawSpokeProviderConfig,
   isEvmRawSpokeProviderConfig,
   isNearRawSpokeProviderConfig,
   isPartnerFeeAmount,
@@ -32,6 +33,7 @@ import {
   NearRawSpokeProvider,
 } from '../entities/index.js';
 import { SuiRawSpokeProvider } from '../entities/sui/SuiSpokeProvider.js';
+import { AleoRawSpokeProvider } from '../entities/aleo/AleoSpokeProvider.js';
 import { Address as AleoAddress } from '@provablehq/sdk';
 
 export async function retry<T>(
@@ -274,6 +276,10 @@ export function constructRawSpokeProvider(config: RawSpokeProviderConfig): RawSp
     case 'NEAR': {
       invariant(isNearRawSpokeProviderConfig(config), 'Invalid Near raw spoke provider config');
       return new NearRawSpokeProvider(config.chainConfig, config.walletAddress);
+    }
+    case 'ALEO': {
+      invariant(isAleoRawSpokeProviderConfig(config), 'Invalid Aleo raw spoke provider config');
+      return new AleoRawSpokeProvider(config.chainConfig, config.walletAddress, config.rpcUrl);
     }
     default: {
       throw new Error(`Unsupported chain type: ${chainType}`);

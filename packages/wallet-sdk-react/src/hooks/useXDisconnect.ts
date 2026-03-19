@@ -6,6 +6,7 @@ import { useDisconnect } from 'wagmi';
 import { getXService } from '../actions';
 import { useXWagmiStore } from '../useXWagmiStore';
 import type { NearXService } from '@/xchains/near/NearXService';
+import { useWallet as useAleoWallet } from '@provablehq/aleo-wallet-adaptor-react';
 
 /**
  * Hook for disconnecting from a specific blockchain wallet
@@ -34,6 +35,7 @@ export function useXDisconnect(): (xChainType: ChainType) => Promise<void> {
   const { disconnectAsync } = useDisconnect();
   const { mutateAsync: suiDisconnectAsync } = useDisconnectWallet();
   const solanaWallet = useWallet();
+  const { disconnect: aleoDisconnect } = useAleoWallet();
 
   return useCallback(
     async (xChainType: ChainType) => {
@@ -47,6 +49,9 @@ export function useXDisconnect(): (xChainType: ChainType) => Promise<void> {
           break;
         case 'SOLANA':
           await solanaWallet.disconnect();
+          break;
+        case 'ALEO':
+          await aleoDisconnect();
           break;
 
         case 'NEAR': {
@@ -68,6 +73,6 @@ export function useXDisconnect(): (xChainType: ChainType) => Promise<void> {
       // Clear connection state from store
       unsetXConnection(xChainType);
     },
-    [xConnections, unsetXConnection, disconnectAsync, suiDisconnectAsync, solanaWallet],
+    [xConnections, unsetXConnection, disconnectAsync, suiDisconnectAsync, solanaWallet, aleoDisconnect],
   );
 }

@@ -1,6 +1,7 @@
 import type { ChainType } from '@sodax/types';
 import { useCurrentAccount, useCurrentWallet } from '@mysten/dapp-kit';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWallet as useAleoWallet } from '@provablehq/aleo-wallet-adaptor-react';
 import { useMemo } from 'react';
 import { useAccount, useConnections } from 'wagmi';
 import type { XConnection } from '../types';
@@ -33,6 +34,7 @@ export function useXConnection(xChainType: ChainType | undefined): XConnection |
   const suiAccount = useCurrentAccount();
   const suiCurrentWallet = useCurrentWallet();
   const solanaWallet = useWallet();
+  const aleoWallet = useAleoWallet();
 
   const xConnection2 = useMemo(() => {
     if (!xChainType) {
@@ -63,10 +65,20 @@ export function useXConnection(xChainType: ChainType | undefined): XConnection |
           };
         }
         return undefined;
+
+      case 'ALEO':
+        if (aleoWallet.connected && aleoWallet.address) {
+          return {
+            xAccount: { address: aleoWallet.address, xChainType },
+            xConnectorId: aleoWallet.wallet?.adapter.name || '',
+          };
+        }
+        return undefined;
+
       default:
         return xConnection;
     }
-  }, [xChainType, xConnection, evmAddress, suiAccount, evmConnections, suiCurrentWallet, solanaWallet]);
+  }, [xChainType, xConnection, evmAddress, suiAccount, evmConnections, suiCurrentWallet, solanaWallet, aleoWallet]);
 
   return xConnection2;
 }

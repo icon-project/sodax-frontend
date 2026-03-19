@@ -28,6 +28,16 @@ vi.mock('@provablehq/sdk', () => {
 describe('AleoWalletProvider', () => {
   const mockRpcUrl = 'https://api.explorer.provable.com/v1';
   const mockPrivateKey = 'APrivateKey1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+  const mockPrivateKeyConfig: AleoWalletConfig = {
+    type: 'privateKey',
+    privateKey: mockPrivateKey,
+    rpcUrl: mockRpcUrl,
+    network: 'testnet',
+    delegate: {
+      apiKey: 'mock-api-key',
+      consumerId: 'mock-consumer-id',
+    },
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -39,6 +49,11 @@ describe('AleoWalletProvider', () => {
         type: 'privateKey',
         privateKey: mockPrivateKey,
         rpcUrl: mockRpcUrl,
+        network: 'testnet',
+        delegate: {
+          apiKey: 'mock-api-key',
+          consumerId: 'mock-consumer-id',
+        },
       };
 
       const provider = new AleoWalletProvider(config);
@@ -55,7 +70,7 @@ describe('AleoWalletProvider', () => {
         disconnect: vi.fn(),
         executeTransaction: vi.fn(),
       } as any;
-      
+
       const config: BrowserExtensionAleoWalletConfig = {
         type: 'browserExtension',
         provableAdapter: mockAdapter,
@@ -67,15 +82,7 @@ describe('AleoWalletProvider', () => {
     });
 
     it('should throw Error for invalid wallet config', () => {
-      // @ts-ignore
-      const config: AleoWalletConfig = {};
-
-      try {
-        new AleoWalletProvider(config);
-      } catch (error) {
-        expect(error).toBeInstanceOf(Error);
-        expect((error as Error).message).toBe('Invalid wallet configuration');
-      }
+      expect(() => new AleoWalletProvider({} as AleoWalletConfig)).toThrow('Invalid wallet configuration');
     });
   });
 
@@ -85,6 +92,11 @@ describe('AleoWalletProvider', () => {
         type: 'privateKey',
         privateKey: mockPrivateKey,
         rpcUrl: mockRpcUrl,
+        network: 'testnet',
+        delegate: {
+          apiKey: 'mock-api-key',
+          consumerId: 'mock-consumer-id',
+        },
       };
       const provider = new AleoWalletProvider(config);
 
@@ -102,14 +114,14 @@ describe('AleoWalletProvider', () => {
         disconnect: vi.fn(),
         executeTransaction: vi.fn(),
       } as any;
-      
+
       const config: BrowserExtensionAleoWalletConfig = {
         type: 'browserExtension',
         provableAdapter: mockAdapter,
         rpcUrl: mockRpcUrl,
       };
       const provider = new AleoWalletProvider(config);
-      
+
       // Set connected account to simulate connected state
       // @ts-ignore - Accessing private property for testing
       provider.wallet.connectedAccount = { address: mockAddress };
@@ -121,13 +133,8 @@ describe('AleoWalletProvider', () => {
 
   describe('execute', () => {
     it('should execute program using private key wallet', async () => {
-      const config: AleoWalletConfig = { 
-        type: 'privateKey',
-        privateKey: mockPrivateKey, 
-        rpcUrl: mockRpcUrl 
-      };
-      const provider = new AleoWalletProvider(config);
-      
+      const provider = new AleoWalletProvider(mockPrivateKeyConfig);
+
       // Mock ProgramManager.execute return value
       const mockTxId = 'at1mocktxid...';
       // @ts-ignore - Accessing public property
@@ -150,12 +157,7 @@ describe('AleoWalletProvider', () => {
     const validMockTxId = 'at1mocktxidmocktxidmocktxidmocktxidmocktxidmocktxidmocktxid12';
 
     it('should return receipt for accepted transaction', async () => {
-      const config: AleoWalletConfig = { 
-        type: 'privateKey',
-        privateKey: mockPrivateKey, 
-        rpcUrl: mockRpcUrl 
-      };
-      const provider = new AleoWalletProvider(config);
+      const provider = new AleoWalletProvider(mockPrivateKeyConfig);
 
       const mockConfirmedTx = {
         status: 'accepted',
@@ -164,7 +166,7 @@ describe('AleoWalletProvider', () => {
         transaction: {},
         finalize: [],
       };
-      
+
       // @ts-ignore
       provider.networkClient.waitForTransactionConfirmation.mockResolvedValue(mockConfirmedTx);
 
@@ -175,12 +177,7 @@ describe('AleoWalletProvider', () => {
     });
 
     it('should throw Error with rejected message for rejected transaction', async () => {
-      const config: AleoWalletConfig = { 
-        type: 'privateKey',
-        privateKey: mockPrivateKey, 
-        rpcUrl: mockRpcUrl 
-      };
-      const provider = new AleoWalletProvider(config);
+      const provider = new AleoWalletProvider(mockPrivateKeyConfig);
 
       // Simulate SDK throwing on rejection
       // @ts-ignore
@@ -195,12 +192,7 @@ describe('AleoWalletProvider', () => {
     });
 
     it('should throw Error with timeout message on timeout', async () => {
-      const config: AleoWalletConfig = { 
-        type: 'privateKey',
-        privateKey: mockPrivateKey, 
-        rpcUrl: mockRpcUrl 
-      };
-      const provider = new AleoWalletProvider(config);
+      const provider = new AleoWalletProvider(mockPrivateKeyConfig);
 
       // @ts-ignore
       provider.networkClient.waitForTransactionConfirmation.mockRejectedValue(new Error('Transaction did not appear after timeout'));
@@ -214,12 +206,7 @@ describe('AleoWalletProvider', () => {
     });
 
     it('should throw Error for invalid transaction ID format immediately (mock behavior)', async () => {
-       const config: AleoWalletConfig = { 
-        type: 'privateKey',
-        privateKey: mockPrivateKey, 
-        rpcUrl: mockRpcUrl 
-      };
-      const provider = new AleoWalletProvider(config);
+      const provider = new AleoWalletProvider(mockPrivateKeyConfig);
 
        // @ts-ignore
       provider.networkClient.waitForTransactionConfirmation.mockRejectedValue(new Error('Malformed transaction ID'));

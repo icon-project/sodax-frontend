@@ -66,6 +66,8 @@ export class AleoBaseSpokeProvider {
 
     const bytes = new Uint8Array(normalized.match(/.{1,2}/g)?.map(byte => Number.parseInt(byte, 16)) ?? []);
 
+    if (bytes.length > 32) throw new Error(`Hex input exceeds 32 bytes: ${bytes.length}`);
+
     // Pad to 32 bytes (left-padded)
     const padded = new Uint8Array(32);
     padded.set(bytes, 32 - bytes.length);
@@ -110,7 +112,7 @@ export class AleoBaseSpokeProvider {
 
       // Verify this connSn hasn't already been used in the on-chain messages mapping
       const used = await this.isConnSnUsed(connSn);
-      if (!used) return BigInt(connSn);
+      if (!used) return connSn;
     }
     throw new Error('Failed to generate unique connSn after maximum retries');
   }
@@ -155,7 +157,7 @@ export class AleoBaseSpokeProvider {
    * Both have identical params — only the function name differs.
    */
   private async executeTransfer<S extends AleoSpokeProviderType, R extends boolean = false>(
-    functionName: 'transfer' | 'transferNative',
+    functionName: 'transfer_token_public' | 'transfer_native_public',
     token: bigint,
     dstAddress: Hex,
     amount: bigint,
@@ -214,7 +216,7 @@ export class AleoBaseSpokeProvider {
     raw?: R,
   ): Promise<TxReturnType<S, R>> {
     return this.executeTransfer(
-      'transfer',
+      'transfer_token_public',
       token,
       dstAddress,
       amount,
@@ -245,7 +247,7 @@ export class AleoBaseSpokeProvider {
     raw?: R,
   ): Promise<TxReturnType<S, R>> {
     return this.executeTransfer(
-      'transferNative',
+      'transfer_native_public',
       token,
       dstAddress,
       amount,
@@ -307,6 +309,12 @@ export class AleoBaseSpokeProvider {
   }
 }
 
+export type AleoRawSpokeProviderConfig = {
+  chainConfig: AleoSpokeChainConfig;
+  walletAddress: string;
+  rpcUrl?: string;
+};
+
 /** Spoke provider that only knows the wallet address — returns raw transactions (AleoExecuteOptions) without broadcasting. */
 export class AleoRawSpokeProvider extends AleoBaseSpokeProvider implements IRawSpokeProvider {
   public readonly walletProvider: WalletAddressProvider;
@@ -338,8 +346,8 @@ export class AleoSpokeProvider extends AleoBaseSpokeProvider implements ISpokePr
     return this.walletProvider.getWalletAddress();
   }
 
-  //! Send the transaction as soon as the transaction happens.
-  //! Data should be handled in frontend itself. The data should not get lost even after refresh and all. [Document this]
+  // TODO: Send the transaction as soon as the transaction happens.
+  // NOTE: Data should be handled in frontend itself. The data should not get lost even after refresh and all. [Document this]
   async waitForTransactionConfirmation(txId: string, timeout: number = ALEO_DEFAULT_TIMEOUT): Promise<boolean> {
     if (!AleoBaseSpokeProvider.isValidTransactionId(txId)) {
       throw new Error(`Invalid Aleo transaction ID: ${txId}`);

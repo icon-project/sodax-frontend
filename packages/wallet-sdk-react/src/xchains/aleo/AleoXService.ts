@@ -7,6 +7,7 @@ import { isNativeToken } from '../../utils';
 
 export class AleoXService extends XService {
   private static instance: AleoXService;
+  public network: Network = Network.MAINNET;
 
   public networkClient: AleoNetworkClient;
   public rpcUrl = 'https://api.provable.com/v2';
@@ -21,6 +22,11 @@ export class AleoXService extends XService {
       AleoXService.instance = new AleoXService();
     }
     return AleoXService.instance;
+  }
+
+  public setRpcUrl(url: string): void {
+    this.rpcUrl = url;
+    this.networkClient = new AleoNetworkClient(this.rpcUrl);
   }
 
   public setNetworkClient(network: Network): void {

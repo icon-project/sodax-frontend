@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import type { ChainType } from '@sodax/types';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWallet as useAleoWallet } from '@provablehq/aleo-wallet-adaptor-react';
 import { useAccount } from 'wagmi';
 
 import type { XAccount } from '../types';
@@ -14,6 +15,7 @@ export function useXAccounts() {
   const { address: evmAddress } = useAccount();
   const suiAccount = useCurrentAccount();
   const solanaWallet = useWallet();
+  const aleoWallet = useAleoWallet();
 
   const xAccounts = useMemo(() => {
     const result: Partial<Record<ChainType, XAccount>> = {};
@@ -48,9 +50,15 @@ export function useXAccounts() {
         xChainType: 'SOLANA',
       };
     }
+    if (aleoWallet.address) {
+      result['ALEO'] = {
+        address: aleoWallet.address,
+        xChainType: 'ALEO',
+      };
+    }
 
     return result;
-  }, [xChainTypes, xConnections, evmAddress, suiAccount, solanaWallet]);
+  }, [xChainTypes, xConnections, evmAddress, suiAccount, solanaWallet, aleoWallet]);
 
   return xAccounts;
 }

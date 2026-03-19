@@ -430,10 +430,8 @@ export const SodaTokensAsHubAssets: Record<string, HubAsset> = Object.values(Sod
 export const hubChainConfig = {
   chain: baseChainInfo[SONIC_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'EVM'>,
   addresses: {
-    // assetManager: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
-    assetManager: '0x1B06762a8B9286f6A1B290579834e555a5F60557',
-    // hubWallet: '0xA0ed3047D358648F2C0583B415CffCA571FDB544',
-    hubWallet: '0x103328BFB6321AD198D5dc4075a171f01c0472E5',
+    assetManager: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
+    hubWallet: '0xA0ed3047D358648F2C0583B415CffCA571FDB544',
     xTokenManager: '0x5bD2843de9D6b0e6A05d0FB742072274EA3C6CA3',
     icxMigration: '0x8294DE9fc60F5ABCc19245E5857071d7C42B9875',
     balnSwap: '0x610a90B61b89a98b954d5750E94834Aa45d08d10',
@@ -1657,8 +1655,8 @@ export const spokeChainConfig = {
   [ALEO_MAINNET_CHAIN_ID]: {
     chain: baseChainInfo[ALEO_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'ALEO'>,
     addresses: {
-      assetManager: 'asset_manager_core_v3.aleo',
-      connection: 'connection_v4.aleo',
+      assetManager: 'asset_manager_core_v1.aleo',
+      connection: 'connection_v1.aleo',
       xTokenManager: '',
       rateLimit: 'rate_limit_v1.aleo',
       testToken: '7190692537453907461105790569797103513515746302149567971663963167242253971980',
@@ -1666,7 +1664,6 @@ export const spokeChainConfig = {
     nativeToken: '3443843282313283355522573239085696902919850365217539366784739393210722344986' as const,
     bnUSD: '',
     rpcUrl: 'https://api.provable.com/v2',
-    network: 'testnet' as const,
     gasPrice: '0',
     supportedTokens: {
       ALEO: {
@@ -1676,18 +1673,19 @@ export const spokeChainConfig = {
         address: '3443843282313283355522573239085696902919850365217539366784739393210722344986',
         xChainId: ALEO_MAINNET_CHAIN_ID,
       },
-      bnUSD: {
-        symbol: 'bnUSD',
-        name: 'bnUSD',
-        decimals: 6,
-        address: '7190692537453907461105790569797103513515746302149567971663963167242253971980',
-        xChainId: ALEO_MAINNET_CHAIN_ID,
-      },
       testToken: {
         symbol: 'testToken',
         name: 'testToken',
         decimals: 6,
         address: '7190692537453907461105790569797103513515746302149567971663963167242253971980',
+        xChainId: ALEO_MAINNET_CHAIN_ID,
+      },
+      // NOTE: Supported token requires bnUSD but in aleo it is not deployed yet.
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 6,
+        address: '',
         xChainId: ALEO_MAINNET_CHAIN_ID,
       },
     } as const,
@@ -2685,13 +2683,6 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'Aleo',
       vault: '0x0000000000000000000000000000000000000000',
     },
-    [spokeChainConfig[ALEO_MAINNET_CHAIN_ID].bnUSD]: {
-      asset: '0xDb38c51BcB3066cd8279f10723A0dE948f21285d',
-      decimal: 6,
-      symbol: 'bnUSD',
-      name: 'bnUSD',
-      vault: SodaTokens.bnUSD.address,
-    },
     [spokeChainConfig[ALEO_MAINNET_CHAIN_ID].addresses.testToken]: {
       asset: '0xDb38c51BcB3066cd8279f10723A0dE948f21285d',
       decimal: 6,
@@ -3054,10 +3045,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[KAIA_MAINNET_CHAIN_ID].supportedTokens.SODA,
   ] as const satisfies XToken[],
-  [ALEO_MAINNET_CHAIN_ID]: [
-    spokeChainConfig[ALEO_MAINNET_CHAIN_ID].supportedTokens.ALEO,
-    spokeChainConfig[ALEO_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
-  ] as const satisfies XToken[],
+  [ALEO_MAINNET_CHAIN_ID]: [spokeChainConfig[ALEO_MAINNET_CHAIN_ID].supportedTokens.ALEO] as const satisfies XToken[],
 } as const satisfies Record<SpokeChainId, readonly XToken[]>;
 
 // export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>
