@@ -26,22 +26,34 @@ export type RadfiWalletBalance = {
 };
 
 export type RadfiUtxo = {
-  id: string;
-  txId: string;
+  _id: string;
+  txid: string;
   vout: number;
-  value: string;
+  txidVout: string;
+  satoshi: number;
+  amount: string;
   address: string;
   isSpent: boolean;
-  isExpired: boolean;
-  expiryBlock?: number;
-  currentBlock?: number;
+  status: string;
+  source: string;
+  runes?: Array<{
+    runeid: string;
+    amount: string;
+    divisibility?: number;
+    rune?: string;
+    spacedRune?: string;
+    symbol?: string;
+  }>;
+  height?: number;
+  confirmations?: number;
+  createdAt?: number;
+  updatedAt?: number;
 };
 
 export type RadfiUtxoListResponse = {
+  code: string;
+  message: string;
   data: RadfiUtxo[];
-  total: number;
-  page: number;
-  pageSize: number;
 };
 
 export type RadfiBuildTxResponse = {

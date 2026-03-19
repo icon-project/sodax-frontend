@@ -19,7 +19,7 @@ type RenewUtxosParams = {
  * const { mutateAsync: renewUtxos, isPending } = useRenewUtxos(spokeProvider);
  *
  * const handleRenew = async (expiredUtxos: RadfiUtxo[]) => {
- *   const txIdVouts = expiredUtxos.map(u => `${u.txId}:${u.vout}`);
+ *   const txIdVouts = expiredUtxos.map(u => u.txidVout);
  *   const txId = await renewUtxos({ txIdVouts });
  *   console.log('Renewed:', txId);
  * };
