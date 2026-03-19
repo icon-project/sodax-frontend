@@ -24,6 +24,11 @@ export class AleoXService extends XService {
     return AleoXService.instance;
   }
 
+  public setRpcUrl(url: string): void {
+    this.rpcUrl = url;
+    this.networkClient = new AleoNetworkClient(this.rpcUrl);
+  }
+
   public setNetworkClient(network: Network): void {
     this.rpcUrl =
       network === Network.MAINNET ? 'https://api.provable.com/v2' : 'https://api.provable.com/v2';

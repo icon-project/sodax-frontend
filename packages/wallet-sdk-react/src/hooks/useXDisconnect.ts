@@ -73,6 +73,6 @@ export function useXDisconnect(): (xChainType: ChainType) => Promise<void> {
       // Clear connection state from store
       unsetXConnection(xChainType);
     },
-    [xConnections, unsetXConnection, disconnectAsync, suiDisconnectAsync, solanaWallet],
+    [xConnections, unsetXConnection, disconnectAsync, suiDisconnectAsync, solanaWallet, aleoDisconnect],
   );
 }
