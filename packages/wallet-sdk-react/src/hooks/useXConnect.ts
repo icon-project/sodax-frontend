@@ -1,6 +1,9 @@
 import type { XAccount } from '@/types';
 import { useConnectWallet } from '@mysten/dapp-kit';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWallet as useAleoWallet } from '@provablehq/aleo-wallet-adaptor-react';
+import { DecryptPermission } from '@provablehq/aleo-wallet-adaptor-core';
+import { AleoXService } from '../xchains/aleo';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { useConnect } from 'wagmi';
 import type { XConnector } from '../core/XConnector';
@@ -8,11 +11,12 @@ import { useXWagmiStore } from '../useXWagmiStore';
 import type { EvmXConnector } from '../xchains/evm';
 import type { SolanaXConnector } from '../xchains/solana';
 import type { SuiXConnector } from '../xchains/sui';
+import type { AleoXConnector } from '../xchains/aleo';
 
 /**
  * Hook for connecting to various blockchain wallets across different chains
  *
- * Handles connection logic for EVM, SUI, Solana and other supported chains.
+ * Handles connection logic for EVM, SUI, Solana, Aleo and other supported chains.
  * Sets up wallet connections and stores connection state in XWagmiStore.
  *
  * @param {void} - No parameters required
@@ -42,6 +46,7 @@ export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XC
   const { mutateAsync: suiConnectAsync } = useConnectWallet();
 
   const { select, connect } = useWallet();
+  const { selectWallet } = useAleoWallet();
 
   return useMutation({
     mutationFn: async (xConnector: XConnector) => {
@@ -96,6 +101,21 @@ export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XC
               });
             });
           }
+
+          break;
+        }
+
+        case 'ALEO': {
+          const walletName = (xConnector as AleoXConnector).wallet.adapter.name;
+          const adapter = (xConnector as AleoXConnector).wallet.adapter;
+
+          if (!adapter) throw new Error('No adapter found for Aleo wallet');
+
+          selectWallet(walletName);
+
+          const aleoNetwork = AleoXService.getInstance().network as unknown as Parameters<typeof adapter.connect>[0];
+
+          await adapter.connect(aleoNetwork, DecryptPermission.NoDecrypt, []);
 
           break;
         }
