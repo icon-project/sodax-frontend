@@ -40,7 +40,7 @@ const rpcConfig: RpcConfig = {
   //   radfiUmsUrl: 'https://staging.ums.radfi.co/api', // https://ums.radfi.co/api for prod
   // },
   bitcoin: {
-    radfiApiUrl: 'https://api.canary.radfi.co/api',
+    radfiApiUrl: 'https://api.radfi.co/api',
     radfiUmsUrl: 'https://ums.radfi.co/api'
   },
 };
