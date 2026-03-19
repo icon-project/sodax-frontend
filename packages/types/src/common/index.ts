@@ -153,7 +153,6 @@ export type SolanaChainConfig = BaseSpokeChainConfig<'SOLANA'> & {
     connection: string;
     xTokenManager: string;
     rateLimit: string;
-    testToken: string;
   };
   chain: SpokeChainInfo<'SOLANA'>;
   rpcUrl: string;
@@ -174,7 +173,6 @@ export type StellarSpokeChainConfig = BaseSpokeChainConfig<'STELLAR'> & {
     connection: string;
     xTokenManager: string;
     rateLimit: string;
-    testToken: string;
   };
   horizonRpcUrl: HttpUrl;
   sorobanRpcUrl: HttpUrl;
@@ -189,7 +187,6 @@ export type InjectiveSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
     connection: string;
     xTokenManager: string;
     rateLimit: string;
-    testToken: string;
   };
   nativeToken: string;
   prefix: string;
@@ -214,7 +211,6 @@ export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
     connection: string;
     xTokenManager: string;
     rateLimit: string;
-    testToken: string;
   };
   rpc_url: string;
 };
@@ -246,7 +242,6 @@ export type StacksSpokeChainConfig = BaseSpokeChainConfig<'STACKS'> & {
     connection: string;
     rateLimit: string;
     xTokenManager: string;
-    testToken: string;
   };
   chain: SpokeChainInfo<'STACKS'>;
   rpcUrl: string;

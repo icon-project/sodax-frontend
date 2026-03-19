@@ -522,7 +522,6 @@ export const spokeChainConfig = {
       assetManager: 'AnCCJjheynmGqPp6Vgat9DTirGKD4CtQzP8cwTYV8qKH',
       connection: 'GxS8i6D9qQjbSeniD487CnomUxU2pXt6V8P96T6MkUXB',
       rateLimit: '2Vyy3A3Teju2EMCkdnappEeWqBXyAaF5V2WsrU4hDtsk',
-      testToken: '3Q2HS3png7fLaYerqCun3zw8rnBZo2Ksvdg6RHTyM4Ns',
       xTokenManager: '',
     },
     chain: baseChainInfo[SOLANA_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'SOLANA'>,
@@ -1103,7 +1102,6 @@ export const spokeChainConfig = {
       assetManager: 'inj1dg6tm62uup53wn2kn97caeqfwt0sukx3qjk8rw',
       connection: 'inj1eexvfglsptxwfj9hft96xcnsdrvr7d7dalcm8w',
       rateLimit: 'inj1x8p2h56edcdrm9tzx7a7zkwe0l334klgrxpqyk',
-      testToken: '',
       xTokenManager: '',
     },
     chain: baseChainInfo[INJECTIVE_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'INJECTIVE'>,
@@ -1160,7 +1158,6 @@ export const spokeChainConfig = {
       assetManager: 'CCGF33A4CO6D3BXFEKPXVCFCZBK76I3AQOZK6KIKRPAWAZR3632WHCJ3',
       xTokenManager: '',
       rateLimit: 'CB6G3ULISTTBPXUN3BI6ADHQGWJEN7BPQINHL45TCB6TDFM5QWU24HAY',
-      testToken: '',
     },
     trustlineConfigs: [
       {
@@ -1231,7 +1228,6 @@ export const spokeChainConfig = {
         '0xa17a409164d1676db71b411ab50813ba2c7dd547d2df538c699049566f1ff922::asset_manager::0xcb7346339340b7f8dea40fcafb70721dc2fcfa7e8626a89fd954d46c1f928b61',
       xTokenManager: '',
       rateLimit: '',
-      testToken: '',
     },
     supportedTokens: {
       SUI: {
@@ -1666,7 +1662,6 @@ export const spokeChainConfig = {
       connection: 'SP3031RGK734636C8KGW2Y76TEQBTVX59Q472EQH0.connection-v3',
       rateLimit: 'SP3031RGK734636C8KGW2Y76TEQBTVX59Q472EQH0.rate-limit-state',
       xTokenManager: '',
-      testToken: '',
     },
     chain: baseChainInfo[STACKS_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'STACKS'>,
     nativeToken: 'ST000000000000000000002AMW42H.nativetoken' as const,
