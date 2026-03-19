@@ -35,6 +35,7 @@ catalog:
   "@injectivelabs/wallet-private-key": "1.16.10"
   "@provablehq/aleo-types": "0.3.0-alpha.3"
   "@provablehq/aleo-wallet-adaptor-core": "0.3.0-alpha.3"
+  "@provablehq/aleo-wallet-adaptor-react": "0.3.0-alpha.3"
   "@provablehq/sdk": "0.9.17"
   "@solana/spl-token": "0.4.9"
   "@solana/wallet-adapter-base": "0.9.26"

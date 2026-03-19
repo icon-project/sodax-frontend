@@ -22,6 +22,7 @@ import {
   SONIC_MAINNET_CHAIN_ID,
   type SonicSpokeChainConfig,
   type HubChainId,
+  type HttpUrl,
   getIntentRelayChainId,
 } from '@sodax/types';
 
@@ -34,9 +35,9 @@ const PROVABLE_API_KEY = process.env.PROVABLE_API_KEY;
 const PROVABLE_CONSUMER_ID = process.env.PROVABLE_CONSUMER_ID;
 const PROVABLE_DELEGATE_URL = process.env.PROVABLE_DELEGATE_URL;
 const HUB_RPC_URL = process.env.HUB_RPC_URL || 'https://rpc.soniclabs.com';
-const RELAYER_API_ENDPOINT = 'https://jozvz6ftrl25jf4bzva125vz94yld26g.lambda-url.us-east-1.localstack.debendra.me';
+const RELAYER_API_ENDPOINT = process.env.RELAYER_API_ENDPOINT as HttpUrl;
 const destinationChainConfig = spokeChainConfig[SONIC_MAINNET_CHAIN_ID] as SonicSpokeChainConfig;
-console.log('HUB_RPC_URL: ', HUB_RPC_URL);
+const IS_TESTNET = process.env.IS_TESTNET;
 if (!ALEO_PRIVATE_KEY) throw new Error('ALEO_PRIVATE_KEY is required');
 if (!ALEO_PRIVATE_KEY.startsWith('APrivateKey1')) throw new Error('Invalid ALEO_PRIVATE_KEY');
 if (!PROVABLE_API_KEY) throw new Error('PROVABLE_API_KEY is required');
@@ -51,7 +52,7 @@ const aleoWalletProvider = new AleoWalletProvider({
   type: 'privateKey',
   rpcUrl: ALEO_RPC_URL,
   privateKey: ALEO_PRIVATE_KEY,
-  network: 'testnet',
+  network: IS_TESTNET ? 'testnet' : 'mainnet',
   delegate: {
     apiKey: PROVABLE_API_KEY,
     consumerId: PROVABLE_CONSUMER_ID,

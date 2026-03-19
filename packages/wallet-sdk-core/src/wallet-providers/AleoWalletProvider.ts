@@ -4,7 +4,6 @@ import {
   ProgramManager,
   AleoKeyProvider,
   NetworkRecordProvider,
-  //   type RecordPlaintext,
 } from '@provablehq/sdk';
 
 import type {

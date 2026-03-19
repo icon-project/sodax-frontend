@@ -1,4 +1,3 @@
-import type { AleoNetworkEnv } from '../aleo/index.js';
 import type {
   HUB_CHAIN_IDS,
   CHAIN_IDS,
@@ -254,7 +253,6 @@ export type AleoSpokeChainConfig = BaseSpokeChainConfig<'ALEO'> & {
   };
   nativeToken: string;
   gasPrice: string;
-  network: AleoNetworkEnv;
 };
 
 export type SpokeChainConfig =

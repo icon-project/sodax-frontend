@@ -23,7 +23,7 @@ import { IconSpokeProvider, type IconRawSpokeProvider } from './entities/icon/Ic
 import { SolanaSpokeProvider, type SolanaRawSpokeProvider, type SolanaRawSpokeProviderConfig } from './entities/solana/SolanaSpokeProvider.js';
 import { SuiSpokeProvider, type SuiRawSpokeProvider } from './entities/sui/SuiSpokeProvider.js';
 import { StellarSpokeProvider, type StellarRawSpokeProvider, type StellarRawSpokeProviderConfig } from './entities/stellar/StellarSpokeProvider.js';
-import { AleoSpokeProvider, type AleoRawSpokeProvider } from './entities/aleo/AleoSpokeProvider.js';
+import { AleoSpokeProvider, type AleoRawSpokeProvider, type AleoRawSpokeProviderConfig } from './entities/aleo/AleoSpokeProvider.js';
 import type {
   EvmSpokeProviderType,
   IconSpokeProviderType,
@@ -559,4 +559,14 @@ export function isNearRawSpokeProviderConfig(value: RawSpokeProviderConfig): val
 }
 export function isAleoRawSpokeProvider(value: unknown): value is AleoRawSpokeProvider {
   return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'ALEO';
+}
+
+export function isAleoRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is AleoRawSpokeProviderConfig {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletAddress' in value &&
+    'chainConfig' in value &&
+    value.chainConfig.chain.type === 'ALEO'
+  );
 }
