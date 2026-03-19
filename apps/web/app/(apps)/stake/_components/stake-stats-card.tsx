@@ -1,9 +1,9 @@
 import type React from 'react';
 import Image from 'next/image';
-import { Info, InfoIcon } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { useStakeState, useStakeActions } from '../_stores/stake-store-provider';
 import { formatCompactNumber, formatTokenAmount } from '@/lib/utils';
-import { STAKING_APR, STAKING_NOW_HOLDERS } from './constants';
+import { STAKING_APR } from './constants';
 import LoadingThreeDotsJumping from '@/components/shared/loading-three-dots-jumping';
 import { useStakingConfig } from '@sodax/dapp-kit';
 import { UnstakeModeToggle } from './unstake-mode-toggle';
@@ -119,10 +119,18 @@ export function StakeStatsCard(): React.JSX.Element {
 
       <div className="w-full flex justify-between items-center">
         <div className="flex flex-col gap-1">
-          <div className="justify-center text-clay text-[9px] font-medium uppercase leading-3">STAKING NOW</div>
+          <div className="justify-center text-clay text-[9px] font-medium uppercase leading-3">MAX PENALTY</div>
           <div className="flex justify-start items-center gap-1">
             <div className="text-espresso text-(length:--body-comfortable) font-bold leading-5">
-              {STAKING_NOW_HOLDERS}
+              <div className="text-lg font-semibold">
+                {isLoadingStakingConfig ? (
+                  <LoadingThreeDotsJumping />
+                ) : stakingConfig ? (
+                  `${Number(stakingConfig.maxPenalty)}%`
+                ) : (
+                  '—'
+                )}
+              </div>
             </div>
           </div>
         </div>
