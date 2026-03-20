@@ -104,7 +104,7 @@ export function PairBalanceHeader({
           </div>
         </div>
       </div>
-      <div className="h-12 px-2 bg-blend-multiply bg-almost-white rounded-lg flex flex-col justify-center items-end">
+      <div className="hidden h-12 px-2 bg-blend-multiply bg-almost-white rounded-lg md:flex flex-col justify-center items-end">
         <div className="text-center justify-start text-clay text-[9px] font-medium font-['Inter'] uppercase leading-3">
           {' '}
           current APY
