@@ -32,7 +32,7 @@ import {
   type StellarRawSpokeProvider,
   type StellarRawSpokeProviderConfig,
 } from './entities/stellar/StellarSpokeProvider.js';
-import { StacksSpokeProvider, type StacksRawSpokeProvider } from './entities/stacks/StacksSpokeProvider.js';
+import { StacksSpokeProvider, type StacksRawSpokeProvider, type StacksRawSpokeProviderConfig } from './entities/stacks/StacksSpokeProvider.js';
 import type {
   BitcoinSpokeProviderType,
   EvmSpokeProviderType,
@@ -625,6 +625,16 @@ export function isNearRawSpokeProviderConfig(value: RawSpokeProviderConfig): val
     'walletAddress' in value &&
     'chainConfig' in value &&
     value.chainConfig.chain.type === 'NEAR'
+  );
+}
+
+export function isStacksRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is StacksRawSpokeProviderConfig {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletAddress' in value &&
+    'chainConfig' in value &&
+    value.chainConfig.chain.type === 'STACKS'
   );
 }
 

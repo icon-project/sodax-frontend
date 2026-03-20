@@ -7,14 +7,18 @@ import {
   type RawSpokeProviderConfig,
   type SpokeProviderType,
 } from '../entities/Providers.js';
-import { isEvmRawSpokeProviderConfig, isNearRawSpokeProviderConfig, isPartnerFeeAmount, isPartnerFeePercentage, isSolanaRawSpokeProviderConfig, isSonicRawSpokeProviderConfig, isStellarRawSpokeProviderConfig } from '../guards.js';
-import type { GetAddressType, GetChainConfigType, PartnerFee, QuoteType } from '../types.js';
 import {
-  type SpokeChainId,
-  type Address,
-  type Hex,
-  SONIC_MAINNET_CHAIN_ID,
-} from '@sodax/types';
+  isEvmRawSpokeProviderConfig,
+  isNearRawSpokeProviderConfig,
+  isPartnerFeeAmount,
+  isPartnerFeePercentage,
+  isSolanaRawSpokeProviderConfig,
+  isSonicRawSpokeProviderConfig,
+  isStacksRawSpokeProviderConfig,
+  isStellarRawSpokeProviderConfig,
+} from '../guards.js';
+import type { GetAddressType, GetChainConfigType, PartnerFee, QuoteType } from '../types.js';
+import { type SpokeChainId, type Address, type Hex, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 import { toHex } from 'viem';
 import { bcs } from '@mysten/sui/bcs';
 import { PublicKey } from '@solana/web3.js';
@@ -28,6 +32,7 @@ import {
   InjectiveRawSpokeProvider,
   SonicRawSpokeProvider,
   NearRawSpokeProvider,
+  StacksRawSpokeProvider,
 } from '../entities/index.js';
 import { SuiRawSpokeProvider } from '../entities/sui/SuiSpokeProvider.js';
 
@@ -161,7 +166,7 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
 
     case 'stellar':
       return `0x${StellarAddress.fromString(address).toScVal().toXDR('hex')}`;
-    
+
     case 'stacks':
       return `0x${serializeCV(Cl.principal(address))}` as Hex;
 
@@ -230,27 +235,15 @@ export function constructRawSpokeProvider(config: RawSpokeProviderConfig): RawSp
     case 'EVM': {
       if (config.chainConfig.chain.id === SONIC_MAINNET_CHAIN_ID) {
         invariant(isSonicRawSpokeProviderConfig(config), 'Invalid Sonic raw spoke provider config');
-        return new SonicRawSpokeProvider(
-          config.walletAddress,
-          config.chainConfig,
-          config.rpcUrl,
-        );
+        return new SonicRawSpokeProvider(config.walletAddress, config.chainConfig, config.rpcUrl);
       }
 
       invariant(isEvmRawSpokeProviderConfig(config), 'Invalid Evm raw spoke provider config');
-      return new EvmRawSpokeProvider(
-        config.walletAddress,
-        config.chainConfig,
-        config.rpcUrl,
-      );
+      return new EvmRawSpokeProvider(config.walletAddress, config.chainConfig, config.rpcUrl);
     }
     case 'STELLAR':
       invariant(isStellarRawSpokeProviderConfig(config), 'Invalid Stellar raw spoke provider config');
-      return new StellarRawSpokeProvider(
-        config.walletAddress,
-        config.chainConfig,
-        config.rpcConfig,
-      );
+      return new StellarRawSpokeProvider(config.walletAddress, config.chainConfig, config.rpcConfig);
     case 'SOLANA': {
       invariant(isSolanaRawSpokeProviderConfig(config), 'Invalid Solana raw spoke provider config');
       return new SolanaRawSpokeProvider({
@@ -279,10 +272,11 @@ export function constructRawSpokeProvider(config: RawSpokeProviderConfig): RawSp
     }
     case 'NEAR': {
       invariant(isNearRawSpokeProviderConfig(config), 'Invalid Near raw spoke provider config');
-      return new NearRawSpokeProvider(
-        config.chainConfig,
-        config.walletAddress,
-      );
+      return new NearRawSpokeProvider(config.chainConfig, config.walletAddress);
+    }
+    case 'STACKS': {
+      invariant(isStacksRawSpokeProviderConfig(config), 'Invalid Stacks raw spoke provider config');
+      return new StacksRawSpokeProvider(config.walletAddress, config.chainConfig);
     }
     default: {
       throw new Error(`Unsupported chain type: ${chainType}`);
