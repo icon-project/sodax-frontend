@@ -199,59 +199,84 @@ export function RoadmapSections({
           <Network className="w-5 h-5 text-cherry-soda shrink-0" aria-hidden />
           Supported networks
         </h2>
-        {bdConfig.chains.trim() && (
-          <div className="rounded-xl bg-cherry-soda/5 border border-cherry-soda/20 px-4 py-3">
-            <p className="font-medium text-[13px] leading-normal text-espresso">
-              Your chains — {bdConfig.chains.trim()} — are all supported.
-            </p>
-          </div>
-        )}
-        <div className="flex items-baseline gap-2">
-          <span className="font-black text-[36px] leading-none text-espresso">17+</span>
-          <span className="font-normal text-[14px] text-clay-dark">networks across EVM, Solana, Sui, Stellar and more.</span>
-        </div>
         {isPublic ? (
-          <div className="flex flex-wrap gap-2">
-            {['Ethereum', 'Solana', 'Base', 'Arbitrum', 'Sui'].map(network => (
-              <span
-                key={network}
-                className="inline-flex items-center h-7 px-3 rounded-full bg-white text-[12px] font-medium text-espresso border border-cherry-grey/20"
+          <>
+            <div className="flex items-baseline gap-2">
+              <span className="font-black text-[36px] leading-none text-espresso">17+</span>
+              <span className="font-normal text-[14px] text-clay-dark">networks across EVM, Solana, Sui, Stellar and more.</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {['Ethereum', 'Solana', 'Base', 'Arbitrum', 'Sui'].map(network => (
+                <span
+                  key={network}
+                  className="inline-flex items-center h-7 px-3 rounded-full bg-white text-[12px] font-medium text-espresso border border-cherry-grey/20"
+                >
+                  {network}
+                </span>
+              ))}
+              <a
+                href={CHAIN_DOCUMENTATION_ROUTE}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-white text-[12px] font-medium text-cherry-soda border border-cherry-grey/20 hover:border-cherry-soda/40 transition-colors"
               >
-                {network}
-              </span>
-            ))}
+                +10 more
+                <ExternalLink className="w-3 h-3 shrink-0" aria-hidden />
+              </a>
+            </div>
+          </>
+        ) : (
+          <>
+            {(() => {
+              const supportedSet = new Set(SUPPORTED_NETWORKS_LIST.split(', ').map(n => n.toLowerCase()));
+              const prospectChains = new Set(
+                bdConfig.chains.split(',').map(c => c.trim().toLowerCase()).filter(Boolean)
+              );
+              const unsupported = bdConfig.chains.trim()
+                ? [...prospectChains].filter(c => !supportedSet.has(c))
+                : [];
+              return (
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    {SUPPORTED_NETWORKS_LIST.split(', ').map(network => {
+                      const isProspect = prospectChains.has(network.toLowerCase());
+                      return isProspect ? (
+                        <span
+                          key={network}
+                          className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-cherry-soda/15 text-[12px] font-semibold text-cherry-dark border border-cherry-soda/30"
+                        >
+                          <Check className="w-3 h-3 shrink-0" aria-hidden />
+                          {network}
+                        </span>
+                      ) : (
+                        <span
+                          key={network}
+                          className="inline-flex items-center h-7 px-3 rounded-full bg-white text-[12px] font-medium text-espresso border border-cherry-grey/20"
+                        >
+                          {network}
+                        </span>
+                      );
+                    })}
+                  </div>
+                  {unsupported.length > 0 && (
+                    <p className="font-normal text-[12px] text-clay-dark">
+                      <span className="font-medium text-clay">Reach out to confirm:</span>{' '}
+                      {unsupported.map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(', ')} {unsupported.length === 1 ? 'is' : 'are'} not yet listed — we may still support {unsupported.length === 1 ? 'it' : 'them'}.
+                    </p>
+                  )}
+                </>
+              );
+            })()}
             <a
               href={CHAIN_DOCUMENTATION_ROUTE}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-white text-[12px] font-medium text-cherry-soda border border-cherry-grey/20 hover:border-cherry-soda/40 transition-colors"
+              className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"
             >
-              +10 more
-              <ExternalLink className="w-3 h-3 shrink-0" aria-hidden />
+              Full list &amp; chain config in docs
+              <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
             </a>
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {SUPPORTED_NETWORKS_LIST.split(', ').map(network => (
-              <span
-                key={network}
-                className="inline-flex items-center h-7 px-3 rounded-full bg-white text-[12px] font-medium text-espresso border border-cherry-grey/20"
-              >
-                {network}
-              </span>
-            ))}
-          </div>
-        )}
-        {!isPublic && (
-          <a
-            href={CHAIN_DOCUMENTATION_ROUTE}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"
-          >
-            Full list &amp; chain config in docs
-            <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
-          </a>
+          </>
         )}
       </div>
 
@@ -392,22 +417,20 @@ export function RoadmapSections({
       )}
 
       <div
-        className={`rounded-3xl flex flex-col gap-5 p-6 md:p-8 ${isPublic ? 'bg-espresso items-center text-center' : 'bg-cream-white border border-cherry-grey/20'}`}
+        className={`rounded-3xl flex flex-col gap-5 p-6 md:p-8 ${isPublic ? 'bg-espresso items-center text-center' : 'bg-espresso'}`}
       >
         {isPublic && (
           <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-yellow-soda/70 uppercase tracking-wider">
             ⚡ We respond within 24 hours
           </span>
         )}
-        <h2
-          className={`font-black text-[22px] sm:text-[26px] leading-[1.1] ${isPublic ? 'text-white' : 'text-espresso'}`}
-        >
-          {isPublic ? 'Ready to integrate?' : 'Next steps'}
+        <h2 className="font-black text-[22px] sm:text-[26px] leading-[1.1] text-white">
+          {isPublic ? 'Ready to integrate?' : 'Ready to start building?'}
         </h2>
-        <p className={`font-normal text-[14px] leading-normal ${isPublic ? 'text-clay-light max-w-md' : 'text-clay-dark'}`}>
+        <p className={`font-normal text-[14px] leading-normal text-clay-light ${isPublic ? 'max-w-md' : ''}`}>
           {isPublic
             ? 'Tell us about your protocol — what you build, your chains, and what you want to unlock. We\u2019ll come back with a plan built around your stack.'
-            : 'Open the docs to follow the integration guide, get help in Discord, or reach out to discuss your use case.'}
+            : 'Follow the integration guide in the docs — everything you need is there.'}
         </p>
         {isPublic && (
           <div className="flex flex-wrap gap-2 justify-center">
@@ -421,46 +444,57 @@ export function RoadmapSections({
             ))}
           </div>
         )}
-        <div className={`flex flex-col sm:flex-row flex-wrap gap-3 ${isPublic ? 'justify-center' : ''}`}>
+        <div className={`flex flex-col gap-4 ${isPublic ? 'items-center' : ''}`}>
+          <div className={`flex flex-col sm:flex-row flex-wrap gap-3 ${isPublic ? 'justify-center' : ''}`}>
+            {!isPublic && (
+              <a
+                href={DOCUMENTATION_ROUTE}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-yellow-soda text-espresso flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer font-semibold text-[14px] text-center shrink-0 hover:opacity-90 transition-opacity"
+              >
+                Open the docs
+              </a>
+            )}
+            {isPublic && (
+              <a
+                href={(() => {
+                  const protocol = currentProtocol?.trim() || '';
+                  const chains = bdConfig.chains.trim() || '';
+                  const subject = `Partnership inquiry - Integration roadmap${protocol ? ` - ${protocol}` : ''}`;
+                  const protocolLine = protocol ? `Protocol: ${protocol}\n` : '';
+                  const chainsLine = chains ? `Target chains: ${chains}\n` : '';
+                  const body = `Hi SODAX team,\n\n${protocolLine}${chainsLine}About our project:\n[Brief description — what your protocol does, stage (live / testnet / pre-launch), TVL or user base if relevant]\n\nWhat we're looking to integrate:\n[e.g. swaps, bridging, money market, staking — and why it fits your product]\n\nTimeline:\n[Target go-live or milestone date]\n\nAnything else we should know:\n[Open questions, technical constraints, preferred contact]\n\nLooking forward to connecting.\n\nBest,\n[Your name & role]\n[Protocol / Company]`;
+                  return `mailto:partnerships@sodax.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                })()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-yellow-soda text-espresso flex h-11 items-center justify-center gap-2 px-8 py-2 rounded-full cursor-pointer font-['Shrikhand'] text-[15px] text-center shrink-0 hover:opacity-90 transition-opacity"
+              >
+                let's build together
+              </a>
+            )}
+          </div>
           {!isPublic && (
-            <a
-              href={DOCUMENTATION_ROUTE}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-yellow-soda text-espresso flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer font-medium text-[14px] text-center shrink-0 hover:opacity-90 transition-opacity"
-            >
-              Open documentation
-            </a>
-          )}
-          {isPublic ? (
-            <a
-              href={(() => {
-                const protocol = currentProtocol?.trim() || '';
-                const chains = bdConfig.chains.trim() || '';
-                const subject = `Partnership inquiry - Integration roadmap${protocol ? ` - ${protocol}` : ''}`;
-                const protocolLine = protocol ? `Protocol: ${protocol}\n` : '';
-                const chainsLine = chains ? `Target chains: ${chains}\n` : '';
-                const body = `Hi SODAX team,\n\n${protocolLine}${chainsLine}About our project:\n[Brief description — what your protocol does, stage (live / testnet / pre-launch), TVL or user base if relevant]\n\nWhat we're looking to integrate:\n[e.g. swaps, bridging, money market, staking — and why it fits your product]\n\nTimeline:\n[Target go-live or milestone date]\n\nAnything else we should know:\n[Open questions, technical constraints, preferred contact]\n\nLooking forward to connecting.\n\nBest,\n[Your name & role]\n[Protocol / Company]`;
-                return `mailto:partnerships@sodax.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-              })()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-yellow-soda text-espresso flex h-11 items-center justify-center gap-2 px-8 py-2 rounded-full cursor-pointer font-['Shrikhand'] text-[15px] text-center shrink-0 hover:opacity-90 transition-opacity"
-            >
-              let's build together
-            </a>
-          ) : (
-            <a
-              href={`mailto:partnerships@sodax.com?subject=${encodeURIComponent(`Partnership inquiry - Integration roadmap${currentProtocol ? ` - ${currentProtocol}` : ''}`)}`}
-              className={secondaryButtonClass}
-            >
-              {fromFirstName ? `Contact ${fromFirstName}` : 'Contact us'}
-            </a>
-          )}
-          {!isPublic && (
-            <a href={DISCORD_ROUTE} target="_blank" rel="noopener noreferrer" className={secondaryButtonClass}>
-              Join Discord
-            </a>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 pt-3 border-t border-white/10">
+              <span className="font-normal text-[13px] text-clay-light/60 shrink-0">Still have questions?</span>
+              <div className="flex flex-wrap gap-2">
+                <a
+                  href={`mailto:partnerships@sodax.com?subject=${encodeURIComponent(`Partnership inquiry - Integration roadmap${currentProtocol ? ` - ${currentProtocol}` : ''}`)}`}
+                  className="h-8 px-4 rounded-full border border-white/20 bg-white/8 text-white cursor-pointer font-medium text-[13px] hover:bg-white/15 transition-colors shrink-0 inline-flex items-center justify-center gap-2"
+                >
+                  {fromFirstName ? `Contact ${fromFirstName}` : 'Contact us'}
+                </a>
+                <a
+                  href={DISCORD_ROUTE}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-8 px-4 rounded-full border border-white/20 bg-white/8 text-white cursor-pointer font-medium text-[13px] hover:bg-white/15 transition-colors shrink-0 inline-flex items-center justify-center gap-2"
+                >
+                  Join Discord
+                </a>
+              </div>
+            </div>
           )}
         </div>
         {isPublic && (
@@ -471,38 +505,39 @@ export function RoadmapSections({
       </div>
 
       {!isPublic && (
-        <div className="rounded-3xl border border-cherry-grey/20 bg-cream-white p-6 md:p-8 flex flex-col gap-4 print:hidden">
-          <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Share roadmap</h2>
-          <p className="font-normal text-[13px] leading-[1.4] text-clay-dark">
-            Share the link with your team or contacts — they&apos;ll see this roadmap for{' '}
-            <span className="font-medium text-espresso">{displayLabel}</span> pre-filled. Or download the PDF to attach
-            to an email.
-          </p>
-          <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:items-center">
+        <div className="rounded-3xl bg-linear-to-br from-yellow-soda/20 via-yellow-soda/10 to-transparent border border-yellow-soda/40 p-6 md:p-8 flex flex-col gap-5 print:hidden">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-black text-[20px] sm:text-[22px] leading-[1.2] text-espresso">Share this roadmap</h2>
+            <p className="font-normal text-[13px] leading-[1.4] text-clay-dark">
+              Send this page to your team or contacts — they&apos;ll see the roadmap for{' '}
+              <span className="font-semibold text-espresso">{displayLabel}</span> pre-filled. Or download the PDF to attach to an email.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row flex-wrap gap-2">
             <Button
               type="button"
-              variant="outline"
+              variant="cherry"
               onClick={onCopyLink}
               size="lg"
-              className={secondaryButtonClass}
+              className="h-10 px-5 rounded-full font-semibold text-[13px] shrink-0"
               aria-label="Copy link to this roadmap"
             >
-              {linkCopied ? <Check className="w-4 h-4 text-cherry-soda" /> : <Link2 className="w-4 h-4" />}
-              {linkCopied ? 'Copied' : 'Copy link'}
+              {linkCopied ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
+              {linkCopied ? 'Copied!' : 'Copy link'}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={onDownloadPdf}
               size="lg"
-              className={secondaryButtonClass}
+              className="h-10 px-5 rounded-full border border-cherry-grey bg-white text-espresso font-semibold text-[13px] hover:bg-cream-white transition-colors shrink-0"
               aria-label="Download roadmap as PDF"
               title="Save as PDF. For a clean PDF, turn off 'Headers and footers' in the print dialog."
             >
               <FileDown className="w-4 h-4" />
               Download PDF
             </Button>
-            <Button variant="outline" size="lg" asChild className={`${secondaryButtonClass} no-underline`}>
+            <Button variant="outline" size="lg" asChild className="h-10 px-5 rounded-full border border-cherry-grey bg-white text-espresso font-semibold text-[13px] hover:bg-cream-white transition-colors shrink-0 no-underline">
               <a
                 href={(() => {
                   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sodax.com';
@@ -526,7 +561,7 @@ export function RoadmapSections({
               </a>
             </Button>
           </div>
-          <p className="font-normal text-[12px] leading-[1.4] text-clay">
+          <p className="font-normal text-[11px] text-clay/60">
             For a clean PDF, turn off &quot;Headers and footers&quot; in the print dialog.
           </p>
         </div>

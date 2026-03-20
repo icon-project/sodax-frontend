@@ -3,7 +3,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, ChevronDown, ChevronUp, Eye, Save, Settings2 } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Eye, Pencil, Save, Settings2 } from 'lucide-react';
 import { INTEGRATION_ROADMAP_BD_ROUTE, INTEGRATION_ROADMAP_ROUTE } from '@/constants/routes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -128,19 +128,6 @@ export function BdComposer({
             ))}
           </div>
 
-          <div className="rounded-2xl bg-cherry-dark/5 border border-cherry-dark/10 px-4 py-3">
-            <p className="font-normal text-[12px] leading-[1.45] text-cherry-dark/90">
-              <strong className="font-semibold text-cherry-dark">Tip:</strong> If you ran the BD Scope Assessment skill
-              on the partner&apos;s Notion card, paste the timeline here so the prospect link matches your internal
-              assessment. Then send this page — partners see their technical requirements instead of a generic docs
-              link.
-            </p>
-          </div>
-
-          <p className="font-normal text-[11px] text-cherry-dark/60 -mt-1">
-            Prospects never see this panel; they only see the roadmap. Use the BD link to reopen your personalised view.
-          </p>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="flex flex-col gap-1 min-w-0" htmlFor="bd-from-name">
               <span className="font-medium text-[12px] text-cherry-dark">Your name</span>
@@ -198,17 +185,19 @@ export function BdComposer({
               className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-yellow-soda/5 transition-colors cursor-pointer"
               aria-expanded={customizeOpen}
             >
-              <span className="font-medium text-[12px] text-cherry-dark flex items-center gap-1.5">
-                Customize roadmap content
+              <span className="font-medium text-[12px] text-cherry-dark">
+                Edit roadmap content
+              </span>
+              <span className="flex items-center gap-2 shrink-0">
                 {(bdConfig.whyOverrides.length > 0 || bdConfig.stepsOverrides.length > 0) && (
-                  <span className="text-cherry-soda">· edited</span>
+                  <span className="text-[11px] font-normal text-cherry-soda">edited</span>
+                )}
+                {customizeOpen ? (
+                  <ChevronUp className="w-3.5 h-3.5 text-cherry-dark/60" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-cherry-dark/60" />
                 )}
               </span>
-              {customizeOpen ? (
-                <ChevronUp className="w-3.5 h-3.5 text-cherry-dark/60 shrink-0" />
-              ) : (
-                <ChevronDown className="w-3.5 h-3.5 text-cherry-dark/60 shrink-0" />
-              )}
             </button>
 
             {customizeOpen && (
@@ -229,10 +218,18 @@ export function BdComposer({
                     ) : (
                       <button
                         type="button"
-                        onClick={() => onChange({ ...bdConfig, whyOverrides: defaultWhyBullets.map(b => b.headline ? `${b.headline} — ${b.copy}` : b.copy) })}
-                        className="text-[11px] font-medium text-cherry-soda hover:underline cursor-pointer"
+                        onClick={() =>
+                          onChange({
+                            ...bdConfig,
+                            whyOverrides: defaultWhyBullets.map(b =>
+                              b.headline ? `${b.headline} — ${b.copy}` : b.copy,
+                            ),
+                          })
+                        }
+                        className="flex items-center gap-1 text-[11px] font-medium text-cherry-soda hover:underline cursor-pointer"
                       >
-                        Edit bullets
+                        <Pencil className="w-3 h-3" />
+                        Customise
                       </button>
                     )}
                   </div>
@@ -240,7 +237,9 @@ export function BdComposer({
                     <ul className="flex flex-col gap-1.5 pl-1">
                       {defaultWhyBullets.map((b, i) => (
                         <li key={i} className="flex flex-col leading-[1.4]">
-                          {b.headline && <span className="font-medium text-[12px] text-cherry-dark/80">{b.headline}</span>}
+                          {b.headline && (
+                            <span className="font-medium text-[12px] text-cherry-dark/80">{b.headline}</span>
+                          )}
                           <span className="text-[11px] text-cherry-dark/50">{b.copy}</span>
                         </li>
                       ))}
@@ -300,9 +299,10 @@ export function BdComposer({
                       <button
                         type="button"
                         onClick={() => onChange({ ...bdConfig, stepsOverrides: [...defaultSteps] })}
-                        className="text-[11px] font-medium text-cherry-soda hover:underline cursor-pointer"
+                        className="flex items-center gap-1 text-[11px] font-medium text-cherry-soda hover:underline cursor-pointer"
                       >
-                        Edit steps
+                        <Pencil className="w-3 h-3" />
+                        Customise
                       </button>
                     )}
                   </div>
@@ -374,6 +374,7 @@ export function BdComposer({
           </label>
 
           <div className="flex flex-col gap-2 pt-1">
+            <p className="font-medium text-[12px] text-cherry-dark">Everything looks good? Share the link.</p>
             <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:items-center">
               <Button
                 type="button"
