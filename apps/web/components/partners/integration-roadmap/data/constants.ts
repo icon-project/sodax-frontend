@@ -207,7 +207,11 @@ export const CATEGORIES: RoadmapCategory[] = [
 ];
 
 /** Default category shown before a protocol is typed / matched (DEXs & Aggregators). */
-export const DEFAULT_CATEGORY: RoadmapCategory = CATEGORIES[1] as RoadmapCategory;
+const defaultCategoryCandidate = CATEGORIES.find(c => c.id === 'dexs');
+if (!defaultCategoryCandidate) {
+  throw new Error('Integration Roadmap: DEFAULT_CATEGORY missing (expected category id "dexs").');
+}
+export const DEFAULT_CATEGORY: RoadmapCategory = defaultCategoryCandidate;
 
 /**
  * Maps BD CRM (Notion) Category property values to Integration Roadmap CategoryId.

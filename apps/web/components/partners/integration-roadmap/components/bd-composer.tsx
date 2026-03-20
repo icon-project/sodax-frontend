@@ -30,7 +30,6 @@ export function BdComposer({
   defaultWhyBullets,
   defaultSteps,
 }: BdComposerProps): React.JSX.Element {
-  const [isExpanded, setIsExpanded] = useState(true);
   const [customizeOpen, setCustomizeOpen] = useState(false);
   const [copiedProspect, setCopiedProspect] = useState(false);
   const [copiedBd, setCopiedBd] = useState(false);
@@ -88,28 +87,15 @@ export function BdComposer({
 
   return (
     <div className="w-full max-w-5xl mx-auto rounded-3xl border-2 border-yellow-soda bg-yellow-soda/10 overflow-visible print:hidden">
-      <button
-        type="button"
-        onClick={() => setIsExpanded(e => !e)}
-        className="w-full flex items-center justify-between gap-3 px-6 py-4 text-left cursor-pointer hover:bg-yellow-soda/10 transition-colors"
-        aria-expanded={isExpanded}
-      >
-        <div className="flex items-center gap-2">
-          <Settings2 className="w-4 h-4 text-cherry-dark shrink-0" />
-          <span className="font-bold text-[14px] text-cherry-dark">BD Composer</span>
-          <span className="hidden sm:inline text-[12px] text-cherry-dark/60 font-normal">
-            · Prospect won&apos;t see this panel
-          </span>
-        </div>
-        {isExpanded ? (
-          <ChevronUp className="w-4 h-4 text-cherry-dark shrink-0" />
-        ) : (
-          <ChevronDown className="w-4 h-4 text-cherry-dark shrink-0" />
-        )}
-      </button>
+      <div className="flex items-center gap-2 px-6 py-4 border-b border-yellow-soda/30">
+        <Settings2 className="w-4 h-4 text-cherry-dark shrink-0" />
+        <span className="font-bold text-[14px] text-cherry-dark">BD Composer</span>
+        <span className="hidden sm:inline text-[12px] text-cherry-dark/60 font-normal">
+          · Prospect won&apos;t see this panel
+        </span>
+      </div>
 
-      {isExpanded && (
-        <div className="px-6 pb-6 flex flex-col gap-4 border-t border-yellow-soda/30">
+      <div className="px-6 pb-6 flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
             {(
               [
@@ -449,7 +435,6 @@ export function BdComposer({
             </p>
           </div>
         </div>
-      )}
     </div>
   );
 }

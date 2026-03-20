@@ -3,8 +3,21 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowUpRight, BookOpen, Check, Code2, Coins, ExternalLink, FileDown, Link2, Mail, Network, Zap } from 'lucide-react';
+import {
+  ArrowUpRight,
+  BookOpen,
+  Check,
+  Code2,
+  Coins,
+  ExternalLink,
+  FileDown,
+  Link2,
+  Mail,
+  Network,
+  Zap,
+} from 'lucide-react';
 import { GithubLogo } from '@phosphor-icons/react';
+import { motion } from 'motion/react';
 import {
   CHAIN_DOCUMENTATION_ROUTE,
   DOCUMENTATION_ROUTE,
@@ -47,7 +60,21 @@ export interface RoadmapSectionsProps {
   fromFirstName: string;
   readOnly: boolean;
   view: RoadmapView;
+  notionTailoringError: boolean;
 }
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 },
+};
+
+const staggerContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07 } },
+};
+
+const viewport = { once: true, margin: '-80px' } as const;
+const transition = { duration: 0.5, ease: [0.22, 1, 0.36, 1] } as const;
 
 export function RoadmapSections({
   roadmap,
@@ -66,17 +93,15 @@ export function RoadmapSections({
   fromFirstName,
   readOnly = false,
   view,
+  notionTailoringError,
 }: RoadmapSectionsProps): React.JSX.Element {
   const displayLabel = getProtocolDisplayLabel(roadmap.protocolDisplay, roadmap.category);
-
-  const secondaryButtonClass =
-    'h-10 px-5 rounded-full border border-cherry-grey bg-white text-espresso cursor-pointer font-medium text-[14px] hover:bg-cream-white transition-colors shrink-0 inline-flex items-center justify-center gap-2';
 
   const isPublic = view === 'public';
 
   return (
     <>
-      {!roadmap.matched && view === 'bd' && (
+      {!roadmap.matched && view === 'bd' && !notionTailoringError && (
         <div className="rounded-xl bg-negative/40 border border-cherry-grey/20 px-4 py-3 print:hidden">
           <p className="font-normal text-[13px] leading-[1.45] text-espresso">
             Couldn&apos;t auto-match a category for &ldquo;{roadmap.protocolDisplay}&rdquo; — pick the right one below
@@ -85,7 +110,15 @@ export function RoadmapSections({
         </div>
       )}
 
-      <div className="bg-cream-white rounded-3xl flex flex-col gap-5 p-6 md:p-8 border border-cherry-grey/20">
+      {/* Category track */}
+      <motion.div
+        variants={fadeUp}
+        initial="hidden"
+        whileInView="show"
+        viewport={viewport}
+        transition={transition}
+        className="bg-cream-white rounded-3xl flex flex-col gap-5 p-6 md:p-8 border border-cherry-grey/20"
+      >
         {/* Icon + title */}
         <div className="flex items-start gap-4">
           {(() => {
@@ -107,17 +140,13 @@ export function RoadmapSections({
         </div>
 
         {/* Description */}
-        <p className="font-normal text-[14px] leading-[1.55] text-clay-dark">
-          {roadmap.category.description}
-        </p>
+        <p className="font-normal text-[14px] leading-[1.55] text-clay-dark">{roadmap.category.description}</p>
 
         {/* Meta chips */}
         <div className="flex flex-wrap gap-2">
           <span className="inline-flex items-center h-7 px-3 rounded-full bg-white border border-cherry-grey/40 text-[12px] font-medium text-espresso gap-1.5">
             ⏱ {displayTimeline}
-            {bdConfig.timeline.trim() && (
-              <span className="font-normal text-clay"> · BD updated</span>
-            )}
+            {bdConfig.timeline.trim() && <span className="font-normal text-clay"> · BD updated</span>}
           </span>
           {(() => {
             const caseStudy = CASE_STUDY_BY_CATEGORY[roadmap.category.id];
@@ -164,31 +193,60 @@ export function RoadmapSections({
             </Select>
           </div>
         )}
-      </div>
+      </motion.div>
 
       {!isPublic && bdConfig.blockerNote.trim() && (
-        <div className="rounded-2xl bg-yellow-soda/10 border border-yellow-soda/40 px-5 py-4 flex gap-3 items-start print:hidden">
-          <span className="text-[16px] leading-none mt-0.5 shrink-0" aria-hidden>⚡</span>
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={viewport}
+          transition={transition}
+          className="rounded-2xl bg-yellow-soda/10 border border-yellow-soda/40 px-5 py-4 flex gap-3 items-start print:hidden"
+        >
+          <span className="text-[16px] leading-none mt-0.5 shrink-0" aria-hidden>
+            ⚡
+          </span>
           <div className="flex flex-col gap-0.5 min-w-0">
             <p className="font-semibold text-[13px] text-cherry-dark">Note on timeline</p>
             <p className="font-normal text-[13px] leading-[1.45] text-cherry-dark/80">{bdConfig.blockerNote}</p>
           </div>
-        </div>
+        </motion.div>
       )}
 
-      {!isPublic && <QuickStartInstall />}
+      {!isPublic && (
+        <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={viewport} transition={transition}>
+          <QuickStartInstall />
+        </motion.div>
+      )}
 
-      <div className="bg-cherry-soda/6 rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-soda/15">
+      {/* Why SODAX */}
+      <motion.div
+        variants={fadeUp}
+        initial="hidden"
+        whileInView="show"
+        viewport={viewport}
+        transition={transition}
+        className="bg-cherry-soda/6 rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-soda/15"
+      >
         <div className="flex items-center gap-3">
           <div className="w-1 h-7 rounded-full bg-cherry-soda shrink-0" aria-hidden />
           <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
             Why SODAX for <span className="text-cherry-soda">{displayLabel}</span>
           </h2>
         </div>
-        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <motion.ul
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="show"
+          viewport={viewport}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+        >
           {whyBullets.map((bullet, i) => (
-            <li
+            <motion.li
               key={i}
+              variants={fadeUp}
+              transition={transition}
               className="flex flex-col gap-1 rounded-xl bg-white px-4 pt-3.5 pb-4 border border-cherry-grey/10"
             >
               {bullet.headline ? (
@@ -199,12 +257,20 @@ export function RoadmapSections({
               ) : (
                 <span className="font-normal text-[14px] leading-normal text-clay-dark">{bullet.copy}</span>
               )}
-            </li>
+            </motion.li>
           ))}
-        </ul>
-      </div>
+        </motion.ul>
+      </motion.div>
 
-      <div className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
+      {/* Supported networks */}
+      <motion.div
+        variants={fadeUp}
+        initial="hidden"
+        whileInView="show"
+        viewport={viewport}
+        transition={transition}
+        className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20"
+      >
         <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
           <Network className="w-5 h-5 text-cherry-soda shrink-0" aria-hidden />
           Supported networks
@@ -213,7 +279,9 @@ export function RoadmapSections({
           <>
             <div className="flex items-baseline gap-2">
               <span className="font-black text-[36px] leading-none text-espresso">17+</span>
-              <span className="font-normal text-[14px] text-clay-dark">networks across EVM, Solana, Sui, Stellar and more.</span>
+              <span className="font-normal text-[14px] text-clay-dark">
+                networks across EVM, Solana, Sui, Stellar and more.
+              </span>
             </div>
             <div className="flex flex-wrap gap-2">
               {['Ethereum', 'Solana', 'Base', 'Arbitrum', 'Sui'].map(network => (
@@ -238,9 +306,11 @@ export function RoadmapSections({
         ) : (
           <>
             {(() => {
-              const supportedSet = new Set(SUPPORTED_NETWORKS_LIST.split(', ').map(n => n.toLowerCase()));
               const prospectChains = new Set(
-                bdConfig.chains.split(',').map(c => c.trim().toLowerCase()).filter(Boolean)
+                bdConfig.chains
+                  .split(',')
+                  .map(c => c.trim().toLowerCase())
+                  .filter(Boolean),
               );
               return (
                 <div className="flex flex-wrap gap-2">
@@ -277,25 +347,51 @@ export function RoadmapSections({
             </a>
           </>
         )}
-      </div>
+      </motion.div>
 
-      <div className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
+      {/* Partner economics */}
+      <motion.div
+        variants={fadeUp}
+        initial="hidden"
+        whileInView="show"
+        viewport={viewport}
+        transition={transition}
+        className="bg-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20"
+      >
         <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
           <Coins className="w-5 h-5 text-cherry-soda shrink-0" aria-hidden />
           Partner economics
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="show"
+          viewport={viewport}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+        >
           {PARTNER_ECONOMICS.map(item => (
-            <div key={item.headline} className="flex flex-col gap-1 rounded-xl bg-white px-4 pt-3.5 pb-4 border border-cherry-grey/15">
+            <motion.div
+              key={item.headline}
+              variants={fadeUp}
+              transition={transition}
+              className="flex flex-col gap-1 rounded-xl bg-white px-4 pt-3.5 pb-4 border border-cherry-grey/15"
+            >
               <span className="font-bold text-[14px] leading-snug text-espresso">{item.headline}</span>
               <span className="font-normal text-[13px] leading-[1.45] text-clay">{item.copy}</span>
-            </div>
+            </motion.div>
           ))}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {!isPublic && (
-        <div className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={viewport}
+          transition={transition}
+          className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20"
+        >
           <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">
             SDK stack for <span className="text-cherry-dark">{displayLabel}</span>
           </h2>
@@ -329,11 +425,18 @@ export function RoadmapSections({
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       )}
 
       {!isPublic && (
-        <div className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={viewport}
+          transition={transition}
+          className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20"
+        >
           <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso flex items-center gap-2">
             <Code2 className="w-5 h-5 text-cherry-soda shrink-0" aria-hidden />
             Code &amp; resources
@@ -356,7 +459,10 @@ export function RoadmapSections({
                   Source code, packages, and integration examples.
                 </span>
               </div>
-              <ExternalLink className="w-3.5 h-3.5 text-clay shrink-0 mt-0.5 group-hover:text-cherry-soda transition-colors" aria-hidden />
+              <ExternalLink
+                className="w-3.5 h-3.5 text-clay shrink-0 mt-0.5 group-hover:text-cherry-soda transition-colors"
+                aria-hidden
+              />
             </a>
             <a
               href={DOCUMENTATION_ROUTE}
@@ -375,21 +481,38 @@ export function RoadmapSections({
                   Step-by-step integration guides for your stack.
                 </span>
               </div>
-              <ExternalLink className="w-3.5 h-3.5 text-clay shrink-0 mt-0.5 group-hover:text-cherry-soda transition-colors" aria-hidden />
+              <ExternalLink
+                className="w-3.5 h-3.5 text-clay shrink-0 mt-0.5 group-hover:text-cherry-soda transition-colors"
+                aria-hidden
+              />
             </a>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {!isPublic && (
-        <div className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={viewport}
+          transition={transition}
+          className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20"
+        >
           <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Integration steps</h2>
           <IntegrationStepper steps={displaySteps} />
-        </div>
+        </motion.div>
       )}
 
       {!isPublic && (
-        <div className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={viewport}
+          transition={transition}
+          className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20"
+        >
           <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Case studies</h2>
           {(() => {
             const featuredMeta = CASE_STUDY_BY_CATEGORY[roadmap.category.id];
@@ -404,7 +527,9 @@ export function RoadmapSections({
                     className="group flex items-center justify-between gap-4 p-5 rounded-xl bg-white border border-cherry-soda/20 hover:border-cherry-soda/40 hover:bg-cherry-soda/5 transition-colors cursor-pointer"
                   >
                     <div className="flex flex-col gap-1 min-w-0">
-                      <span className="font-normal text-[11px] text-cherry-soda uppercase tracking-wide">Built with SODAX</span>
+                      <span className="font-normal text-[11px] text-cherry-soda uppercase tracking-wide">
+                        Built with SODAX
+                      </span>
                       <span className="font-black text-[17px] leading-snug text-espresso group-hover:text-cherry-soda transition-colors">
                         {featured.name}
                       </span>
@@ -416,7 +541,9 @@ export function RoadmapSections({
                     />
                   </Link>
                 )}
-                <div className={`grid gap-3 ${rest.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'}`}>
+                <div
+                  className={`grid gap-3 ${rest.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'}`}
+                >
                   {rest.map(study => (
                     <Link
                       key={study.name}
@@ -440,10 +567,16 @@ export function RoadmapSections({
               </div>
             );
           })()}
-        </div>
+        </motion.div>
       )}
 
-      <div
+      {/* CTA */}
+      <motion.div
+        variants={fadeUp}
+        initial="hidden"
+        whileInView="show"
+        viewport={viewport}
+        transition={transition}
         className="rounded-3xl flex flex-col gap-5 p-6 md:p-8 bg-espresso items-center text-center"
       >
         {isPublic && (
@@ -525,15 +658,18 @@ export function RoadmapSections({
             </a>
           )}
         </div>
-        {isPublic && (
-          <p className="font-normal text-[12px] text-clay-light/60">
-            Expect a plan, not a pitch.
-          </p>
-        )}
-      </div>
+        {isPublic && <p className="font-normal text-[12px] text-clay-light/60">Expect a plan, not a pitch.</p>}
+      </motion.div>
 
       {!isPublic && (
-        <div className="rounded-3xl bg-cream-white border border-cherry-grey/20 p-6 md:p-8 flex flex-col sm:flex-row sm:items-center gap-5 print:hidden">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          whileInView="show"
+          viewport={viewport}
+          transition={transition}
+          className="rounded-3xl bg-cream-white border border-cherry-grey/20 p-6 md:p-8 flex flex-col sm:flex-row sm:items-center gap-5 print:hidden"
+        >
           <div className="flex flex-col gap-1 flex-1 min-w-0">
             <h2 className="font-black text-[18px] leading-[1.2] text-espresso">Pass this along</h2>
             <p className="font-normal text-[13px] leading-[1.4] text-clay">
@@ -588,7 +724,7 @@ export function RoadmapSections({
               </a>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
       <div

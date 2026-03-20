@@ -5,14 +5,18 @@ import { DEFAULT_FROM_SUFFIX } from '@/components/partners/integration-roadmap/d
 
 export const BD_DRAFT_STORAGE_KEY = 'sodax-bd-composer-draft';
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
 export function loadDraftFromStorage(): BdConfig | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = window.localStorage.getItem(BD_DRAFT_STORAGE_KEY);
     if (!raw) return null;
-    const data = JSON.parse(raw) as unknown;
-    if (!data || typeof data !== 'object') return null;
-    const draft = data as Record<string, unknown>;
+    const data: unknown = JSON.parse(raw);
+    if (!isRecord(data)) return null;
+    const draft = data;
     return {
       fromName: typeof draft.fromName === 'string' ? draft.fromName : '',
       fromSuffix:

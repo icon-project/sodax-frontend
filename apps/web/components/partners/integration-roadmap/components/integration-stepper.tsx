@@ -25,7 +25,7 @@ export function IntegrationStepper({ steps }: IntegrationStepperProps): React.JS
     // "elements" are the rendered <li> nodes for each step; we observe them to drive `activeIndex`.
     const elements = itemRefs.current
       .slice(0, stepCount)
-      .filter(Boolean) as HTMLLIElement[];
+      .filter((el): el is HTMLLIElement => el instanceof HTMLLIElement);
     if (elements.length === 0) return;
 
     const obs = new IntersectionObserver(
@@ -34,7 +34,7 @@ export function IntegrationStepper({ steps }: IntegrationStepperProps): React.JS
         let best: { stepIndex: number; top: number } | null = null;
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
-          const stepIndex = elements.indexOf(entry.target as HTMLLIElement);
+          const stepIndex = elements.findIndex(el => el === entry.target);
           if (stepIndex === -1) continue;
           const top = entry.boundingClientRect.top;
           if (best === null || top < best.top) best = { stepIndex, top };

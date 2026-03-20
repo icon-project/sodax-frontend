@@ -3,7 +3,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'motion/react';
 import { INTEGRATION_ROADMAP_BD_ROUTE, INTEGRATION_ROADMAP_ROUTE } from '@/constants/routes';
@@ -27,6 +27,14 @@ import { BdComposer } from './bd-composer';
 import { PersonalIntroCard } from './personal-intro-card';
 import { RoadmapSections } from './roadmap-sections';
 
+const CATEGORY_ID_SET: ReadonlySet<string> = new Set(CATEGORIES.map(c => c.id));
+
+function isCategoryId(value: string): value is CategoryId {
+  return CATEGORY_ID_SET.has(value);
+}
+
+const ROADMAP_LOAD_ERROR = "Couldn't load tailored roadmap — fill in BD Composer manually or retry.";
+
 export function IntegrationRoadmapUi(): React.JSX.Element {
   const searchParams = useSearchParams();
   const params = useParams<{ protocol?: string }>();
@@ -43,6 +51,13 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
   const [bdConfig, setBdConfig] = useState<BdConfig>(EMPTY_BD_CONFIG);
   const [notionWhyBullets, setNotionWhyBullets] = useState<WhyBullet[]>([]);
   const [printDate, setPrintDate] = useState<string | null>(null);
+  const [roadmapError, setRoadmapError] = useState<string | null>(null);
+
+  // Prevent out-of-order responses from overwriting newer state.
+  // Also avoid duplicating the Notion fetch when `handleGenerate` already triggered it.
+  const roadmapFetchSeqRef = useRef(0);
+  const roadmapFetchAbortRef = useRef<AbortController | null>(null);
+  const suppressEffectFetchForProtocolRef = useRef<string | null>(null);
 
   // Redirect legacy ?bd=1 on base path to canonical BD route so that path is not used.
   useEffect(() => {
@@ -116,7 +131,8 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
       setProtocolName(trimmed);
       const categoryFromUrl = (() => {
         if (!cat) return null;
-        return CATEGORIES.find(c => c.id === (cat as CategoryId)) ?? null;
+        if (!isCategoryId(cat)) return null;
+        return CATEGORIES.find(c => c.id === cat) ?? null;
       })();
       const { category, matched } = matchCategory(trimmed);
       const effectiveCategory = categoryFromUrl ?? category;
@@ -134,10 +150,37 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
   useEffect(() => {
     if (!protocolDisplay) return;
 
-    fetch(`/api/roadmap/${encodeURIComponent(protocolDisplay)}`)
-      .then(res => (res.ok ? res.json() : null))
-      .then(data => {
-        if (!data || data.error) return;
+    // If `handleGenerate` is already fetching for this same protocol display,
+    // skip the effect-driven fetch to avoid duplicated work.
+    if (suppressEffectFetchForProtocolRef.current === protocolDisplay) {
+      suppressEffectFetchForProtocolRef.current = null;
+      return;
+    }
+
+    const seq = ++roadmapFetchSeqRef.current;
+    roadmapFetchAbortRef.current?.abort();
+    const controller = new AbortController();
+    roadmapFetchAbortRef.current = controller;
+
+    // Prevent stale Notion-derived bullets from showing while the next protocol is loading.
+    setNotionWhyBullets([]);
+    setRoadmapError(null);
+
+    void (async () => {
+      try {
+        const res = await fetch(`/api/roadmap/${encodeURIComponent(protocolDisplay)}`, { signal: controller.signal });
+        if (!res.ok) {
+          if (seq === roadmapFetchSeqRef.current) setRoadmapError(ROADMAP_LOAD_ERROR);
+          return;
+        }
+
+        const data = await res.json();
+        if (seq !== roadmapFetchSeqRef.current) return;
+        if (!data || data.error) {
+          if (seq === roadmapFetchSeqRef.current) setRoadmapError(ROADMAP_LOAD_ERROR);
+          return;
+        }
+
         const notionCategory = CATEGORIES.find(c => c.id === data.categoryId);
         setRoadmap(prev =>
           prev
@@ -158,28 +201,51 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
           chains: prev.chains || (data.chains ?? []).join(', '),
         }));
         setNotionWhyBullets(data.whyBullets ?? []);
-      })
-      .catch(() => {});
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
+        // This fetch failure can happen due to network/API issues. Surface it to users with a retry.
+        console.error('IntegrationRoadmapUi: notion fetch failed', err);
+        if (seq === roadmapFetchSeqRef.current) setRoadmapError(ROADMAP_LOAD_ERROR);
+      }
+    })();
   }, [protocolDisplay]);
 
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGenerate = async (): Promise<void> => {
-    const display = protocolName.trim() || 'Your protocol';
+    // Defensive: treat empty input as a no-op.
+    // Even though the button is disabled, keyboard shortcuts like Enter can still call this path.
+    const trimmedProtocolName = protocolName.trim();
+    if (!trimmedProtocolName) return;
+    if (isLoading) return;
+
+    const display = trimmedProtocolName;
 
     // 1. Show roadmap immediately with keyword/override match (instant)
-    const { category, matched } = matchCategory(protocolName);
+    const { category, matched } = matchCategory(trimmedProtocolName);
     setRoadmap({ category, protocolDisplay: display, matched });
+    setNotionWhyBullets([]);
+    setRoadmapError(null);
 
     // 2. Fetch Notion data in background
+    suppressEffectFetchForProtocolRef.current = display;
     setIsLoading(true);
+
+    const seq = ++roadmapFetchSeqRef.current;
+    roadmapFetchAbortRef.current?.abort();
+    const controller = new AbortController();
+    roadmapFetchAbortRef.current = controller;
+
     try {
-      const res = await fetch(`/api/roadmap/${encodeURIComponent(display)}`);
+      const res = await fetch(`/api/roadmap/${encodeURIComponent(display)}`, { signal: controller.signal });
       let notionResolved = false;
-      if (res.ok) {
+      if (!res.ok) {
+        if (seq === roadmapFetchSeqRef.current) setRoadmapError(ROADMAP_LOAD_ERROR);
+      } else {
         const data = await res.json();
         if (data && !data.error) {
           notionResolved = true;
+          if (seq !== roadmapFetchSeqRef.current) return;
           // Override category if Notion has one
           const notionCategory = CATEGORIES.find(c => c.id === data.categoryId);
           setRoadmap({
@@ -197,6 +263,8 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
             chains: prev.chains || (data.chains ?? []).join(', '),
           }));
           setNotionWhyBullets(data.whyBullets ?? []);
+        } else if (seq === roadmapFetchSeqRef.current) {
+          setRoadmapError(ROADMAP_LOAD_ERROR);
         }
       }
 
@@ -207,10 +275,14 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: display }),
+          signal: controller.signal,
         });
-        if (classifyRes.ok) {
+        if (!classifyRes.ok) {
+          if (seq === roadmapFetchSeqRef.current) setRoadmapError(ROADMAP_LOAD_ERROR);
+        } else {
           const classifyData = await classifyRes.json();
           if (classifyData.categoryId) {
+            if (seq !== roadmapFetchSeqRef.current) return;
             const aiCategory = CATEGORIES.find(c => c.id === classifyData.categoryId);
             if (aiCategory) {
               setRoadmap(prev => (prev ? { ...prev, category: aiCategory, matched: true } : prev));
@@ -218,10 +290,13 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
           }
         }
       }
-    } catch {
-      // silently fall back to keyword match result
+    } catch (err) {
+      // Silently fall back to keyword match result, but surface unexpected errors.
+      if (err instanceof Error && err.name === 'AbortError') return;
+      console.error('IntegrationRoadmapUi: handleGenerate failed', err);
+      if (seq === roadmapFetchSeqRef.current) setRoadmapError(ROADMAP_LOAD_ERROR);
     } finally {
-      setIsLoading(false);
+      if (seq === roadmapFetchSeqRef.current) setIsLoading(false);
     }
   };
 
@@ -335,7 +410,9 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
                   placeholder="e.g. Uniswap, Aave, Hana Wallet"
                   value={protocolName}
                   onChange={e => setProtocolName(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleGenerate()}
+                  // Guard: pressing Enter must not bypass the button's disabled logic.
+                  // Without this, we could call `handleGenerate()` with an empty protocol name.
+                  onKeyDown={e => e.key === 'Enter' && protocolName.trim() && handleGenerate()}
                   className="flex-1 min-w-0 h-11 px-3 py-2 rounded-xl border-0 bg-transparent font-normal text-[14px] text-espresso placeholder:text-clay focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
                   aria-label="Protocol name"
                 />
@@ -349,6 +426,23 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
                 </button>
               </div>
             </motion.div>
+
+            {/* Reserve minimal space to prevent layout jump when error appears (BD mode only). */}
+            <div className={`w-full max-w-xl print:hidden${bdMode ? ' min-h-[40px]' : ''}`}>
+              {bdMode && roadmapError && (
+                <div className="w-full rounded-2xl bg-negative/35 border border-negative/15 px-4 py-2.5 flex items-center justify-between gap-3">
+                  <p className="font-normal text-[12px] leading-[1.4] text-cherry-dark/80 min-w-0">{roadmapError}</p>
+                  <button
+                    type="button"
+                    onClick={() => void handleGenerate()}
+                    disabled={!protocolName.trim() || isLoading}
+                    className="shrink-0 h-7 px-3 rounded-full bg-white border border-cherry-grey/20 text-espresso font-semibold text-[12px] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-cream-white transition-colors cursor-pointer"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+            </div>
 
             {!bdMode && (
               <motion.div
@@ -391,63 +485,64 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="w-full min-w-0 max-w-4xl roadmap-print-area"
           >
-            <div className="bg-white rounded-3xl border border-cherry-grey/20 shadow-[0_4px_32px_rgb(0_0_0/0.06)] p-4 sm:p-5 flex flex-col gap-4 sm:gap-5">
-            {bdMode && (
-              <div className="w-full text-center rounded-2xl bg-yellow-soda/10 border border-yellow-soda/40 px-4 py-3 flex flex-col gap-1 print:hidden">
-                <p className="font-semibold text-[13px] text-cherry-dark">Preview for partner</p>
-                <p className="font-normal text-[12px] text-cherry-dark/70">
-                  This is exactly what they&apos;ll see when you share the prospect link. The BD Composer above stays
-                  hidden for them.
-                </p>
-              </div>
-            )}
-            {bdMode && (
-              <div className="flex flex-col gap-4 items-center px-4 w-full max-w-4xl print:hidden">
-                <div className="flex gap-2 items-center">
-                  <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="shrink-0" />
-                  <span className="font-normal text-[13px] text-clay uppercase tracking-wide">SODAX Partners</span>
+            <div className=" p-4 sm:p-5 flex flex-col gap-4 sm:gap-5">
+              {bdMode && (
+                <div className="w-full text-center rounded-2xl bg-yellow-soda/10 border border-yellow-soda/40 px-4 py-3 flex flex-col gap-1 print:hidden">
+                  <p className="font-semibold text-[13px] text-cherry-dark">Preview for partner</p>
+                  <p className="font-normal text-[12px] text-cherry-dark/70">
+                    This is exactly what they&apos;ll see when you share the prospect link. The BD Composer above stays
+                    hidden for them.
+                  </p>
                 </div>
-                <h2 className="font-bold text-[26px] sm:text-[32px] leading-[1.1] text-espresso text-center">
-                  Integration roadmap —{' '}
-                  <span className="text-cherry-soda">
-                    {getProtocolDisplayLabel(roadmap.protocolDisplay, roadmap.category)}
-                  </span>
-                </h2>
-                <p className="font-normal text-[14px] sm:text-[16px] leading-[1.4] text-espresso text-center max-w-full md:max-w-140">
-                  Here&apos;s the integration roadmap we prepared for you — SDK layers, partner category, and steps to
-                  integrate with SODAX.
-                </p>
+              )}
+              {bdMode && (
+                <div className="flex flex-col gap-4 items-center px-4 w-full max-w-4xl print:hidden">
+                  <div className="flex gap-2 items-center">
+                    <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="shrink-0" />
+                    <span className="font-normal text-[13px] text-clay uppercase tracking-wide">SODAX Partners</span>
+                  </div>
+                  <h2 className="font-bold text-[26px] sm:text-[32px] leading-[1.1] text-espresso text-center">
+                    Integration roadmap —{' '}
+                    <span className="text-cherry-soda">
+                      {getProtocolDisplayLabel(roadmap.protocolDisplay, roadmap.category)}
+                    </span>
+                  </h2>
+                  <p className="font-normal text-[14px] sm:text-[16px] leading-[1.4] text-espresso text-center max-w-full md:max-w-140">
+                    Here&apos;s the integration roadmap we prepared for you — SDK layers, partner category, and steps to
+                    integrate with SODAX.
+                  </p>
+                </div>
+              )}
+              <div className="hidden print:flex flex-col gap-3 pb-6 border-b border-cherry-grey/30" aria-hidden>
+                <div className="flex items-center gap-3">
+                  <Image src="/symbol_dark.png" alt="" width={28} height={28} className="shrink-0" />
+                  <span className="font-bold text-lg text-espresso">Integration Roadmap</span>
+                  <span className="text-cherry-grey text-sm">·</span>
+                  <span className="font-medium text-sm text-espresso">SODAX Partners</span>
+                </div>
               </div>
-            )}
-            <div className="hidden print:flex flex-col gap-3 pb-6 border-b border-cherry-grey/30" aria-hidden>
-              <div className="flex items-center gap-3">
-                <Image src="/symbol_dark.png" alt="" width={28} height={28} className="shrink-0" />
-                <span className="font-bold text-lg text-espresso">Integration Roadmap</span>
-                <span className="text-cherry-grey text-sm">·</span>
-                <span className="font-medium text-sm text-espresso">SODAX Partners</span>
-              </div>
-            </div>
 
-            <PersonalIntroCard note={bdConfig.note} fromName={fromName} fromSuffix={fromSuffix} />
+              <PersonalIntroCard note={bdConfig.note} fromName={fromName} fromSuffix={fromSuffix} />
 
-            <RoadmapSections
-              roadmap={roadmap}
-              setRoadmap={setRoadmap}
-              bdConfig={bdConfig}
-              displayTimeline={displayTimeline}
-              whyBullets={whyBullets}
-              displaySteps={displaySteps}
-              currentProtocol={currentProtocol}
-              protocolName={protocolName}
-              linkCopied={linkCopied}
-              onCopyLink={handleCopyLink}
-              onDownloadPdf={handleDownloadPdf}
-              printDate={printDate}
-              signature={signature}
-              fromFirstName={fromFirstName}
-              readOnly={isProspectView}
-              view={view}
-            />
+              <RoadmapSections
+                roadmap={roadmap}
+                setRoadmap={setRoadmap}
+                bdConfig={bdConfig}
+                displayTimeline={displayTimeline}
+                whyBullets={whyBullets}
+                displaySteps={displaySteps}
+                currentProtocol={currentProtocol}
+                protocolName={protocolName}
+                linkCopied={linkCopied}
+                onCopyLink={handleCopyLink}
+                onDownloadPdf={handleDownloadPdf}
+                printDate={printDate}
+                signature={signature}
+                fromFirstName={fromFirstName}
+                readOnly={isProspectView}
+                view={view}
+                notionTailoringError={Boolean(roadmapError)}
+              />
             </div>
           </motion.div>
         )}
