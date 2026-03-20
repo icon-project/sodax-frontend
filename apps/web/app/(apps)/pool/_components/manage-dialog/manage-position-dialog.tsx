@@ -80,6 +80,11 @@ export function ManagePositionDialog({
   const [withdrawPercentage, setWithdrawPercentage] = useState<string>('0');
   const [addLiquidityError, setAddLiquidityError] = useState<string>('');
   const [isAddLiquiditySuccess, setIsAddLiquiditySuccess] = useState<boolean>(false);
+  const [isAddLiquidityApproved, setIsAddLiquidityApproved] = useState<boolean>(false);
+  const [isAddLiquidityTransferred, setIsAddLiquidityTransferred] = useState<boolean>(false);
+  const [lockedAddLiquidityAmounts, setLockedAddLiquidityAmounts] = useState<{ token0: string; token1: string } | null>(
+    null,
+  );
   const [withdrawError, setWithdrawError] = useState<string>('');
   const [isWithdrawSuccess, setIsWithdrawSuccess] = useState<boolean>(false);
   const [claimError, setClaimError] = useState<string>('');
@@ -152,6 +157,9 @@ export function ManagePositionDialog({
   const handleSodaAmountChange = useCallback(
     (value: string): void => {
       setIsAddLiquiditySuccess(false);
+      setIsAddLiquidityApproved(false);
+      setIsAddLiquidityTransferred(false);
+      setLockedAddLiquidityAmounts(null);
       setLastEditedAmount('soda');
       setSodaInputAmount(value);
       handleToken0AmountChange(convertSodaToPoolTokenAmount(value));
@@ -161,6 +169,9 @@ export function ManagePositionDialog({
   const handleXSodaAmountChange = useCallback(
     (value: string): void => {
       setIsAddLiquiditySuccess(false);
+      setIsAddLiquidityApproved(false);
+      setIsAddLiquidityTransferred(false);
+      setLockedAddLiquidityAmounts(null);
       setLastEditedAmount('xsoda');
       handleToken1AmountChange(value);
     },
@@ -173,6 +184,9 @@ export function ManagePositionDialog({
       setIsClaimActionPending(false);
       setAddLiquidityError('');
       setIsAddLiquiditySuccess(false);
+      setIsAddLiquidityApproved(false);
+      setIsAddLiquidityTransferred(false);
+      setLockedAddLiquidityAmounts(null);
       setWithdrawError('');
       setIsWithdrawSuccess(false);
       setActiveTab('claim');
@@ -271,6 +285,131 @@ export function ManagePositionDialog({
   };
 
   const handleAddLiquidity = async (): Promise<void> => {
+    if (!isAddLiquidityTransferred) {
+      setAddLiquidityError('Transfer assets before adding liquidity.');
+      return;
+    }
+    if (!spokeProvider) {
+      setAddLiquidityError('Wallet is not connected to this chain.');
+      return;
+    }
+    if (isWrongChain) {
+      await handleSwitchChain();
+      return;
+    }
+    const minPriceNumber = Number.parseFloat(minPrice);
+    const maxPriceNumber = Number.parseFloat(maxPrice);
+    const supplyToken0Amount = lockedAddLiquidityAmounts?.token0 ?? liquidityToken0Amount;
+    const supplyToken1Amount = lockedAddLiquidityAmounts?.token1 ?? liquidityToken1Amount;
+    const amount0 = Number.parseFloat(supplyToken0Amount);
+    const amount1 = Number.parseFloat(supplyToken1Amount);
+
+    if (!Number.isFinite(minPriceNumber) || !Number.isFinite(maxPriceNumber) || minPriceNumber >= maxPriceNumber) {
+      setAddLiquidityError('Enter a valid price range where min price is less than max price.');
+      return;
+    }
+    if (!(amount0 > 0) || !(amount1 > 0)) {
+      setAddLiquidityError('Enter valid token amounts to add liquidity.');
+      return;
+    }
+    if (!poolSpokeAssets) {
+      setAddLiquidityError('Pool assets are unavailable for this network.');
+      return;
+    }
+
+    setAddLiquidityError('');
+    setIsAddLiquiditySuccess(false);
+
+    try {
+      await supplyLiquidityMutation.mutateAsync({
+        params: createSupplyLiquidityParamsProps({
+          poolData,
+          poolKey,
+          minPrice,
+          maxPrice,
+          liquidityToken0Amount: supplyToken0Amount,
+          liquidityToken1Amount: supplyToken1Amount,
+          slippageTolerance: '0.5',
+          positionId: tokenId,
+          isValidPosition: true,
+        }),
+        spokeProvider,
+      });
+      setLastEditedAmount(null);
+      handleToken0AmountChange('');
+      handleToken1AmountChange('');
+      setSodaInputAmount('');
+      setLockedAddLiquidityAmounts(null);
+      setIsAddLiquidityApproved(false);
+      setIsAddLiquidityTransferred(false);
+      setIsAddLiquiditySuccess(true);
+    } catch (supplyError) {
+      const message = supplyError instanceof Error ? supplyError.message : 'Add liquidity failed.';
+      setAddLiquidityError(message);
+      setIsAddLiquiditySuccess(false);
+    }
+  };
+
+  const handleAddLiquidityApprove = async (): Promise<void> => {
+    if (!spokeProvider) {
+      setAddLiquidityError('Wallet is not connected to this chain.');
+      return;
+    }
+    if (isWrongChain) {
+      await handleSwitchChain();
+      return;
+    }
+    const minPriceNumber = Number.parseFloat(minPrice);
+    const maxPriceNumber = Number.parseFloat(maxPrice);
+    const amount0 = Number.parseFloat(liquidityToken0Amount);
+    const amount1 = Number.parseFloat(liquidityToken1Amount);
+
+    if (!Number.isFinite(minPriceNumber) || !Number.isFinite(maxPriceNumber) || minPriceNumber >= maxPriceNumber) {
+      setAddLiquidityError('Enter a valid price range where min price is less than max price.');
+      return;
+    }
+    if (!(amount0 > 0) || !(amount1 > 0)) {
+      setAddLiquidityError('Enter valid token amounts to add liquidity.');
+      return;
+    }
+    if (!poolSpokeAssets) {
+      setAddLiquidityError('Pool assets are unavailable for this network.');
+      return;
+    }
+
+    setAddLiquidityError('');
+    setIsAddLiquiditySuccess(false);
+    setLockedAddLiquidityAmounts(null);
+    setIsAddLiquidityTransferred(false);
+
+    try {
+      if (poolData.token0IsStatAToken) {
+        if (!token0DepositParams) {
+          setAddLiquidityError('Enter a valid first token amount before adding liquidity.');
+          return;
+        }
+
+        if (!hasToken0Allowance) {
+          await approveMutation.mutateAsync({
+            params: token0DepositParams,
+            spokeProvider,
+          });
+        }
+      }
+      setIsAddLiquidityApproved(true);
+    } catch (supplyError) {
+      const message = supplyError instanceof Error ? supplyError.message : 'Approve failed.';
+      setAddLiquidityError(message);
+      setIsAddLiquiditySuccess(false);
+      setIsAddLiquidityApproved(false);
+    }
+  };
+
+  const handleAddLiquidityTransfer = async (): Promise<void> => {
+    if (!isAddLiquidityApproved) {
+      setAddLiquidityError('Approve assets before transferring.');
+      return;
+    }
     if (!spokeProvider) {
       setAddLiquidityError('Wallet is not connected to this chain.');
       return;
@@ -303,46 +442,24 @@ export function ManagePositionDialog({
     try {
       if (poolData.token0IsStatAToken) {
         if (!token0DepositParams) {
-          setAddLiquidityError('Enter a valid first token amount before adding liquidity.');
+          setAddLiquidityError('Enter a valid first token amount before transferring.');
           return;
         }
-
-        if (!hasToken0Allowance) {
-          await approveMutation.mutateAsync({
-            params: token0DepositParams,
-            spokeProvider,
-          });
-        }
-
         await depositMutation.mutateAsync({
           params: token0DepositParams,
           spokeProvider,
         });
       }
-
-      await supplyLiquidityMutation.mutateAsync({
-        params: createSupplyLiquidityParamsProps({
-          poolData,
-          poolKey,
-          minPrice,
-          maxPrice,
-          liquidityToken0Amount,
-          liquidityToken1Amount,
-          slippageTolerance: '0.5',
-          positionId: tokenId,
-          isValidPosition: true,
-        }),
-        spokeProvider,
+      setLockedAddLiquidityAmounts({
+        token0: liquidityToken0Amount,
+        token1: liquidityToken1Amount,
       });
-      setLastEditedAmount(null);
-      handleToken0AmountChange('');
-      handleToken1AmountChange('');
-      setSodaInputAmount('');
-      setIsAddLiquiditySuccess(true);
+      setIsAddLiquidityTransferred(true);
     } catch (supplyError) {
-      const message = supplyError instanceof Error ? supplyError.message : 'Add liquidity failed.';
+      const message = supplyError instanceof Error ? supplyError.message : 'Transfer failed.';
       setAddLiquidityError(message);
       setIsAddLiquiditySuccess(false);
+      setIsAddLiquidityTransferred(false);
     }
   };
 
@@ -410,7 +527,7 @@ export function ManagePositionDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-120 h-106 p-12" hideCloseButton={true}>
+      <DialogContent className="sm:max-w-120 h-106 px-6 py-12 sm:px-12" hideCloseButton={true}>
         <Tabs value={activeTab} onValueChange={value => setActiveTab(value as 'claim' | 'add' | 'withdraw')}>
           <div className="flex justify-between items-center">
             <TabsList className="flex bg-transparent gap-4 p-0 h-4">
@@ -459,11 +576,20 @@ export function ManagePositionDialog({
             liquidityToken0Amount={displaySodaAmount}
             liquidityToken1Amount={liquidityToken1Amount}
             isPending={isPending}
+            isApproving={approveMutation.isPending}
+            isTransferring={depositMutation.isPending}
+            isAdding={supplyLiquidityMutation.isPending}
             isSuccess={isAddLiquiditySuccess}
+            isApproved={isAddLiquidityApproved}
+            isTransferred={isAddLiquidityTransferred}
+            isWrongChain={isWrongChain}
             error={addLiquidityError}
             onToken0AmountChange={handleSodaAmountChange}
             onToken1AmountChange={handleXSodaAmountChange}
+            onApprove={() => void handleAddLiquidityApprove()}
+            onTransfer={() => void handleAddLiquidityTransfer()}
             onAddLiquidity={() => void handleAddLiquidity()}
+            onSwitchChain={() => void handleSwitchChain()}
             onSuccessClick={() => onOpenChange(false)}
           />
           <WithdrawTabContent

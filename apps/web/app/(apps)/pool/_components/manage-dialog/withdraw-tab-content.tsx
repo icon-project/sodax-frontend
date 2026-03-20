@@ -106,7 +106,7 @@ export function WithdrawTabContent({
           )}
         </div>
         <div className="self-stretch inline-flex justify-center items-center gap-2">
-          <div className="flex justify-start items-center gap-1">
+          <div className="justify-start items-center gap-1 hidden sm:flex">
             {QUICK_WITHDRAW_OPTIONS.map(option => {
               const isActive = normalizedWithdrawPercentage === option;
               const buttonText = option === MAX_WITHDRAW_PERCENTAGE ? 'MAX' : `${option}%`;
@@ -148,7 +148,7 @@ export function WithdrawTabContent({
           </div>
         </div>
         <div className="inline-flex justify-start items-center gap-6">
-          <div className="text-right justify-start text-clay text-[9px] font-medium font-['Inter'] uppercase leading-3">
+          <div className="text-right justify-start text-clay text-[9px] font-medium font-['Inter'] uppercase leading-3 hidden sm:block">
             YOU GET
           </div>
           <div className="flex justify-start items-center gap-3">

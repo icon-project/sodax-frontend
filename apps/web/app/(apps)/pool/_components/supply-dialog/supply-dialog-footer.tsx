@@ -375,121 +375,128 @@ export default function SupplyDialogFooter({
 
   return (
     <DialogFooter className="flex justify-between gap-2 overflow-hidden bottom-8 md:inset-x-12 inset-x-8 absolute">
-      <Button
-        variant="cherry"
-        className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
-          isMobile
-            ? 'w-full'
-            : !isTermsStep
-              ? 'w-10 h-10 rounded-full p-0 flex items-center justify-center bg-cream-white text-clay-light'
-              : 'flex-1'
-        }`}
-        onClick={isTermsStep ? handleContinue : handleBack}
-        disabled={!isTermsStep && !isApproveStep}
-      >
-        {!isTermsStep && isApproveStep ? (
-          <ArrowLeft className="w-5 h-5" />
-        ) : isTermsStep ? (
-          'Continue'
-        ) : (
-          <CheckIcon className="w-5 h-5" />
-        )}
-      </Button>
-
-      <Button
-        variant="cherry"
-        className={cn(
-          "text-white font-['InterRegular'] transition-all duration-300 ease-in-out",
-          isMobile ? 'w-full' : isTermsStep || isApproved ? 'w-[40px]' : 'flex-1',
-        )}
-        onClick={isApproveStep && isWrongChain ? handleSwitchChain : handleApprove}
-        disabled={
-          !isApproveStep ||
-          isApproved ||
-          isApproving ||
-          isDepositing ||
-          isToken0AllowanceLoading ||
-          !token0DepositParams ||
-          !token1DepositParams
-        }
-      >
-        {isApproveStep && isWrongChain ? (
-          <>Switch to {selectedNetworkChainId ? chainIdToChainName(selectedNetworkChainId) : 'selected network'}</>
-        ) : isApproved ? (
-          <Check className="w-5 h-5" />
-        ) : isApproving ? (
-          <>
-            Approving <Loader2 className="w-4 h-4 animate-spin ml-2" />
-          </>
-        ) : isTermsStep ? (
-          <FilePenLine className="w-5 h-5" />
-        ) : (
-          'Approve'
-        )}
-      </Button>
-
-      <Button
-        variant="cherry"
-        className={cn(
-          "text-white font-['InterRegular'] transition-all duration-300 ease-in-out",
-          isMobile ? 'w-full' : isTermsStep || isApproveStep || isTransferred ? 'w-[40px]' : 'flex-1',
-        )}
-        onClick={isTransferStep && isWrongChain ? handleSwitchChain : handleTransfer}
-        disabled={
-          !isTransferStep ||
-          !isApproved ||
-          isApproving ||
-          isDepositing ||
-          isToken0AllowanceLoading ||
-          !token0DepositParams ||
-          !token1DepositParams ||
-          isTransferred
-        }
-      >
-        {isTransferStep && isWrongChain ? (
-          <>Switch to {selectedNetworkChainId ? chainIdToChainName(selectedNetworkChainId) : 'selected network'}</>
-        ) : isTransferred ? (
-          <Check className="w-5 h-5" />
-        ) : !isApproved ? (
-          <FilePenLine className="w-5 h-5" />
-        ) : isDepositing ? (
-          <>
-            Transferring <Loader2 className="w-4 h-4 animate-spin ml-2" />
-          </>
-        ) : (
-          'Transfer'
-        )}
-      </Button>
-
-      {isCompleted ? (
-        <Button
-          variant="cherry"
-          className={`text-white font-['InterRegular'] rounded-full p-0 flex items-center justify-center gap-1 ${
-            isMobile ? 'w-full' : 'flex-1'
-          }`}
-          onClick={onClose}
-        >
-          Supplied
-          <CheckIcon className="w-4 h-4" />
-        </Button>
-      ) : (
+      {(isMobile ? isTermsStep : true) && (
         <Button
           variant="cherry"
           className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
-            isMobile ? 'w-full' : 'h-10 rounded-full p-0 flex-1 items-center justify-center'
+            isMobile
+              ? 'w-full'
+              : !isTermsStep
+                ? 'w-10 h-10 rounded-full p-0 flex items-center justify-center bg-cream-white text-clay-light'
+                : 'flex-1'
           }`}
-          onClick={handleSupply}
-          disabled={!isConfirmStep || isSupplyInProgress}
+          onClick={isTermsStep ? handleContinue : handleBack}
+          disabled={!isTermsStep && !isApproveStep}
         >
-          {isSupplyInProgress ? (
-            <>
-              Supplying <Loader2 className="w-4 h-4 animate-spin ml-2" />
-            </>
+          {!isTermsStep && isApproveStep ? (
+            <ArrowLeft className="w-5 h-5" />
+          ) : isTermsStep ? (
+            'Continue'
           ) : (
-            'Supply'
+            <CheckIcon className="w-5 h-5" />
           )}
         </Button>
       )}
+
+      {(isMobile ? isApproveStep : true) && (
+        <Button
+          variant="cherry"
+          className={cn(
+            "text-white font-['InterRegular'] transition-all duration-300 ease-in-out",
+            isMobile ? 'w-full' : isTermsStep || isApproved ? 'w-[40px]' : 'flex-1',
+          )}
+          onClick={isApproveStep && isWrongChain ? handleSwitchChain : handleApprove}
+          disabled={
+            !isApproveStep ||
+            isApproved ||
+            isApproving ||
+            isDepositing ||
+            isToken0AllowanceLoading ||
+            !token0DepositParams ||
+            !token1DepositParams
+          }
+        >
+          {isApproveStep && isWrongChain ? (
+            <>Switch to {selectedNetworkChainId ? chainIdToChainName(selectedNetworkChainId) : 'selected network'}</>
+          ) : isApproved ? (
+            <Check className="w-5 h-5" />
+          ) : isApproving ? (
+            <>
+              Approving <Loader2 className="w-4 h-4 animate-spin ml-2" />
+            </>
+          ) : isTermsStep ? (
+            <FilePenLine className="w-5 h-5" />
+          ) : (
+            'Approve'
+          )}
+        </Button>
+      )}
+
+      {(isMobile ? isTransferStep : true) && (
+        <Button
+          variant="cherry"
+          className={cn(
+            "text-white font-['InterRegular'] transition-all duration-300 ease-in-out",
+            isMobile ? 'w-full' : isTermsStep || isApproveStep || isTransferred ? 'w-[40px]' : 'flex-1',
+          )}
+          onClick={isTransferStep && isWrongChain ? handleSwitchChain : handleTransfer}
+          disabled={
+            !isTransferStep ||
+            !isApproved ||
+            isApproving ||
+            isDepositing ||
+            isToken0AllowanceLoading ||
+            !token0DepositParams ||
+            !token1DepositParams ||
+            isTransferred
+          }
+        >
+          {isTransferStep && isWrongChain ? (
+            <>Switch to {selectedNetworkChainId ? chainIdToChainName(selectedNetworkChainId) : 'selected network'}</>
+          ) : isTransferred ? (
+            <Check className="w-5 h-5" />
+          ) : !isApproved ? (
+            <FilePenLine className="w-5 h-5" />
+          ) : isDepositing ? (
+            <>
+              Transferring <Loader2 className="w-4 h-4 animate-spin ml-2" />
+            </>
+          ) : (
+            'Transfer'
+          )}
+        </Button>
+      )}
+
+      {(isMobile ? isConfirmStep || isCompleted : true) &&
+        (isCompleted ? (
+          <Button
+            variant="cherry"
+            className={`text-white font-['InterRegular'] rounded-full p-0 flex items-center justify-center gap-1 ${
+              isMobile ? 'w-full' : 'flex-1'
+            }`}
+            onClick={onClose}
+          >
+            Supplied
+            <CheckIcon className="w-4 h-4" />
+          </Button>
+        ) : (
+          <Button
+            variant="cherry"
+            className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
+              isMobile ? 'w-full' : 'h-10 rounded-full p-0 flex-1 items-center justify-center'
+            }`}
+            onClick={handleSupply}
+            disabled={!isConfirmStep || isSupplyInProgress}
+          >
+            {isSupplyInProgress ? (
+              <>
+                Supplying <Loader2 className="w-4 h-4 animate-spin ml-2" />
+              </>
+            ) : (
+              'Supply'
+            )}
+          </Button>
+        ))}
     </DialogFooter>
   );
 }
