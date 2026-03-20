@@ -1,6 +1,6 @@
 // import * as bitcoin from 'bitcoinjs-lib';
 import type { Hex, HubAddress, HubChainId } from '@sodax/types';
-import type { BitcoinSpokeProviderType, TxReturnType } from '../../types.js';
+import type { BitcoinSpokeProviderType, DepositSimulationParams, TxReturnType } from '../../types.js';
 import type { EvmHubProvider } from '../../entities/index.js';
 // import { isBitcoinRawSpokeProvider } from '../../guards.js';
 import { encodeAddress } from '../../utils/shared-utils.js';
@@ -21,16 +21,6 @@ export type BitcoinTransferToHubParams = {
   amount: bigint;
   data?: Hex;
   accessToken?: string;
-};
-
-export type DepositSimulationParams = {
-  spokeChainID: number | string;
-  token: Hex;
-  from: Hex;
-  to: HubAddress;
-  amount: bigint;
-  data: Hex;
-  srcAddress: Hex;
 };
 
 export class BitcoinSpokeService {

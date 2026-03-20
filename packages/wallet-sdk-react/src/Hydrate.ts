@@ -7,8 +7,11 @@ import { SolanaXService } from './xchains/solana/SolanaXService';
 import { SuiXService } from './xchains/sui';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useConfig } from 'wagmi';
+import { StacksXService } from './xchains/stacks/StacksXService';
+import { createNetwork } from '@stacks/network';
+import type { RpcConfig } from '@sodax/types';
 
-export const Hydrate = () => {
+export const Hydrate = ({ rpcConfig }: { rpcConfig: RpcConfig }) => {
   // sui
   const suiClient = useSuiClient();
   useEffect(() => {
@@ -51,5 +54,12 @@ export const Hydrate = () => {
     }
   }, [wagmiConfig]);
 
+  // stacks
+  useEffect(() => {
+    StacksXService.getInstance().network = createNetwork({
+      network: 'mainnet',
+      client: { baseUrl: rpcConfig.stacks ?? 'https://api.mainnet.hiro.so' },
+    });
+  }, [rpcConfig.stacks]);
   return null;
 };

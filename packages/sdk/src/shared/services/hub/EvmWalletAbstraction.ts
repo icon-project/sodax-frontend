@@ -9,7 +9,7 @@ export class EvmWalletAbstraction {
   /**
    * Get the hub wallet address for a given spoke chain and address.
    * @param chainId - The spoke chain ID.
-   * @param address - The address on the spoke chain.
+   * @param address - The encoded address on the spoke chain.
    * @param hubProvider - The hub provider.
    * @returns The hub wallet address.
    */

@@ -60,7 +60,6 @@ describe('calculatePercentageAmount', () => {
   const mockEvmWalletProvider = {
     sendTransaction: vi.fn(),
     getWalletAddress: vi.fn().mockResolvedValue('0x9999999999999999999999999999999999999999' as `0x${string}`),
-    getWalletAddressBytes: vi.fn().mockResolvedValue('0x9999999999999999999999999999999999999999' as `0x${string}`),
     waitForTransactionReceipt: vi.fn(),
   } as unknown as IEvmWalletProvider;
 

@@ -83,7 +83,6 @@ export type NearRawTransaction = {
 
 export interface INearWalletProvider extends WalletAddressProvider {
   getWalletAddress: () => Promise<string>;
-  getWalletAddressBytes: () => Promise<Hex>;
   getRawTransaction(params: CallContractParams): Promise<NearRawTransaction>;
   signAndSubmitTxn(tx: NearRawTransaction): Promise<string>;
 }

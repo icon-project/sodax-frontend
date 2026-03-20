@@ -5,6 +5,7 @@ import { SuiXService } from '..';
 import { EvmXService } from '..';
 import type { XService } from '../core';
 import { NearXService } from '../xchains/near/NearXService';
+import { StacksXService } from '../xchains/stacks/StacksXService';
 
 export function getXService(xChainType: ChainType): XService {
   switch (xChainType) {
@@ -24,6 +25,8 @@ export function getXService(xChainType: ChainType): XService {
       return StellarXService.getInstance();
     case 'NEAR':
       return NearXService.getInstance();
+    case 'STACKS':
+      return StacksXService.getInstance();
     default:
       throw new Error(`Unsupported chain type: ${xChainType}`);
   }
