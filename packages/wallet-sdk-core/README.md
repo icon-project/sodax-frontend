@@ -31,3 +31,6 @@ The package includes wallet provider implementations for:
 - Stellar ✅
 - ICON ✅
 - Injective ✅
+- Near ✅
+- Stacks ✅
+- Bitcoin ✅
