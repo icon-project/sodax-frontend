@@ -184,7 +184,7 @@ export const MigrateButton = () => {
               onClick={handleActivateStellarAccount}
               disabled={isActivatingStellarAccount}
             >
-              {isActivatingStellarAccount ? 'Activating Stellar Account' : 'Activate Stellar Account'}
+              {isActivatingStellarAccount ? 'Activating Stellar' : 'Activate Stellar'}
               {isActivatingStellarAccount && <Loader2 className="w-4 h-4 animate-spin" />}
             </Button>
           ) : direction.to === STELLAR_MAINNET_CHAIN_ID && stellarTrustlineValidation?.ok === false && !hasTrustline ? (
