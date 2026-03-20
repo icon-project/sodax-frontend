@@ -11,6 +11,7 @@ import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import { chainIdToChainName } from '@/providers/constants';
 import type { ChainId } from '@sodax/types';
 import { SwitchChainDialog } from '@/components/shared/switch-chain-dialog';
+import { trackUnstakeClaimCompleted } from '@/lib/analytics';
 interface UnstakeRequestItemProps {
   request: UnstakeRequestWithPenalty;
   stakingConfig: StakingConfig | undefined;
@@ -89,9 +90,16 @@ export function UnstakeRequestItem({
     }
 
     try {
-      await claim({
+      const [spokeTxHash] = await claim({
         requestId: request.id,
         amount: request.claimableAmount,
+      });
+      trackUnstakeClaimCompleted({
+        request_id: request.id.toString(),
+        claimed_amount: claimableAmountFormatted,
+        penalty_percent: request.penaltyPercentage,
+        source_chain: chainName,
+        transaction_hash: spokeTxHash,
       });
     } catch (error) {
       console.error('Claim error:', error);

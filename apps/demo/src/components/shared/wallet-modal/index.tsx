@@ -45,6 +45,10 @@ export const xChainTypes: WalletItemProps[] = [
     name: 'Near',
     xChainType: 'NEAR',
   },
+  {
+    name: 'Stacks',
+    xChainType: 'STACKS',
+  },
 ];
 
 export const WalletModal = ({ isOpen, onDismiss }: WalletModalProps) => {

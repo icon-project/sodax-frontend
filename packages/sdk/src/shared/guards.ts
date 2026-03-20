@@ -32,6 +32,7 @@ import {
   type StellarRawSpokeProvider,
   type StellarRawSpokeProviderConfig,
 } from './entities/stellar/StellarSpokeProvider.js';
+import { StacksSpokeProvider, type StacksRawSpokeProvider, type StacksRawSpokeProviderConfig } from './entities/stacks/StacksSpokeProvider.js';
 import type {
   BitcoinSpokeProviderType,
   EvmSpokeProviderType,
@@ -48,6 +49,7 @@ import type {
   SolanaSpokeProviderType,
   SolverConfigParams,
   SonicSpokeProviderType,
+  StacksSpokeProviderType,
   SpokeProviderObjectType,
   StellarSpokeProviderType,
   SuiSpokeProviderType,
@@ -292,6 +294,24 @@ export function isSuiSpokeProvider(value: SpokeProviderType): value is SuiSpokeP
     !('raw' in value) &&
     value.chainConfig.chain.type === 'SUI'
   );
+}
+
+export function isStacksSpokeProviderType(value: SpokeProviderType): value is StacksSpokeProviderType {
+  return typeof value === 'object' && value !== null && (isStacksSpokeProvider(value) || isStacksRawSpokeProvider(value));
+}
+
+export function isStacksSpokeProvider(value: SpokeProviderType): value is StacksSpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof StacksSpokeProvider &&
+    !('raw' in value) &&
+    value.chainConfig.chain.type === 'STACKS'
+  );
+}
+
+export function isStacksRawSpokeProvider(value: unknown): value is StacksRawSpokeProvider {
+  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'STACKS';
 }
 
 export function isConfiguredSolverConfig(
@@ -605,6 +625,16 @@ export function isNearRawSpokeProviderConfig(value: RawSpokeProviderConfig): val
     'walletAddress' in value &&
     'chainConfig' in value &&
     value.chainConfig.chain.type === 'NEAR'
+  );
+}
+
+export function isStacksRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is StacksRawSpokeProviderConfig {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletAddress' in value &&
+    'chainConfig' in value &&
+    value.chainConfig.chain.type === 'STACKS'
   );
 }
 
