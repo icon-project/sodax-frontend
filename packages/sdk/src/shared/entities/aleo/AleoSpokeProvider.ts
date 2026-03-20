@@ -11,7 +11,8 @@ import type {
 } from '@sodax/types';
 
 import { isAleoRawSpokeProvider } from '../../guards.js';
-import { AleoNetworkClient, BHP256, ProgramManager, Plaintext, Address as AleoAddress } from '@provablehq/sdk';
+import { AleoNetworkClient, BHP256, ProgramManager, Plaintext } from '@provablehq/sdk';
+import { decodeBech32m } from '../../utils/bech32m.js';
 
 export const ALEO_DEFAULT_TIMEOUT = 45000;
 const ALEO_DEFAULT_CHECK_INTERVAL = 2000;
@@ -35,8 +36,8 @@ export class AleoBaseSpokeProvider {
       throw new Error(`Invalid Aleo address format: ${aleoAddress}`);
     }
 
-    const bytesLe = Array.from(AleoAddress.from_string(aleoAddress).toBytesLe());
-    return toHex(new Uint8Array(bytesLe.reverse()));
+    const { data } = decodeBech32m(aleoAddress);
+    return toHex(new Uint8Array([...data].reverse()));
   }
 
   static isValidAleoAddress(address: string): boolean {
