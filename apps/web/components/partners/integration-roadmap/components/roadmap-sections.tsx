@@ -169,8 +169,8 @@ export function RoadmapSections({
             <Select
               value={roadmap.category.id}
               onValueChange={(id: CategoryId) => {
-                const cat = CATEGORIES.find(c => c.id === id);
-                if (cat) setRoadmap({ ...roadmap, category: cat, matched: true });
+                const matchedCategory = CATEGORIES.find(category => category.id === id);
+                if (matchedCategory) setRoadmap({ ...roadmap, category: matchedCategory, matched: true });
               }}
             >
               <SelectTrigger
@@ -180,13 +180,13 @@ export function RoadmapSections({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="border-cherry-grey/30 bg-white">
-                {CATEGORIES.map(c => (
+                {CATEGORIES.map(category => (
                   <SelectItem
-                    key={c.id}
-                    value={c.id}
+                    key={category.id}
+                    value={category.id}
                     className="text-[13px] text-espresso focus:bg-cherry-soda/10 focus:text-espresso data-highlighted:bg-cherry-soda/10"
                   >
-                    {c.title}
+                    {category.title}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -309,7 +309,7 @@ export function RoadmapSections({
               const prospectChains = new Set(
                 bdConfig.chains
                   .split(',')
-                  .map(c => c.trim().toLowerCase())
+                  .map(chainName => chainName.trim().toLowerCase())
                   .filter(Boolean),
               );
               return (

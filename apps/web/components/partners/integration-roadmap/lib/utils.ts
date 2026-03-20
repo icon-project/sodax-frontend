@@ -27,12 +27,12 @@ export function matchCategory(protocolName: string): { category: RoadmapCategory
 
   const override = findProtocolOverride(lower);
   if (override) {
-    const cat = CATEGORIES.find(c => c.id === override.categoryId);
-    if (cat) return { category: cat, matched: true };
+    const matchedCategory = CATEGORIES.find(category => category.id === override.categoryId);
+    if (matchedCategory) return { category: matchedCategory, matched: true };
   }
 
-  for (const cat of CATEGORIES) {
-    if (cat.keywords.some(kw => lower.includes(kw))) return { category: cat, matched: true };
+  for (const category of CATEGORIES) {
+    if (category.keywords.some(keyword => lower.includes(keyword))) return { category, matched: true };
   }
   return { category: DEFAULT_CATEGORY, matched: false };
 }

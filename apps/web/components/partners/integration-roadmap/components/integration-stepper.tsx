@@ -28,7 +28,7 @@ export function IntegrationStepper({ steps }: IntegrationStepperProps): React.JS
       .filter((el): el is HTMLLIElement => el instanceof HTMLLIElement);
     if (elements.length === 0) return;
 
-    const obs = new IntersectionObserver(
+    const observer = new IntersectionObserver(
       (entries) => {
         // Pick the intersecting entry closest to the top of the viewport.
         let best: { stepIndex: number; top: number } | null = null;
@@ -44,8 +44,8 @@ export function IntegrationStepper({ steps }: IntegrationStepperProps): React.JS
       { threshold: 0.5, rootMargin: '-8% 0px -48% 0px' },
     );
 
-    for (const element of elements) obs.observe(element);
-    return () => obs.disconnect();
+    for (const element of elements) observer.observe(element);
+    return () => observer.disconnect();
   }, [steps.length]);
 
   if (steps.length === 0) return <></>;

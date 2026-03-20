@@ -207,7 +207,7 @@ export const CATEGORIES: RoadmapCategory[] = [
 ];
 
 /** Default category shown before a protocol is typed / matched (DEXs & Aggregators). */
-const defaultCategoryCandidate = CATEGORIES.find(c => c.id === 'dexs');
+const defaultCategoryCandidate = CATEGORIES.find(category => category.id === 'dexs');
 if (!defaultCategoryCandidate) {
   throw new Error('Integration Roadmap: DEFAULT_CATEGORY missing (expected category id "dexs").');
 }

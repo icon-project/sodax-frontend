@@ -27,7 +27,7 @@ import { BdComposer } from './bd-composer';
 import { PersonalIntroCard } from './personal-intro-card';
 import { RoadmapSections } from './roadmap-sections';
 
-const CATEGORY_ID_SET: ReadonlySet<string> = new Set(CATEGORIES.map(c => c.id));
+const CATEGORY_ID_SET: ReadonlySet<string> = new Set(CATEGORIES.map(category => category.id));
 
 function isCategoryId(value: string): value is CategoryId {
   return CATEGORY_ID_SET.has(value);
@@ -82,32 +82,32 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
     const protocolFromPath = params?.protocol ?? null;
     const protocolDisplay = protocolFromQuery?.trim() || (protocolFromPath ? slugToDisplay(protocolFromPath) : null);
 
-    const cat = get('cat');
+    const categoryId = get('cat');
     const from = get('from');
     const suffix = get('suffix');
     const note = get('note');
-    const tl = get('tl');
+    const timeline = get('timeline');
     const why = get('why');
     const chains = get('chains');
-    const whys = get('whys');
+    const whyOverrides = get('whyOverrides');
     const steps = get('steps');
-    const ns = get('ns');
+    const nextStep = get('nextStep');
     const blocker = get('blocker');
 
     const isBdPath =
       pathname === INTEGRATION_ROADMAP_BD_ROUTE || pathname?.startsWith(`${INTEGRATION_ROADMAP_BD_ROUTE}/`);
     setBdMode(Boolean(isBdPath));
 
-    const fromUrl: BdConfig = {
+    const configFromUrl: BdConfig = {
       fromName: from ?? '',
       fromSuffix: suffix ?? DEFAULT_FROM_SUFFIX,
       note: note ?? '',
-      timeline: tl ?? '',
+      timeline: timeline ?? '',
       customWhy: why ?? '',
       chains: chains ?? '',
-      whyOverrides: whys ? whys.split('\n').filter(Boolean) : [],
+      whyOverrides: whyOverrides ? whyOverrides.split('\n').filter(Boolean) : [],
       stepsOverrides: steps ? steps.split('\n').filter(Boolean) : [],
-      nextStep: ns ?? '',
+      nextStep: nextStep ?? '',
       blockerNote: blocker ?? '',
     };
 
@@ -116,23 +116,23 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
       (from ?? '') !== '' ||
       (suffix ?? '') !== '' ||
       (note ?? '') !== '' ||
-      (tl ?? '') !== '' ||
+      (timeline ?? '') !== '' ||
       (why ?? '') !== '' ||
       (chains ?? '') !== '' ||
-      (whys ?? '') !== '' ||
+      (whyOverrides ?? '') !== '' ||
       (steps ?? '') !== '' ||
-      (ns ?? '') !== '' ||
+      (nextStep ?? '') !== '' ||
       (blocker ?? '') !== '';
     const draft = isBdPath && !hasBdParamsFromUrl ? loadDraftFromStorage() : null;
-    setBdConfig(draft ?? fromUrl);
+    setBdConfig(draft ?? configFromUrl);
 
     if (protocolDisplay != null && protocolDisplay.trim() !== '') {
       const trimmed = protocolDisplay.trim();
       setProtocolName(trimmed);
       const categoryFromUrl = (() => {
-        if (!cat) return null;
-        if (!isCategoryId(cat)) return null;
-        return CATEGORIES.find(c => c.id === cat) ?? null;
+        if (!categoryId) return null;
+        if (!isCategoryId(categoryId)) return null;
+        return CATEGORIES.find(category => category.id === categoryId) ?? null;
       })();
       const { category, matched } = matchCategory(trimmed);
       const effectiveCategory = categoryFromUrl ?? category;
@@ -181,7 +181,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
           return;
         }
 
-        const notionCategory = CATEGORIES.find(c => c.id === data.categoryId);
+        const notionCategory = CATEGORIES.find(category => category.id === data.categoryId);
         setRoadmap(prev =>
           prev
             ? {
@@ -247,7 +247,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
           notionResolved = true;
           if (seq !== roadmapFetchSeqRef.current) return;
           // Override category if Notion has one
-          const notionCategory = CATEGORIES.find(c => c.id === data.categoryId);
+          const notionCategory = CATEGORIES.find(category => category.id === data.categoryId);
           setRoadmap({
             category: notionCategory ?? category,
             protocolDisplay: data.protocolDisplay ?? display,
@@ -283,7 +283,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
           const classifyData = await classifyRes.json();
           if (classifyData.categoryId) {
             if (seq !== roadmapFetchSeqRef.current) return;
-            const aiCategory = CATEGORIES.find(c => c.id === classifyData.categoryId);
+            const aiCategory = CATEGORIES.find(category => category.id === classifyData.categoryId);
             if (aiCategory) {
               setRoadmap(prev => (prev ? { ...prev, category: aiCategory, matched: true } : prev));
             }
@@ -324,7 +324,7 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
 
   const whyBullets = ((): WhyBullet[] => {
     if (bdConfig.whyOverrides.length > 0) {
-      return bdConfig.whyOverrides.filter(Boolean).map(s => ({ headline: '', copy: s }));
+      return bdConfig.whyOverrides.filter(Boolean).map(bulletText => ({ headline: '', copy: bulletText }));
     }
     const base = notionWhyBullets.length > 0 ? notionWhyBullets : defaultWhyBullets;
     return bdConfig.customWhy.trim() ? [...base, { headline: '', copy: bdConfig.customWhy.trim() }] : base;

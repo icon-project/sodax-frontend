@@ -50,12 +50,12 @@ export function BdComposer({
     if (bdConfig.fromName) params.set('from', bdConfig.fromName);
     if (bdConfig.fromSuffix.trim()) params.set('suffix', bdConfig.fromSuffix.trim());
     if (bdConfig.note) params.set('note', bdConfig.note);
-    if (bdConfig.timeline) params.set('tl', bdConfig.timeline);
+    if (bdConfig.timeline) params.set('timeline', bdConfig.timeline);
     if (bdConfig.customWhy) params.set('why', bdConfig.customWhy);
     if (bdConfig.chains) params.set('chains', bdConfig.chains);
-    if (bdConfig.whyOverrides.length > 0) params.set('whys', bdConfig.whyOverrides.join('\n'));
+    if (bdConfig.whyOverrides.length > 0) params.set('whyOverrides', bdConfig.whyOverrides.join('\n'));
     if (bdConfig.stepsOverrides.length > 0) params.set('steps', bdConfig.stepsOverrides.join('\n'));
-    if (bdConfig.nextStep) params.set('ns', bdConfig.nextStep);
+    if (bdConfig.nextStep) params.set('nextStep', bdConfig.nextStep);
     if (bdConfig.blockerNote) params.set('blocker', bdConfig.blockerNote);
     const qs = params.toString();
     return `${origin}${path}${qs ? `?${qs}` : ''}`;
@@ -103,14 +103,14 @@ export function BdComposer({
                 ['2', 'Optional: personalise', 'Add your name, note, timeline, and chains for your BD link.'],
                 ['3', 'Copy links', 'Send the prospect link to the client. Keep the BD link for yourself.'],
               ] as [string, string, string][]
-            ).map(([n, title, desc]) => (
-              <div key={n} className="flex gap-3 flex-1 bg-white/60 rounded-2xl px-4 py-3">
+            ).map(([stepNumber, title, stepDescription]) => (
+              <div key={stepNumber} className="flex gap-3 flex-1 bg-white/60 rounded-2xl px-4 py-3">
                 <span className="font-['Shrikhand'] text-[20px] leading-none text-yellow-soda shrink-0 mt-0.5">
-                  {n}
+                  {stepNumber}
                 </span>
                 <div className="flex flex-col gap-0.5">
                   <p className="font-semibold text-[13px] text-cherry-dark">{title}</p>
-                  <p className="font-normal text-[12px] text-cherry-dark/70 leading-[1.4]">{desc}</p>
+                  <p className="font-normal text-[12px] text-cherry-dark/70 leading-[1.4]">{stepDescription}</p>
                 </div>
               </div>
             ))}
@@ -237,8 +237,8 @@ export function BdComposer({
                         onClick={() =>
                           onChange({
                             ...bdConfig,
-                            whyOverrides: defaultWhyBullets.map(b =>
-                              b.headline ? `${b.headline} — ${b.copy}` : b.copy,
+                            whyOverrides: defaultWhyBullets.map(bullet =>
+                              bullet.headline ? `${bullet.headline} — ${bullet.copy}` : bullet.copy,
                             ),
                           })
                         }
@@ -251,25 +251,25 @@ export function BdComposer({
                   </div>
                   {bdConfig.whyOverrides.length === 0 ? (
                     <ul className="flex flex-col gap-1.5 pl-1">
-                      {defaultWhyBullets.map((b, i) => (
-                        <li key={i} className="flex flex-col leading-[1.4]">
-                          {b.headline && (
-                            <span className="font-medium text-[12px] text-cherry-dark/80">{b.headline}</span>
+                      {defaultWhyBullets.map((bullet, bulletIndex) => (
+                        <li key={bulletIndex} className="flex flex-col leading-[1.4]">
+                          {bullet.headline && (
+                            <span className="font-medium text-[12px] text-cherry-dark/80">{bullet.headline}</span>
                           )}
-                          <span className="text-[11px] text-cherry-dark/50">{b.copy}</span>
+                          <span className="text-[11px] text-cherry-dark/50">{bullet.copy}</span>
                         </li>
                       ))}
                     </ul>
                   ) : (
                     <div className="flex flex-col gap-1.5">
-                      {bdConfig.whyOverrides.map((bullet, i) => (
-                        <div key={i} className="flex gap-2 items-center">
+                      {bdConfig.whyOverrides.map((bullet, bulletIndex) => (
+                        <div key={bulletIndex} className="flex gap-2 items-center">
                           <input
                             type="text"
                             value={bullet}
                             onChange={e => {
                               const next = [...bdConfig.whyOverrides];
-                              next[i] = e.target.value;
+                              next[bulletIndex] = e.target.value;
                               onChange({ ...bdConfig, whyOverrides: next });
                             }}
                             className="flex-1 h-8 px-2.5 rounded-lg border border-yellow-soda/60 bg-white text-[12px] text-espresso placeholder:text-clay focus:outline-none focus:ring-1 focus:ring-yellow-soda/50"
@@ -278,7 +278,7 @@ export function BdComposer({
                           <button
                             type="button"
                             onClick={() =>
-                              onChange({ ...bdConfig, whyOverrides: bdConfig.whyOverrides.filter((_, j) => j !== i) })
+                              onChange({ ...bdConfig, whyOverrides: bdConfig.whyOverrides.filter((_, idx) => idx !== bulletIndex) })
                             }
                             className="w-6 h-6 flex items-center justify-center rounded-md text-cherry-dark/40 hover:text-cherry-dark hover:bg-cherry-dark/5 transition-colors cursor-pointer shrink-0"
                             aria-label="Remove bullet"
@@ -324,25 +324,25 @@ export function BdComposer({
                   </div>
                   {bdConfig.stepsOverrides.length === 0 ? (
                     <ol className="flex flex-col gap-1 list-decimal list-inside text-[12px] text-cherry-dark/60 pl-1">
-                      {defaultSteps.map((s, i) => (
-                        <li key={i} className="leading-[1.4]">
-                          {s}
+                      {defaultSteps.map((step, stepIndex) => (
+                        <li key={stepIndex} className="leading-[1.4]">
+                          {step}
                         </li>
                       ))}
                     </ol>
                   ) : (
                     <div className="flex flex-col gap-1.5">
-                      {bdConfig.stepsOverrides.map((step, i) => (
-                        <div key={i} className="flex gap-2 items-center">
+                      {bdConfig.stepsOverrides.map((step, stepIndex) => (
+                        <div key={stepIndex} className="flex gap-2 items-center">
                           <span className="font-normal text-[11px] text-cherry-dark/40 shrink-0 w-4 text-right">
-                            {i + 1}.
+                            {stepIndex + 1}.
                           </span>
                           <input
                             type="text"
                             value={step}
                             onChange={e => {
                               const next = [...bdConfig.stepsOverrides];
-                              next[i] = e.target.value;
+                              next[stepIndex] = e.target.value;
                               onChange({ ...bdConfig, stepsOverrides: next });
                             }}
                             className="flex-1 h-8 px-2.5 rounded-lg border border-yellow-soda/60 bg-white text-[12px] text-espresso placeholder:text-clay focus:outline-none focus:ring-1 focus:ring-yellow-soda/50"
@@ -353,7 +353,7 @@ export function BdComposer({
                             onClick={() =>
                               onChange({
                                 ...bdConfig,
-                                stepsOverrides: bdConfig.stepsOverrides.filter((_, j) => j !== i),
+                                stepsOverrides: bdConfig.stepsOverrides.filter((_, idx) => idx !== stepIndex),
                               })
                             }
                             className="w-6 h-6 flex items-center justify-center rounded-md text-cherry-dark/40 hover:text-cherry-dark hover:bg-cherry-dark/5 transition-colors cursor-pointer shrink-0"
