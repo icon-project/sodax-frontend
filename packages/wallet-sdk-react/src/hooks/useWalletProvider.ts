@@ -5,6 +5,7 @@ import type {
   IInjectiveWalletProvider,
   INearWalletProvider,
   ISolanaWalletProvider,
+  IStacksWalletProvider,
   IStellarWalletProvider,
   ISuiWalletProvider,
   IBitcoinWalletProvider,
@@ -20,14 +21,18 @@ import {
   StellarWalletProvider,
   SolanaWalletProvider,
   NearWalletProvider,
+  StacksWalletProvider,
 } from '@sodax/wallet-sdk-core';
 import { getXChainType } from '../actions';
 import { usePublicClient, useWalletClient } from 'wagmi';
-import { type SolanaXService, type StellarXService, useXAccount, useXService, useXConnection } from '..';
+import { type SolanaXService, type StellarXService, useXAccount, useXService } from '..';
 import type { SuiXService } from '../xchains/sui/SuiXService';
 import { CHAIN_INFO, SupportedChainId } from '../xchains/icon/IconXService';
 import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
 import type { NearXService } from '../xchains/near/NearXService';
+import { useXConnection } from './useXConnection';
+import { useXConnectors } from './useXConnectors';
+import type { StacksXConnector } from '../xchains/stacks';
 
 /**
  * Hook to get the appropriate wallet provider based on the chain type.
@@ -57,6 +62,7 @@ export function useWalletProvider(
   | ISolanaWalletProvider
   | IBitcoinWalletProvider
   | INearWalletProvider
+  | IStacksWalletProvider
   | undefined {
   const xChainType = getXChainType(spokeChainId);
   // EVM-specific hooks
@@ -67,6 +73,8 @@ export function useWalletProvider(
   // Cross-chain hooks
   const xService = useXService(getXChainType(spokeChainId));
   const xAccount = useXAccount(spokeChainId);
+  const stacksConnection = useXConnection('STACKS');
+  const stacksConnectors = useXConnectors('STACKS');
   const xConnection = useXConnection(xChainType);
 
   return useMemo(() => {
@@ -152,11 +160,14 @@ export function useWalletProvider(
 
       case 'BITCOIN': {
         if (!xConnection?.xConnectorId) return undefined;
-        const connector = BitcoinXService.getInstance().getXConnectorById(xConnection.xConnectorId) as BitcoinXConnector | undefined;
+        const connector = BitcoinXService.getInstance().getXConnectorById(xConnection.xConnectorId) as
+          | BitcoinXConnector
+          | undefined;
         if (!connector) return undefined;
         // Recreate from window extension object — works after page reload without reconnect
         return connector.recreateWalletProvider(xConnection.xAccount);
       }
+
       case 'NEAR': {
         const nearXService = xService as NearXService;
         if (!nearXService.walletSelector) {
@@ -166,8 +177,30 @@ export function useWalletProvider(
         return new NearWalletProvider({ wallet: nearXService.walletSelector });
       }
 
+      case 'STACKS': {
+        const address = xAccount.address;
+        if (!address) {
+          return undefined;
+        }
+
+        const activeStacksConnector = stacksConnectors.find(c => c.id === stacksConnection?.xConnectorId) as
+          | StacksXConnector
+          | undefined;
+
+        return new StacksWalletProvider({ address, provider: activeStacksConnector?.getProvider() });
+      }
+
       default:
         return undefined;
     }
-  }, [xChainType, evmPublicClient, evmWalletClient, xService, xAccount, xConnection]);
+  }, [
+    xChainType,
+    evmPublicClient,
+    evmWalletClient,
+    xService,
+    xAccount,
+    stacksConnection,
+    stacksConnectors,
+    xConnection,
+  ]);
 }

@@ -1,7 +1,6 @@
 import { Account, JsonRpcProvider, KeyPairSigner, actions } from 'near-api-js';
 import type { KeyPairString } from 'near-api-js';
-import { toHex } from 'viem';
-import type { Hex, INearWalletProvider, CallContractParams, NearRawTransaction } from '@sodax/types';
+import type { INearWalletProvider, CallContractParams, NearRawTransaction } from '@sodax/types';
 import type { NearConnector } from '@hot-labs/near-connect';
 
 /**
@@ -71,11 +70,6 @@ export class NearWalletProvider implements INearWalletProvider {
       return accounts[0].accountId;
     }
     throw new Error('Wallet not initialized');
-  }
-
-  async getWalletAddressBytes(): Promise<Hex> {
-    const address = await this.getWalletAddress();
-    return toHex(Buffer.from(address, 'utf-8'));
   }
 
   async getRawTransaction(params: CallContractParams): Promise<NearRawTransaction> {

@@ -33,6 +33,9 @@
     "lint": "biome lint . --write"
   },
   "dependencies": {
+    "@stacks/connect": "catalog:",
+    "@stacks/network": "catalog:",
+    "@stacks/transactions": "catalog:",
     "@creit.tech/stellar-wallets-kit": "^1.7.5",
     "@hot-labs/near-connect": "0.10.0",
     "@injectivelabs/networks": "catalog:",

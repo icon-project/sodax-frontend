@@ -41,7 +41,7 @@ export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.R
           <SuiWalletProvider autoConnect={true}>
             <SolanaConnectionProvider endpoint={rpcConfig['solana'] ?? 'https://api.mainnet-beta.solana.com'}>
               <SolanaWalletProvider wallets={wallets} autoConnect>
-                <Hydrate />
+                <Hydrate rpcConfig={rpcConfig} />
                 {children}
               </SolanaWalletProvider>
             </SolanaConnectionProvider>

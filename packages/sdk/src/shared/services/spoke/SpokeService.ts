@@ -23,6 +23,7 @@ import type {
   IconSpokeProviderType,
   SuiSpokeProviderType,
   SolanaSpokeProviderType,
+  StacksSpokeProviderType,
   StellarSpokeProviderType,
   BitcoinSpokeProviderType,
   NearSpokeProviderType,
@@ -40,6 +41,7 @@ import {
   isSolanaSpokeProvider,
   isSonicSpokeProvider,
   isStellarSpokeProvider,
+  isStacksSpokeProviderType,
   isSonicRawSpokeProvider,
   isSolanaSpokeProviderType,
   isStellarSpokeProviderType,
@@ -56,6 +58,7 @@ import {
 import * as rlp from 'rlp';
 import { encodeFunctionData } from 'viem';
 import { encodeAddress } from '../../utils/shared-utils.js';
+import { StacksSpokeService } from './StacksSpokeService.js';
 import { BitcoinSpokeService } from './BitcoinSpokeService.js';
 import { NearSpokeProvider } from '../../entities/near/NearSpokeProvider.js';
 import { NearSpokeService } from './NearSpokeService.js';
@@ -300,6 +303,15 @@ export class SpokeService {
         raw,
       ) satisfies Promise<TxReturnType<StellarSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
     }
+    if (isStacksSpokeProviderType(spokeProvider)) {
+      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
+      return StacksSpokeService.deposit(
+        params as GetSpokeDepositParamsType<StacksSpokeProviderType>,
+        spokeProvider as StacksSpokeProviderType,
+        hubProvider,
+        raw,
+      ) as Promise<TxReturnType<S, R>>;
+    }
     if (isBitcoinSpokeProviderType(spokeProvider)) {
       await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
       return BitcoinSpokeService.deposit(
@@ -382,6 +394,13 @@ export class SpokeService {
         hubProvider,
       );
     }
+    if (isStacksSpokeProviderType(spokeProvider)) {
+      return StacksSpokeService.getSimulateDepositParams(
+        params as GetSpokeDepositParamsType<StacksSpokeProviderType>,
+        spokeProvider as StacksSpokeProviderType,
+        hubProvider,
+      );
+    }
 
     throw new Error('[getSimulateDepositParams] Invalid spoke provider');
   }
@@ -429,6 +448,9 @@ export class SpokeService {
     }
     if (isSonicSpokeProviderType(spokeProvider)) {
       return SonicSpokeService.getDeposit(token, spokeProvider);
+    }
+    if (isStacksSpokeProviderType(spokeProvider)) {
+      return StacksSpokeService.getDeposit(token, spokeProvider as StacksSpokeProviderType);
     }
     if (isBitcoinSpokeProviderType(spokeProvider)) {
       return BitcoinSpokeService.getDeposit(token, spokeProvider);
@@ -533,6 +555,16 @@ export class SpokeService {
         hubProvider,
         raw,
       )) satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<T, R>;
+    }
+    if (isStacksSpokeProviderType(spokeProvider)) {
+      await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
+      return (await StacksSpokeService.callWallet(
+        from,
+        payload,
+        spokeProvider,
+        hubProvider,
+        raw,
+      )) satisfies TxReturnType<StacksSpokeProviderType, R> as TxReturnType<T, R>;
     }
     if (isBitcoinSpokeProviderType(spokeProvider)) {
       await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);

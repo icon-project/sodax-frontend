@@ -10,6 +10,7 @@ import { useStellarXConnectors } from '../xchains/stellar/useStellarXConnectors'
 import { SuiXConnector } from '../xchains/sui';
 import { useXService } from './useXService';
 import { useNearXConnectors } from '../xchains/near/useNearXConnectors';
+import { useStacksXConnectors } from '../xchains/stacks/useStacksXConnectors';
 
 /**
  * Hook to retrieve available wallet connectors for a specific blockchain type.
@@ -20,7 +21,7 @@ import { useNearXConnectors } from '../xchains/near/useNearXConnectors';
  * - Stellar: Uses custom Stellar connectors
  * - Solana: Uses Solana wallet adapters (filtered to installed wallets only)
  *
- * @param xChainType - The blockchain type to get connectors for ('EVM' | 'SUI' | 'STELLAR' | 'SOLANA' | 'NEAR')
+ * @param xChainType - The blockchain type to get connectors for ('EVM' | 'SUI' | 'STELLAR' | 'SOLANA' | 'NEAR' | 'STACKS')
  * @returns An array of XConnector instances compatible with the specified chain type
  */
 
@@ -30,6 +31,7 @@ export function useXConnectors(xChainType: ChainType | undefined): XConnector[] 
   const suiWallets = useWallets();
   const { data: stellarXConnectors } = useStellarXConnectors();
   const { data: nearXConnectors } = useNearXConnectors();
+  const stacksXConnectors = useStacksXConnectors();
   const { wallets: solanaWallets } = useWallet();
 
   const xConnectors = useMemo((): XConnector[] => {
@@ -50,10 +52,21 @@ export function useXConnectors(xChainType: ChainType | undefined): XConnector[] 
           .map(wallet => new SolanaXConnector(wallet));
       case 'NEAR':
         return nearXConnectors || [];
+      case 'STACKS':
+        return stacksXConnectors;
       default:
         return xService.getXConnectors();
     }
-  }, [xService, xChainType, evmConnectors, suiWallets, stellarXConnectors, solanaWallets, nearXConnectors]);
+  }, [
+    xService,
+    xChainType,
+    evmConnectors,
+    suiWallets,
+    stellarXConnectors,
+    solanaWallets,
+    nearXConnectors,
+    stacksXConnectors,
+  ]);
 
   return xConnectors;
 }

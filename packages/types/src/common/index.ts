@@ -16,7 +16,7 @@ export type SpokeChainId = (typeof CHAIN_IDS)[number];
 
 export type ChainId = (typeof CHAIN_IDS)[number];
 
-export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'NEAR', 'BITCOIN'] as const;
+export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'STACKS', 'NEAR', 'BITCOIN'] as const;
 export type ChainType = (typeof ChainTypeArr)[number];
 
 export type Chain = {
@@ -166,7 +166,6 @@ export type SolanaChainConfig = BaseSpokeChainConfig<'SOLANA'> & {
     connection: string;
     xTokenManager: string;
     rateLimit: string;
-    testToken: string;
   };
   chain: SpokeChainInfo<'SOLANA'>;
   rpcUrl: string;
@@ -187,7 +186,6 @@ export type StellarSpokeChainConfig = BaseSpokeChainConfig<'STELLAR'> & {
     connection: string;
     xTokenManager: string;
     rateLimit: string;
-    testToken: string;
   };
   horizonRpcUrl: HttpUrl;
   sorobanRpcUrl: HttpUrl;
@@ -213,7 +211,6 @@ export type InjectiveSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
     connection: string;
     xTokenManager: string;
     rateLimit: string;
-    testToken: string;
   };
   nativeToken: string;
   prefix: string;
@@ -238,7 +235,6 @@ export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
     connection: string;
     xTokenManager: string;
     rateLimit: string;
-    testToken: string;
   };
   rpc_url: string;
 };
@@ -264,6 +260,18 @@ export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
   nid: Hex;
 };
 
+export type StacksSpokeChainConfig = BaseSpokeChainConfig<'STACKS'> & {
+  addresses: {
+    assetManager: string;
+    connection: string;
+    rateLimit: string;
+    xTokenManager: string;
+  };
+  chain: SpokeChainInfo<'STACKS'>;
+  rpcUrl: string;
+  nativeToken: string;
+};
+
 export type SpokeChainConfig =
   | EvmSpokeChainConfig
   | SonicSpokeChainConfig
@@ -273,6 +281,7 @@ export type SpokeChainConfig =
   | StellarSpokeChainConfig
   | BitcoinSpokeChainConfig
   | SolanaChainConfig
+  | StacksSpokeChainConfig
   | NearSpokeChainConfig;
 
 export type SolverConfig = {
