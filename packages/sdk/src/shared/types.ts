@@ -12,6 +12,8 @@ import type {
   SonicRawSpokeProvider,
   SonicSpokeProvider,
   SpokeProvider,
+  StacksSpokeProvider,
+  StacksRawSpokeProvider,
   SpokeProviderType,
   StellarRawSpokeProvider,
   StellarSpokeProvider,
@@ -51,6 +53,7 @@ import type {
   EvmChainId,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
+import type { StacksSpokeDepositParams } from './services/spoke/StacksSpokeService.js';
 import type { BitcoinRawSpokeProvider, BitcoinSpokeProvider } from './entities/btc/BitcoinSpokeProvider.js';
 import type { BitcoinSpokeDepositParams } from './services/spoke/BitcoinSpokeService.js';
 import type { NearRawSpokeProvider, NearSpokeProvider } from './entities/near/NearSpokeProvider.js';
@@ -225,15 +228,19 @@ export type GetSpokeDepositParamsType<T extends SpokeProviderType> = T extends E
                           ? SonicSpokeDepositParams
                           : T extends SonicRawSpokeProvider
                             ? SonicSpokeDepositParams
-                            : T extends BitcoinSpokeProvider
-                              ? BitcoinSpokeDepositParams
-                              : T extends BitcoinRawSpokeProvider
-                                ? BitcoinSpokeDepositParams
-                                : T extends NearSpokeProvider
-                                  ? NearSpokeDepositParams
-                                  : T extends NearRawSpokeProvider
-                                    ? NearSpokeDepositParams
-                                    : never;
+                            : T extends StacksSpokeProvider
+                              ? StacksSpokeDepositParams
+                              : T extends StacksRawSpokeProvider
+                                ? StacksSpokeDepositParams
+                                : T extends BitcoinSpokeProvider
+                                  ? BitcoinSpokeDepositParams
+                                  : T extends BitcoinRawSpokeProvider
+                                    ? BitcoinSpokeDepositParams
+                                    : T extends NearSpokeProvider
+                                      ? NearSpokeDepositParams
+                                      : T extends NearRawSpokeProvider
+                                        ? NearSpokeDepositParams
+                                        : never;
 
 export type GetAddressType<T extends SpokeProviderType> = T extends EvmSpokeProvider
   ? Address
@@ -263,11 +270,15 @@ export type GetAddressType<T extends SpokeProviderType> = T extends EvmSpokeProv
                           ? Address
                           : T extends SonicRawSpokeProvider
                             ? Address
-                            : T extends NearSpokeProvider
-                              ? Address
-                              : T extends NearRawSpokeProvider
-                                ? Address
-                                : never;
+                            : T extends StacksSpokeProvider
+                              ? string
+                              : T extends StacksRawSpokeProvider
+                                ? string
+                                : T extends NearSpokeProvider
+                                  ? Address
+                                  : T extends NearRawSpokeProvider
+                                    ? Address
+                                    : never;
 
 export type SolverConfigParams =
   | Prettify<SolverConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
@@ -379,12 +390,17 @@ export type SuiRawTransaction = {
   data: Base64String;
 };
 
+export type StacksRawTransaction = {
+  [key: string]: string | object | number;
+};
+
 export type EvmReturnType<Raw extends boolean> = Raw extends true ? EvmRawTransaction : Hex;
 export type SolanaReturnType<Raw extends boolean> = Raw extends true ? SolanaRawTransaction : string;
 export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarRawTransaction : string;
 export type IconReturnType<Raw extends boolean> = Raw extends true ? IconRawTransaction : Hex;
 export type SuiReturnType<Raw extends boolean> = Raw extends true ? SuiRawTransaction : string;
 export type InjectiveReturnType<Raw extends boolean> = Raw extends true ? InjectiveRawTransaction : string;
+export type StacksReturnType<Raw extends boolean> = Raw extends true ? StacksRawTransaction : string;
 export type NearReturnType<Raw extends boolean> = Raw extends true ? NearRawTransaction : string;
 
 export type HashTxReturnType =
@@ -394,6 +410,7 @@ export type HashTxReturnType =
   | SuiReturnType<false>
   | InjectiveReturnType<false>
   | StellarReturnType<false>
+  | StacksReturnType<false>
   | NearReturnType<false>;
 
 export type RawTxReturnType =
@@ -403,6 +420,7 @@ export type RawTxReturnType =
   | IconRawTransaction
   | SuiRawTransaction
   | StellarRawTransaction
+  | StacksRawTransaction
   | NearRawTransaction;
 
 /**
@@ -423,9 +441,11 @@ export type TxReturnType<T extends SpokeProviderType, Raw extends boolean> = T e
             ? SuiReturnType<true>
             : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
               ? InjectiveReturnType<true>
-              : T['chainConfig']['chain']['type'] extends 'NEAR'
-                ? NearReturnType<true>
-                : RawTxReturnType
+              : T['chainConfig']['chain']['type'] extends 'STACKS'
+                ? StacksReturnType<true>
+                : T['chainConfig']['chain']['type'] extends 'NEAR'
+                  ? NearReturnType<true>
+                  : RawTxReturnType
   : T extends SpokeProvider
     ? T['chainConfig']['chain']['type'] extends 'EVM'
       ? EvmReturnType<Raw>
@@ -439,11 +459,13 @@ export type TxReturnType<T extends SpokeProviderType, Raw extends boolean> = T e
               ? SuiReturnType<Raw>
               : T['chainConfig']['chain']['type'] extends 'INJECTIVE'
                 ? InjectiveReturnType<Raw>
-                : T['chainConfig']['chain']['type'] extends 'NEAR'
-                  ? NearReturnType<Raw>
-                  : Raw extends true
-                    ? RawTxReturnType
-                    : HashTxReturnType
+                : T['chainConfig']['chain']['type'] extends 'STACKS'
+                  ? StacksReturnType<Raw>
+                  : T['chainConfig']['chain']['type'] extends 'NEAR'
+                    ? NearReturnType<Raw>
+                    : Raw extends true
+                      ? RawTxReturnType
+                      : HashTxReturnType
     : Raw extends true
       ? RawTxReturnType
       : HashTxReturnType;
@@ -455,6 +477,7 @@ export type PromiseStellarTxReturnType<Raw extends boolean> = Promise<TxReturnTy
 export type PromiseIconTxReturnType<Raw extends boolean> = Promise<TxReturnType<IconSpokeProvider, Raw>>;
 export type PromiseSuiTxReturnType<Raw extends boolean> = Promise<TxReturnType<SuiSpokeProvider, Raw>>;
 export type PromiseInjectiveTxReturnType<Raw extends boolean> = Promise<TxReturnType<InjectiveSpokeProvider, Raw>>;
+export type PromiseStacksTxReturnType<Raw extends boolean> = Promise<TxReturnType<StacksSpokeProvider, Raw>>;
 export type PromiseNearTxReturnType<Raw extends boolean> = Promise<TxReturnType<NearSpokeProvider, Raw>>;
 export type PromiseNearRawTxReturnType<Raw extends boolean> = Promise<TxReturnType<NearSpokeProvider, Raw>>;
 
@@ -486,6 +509,7 @@ export type IconSpokeProviderType = IconSpokeProvider | IconRawSpokeProvider;
 export type SuiSpokeProviderType = SuiSpokeProvider | SuiRawSpokeProvider;
 export type InjectiveSpokeProviderType = InjectiveSpokeProvider | InjectiveRawSpokeProvider;
 export type SonicSpokeProviderType = SonicSpokeProvider | SonicRawSpokeProvider;
+export type StacksSpokeProviderType = StacksSpokeProvider | StacksRawSpokeProvider;
 export type NearSpokeProviderType = NearSpokeProvider | NearRawSpokeProvider;
 
 export type Prettify<T> = {
