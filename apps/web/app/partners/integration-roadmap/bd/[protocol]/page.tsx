@@ -10,8 +10,7 @@ import { IntegrationRoadmapUi } from '@/components/partners/integration-roadmap'
 import { BdLoginForm } from '@/components/partners/integration-roadmap/components/bd-login-form';
 import { slugToDisplay } from '@/components/partners/integration-roadmap/lib/slug';
 import { INTEGRATION_ROADMAP_BD_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
-
-const BD_COOKIE = 'bd_auth';
+import { BD_AUTH_COOKIE, deriveBdToken } from '@/constants/auth';
 
 type PageProps = { params: Promise<{ protocol: string }> };
 
@@ -31,10 +30,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function IntegrationRoadmapBdProtocolPage({ params }: PageProps): Promise<React.JSX.Element> {
-  const BD_PASSWORD = process.env.BD_PASSWORD;
+  const expectedToken = await deriveBdToken();
   const cookieStore = await cookies();
-  const bdCookie = cookieStore.get(BD_COOKIE);
-  const isAuthenticated = !BD_PASSWORD || bdCookie?.value === BD_PASSWORD;
+  const bdCookie = cookieStore.get(BD_AUTH_COOKIE);
+  const isAuthenticated = !expectedToken || bdCookie?.value === expectedToken;
 
   return (
     <div className="partners-page integration-roadmap-page relative w-full overflow-x-hidden bg-cream">

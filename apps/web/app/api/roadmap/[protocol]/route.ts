@@ -5,9 +5,8 @@
 import { NextResponse } from 'next/server';
 
 const NOTION_TOKEN = process.env.NOTION_TOKEN;
-
-// The ID of our Notion database that stores partner/protocol cards.
-const DB_ID = '2cd8c1d2979c808180a3cd4bee55dbb1';
+// Set NOTION_ROADMAP_DB_ID in your .env file (staging and prod can use different databases).
+const NOTION_ROADMAP_DB_ID = process.env.NOTION_ROADMAP_DB_ID;
 
 export async function GET(_req: Request, { params }: { params: Promise<{ protocol: string }> }) {
   const { protocol } = await params;
@@ -16,7 +15,11 @@ export async function GET(_req: Request, { params }: { params: Promise<{ protoco
     return NextResponse.json({ error: 'missing NOTION_TOKEN' }, { status: 500 });
   }
 
-  const res = await fetch(`https://api.notion.com/v1/databases/${DB_ID}/query`, {
+  if (!NOTION_ROADMAP_DB_ID) {
+    return NextResponse.json({ error: 'missing NOTION_ROADMAP_DB_ID' }, { status: 500 });
+  }
+
+  const res = await fetch(`https://api.notion.com/v1/databases/${NOTION_ROADMAP_DB_ID}/query`, {
     method: 'POST',
     // cache: 'no-store' tells Next.js NOT to cache this request.
     // Without it, Next.js would cache the Notion response and you'd see stale data
