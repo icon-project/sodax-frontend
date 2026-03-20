@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Sodax is a cross-chain DeFi platform supporting swaps, lending (money market), staking, bridging, and token migration across multiple blockchains (EVM chains, Solana, Sui, Stellar, Injective, ICON). The hub chain is Sonic.
+Sodax is a cross-chain DeFi platform supporting swaps, lending (money market), staking, bridging, and token migration across multiple blockchains (EVM chains, Solana, Sui, Stellar, Injective, ICON, NEAR, Bitcoin, Stacks). The hub chain is Sonic.
 
 ## Monorepo Structure
 
@@ -12,7 +12,8 @@ Turborepo + pnpm workspace. Package manager: **pnpm 9.8.0**.
 
 - `apps/web` — Main Next.js 15 web app (App Router, React 19, Tailwind CSS, shadcn/ui)
 - `apps/demo` — Vite + React demo app for SDK showcase
-- `apps/node` — Node.js scripts for E2E testing various chain operations
+- `apps/node` — Node.js scripts for E2E testing various chain operations (ESM)
+- `apps/node-cjs` — Node.js scripts for E2E testing (CommonJS)
 - `packages/types` — Shared TypeScript type definitions (chain IDs, common types, backend types)
 - `packages/sdk` — Core SDK: swap, bridge, moneyMarket, staking, migration, partner modules
 - `packages/wallet-sdk-core` — Low-level multi-chain wallet operations (signing, broadcasting)
@@ -38,11 +39,6 @@ pnpm checkTs              # TypeScript type checking across all packages
 pnpm test                 # Run tests across all packages
 pnpm clean                # Remove all node_modules, dist, .turbo, .next
 ```
-
-## Common Pitfalls
-
-- **Never use `bigint` in types that will be passed to `JSON.stringify`** — it throws `TypeError` at runtime. Use `string` for numeric fields in API request/response types. If `bigint` is needed in domain types, convert to string before serialization.
-
 
 ### Running tests for a specific package
 
@@ -71,13 +67,18 @@ Key rules enforced:
 
 Formatting: 2-space indent, 120 char line width, single quotes, semicolons required, trailing commas, LF line endings.
 
+## Common Pitfalls
+
+- **Never use `bigint` in types that will be passed to `JSON.stringify`** — it throws `TypeError` at runtime. Use `string` for numeric fields in API request/response types. If `bigint` is needed in domain types, convert to string before serialization.
+- **Always rebuild packages after changes**: `pnpm build:packages` or `cd packages/xxx && pnpm dev`. The dependency chain (`types` → `sdk` → `wallet-sdk-core` → `wallet-sdk-react` → `dapp-kit` → `apps/web`) means downstream packages won't see changes until rebuilt.
+
 Pre-commit hooks (via Husky + lint-staged) auto-format and lint staged files. Commits must follow **conventional commits** format (enforced by commitlint).
 
 ## Architecture Notes
 
 ### Web App (`apps/web`)
 
-- **Routing**: Next.js App Router. Feature routes under `app/(apps)/` (swap, loans, save, stake, migrate, partner).
+- **Routing**: Next.js App Router. Feature routes under `app/(apps)/` (swap, loans, save, stake, migrate, pool, partner-dashboard).
 - **State**: Zustand stores in `stores/` (app-store for chain/page state, modal-store for modals). Server state via `@tanstack/react-query`.
 - **Provider stack** (in `providers/providers.tsx`): `SodaxProvider` → `QueryClientProvider` → `SodaxWalletProvider`
 - **UI**: shadcn/ui components (Radix UI) in `components/ui/`, shared components in `components/shared/`
@@ -94,7 +95,7 @@ Pre-commit hooks (via Husky + lint-staged) auto-format and lint staged files. Co
 
 ### Multi-chain wallet architecture
 
-`wallet-sdk-core` provides per-chain implementations in `src/chains/` (EVM, Solana, Sui, Stellar, Injective, ICON). `wallet-sdk-react` wraps these with React hooks (`useXConnect`, `useXAccount`, etc.) and Zustand state in `src/core/`. The `dapp-kit` adds React Query-powered hooks organized by feature (`hooks/swap/`, `hooks/mm/`, `hooks/bridge/`, etc.).
+`wallet-sdk-core` provides per-chain wallet providers in `src/wallet-providers/` (EVM, Solana, Sui, Stellar, Injective, ICON, NEAR, Bitcoin). `wallet-sdk-react` wraps these with React hooks (`useXConnect`, `useXAccount`, etc.) and Zustand state in `src/core/`. The `dapp-kit` adds React Query-powered hooks organized by feature (`hooks/swap/`, `hooks/mm/`, `hooks/bridge/`, etc.).
 
 ## CI Pipeline
 
