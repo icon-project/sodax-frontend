@@ -5,7 +5,7 @@ import type {
   WalletAddressProvider,
 } from '@sodax/types';
 import type { IRawSpokeProvider, ISpokeProvider } from '../Providers.js';
-import { networkFrom, type StacksNetwork } from '@stacks/network';
+import { type StacksNetwork, createNetwork } from '@stacks/network';
 import {
   Cl,
   type ClarityValue,
@@ -22,8 +22,7 @@ abstract class StacksBaseSpokeProvider {
 
   constructor(config: StacksSpokeChainConfig) {
     this.chainConfig = config;
-    this.network = networkFrom('mainnet');
-    this.network.client.baseUrl = config.rpcUrl;
+    this.network = createNetwork({ network: 'mainnet', client: { baseUrl: config.rpcUrl } });
   }
 
   async getSTXBalance(address: string): Promise<bigint> {
