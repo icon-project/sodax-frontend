@@ -21,28 +21,32 @@ export function IntegrationStepper({ steps }: IntegrationStepperProps): React.JS
 
   // Scroll-driven: whichever step is most visible in the upper viewport becomes active.
   useEffect(() => {
-    const els = itemRefs.current.filter(Boolean) as HTMLLIElement[];
-    if (els.length === 0) return;
+    const stepCount = steps.length;
+    // "elements" are the rendered <li> nodes for each step; we observe them to drive `activeIndex`.
+    const elements = itemRefs.current
+      .slice(0, stepCount)
+      .filter(Boolean) as HTMLLIElement[];
+    if (elements.length === 0) return;
 
     const obs = new IntersectionObserver(
       (entries) => {
         // Pick the intersecting entry closest to the top of the viewport.
-        let best: { i: number; top: number } | null = null;
+        let best: { stepIndex: number; top: number } | null = null;
         for (const entry of entries) {
           if (!entry.isIntersecting) continue;
-          const i = els.indexOf(entry.target as HTMLLIElement);
-          if (i === -1) continue;
+          const stepIndex = elements.indexOf(entry.target as HTMLLIElement);
+          if (stepIndex === -1) continue;
           const top = entry.boundingClientRect.top;
-          if (best === null || top < best.top) best = { i, top };
+          if (best === null || top < best.top) best = { stepIndex, top };
         }
-        if (best !== null) setActiveIndex(best.i);
+        if (best !== null) setActiveIndex(best.stepIndex);
       },
       { threshold: 0.5, rootMargin: '-8% 0px -48% 0px' },
     );
 
-    for (const el of els) obs.observe(el);
+    for (const element of elements) obs.observe(element);
     return () => obs.disconnect();
-  }, [steps]);
+  }, [steps.length]);
 
   if (steps.length === 0) return <></>;
 
@@ -145,7 +149,7 @@ export function IntegrationStepper({ steps }: IntegrationStepperProps): React.JS
             {/* ── Step text ── */}
             <p
               className={[
-                'text-[14px] leading-[1.5] min-w-0 md:w-full md:text-left',
+                'text-[14px] leading-normal min-w-0 md:w-full md:text-left',
                 'pt-1 md:pt-0 md:mt-3',
                 'transition-colors duration-200 motion-reduce:transition-none',
                 isActive

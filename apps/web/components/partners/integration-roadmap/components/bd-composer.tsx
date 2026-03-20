@@ -56,6 +56,8 @@ export function BdComposer({
     if (bdConfig.chains) params.set('chains', bdConfig.chains);
     if (bdConfig.whyOverrides.length > 0) params.set('whys', bdConfig.whyOverrides.join('\n'));
     if (bdConfig.stepsOverrides.length > 0) params.set('steps', bdConfig.stepsOverrides.join('\n'));
+    if (bdConfig.nextStep) params.set('ns', bdConfig.nextStep);
+    if (bdConfig.blockerNote) params.set('blocker', bdConfig.blockerNote);
     const qs = params.toString();
     return `${origin}${path}${qs ? `?${qs}` : ''}`;
   };
@@ -173,6 +175,34 @@ export function BdComposer({
                 placeholder="e.g. Ethereum, Solana, Base"
                 value={bdConfig.chains}
                 onChange={e => onChange({ ...bdConfig, chains: e.target.value })}
+                className="h-9 rounded-xl border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus-visible:ring-yellow-soda/50 focus-visible:border-yellow-soda"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1 sm:col-span-2" htmlFor="bd-next-step">
+              <span className="font-medium text-[12px] text-cherry-dark">
+                Next action <span className="font-normal text-cherry-dark/50">(shown to prospect as the single CTA)</span>
+              </span>
+              <Input
+                id="bd-next-step"
+                type="text"
+                placeholder="e.g. Schedule a 30-min technical call to walk through the deposit flow"
+                value={bdConfig.nextStep}
+                onChange={e => onChange({ ...bdConfig, nextStep: e.target.value })}
+                className="h-9 rounded-xl border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus-visible:ring-yellow-soda/50 focus-visible:border-yellow-soda"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1 sm:col-span-2" htmlFor="bd-blocker-note">
+              <span className="font-medium text-[12px] text-cherry-dark">
+                Blocker / dependency note <span className="font-normal text-cherry-dark/50">(optional — shown above integration steps)</span>
+              </span>
+              <Input
+                id="bd-blocker-note"
+                type="text"
+                placeholder="e.g. Integration timeline starts once Hedera goes live on SODAX"
+                value={bdConfig.blockerNote}
+                onChange={e => onChange({ ...bdConfig, blockerNote: e.target.value })}
                 className="h-9 rounded-xl border-yellow-soda/60 bg-white text-[13px] text-espresso placeholder:text-clay focus-visible:ring-yellow-soda/50 focus-visible:border-yellow-soda"
               />
             </label>

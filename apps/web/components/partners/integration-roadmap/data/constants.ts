@@ -35,6 +35,8 @@ export const EMPTY_BD_CONFIG: BdConfig = {
   chains: '',
   whyOverrides: [],
   stepsOverrides: [],
+  nextStep: '',
+  blockerNote: '',
 };
 
 // ─── Partner categories ───────────────────────────────────────────────────────

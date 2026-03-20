@@ -3,7 +3,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowUpRight, BookOpen, Check, Code2, Coins, ExternalLink, FileDown, Link2, Mail, Network } from 'lucide-react';
+import { ArrowUpRight, BookOpen, Check, Code2, Coins, ExternalLink, FileDown, Link2, Mail, Network, Zap } from 'lucide-react';
 import { GithubLogo } from '@phosphor-icons/react';
 import {
   CHAIN_DOCUMENTATION_ROUTE,
@@ -166,6 +166,16 @@ export function RoadmapSections({
         )}
       </div>
 
+      {!isPublic && bdConfig.blockerNote.trim() && (
+        <div className="rounded-2xl bg-yellow-soda/10 border border-yellow-soda/40 px-5 py-4 flex gap-3 items-start print:hidden">
+          <span className="text-[16px] leading-none mt-0.5 shrink-0" aria-hidden>⚡</span>
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <p className="font-semibold text-[13px] text-cherry-dark">Note on timeline</p>
+            <p className="font-normal text-[13px] leading-[1.45] text-cherry-dark/80">{bdConfig.blockerNote}</p>
+          </div>
+        </div>
+      )}
+
       {!isPublic && <QuickStartInstall />}
 
       <div className="bg-cherry-soda/6 rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-soda/15">
@@ -232,39 +242,28 @@ export function RoadmapSections({
               const prospectChains = new Set(
                 bdConfig.chains.split(',').map(c => c.trim().toLowerCase()).filter(Boolean)
               );
-              const unsupported = bdConfig.chains.trim()
-                ? [...prospectChains].filter(c => !supportedSet.has(c))
-                : [];
               return (
-                <>
-                  <div className="flex flex-wrap gap-2">
-                    {SUPPORTED_NETWORKS_LIST.split(', ').map(network => {
-                      const isProspect = prospectChains.has(network.toLowerCase());
-                      return isProspect ? (
-                        <span
-                          key={network}
-                          className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-cherry-soda/15 text-[12px] font-semibold text-cherry-dark border border-cherry-soda/30"
-                        >
-                          <Check className="w-3 h-3 shrink-0" aria-hidden />
-                          {network}
-                        </span>
-                      ) : (
-                        <span
-                          key={network}
-                          className="inline-flex items-center h-7 px-3 rounded-full bg-white text-[12px] font-medium text-espresso border border-cherry-grey/20"
-                        >
-                          {network}
-                        </span>
-                      );
-                    })}
-                  </div>
-                  {unsupported.length > 0 && (
-                    <p className="font-normal text-[12px] text-clay-dark">
-                      <span className="font-medium text-clay">Reach out to confirm:</span>{' '}
-                      {unsupported.map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(', ')} {unsupported.length === 1 ? 'is' : 'are'} not yet listed — we may still support {unsupported.length === 1 ? 'it' : 'them'}.
-                    </p>
-                  )}
-                </>
+                <div className="flex flex-wrap gap-2">
+                  {SUPPORTED_NETWORKS_LIST.split(', ').map(network => {
+                    const isProspect = prospectChains.has(network.toLowerCase());
+                    return isProspect ? (
+                      <span
+                        key={network}
+                        className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full bg-cherry-soda/15 text-[12px] font-semibold text-cherry-dark border border-cherry-soda/30"
+                      >
+                        <Check className="w-3 h-3 shrink-0" aria-hidden />
+                        {network}
+                      </span>
+                    ) : (
+                      <span
+                        key={network}
+                        className="inline-flex items-center h-7 px-3 rounded-full bg-white text-[12px] font-medium text-espresso border border-cherry-grey/20"
+                      >
+                        {network}
+                      </span>
+                    );
+                  })}
+                </div>
               );
             })()}
             <a
@@ -273,7 +272,7 @@ export function RoadmapSections({
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 font-medium text-[13px] text-cherry-soda hover:underline cursor-pointer w-fit"
             >
-              Full list &amp; chain config in docs
+              SDK integration guide in docs
               <ExternalLink className="w-3.5 h-3.5 shrink-0" aria-hidden />
             </a>
           </>
@@ -392,45 +391,76 @@ export function RoadmapSections({
       {!isPublic && (
         <div className="bg-cream-white rounded-3xl flex flex-col gap-4 p-6 md:p-8 border border-cherry-grey/20">
           <h2 className="font-black text-[18px] sm:text-[20px] leading-[1.2] text-espresso">Case studies</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {ALL_CASE_STUDIES.map(study => (
-              <Link
-                key={study.name}
-                href={study.href}
-                aria-label={`Read ${study.name} case study`}
-                className="group flex flex-col gap-2 p-4 rounded-xl bg-white border border-cherry-grey/15 hover:border-cherry-soda/25 hover:bg-cherry-soda/5 transition-colors cursor-pointer"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <span className="font-black text-[15px] leading-snug text-espresso group-hover:text-cherry-soda transition-colors">
-                    {study.name}
-                  </span>
-                  <ArrowUpRight
-                    className="w-3.5 h-3.5 text-clay shrink-0 mt-0.5 transition-[color,transform] group-hover:text-cherry-soda group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                    aria-hidden
-                  />
+          {(() => {
+            const featuredMeta = CASE_STUDY_BY_CATEGORY[roadmap.category.id];
+            const featured = featuredMeta ? ALL_CASE_STUDIES.find(s => s.name === featuredMeta.name) : null;
+            const rest = featured ? ALL_CASE_STUDIES.filter(s => s.name !== featured.name) : ALL_CASE_STUDIES;
+            return (
+              <div className="flex flex-col gap-3">
+                {featured && (
+                  <Link
+                    href={featured.href}
+                    aria-label={`Read ${featured.name} case study`}
+                    className="group flex items-center justify-between gap-4 p-5 rounded-xl bg-white border border-cherry-soda/20 hover:border-cherry-soda/40 hover:bg-cherry-soda/5 transition-colors cursor-pointer"
+                  >
+                    <div className="flex flex-col gap-1 min-w-0">
+                      <span className="font-normal text-[11px] text-cherry-soda uppercase tracking-wide">Built with SODAX</span>
+                      <span className="font-black text-[17px] leading-snug text-espresso group-hover:text-cherry-soda transition-colors">
+                        {featured.name}
+                      </span>
+                      <span className="font-normal text-[13px] leading-snug text-clay">{featured.tagline}</span>
+                    </div>
+                    <ArrowUpRight
+                      className="w-4 h-4 text-clay shrink-0 transition-[color,transform] group-hover:text-cherry-soda group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                      aria-hidden
+                    />
+                  </Link>
+                )}
+                <div className={`grid gap-3 ${rest.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'}`}>
+                  {rest.map(study => (
+                    <Link
+                      key={study.name}
+                      href={study.href}
+                      aria-label={`Read ${study.name} case study`}
+                      className="group flex flex-col gap-2 p-4 rounded-xl bg-white border border-cherry-grey/15 hover:border-cherry-soda/25 hover:bg-cherry-soda/5 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="font-black text-[15px] leading-snug text-espresso group-hover:text-cherry-soda transition-colors">
+                          {study.name}
+                        </span>
+                        <ArrowUpRight
+                          className="w-3.5 h-3.5 text-clay shrink-0 mt-0.5 transition-[color,transform] group-hover:text-cherry-soda group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                          aria-hidden
+                        />
+                      </div>
+                      <span className="font-normal text-[12px] leading-snug text-clay">{study.tagline}</span>
+                    </Link>
+                  ))}
                 </div>
-                <span className="font-normal text-[12px] leading-snug text-clay">{study.tagline}</span>
-              </Link>
-            ))}
-          </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 
       <div
-        className={`rounded-3xl flex flex-col gap-5 p-6 md:p-8 ${isPublic ? 'bg-espresso items-center text-center' : 'bg-espresso'}`}
+        className="rounded-3xl flex flex-col gap-5 p-6 md:p-8 bg-espresso items-center text-center"
       >
         {isPublic && (
           <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-yellow-soda/70 uppercase tracking-wider">
             ⚡ We respond within 24 hours
           </span>
         )}
+        <Zap className="w-8 h-8 text-yellow-soda" aria-hidden />
         <h2 className="font-black text-[22px] sm:text-[26px] leading-[1.1] text-white">
-          {isPublic ? 'Ready to integrate?' : 'Ready to start building?'}
+          {isPublic ? 'Ready to integrate?' : "Let's make it happen"}
         </h2>
-        <p className={`font-normal text-[14px] leading-normal text-clay-light ${isPublic ? 'max-w-md' : ''}`}>
+        <p className="font-normal text-[14px] leading-normal text-clay-light max-w-md">
           {isPublic
             ? 'Tell us about your protocol — what you build, your chains, and what you want to unlock. We\u2019ll come back with a plan built around your stack.'
-            : 'Follow the integration guide in the docs — everything you need is there.'}
+            : bdConfig.nextStep.trim()
+              ? bdConfig.nextStep.trim()
+              : 'Reach out and we\u2019ll walk you through the integration together.'}
         </p>
         {isPublic && (
           <div className="flex flex-wrap gap-2 justify-center">
@@ -444,19 +474,9 @@ export function RoadmapSections({
             ))}
           </div>
         )}
-        <div className={`flex flex-col gap-4 ${isPublic ? 'items-center' : ''}`}>
-          <div className={`flex flex-col sm:flex-row flex-wrap gap-3 ${isPublic ? 'justify-center' : ''}`}>
-            {!isPublic && (
-              <a
-                href={DOCUMENTATION_ROUTE}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-yellow-soda text-espresso flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer font-semibold text-[14px] text-center shrink-0 hover:opacity-90 transition-opacity"
-              >
-                Open the docs
-              </a>
-            )}
-            {isPublic && (
+        <div className="flex flex-col gap-4 items-center">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center">
+            {isPublic ? (
               <a
                 href={(() => {
                   const protocol = currentProtocol?.trim() || '';
@@ -473,28 +493,36 @@ export function RoadmapSections({
               >
                 let's build together
               </a>
-            )}
-          </div>
-          {!isPublic && (
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 pt-3 border-t border-white/10">
-              <span className="font-normal text-[13px] text-clay-light/60 shrink-0">Still have questions?</span>
-              <div className="flex flex-wrap gap-2">
+            ) : (
+              <>
                 <a
                   href={`mailto:partnerships@sodax.com?subject=${encodeURIComponent(`Partnership inquiry - Integration roadmap${currentProtocol ? ` - ${currentProtocol}` : ''}`)}`}
-                  className="h-8 px-4 rounded-full border border-white/20 bg-white/8 text-white cursor-pointer font-medium text-[13px] hover:bg-white/15 transition-colors shrink-0 inline-flex items-center justify-center gap-2"
+                  className="bg-yellow-soda text-espresso flex h-10 items-center justify-center px-6 py-2 rounded-full cursor-pointer font-semibold text-[14px] text-center shrink-0 hover:opacity-90 transition-opacity"
                 >
                   {fromFirstName ? `Contact ${fromFirstName}` : 'Contact us'}
                 </a>
-                <a
-                  href={DISCORD_ROUTE}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="h-8 px-4 rounded-full border border-white/20 bg-white/8 text-white cursor-pointer font-medium text-[13px] hover:bg-white/15 transition-colors shrink-0 inline-flex items-center justify-center gap-2"
-                >
-                  Join Discord
-                </a>
-              </div>
-            </div>
+                {view === 'bd' && (
+                  <a
+                    href={DISCORD_ROUTE}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="h-10 px-5 rounded-full border border-white/20 bg-white/10 text-white cursor-pointer font-medium text-[14px] hover:bg-white/15 transition-colors shrink-0 inline-flex items-center justify-center gap-2"
+                  >
+                    Join Discord
+                  </a>
+                )}
+              </>
+            )}
+          </div>
+          {view === 'bd' && (
+            <a
+              href={DOCUMENTATION_ROUTE}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-[13px] text-clay-light/60 hover:text-clay-light transition-colors underline underline-offset-2"
+            >
+              Or explore the docs yourself
+            </a>
           )}
         </div>
         {isPublic && (
@@ -505,39 +533,37 @@ export function RoadmapSections({
       </div>
 
       {!isPublic && (
-        <div className="rounded-3xl bg-linear-to-br from-yellow-soda/20 via-yellow-soda/10 to-transparent border border-yellow-soda/40 p-6 md:p-8 flex flex-col gap-5 print:hidden">
-          <div className="flex flex-col gap-1">
-            <h2 className="font-black text-[20px] sm:text-[22px] leading-[1.2] text-espresso">Share this roadmap</h2>
-            <p className="font-normal text-[13px] leading-[1.4] text-clay-dark">
-              Send this page to your team or contacts — they&apos;ll see the roadmap for{' '}
-              <span className="font-semibold text-espresso">{displayLabel}</span> pre-filled. Or download the PDF to attach to an email.
+        <div className="rounded-3xl bg-cream-white border border-cherry-grey/20 p-6 md:p-8 flex flex-col sm:flex-row sm:items-center gap-5 print:hidden">
+          <div className="flex flex-col gap-1 flex-1 min-w-0">
+            <h2 className="font-black text-[18px] leading-[1.2] text-espresso">Pass this along</h2>
+            <p className="font-normal text-[13px] leading-[1.4] text-clay">
+              Share with your team — this link opens the roadmap for{' '}
+              <span className="font-semibold text-espresso">{displayLabel}</span> ready to go.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row flex-wrap gap-2">
+          <div className="flex flex-col gap-3 shrink-0">
             <Button
               type="button"
               variant="cherry"
               onClick={onCopyLink}
               size="lg"
-              className="h-10 px-5 rounded-full font-semibold text-[13px] shrink-0"
+              className="h-10 px-5 rounded-full font-semibold text-[13px]"
               aria-label="Copy link to this roadmap"
             >
               {linkCopied ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
-              {linkCopied ? 'Copied!' : 'Copy link'}
+              {linkCopied ? 'Link copied!' : 'Copy link'}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onDownloadPdf}
-              size="lg"
-              className="h-10 px-5 rounded-full border border-cherry-grey bg-white text-espresso font-semibold text-[13px] hover:bg-cream-white transition-colors shrink-0"
-              aria-label="Download roadmap as PDF"
-              title="Save as PDF. For a clean PDF, turn off 'Headers and footers' in the print dialog."
-            >
-              <FileDown className="w-4 h-4" />
-              Download PDF
-            </Button>
-            <Button variant="outline" size="lg" asChild className="h-10 px-5 rounded-full border border-cherry-grey bg-white text-espresso font-semibold text-[13px] hover:bg-cream-white transition-colors shrink-0 no-underline">
+            <div className="flex items-center justify-center gap-4">
+              <button
+                type="button"
+                onClick={onDownloadPdf}
+                title="Save as PDF — turn off 'Headers and footers' in the print dialog for best results"
+                className="inline-flex items-center gap-1.5 font-medium text-[12px] text-clay hover:text-espresso transition-colors cursor-pointer"
+              >
+                <FileDown className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                Download PDF
+              </button>
+              <span className="w-px h-3 bg-cherry-grey/40" aria-hidden />
               <a
                 href={(() => {
                   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://sodax.com';
@@ -554,16 +580,14 @@ export function RoadmapSections({
                   );
                   return `mailto:?subject=${subject}&body=${body}`;
                 })()}
+                className="inline-flex items-center gap-1.5 font-medium text-[12px] text-clay hover:text-espresso transition-colors"
                 aria-label="Email this roadmap"
               >
-                <Mail className="w-4 h-4" />
-                Email this roadmap
+                <Mail className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                Email
               </a>
-            </Button>
+            </div>
           </div>
-          <p className="font-normal text-[11px] text-clay/60">
-            For a clean PDF, turn off &quot;Headers and footers&quot; in the print dialog.
-          </p>
         </div>
       )}
 

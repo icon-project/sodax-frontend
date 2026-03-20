@@ -6,13 +6,7 @@ import type { Icon } from '@phosphor-icons/react';
 
 // ─── Category ────────────────────────────────────────────────────────────────
 
-export type CategoryId =
-  | 'wallets'
-  | 'dexs'
-  | 'lending'
-  | 'perp-yield'
-  | 'new-networks'
-  | 'solver-marketplaces';
+export type CategoryId = 'wallets' | 'dexs' | 'lending' | 'perp-yield' | 'new-networks' | 'solver-marketplaces';
 
 // ─── Data shapes ─────────────────────────────────────────────────────────────
 
@@ -66,6 +60,10 @@ export interface BdConfig {
   whyOverrides: string[];
   /** Full replacement list for the integration steps (set via Customize panel). */
   stepsOverrides: string[];
+  /** Single concrete next action shown in the prospect CTA (e.g. "Schedule a 30-min technical call"). */
+  nextStep: string;
+  /** Optional blocker or dependency note shown as a callout above integration steps. */
+  blockerNote: string;
 }
 
 // ─── Roadmap state ───────────────────────────────────────────────────────────

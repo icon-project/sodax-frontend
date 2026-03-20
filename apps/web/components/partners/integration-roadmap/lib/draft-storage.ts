@@ -12,20 +12,23 @@ export function loadDraftFromStorage(): BdConfig | null {
     if (!raw) return null;
     const data = JSON.parse(raw) as unknown;
     if (!data || typeof data !== 'object') return null;
-    const o = data as Record<string, unknown>;
+    const draft = data as Record<string, unknown>;
     return {
-      fromName: typeof o.fromName === 'string' ? o.fromName : '',
-      fromSuffix: typeof o.fromSuffix === 'string' ? o.fromSuffix : DEFAULT_FROM_SUFFIX,
-      note: typeof o.note === 'string' ? o.note : '',
-      timeline: typeof o.timeline === 'string' ? o.timeline : '',
-      customWhy: typeof o.customWhy === 'string' ? o.customWhy : '',
-      chains: typeof o.chains === 'string' ? o.chains : '',
-      whyOverrides: Array.isArray(o.whyOverrides)
-        ? o.whyOverrides.filter((x): x is string => typeof x === 'string')
+      fromName: typeof draft.fromName === 'string' ? draft.fromName : '',
+      fromSuffix:
+        typeof draft.fromSuffix === 'string' ? draft.fromSuffix : DEFAULT_FROM_SUFFIX,
+      note: typeof draft.note === 'string' ? draft.note : '',
+      timeline: typeof draft.timeline === 'string' ? draft.timeline : '',
+      customWhy: typeof draft.customWhy === 'string' ? draft.customWhy : '',
+      chains: typeof draft.chains === 'string' ? draft.chains : '',
+      whyOverrides: Array.isArray(draft.whyOverrides)
+        ? draft.whyOverrides.filter((x): x is string => typeof x === 'string')
         : [],
-      stepsOverrides: Array.isArray(o.stepsOverrides)
-        ? o.stepsOverrides.filter((x): x is string => typeof x === 'string')
+      stepsOverrides: Array.isArray(draft.stepsOverrides)
+        ? draft.stepsOverrides.filter((x): x is string => typeof x === 'string')
         : [],
+      nextStep: typeof draft.nextStep === 'string' ? draft.nextStep : '',
+      blockerNote: typeof draft.blockerNote === 'string' ? draft.blockerNote : '',
     };
   } catch {
     return null;

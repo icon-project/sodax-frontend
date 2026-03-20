@@ -76,6 +76,8 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
     const chains = get('chains');
     const whys = get('whys');
     const steps = get('steps');
+    const ns = get('ns');
+    const blocker = get('blocker');
 
     const isBdPath =
       pathname === INTEGRATION_ROADMAP_BD_ROUTE || pathname?.startsWith(`${INTEGRATION_ROADMAP_BD_ROUTE}/`);
@@ -90,6 +92,8 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
       chains: chains ?? '',
       whyOverrides: whys ? whys.split('\n').filter(Boolean) : [],
       stepsOverrides: steps ? steps.split('\n').filter(Boolean) : [],
+      nextStep: ns ?? '',
+      blockerNote: blocker ?? '',
     };
 
     // When URL has no BD params, auto-load saved draft so the user sees their last options after reload (better UX).
@@ -101,7 +105,9 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
       (why ?? '') !== '' ||
       (chains ?? '') !== '' ||
       (whys ?? '') !== '' ||
-      (steps ?? '') !== '';
+      (steps ?? '') !== '' ||
+      (ns ?? '') !== '' ||
+      (blocker ?? '') !== '';
     const draft = isBdPath && !hasBdParamsFromUrl ? loadDraftFromStorage() : null;
     setBdConfig(draft ?? fromUrl);
 
@@ -302,12 +308,17 @@ export function IntegrationRoadmapUi(): React.JSX.Element {
               <div className="flex gap-2 items-center">
                 <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="shrink-0" />
                 <h1 className="font-bold text-[26px] sm:text-[32px] leading-[1.1] text-espresso">
-                  {bdMode ? 'Integration Roadmap — Partner follow-up' : 'Integration Roadmap'}
+                  Integration Roadmap
+                  {bdMode && (
+                    <span className="ml-2 inline-flex items-center h-6 px-2.5 rounded-full bg-yellow-soda/25 text-[12px] font-semibold text-cherry-dark align-middle">
+                      BD
+                    </span>
+                  )}
                 </h1>
               </div>
               <p className="font-normal text-[14px] sm:text-[16px] leading-[1.4] text-espresso text-center max-w-full md:max-w-140">
                 {bdMode
-                  ? 'Enter the partner name, generate the roadmap, then personalize in the BD Composer and copy the prospect link to send after your call.'
+                  ? 'Type the partner name → get their tailored roadmap → copy the prospect link and send it after your call.'
                   : INTEGRATION_ROADMAP_COPY.publicDescription}
               </p>
             </motion.div>
