@@ -41,15 +41,9 @@ const HUB_RPC_URL = IS_TESTNET ? 'https://rpc.testnet.soniclabs.com' : 'https://
 const SPOKE_RPC_URL = IS_TESTNET ? 'https://api.testnet.hiro.so' : 'https://api.mainnet.hiro.so';
 const SPOKE_CHAIN_ID = STACKS_MAINNET_CHAIN_ID;
 
-const stacksNetwork = IS_TESTNET ? 'testnet' : 'mainnet';
-const stacksWalletProvider = new StacksWalletProvider(privateKey, stacksNetwork);
+const stacksWalletProvider = new StacksWalletProvider({ privateKey, endpoint: SPOKE_RPC_URL });
 const stacksSpokeChainConfig = spokeChainConfig[SPOKE_CHAIN_ID] as StacksSpokeChainConfig;
-const stacksSpokeProvider = new StacksSpokeProvider(
-  stacksSpokeChainConfig,
-  stacksWalletProvider,
-  stacksNetwork,
-  SPOKE_RPC_URL,
-);
+const stacksSpokeProvider = new StacksSpokeProvider(stacksSpokeChainConfig, stacksWalletProvider);
 
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
@@ -234,12 +228,7 @@ async function repay(token: Address, amount: bigint) {
     hubProvider,
   );
 
-  const data: Hex = sodax.moneyMarket.buildRepayData(
-    STACKS_MAINNET_CHAIN_ID,
-    token,
-    amount,
-    hubWallet,
-  );
+  const data: Hex = sodax.moneyMarket.buildRepayData(STACKS_MAINNET_CHAIN_ID, token, amount, hubWallet);
 
   const txHash: string = await SpokeService.deposit(
     {

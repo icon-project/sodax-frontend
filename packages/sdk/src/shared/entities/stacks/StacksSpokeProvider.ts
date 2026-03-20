@@ -1,4 +1,9 @@
-import type { IStacksWalletProvider, StacksSpokeChainConfig, StacksTransactionParams, WalletAddressProvider } from '@sodax/types';
+import type {
+  IStacksWalletProvider,
+  StacksSpokeChainConfig,
+  StacksTransactionParams,
+  WalletAddressProvider,
+} from '@sodax/types';
 import type { IRawSpokeProvider, ISpokeProvider } from '../Providers.js';
 import { networkFrom, type StacksNetwork } from '@stacks/network';
 import {
@@ -15,10 +20,10 @@ abstract class StacksBaseSpokeProvider {
   public chainConfig: StacksSpokeChainConfig;
   protected network: StacksNetwork;
 
-  constructor(config: StacksSpokeChainConfig, network: 'testnet' | 'mainnet' = 'mainnet', rpcUrl?: string) {
+  constructor(config: StacksSpokeChainConfig) {
     this.chainConfig = config;
-    this.network = networkFrom(network);
-    this.network.client.baseUrl = rpcUrl ?? this.network.client.baseUrl;
+    this.network = networkFrom('mainnet');
+    this.network.client.baseUrl = config.rpcUrl;
   }
 
   async getSTXBalance(address: string): Promise<bigint> {
@@ -63,13 +68,8 @@ abstract class StacksBaseSpokeProvider {
 export class StacksSpokeProvider extends StacksBaseSpokeProvider implements ISpokeProvider {
   public readonly walletProvider: IStacksWalletProvider;
 
-  constructor(
-    config: StacksSpokeChainConfig,
-    walletProvider: IStacksWalletProvider,
-    network: 'testnet' | 'mainnet' = 'mainnet',
-    rpcUrl?: string,
-  ) {
-    super(config, network, rpcUrl);
+  constructor(config: StacksSpokeChainConfig, walletProvider: IStacksWalletProvider) {
+    super(config);
     this.walletProvider = walletProvider;
   }
 
@@ -81,16 +81,14 @@ export class StacksSpokeProvider extends StacksBaseSpokeProvider implements ISpo
 export type StacksRawSpokeProviderConfig = {
   walletAddress: string;
   chainConfig: StacksSpokeChainConfig;
-  network?: 'testnet' | 'mainnet';
-  rpcUrl?: string;
 };
 
 export class StacksRawSpokeProvider extends StacksBaseSpokeProvider implements IRawSpokeProvider {
   public readonly walletProvider: WalletAddressProvider;
   public readonly raw = true;
 
-  constructor(walletAddress: string, config: StacksSpokeChainConfig, network: 'testnet' | 'mainnet' = 'mainnet', rpcUrl?: string) {
-    super(config, network, rpcUrl);
+  constructor(walletAddress: string, config: StacksSpokeChainConfig) {
+    super(config);
     this.walletProvider = {
       getWalletAddress: async () => walletAddress,
     };

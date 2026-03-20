@@ -1,15 +1,16 @@
 import { XService } from '@/core/XService';
 import type { XToken } from '@sodax/types';
 import { fetchCallReadOnlyFunction, Cl, type UIntCV, type ResponseOkCV } from '@stacks/transactions';
-import { networkFrom } from '@stacks/network';
-
-const STACKS_API_BASE_URL = 'https://api.mainnet.hiro.so';
+import { networkFrom, type StacksNetwork } from '@stacks/network';
 
 export class StacksXService extends XService {
   private static instance: StacksXService;
 
+  public network: StacksNetwork | undefined;
+
   private constructor() {
     super('STACKS');
+    this.network = networkFrom('mainnet');
   }
 
   public static getInstance(): StacksXService {
@@ -24,7 +25,7 @@ export class StacksXService extends XService {
 
     // native STX balance
     if (xToken.symbol === 'STX') {
-      const url = `${STACKS_API_BASE_URL}/extended/v1/address/${address}/balances`;
+      const url = `${this.network?.client.baseUrl}/extended/v1/address/${address}/balances`;
       try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -46,7 +47,7 @@ export class StacksXService extends XService {
         contractName,
         functionName: 'get-balance',
         functionArgs: [Cl.principal(address)],
-        network: networkFrom('mainnet'),
+        network: this.network,
         senderAddress: address,
       })) as ResponseOkCV<UIntCV>;
       return result.value.value as bigint;

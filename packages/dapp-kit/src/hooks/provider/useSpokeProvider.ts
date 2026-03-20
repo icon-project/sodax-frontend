@@ -132,7 +132,12 @@ export function useSpokeProvider(
 
     if (xChainType === 'STACKS') {
       return new StacksSpokeProvider(
-        spokeChainConfig[spokeChainId] as StacksSpokeChainConfig,
+        rpcConfig[spokeChainId]
+          ? ({
+              ...spokeChainConfig[spokeChainId],
+              rpcUrl: rpcConfig[spokeChainId],
+            } as StacksSpokeChainConfig)
+          : (spokeChainConfig[spokeChainId] as StacksSpokeChainConfig),
         walletProvider as IStacksWalletProvider,
       );
     }

@@ -18,7 +18,7 @@ import {
   StellarWalletProvider,
   SolanaWalletProvider,
   NearWalletProvider,
-  StacksBrowserWalletProvider,
+  StacksWalletProvider,
 } from '@sodax/wallet-sdk-core';
 import { getXChainType } from '../actions';
 import { usePublicClient, useWalletClient } from 'wagmi';
@@ -172,7 +172,7 @@ export function useWalletProvider(
           c => c.id === stacksConnection?.xConnectorId,
         ) as StacksXConnector | undefined;
 
-        return new StacksBrowserWalletProvider(address, 'mainnet', activeStacksConnector?.getProvider());
+        return new StacksWalletProvider({ address, provider: activeStacksConnector?.getProvider() });
       }
 
       default:
