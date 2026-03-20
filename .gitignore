@@ -17,8 +17,8 @@ public/dist
 
 # Claude Code local settings
 .claude/settings.local.json
+.claude/docs/
 
 # Agent skills (local to VSCode)
 .agents/
 .github/skills/
-

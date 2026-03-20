@@ -48,11 +48,14 @@ import type {
   SuiSpokeChainConfig,
   SolanaChainConfig,
   BaseSpokeChainConfig,
+  ConcentratedLiquidityConfig,
   NearRawTransaction,
   EvmChainId,
 } from '@sodax/types';
 import type { InjectiveSpokeDepositParams } from './services/spoke/InjectiveSpokeService.js';
 import type { StacksSpokeDepositParams } from './services/spoke/StacksSpokeService.js';
+import type { BitcoinRawSpokeProvider, BitcoinSpokeProvider } from './entities/btc/BitcoinSpokeProvider.js';
+import type { BitcoinSpokeDepositParams } from './services/spoke/BitcoinSpokeService.js';
 import type { NearRawSpokeProvider, NearSpokeProvider } from './entities/near/NearSpokeProvider.js';
 import type { NearSpokeDepositParams } from './services/spoke/NearSpokeService.js';
 import type { Finality } from '@solana/web3.js';
@@ -63,6 +66,7 @@ export type LegacybnUSDToken = (typeof bnUSDLegacyTokens)[number];
 export type NewbnUSDChainId = (typeof newbnUSDSpokeChainIds)[number];
 
 export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & PartnerFeeConfig & RelayerApiConfig>;
+export type ClServiceConfig = Prettify<ConcentratedLiquidityConfig & RelayerApiConfig>;
 export type SwapServiceConfig = Prettify<SolverConfig & PartnerFeeConfig & RelayerApiConfig>;
 export type MigrationServiceConfig = Prettify<RelayerApiConfig>;
 export type BridgeServiceConfig = Optional<PartnerFeeConfig, 'partnerFee'>;
@@ -177,6 +181,8 @@ export type FeeAmount = {
 
 export type OptionalFee = { fee?: PartnerFee };
 
+export type OptionalSkipSimulation = { skipSimulation?: boolean };
+
 export type EvmTxReturnType<T extends boolean> = T extends true ? TransactionReceipt : Hex;
 
 export type IconContractAddress = `cx${string}`;
@@ -185,7 +191,14 @@ export type IcxTokenType =
   | (typeof spokeChainConfig)[typeof ICON_MAINNET_CHAIN_ID]['nativeToken'];
 export type Result<T, E = Error | unknown> = { ok: true; value: T } | { ok: false; error: E };
 
-export type SpokeDepositParams = EvmSpokeDepositParams | InjectiveSpokeDepositParams | IconSpokeDepositParams;
+export type SpokeDepositParams =
+  | EvmSpokeDepositParams
+  | InjectiveSpokeDepositParams
+  | SuiSpokeDepositParams
+  | IconSpokeDepositParams
+  | StellarSpokeDepositParams
+  | SolanaSpokeDepositParams
+  | SonicSpokeDepositParams;
 
 export type GetSpokeDepositParamsType<T extends SpokeProviderType> = T extends EvmSpokeProvider
   ? EvmSpokeDepositParams
@@ -219,11 +232,15 @@ export type GetSpokeDepositParamsType<T extends SpokeProviderType> = T extends E
                               ? StacksSpokeDepositParams
                               : T extends StacksRawSpokeProvider
                                 ? StacksSpokeDepositParams
-                                : T extends NearSpokeProvider
-                                ? NearSpokeDepositParams
-                                : T extends NearRawSpokeProvider
-                                  ? NearSpokeDepositParams
-                                  : never;
+                                : T extends BitcoinSpokeProvider
+                                  ? BitcoinSpokeDepositParams
+                                  : T extends BitcoinRawSpokeProvider
+                                    ? BitcoinSpokeDepositParams
+                                    : T extends NearSpokeProvider
+                                      ? NearSpokeDepositParams
+                                      : T extends NearRawSpokeProvider
+                                        ? NearSpokeDepositParams
+                                        : never;
 
 export type GetAddressType<T extends SpokeProviderType> = T extends EvmSpokeProvider
   ? Address
@@ -487,6 +504,7 @@ export type PromiseTxReturnType<
 export type EvmSpokeProviderType = EvmSpokeProvider | EvmRawSpokeProvider;
 export type SolanaSpokeProviderType = SolanaSpokeProvider | SolanaRawSpokeProvider;
 export type StellarSpokeProviderType = StellarSpokeProvider | StellarRawSpokeProvider;
+export type BitcoinSpokeProviderType = BitcoinSpokeProvider | BitcoinRawSpokeProvider;
 export type IconSpokeProviderType = IconSpokeProvider | IconRawSpokeProvider;
 export type SuiSpokeProviderType = SuiSpokeProvider | SuiRawSpokeProvider;
 export type InjectiveSpokeProviderType = InjectiveSpokeProvider | InjectiveRawSpokeProvider;
@@ -545,7 +563,7 @@ export type GetEstimateGasReturnType<T extends SpokeProviderType> = T['chainConf
             ? InjectiveGasEstimate
             : GasEstimateType; // default to all gas estimate types union type
 
-export type OptionalRaw<R extends boolean = false> = { raw?: R };
+export type OptionalRaw<R extends boolean> = { raw?: R };
 export type OptionalTimeout = { timeout?: number };
 export type RelayExtraData = { address: Hex; payload: Hex };
 export type RelayOptionalExtraData = { data?: RelayExtraData };
@@ -569,6 +587,13 @@ export type GetChainConfigType<T extends ChainType> = T extends 'EVM'
           : T extends 'INJECTIVE'
             ? InjectiveSpokeChainConfig
             : BaseSpokeChainConfig<T>;
+
+export type RawDestinationParams = {
+  toChainId: SpokeChainId;
+  toAddress: string;
+};
+export type SpokeProviderObjectType = { spokeProvider: SpokeProviderType };
+export type DestinationParamsType = RawDestinationParams | SpokeProviderObjectType;
 
 export type SonicAddressOrSpokeType =
   | {
@@ -617,7 +642,12 @@ export type VerifyTxHashRawEvmConfig = {
 };
 
 export type VerifyTxHashRawConfigType = Prettify<
-  (VerifyTxHashRawSolanaConfig | VerifyTxHashRawStellarConfig | VerifyTxHashRawEvmConfig | VerifyTxHashRawNearConfig) & { chainType: ChainType }
+  (
+    | VerifyTxHashRawSolanaConfig
+    | VerifyTxHashRawStellarConfig
+    | VerifyTxHashRawEvmConfig
+    | VerifyTxHashRawNearConfig
+  ) & { chainType: ChainType }
 >;
 export type VerifyTxHashRawConfig<T extends ChainType> = T extends 'SOLANA'
   ? VerifyTxHashRawSolanaConfig
@@ -627,4 +657,4 @@ export type VerifyTxHashRawConfig<T extends ChainType> = T extends 'SOLANA'
       ? VerifyTxHashRawEvmConfig
       : T extends 'NEAR'
         ? VerifyTxHashRawNearConfig
-      : VerifyTxHashRawConfigType;
+        : VerifyTxHashRawConfigType;

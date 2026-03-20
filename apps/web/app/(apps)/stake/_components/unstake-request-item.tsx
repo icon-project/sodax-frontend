@@ -1,4 +1,3 @@
-// apps/web/app/(apps)/stake/_components/unstake-request-item.tsx
 import type React from 'react';
 import { useMemo, useState, useEffect } from 'react';
 import type { UnstakeRequestWithPenalty, StakingConfig, SpokeProvider } from '@sodax/sdk';
@@ -6,14 +5,13 @@ import { useClaim, useCancelUnstake } from '@sodax/dapp-kit';
 import { formatTokenAmount, getTimeRemaining } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import LoadingThreeDotsJumping from '@/components/shared/loading-three-dots-jumping';
-import { CircleCheck, MinusCircleIcon, XCircleIcon, XIcon } from 'lucide-react';
+import { CircleEllipsis, MinusCircleIcon, XCircleIcon } from 'lucide-react';
 import { useStakeState } from '../_stores/stake-store-provider';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
-import { Dialog, DialogContent, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { chainIdToChainName } from '@/providers/constants';
 import type { ChainId } from '@sodax/types';
-import Image from 'next/image';
+import { SwitchChainDialog } from '@/components/shared/switch-chain-dialog';
+import { trackUnstakeClaimCompleted } from '@/lib/analytics';
 interface UnstakeRequestItemProps {
   request: UnstakeRequestWithPenalty;
   stakingConfig: StakingConfig | undefined;
@@ -92,9 +90,16 @@ export function UnstakeRequestItem({
     }
 
     try {
-      await claim({
+      const [spokeTxHash] = await claim({
         requestId: request.id,
         amount: request.claimableAmount,
+      });
+      trackUnstakeClaimCompleted({
+        request_id: request.id.toString(),
+        claimed_amount: claimableAmountFormatted,
+        penalty_percent: request.penaltyPercentage,
+        source_chain: chainName,
+        transaction_hash: spokeTxHash,
       });
     } catch (error) {
       console.error('Claim error:', error);
@@ -121,16 +126,15 @@ export function UnstakeRequestItem({
   };
 
   const handleSwitchChainClick = (): void => {
-    handleSwitchChain();
-    setIsSwitchChainDialogOpen(false);
+    void handleSwitchChain();
   };
 
   return (
     <div className="w-full inline-flex flex-col justify-start items-start gap-4">
       <div className="w-full flex flex-col justify-start items-start gap-1">
         <div className="inline-flex justify-start items-center gap-2">
-          <div className="justify-center text-clay text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-5">
-            {isReadyToClaim ? 'Unstake complete' : timeRemaining}
+          <div className="justify-center text-clay text-(length:--body-super-comfortable) leading-5">
+            {isReadyToClaim ? 'Ready to claim' : timeRemaining}
           </div>
           {isReadyToClaim ? null : <LoadingThreeDotsJumping />}
         </div>
@@ -139,29 +143,29 @@ export function UnstakeRequestItem({
           <div className="justify-center">
             {isReadyToClaim ? (
               <>
-                <span className="text-espresso text-(length:--body-small) font-['InterBold'] leading-4">
+                <span className="text-espresso text-(length:--body-small) font-bold leading-4">
                   {totalAmountFormatted} SODA
                 </span>
               </>
             ) : (
               <>
-                <span className="text-espresso text-(length:--body-small) font-['InterBold'] leading-4">
+                <span className="text-espresso text-(length:--body-small) font-bold leading-4">
                   {claimableAmountFormatted}
                 </span>
-                <span className="text-clay text-(length:--body-small) font-normal font-['InterRegular'] leading-4">
-                  {' '}
-                  / {totalAmountFormatted} SODA
-                </span>
+                <span className="text-clay text-(length:--body-small) leading-4"> / {totalAmountFormatted} SODA</span>
               </>
             )}
           </div>
-          <div className="justify-center text-clay text-(length:--body-fine-print) font-normal font-['InterRegular'] leading-3">
-            {isReadyToClaim ? 'Ready to claim' : completionDate && <>{completionDate}</>}
+          <div className="justify-center text-clay text-(length:--body-fine-print) leading-3">
+            {isReadyToClaim ? null : completionDate || null}
           </div>
         </div>
       </div>
 
-      <Progress value={progressPercentage} className="h-1 bg-almost-white rounded-[40px] [&>div]:bg-clay-light" />
+      <Progress
+        value={progressPercentage}
+        className="h-1 bg-almost-white rounded-[40px] [&>div]:bg-clay-light mix-blend-multiply"
+      />
 
       <div className="inline-flex justify-start items-center gap-4">
         {isReadyToClaim ? (
@@ -171,10 +175,8 @@ export function UnstakeRequestItem({
             disabled={isClaiming || isCancellingUnstake || !spokeProvider}
             className="rounded-2xl flex justify-center items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
           >
-            <CircleCheck className="w-4 h-4" />
-            <div className="justify-start text-clay text-(length:--body-small) font-normal font-['InterRegular'] leading-4">
-              Claim full value
-            </div>
+            <CircleEllipsis className="w-4 h-4" />{' '}
+            <div className="justify-start text-clay text-(length:--body-small) leading-4">Claim full value</div>
           </button>
         ) : (
           <>
@@ -185,7 +187,7 @@ export function UnstakeRequestItem({
               className="rounded-2xl flex justify-center items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
             >
               <MinusCircleIcon className="w-4 h-4" />
-              <div className="justify-start text-clay text-(length:--body-small) font-normal font-['InterRegular'] leading-4">
+              <div className="justify-start text-clay text-(length:--body-small) leading-4">
                 {isClaiming ? 'Claiming...' : `Claim early –${penaltyPercentage}%`}
               </div>
             </button>
@@ -196,7 +198,7 @@ export function UnstakeRequestItem({
               className="rounded-2xl flex justify-center items-center gap-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
             >
               <XCircleIcon className="w-4 h-4" />
-              <div className="justify-start text-clay text-(length:--body-small) font-normal font-['InterRegular'] leading-4">
+              <div className="justify-start text-clay text-(length:--body-small) leading-4">
                 {isCancellingUnstake ? 'Cancelling...' : 'Cancel'}
               </div>
             </button>
@@ -204,29 +206,14 @@ export function UnstakeRequestItem({
         )}
       </div>
 
-      <Dialog open={isSwitchChainDialogOpen} onOpenChange={setIsSwitchChainDialogOpen}>
-        <DialogContent className="w-full md:!max-w-[480px] p-8 md:p-12 gap-6 bg-vibrant-white" hideCloseButton>
-          <div className="inline-flex justify-start items-center gap-2 w-full">
-            <Image src="/symbol_dark.png" alt="SODAX Symbol" width={16} height={16} className="mix-blend-multiply" />
-            <DialogTitle className="mix-blend-multiply text-espresso font-['InterBold'] leading-snug text-(size:--body-super-comfortable) flex justify-between items-center w-full">
-              Switch to {chainName} to claim
-              <DialogClose asChild>
-                <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />
-              </DialogClose>
-            </DialogTitle>
-          </div>
-          <div className="flex flex-col gap-4">
-            <p className="text-clay text-(length:--body-comfortable) font-normal font-['InterRegular'] leading-5">
-              Your SODA is ready to claim on {chainName}.
-            </p>
-          </div>
-          <DialogFooter className="flex justify-end gap-2">
-            <Button type="button" variant="cherry" onClick={handleSwitchChainClick}>
-              Switch to {chainName}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SwitchChainDialog
+        open={isSwitchChainDialogOpen}
+        onOpenChange={setIsSwitchChainDialogOpen}
+        chainName={chainName}
+        onSwitchChain={handleSwitchChainClick}
+        titleAction="claim"
+        description={`Your SODA is ready to claim on ${chainName}.`}
+      />
     </div>
   );
 }

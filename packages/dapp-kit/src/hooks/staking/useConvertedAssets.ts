@@ -23,12 +23,12 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 export function useConvertedAssets(amount: bigint | undefined, refetchInterval = 10000): UseQueryResult<bigint, Error> {
   const { sodax } = useSodaxContext();
 
-  console.log('useConvertedAssets hook called with:', { amount: amount?.toString(), sodax: !!sodax });
+  // console.log('useConvertedAssets hook called with:', { amount: amount?.toString(), sodax: !!sodax });
 
   return useQuery({
     queryKey: ['soda', 'convertedAssets', amount?.toString()],
     queryFn: async () => {
-      console.log('useConvertedAssets queryFn called with amount:', amount?.toString());
+      // console.log('useConvertedAssets queryFn called with amount:', amount?.toString());
       if (!amount || amount <= 0n) {
         throw new Error('Amount must be greater than 0');
       }

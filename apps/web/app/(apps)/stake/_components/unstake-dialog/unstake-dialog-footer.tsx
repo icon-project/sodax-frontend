@@ -24,6 +24,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ArrowLeft, Check, CheckIcon, FilePenLine, Loader2Icon } from 'lucide-react';
 import { chainIdToChainName } from '@/providers/constants';
 import BigNumber from 'bignumber.js';
+import { formatUnits } from 'viem';
+import { trackUnstakeCompleted } from '@/lib/analytics';
 interface UnstakeDialogFooterProps {
   selectedToken: XToken | null;
   scaledUnstakeAmount: bigint | undefined;
@@ -210,10 +212,26 @@ export default function UnstakeDialogFooter({
 
     try {
       onError?.(null);
+      let spokeTxHash: string | undefined;
       if (unstakeMethod === UNSTAKE_METHOD.INSTANT && instantUnstakeParams) {
-        await instantUnstake(instantUnstakeParams);
+        const [txHash] = await instantUnstake(instantUnstakeParams);
+        spokeTxHash = txHash;
       } else if (unstakeMethod === UNSTAKE_METHOD.REGULAR && regularUnstakeParams) {
-        await unstake(regularUnstakeParams);
+        const [txHash] = await unstake(regularUnstakeParams);
+        spokeTxHash = txHash;
+      }
+      if (spokeTxHash && selectedToken && scaledUnstakeAmount) {
+        const isInstant = unstakeMethod === UNSTAKE_METHOD.INSTANT;
+        trackUnstakeCompleted({
+          amount_xsoda: formatUnits(scaledUnstakeAmount, 18),
+          expected_soda: isInstant
+            ? formatUnits(instantUnstakeRatio ?? 0n, 18)
+            : formatUnits(convertedAssets ?? 0n, 18),
+          method: isInstant ? 'instant' : 'regular',
+          ...(isInstant && penaltyPercentage !== undefined && { penalty_percent: penaltyPercentage }),
+          source_chain: chainIdToChainName(selectedToken.xChainId as ChainId),
+          transaction_hash: spokeTxHash,
+        });
       }
       setIsCompleted(true);
       onCompletedChange?.(true);
@@ -235,7 +253,7 @@ export default function UnstakeDialogFooter({
         : true) && (
         <Button
           variant="cherry"
-          className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
+          className={`text-white transition-all duration-300 ease-in-out ${
             isMobile
               ? 'w-full'
               : currentUnstakeStep !== UNSTAKE_STEP.UNSTAKE_CHOOSE_TYPE
@@ -267,7 +285,7 @@ export default function UnstakeDialogFooter({
           <>
             <Button
               variant="cherry"
-              className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
+              className={`text-white transition-all duration-300 ease-in-out ${
                 isMobile ? 'w-full' : currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_APPROVE ? 'flex-1' : 'w-[40px]'
               }`}
               onClick={handleApprove}
@@ -292,7 +310,7 @@ export default function UnstakeDialogFooter({
         (isCompleted ? (
           <Button
             variant="cherry"
-            className={`text-white font-['InterRegular'] rounded-full p-0 flex items-center justify-center gap-1 ${
+            className={`text-white rounded-full p-0 flex items-center justify-center gap-1 ${
               isMobile ? 'w-full' : 'flex-1'
             }`}
             onClick={onClose}
@@ -303,7 +321,7 @@ export default function UnstakeDialogFooter({
         ) : (
           <Button
             variant="cherry"
-            className={`text-white font-['InterRegular'] transition-all duration-300 ease-in-out ${
+            className={`text-white transition-all duration-300 ease-in-out ${
               isMobile
                 ? 'w-full'
                 : currentUnstakeStep === UNSTAKE_STEP.UNSTAKE_CONFIRM || isApproved

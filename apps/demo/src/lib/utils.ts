@@ -1,7 +1,17 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import BigNumber from 'bignumber.js';
-import { hubAssets, SolverIntentStatusCode, type SpokeChainId } from '@sodax/sdk';
+import {
+  hubAssets,
+  moneyMarketSupportedTokens,
+  SolverIntentStatusCode,
+  supportedSpokeChains,
+  spokeChainConfig,
+  type XToken,
+  type SpokeChainId,
+  type ChainId,
+} from '@sodax/sdk';
+import { getChainUI } from './chains';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -30,6 +40,72 @@ export function formatTokenAmount(amount: number | string | bigint, decimals: nu
   return new BigNumber(amount.toString())
     .dividedBy(new BigNumber(10).pow(decimals))
     .toFixed(displayDecimals, BigNumber.ROUND_DOWN);
+}
+
+/**
+ * Truncates a decimal string to at most maxDecimals fractional digits (no rounding).
+ * Trims trailing zeros. For non-zero values that truncate to "0" (e.g. 0.00005 with 4 decimals),
+ * returns a "< threshold" hint instead so the user knows the value is small but non-zero.
+ */
+export function formatDecimalForDisplay(value: string, maxDecimals: number): string {
+  const trimmedInput = value.trim();
+  // Reject empty or non-numeric input
+  if (trimmedInput === '') return '0';
+  const num = Number.parseFloat(trimmedInput);
+  if (!Number.isFinite(num)) return '0';
+  if (trimmedInput === '0') return '0';
+  // Use trimmedInput (not value) so spaces and edge cases are handled consistently.
+  const [intPart, fracPart = ''] = trimmedInput.split('.');
+  const truncated = fracPart.slice(0, maxDecimals);
+  const combined = truncated.length > 0 ? `${intPart}.${truncated}` : intPart;
+  const trimmed = combined.replace(/\.?0+$/, '');
+
+  // Tiny positive value that truncates to "0" → show "<0.00...1" so user sees it's non-zero.
+  if (trimmed === '0' && num > 0) {
+    const threshold = `0.${'0'.repeat(Math.max(0, maxDecimals - 1))}1`;
+    return `<${threshold}`;
+  }
+
+  if (trimmed === '-0' || (trimmed.startsWith('-0.') && /^-0\.?0*$/.test(trimmed))) {
+    return '0';
+  }
+  return trimmed;
+}
+
+/**
+ * Safely truncates a decimal string for "Max" form-fill without rounding up.
+ *
+ * Purpose:
+ * - Keep the value parseable by `parseUnits` while avoiding floating-point rounding that could
+ *   produce a value slightly greater than the true max (and fail "exceeds max" validation ).
+ *
+ * Behavior:
+ * - If `value` has a fractional part, keep the first non-zero fractional digit plus a few extra
+ *   digits (default: +3), with a minimum number of decimals (default: 6).
+ * - Trims trailing zeros and removes the trailing dot if needed.
+ */
+export function getSafeMaxAmountForInput(
+  value: string,
+  {
+    minDecimals = 6,
+    extraDecimalsAfterFirstNonZero = 3,
+  }: { minDecimals?: number; extraDecimalsAfterFirstNonZero?: number } = {},
+): string {
+  const trimmed = value.trim();
+  if (trimmed === '') return '';
+
+  const dotIndex = trimmed.indexOf('.');
+  if (dotIndex < 0) return trimmed;
+
+  const intPart = trimmed.slice(0, dotIndex);
+  const fracPart = trimmed.slice(dotIndex + 1);
+
+  const firstNonZero = fracPart.search(/[1-9]/);
+  const decimalsFromFirstNonZero = firstNonZero < 0 ? minDecimals : firstNonZero + 1 + extraDecimalsAfterFirstNonZero;
+  const decimalPlaces = Math.max(minDecimals, decimalsFromFirstNonZero);
+
+  const next = `${intPart}.${fracPart.slice(0, decimalPlaces)}`;
+  return next.replace(/\.?0+$/, '');
 }
 
 export function calculateExchangeRate(amount: BigNumber, toAmount: BigNumber): BigNumber {
@@ -140,6 +216,52 @@ export function getReadableTxError(error: unknown): string {
   return 'Transaction failed. Please try again.';
 }
 
+export function createDexTokenIdsStorageKey(chainId: SpokeChainId, userAddress: string): string {
+  return `sodax-dex-positions-${chainId}-${userAddress}`;
+}
+
+export function saveTokenIdToLocalStorage(userAddress: string, chainId: SpokeChainId, tokenId: string): void {
+  const cleanId = tokenId.trim().toLowerCase();
+  const positions = getTokenIdsFromLocalStorage(chainId, userAddress);
+
+  const hasDuplicate = positions.some(id => id.trim().toLowerCase() === cleanId);
+
+  if (!hasDuplicate) {
+    positions.push(tokenId.trim());
+    localStorage.setItem(
+      createDexTokenIdsStorageKey(chainId, userAddress),
+      positions.join(',')
+    );
+  } else {
+    console.warn(`Token ID ${tokenId} already exists for user ${userAddress}`);
+  }
+}
+
+export function getTokenIdsFromLocalStorage(chainId: SpokeChainId, userAddress: string): string[] {
+  const positions = localStorage.getItem(createDexTokenIdsStorageKey(chainId, userAddress));
+  if (!positions) {
+    return [];
+  }
+  return positions.split(',').map(v => v.trim());
+}
+
+export function removeTokenIdFromLocalStorage(chainId: SpokeChainId, userAddress: string, tokenId: string): void {
+  const positions = getTokenIdsFromLocalStorage(chainId, userAddress);
+  if (!positions) {
+    return;
+  }
+  if (positions.includes(tokenId)) {
+    positions.splice(positions.indexOf(tokenId), 1);
+    localStorage.setItem(`sodax-dex-positions-${userAddress}`, positions.join(','));
+  } else {
+    console.warn(`Token ID ${tokenId} not found for user ${userAddress}`);
+  }
+}
+
+export function clearTokenIdsFromLocalStorage(userAddress: string): void {
+  localStorage.removeItem(`sodax-dex-positions-${userAddress}`);
+}
+
 export function getHealthFactorState(hf: number) {
   if (hf < 1) {
     return { label: 'At risk', className: 'text-negative' };
@@ -148,4 +270,106 @@ export function getHealthFactorState(hf: number) {
     return { label: 'Moderate Risk', className: 'text-yellow-dark' };
   }
   return { label: 'Low Risk', className: 'text-cherry-soda' };
+}
+
+export function getChainsWithThisToken(token: XToken) {
+  return supportedSpokeChains.filter(chainId =>
+    moneyMarketSupportedTokens[chainId].some(t => t.symbol === token.symbol),
+  );
+}
+
+export function getTokenOnChain(symbol: string, chainId: ChainId): XToken | undefined {
+  const normalizedChainId = String(chainId).toLowerCase();
+
+  return Object.values(moneyMarketSupportedTokens)
+    .flat()
+    .find(t => t.symbol === symbol && t.xChainId === normalizedChainId);
+}
+
+export const getChainExplorerTxUrl = (chainId: string, txHash: string): string | undefined => {
+  const chain = getChainUI(chainId);
+  if (!chain?.explorerTxUrl) return undefined;
+  return `${chain.explorerTxUrl}${txHash}`;
+};
+export function formatCurrencyCompact(value: number): string {
+  const abs = Math.abs(value);
+
+  if (abs < 1000) {
+    return `$${value.toLocaleString()}`;
+  }
+
+  if (abs < 1_000_000) {
+    const num = (value / 1000).toFixed(1);
+    return `$${trimZeros(num)}K`;
+  }
+
+  const num = (value / 1_000_000).toFixed(2);
+  return `$${trimZeros(num)}M`;
+}
+
+function trimZeros(num: string) {
+  return num.replace(/\.?0+$/, '');
+}
+
+export function isTxHash(value: unknown): value is `0x${string}` {
+  return typeof value === 'string' && value.startsWith('0x');
+}
+
+/** Returns the full error message/code for display in MM modals (exact error text). */
+export function getMmErrorText(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  if (error && typeof error === 'object') {
+    const o = error as { message?: string; code?: string; data?: { payload?: string; error?: unknown } };
+
+    // Handle relay timeout errors with a user-friendly message
+    if (o.code === 'RELAY_TIMEOUT') {
+      const txHash = o.data?.payload;
+      if (txHash && typeof txHash === 'string') {
+        return `Transaction timed out while waiting for relay. The transaction may still be processing.\n\nTransaction hash: ${txHash}\n\nPlease check the transaction status on the explorer.`;
+      }
+      return 'Transaction timed out while waiting for relay. The transaction may still be processing. Please check the transaction status on the explorer.';
+    }
+
+    // Handle submit tx failed errors
+    if (o.code === 'SUBMIT_TX_FAILED') {
+      return 'Failed to submit transaction to relay. Please try again.';
+    }
+
+    // Repay/create intent failed (e.g. deposit simulation reverted on hub with "External call failed")
+    if (o.code === 'CREATE_REPAY_INTENT_FAILED') {
+      const detail = o.data?.error;
+      const msg = typeof detail === 'string' ? detail : '';
+      if (msg.includes('External call failed') || msg.includes('Simulation failed')) {
+        return 'Repay simulation failed on the hub. The transfer may not be allowed in current state (e.g. contract conditions). Please try again or use a smaller amount.';
+      }
+      return msg || 'Repay intent could not be created. Please try again.';
+    }
+
+    // Generic repay failure (e.g. unexpected throw)
+    if (o.code === 'REPAY_UNKNOWN_ERROR') {
+      return 'Repay failed. Please try again. If the problem persists, check your balance and allowance.';
+    }
+
+    const part = o.message ?? o.code;
+    if (typeof part === 'string') return part;
+  }
+  return String(error);
+}
+
+/**
+ * Gets the native token symbol for a given chain ID (e.g., ETH for Arbitrum, AVAX for Avalanche).
+ * Used for displaying gas fee requirements to users.
+ */
+export function getNativeTokenSymbol(chainId: ChainId): string {
+  const config = spokeChainConfig[chainId as SpokeChainId];
+  if (!config) return 'native token';
+
+  // Find the token with address matching nativeToken (0x0000... for EVM chains)
+  const nativeTokenAddress = config.nativeToken;
+  const nativeToken = Object.values(config.supportedTokens).find(
+    token => token.address.toLowerCase() === nativeTokenAddress.toLowerCase(),
+  );
+
+  return nativeToken?.symbol ?? 'native token';
 }

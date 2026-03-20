@@ -7,3 +7,4 @@ export * from './near/index.js';
 export * from './Sodax.js';
 export * from './Providers.js';
 export * from './stacks/index.js';
+export * from './btc/index.js';

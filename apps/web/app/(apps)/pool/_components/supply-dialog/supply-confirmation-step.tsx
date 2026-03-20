@@ -2,8 +2,12 @@ import CurrencyLogo from '@/components/shared/currency-logo';
 import { usePoolState } from '../../_stores/pool-store-provider';
 import type { XToken } from '@sodax/types';
 import { formatBalance } from '@/lib/utils';
+import { ShieldAlertIcon } from 'lucide-react';
 
-export default function SupplyConfirmationStep() {
+interface SupplyConfirmationStepProps {
+  supplyError: { title: string; message: string } | null;
+}
+export default function SupplyConfirmationStep({ supplyError }: SupplyConfirmationStepProps) {
   const { selectedToken, minPrice, maxPrice, sodaAmount, xSodaAmount } = usePoolState();
   const xSodaToken: XToken = {
     name: 'xSODA',
@@ -15,14 +19,28 @@ export default function SupplyConfirmationStep() {
 
   return (
     <div className="flex flex-col items-center mt-4">
-      <div className="flex flex-col text-center">
-        <div className="text-espresso text-(length:--body-super-comfortable) font-['InterBold'] leading-[1.4]">
-          Create liquidity position
+      {supplyError ? (
+        <div className="flex flex-col text-center">
+          <div className="flex justify-center gap-1 w-full items-center">
+            <ShieldAlertIcon className="w-4 h-4 text-negative" />
+            <span className="font-['InterBold'] text-(length:--body-super-comfortable) leading-[1.4] text-negative">
+              {supplyError.title}
+            </span>
+          </div>
+          <div className="text-espresso text-(length:--body-small) font-medium font-['InterRegular'] text-center leading-[1.4]">
+            {supplyError.message}
+          </div>
         </div>
-        <div className="text-clay text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">
-          Takes ~10 secs
+      ) : (
+        <div className="flex flex-col text-center">
+          <div className="text-espresso text-(length:--body-super-comfortable) font-['InterBold'] leading-[1.4]">
+            Create liquidity position
+          </div>
+          <div className="text-clay text-(length:--body-small) font-medium font-['InterRegular'] leading-[1.4]">
+            Takes ~10 secs
+          </div>
         </div>
-      </div>
+      )}
       <div className="pb-6 flex justify-between items-center mt-4">
         <div className="self-stretch inline-flex flex-col justify-start items-center gap-2">
           <div className="self-stretch inline-flex justify-center items-center gap-4">

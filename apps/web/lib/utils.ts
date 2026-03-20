@@ -295,13 +295,13 @@ export function formatCompactNumber(value: string | number | bigint): string {
 
   if (!Number.isFinite(num)) return '-';
 
-  if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(4).replace(/\.?0+$/, '')}B`;
+  if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(2).replace(/\.?0+$/, '')}B`;
 
-  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(4).replace(/\.?0+$/, '')}M`;
+  if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(2).replace(/\.?0+$/, '')}M`;
 
-  if (num >= 1_000) return `${(num / 1_000).toFixed(4).replace(/\.?0+$/, '')}K`;
+  if (num >= 1_000) return `${(num / 1_000).toFixed(2).replace(/\.?0+$/, '')}K`;
 
-  return num.toFixed(4);
+  return num.toFixed(2);
 }
 
 /**

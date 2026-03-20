@@ -127,7 +127,7 @@ export default function SwapReviewButton({
           onClick={handleActivateStellarAccount}
           disabled={isActivatingStellarAccount || isSwapAndSend}
         >
-          {isActivatingStellarAccount ? 'Activating Stellar Account' : 'Activate Stellar Account'}
+          {isActivatingStellarAccount ? 'Activating Stellar' : 'Activate Stellar'}
           {isActivatingStellarAccount && <Loader2 className="w-4 h-4 animate-spin" />}
         </Button>
       ) : outputToken.xChainId === STELLAR_MAINNET_CHAIN_ID &&

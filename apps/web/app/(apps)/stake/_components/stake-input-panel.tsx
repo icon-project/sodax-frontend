@@ -188,15 +188,12 @@ export function StakeInputPanel(): React.JSX.Element {
                     onChange={e => setStakeTypedValue(e.target.value)}
                     disabled={isSliderDisabled}
                     className={cn(
-                      "pl-6 pr-4 text-espresso text-(length:--body-comfortable) placeholder:text-clay-light font-['InterRegular']",
+                      'pl-6 pr-4 text-espresso text-(length:--body-comfortable) placeholder:text-clay-light',
                     )}
                   />
                   <InputGroupAddon align="inline-end">
                     <InputGroupText
-                      className={cn(
-                        'text-cherry-grey text-(length:--body-comfortable) font-normal font-["InterRegular"]',
-                        stakeTypedValue && 'hidden',
-                      )}
+                      className={cn('text-cherry-grey text-(length:--body-comfortable)', stakeTypedValue && 'hidden')}
                     >
                       {stakeMode === STAKE_MODE.STAKING ? 'SODA' : 'xSODA'}
                     </InputGroupText>
@@ -215,7 +212,12 @@ export function StakeInputPanel(): React.JSX.Element {
                 className="flex"
               >
                 {stakeMode === STAKE_MODE.STAKING ? (
-                  !walletConnected && selectedToken ? (
+                  !selectedToken ? (
+                    // Initial stake state stays on "Choose a network" with a disabled "Stake" button.
+                    <Button variant="cherry" className="px-6 w-25" onClick={handleStake} disabled={true}>
+                      Stake
+                    </Button>
+                  ) : !walletConnected && selectedToken ? (
                     <Button variant="cherry" className="px-6" onClick={() => handleConnect()}>
                       Connect {getChainName(selectedToken.xChainId)}
                     </Button>
@@ -229,7 +231,7 @@ export function StakeInputPanel(): React.JSX.Element {
                       onClick={handleActivateStellarAccount}
                       disabled={isActivatingStellarAccount}
                     >
-                      {isActivatingStellarAccount ? 'Activating Stellar Account' : 'Activate Stellar Account'}
+                      {isActivatingStellarAccount ? 'Activating Stellar' : 'Activate Stellar'}
                       {isActivatingStellarAccount && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
                     </Button>
                   ) : isStellarChain &&
@@ -273,7 +275,7 @@ export function StakeInputPanel(): React.JSX.Element {
                     onClick={handleActivateStellarAccount}
                     disabled={isActivatingStellarAccount}
                   >
-                    {isActivatingStellarAccount ? 'Activating Stellar Account' : 'Activate Stellar Account'}
+                    {isActivatingStellarAccount ? 'Activating Stellar' : 'Activate Stellar'}
                     {isActivatingStellarAccount && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
                   </Button>
                 ) : isStellarChain &&

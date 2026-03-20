@@ -19,6 +19,10 @@ import type {
   GetSwapTokensByChainIdApiResponse,
   IConfigApi,
   SpokeChainId,
+  SubmitSwapTxRequest,
+  SubmitSwapTxResponse,
+  GetSubmitSwapTxStatusParams,
+  SubmitSwapTxStatusResponse,
 } from '@sodax/types';
 import {
   DEFAULT_BACKEND_API_ENDPOINT,
@@ -26,6 +30,7 @@ import {
   DEFAULT_BACKEND_API_TIMEOUT,
 } from '../shared/constants.js';
 import type { BackendApiConfig } from '../shared/types.js';
+import { isSubmitSwapTxResponse, isSubmitSwapTxStatusResponse } from '../shared/guards.js';
 
 // Base types for API responses
 export interface ApiResponse<T = unknown> {
@@ -40,7 +45,14 @@ export interface RequestConfig {
   headers?: Record<string, string>;
   body?: string;
   timeout?: number;
+  baseURL?: string;
 }
+
+export type RequestOverrideConfig = {
+  baseURL?: string;
+  timeout?: number;
+  headers?: Record<string, string>;
+};
 
 // Intent endpoints types
 export interface IntentResponse {
@@ -181,12 +193,13 @@ export class BackendApiService implements IConfigApi {
    * @returns Promise<T>
    */
   private async makeRequest<T>(endpoint: string, config: RequestConfig): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
+    const url = config.baseURL ? `${config.baseURL}${endpoint}` : `${this.baseURL}${endpoint}`;
     const headers = { ...this.defaultHeaders, ...config.headers };
 
     // Create AbortController for timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+    const timeout = config.timeout ?? this.timeout;
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
       const response = await fetch(url, {
@@ -210,7 +223,7 @@ export class BackendApiService implements IConfigApi {
 
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          throw new Error(`Request timeout after ${this.timeout}ms`);
+          throw new Error(`Request timeout after ${timeout}ms`);
         }
         console.error('[BackendApiService] Request error:', error.message);
         throw error;
@@ -228,8 +241,8 @@ export class BackendApiService implements IConfigApi {
    * @param txHash - The intent created transaction hash from the hub chain
    * @returns Promise<IntentResponse>
    */
-  public async getIntentByTxHash(txHash: string): Promise<IntentResponse> {
-    return this.makeRequest<IntentResponse>(`/intent/tx/${txHash}`, { method: 'GET' });
+  public async getIntentByTxHash(txHash: string, config?: RequestOverrideConfig): Promise<IntentResponse> {
+    return this.makeRequest<IntentResponse>(`/intent/tx/${txHash}`, { ...config, method: 'GET' });
   }
 
   /**
@@ -237,8 +250,52 @@ export class BackendApiService implements IConfigApi {
    * @param intentHash - Intent hash
    * @returns Promise<IntentResponse>
    */
-  public async getIntentByHash(intentHash: string): Promise<IntentResponse> {
-    return this.makeRequest<IntentResponse>(`/intent/${intentHash}`, { method: 'GET' });
+  public async getIntentByHash(intentHash: string, config?: RequestOverrideConfig): Promise<IntentResponse> {
+    return this.makeRequest<IntentResponse>(`/intent/${intentHash}`, { ...config, method: 'GET' });
+  }
+
+  // Swap submit-tx endpoints
+  /**
+   * Submit a swap transaction to be processed (relay, post execution to solver, etc.)
+   * @param params - Swap transaction submission data
+   * @returns Promise<SubmitSwapTxResponse>
+   */
+  public async submitSwapTx(
+    params: SubmitSwapTxRequest,
+    config?: RequestOverrideConfig,
+  ): Promise<SubmitSwapTxResponse> {
+    const data = await this.makeRequest<unknown>('/swaps/submit-tx', {
+      ...config,
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+    if (!isSubmitSwapTxResponse(data)) {
+      throw new Error('Invalid submitSwapTx response: unexpected response shape');
+    }
+    return data;
+  }
+
+  /**
+   * Get the processing status of a submitted swap transaction
+   * @param params - Query parameters containing txHash and optional srcChainId
+   * @returns Promise<SubmitSwapTxStatusResponse>
+   */
+  public async getSubmitSwapTxStatus(
+    params: GetSubmitSwapTxStatusParams,
+    config?: RequestOverrideConfig,
+  ): Promise<SubmitSwapTxStatusResponse> {
+    const queryParams = new URLSearchParams();
+    queryParams.append('txHash', params.txHash);
+    if (params.srcChainId) queryParams.append('srcChainId', params.srcChainId);
+
+    const queryString = queryParams.toString();
+    const endpoint = `/swaps/submit-tx/status?${queryString}`;
+
+    const data = await this.makeRequest<unknown>(endpoint, { ...config, method: 'GET' });
+    if (!isSubmitSwapTxStatusResponse(data)) {
+      throw new Error('Invalid submitSwapTxStatus response: unexpected response shape');
+    }
+    return data;
   }
 
   // Solver endpoints
@@ -247,7 +304,10 @@ export class BackendApiService implements IConfigApi {
    * @param params - Object containing offset and limit parameters for pagination
    * @returns Promise<OrderbookResponse>
    */
-  public async getOrderbook(params: { offset: string; limit: string }): Promise<OrderbookResponse> {
+  public async getOrderbook(
+    params: { offset: string; limit: string },
+    config?: RequestOverrideConfig,
+  ): Promise<OrderbookResponse> {
     const queryParams = new URLSearchParams();
     queryParams.append('offset', params.offset);
     queryParams.append('limit', params.limit);
@@ -255,7 +315,7 @@ export class BackendApiService implements IConfigApi {
     const queryString = queryParams.toString();
     const endpoint = `/solver/orderbook?${queryString}`;
 
-    return this.makeRequest<OrderbookResponse>(endpoint, { method: 'GET' });
+    return this.makeRequest<OrderbookResponse>(endpoint, { ...config, method: 'GET' });
   }
 
   /**
@@ -270,13 +330,16 @@ export class BackendApiService implements IConfigApi {
    *
    * @returns {Promise<UserIntentsResponse>} Promise resolving to an array of intent responses for the user.
    */
-  public async getUserIntents(params: {
-    userAddress: Address;
-    startDate?: number;
-    endDate?: number;
-    limit?: string;
-    offset?: string;
-  }): Promise<UserIntentsResponse> {
+  public async getUserIntents(
+    params: {
+      userAddress: Address;
+      startDate?: number;
+      endDate?: number;
+      limit?: string;
+      offset?: string;
+    },
+    config?: RequestOverrideConfig,
+  ): Promise<UserIntentsResponse> {
     const { userAddress, startDate, endDate, limit, offset } = params;
     const queryParams = new URLSearchParams();
     if (startDate) queryParams.append('startDate', new Date(startDate).toISOString());
@@ -288,7 +351,7 @@ export class BackendApiService implements IConfigApi {
     const endpoint =
       queryString.length > 0 ? `/intent/user/${userAddress}?${queryString}` : `/intent/user/${userAddress}`;
 
-    return this.makeRequest<UserIntentsResponse>(endpoint, { method: 'GET' });
+    return this.makeRequest<UserIntentsResponse>(endpoint, { ...config, method: 'GET' });
   }
 
   // Money Market endpoints
@@ -297,16 +360,19 @@ export class BackendApiService implements IConfigApi {
    * @param userAddress - User's wallet address
    * @returns Promise<MoneyMarketPosition>
    */
-  public async getMoneyMarketPosition(userAddress: string): Promise<MoneyMarketPosition> {
-    return this.makeRequest<MoneyMarketPosition>(`/moneymarket/position/${userAddress}`, { method: 'GET' });
+  public async getMoneyMarketPosition(
+    userAddress: string,
+    config?: RequestOverrideConfig,
+  ): Promise<MoneyMarketPosition> {
+    return this.makeRequest<MoneyMarketPosition>(`/moneymarket/position/${userAddress}`, { ...config, method: 'GET' });
   }
 
   /**
    * Get all money market assets
    * @returns Promise<MoneyMarketAsset[]>
    */
-  public async getAllMoneyMarketAssets(): Promise<MoneyMarketAsset[]> {
-    return this.makeRequest<MoneyMarketAsset[]>('/moneymarket/asset/all', { method: 'GET' });
+  public async getAllMoneyMarketAssets(config?: RequestOverrideConfig): Promise<MoneyMarketAsset[]> {
+    return this.makeRequest<MoneyMarketAsset[]>('/moneymarket/asset/all', { ...config, method: 'GET' });
   }
 
   /**
@@ -314,8 +380,8 @@ export class BackendApiService implements IConfigApi {
    * @param reserveAddress - Reserve contract address
    * @returns Promise<MoneyMarketAsset>
    */
-  public async getMoneyMarketAsset(reserveAddress: string): Promise<MoneyMarketAsset> {
-    return this.makeRequest<MoneyMarketAsset>(`/moneymarket/asset/${reserveAddress}`, { method: 'GET' });
+  public async getMoneyMarketAsset(reserveAddress: string, config?: RequestOverrideConfig): Promise<MoneyMarketAsset> {
+    return this.makeRequest<MoneyMarketAsset>(`/moneymarket/asset/${reserveAddress}`, { ...config, method: 'GET' });
   }
 
   /**
@@ -327,6 +393,7 @@ export class BackendApiService implements IConfigApi {
   public async getMoneyMarketAssetBorrowers(
     reserveAddress: string,
     params: { offset: string; limit: string },
+    config?: RequestOverrideConfig,
   ): Promise<MoneyMarketAssetBorrowers> {
     const queryParams = new URLSearchParams();
     queryParams.append('offset', params.offset);
@@ -335,7 +402,7 @@ export class BackendApiService implements IConfigApi {
     const queryString = queryParams.toString();
     const endpoint = `/moneymarket/asset/${reserveAddress}/borrowers?${queryString}`;
 
-    return this.makeRequest<MoneyMarketAssetBorrowers>(endpoint, { method: 'GET' });
+    return this.makeRequest<MoneyMarketAssetBorrowers>(endpoint, { ...config, method: 'GET' });
   }
 
   /**
@@ -347,6 +414,7 @@ export class BackendApiService implements IConfigApi {
   public async getMoneyMarketAssetSuppliers(
     reserveAddress: string,
     params: { offset: string; limit: string },
+    config?: RequestOverrideConfig,
   ): Promise<MoneyMarketAssetSuppliers> {
     const queryParams = new URLSearchParams();
     queryParams.append('offset', params.offset);
@@ -355,7 +423,7 @@ export class BackendApiService implements IConfigApi {
     const queryString = queryParams.toString();
     const endpoint = `/moneymarket/asset/${reserveAddress}/suppliers?${queryString}`;
 
-    return this.makeRequest<MoneyMarketAssetSuppliers>(endpoint, { method: 'GET' });
+    return this.makeRequest<MoneyMarketAssetSuppliers>(endpoint, { ...config, method: 'GET' });
   }
 
   /**
@@ -363,7 +431,10 @@ export class BackendApiService implements IConfigApi {
    * @param params - Object containing offset and limit parameters for pagination
    * @returns Promise<MoneyMarketBorrowers>
    */
-  public async getAllMoneyMarketBorrowers(params: { offset: string; limit: string }): Promise<MoneyMarketBorrowers> {
+  public async getAllMoneyMarketBorrowers(
+    params: { offset: string; limit: string },
+    config?: RequestOverrideConfig,
+  ): Promise<MoneyMarketBorrowers> {
     const queryParams = new URLSearchParams();
     queryParams.append('offset', params.offset);
     queryParams.append('limit', params.limit);
@@ -371,31 +442,31 @@ export class BackendApiService implements IConfigApi {
     const queryString = queryParams.toString();
     const endpoint = `/moneymarket/borrowers?${queryString}`;
 
-    return this.makeRequest<MoneyMarketBorrowers>(endpoint, { method: 'GET' });
+    return this.makeRequest<MoneyMarketBorrowers>(endpoint, { ...config, method: 'GET' });
   }
 
   /**
    * Get all supported config
    * @returns Promise<GetAllConfigApiResponse>
    */
-  public async getAllConfig(): Promise<GetAllConfigApiResponse> {
-    return this.makeRequest<GetAllConfigApiResponse>('/config/all', { method: 'GET' });
+  public async getAllConfig(config?: RequestOverrideConfig): Promise<GetAllConfigApiResponse> {
+    return this.makeRequest<GetAllConfigApiResponse>('/config/all', { ...config, method: 'GET' });
   }
 
   /**
    * Get all supported spoke chains
    * @returns Promise<GetChainsApiResponse>
    */
-  public async getChains(): Promise<GetChainsApiResponse> {
-    return this.makeRequest<GetChainsApiResponse>('/config/spoke/chains', { method: 'GET' });
+  public async getChains(config?: RequestOverrideConfig): Promise<GetChainsApiResponse> {
+    return this.makeRequest<GetChainsApiResponse>('/config/spoke/chains', { ...config, method: 'GET' });
   }
 
   /**
    * Get all supported swap tokens
    * @returns Promise<GetSwapTokensApiResponse>
    */
-  public async getSwapTokens(): Promise<GetSwapTokensApiResponse> {
-    return this.makeRequest<GetSwapTokensApiResponse>('/config/swap/tokens', { method: 'GET' });
+  public async getSwapTokens(config?: RequestOverrideConfig): Promise<GetSwapTokensApiResponse> {
+    return this.makeRequest<GetSwapTokensApiResponse>('/config/swap/tokens', { ...config, method: 'GET' });
   }
 
   /**
@@ -403,24 +474,36 @@ export class BackendApiService implements IConfigApi {
    * @param chainId - Spoke chain id
    * @returns Promise<GetSwapTokensByChainIdApiResponse>
    */
-  public async getSwapTokensByChainId(chainId: SpokeChainId): Promise<GetSwapTokensByChainIdApiResponse> {
-    return this.makeRequest<GetSwapTokensByChainIdApiResponse>(`/config/swap/${chainId}/tokens`, { method: 'GET' });
+  public async getSwapTokensByChainId(
+    chainId: SpokeChainId,
+    config?: RequestOverrideConfig,
+  ): Promise<GetSwapTokensByChainIdApiResponse> {
+    return this.makeRequest<GetSwapTokensByChainIdApiResponse>(`/config/swap/${chainId}/tokens`, {
+      ...config,
+      method: 'GET',
+    });
   }
 
   /**
    * Get all supported money market tokens
    * @returns Promise<GetMoneyMarketTokensApiResponse>
    */
-  public async getMoneyMarketTokens(): Promise<GetMoneyMarketTokensApiResponse> {
-    return this.makeRequest<GetMoneyMarketTokensApiResponse>('/config/money-market/tokens', { method: 'GET' });
+  public async getMoneyMarketTokens(config?: RequestOverrideConfig): Promise<GetMoneyMarketTokensApiResponse> {
+    return this.makeRequest<GetMoneyMarketTokensApiResponse>('/config/money-market/tokens', {
+      ...config,
+      method: 'GET',
+    });
   }
 
   /**
    * Get all supported money market tokens
    * @returns Promise<GetMoneyMarketTokensApiResponse>
    */
-  public async getMoneyMarketReserveAssets(): Promise<GetMoneyMarketReserveAssetsApiResponse> {
+  public async getMoneyMarketReserveAssets(
+    config?: RequestOverrideConfig,
+  ): Promise<GetMoneyMarketReserveAssetsApiResponse> {
     return this.makeRequest<GetMoneyMarketReserveAssetsApiResponse>('/config/money-market/reserve-assets', {
+      ...config,
       method: 'GET',
     });
   }
@@ -430,8 +513,12 @@ export class BackendApiService implements IConfigApi {
    * @param chainId - Spoke chain id
    * @returns Promise<GetMoneyMarketTokensByChainIdApiResponse>
    */
-  public async getMoneyMarketTokensByChainId(chainId: SpokeChainId): Promise<GetMoneyMarketTokensByChainIdApiResponse> {
+  public async getMoneyMarketTokensByChainId(
+    chainId: SpokeChainId,
+    config?: RequestOverrideConfig,
+  ): Promise<GetMoneyMarketTokensByChainIdApiResponse> {
     return this.makeRequest<GetMoneyMarketTokensByChainIdApiResponse>(`/config/money-market/${chainId}/tokens`, {
+      ...config,
       method: 'GET',
     });
   }
@@ -440,8 +527,8 @@ export class BackendApiService implements IConfigApi {
    * Get all supported hub assets (assets representing spoke token deposit)
    * @returns Promise<GetHubAssetsApiResponse>
    */
-  public async getHubAssets(): Promise<GetHubAssetsApiResponse> {
-    return this.makeRequest<GetHubAssetsApiResponse>('/config/hub/assets', { method: 'GET' });
+  public async getHubAssets(config?: RequestOverrideConfig): Promise<GetHubAssetsApiResponse> {
+    return this.makeRequest<GetHubAssetsApiResponse>('/config/hub/assets', { ...config, method: 'GET' });
   }
 
   /**
@@ -449,24 +536,36 @@ export class BackendApiService implements IConfigApi {
    * @param chainId - Spoke chain id
    * @returns Promise<GetHubAssetsByChainIdApiResponse>
    */
-  public async getHubAssetsByChainId(chainId: SpokeChainId): Promise<GetHubAssetsByChainIdApiResponse> {
-    return this.makeRequest<GetHubAssetsByChainIdApiResponse>(`/config/hub/${chainId}/assets`, { method: 'GET' });
+  public async getHubAssetsByChainId(
+    chainId: SpokeChainId,
+    config?: RequestOverrideConfig,
+  ): Promise<GetHubAssetsByChainIdApiResponse> {
+    return this.makeRequest<GetHubAssetsByChainIdApiResponse>(`/config/hub/${chainId}/assets`, {
+      ...config,
+      method: 'GET',
+    });
   }
 
   /**
    * Get the intent relay chain id map
    * @returns Promise<GetRelayChainIdMapApiResponse>
    */
-  public async getRelayChainIdMap(): Promise<GetRelayChainIdMapApiResponse> {
-    return this.makeRequest<GetRelayChainIdMapApiResponse>('/config/relay/chain-id-map', { method: 'GET' });
+  public async getRelayChainIdMap(config?: RequestOverrideConfig): Promise<GetRelayChainIdMapApiResponse> {
+    return this.makeRequest<GetRelayChainIdMapApiResponse>('/config/relay/chain-id-map', {
+      ...config,
+      method: 'GET',
+    });
   }
 
   /**
    * Get the spoke chain config
    * @returns Promise<GetSpokeChainConfigApiResponse>
    */
-  public async getSpokeChainConfig(): Promise<GetSpokeChainConfigApiResponse> {
-    return this.makeRequest<GetSpokeChainConfigApiResponse>('/config/spoke/all-chains-configs', { method: 'GET' });
+  public async getSpokeChainConfig(config?: RequestOverrideConfig): Promise<GetSpokeChainConfigApiResponse> {
+    return this.makeRequest<GetSpokeChainConfigApiResponse>('/config/spoke/all-chains-configs', {
+      ...config,
+      method: 'GET',
+    });
   }
 
   /**

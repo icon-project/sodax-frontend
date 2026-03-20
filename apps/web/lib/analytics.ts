@@ -16,6 +16,46 @@ export interface SwapCompletedEvent {
   transaction_hash: string;
 }
 
+export interface StakeCompletedEvent {
+  event: 'stake_completed';
+  amount_soda: string;
+  received_xsoda: string;
+  apy: number;
+  source_chain: string;
+  transaction_hash: string;
+}
+
+export interface UnstakeCompletedEvent {
+  event: 'unstake_completed';
+  amount_xsoda: string;
+  expected_soda: string;
+  method: 'regular' | 'instant';
+  penalty_percent?: number;
+  source_chain: string;
+  transaction_hash: string;
+}
+
+export interface UnstakeClaimCompletedEvent {
+  event: 'unstake_claim_completed';
+  request_id: string;
+  claimed_amount: string;
+  penalty_percent: number;
+  source_chain: string;
+  transaction_hash: string;
+}
+
+export interface MigrationCompletedEvent {
+  event: 'migration_completed';
+  migration_mode: 'icxsoda' | 'bnusd';
+  input_token_symbol: string;
+  output_token_symbol: string;
+  input_amount: string;
+  source_chain: string;
+  destination_chain: string;
+  spoke_transaction_hash: string;
+  hub_transaction_hash: string;
+}
+
 // Extend Window interface for dataLayer
 declare global {
   interface Window {
@@ -40,7 +80,7 @@ function pushToDataLayer(eventData: Record<string, unknown>): void {
   }
 
   window.dataLayer.push(eventData);
-  
+
   if (process.env.NODE_ENV === 'development') {
     console.log('[Analytics] Event tracked:', eventData);
   }
@@ -53,6 +93,34 @@ function pushToDataLayer(eventData: Record<string, unknown>): void {
 export function trackSwapCompleted(params: Omit<SwapCompletedEvent, 'event'>): void {
   pushToDataLayer({
     event: 'swap_completed',
+    ...params,
+  });
+}
+
+export function trackStakeCompleted(params: Omit<StakeCompletedEvent, 'event'>): void {
+  pushToDataLayer({
+    event: 'stake_completed',
+    ...params,
+  });
+}
+
+export function trackUnstakeCompleted(params: Omit<UnstakeCompletedEvent, 'event'>): void {
+  pushToDataLayer({
+    event: 'unstake_completed',
+    ...params,
+  });
+}
+
+export function trackUnstakeClaimCompleted(params: Omit<UnstakeClaimCompletedEvent, 'event'>): void {
+  pushToDataLayer({
+    event: 'unstake_claim_completed',
+    ...params,
+  });
+}
+
+export function trackMigrationCompleted(params: Omit<MigrationCompletedEvent, 'event'>): void {
+  pushToDataLayer({
+    event: 'migration_completed',
     ...params,
   });
 }

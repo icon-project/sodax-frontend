@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: ['18.x', '20.x', '22.x']
+        node-version: ['20.x', '22.x', '24.x']
 
     steps:
       - name: Check out code
@@ -43,6 +43,9 @@ jobs:
 
       - name: Build Packages
         run: pnpm build:packages
+      - name: CJS Compatibility Check
+        run: cd apps/node-cjs && pnpm test
+
       - name: Build Check
         run: pnpm checkTs
 

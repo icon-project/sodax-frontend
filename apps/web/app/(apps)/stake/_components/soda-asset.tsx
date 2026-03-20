@@ -24,12 +24,10 @@ export function SodaAsset({
   const assetRef = useRef<HTMLDivElement>(null);
   const chainId = (selectedToken?.xChainId || token?.xChainId) as ChainId;
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(chainId);
+  // Ref is logo only; clicks on "Stake SODA" text are "away" and close picker (mousedown). See selector panel onMouseDown/ignoreNextToggle.
   useClickAway(assetRef, event => {
     const target = event.target as HTMLElement;
-    const isInNetworkPicker = target.closest('.network-picker-container') !== null;
-    if (!isInNetworkPicker) {
-      setIsNetworkPickerOpened(false);
-    }
+    if (target.closest('.network-picker-container') === null) setIsNetworkPickerOpened(false);
   });
 
   return (
@@ -40,7 +38,7 @@ export function SodaAsset({
             <CurrencyLogo
               currency={selectedToken}
               isGroup={false}
-              tokenCount={tokens.length}
+              tokenCount={1} // Single selected network: show chain badge overlay
               logoSrc={isXSoda ? '/coin/xsoda.png' : undefined}
             />
           ) : (
@@ -63,7 +61,7 @@ export function SodaAsset({
                   handleSwitchChain();
                 }
               }}
-              reference={assetRef.current}
+              reference={assetRef.current} // Floating UI anchor; picker is portaled to body
             />
           )}
         </div>

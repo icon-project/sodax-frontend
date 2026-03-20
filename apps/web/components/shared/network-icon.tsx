@@ -15,6 +15,7 @@ import { HyperIcon } from '@/components/icons/chains/hyper';
 import { EthereumIcon } from '@/components/icons/chains/ethereum';
 import { KaiaIcon } from '@/components/icons/chains/kaia';
 import { RedbellyIcon } from '@/components/icons/chains/redbelly';
+import { NearIcon } from '@/components/icons/chains/near';
 
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
@@ -34,6 +35,7 @@ import {
   LIGHTLINK_MAINNET_CHAIN_ID,
   KAIA_MAINNET_CHAIN_ID,
   REDBELLY_MAINNET_CHAIN_ID,
+  NEAR_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 interface NetworkIconProps {
   id: string;
@@ -63,6 +65,7 @@ function renderIcons(id: string): React.ReactNode {
       {id === ETHEREUM_MAINNET_CHAIN_ID && <EthereumIcon />}
       {id === KAIA_MAINNET_CHAIN_ID && <KaiaIcon />}
       {id === REDBELLY_MAINNET_CHAIN_ID && <RedbellyIcon />}
+      {id === NEAR_MAINNET_CHAIN_ID && <NearIcon />}
     </>
   );
 }
@@ -90,9 +93,7 @@ export default function NetworkIcon({
   }
 
   // Neutral gray shadow (designer: previous rgba(175,145,145) was too dark and color off).
-  const shadowClass = hasBalance
-    ? 'shadow-[-4px_0_6px_0_rgba(0,0,0,0.08)]'
-    : 'shadow-[-2px_0_4px_0_rgba(0,0,0,0.06)]';
+  const shadowClass = hasBalance ? 'shadow-[-4px_0_6px_0_rgba(0,0,0,0.08)]' : 'shadow-[-2px_0_4px_0_rgba(0,0,0,0.06)]';
   return (
     <div className={`flex items-center justify-center rounded ${ringClass} ${shadowClass} w-4 h-4 ${className}`}>
       {renderIcons(id)}

@@ -25,7 +25,7 @@ export function PartnerSimpleFooter() {
         </div>
         <div>
           <Label className="text-[12px] font-[InterMedium] text-cherry-bright mt-5">
-            © 2025 ICON Foundation. All rights reserved.
+            © 2026 ICON Foundation. All rights reserved.
           </Label>
         </div>
       </div>

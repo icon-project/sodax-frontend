@@ -8,8 +8,11 @@ import type {
   IStacksWalletProvider,
   IStellarWalletProvider,
   ISuiWalletProvider,
+  IBitcoinWalletProvider,
 } from '@sodax/types';
 import { useMemo } from 'react';
+import { BitcoinXService } from '../xchains/bitcoin/BitcoinXService';
+import type { BitcoinXConnector } from '../xchains/bitcoin/BitcoinXConnector';
 import {
   EvmWalletProvider,
   IconWalletProvider,
@@ -57,6 +60,7 @@ export function useWalletProvider(
   | IInjectiveWalletProvider
   | IStellarWalletProvider
   | ISolanaWalletProvider
+  | IBitcoinWalletProvider
   | INearWalletProvider
   | IStacksWalletProvider
   | undefined {
@@ -71,6 +75,7 @@ export function useWalletProvider(
   const xAccount = useXAccount(spokeChainId);
   const stacksConnection = useXConnection('STACKS');
   const stacksConnectors = useXConnectors('STACKS');
+  const xConnection = useXConnection(xChainType);
 
   return useMemo(() => {
     switch (xChainType) {
@@ -153,6 +158,16 @@ export function useWalletProvider(
         });
       }
 
+      case 'BITCOIN': {
+        if (!xConnection?.xConnectorId) return undefined;
+        const connector = BitcoinXService.getInstance().getXConnectorById(xConnection.xConnectorId) as
+          | BitcoinXConnector
+          | undefined;
+        if (!connector) return undefined;
+        // Recreate from window extension object — works after page reload without reconnect
+        return connector.recreateWalletProvider(xConnection.xAccount);
+      }
+
       case 'NEAR': {
         const nearXService = xService as NearXService;
         if (!nearXService.walletSelector) {
@@ -168,9 +183,9 @@ export function useWalletProvider(
           return undefined;
         }
 
-        const activeStacksConnector = stacksConnectors.find(
-          c => c.id === stacksConnection?.xConnectorId,
-        ) as StacksXConnector | undefined;
+        const activeStacksConnector = stacksConnectors.find(c => c.id === stacksConnection?.xConnectorId) as
+          | StacksXConnector
+          | undefined;
 
         return new StacksWalletProvider({ address, provider: activeStacksConnector?.getProvider() });
       }
@@ -178,5 +193,14 @@ export function useWalletProvider(
       default:
         return undefined;
     }
-  }, [xChainType, evmPublicClient, evmWalletClient, xService, xAccount, stacksConnection, stacksConnectors]);
+  }, [
+    xChainType,
+    evmPublicClient,
+    evmWalletClient,
+    xService,
+    xAccount,
+    stacksConnection,
+    stacksConnectors,
+    xConnection,
+  ]);
 }

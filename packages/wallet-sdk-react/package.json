@@ -7,7 +7,10 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -45,7 +48,7 @@
     "@injectivelabs/wallet-strategy": "catalog:",
     "@mysten/dapp-kit": "catalog:",
     "@mysten/sui": "catalog:",
-    "near-api-js": "7.1.1",
+    "near-api-js": "catalog:",
     "@sodax/types": "workspace:*",
     "@sodax/wallet-sdk-core": "workspace:*",
     "@solana/spl-token": "catalog:",
@@ -55,6 +58,7 @@
     "@stellar/stellar-sdk": "catalog:",
     "icon-sdk-js": "catalog:",
     "immer": "10.1.1",
+    "sats-connect": "^4.2.1",
     "viem": "catalog:",
     "wagmi": "catalog:",
     "zustand": "4.5.2",
