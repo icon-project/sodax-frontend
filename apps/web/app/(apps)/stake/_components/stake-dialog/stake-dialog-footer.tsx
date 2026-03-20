@@ -16,6 +16,9 @@ import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ArrowLeft, Check, CheckIcon, FilePenLine, Loader2Icon } from 'lucide-react';
 import { chainIdToChainName } from '@/providers/constants';
+import { useStakeVaultApy } from '@/hooks/useStakeVaultApy';
+import { trackStakeCompleted } from '@/lib/analytics';
+import { formatUnits } from 'viem';
 interface StakeDialogFooterProps {
   selectedToken: XToken | null;
   receivedXSodaAmount: string;
@@ -44,6 +47,7 @@ export default function StakeDialogFooter({
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(currentNetwork as ChainId);
 
   const { mutateAsync: stake, isPending } = useStake(spokeProvider as SpokeProvider);
+  const { data: apy } = useStakeVaultApy();
   const isMobile = useIsMobile();
   const [isApproved, setIsApproved] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -128,11 +132,18 @@ export default function StakeDialogFooter({
 
     try {
       onError?.(null);
-      await stake({
+      const [spokeTxHash] = await stake({
         amount: stakeValue,
         minReceive: parseUnits(receivedXSodaAmount, 18) as bigint,
         account: address as `0x${string}`,
         action: 'stake',
+      });
+      trackStakeCompleted({
+        amount_soda: formatUnits(stakeValue, 18),
+        received_xsoda: receivedXSodaAmount,
+        apy: apy ?? 0,
+        source_chain: chainIdToChainName(selectedToken.xChainId as ChainId),
+        transaction_hash: spokeTxHash,
       });
       setIsCompleted(true);
       onCompletedChange?.(true);
