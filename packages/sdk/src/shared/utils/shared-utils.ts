@@ -37,7 +37,7 @@ import {
 } from '../entities/index.js';
 import { SuiRawSpokeProvider } from '../entities/sui/SuiSpokeProvider.js';
 import { AleoRawSpokeProvider } from '../entities/aleo/AleoSpokeProvider.js';
-import { Address as AleoAddress } from '@provablehq/sdk';
+import { decodeBech32m } from './bech32m.js';
 
 export async function retry<T>(
   action: (retryCount: number) => Promise<T>,
@@ -179,8 +179,8 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
       return toHex(Buffer.from(address, 'utf-8'));
 
     case 'aleo': {
-      const bytesLe = Array.from(AleoAddress.from_string(address).toBytesLe());
-      return toHex(new Uint8Array(bytesLe.reverse()));
+      const { data } = decodeBech32m(address);
+      return toHex(new Uint8Array([...data].reverse()));
     }
 
     default:

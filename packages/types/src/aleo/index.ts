@@ -62,7 +62,6 @@ export type AleoRawTransaction = {
   value: bigint;
   data: AleoExecuteOptions;
 };
-//! Use the same encodeAleoAddress from shared file.
 export interface IAleoWalletProvider extends WalletAddressProvider {
   getWalletAddress: () => Promise<string>;
   execute: (options: AleoExecuteOptions) => Promise<AleoExecutionResult>;
