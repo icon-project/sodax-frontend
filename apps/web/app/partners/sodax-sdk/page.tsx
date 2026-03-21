@@ -392,6 +392,9 @@ export default function SodaxSDKPage() {
                   <PartnerLogo description="Money app">
                     <Image src={imgLogoHana} alt="Hana Wallet" width={49} height={19} className="object-contain" />
                   </PartnerLogo>
+                  <PartnerLogo description="Native Bitcoin DEX">
+                    <Image src={imgLogoRadfi} alt="RadFi" width={45} height={26} className="object-contain" />
+                  </PartnerLogo>
                 </div>
               </div>
 
@@ -419,9 +422,6 @@ export default function SodaxSDKPage() {
                       height={26}
                       className="object-contain"
                     />
-                  </PartnerLogo>
-                  <PartnerLogo description="Native Bitcoin DEX">
-                    <Image src={imgLogoRadfi} alt="RadFi" width={45} height={26} className="object-contain" />
                   </PartnerLogo>
                   <PartnerLogo description="Intent-based swaps">
                     <Image src={imgLogo1inch} alt="1inch" width={40} height={10} className="object-contain" />
@@ -453,13 +453,13 @@ export default function SodaxSDKPage() {
                 </p>
                 <p className="font-['InterRegular'] text-xs text-[var(--clay-dark)] leading-relaxed">
                   Sonic, Sui, Base, Ethereum, Arbitrum, Polygon & Polygon zkEVM, Avalanche, BNB Chain, Optimism,
-                  Stellar, HyperEVM, ICON, LightLink, Kaia
+                  Stellar, HyperEVM, ICON, LightLink, Kaia, Bitcoin
                 </p>
               </div>
               <div className="flex flex-col gap-2 items-start flex-1">
                 <p className="font-['InterMedium'] text-xs text-[var(--clay)] uppercase tracking-wider">Coming Soon</p>
                 <p className="font-['InterRegular'] text-xs text-[var(--clay-dark)] leading-relaxed">
-                  Bitcoin, NEAR, Redbelly, Stacks, Aleo, Giwa, Injective
+                  NEAR, Redbelly, Stacks, Aleo, Giwa, Injective
                 </p>
               </div>
             </div>
