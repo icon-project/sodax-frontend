@@ -2783,6 +2783,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens['HYPE.LL'],
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.USDT,
+    spokeChainConfig[LIGHTLINK_MAINNET_CHAIN_ID].supportedTokens.LL,
   ] as const satisfies XToken[],
   [SOLANA_MAINNET_CHAIN_ID]: [
     spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL,
