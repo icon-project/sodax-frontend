@@ -710,6 +710,7 @@ export class BridgeService {
 
       // Check if both assets are supported and have vault information
       invariant(srcAssetInfo, `Hub asset not found for token ${from.address} on chain ${from.xChainId}`);
+      invariant(dstAssetInfo, `Hub asset not found for token ${to.address} on chain ${to.xChainId}`);
 
       // Check if the vault addresses are the same (case-insensitive comparison)
       return srcAssetInfo.vault.toLowerCase() === dstAssetInfo.vault.toLowerCase();
