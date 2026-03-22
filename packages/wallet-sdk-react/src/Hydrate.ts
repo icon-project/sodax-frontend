@@ -6,7 +6,7 @@ import { EvmXService } from './xchains/evm';
 import { SolanaXService } from './xchains/solana/SolanaXService';
 import { SuiXService } from './xchains/sui';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { useConfig } from 'wagmi';
+import { useConfig, useReconnect } from 'wagmi';
 import { StacksXService } from './xchains/stacks/StacksXService';
 import { createNetwork } from '@stacks/network';
 import type { RpcConfig } from '@sodax/types';
@@ -48,11 +48,15 @@ export const Hydrate = ({ rpcConfig }: { rpcConfig: RpcConfig }) => {
 
   // evm
   const wagmiConfig = useConfig();
+  const { reconnect } = useReconnect();
   useEffect(() => {
     if (wagmiConfig) {
       EvmXService.getInstance().wagmiConfig = wagmiConfig;
     }
   }, [wagmiConfig]);
+  useEffect(() => {
+    reconnect();
+  }, [reconnect]);
 
   // stacks
   useEffect(() => {
