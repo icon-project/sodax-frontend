@@ -1,7 +1,14 @@
-import { describe, it, expect } from 'vitest';
-import { ARBITRUM_MAINNET_CHAIN_ID, BASE_MAINNET_CHAIN_ID, type XToken, spokeChainConfig } from '@sodax/types';
+import { afterEach, describe, it, expect, vi } from 'vitest';
+import {
+  ARBITRUM_MAINNET_CHAIN_ID,
+  BASE_MAINNET_CHAIN_ID,
+  SONIC_MAINNET_CHAIN_ID,
+  type XToken,
+  spokeChainConfig,
+} from '@sodax/types';
 import { Sodax } from '../index.js';
 import BigNumber from 'bignumber.js';
+import { EvmVaultTokenService } from '../shared/services/hub/EvmVaultTokenService.js';
 
 describe('BridgeService', () => {
   const sodax = new Sodax();
@@ -135,6 +142,89 @@ describe('BridgeService', () => {
       BigNumber(availableDeposit)
         .shiftedBy(-fromTokenInfo.decimals)
         .isLessThan(BigNumber(assetManagerBalance).shiftedBy(-toTokenInfo.decimals));
+    });
+  });
+
+  describe('getBridgeableAmount', () => {
+    const fromHubAsset = {
+      vault: '0x1111111111111111111111111111111111111111' as `0x${string}`,
+      asset: '0xaaaa000000000000000000000000000000000001' as `0x${string}`,
+      decimal: 18,
+    };
+
+    const toHubAsset = {
+      vault: '0x1111111111111111111111111111111111111111' as `0x${string}`,
+      asset: '0xaaaa000000000000000000000000000000000002' as `0x${string}`,
+      decimal: 18,
+    };
+
+    const mockTokenInfos = [
+      { decimals: 18, depositFee: 0n, withdrawalFee: 0n, maxDeposit: 1000n * 10n ** 18n, isSupported: false },
+      { decimals: 18, depositFee: 0n, withdrawalFee: 0n, maxDeposit: 1000n * 10n ** 18n, isSupported: true },
+    ];
+
+    const mockReserves = {
+      tokens: [fromHubAsset.asset, toHubAsset.asset],
+      balances: [500n * 10n ** 18n, 200n * 10n ** 18n],
+    };
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('should not return 0 for hub-chain tokens where isSupported is false', async () => {
+      const fromToken: XToken = {
+        ...spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.S,
+        xChainId: SONIC_MAINNET_CHAIN_ID,
+      };
+
+      const toToken: XToken = {
+        ...spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
+        xChainId: ARBITRUM_MAINNET_CHAIN_ID,
+      };
+
+      vi.spyOn(sodax.config, 'getHubAssetInfo')
+        .mockReturnValueOnce(fromHubAsset)
+        .mockReturnValueOnce(toHubAsset)
+        .mockReturnValueOnce(toHubAsset); // findTokenBalanceInReserves: to
+      vi.spyOn(sodax.bridge, 'isBridgeable').mockReturnValue(true);
+      vi.spyOn(EvmVaultTokenService, 'getTokenInfos').mockResolvedValueOnce(mockTokenInfos);
+      vi.spyOn(EvmVaultTokenService, 'getVaultReserves').mockResolvedValueOnce(mockReserves);
+
+      const result = await sodax.bridge.getBridgeableAmount(fromToken, toToken);
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.value.amount).not.toBe(0n);
+        expect(result.value.type).toBe('WITHDRAWAL_LIMIT');
+      }
+    });
+
+    it('should return 0 for spoke-chain tokens where isSupported is false', async () => {
+      const fromToken: XToken = {
+        ...spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
+        xChainId: ARBITRUM_MAINNET_CHAIN_ID,
+      };
+
+      const toToken: XToken = {
+        ...spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.S,
+        xChainId: SONIC_MAINNET_CHAIN_ID,
+      };
+
+      vi.spyOn(sodax.config, 'getHubAssetInfo')
+        .mockReturnValueOnce(fromHubAsset)
+        .mockReturnValueOnce(toHubAsset);
+      vi.spyOn(sodax.bridge, 'isBridgeable').mockReturnValue(true);
+      vi.spyOn(EvmVaultTokenService, 'getTokenInfos').mockResolvedValueOnce(mockTokenInfos);
+      vi.spyOn(EvmVaultTokenService, 'getVaultReserves').mockResolvedValueOnce(mockReserves);
+
+      const result = await sodax.bridge.getBridgeableAmount(fromToken, toToken);
+
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.value.amount).toBe(0n);
+        expect(result.value.type).toBe('DEPOSIT_LIMIT');
+      }
     });
   });
 });
