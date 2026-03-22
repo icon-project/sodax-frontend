@@ -2811,6 +2811,7 @@ export const swapSupportedTokens = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    ...Object.values(SodaTokens),
   ] as const satisfies XToken[],
   [AVALANCHE_MAINNET_CHAIN_ID]: [
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.AVAX,
