@@ -3,12 +3,25 @@ import { usePoolState } from '../../_stores/pool-store-provider';
 import type { XToken } from '@sodax/types';
 import { formatBalance } from '@/lib/utils';
 import { ShieldAlertIcon } from 'lucide-react';
+import { useMemo } from 'react';
+import BigNumber from 'bignumber.js';
+import { usePoolData } from '@sodax/dapp-kit';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
+import { dexPools } from '@sodax/sdk';
 
 interface SupplyConfirmationStepProps {
   supplyError: { title: string; message: string } | null;
 }
 export default function SupplyConfirmationStep({ supplyError }: SupplyConfirmationStepProps) {
   const { selectedToken, minPrice, maxPrice, sodaAmount, xSodaAmount } = usePoolState();
+  const fixedPoolKey = dexPools.ASODA_XSODA;
+  const sodaToken: XToken = selectedToken ?? {
+    name: 'SODA',
+    symbol: 'SODA',
+    address: '0x0',
+    decimals: 18,
+    xChainId: 'sonic',
+  };
   const xSodaToken: XToken = {
     name: 'xSODA',
     symbol: 'xSODA',
@@ -16,6 +29,40 @@ export default function SupplyConfirmationStep({ supplyError }: SupplyConfirmati
     decimals: 18,
     xChainId: selectedToken?.xChainId ?? 'sonic',
   };
+  const { data: sodaPrice } = useTokenPrice(sodaToken);
+  const { data: poolDataRaw } = usePoolData({ poolKey: fixedPoolKey });
+  const sodaPerXSodaRate = useMemo((): number | null => {
+    if (!poolDataRaw) {
+      return null;
+    }
+    const parsedRate = Number(poolDataRaw.price.toSignificant(18));
+    if (!Number.isFinite(parsedRate) || parsedRate <= 0) {
+      return null;
+    }
+    return parsedRate;
+  }, [poolDataRaw]);
+  const xSodaPrice = useMemo((): number => {
+    if (!sodaPrice || !sodaPerXSodaRate) {
+      return 0;
+    }
+    // Convert xSODA amount to USD via SODA USD price and current SODA/xSODA pool rate.
+    return sodaPrice / sodaPerXSodaRate;
+  }, [sodaPerXSodaRate, sodaPrice]);
+  const totalUsdText = useMemo((): string => {
+    const sodaUsdValue = new BigNumber(sodaAmount || '0').multipliedBy(sodaPrice ?? 0);
+    const xSodaUsdValue = new BigNumber(xSodaAmount || '0').multipliedBy(xSodaPrice ?? 0);
+    const totalUsdValue = sodaUsdValue.plus(xSodaUsdValue);
+    const numericTotal = totalUsdValue.toNumber();
+
+    if (!Number.isFinite(numericTotal) || numericTotal <= 0) {
+      return '$0.00 total';
+    }
+
+    return `$${numericTotal.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })} total`;
+  }, [sodaAmount, sodaPrice, xSodaAmount, xSodaPrice]);
 
   return (
     <div className="flex flex-col items-center mt-4">
@@ -76,7 +123,7 @@ export default function SupplyConfirmationStep({ supplyError }: SupplyConfirmati
           </div>
           <div className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] inline-flex justify-center items-center gap-1">
             <div className="text-center justify-center text-espresso text-[9px] font-medium font-['InterRegular'] uppercase leading-3">
-              $1,021.68 total{' '}
+              {totalUsdText}
             </div>
           </div>
         </div>
