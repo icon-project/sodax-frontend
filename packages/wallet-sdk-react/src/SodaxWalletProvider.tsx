@@ -27,55 +27,20 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient();
 
-export type SodaxWalletProviderOptions = {
-  wagmi?: {
-    reconnectOnMount?: boolean;
-    ssr?: boolean;
-  };
-  solana?: {
-    autoConnect?: boolean;
-  };
-  sui?: {
-    autoConnect?: boolean;
-  };
-}
-
-const defaultOptions = {
-  wagmi: {
-    reconnectOnMount: false,
-    ssr: true,
-  },
-  solana: {
-    autoConnect: true,
-  },
-  sui: {
-    autoConnect: true,
-  },
-} satisfies SodaxWalletProviderOptions;
-
-export type SodaxWalletProviderProps = {
-  children: React.ReactNode;
-  rpcConfig: RpcConfig;
-  options?: SodaxWalletProviderOptions;
-};
-
-export const SodaxWalletProvider = ({ children, rpcConfig, options }: SodaxWalletProviderProps) => {
+export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.ReactNode; rpcConfig: RpcConfig }) => {
   const wagmiConfig = useMemo(() => {
     return createWagmiConfig(rpcConfig);
   }, [rpcConfig]);
 
   const wallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
-  const wagmi = { ...defaultOptions.wagmi, ...options?.wagmi };
-  const solana = { ...defaultOptions.solana, ...options?.solana };
-  const sui = { ...defaultOptions.sui, ...options?.sui };
 
   return (
     <QueryClientProvider client={queryClient}>
-      <WagmiProvider reconnectOnMount={wagmi.reconnectOnMount} config={wagmiConfig}>
+      <WagmiProvider reconnectOnMount={false} config={wagmiConfig}>
         <SuiClientProvider networks={{ mainnet: { url: getFullnodeUrl('mainnet') } }} defaultNetwork="mainnet">
-          <SuiWalletProvider autoConnect={sui.autoConnect}>
+          <SuiWalletProvider autoConnect={true}>
             <SolanaConnectionProvider endpoint={rpcConfig['solana'] ?? 'https://api.mainnet-beta.solana.com'}>
-              <SolanaWalletProvider wallets={wallets} autoConnect={solana.autoConnect}>
+              <SolanaWalletProvider wallets={wallets} autoConnect>
                 <Hydrate rpcConfig={rpcConfig} />
                 {children}
               </SolanaWalletProvider>
