@@ -15,7 +15,7 @@ import { useLiquidityAmounts, usePoolData, useSodaxContext, useSpokeProvider } f
 import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { dexPools, type PoolSpokeAssets } from '@sodax/sdk';
 import { formatUnits, parseUnits } from 'viem';
-import { SuppliedPositionsCarousel } from './_components/supplied-positions-carousel';
+import { SupplyOverview } from './_components/supply-overview';
 
 type DexPositionsUpdatedDetail = {
   chainId: string | number;
@@ -265,7 +265,7 @@ export default function PoolPage() {
     >
       <motion.div className="self-stretch flex flex-col justify-start items-start gap-4 pb-20" variants={itemVariants}>
         {savedPositions.length > 0 ? (
-          <SuppliedPositionsCarousel positions={savedPositions} poolKey={fixedPoolKey} poolData={poolData} />
+          <SupplyOverview positions={savedPositions} poolKey={fixedPoolKey} poolData={poolData} />
         ) : (
           <PoolHeader />
         )}

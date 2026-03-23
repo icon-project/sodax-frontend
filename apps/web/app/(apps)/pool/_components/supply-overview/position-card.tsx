@@ -7,30 +7,18 @@ import { spokeChainConfig } from '@sodax/sdk';
 import type { PoolData, PoolKey } from '@sodax/sdk';
 import type { ChainId, SpokeChainId } from '@sodax/types';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { formatTokenAmount } from '@/lib/utils';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { chainIdToChainName } from '@/providers/constants';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Item, ItemContent, ItemMedia } from '@/components/ui/item';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'motion/react';
 import { CircleEllipsisIcon } from 'lucide-react';
-import { usePoolStore } from '@/app/(apps)/pool/_stores/pool-store-provider';
-import { ManagePositionDialog } from './manage-dialog';
+import { ManagePositionDialog } from '../manage-dialog';
 import { SwitchChainDialog } from '@/components/shared/switch-chain-dialog';
-
-type SuppliedPositionsCarouselProps = {
-  positions: SuppliedPositionItem[];
-  poolKey: PoolKey;
-  poolData: PoolData | null;
-};
-
-type SuppliedPositionItem = {
-  tokenId: string;
-  chainId: string;
-};
+import type { XToken } from '@sodax/types';
 
 type PositionCardProps = {
   tokenId: string;
@@ -41,17 +29,6 @@ type PositionCardProps = {
   onLiquidityValueChange: (positionKey: string, value: number) => void;
 };
 
-function formatApproxValue(value: string): string {
-  const numericValue = Number.parseFloat(value);
-  if (!Number.isFinite(numericValue)) {
-    return '$0.00';
-  }
-  return `$${numericValue.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
 function resolveSpokeChainId(chainId: string): SpokeChainId {
   if (!(chainId in spokeChainConfig)) {
     return 'sonic';
@@ -59,7 +36,19 @@ function resolveSpokeChainId(chainId: string): SpokeChainId {
   return chainId as SpokeChainId;
 }
 
-function PositionCard({
+function formatApproxValue(value: string): string {
+  const numericValue = Number.parseFloat(value);
+  if (!Number.isFinite(numericValue)) {
+    return '$0.00';
+  }
+
+  return `$${numericValue.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+export function PositionCard({
   tokenId,
   chainId,
   poolKey,
@@ -75,6 +64,29 @@ function PositionCard({
   const spokeChainId = resolveSpokeChainId(chainId);
   const chainName = chainIdToChainName(spokeChainId as ChainId);
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(spokeChainId);
+  const selectedSodaToken = useMemo((): XToken | undefined => {
+    const selectedChainConfig = spokeChainConfig[spokeChainId];
+    if (!selectedChainConfig?.supportedTokens || !('SODA' in selectedChainConfig.supportedTokens)) {
+      return undefined;
+    }
+    return selectedChainConfig.supportedTokens.SODA as XToken;
+  }, [spokeChainId]);
+  const { data: sodaPrice } = useTokenPrice(selectedSodaToken as XToken);
+  const sodaPerXSodaRate = useMemo((): number | null => {
+    const parsedRate = Number(poolData.price.toSignificant(18));
+    if (!Number.isFinite(parsedRate) || parsedRate <= 0) {
+      return null;
+    }
+    return parsedRate;
+  }, [poolData.price]);
+
+  const xSodaPrice = useMemo((): number => {
+    if (!sodaPrice || !sodaPerXSodaRate) {
+      return 0;
+    }
+    // Convert xSODA amount to USD via SODA USD price and current SODA/xSODA pool rate.
+    return sodaPrice / sodaPerXSodaRate;
+  }, [sodaPerXSodaRate, sodaPrice]);
 
   const handleManageClick = (): void => {
     if (isWrongChain) {
@@ -89,14 +101,27 @@ function PositionCard({
   };
 
   useEffect((): void => {
-    if (isLoading || isError || !data?.isValid) {
+    if (isLoading) {
+      return;
+    }
+
+    if (isError || !data?.isValid) {
       onLiquidityValueChange(positionKey, 0);
       return;
     }
+
+    // Wait for pricing inputs before publishing liquidity to the parent;
+    // otherwise the card can be hidden too early with a transient $0 value.
+    if (!sodaPrice || !sodaPerXSodaRate) {
+      return;
+    }
+
     const amount0 = formatTokenAmount(data.positionInfo.amount0, poolData.token0.decimals, 6);
     const amount1 = formatTokenAmount(data.positionInfo.amount1, poolData.token1.decimals, 6);
-    const positionTotal = Number.parseFloat(amount0 || '0') + Number.parseFloat(amount1 || '0');
-    onLiquidityValueChange(positionKey, positionTotal);
+    const sodaAmount = Number.parseFloat(amount0 || '0');
+    const xSodaAmount = Number.parseFloat(amount1 || '0');
+    const positionTotalUsd = sodaAmount * sodaPrice + xSodaAmount * xSodaPrice;
+    onLiquidityValueChange(positionKey, positionTotalUsd);
   }, [
     data,
     isError,
@@ -105,6 +130,9 @@ function PositionCard({
     poolData.token0.decimals,
     poolData.token1.decimals,
     positionKey,
+    sodaPerXSodaRate,
+    sodaPrice,
+    xSodaPrice,
   ]);
 
   if (isLoading) {
@@ -139,8 +167,10 @@ function PositionCard({
   const amount1 = formatTokenAmount(positionInfo.amount1, poolData.token1.decimals, 6);
   const fees0 = formatTokenAmount(positionInfo.unclaimedFees0, poolData.token0.decimals, 6);
   const fees1 = formatTokenAmount(positionInfo.unclaimedFees1, poolData.token1.decimals, 6);
-  const positionTotal = Number.parseFloat(amount0 || '0') + Number.parseFloat(amount1 || '0');
-  const positionValueText = formatApproxValue(positionTotal.toFixed(6));
+  const sodaAmount = Number.parseFloat(amount0 || '0');
+  const xSodaAmount = Number.parseFloat(amount1 || '0');
+  const positionTotalUsd = sodaAmount * (sodaPrice ?? 0) + xSodaAmount * (xSodaPrice ?? 0);
+  const positionValueText = formatApproxValue(positionTotalUsd.toFixed(6));
   const totalFeeAmount = Number.parseFloat(fees0 || '0') + Number.parseFloat(fees1 || '0');
   const totalFeeText = `+${totalFeeAmount.toFixed(4)}`;
   const minPrice = positionInfo.tickLowerPrice.toSignificant(4);
@@ -160,7 +190,7 @@ function PositionCard({
       ? ((currentPriceValue - minPriceValue) / (maxPriceValue - minPriceValue)) * 100
       : 0;
   const clampedCurrentPriceTickLeft = Math.min(100, Math.max(0, currentPriceTickLeft));
-  const apyText = apyPercent === null ? '-- APY' : `${apyPercent.toFixed(2)}% APY`;
+  const apyText = apyPercent === null ? '-- APR' : `${apyPercent.toFixed(2)}% APR`;
 
   return (
     <div
@@ -292,116 +322,6 @@ function PositionCard({
         initialMaxPrice={maxPrice}
         positionInfo={positionInfo}
       />
-    </div>
-  );
-}
-
-export function SuppliedPositionsCarousel({
-  positions,
-  poolKey,
-  poolData,
-}: SuppliedPositionsCarouselProps): React.JSX.Element | null {
-  const isMobile = useIsMobile();
-  const [positionLiquidityByKey, setPositionLiquidityByKey] = useState<Record<string, number>>({});
-  const poolApyPercent = usePoolStore(state => state.poolApyPercent);
-  const fetchPoolApy = usePoolStore(state => state.fetchPoolApy);
-  const normalizedPositions = useMemo((): SuppliedPositionItem[] => {
-    const seen = new Set<string>();
-    return positions
-      .map(position => ({
-        tokenId: position.tokenId.trim(),
-        chainId: position.chainId.trim(),
-      }))
-      .filter(position => {
-        const normalizedTokenId = position.tokenId.toLowerCase();
-        if (!position.tokenId || !position.chainId || seen.has(normalizedTokenId)) {
-          return false;
-        }
-        seen.add(normalizedTokenId);
-        return true;
-      });
-  }, [positions]);
-  useEffect((): void => {
-    const activeKeys = new Set(normalizedPositions.map(position => `${position.chainId}-${position.tokenId}`));
-    setPositionLiquidityByKey(prevState => {
-      const nextState: Record<string, number> = {};
-      let hasChanges = false;
-      Object.entries(prevState).forEach(([key, value]) => {
-        if (activeKeys.has(key)) {
-          nextState[key] = value;
-          return;
-        }
-        hasChanges = true;
-      });
-      return hasChanges ? nextState : prevState;
-    });
-  }, [normalizedPositions]);
-  const totalLiquidityText = useMemo((): string => {
-    const totalLiquidity = Object.values(positionLiquidityByKey).reduce((sum, value) => sum + value, 0);
-    return formatApproxValue(totalLiquidity.toFixed(6));
-  }, [positionLiquidityByKey]);
-  const handleLiquidityValueChange = (positionKey: string, value: number): void => {
-    setPositionLiquidityByKey(prevState => {
-      if (prevState[positionKey] === value) {
-        return prevState;
-      }
-      return {
-        ...prevState,
-        [positionKey]: value,
-      };
-    });
-  };
-  useEffect((): void => {
-    void fetchPoolApy();
-  }, [fetchPoolApy]);
-
-  if (!poolData || normalizedPositions.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="w-full flex flex-col gap-3">
-      {normalizedPositions.length > 1 ? (
-        <div className="inline-flex justify-start items-center gap-2">
-          <div className="text-center justify-center text-espresso text-(length:--body-super-comfortable) font-['InterBold'] leading-5">
-            {totalLiquidityText}
-          </div>
-          <div className="text-center justify-center text-clay text-(length:--body-super-comfortable) font-normal font-['InterRegular'] leading-5">
-            Total liquidity
-          </div>
-        </div>
-      ) : null}
-      <Carousel
-        className="w-full"
-        opts={{
-          align: 'start',
-          containScroll: false,
-        }}
-      >
-        <CarouselContent className="mix-blend-multiply">
-          {normalizedPositions.map(position => (
-            <CarouselItem key={`${position.chainId}-${position.tokenId}`} className="basis-1/1.5">
-              <PositionCard
-                tokenId={position.tokenId}
-                chainId={position.chainId}
-                poolKey={poolKey}
-                poolData={poolData}
-                apyPercent={poolApyPercent}
-                onLiquidityValueChange={handleLiquidityValueChange}
-              />
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        {!isMobile ? (
-          <div className="w-32 h-42 right-0 top-0 absolute bg-linear-to-l from-[#F5F2F2] to-[rgba(245, 242, 242, 0)] pointer-events-none" />
-        ) : null}
-        {!isMobile && normalizedPositions.length > 1 ? (
-          <>
-            <CarouselPrevious className="outline-none h-full border-none shadow-none text-clay hover:text-espresso" />
-            <CarouselNext className="outline-none h-full border-none shadow-none text-clay hover:text-espresso" />
-          </>
-        ) : null}
-      </Carousel>
     </div>
   );
 }
