@@ -27,18 +27,20 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient();
 
+export type WagmiOptions = {
+  reconnectOnMount?: boolean;
+  ssr?: boolean;
+};
+
 export type SodaxWalletProviderOptions = {
-  wagmi?: {
-    reconnectOnMount?: boolean;
-    ssr?: boolean;
-  };
+  wagmi?: WagmiOptions;
   solana?: {
     autoConnect?: boolean;
   };
   sui?: {
     autoConnect?: boolean;
   };
-}
+};
 
 const defaultOptions = {
   wagmi: {
@@ -61,13 +63,13 @@ export type SodaxWalletProviderProps = {
 
 export const SodaxWalletProvider = ({ children, rpcConfig, options }: SodaxWalletProviderProps) => {
   const wagmiConfig = useMemo(() => {
-    return createWagmiConfig(rpcConfig);
+    return createWagmiConfig(rpcConfig, options?.wagmi);
   }, [rpcConfig]);
 
   const wallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
-  const wagmi = { ...defaultOptions.wagmi, ...options?.wagmi };
-  const solana = { ...defaultOptions.solana, ...options?.solana };
-  const sui = { ...defaultOptions.sui, ...options?.sui };
+  const wagmi = useMemo(() => ({ ...defaultOptions.wagmi, ...options?.wagmi }), [options?.wagmi]);
+  const solana = useMemo(() => ({ ...defaultOptions.solana, ...options?.solana }), [options?.solana]);
+  const sui = useMemo(() => ({ ...defaultOptions.sui, ...options?.sui }), [options?.sui]);
 
   return (
     <QueryClientProvider client={queryClient}>

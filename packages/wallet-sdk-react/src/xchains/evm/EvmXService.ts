@@ -33,6 +33,7 @@ import {
   redbellyMainnet,
   kaia,
 } from 'wagmi/chains';
+import { WagmiOptions } from '@/SodaxWalletProvider';
 
 // HyperEVM chain is not supported by viem, so we need to define it manually
 export const hyper = /*#__PURE__*/ defineChain({
@@ -60,7 +61,7 @@ export const hyper = /*#__PURE__*/ defineChain({
   },
 });
 
-export const createWagmiConfig = (config: RpcConfig) => {
+export const createWagmiConfig = (config: RpcConfig, options?: WagmiOptions) => {
   return createConfig({
     chains: [
       mainnet,
@@ -76,7 +77,7 @@ export const createWagmiConfig = (config: RpcConfig) => {
       kaia,
       redbellyMainnet,
     ],
-    ssr: true,
+    ssr: options?.ssr,
     transports: {
       [mainnet.id]: http(config[ETHEREUM_MAINNET_CHAIN_ID]),
       [avalanche.id]: http(config[AVALANCHE_MAINNET_CHAIN_ID]),
