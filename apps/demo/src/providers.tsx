@@ -41,10 +41,12 @@ const rpcConfig: RpcConfig = {
   // },
   bitcoin: {
     radfiApiUrl: 'https://api.radfi.co/api',
-    radfiUmsUrl: 'https://ums.radfi.co/api'
+    radfiUmsUrl: 'https://ums.radfi.co/api',
   },
-};
 
+  // aleo
+  aleo: 'https://api.provable.com/v2',
+};
 
 const configMap: Record<SolverEnv, SolverConfigParams> = {
   [SolverEnv.Production]: productionSolverConfig,
@@ -53,7 +55,7 @@ const configMap: Record<SolverEnv, SolverConfigParams> = {
 };
 
 export default function Providers({ children }: { children: ReactNode }) {
-  const { solverEnvironment } = useAppStore();
+  const solverEnvironment = useAppStore(state => state.solverEnvironment);
 
   const sodaxConfig: SodaxConfig = useMemo(() => {
     return {

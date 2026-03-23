@@ -38,12 +38,19 @@ export default defineConfig(({ command, mode }: ConfigEnv) => {
 
     optimizeDeps: {
       include: ['buffer'],
+      exclude: ['@provablehq/wasm'],
+      esbuildOptions: {
+        target: 'esnext',
+      },
     },
     server: {
       // this ensures that the browser opens upon server start
       open: true,
       // this sets a default port to 3000
       port: 3000,
+    },
+    build: {
+      target: 'esnext',
     },
     define: {
       global: 'globalThis',

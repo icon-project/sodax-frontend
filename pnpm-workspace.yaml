@@ -46,4 +46,5 @@ catalog:
   "@provablehq/aleo-wallet-adaptor-react": "0.3.0-alpha.1"
   "@provablehq/aleo-wallet-adaptor-puzzle": "0.3.0-alpha.1"
   "@provablehq/aleo-wallet-adaptor-shield": "0.3.0-alpha.1"
+  "@provablehq/aleo-wallet-adaptor-leo": "0.3.0-alpha.1"
   "@provablehq/aleo-wallet-standard": "0.3.0-alpha.1"

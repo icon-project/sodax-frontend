@@ -7,5 +7,4 @@ export * from './StellarWalletProvider.js';
 export * from './StacksWalletProvider.js';
 export * from './BTCWalletProvider.js';
 export * from './NearWalletProvider.js';
-export * from "./AleoWalletProvider.js"
-
+export * from './AleoWalletProvider.js';

@@ -1,10 +1,4 @@
-import {
-  Account,
-  AleoNetworkClient,
-  ProgramManager,
-  AleoKeyProvider,
-  NetworkRecordProvider,
-} from '@provablehq/sdk';
+import { Account, AleoNetworkClient, ProgramManager, AleoKeyProvider, NetworkRecordProvider } from '@provablehq/sdk';
 
 import type {
   IAleoWalletProvider,
@@ -22,6 +16,11 @@ import type {
 import type { WalletAdapter } from '@provablehq/aleo-wallet-standard';
 
 export type AleoNetwork = 'mainnet' | 'testnet';
+
+/** Priority fee for private key wallets — 0 means only the base fee (calculated by ProgramManager) */
+const DEFAULT_PK_PRIORITY_FEE = 0;
+/** Minimum fee for browser extension wallets — 0.001 ALEO to ensure transaction acceptance */
+const DEFAULT_BROWSER_FEE = 0.001;
 
 export type DelegateProvingConfig = {
   apiKey: string;
@@ -134,10 +133,10 @@ export class AleoWalletProvider implements IAleoWalletProvider {
     }
 
     if (isBrowserExtensionAleoWallet(this.wallet)) {
-      if (!this.wallet.adapter.connected || !this.wallet.connectedAccount) {
+      if (!this.wallet.adapter.connected || !this.wallet.adapter.account) {
         throw new Error('Browser wallet not connected');
       }
-      return this.wallet.connectedAccount.address;
+      return this.wallet.adapter.account.address;
     }
 
     throw new Error('Invalid wallet configuration');
@@ -150,7 +149,7 @@ export class AleoWalletProvider implements IAleoWalletProvider {
   }
 
   async execute(options: AleoExecuteOptions): Promise<AleoExecutionResult> {
-    const { programName, functionName, inputs, priorityFee = 0, privateFee = false } = options;
+    const { programName, functionName, inputs, priorityFee, privateFee = false } = options;
 
     if (isPkAleoWallet(this.wallet)) {
       try {
@@ -159,7 +158,7 @@ export class AleoWalletProvider implements IAleoWalletProvider {
             programName,
             functionName,
             inputs,
-            priorityFee,
+            priorityFee: priorityFee ?? DEFAULT_PK_PRIORITY_FEE,
             privateFee,
             broadcast: true,
           });
@@ -179,7 +178,7 @@ export class AleoWalletProvider implements IAleoWalletProvider {
         const txId = await this.programManager.execute({
           programName,
           functionName,
-          priorityFee,
+          priorityFee: priorityFee ?? DEFAULT_PK_PRIORITY_FEE,
           privateFee,
           inputs,
         });
@@ -192,7 +191,7 @@ export class AleoWalletProvider implements IAleoWalletProvider {
     }
 
     if (isBrowserExtensionAleoWallet(this.wallet)) {
-      if (!this.wallet.adapter.connected || !this.wallet.connectedAccount) {
+      if (!this.wallet.adapter.connected || !this.wallet.adapter.account) {
         throw new Error('Browser wallet not connected');
       }
 
@@ -201,7 +200,7 @@ export class AleoWalletProvider implements IAleoWalletProvider {
           program: programName,
           function: functionName,
           inputs,
-          fee: priorityFee || 0.001,
+          fee: priorityFee ?? DEFAULT_BROWSER_FEE,
           privateFee: privateFee || false,
         };
 
@@ -241,8 +240,8 @@ export class AleoWalletProvider implements IAleoWalletProvider {
         status: confirmedTx.status as AleoTransactionReceipt['status'],
         type: confirmedTx.type,
         index: confirmedTx.index,
-        transaction: confirmedTx.transaction as unknown,
-        finalize: confirmedTx.finalize as unknown[],
+        transaction: confirmedTx.transaction,
+        finalize: confirmedTx.finalize,
         confirmedAt: new Date(),
       };
     } catch (error) {

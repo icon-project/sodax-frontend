@@ -1,11 +1,7 @@
 import type { Address, Hex } from 'viem';
 import { keccak256 } from 'viem';
 import type { EvmHubProvider } from '../../entities/index.js';
-import {
-  AleoBaseSpokeProvider,
-  type AleoSpokeProvider,
-  ALEO_DEFAULT_TIMEOUT,
-} from '../../entities/aleo/AleoSpokeProvider.js';
+import { type AleoSpokeProvider, ALEO_DEFAULT_TIMEOUT } from '../../entities/aleo/AleoSpokeProvider.js';
 import type {
   AleoGasEstimate,
   AleoSpokeProviderType,
@@ -22,10 +18,10 @@ export type AleoSpokeDepositParams = {
   from: string; // Aleo address (aleo1...)
   to?: HubAddress; // The address of the user on the hub chain (wallet abstraction address)
   token: string; // Token ID (will be converted to field)
-  amount: number; // Amount to transfer (will be converted to u64)
+  amount: bigint; // Amount to transfer (will be converted to u64)
   data: Hex; // Data payload
   connSn?: string; // Connection sequence number (randomly generated if not provided)
-  feeAmount?: number; // Fee amount for cross-chain transfer (defaults to 0)
+  feeAmount?: bigint; // Fee amount for cross-chain transfer (defaults to 0)
 };
 
 type AleoTransferToHubParams = {
@@ -50,8 +46,7 @@ export class AleoSpokeService {
     rawTx: AleoRawTransaction,
     spokeProvider: AleoSpokeProviderType,
   ): Promise<AleoGasEstimate> {
-    const baseProvider = new AleoBaseSpokeProvider(spokeProvider.chainConfig);
-    return baseProvider.estimateFee(rawTx.data);
+    return spokeProvider.estimateFee(rawTx.data);
   }
 
   /**
@@ -97,9 +92,8 @@ export class AleoSpokeService {
    * @returns The balance of the token.
    */
   public static async getDeposit(token: string, spokeProvider: AleoSpokeProviderType): Promise<bigint> {
-    const baseProvider = new AleoBaseSpokeProvider(spokeProvider.chainConfig);
     const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-    return baseProvider.getBalance(walletAddress, token);
+    return spokeProvider.getBalance(walletAddress, token);
   }
 
   /**
@@ -114,9 +108,8 @@ export class AleoSpokeService {
     spokeProvider: AleoSpokeProviderType,
     hubProvider: EvmHubProvider,
   ): Promise<DepositSimulationParams> {
-    const baseProvider = new AleoBaseSpokeProvider(spokeProvider.chainConfig);
     const assetManagerId = spokeProvider.chainConfig.addresses.assetManager;
-    const programObj = await baseProvider.networkClient.getProgramObject(assetManagerId);
+    const programObj = await spokeProvider.networkClient.getProgramObject(assetManagerId);
     const assetManagerAddress = programObj.address().to_string();
     const to =
       params.to ??
@@ -153,8 +146,7 @@ export class AleoSpokeService {
     raw?: R,
   ): Promise<TxReturnType<S, R>> {
     const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
-    const baseProvider = new AleoBaseSpokeProvider(spokeProvider.chainConfig);
-    const connSn = await baseProvider.generateUniqueConnSn();
+    const connSn = await spokeProvider.generateUniqueConnSn();
     return AleoSpokeService.call(BigInt(relayId), from, keccak256(payload), connSn, spokeProvider, raw);
   }
 
@@ -170,8 +162,7 @@ export class AleoSpokeService {
     hubProvider: EvmHubProvider,
     raw?: R,
   ): Promise<TxReturnType<S, R>> {
-    const baseProvider = new AleoBaseSpokeProvider(spokeProvider.chainConfig);
-    const connSn = await baseProvider.generateUniqueConnSn(inputConnSn);
+    const connSn = await spokeProvider.generateUniqueConnSn(inputConnSn);
 
     const hubChainId = BigInt(hubProvider.chainConfig.chain.chainId);
 
@@ -184,7 +175,7 @@ export class AleoSpokeService {
       if (amount > U64_MAX) {
         throw new Error(`Amount ${amount} exceeds u64 maximum of ${U64_MAX}`);
       }
-      return baseProvider.transferNative(
+      return spokeProvider.transferNative(
         token,
         recipient,
         amount,
@@ -197,7 +188,7 @@ export class AleoSpokeService {
         raw,
       );
     }
-    return baseProvider.transfer(
+    return spokeProvider.transfer(
       token,
       recipient,
       amount,
@@ -222,8 +213,7 @@ export class AleoSpokeService {
     spokeProvider: S,
     raw?: R,
   ): Promise<TxReturnType<S, R>> {
-    const baseProvider = new AleoBaseSpokeProvider(spokeProvider.chainConfig);
-    return baseProvider.sendMessage(dstChainId, dstAddress, connSn, payload, spokeProvider, raw);
+    return spokeProvider.sendMessage(dstChainId, dstAddress, connSn, payload, spokeProvider, raw);
   }
 
   /**

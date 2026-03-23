@@ -57,6 +57,9 @@ catalogs:
     '@provablehq/aleo-wallet-adaptor-core':
       specifier: 0.3.0-alpha.1
       version: 0.3.0-alpha.1
+    '@provablehq/aleo-wallet-adaptor-leo':
+      specifier: 0.3.0-alpha.1
+      version: 0.3.0-alpha.1
     '@provablehq/aleo-wallet-adaptor-puzzle':
       specifier: 0.3.0-alpha.1
       version: 0.3.0-alpha.1
@@ -962,6 +965,9 @@ importers:
       '@provablehq/aleo-wallet-adaptor-core':
         specifier: 'catalog:'
         version: 0.3.0-alpha.1
+      '@provablehq/aleo-wallet-adaptor-leo':
+        specifier: 'catalog:'
+        version: 0.3.0-alpha.1
       '@provablehq/aleo-wallet-adaptor-puzzle':
         specifier: 'catalog:'
         version: 0.3.0-alpha.1(buffer@6.0.3)(bufferutil@4.1.0)(utf-8-validate@5.0.10)
@@ -1020,8 +1026,8 @@ importers:
         specifier: 10.1.1
         version: 10.1.1
       near-api-js:
-        specifier: 'catalog:'
-        version: 7.2.0
+        specifier: 7.1.1
+        version: 7.1.1
       react:
         specifier: '>=19'
         version: 19.1.4
@@ -2375,10 +2381,6 @@ packages:
     resolution: {integrity: sha512-moJwhmtLtuxiUzzNp1jpfBfx8yefKoO9D/RCR9dmwrnc7qjJqId1rEtQz+lSlU5cabX8daToMSx/7HayXOiaFw==}
     engines: {node: '>=16.0.0'}
 
-  '@hpke/common@1.8.1':
-    resolution: {integrity: sha512-PSI4QSxH8XDli0TqAsWycVfrLLCM/bBe+hVlJwtuJJiKIvCaFS3CXX/WtRfJceLJye9NHc2J7GvHVCY9B1BEbA==}
-    engines: {node: '>=16.0.0'}
-
   '@hpke/core@1.9.0':
     resolution: {integrity: sha512-pFxWl1nNJeQCSUFs7+GAblHvXBCjn9EPN65vdKlYQil2aURaRxfGMO6vBKGqm1YHTKwiAxJQNEI70PbSowMP9Q==}
     engines: {node: '>=16.0.0'}
@@ -3298,6 +3300,9 @@ packages:
 
   '@provablehq/aleo-wallet-adaptor-core@0.3.0-alpha.1':
     resolution: {integrity: sha512-+1ruZ7zpGh35BipFeWdkxP1BIKsT3rE0IiW/pe3o3x3qHLPGxpsoZ1AX6uA3O7k1ckTYNqlH9JucGBfOpD5KDQ==}
+
+  '@provablehq/aleo-wallet-adaptor-leo@0.3.0-alpha.1':
+    resolution: {integrity: sha512-ECNIy2lXmVd/kEp6yTjNpzGzZ7vNqKiK4eFh5aVVj/vmRy1mVZDbZDeIXb8ObEO0vGCj7EZ29/eMhaaLcxA4hQ==}
 
   '@provablehq/aleo-wallet-adaptor-puzzle@0.3.0-alpha.1':
     resolution: {integrity: sha512-drRazVZY4VWXBfZdI0ottuaDTgySM6EU3AqddolVw+5XRITOKykq8oF+1enpPurBXn8AATGjRpwHuHqFuLblyQ==}
@@ -9987,6 +9992,10 @@ packages:
     resolution: {integrity: sha512-yJBmDJr18xy47dbNVlHcgdPrulSn1nhSE6Ns9vTG+Nx9VPT6iV1MD6aQFp/t52zpf82FhLLTXAXr30NuCnxvwA==}
     engines: {node: ^20.0.0 || >=22.0.0}
 
+  near-api-js@7.1.1:
+    resolution: {integrity: sha512-85Ty3apM+tvAw0us+fCdJTv00p/4+SNuryUnJmF4W4DAoWCq8y2i7+RyNT57GbVqzc9Yjr+OGMqDPX8ij50JJA==}
+    engines: {node: '>=20.18.3', pnpm: '>=10.4.1'}
+
   near-api-js@7.2.0:
     resolution: {integrity: sha512-byLJC+VBXe8SDCABqy5A2wXE+oHzDrn8JKoIKUnpilg1Tm9v3hejYv047hF2KUmSC5Ll7Rl5I5CrU2lk/u4ocQ==}
     engines: {node: '>=20.18.3', pnpm: '>=10.4.1'}
@@ -13790,7 +13799,7 @@ snapshots:
     dependencies:
       '@albedo-link/intent': 0.12.0
       '@creit.tech/xbull-wallet-connect': 0.4.0
-      '@hot-wallet/sdk': 1.0.11(bufferutil@4.1.0)(encoding@0.1.13)(near-api-js@7.2.0)(utf-8-validate@5.0.10)
+      '@hot-wallet/sdk': 1.0.11(bufferutil@4.1.0)(encoding@0.1.13)(near-api-js@7.1.1)(utf-8-validate@5.0.10)
       '@ledgerhq/hw-app-str': 7.0.4
       '@ledgerhq/hw-transport': 6.31.4
       '@ledgerhq/hw-transport-webusb': 6.29.4
@@ -14539,11 +14548,11 @@ snapshots:
 
   '@hot-labs/near-connect@0.10.0': {}
 
-  '@hot-wallet/sdk@1.0.11(bufferutil@4.1.0)(encoding@0.1.13)(near-api-js@7.2.0)(utf-8-validate@5.0.10)':
+  '@hot-wallet/sdk@1.0.11(bufferutil@4.1.0)(encoding@0.1.13)(near-api-js@7.1.1)(utf-8-validate@5.0.10)':
     dependencies:
       '@near-js/crypto': 1.4.2
       '@near-js/utils': 1.1.0
-      '@near-wallet-selector/core': 8.10.2(near-api-js@7.2.0)
+      '@near-wallet-selector/core': 8.10.2(near-api-js@7.1.1)
       '@solana/wallet-adapter-base': 0.9.27(@solana/web3.js@1.98.0(bufferutil@4.1.0)(encoding@0.1.13)(utf-8-validate@5.0.10))
       '@solana/web3.js': 1.98.0(bufferutil@4.1.0)(encoding@0.1.13)(utf-8-validate@5.0.10)
       borsh: 2.0.0
@@ -14558,11 +14567,9 @@ snapshots:
 
   '@hpke/chacha20poly1305@1.7.1':
     dependencies:
-      '@hpke/common': 1.8.1
+      '@hpke/common': 1.10.1
 
   '@hpke/common@1.10.1': {}
-
-  '@hpke/common@1.8.1': {}
 
   '@hpke/core@1.9.0':
     dependencies:
@@ -14570,11 +14577,11 @@ snapshots:
 
   '@hpke/dhkem-x25519@1.6.4':
     dependencies:
-      '@hpke/common': 1.8.1
+      '@hpke/common': 1.10.1
 
   '@hpke/dhkem-x448@1.6.4':
     dependencies:
-      '@hpke/common': 1.8.1
+      '@hpke/common': 1.10.1
 
   '@img/colour@1.0.0':
     optional: true
@@ -16080,12 +16087,12 @@ snapshots:
       depd: 2.0.0
       mustache: 4.0.0
 
-  '@near-wallet-selector/core@8.10.2(near-api-js@7.2.0)':
+  '@near-wallet-selector/core@8.10.2(near-api-js@7.1.1)':
     dependencies:
       borsh: 1.0.0
       events: 3.3.0
       js-sha256: 0.9.0
-      near-api-js: 7.2.0
+      near-api-js: 7.1.1
       rxjs: 7.8.1
 
   '@next/env@15.5.9': {}
@@ -16573,6 +16580,12 @@ snapshots:
   '@provablehq/aleo-wallet-adaptor-core@0.3.0-alpha.1':
     dependencies:
       '@provablehq/aleo-types': 0.3.0-alpha.1
+      '@provablehq/aleo-wallet-standard': 0.3.0-alpha.1
+
+  '@provablehq/aleo-wallet-adaptor-leo@0.3.0-alpha.1':
+    dependencies:
+      '@provablehq/aleo-types': 0.3.0-alpha.1
+      '@provablehq/aleo-wallet-adaptor-core': 0.3.0-alpha.1
       '@provablehq/aleo-wallet-standard': 0.3.0-alpha.1
 
   '@provablehq/aleo-wallet-adaptor-puzzle@0.3.0-alpha.1(buffer@6.0.3)(bufferutil@4.1.0)(utf-8-validate@5.0.10)':
@@ -28716,7 +28729,7 @@ snapshots:
   hpke-js@1.6.5:
     dependencies:
       '@hpke/chacha20poly1305': 1.7.1
-      '@hpke/common': 1.8.1
+      '@hpke/common': 1.10.1
       '@hpke/core': 1.9.0
       '@hpke/dhkem-x25519': 1.6.4
       '@hpke/dhkem-x448': 1.6.4
@@ -29928,6 +29941,16 @@ snapshots:
 
   nanostores@1.1.0: {}
 
+  near-api-js@7.1.1:
+    dependencies:
+      '@noble/curves': 2.0.1
+      '@noble/hashes': 2.0.1
+      '@scure/base': 2.0.0
+      borsh: 2.0.0
+      is-my-json-valid: 2.20.6
+      near-seed-phrase: 0.2.1
+      secp256k1: 5.0.1
+
   near-api-js@7.2.0:
     dependencies:
       '@noble/curves': 2.0.1
@@ -30638,7 +30661,7 @@ snapshots:
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
       '@types/node': 25.0.10
-      long: 5.2.5
+      long: 5.3.2
 
   protobufjs@7.5.4:
     dependencies:

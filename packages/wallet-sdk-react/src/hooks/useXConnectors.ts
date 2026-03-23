@@ -35,7 +35,7 @@ export function useXConnectors(xChainType: ChainType | undefined): XConnector[] 
   const { data: stellarXConnectors } = useStellarXConnectors();
   const { wallets: aleoWallets } = useAleoWallet();
   const stacksXConnectors = useStacksXConnectors();
-
+  const { data: nearXConnectors } = useNearXConnectors();
   const { wallets: solanaWallets } = useWallet();
 
   const xConnectors = useMemo((): XConnector[] => {
@@ -54,10 +54,10 @@ export function useXConnectors(xChainType: ChainType | undefined): XConnector[] 
         return solanaWallets
           .filter(wallet => wallet.readyState === 'Installed')
           .map(wallet => new SolanaXConnector(wallet));
+      case 'NEAR':
+        return nearXConnectors || [];
       case 'ALEO':
-        return aleoWallets
-          .filter(wallet => wallet.readyState === 'Installed' || wallet.readyState === 'Loadable')
-          .map(wallet => new AleoXConnector(wallet));
+        return aleoWallets.map(wallet => new AleoXConnector(wallet));
       case 'STACKS':
         return stacksXConnectors;
       default:
@@ -70,6 +70,7 @@ export function useXConnectors(xChainType: ChainType | undefined): XConnector[] 
     suiWallets,
     stellarXConnectors,
     solanaWallets,
+    nearXConnectors,
     aleoWallets,
     stacksXConnectors,
   ]);

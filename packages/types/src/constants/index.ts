@@ -1207,7 +1207,7 @@ export const spokeChainConfig = {
         decimals: 6,
         address: '897442:43',
         xChainId: BITCOIN_MAINNET_CHAIN_ID,
-      }
+      },
     },
     radfiApiUrl: 'https://api.radfi.co/api',
     radfiApiKey: '',
@@ -1768,7 +1768,7 @@ export const spokeChainConfig = {
     },
     rpcUrl: 'https://api.mainnet.hiro.so',
   } as const satisfies StacksSpokeChainConfig,
-    [ALEO_MAINNET_CHAIN_ID]: {
+  [ALEO_MAINNET_CHAIN_ID]: {
     chain: baseChainInfo[ALEO_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'ALEO'>,
     addresses: {
       assetManager: 'asset_manager_core_v1.aleo',
@@ -1776,6 +1776,13 @@ export const spokeChainConfig = {
       xTokenManager: '',
       rateLimit: 'rate_limit_v1.aleo',
       testToken: '7190692537453907461105790569797103513515746302149567971663963167242253971980',
+      creditsProgram: 'credits.aleo',
+      tokenRegistry: 'token_registry.aleo',
+    },
+    mappings: {
+      messages: 'messages',
+      account: 'account',
+      authorizedBalances: 'authorized_balances',
     },
     nativeToken: '3443843282313283355522573239085696902919850365217539366784739393210722344986' as const,
     bnUSD: '',
@@ -2849,9 +2856,9 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       symbol: 'BUSD',
       name: 'BUSD.BUSD.BUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
-    }
+    },
   },
-    [ALEO_MAINNET_CHAIN_ID]: {
+  [ALEO_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[ALEO_MAINNET_CHAIN_ID].nativeToken]: {
       asset: '0x0000000000000000000000000000000000000000',
       decimal: 6,
@@ -3245,7 +3252,7 @@ export const moneyMarketSupportedTokens = {
   [BITCOIN_MAINNET_CHAIN_ID]: [
     spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BTC,
   ] as const satisfies XToken[],
-    [ALEO_MAINNET_CHAIN_ID]: [spokeChainConfig[ALEO_MAINNET_CHAIN_ID].supportedTokens.ALEO] as const satisfies XToken[],
+  [ALEO_MAINNET_CHAIN_ID]: [spokeChainConfig[ALEO_MAINNET_CHAIN_ID].supportedTokens.ALEO] as const satisfies XToken[],
 } as const satisfies Record<SpokeChainId, readonly XToken[]>;
 
 // export const isMoneyMarketSupportedToken = (chainId: SpokeChainId, token: string): boolean =>

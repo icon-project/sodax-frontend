@@ -16,7 +16,18 @@ export type SpokeChainId = (typeof CHAIN_IDS)[number];
 
 export type ChainId = (typeof CHAIN_IDS)[number];
 
-export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'STACKS', 'NEAR', 'BITCOIN', 'ALEO'] as const;
+export const ChainTypeArr = [
+  'ICON',
+  'EVM',
+  'INJECTIVE',
+  'SUI',
+  'STELLAR',
+  'SOLANA',
+  'STACKS',
+  'NEAR',
+  'BITCOIN',
+  'ALEO',
+] as const;
 export type ChainType = (typeof ChainTypeArr)[number];
 
 export type Chain = {
@@ -281,6 +292,13 @@ export type AleoSpokeChainConfig = BaseSpokeChainConfig<'ALEO'> & {
     xTokenManager: string;
     rateLimit: string;
     testToken: string;
+    creditsProgram: string;
+    tokenRegistry: string;
+  };
+  mappings: {
+    messages: string;
+    account: string;
+    authorizedBalances: string;
   };
   nativeToken: string;
   gasPrice: string;
