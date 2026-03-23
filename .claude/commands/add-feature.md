@@ -42,7 +42,8 @@ apps/web/app/(apps)/[reference]/_stores/[reference]-store.ts
 apps/web/app/(apps)/[reference]/_stores/[reference]-store-provider.tsx
 apps/web/app/(apps)/[reference]/_components/   (list all files)
 apps/web/app/(apps)/layout.tsx                 (provider nesting)
-apps/web/components/shared/route-tabs.tsx       (tab config)
+apps/web/components/shared/route-tabs.tsx       (tab config — includes `enabled` flag)
+apps/web/components/shared/tab-icon.tsx         (icon types for tabs)
 apps/web/constants/routes.ts                   (route constants)
 apps/web/constants/animation.ts                (animation variants)
 ```
@@ -234,7 +235,11 @@ Each component:
 - Use shadcn/ui components from `@/components/ui/`
 - Use shared components from `@/components/shared/` (CurrencyLogo, NetworkIcon, etc.)
 
-**Create** `apps/web/app/(apps)/[feature]/_components/index.ts` — barrel export all components.
+Optionally **create** `apps/web/app/(apps)/[feature]/_components/index.ts` — barrel export (only if feature has many top-level components; some features like save/swap import directly without barrel).
+
+Optional directories (create only if needed):
+- `_constants/` — feature-specific constants (e.g., messages, enums). Only swap uses this.
+- `_utils/` — feature-specific utility functions. Only migrate uses this.
 
 ---
 
@@ -258,10 +263,10 @@ export const FEATURE_ROUTE = '/[feature]';
 ```typescript
 {
   value: '[feature]',
-  type: '[feature]',    // or reuse existing icon type
+  type: '[feature]',    // or reuse existing TabIconType from tab-icon.tsx
   label: 'Feature',
   content: 'description for hover',
-  enabled: true,
+  enabled: true,        // set false to hide in production initially
   href: FEATURE_ROUTE,
 },
 ```
