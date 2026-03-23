@@ -36,6 +36,23 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export const DEX_POSITIONS_UPDATED_EVENT = 'sodax-dex-positions-updated';
+
+export function createDexTokenIdsStorageKey(chainId: string | number, userAddress: string): string {
+  return `sodax-dex-positions-${chainId}-${userAddress}`;
+}
+
+export function dispatchDexPositionsUpdatedEvent(chainId: string | number, userAddress: string): void {
+  globalThis.dispatchEvent(
+    new CustomEvent(DEX_POSITIONS_UPDATED_EVENT, {
+      detail: {
+        chainId,
+        userAddress,
+      },
+    }),
+  );
+}
+
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export function shortenAddress(address: string, chars = 4): string {

@@ -9,7 +9,7 @@ import { PoolNetworkSelector } from './_components/pool-network-selector';
 import { PriceRangeSelector } from './_components/price-range-selector';
 import { LiquidityInputs } from './_components/liquidity-inputs';
 import Tip from '../stake/_components/icons/tip';
-import { cn } from '@/lib/utils';
+import { cn, DEX_POSITIONS_UPDATED_EVENT } from '@/lib/utils';
 import { usePoolActions, usePoolState } from './_stores/pool-store-provider';
 import { useLiquidityAmounts, usePoolData, useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
 import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
@@ -26,8 +26,6 @@ type SavedDexPosition = {
   tokenId: string;
   chainId: string;
 };
-
-const DEX_POSITIONS_UPDATED_EVENT = 'sodax-dex-positions-updated';
 
 function parseTokenIdsFromStorageValue(value: string | null): string[] {
   if (!value) {
