@@ -32,6 +32,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WithdrawTabContent } from '@/app/(apps)/pool/_components/manage-dialog/withdraw-tab-content';
 import { formatUnits, parseUnits } from 'viem';
 import type { CreateAssetDepositParams } from '@sodax/sdk';
+import { formatTokenAmount } from '@/lib/utils';
 
 type ManagePositionDialogProps = {
   open: boolean;
@@ -208,6 +209,14 @@ export function ManagePositionDialog({
   }, [convertPoolTokenToSodaAmount, lastEditedAmount, liquidityToken0Amount]);
 
   const hasUnclaimedFees = unclaimedFees0 > 0n || unclaimedFees1 > 0n;
+  const positionSodaBalanceText = useMemo(
+    (): string => formatTokenAmount(positionInfo.amount0, poolData.token0.decimals, 2),
+    [poolData.token0.decimals, positionInfo.amount0],
+  );
+  const positionXSodaBalanceText = useMemo(
+    (): string => formatTokenAmount(positionInfo.amount1, poolData.token1.decimals, 2),
+    [poolData.token1.decimals, positionInfo.amount1],
+  );
   const token0DepositParams = useMemo((): CreateAssetDepositParams | undefined => {
     if (!poolSpokeAssets || !poolData.token0IsStatAToken || Number.parseFloat(sodaInputAmount) <= 0) {
       return undefined;
@@ -561,6 +570,8 @@ export function ManagePositionDialog({
 
           <ClaimTabContent
             chainId={spokeChainId}
+            positionSodaBalanceText={positionSodaBalanceText}
+            positionXSodaBalanceText={positionXSodaBalanceText}
             hasUnclaimedFees={hasUnclaimedFees}
             unclaimedFees0={unclaimedFees0}
             unclaimedFees1={unclaimedFees1}
@@ -573,6 +584,8 @@ export function ManagePositionDialog({
             chainId={spokeChainId}
             tokenId={tokenId}
             poolData={poolData}
+            positionSodaBalanceText={positionSodaBalanceText}
+            positionXSodaBalanceText={positionXSodaBalanceText}
             liquidityToken0Amount={displaySodaAmount}
             liquidityToken1Amount={liquidityToken1Amount}
             isPending={isPending}
@@ -596,6 +609,8 @@ export function ManagePositionDialog({
             chainId={spokeChainId}
             poolData={poolData}
             positionInfo={positionInfo}
+            positionSodaBalanceText={positionSodaBalanceText}
+            positionXSodaBalanceText={positionXSodaBalanceText}
             withdrawPercentage={withdrawPercentage}
             isPending={isPending}
             isWithdrawPending={decreaseLiquidityMutation.isPending || withdrawMutation.isPending}
