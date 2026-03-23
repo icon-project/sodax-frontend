@@ -33,7 +33,7 @@ import {
   redbellyMainnet,
   kaia,
 } from 'wagmi/chains';
-import { WagmiOptions } from '@/SodaxWalletProvider';
+import type { WagmiOptions } from '@/SodaxWalletProvider';
 
 // HyperEVM chain is not supported by viem, so we need to define it manually
 export const hyper = /*#__PURE__*/ defineChain({

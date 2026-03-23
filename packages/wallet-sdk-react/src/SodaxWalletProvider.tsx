@@ -62,12 +62,12 @@ export type SodaxWalletProviderProps = {
 };
 
 export const SodaxWalletProvider = ({ children, rpcConfig, options }: SodaxWalletProviderProps) => {
+  const wagmi = useMemo(() => ({ ...defaultOptions.wagmi, ...options?.wagmi }), [options?.wagmi]);
   const wagmiConfig = useMemo(() => {
-    return createWagmiConfig(rpcConfig, options?.wagmi);
-  }, [rpcConfig]);
+    return createWagmiConfig(rpcConfig, wagmi);
+  }, [rpcConfig, wagmi]);
 
   const wallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
-  const wagmi = useMemo(() => ({ ...defaultOptions.wagmi, ...options?.wagmi }), [options?.wagmi]);
   const solana = useMemo(() => ({ ...defaultOptions.solana, ...options?.solana }), [options?.solana]);
   const sui = useMemo(() => ({ ...defaultOptions.sui, ...options?.sui }), [options?.sui]);
 
