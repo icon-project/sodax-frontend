@@ -3017,6 +3017,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.USDC,
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
     spokeChainConfig[AVALANCHE_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    ...Object.values(SodaTokens),
   ] as const satisfies XToken[],
   [ARBITRUM_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
