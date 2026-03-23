@@ -23,6 +23,8 @@ import {
   hubAssets,
   EVM_CHAIN_IDS,
   NEAR_MAINNET_CHAIN_ID,
+  SodaTokens,
+  SONIC_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
@@ -100,8 +102,11 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
   return activeChains.flatMap(chainId => {
     try {
       const tokens = getSupportedSolverTokens(chainId).map(normalizeToken);
+      const tokensForChain = chainId === SONIC_MAINNET_CHAIN_ID
+        ? tokens.filter(token => !Object.values(SodaTokens).some(sodaToken => sodaToken.symbol === token.symbol))
+        : tokens;
 
-      return tokens.map(token => ({
+      return tokensForChain.map(token => ({
         ...token,
         xChainId: chainId,
       }));
@@ -115,8 +120,11 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
 export const getSupportedSolverTokensForChain = (chainId: SpokeChainId): XToken[] => {
   try {
     const tokens = getSupportedSolverTokens(chainId).map(normalizeToken);
+    const tokensForChain = chainId === SONIC_MAINNET_CHAIN_ID
+      ? tokens.filter(token => !Object.values(SodaTokens).some(sodaToken => sodaToken.symbol === token.symbol))
+      : tokens;
 
-    return tokens.map(token => ({
+    return tokensForChain.map(token => ({
       ...token,
       xChainId: chainId,
     }));
