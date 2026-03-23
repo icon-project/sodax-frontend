@@ -32,6 +32,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WithdrawTabContent } from '@/app/(apps)/pool/_components/manage-dialog/withdraw-tab-content';
 import { formatUnits, parseUnits } from 'viem';
 import type { CreateAssetDepositParams } from '@sodax/sdk';
+import { createDexTokenIdsStorageKey, dispatchDexPositionsUpdatedEvent, formatTokenAmount } from '@/lib/utils';
 
 type ManagePositionDialogProps = {
   open: boolean;
@@ -46,6 +47,26 @@ type ManagePositionDialogProps = {
   initialMaxPrice: string;
   positionInfo: ClPositionInfo;
 };
+
+function removeTokenIdFromLocalStorage(userAddress: string, chainId: string | number, tokenId: string): void {
+  if (typeof globalThis.localStorage === 'undefined') {
+    return;
+  }
+
+  const cleanId = tokenId.trim().toLowerCase();
+  const storageKey = createDexTokenIdsStorageKey(chainId, userAddress);
+  const positions = globalThis.localStorage.getItem(storageKey);
+  const tokenIds = positions ? positions.split(',').map(value => value.trim()) : [];
+  const filteredTokenIds = tokenIds.filter(id => id.trim().toLowerCase() !== cleanId);
+
+  if (filteredTokenIds.length > 0) {
+    globalThis.localStorage.setItem(storageKey, filteredTokenIds.join(','));
+  } else {
+    globalThis.localStorage.removeItem(storageKey);
+  }
+
+  dispatchDexPositionsUpdatedEvent(chainId, userAddress);
+}
 
 function resolveSpokeChainId(chainId: string): SpokeChainId {
   if (!(chainId in spokeChainConfig)) {
@@ -208,6 +229,14 @@ export function ManagePositionDialog({
   }, [convertPoolTokenToSodaAmount, lastEditedAmount, liquidityToken0Amount]);
 
   const hasUnclaimedFees = unclaimedFees0 > 0n || unclaimedFees1 > 0n;
+  const positionSodaBalanceText = useMemo(
+    (): string => formatTokenAmount(positionInfo.amount0, poolData.token0.decimals, 2),
+    [poolData.token0.decimals, positionInfo.amount0],
+  );
+  const positionXSodaBalanceText = useMemo(
+    (): string => formatTokenAmount(positionInfo.amount1, poolData.token1.decimals, 2),
+    [poolData.token1.decimals, positionInfo.amount1],
+  );
   const token0DepositParams = useMemo((): CreateAssetDepositParams | undefined => {
     if (!poolSpokeAssets || !poolData.token0IsStatAToken || Number.parseFloat(sodaInputAmount) <= 0) {
       return undefined;
@@ -335,6 +364,13 @@ export function ManagePositionDialog({
         }),
         spokeProvider,
       });
+      try {
+        const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+        dispatchDexPositionsUpdatedEvent(chainId, walletAddress);
+      } catch (eventError) {
+        // Keep add-liquidity successful even if local position refresh event fails.
+        console.warn('Failed to dispatch DEX positions updated event', eventError);
+      }
       setLastEditedAmount(null);
       handleToken0AmountChange('');
       handleToken1AmountChange('');
@@ -513,11 +549,25 @@ export function ManagePositionDialog({
           });
         }
       }
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['allChainBalances'] }),
-        queryClient.invalidateQueries({ queryKey: ['allChainXSodaBalances'] }),
-      ]);
+      setWithdrawPercentage('0');
       setIsWithdrawSuccess(true);
+      try {
+        const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+        if (parsedPercentage === 100) {
+          removeTokenIdFromLocalStorage(walletAddress, chainId, tokenId);
+        } else {
+          dispatchDexPositionsUpdatedEvent(chainId, walletAddress);
+        }
+      } catch (walletAddressError) {
+        // Keep withdraw successful even when local position cache refresh fails.
+        console.warn('Failed to refresh local DEX position state', walletAddressError);
+      }
+      try {
+        await queryClient.invalidateQueries({ queryKey: ['dex', 'positionInfo'] });
+      } catch (invalidateError) {
+        // Keep success state even when cache invalidation fails.
+        console.warn('Failed to invalidate DEX position query', invalidateError);
+      }
     } catch (withdrawErr) {
       const message = withdrawErr instanceof Error ? withdrawErr.message : 'Withdraw liquidity failed.';
       setWithdrawError(message);
@@ -561,6 +611,8 @@ export function ManagePositionDialog({
 
           <ClaimTabContent
             chainId={spokeChainId}
+            positionSodaBalanceText={positionSodaBalanceText}
+            positionXSodaBalanceText={positionXSodaBalanceText}
             hasUnclaimedFees={hasUnclaimedFees}
             unclaimedFees0={unclaimedFees0}
             unclaimedFees1={unclaimedFees1}
@@ -573,6 +625,8 @@ export function ManagePositionDialog({
             chainId={spokeChainId}
             tokenId={tokenId}
             poolData={poolData}
+            positionSodaBalanceText={positionSodaBalanceText}
+            positionXSodaBalanceText={positionXSodaBalanceText}
             liquidityToken0Amount={displaySodaAmount}
             liquidityToken1Amount={liquidityToken1Amount}
             isPending={isPending}
@@ -596,6 +650,8 @@ export function ManagePositionDialog({
             chainId={spokeChainId}
             poolData={poolData}
             positionInfo={positionInfo}
+            positionSodaBalanceText={positionSodaBalanceText}
+            positionXSodaBalanceText={positionXSodaBalanceText}
             withdrawPercentage={withdrawPercentage}
             isPending={isPending}
             isWithdrawPending={decreaseLiquidityMutation.isPending || withdrawMutation.isPending}

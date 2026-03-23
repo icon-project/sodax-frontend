@@ -1,4 +1,5 @@
 [![CI](https://github.com/icon-project/sodax-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/icon-project/sodax-frontend/actions/workflows/ci.yml)
+[![Security](https://github.com/icon-project/sodax-frontend/actions/workflows/security.yml/badge.svg)](https://github.com/icon-project/sodax-frontend/actions/workflows/security.yml)
 
 # Sodax Frontend
 

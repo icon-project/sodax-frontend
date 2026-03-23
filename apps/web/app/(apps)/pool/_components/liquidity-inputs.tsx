@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -20,9 +20,17 @@ import { InputGroupButton } from '@/components/ui/input-group';
 import { STAKE_ROUTE, SWAP_ROUTE } from '@/constants/routes';
 import { spokeChainConfig } from '@sodax/sdk';
 import type { PoolData, PoolSpokeAssets } from '@sodax/sdk';
-import { cn, formatTokenAmount } from '@/lib/utils';
+import { cn, formatTokenAmount, validateChainAddress } from '@/lib/utils';
 import { formatUnits, parseUnits } from 'viem';
 import { SupplyDialog } from './supply-dialog';
+import { STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
+import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
+import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
+import { useRequestTrustline, useSpokeProvider, useStellarTrustlineCheck } from '@sodax/dapp-kit';
+import { useWalletProvider } from '@sodax/wallet-sdk-react';
+import type { SpokeProvider } from '@sodax/sdk';
+import { Loader2 } from 'lucide-react';
+import { ErrorDialog } from '@/components/shared/error-dialog';
 
 type LiquidityInputsProps = {
   selectedNetworkChainId: SpokeChainId | null;
@@ -46,11 +54,11 @@ export function LiquidityInputs({
   const router = useRouter();
   const openModal = useModalStore(state => state.openModal);
   const [isSupplyDialogOpen, setIsSupplyDialogOpen] = useState<boolean>(false);
+  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const { address } = useXAccount(selectedNetworkChainId ?? undefined);
   const allChainSodaBalances = useAllChainBalances({ onlySodaTokens: true });
-  const allChainXSodaBalances = useAllChainXSodaBalances(
-    selectedNetworkChainId ? [selectedNetworkChainId] : [],
-  );
+  const allChainXSodaBalances = useAllChainXSodaBalances(selectedNetworkChainId ? [selectedNetworkChainId] : []);
   const isWalletConnected = Boolean(address);
   const selectedSodaBalance = useMemo((): bigint => {
     if (!selectedNetworkChainId) {
@@ -85,7 +93,36 @@ export function LiquidityInputs({
   const isOverMax = sodaValue > selectedSodaBalance || xSodaValue > selectedXSodaBalance;
   const hasPoolContext = poolData !== null && poolSpokeAssets !== null;
   const hasSelectedNetwork = selectedNetworkChainId !== null;
-  const canContinue = isWalletConnected && hasSelectedNetwork && hasPoolContext && hasValidSodaInput && hasValidXSodaInput;
+  const canContinue =
+    isWalletConnected && hasSelectedNetwork && hasPoolContext && hasValidSodaInput && hasValidXSodaInput;
+  const isStellarChain = selectedNetworkChainId === STELLAR_MAINNET_CHAIN_ID;
+  const selectedChainConfig = selectedNetworkChainId ? spokeChainConfig[selectedNetworkChainId] : undefined;
+  const selectedSodaToken =
+    selectedChainConfig?.supportedTokens && 'SODA' in selectedChainConfig.supportedTokens
+      ? (selectedChainConfig.supportedTokens.SODA as XToken)
+      : undefined;
+  const { data: stellarAccountValidation } = useValidateStellarAccount(isStellarChain ? address : undefined);
+  const {
+    activateStellarAccount,
+    isLoading: isActivatingStellarAccount,
+    isActivated: isActivatedStellarAccount,
+  } = useActivateStellarAccount();
+
+  const walletProvider = useWalletProvider(selectedNetworkChainId ?? undefined);
+  const spokeProvider = useSpokeProvider(selectedNetworkChainId ?? undefined, walletProvider);
+  const trustlineCheckAmount = sodaValue > 0n ? sodaValue : undefined;
+  const { data: hasSufficientTrustline } = useStellarTrustlineCheck(
+    selectedSodaToken?.address,
+    trustlineCheckAmount,
+    spokeProvider,
+    selectedNetworkChainId ?? undefined,
+  );
+  const {
+    requestTrustline,
+    isLoading: isRequestingTrustline,
+    isRequested: hasTrustline,
+    error: trustlineError,
+  } = useRequestTrustline(selectedSodaToken?.address);
 
   const handleOpenWalletModal = (): void => {
     if (!selectedNetworkChainId) {
@@ -105,6 +142,41 @@ export function LiquidityInputs({
     }
     setIsSupplyDialogOpen(true);
   };
+  const handleActivateStellarAccount = async (): Promise<void> => {
+    if (!address) {
+      return;
+    }
+    try {
+      await activateStellarAccount({ address });
+    } catch {
+      const errorMsg = 'Failed to activate Stellar account. Please try again.';
+      setErrorMessage(errorMsg);
+      setIsErrorDialogOpen(true);
+    }
+  };
+  const handleRequestTrustline = async (): Promise<void> => {
+    if (!selectedSodaToken || !spokeProvider) {
+      return;
+    }
+    try {
+      await requestTrustline({
+        token: selectedSodaToken.address,
+        amount: sodaValue,
+        spokeProvider: spokeProvider as SpokeProvider,
+      });
+    } catch {
+      const errorMsg = 'Failed to add Stellar trustline. Please check your XLM balance and try again.';
+      setErrorMessage(errorMsg);
+      setIsErrorDialogOpen(true);
+    }
+  };
+  useEffect((): void => {
+    if (trustlineError) {
+      const errorMsg = 'Failed to add Stellar trustline. Please check your XLM balance and try again.';
+      setErrorMessage(errorMsg);
+      setIsErrorDialogOpen(true);
+    }
+  }, [trustlineError]);
 
   return (
     <>
@@ -236,7 +308,29 @@ export function LiquidityInputs({
           ) : null}
         </InputGroup>
         {isWalletConnected ? (
-          !hasNoSodaBalance && hasNoXSodaBalance ? (
+          isStellarChain &&
+          !isActivatedStellarAccount &&
+          stellarAccountValidation?.ok === false &&
+          validateChainAddress(address, 'STELLAR') ? (
+            <Button
+              variant="cherry"
+              onClick={handleActivateStellarAccount}
+              className="px-6"
+              disabled={isActivatingStellarAccount}
+            >
+              {isActivatingStellarAccount ? 'Activating Stellar' : 'Activate Stellar'}
+              {isActivatingStellarAccount && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
+            </Button>
+          ) : isStellarChain &&
+            sodaValue > 0n &&
+            hasSufficientTrustline === false &&
+            !hasTrustline &&
+            validateChainAddress(address || '', 'STELLAR') ? (
+            <Button variant="cherry" onClick={handleRequestTrustline} className="px-6" disabled={isRequestingTrustline}>
+              {isRequestingTrustline ? 'Adding Stellar Trustline' : 'Add Stellar Trustline'}
+              {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
+            </Button>
+          ) : !hasNoSodaBalance && hasNoXSodaBalance ? (
             <Button variant="cherry" onClick={handleGetXSoda} className="px-6">
               Get xSODA
             </Button>
@@ -267,6 +361,12 @@ export function LiquidityInputs({
         onOpenChange={setIsSupplyDialogOpen}
         poolData={poolData}
         poolSpokeAssets={poolSpokeAssets}
+      />
+      <ErrorDialog
+        open={isErrorDialogOpen}
+        onOpenChange={setIsErrorDialogOpen}
+        errorMessage={errorMessage}
+        title="Transaction failed"
       />
     </>
   );

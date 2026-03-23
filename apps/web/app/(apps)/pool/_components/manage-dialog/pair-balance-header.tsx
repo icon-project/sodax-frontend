@@ -1,13 +1,10 @@
 'use client';
 
 import type React from 'react';
-import { useMemo } from 'react';
-import { spokeChainConfig } from '@sodax/sdk';
+import { useEffect } from 'react';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import CurrencyLogo from '@/components/shared/currency-logo';
-import { useAllChainBalances } from '@/hooks/useAllChainBalances';
-import { useAllChainXSodaBalances } from '@/hooks/useAllChainXSodaBalances';
-import { formatTokenAmount } from '@/lib/utils';
+import { usePoolStore } from '@/app/(apps)/pool/_stores/pool-store-provider';
 
 const sodaToken: XToken = {
   name: 'SODA',
@@ -27,47 +24,25 @@ const xSodaToken: XToken = {
 
 type PairBalanceHeaderProps = {
   chainId: SpokeChainId;
-  sodaBalanceOverride?: string;
-  xSodaBalanceOverride?: string;
-  sodaBalanceDelta?: bigint;
-  xSodaBalanceDelta?: bigint;
+  sodaBalanceText: string;
+  xSodaBalanceText: string;
 };
 
 export function PairBalanceHeader({
   chainId,
-  sodaBalanceOverride,
-  xSodaBalanceOverride,
-  sodaBalanceDelta = 0n,
-  xSodaBalanceDelta = 0n,
+  sodaBalanceText,
+  xSodaBalanceText,
 }: PairBalanceHeaderProps): React.JSX.Element {
+  const poolApyPercent = usePoolStore(state => state.poolApyPercent);
+  const fetchPoolApy = usePoolStore(state => state.fetchPoolApy);
   const xSodaTokenOnCurrentChain: XToken = {
     ...xSodaToken,
     xChainId: chainId,
   };
-  const allChainSodaBalances = useAllChainBalances({ onlySodaTokens: true });
-  const allChainXSodaBalances = useAllChainXSodaBalances([chainId]);
-  const selectedSodaToken = useMemo((): XToken | undefined => {
-    const selectedChainConfig = spokeChainConfig[chainId];
-    if (!selectedChainConfig?.supportedTokens || !('SODA' in selectedChainConfig.supportedTokens)) {
-      return undefined;
-    }
-    return selectedChainConfig.supportedTokens.SODA as XToken;
-  }, [chainId]);
-  const selectedSodaBalance = useMemo((): bigint => {
-    if (!selectedSodaToken) {
-      return 0n;
-    }
-    const selectedSodaBalanceEntry = (allChainSodaBalances[selectedSodaToken.address] || []).find(
-      balanceEntry => balanceEntry.chainId === chainId,
-    );
-    return selectedSodaBalanceEntry?.balance ?? 0n;
-  }, [allChainSodaBalances, chainId, selectedSodaToken]);
-  const selectedXSodaBalance = allChainXSodaBalances.get(chainId) ?? 0n;
-  const projectedSodaBalance = BigInt(selectedSodaBalance) + sodaBalanceDelta;
-  const projectedXSodaBalance = selectedXSodaBalance + xSodaBalanceDelta;
-  const sodaBalanceText =
-    sodaBalanceOverride ?? formatTokenAmount(projectedSodaBalance, selectedSodaToken?.decimals ?? 18, 2);
-  const xSodaBalanceText = xSodaBalanceOverride ?? formatTokenAmount(projectedXSodaBalance, 18, 2);
+  useEffect((): void => {
+    void fetchPoolApy();
+  }, [fetchPoolApy]);
+  const apyText = poolApyPercent === null ? '--' : `${poolApyPercent.toFixed(2)}%`;
 
   return (
     <div className="self-stretch flex justify-between items-start">
@@ -107,10 +82,10 @@ export function PairBalanceHeader({
       <div className="hidden h-12 px-2 bg-blend-multiply bg-almost-white rounded-lg md:flex flex-col justify-center items-end">
         <div className="text-center justify-start text-clay text-[9px] font-medium font-['Inter'] uppercase leading-3">
           {' '}
-          current APY
+          current APR
         </div>
         <div className="text-center justify-start text-espresso text-(length:--body-super-comfortable) font-bold font-['Inter'] leading-5">
-          8.49%
+          {apyText}
         </div>
       </div>
     </div>
