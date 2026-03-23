@@ -4,7 +4,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.4.3-beta",
+  "version": "1.4.4-beta",
   "license": "MIT",
   "description": "Sodax SDK",
   "keywords": [
