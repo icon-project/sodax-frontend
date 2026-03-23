@@ -3127,6 +3127,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.wS,
     spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    ...Object.values(SodaTokens),
   ] as const satisfies XToken[],
   [NEAR_MAINNET_CHAIN_ID]: [
     spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.NEAR,
