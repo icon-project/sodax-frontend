@@ -16,6 +16,10 @@ export const POOL_ROUTE = '/pool';
 export const MIGRATE_ROUTE = '/migrate';
 export const GLOSSARY_ROUTE = '/glossary';
 export const PARTNERS_ROUTE = '/partners';
+/** Integration Roadmap: type protocol name, get visual integration roadmap (partners). */
+export const INTEGRATION_ROADMAP_ROUTE = '/partners/integration-roadmap';
+/** BD-only view of the Integration Roadmap (clean URL; no ?bd=1). */
+export const INTEGRATION_ROADMAP_BD_ROUTE = `${INTEGRATION_ROADMAP_ROUTE}/bd`;
 export const NEWS_ROUTE = '/news';
 export const COMMUNITY_ROUTE = '/community';
 export const PARTNER_DASHBOARD_ROUTE = '/partner-dashboard';
@@ -49,11 +53,15 @@ export const CMS_USERS_ROUTE = '/cms/users';
 // ── Documentation (external) ─────────────────────────────────────────────────
 /** Canonical product & developer docs (docs.sodax.com). */
 export const DOCUMENTATION_ROUTE = 'https://docs.sodax.com';
+/** Docs: chain config / how to create a spoke provider (Integration Roadmap “Supported networks” link). */
+export const CHAIN_DOCUMENTATION_ROUTE = 'https://docs.sodax.com/developers/how-to/how_to_create_a_spoke_provider';
 /** Legacy GitBook; prefer DOCUMENTATION_ROUTE for primary docs. */
 export const DOCUMENTATION_GITBOOK_ROUTE = 'https://sodax-1.gitbook.io/sodax-docs/readme-1';
 
 // ── Social & community (external) ──────────────────────────────────────────
 export const DISCORD_ROUTE = 'https://discord.com/invite/xM2Nh4S6vN';
+// TODO: Replace with the real Telegram partnerships handle/link before launch.
+export const TELEGRAM_PARTNERSHIPS_ROUTE = 'https://t.me/PLACEHOLDER_sodax_partnerships';
 export const X_ROUTE = 'https://x.com/gosodax';
 /** X (Twitter) “follow” intent URL. */
 export const X_INTENT_FOLLOW_ROUTE = 'https://x.com/intent/user?screen_name=gosodax';
@@ -66,10 +74,10 @@ export const BALANCED_DEFI_ROUTE = 'https://app.balanced.network/';
 export const HANA_WALLET_ROUTE = 'https://www.hanawallet.io/';
 
 // ── Resources & tools (external) ───────────────────────────────────────────
-/** Frontend repo (this app). */
+/** Frontend repo (this app); SDK and packages live here (monorepo). */
 export const GITHUB_ROUTE = 'https://github.com/icon-project/sodax-frontend';
-/** Main SODAX SDK / monorepo (e.g. partner CTA “Explore SDKs”). */
-export const GITHUB_SODAX_REPO_ROUTE = 'https://github.com/icon-project/sodax';
+/** Main SODAX repo (frontend + SDK monorepo); e.g. partner CTA “Explore SDKs”, Integration Roadmap. */
+export const GITHUB_SODAX_REPO_ROUTE = GITHUB_ROUTE;
 export const SODAX_SCAN_ROUTE = 'https://sodaxscan.com/';
 export const SODAX_SCAN_TOKEN_ROUTE = 'https://sonicscan.org/token/0x7c7d53eecda37a87ce0d5bf8e0b24512a48dc963';
 export const BRAND_KIT_ROUTE = '/SODAX.logos.and.token.zip';

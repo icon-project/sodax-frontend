@@ -6,40 +6,63 @@ import { type NextRequest, NextResponse } from 'next/server';
  */
 const EU_EEA_UK_COUNTRY_CODES = new Set([
   // EU (27)
-  'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR',
-  'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL',
-  'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE',
+  'AT',
+  'BE',
+  'BG',
+  'HR',
+  'CY',
+  'CZ',
+  'DK',
+  'EE',
+  'FI',
+  'FR',
+  'DE',
+  'GR',
+  'HU',
+  'IE',
+  'IT',
+  'LV',
+  'LT',
+  'LU',
+  'MT',
+  'NL',
+  'PL',
+  'PT',
+  'RO',
+  'SK',
+  'SI',
+  'ES',
+  'SE',
   // EEA non-EU (3)
-  'IS', 'LI', 'NO',
+  'IS',
+  'LI',
+  'NO',
   // UK (1)
   'GB',
 ]);
 
 export function middleware(request: NextRequest) {
+  // BD auth: /bd pages show login form in-page when unauthenticated (no redirect).
+
+  // --- Cookie consent region (existing logic, unchanged) ---
   const response = NextResponse.next();
 
-  // Only set the cookie if it hasn't been set yet
-  if (request.cookies.has('cookie_consent_region')) {
-    return response;
+  if (!request.cookies.has('cookie_consent_region')) {
+    const country = request.headers.get('x-vercel-ip-country');
+    const region = country && EU_EEA_UK_COUNTRY_CODES.has(country) ? 'eu' : 'other';
+
+    response.cookies.set('cookie_consent_region', region, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365,
+    });
   }
-
-  // Vercel injects geo data as request headers; undefined in local dev (defaults to 'other' → no banner)
-  const country = request.headers.get('x-vercel-ip-country');
-  const region = country && EU_EEA_UK_COUNTRY_CODES.has(country) ? 'eu' : 'other';
-
-  response.cookies.set('cookie_consent_region', region, {
-    httpOnly: false, // Client JS must read this cookie
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 60 * 60 * 24 * 365, // 1 year
-  });
 
   return response;
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|fonts|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|zip|toml)).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|fonts|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|zip|toml)).*)'],
 };

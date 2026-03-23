@@ -112,6 +112,7 @@ export function ShareButton({ title, url }: ShareButtonProps) {
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border-2 border-[var(--clay-light)] py-1 z-50">
           {hasNativeShare && (
             <button
+              type="button"
               onClick={handleNativeShare}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--espresso)] hover:bg-[var(--cream)] transition-colors text-left"
             >
@@ -121,6 +122,7 @@ export function ShareButton({ title, url }: ShareButtonProps) {
           )}
 
           <button
+            type="button"
             onClick={handleShareX}
             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--espresso)] hover:bg-[var(--cream)] transition-colors text-left"
           >
@@ -129,6 +131,7 @@ export function ShareButton({ title, url }: ShareButtonProps) {
           </button>
 
           <button
+            type="button"
             onClick={handleShareReddit}
             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--espresso)] hover:bg-[var(--cream)] transition-colors text-left"
           >
@@ -139,9 +142,10 @@ export function ShareButton({ title, url }: ShareButtonProps) {
           <div className="border-t border-[var(--clay-light)] my-1" />
 
           <button
+            type="button"
             onClick={handleCopyLink}
             disabled={copied}
-            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--espresso)] hover:bg-[var(--cream)] transition-colors text-left disabled:opacity-75 disabled:cursor-not-allowed"
+            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-[var(--espresso)] hover:bg-[var(--cream)] transition-colors text-left disabled:opacity-75 disabled:cursor-not-allowed cursor-pointer"
           >
             {copied ? (
               <>

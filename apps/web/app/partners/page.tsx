@@ -7,6 +7,7 @@ import SodaxAdvantageSection from '@/components/partners/sodax-advantage-section
 import FeaturedCaseStudiesSection from '@/components/partners/featured-case-studies-section';
 import NetworkIntegrationSection from '@/components/partners/network-integration-section';
 import PartnersCtaSection from '@/components/partners/partners-cta-section';
+import IntegrationRoadmapSection from '@/components/partners/integration-roadmap/components/integration-roadmap-section';
 import BuildersMcpSection from '@/components/partners/builders-mcp-section';
 import Footer from '@/components/landing/footer';
 
@@ -110,6 +111,7 @@ export default function PartnersPage() {
         <SodaxAdvantageSection />
         <FeaturedCaseStudiesSection />
         <NetworkIntegrationSection />
+        <IntegrationRoadmapSection />
         <BuildersMcpSection />
         <PartnersCtaSection />
       </main>
