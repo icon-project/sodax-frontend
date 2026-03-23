@@ -32,7 +32,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WithdrawTabContent } from '@/app/(apps)/pool/_components/manage-dialog/withdraw-tab-content';
 import { formatUnits, parseUnits } from 'viem';
 import type { CreateAssetDepositParams } from '@sodax/sdk';
-import { formatTokenAmount } from '@/lib/utils';
+import { createDexTokenIdsStorageKey, dispatchDexPositionsUpdatedEvent, formatTokenAmount } from '@/lib/utils';
 
 type ManagePositionDialogProps = {
   open: boolean;
@@ -47,23 +47,6 @@ type ManagePositionDialogProps = {
   initialMaxPrice: string;
   positionInfo: ClPositionInfo;
 };
-
-const DEX_POSITIONS_UPDATED_EVENT = 'sodax-dex-positions-updated';
-
-function createDexTokenIdsStorageKey(chainId: string | number, userAddress: string): string {
-  return `sodax-dex-positions-${chainId}-${userAddress}`;
-}
-
-function dispatchDexPositionsUpdatedEvent(chainId: string | number, userAddress: string): void {
-  globalThis.dispatchEvent(
-    new CustomEvent(DEX_POSITIONS_UPDATED_EVENT, {
-      detail: {
-        chainId,
-        userAddress,
-      },
-    }),
-  );
-}
 
 function removeTokenIdFromLocalStorage(userAddress: string, chainId: string | number, tokenId: string): void {
   if (typeof globalThis.localStorage === 'undefined') {
@@ -381,6 +364,13 @@ export function ManagePositionDialog({
         }),
         spokeProvider,
       });
+      try {
+        const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+        dispatchDexPositionsUpdatedEvent(chainId, walletAddress);
+      } catch (eventError) {
+        // Keep add-liquidity successful even if local position refresh event fails.
+        console.warn('Failed to dispatch DEX positions updated event', eventError);
+      }
       setLastEditedAmount(null);
       handleToken0AmountChange('');
       handleToken1AmountChange('');
