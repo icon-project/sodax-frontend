@@ -74,7 +74,6 @@ export default function PoolPage() {
     usePoolActions();
   const { address } = useXAccount(selectedNetworkChainId ?? undefined);
   const [savedPositions, setSavedPositions] = useState<SavedDexPosition[]>([]);
-  console.log('dex pools', dexPools);
   const fixedPoolKey = dexPools.ASODA_XSODA;
   const { data: poolDataRaw } = usePoolData({ poolKey: fixedPoolKey });
   const poolData = poolDataRaw ?? null;

@@ -1,10 +1,11 @@
 'use client';
 
 import type React from 'react';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { spokeChainConfig } from '@sodax/sdk';
 import type { SpokeChainId, XToken } from '@sodax/types';
 import CurrencyLogo from '@/components/shared/currency-logo';
+import { usePoolStore } from '@/app/(apps)/pool/_stores/pool-store-provider';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import { useAllChainXSodaBalances } from '@/hooks/useAllChainXSodaBalances';
 import { formatTokenAmount } from '@/lib/utils';
@@ -40,10 +41,15 @@ export function PairBalanceHeader({
   sodaBalanceDelta = 0n,
   xSodaBalanceDelta = 0n,
 }: PairBalanceHeaderProps): React.JSX.Element {
+  const poolApyPercent = usePoolStore(state => state.poolApyPercent);
+  const fetchPoolApy = usePoolStore(state => state.fetchPoolApy);
   const xSodaTokenOnCurrentChain: XToken = {
     ...xSodaToken,
     xChainId: chainId,
   };
+  useEffect((): void => {
+    void fetchPoolApy();
+  }, [fetchPoolApy]);
   const allChainSodaBalances = useAllChainBalances({ onlySodaTokens: true });
   const allChainXSodaBalances = useAllChainXSodaBalances([chainId]);
   const selectedSodaToken = useMemo((): XToken | undefined => {
@@ -68,6 +74,7 @@ export function PairBalanceHeader({
   const sodaBalanceText =
     sodaBalanceOverride ?? formatTokenAmount(projectedSodaBalance, selectedSodaToken?.decimals ?? 18, 2);
   const xSodaBalanceText = xSodaBalanceOverride ?? formatTokenAmount(projectedXSodaBalance, 18, 2);
+  const apyText = poolApyPercent === null ? '--' : `${poolApyPercent.toFixed(2)}%`;
 
   return (
     <div className="self-stretch flex justify-between items-start">
@@ -110,7 +117,7 @@ export function PairBalanceHeader({
           current APY
         </div>
         <div className="text-center justify-start text-espresso text-(length:--body-super-comfortable) font-bold font-['Inter'] leading-5">
-          8.49%
+          {apyText}
         </div>
       </div>
     </div>

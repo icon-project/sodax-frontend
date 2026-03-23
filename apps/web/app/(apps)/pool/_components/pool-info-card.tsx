@@ -1,4 +1,8 @@
+'use client';
+
 import type React from 'react';
+import { useEffect } from 'react';
+import { usePoolStore } from '@/app/(apps)/pool/_stores/pool-store-provider';
 import PoolChart from './pool-chart';
 
 type PoolInfoCardProps = {
@@ -18,6 +22,15 @@ export function PoolInfoCard({
   onMinPriceChange,
   onMaxPriceChange,
 }: PoolInfoCardProps): React.JSX.Element {
+  const poolApyPercent = usePoolStore(state => state.poolApyPercent);
+  const fetchPoolApy = usePoolStore(state => state.fetchPoolApy);
+
+  useEffect((): void => {
+    void fetchPoolApy();
+  }, [fetchPoolApy]);
+
+  const apyText = poolApyPercent === null ? '--' : `${poolApyPercent.toFixed(2)}%`;
+
   return (
     <div className="self-stretch flex flex-col justify-start items-start">
       <div
@@ -33,7 +46,7 @@ export function PoolInfoCard({
                 EST. APR
               </div>
               <div className="text-center justify-start text-espresso text-(length:--body-super-comfortable) font-['InterBold'] leading-6">
-                12.31%
+                {apyText}
               </div>
             </div>
           </div>
