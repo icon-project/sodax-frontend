@@ -377,7 +377,9 @@ export class BridgeService {
 
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
-        (spokeProvider instanceof SolanaSpokeProvider || spokeProvider instanceof BitcoinSpokeProvider) ? txResult.data : undefined,
+        spokeProvider instanceof SolanaSpokeProvider || spokeProvider instanceof BitcoinSpokeProvider
+          ? txResult.data
+          : undefined,
         spokeProvider,
         this.relayerApiEndpoint,
         timeout,
@@ -464,9 +466,10 @@ export class BridgeService {
       if (spokeProvider instanceof BitcoinSpokeProvider) {
         await spokeProvider.ensureRadfiAccessToken();
       }
-      const walletAddress = spokeProvider instanceof BitcoinSpokeProvider
-        ? await spokeProvider.getEffectiveWalletAddress()
-        : await spokeProvider.walletProvider.getWalletAddress();
+      const walletAddress =
+        spokeProvider instanceof BitcoinSpokeProvider
+          ? await spokeProvider.getEffectiveWalletAddress()
+          : await spokeProvider.walletProvider.getWalletAddress();
 
       const hubWallet = await WalletAbstractionService.getUserAbstractedWalletAddress(
         walletAddress,
@@ -611,7 +614,7 @@ export class BridgeService {
       invariant(toTokenInfo, 'To token info not found');
 
       // if the from token to be deposited is not supported, we return 0
-      if (!fromTokenInfo.isSupported) {
+      if (from.xChainId !== this.hubProvider.chainConfig.chain.id && !fromTokenInfo.isSupported) {
         return {
           ok: true,
           value: {

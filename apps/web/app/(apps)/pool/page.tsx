@@ -9,13 +9,13 @@ import { PoolNetworkSelector } from './_components/pool-network-selector';
 import { PriceRangeSelector } from './_components/price-range-selector';
 import { LiquidityInputs } from './_components/liquidity-inputs';
 import Tip from '../stake/_components/icons/tip';
-import { cn } from '@/lib/utils';
+import { cn, DEX_POSITIONS_UPDATED_EVENT } from '@/lib/utils';
 import { usePoolActions, usePoolState } from './_stores/pool-store-provider';
 import { useLiquidityAmounts, usePoolData, useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
 import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { dexPools, type PoolSpokeAssets } from '@sodax/sdk';
 import { formatUnits, parseUnits } from 'viem';
-import { SuppliedPositionsCarousel } from './_components/supplied-positions-carousel';
+import { SupplyOverview } from './_components/supply-overview';
 
 type DexPositionsUpdatedDetail = {
   chainId: string | number;
@@ -26,8 +26,6 @@ type SavedDexPosition = {
   tokenId: string;
   chainId: string;
 };
-
-const DEX_POSITIONS_UPDATED_EVENT = 'sodax-dex-positions-updated';
 
 function parseTokenIdsFromStorageValue(value: string | null): string[] {
   if (!value) {
@@ -74,7 +72,6 @@ export default function PoolPage() {
     usePoolActions();
   const { address } = useXAccount(selectedNetworkChainId ?? undefined);
   const [savedPositions, setSavedPositions] = useState<SavedDexPosition[]>([]);
-  console.log('dex pools', dexPools);
   const fixedPoolKey = dexPools.ASODA_XSODA;
   const { data: poolDataRaw } = usePoolData({ poolKey: fixedPoolKey });
   const poolData = poolDataRaw ?? null;
@@ -266,7 +263,7 @@ export default function PoolPage() {
     >
       <motion.div className="self-stretch flex flex-col justify-start items-start gap-4 pb-20" variants={itemVariants}>
         {savedPositions.length > 0 ? (
-          <SuppliedPositionsCarousel positions={savedPositions} poolKey={fixedPoolKey} poolData={poolData} />
+          <SupplyOverview positions={savedPositions} poolKey={fixedPoolKey} poolData={poolData} />
         ) : (
           <PoolHeader />
         )}

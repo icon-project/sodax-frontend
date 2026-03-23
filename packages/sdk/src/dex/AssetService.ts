@@ -469,7 +469,7 @@ export class AssetService {
       spokeProvider.chainConfig.chain.id,
       this.hubProvider,
     );
-    let recipient = fromHubWallet;
+    let recipient = walletAddress;
     let dstChainId = spokeProvider.chainConfig.chain.id;
 
     if (params.dst) {
@@ -507,7 +507,7 @@ export class AssetService {
       ok: true,
       value: txResult satisfies TxReturnType<S, R> as TxReturnType<S, R>,
       data: {
-        address: recipient,
+        address: recipient as `0x${string}`,
         payload: data,
       },
     };

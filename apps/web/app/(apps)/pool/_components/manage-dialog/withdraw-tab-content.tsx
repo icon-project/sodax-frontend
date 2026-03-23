@@ -44,6 +44,8 @@ type WithdrawTabContentProps = {
   chainId: SpokeChainId;
   poolData: PoolData;
   positionInfo: ClPositionInfo;
+  positionSodaBalanceText: string;
+  positionXSodaBalanceText: string;
   withdrawPercentage: string;
   isPending: boolean;
   isWithdrawPending: boolean;
@@ -58,6 +60,8 @@ export function WithdrawTabContent({
   chainId,
   poolData,
   positionInfo,
+  positionSodaBalanceText,
+  positionXSodaBalanceText,
   withdrawPercentage,
   isPending,
   isWithdrawPending,
@@ -88,8 +92,8 @@ export function WithdrawTabContent({
       <div className="self-stretch mt-4">
         <PairBalanceHeader
           chainId={chainId}
-          sodaBalanceDelta={withdrawToken0Total}
-          xSodaBalanceDelta={withdrawToken1Total}
+          sodaBalanceText={(Number(positionSodaBalanceText) - Number(withdrawToken0Text)).toFixed(2)}
+          xSodaBalanceText={(Number(positionXSodaBalanceText) - Number(withdrawToken1Text)).toFixed(2)}
         />
       </div>
       <div className="self-stretch p-6 bg-blend-multiply bg-almost-white rounded-2xl inline-flex flex-col justify-start items-start gap-4 w-full relative mt-10">

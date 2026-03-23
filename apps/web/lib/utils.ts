@@ -23,6 +23,8 @@ import {
   hubAssets,
   EVM_CHAIN_IDS,
   NEAR_MAINNET_CHAIN_ID,
+  SodaTokens,
+  SONIC_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import type { FormatReserveUSDResponse } from '@sodax/sdk';
 import type { ChainBalanceEntry } from '@/hooks/useAllChainBalances';
@@ -32,6 +34,23 @@ import { availableChains, getChainUI } from '@/constants/chains';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+export const DEX_POSITIONS_UPDATED_EVENT = 'sodax-dex-positions-updated';
+
+export function createDexTokenIdsStorageKey(chainId: string | number, userAddress: string): string {
+  return `sodax-dex-positions-${chainId}-${userAddress}`;
+}
+
+export function dispatchDexPositionsUpdatedEvent(chainId: string | number, userAddress: string): void {
+  globalThis.dispatchEvent(
+    new CustomEvent(DEX_POSITIONS_UPDATED_EVENT, {
+      detail: {
+        chainId,
+        userAddress,
+      },
+    }),
+  );
 }
 
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -100,8 +119,11 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
   return activeChains.flatMap(chainId => {
     try {
       const tokens = getSupportedSolverTokens(chainId).map(normalizeToken);
+      const tokensForChain = chainId === SONIC_MAINNET_CHAIN_ID
+        ? tokens.filter(token => !Object.values(SodaTokens).some(sodaToken => sodaToken.symbol === token.symbol))
+        : tokens;
 
-      return tokens.map(token => ({
+      return tokensForChain.map(token => ({
         ...token,
         xChainId: chainId,
       }));
@@ -115,8 +137,11 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
 export const getSupportedSolverTokensForChain = (chainId: SpokeChainId): XToken[] => {
   try {
     const tokens = getSupportedSolverTokens(chainId).map(normalizeToken);
+    const tokensForChain = chainId === SONIC_MAINNET_CHAIN_ID
+      ? tokens.filter(token => !Object.values(SodaTokens).some(sodaToken => sodaToken.symbol === token.symbol))
+      : tokens;
 
-    return tokens.map(token => ({
+    return tokensForChain.map(token => ({
       ...token,
       xChainId: chainId,
     }));

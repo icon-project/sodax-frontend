@@ -27,20 +27,57 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient();
 
-export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.ReactNode; rpcConfig: RpcConfig }) => {
+export type WagmiOptions = {
+  reconnectOnMount?: boolean;
+  ssr?: boolean;
+};
+
+export type SodaxWalletProviderOptions = {
+  wagmi?: WagmiOptions;
+  solana?: {
+    autoConnect?: boolean;
+  };
+  sui?: {
+    autoConnect?: boolean;
+  };
+};
+
+const defaultOptions = {
+  wagmi: {
+    reconnectOnMount: false,
+    ssr: true,
+  },
+  solana: {
+    autoConnect: true,
+  },
+  sui: {
+    autoConnect: true,
+  },
+} satisfies SodaxWalletProviderOptions;
+
+export type SodaxWalletProviderProps = {
+  children: React.ReactNode;
+  rpcConfig: RpcConfig;
+  options?: SodaxWalletProviderOptions;
+};
+
+export const SodaxWalletProvider = ({ children, rpcConfig, options }: SodaxWalletProviderProps) => {
+  const wagmi = useMemo(() => ({ ...defaultOptions.wagmi, ...options?.wagmi }), [options?.wagmi]);
   const wagmiConfig = useMemo(() => {
-    return createWagmiConfig(rpcConfig);
-  }, [rpcConfig]);
+    return createWagmiConfig(rpcConfig, wagmi);
+  }, [rpcConfig, wagmi]);
 
   const wallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
+  const solana = useMemo(() => ({ ...defaultOptions.solana, ...options?.solana }), [options?.solana]);
+  const sui = useMemo(() => ({ ...defaultOptions.sui, ...options?.sui }), [options?.sui]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <WagmiProvider reconnectOnMount={false} config={wagmiConfig}>
+      <WagmiProvider reconnectOnMount={wagmi.reconnectOnMount} config={wagmiConfig}>
         <SuiClientProvider networks={{ mainnet: { url: getFullnodeUrl('mainnet') } }} defaultNetwork="mainnet">
-          <SuiWalletProvider autoConnect={true}>
+          <SuiWalletProvider autoConnect={sui.autoConnect}>
             <SolanaConnectionProvider endpoint={rpcConfig['solana'] ?? 'https://api.mainnet-beta.solana.com'}>
-              <SolanaWalletProvider wallets={wallets} autoConnect>
+              <SolanaWalletProvider wallets={wallets} autoConnect={solana.autoConnect}>
                 <Hydrate rpcConfig={rpcConfig} />
                 {children}
               </SolanaWalletProvider>
