@@ -14,7 +14,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <SodaxProvider testnet={false} config={sodaxConfig} rpcConfig={rpcConfig}>
       <QueryClientProvider client={queryClient}>
-        <SodaxWalletProvider rpcConfig={rpcConfig}>{children}</SodaxWalletProvider>
+        <SodaxWalletProvider rpcConfig={rpcConfig} options={{ wagmi: { ssr: true, reconnectOnMount: true } }}>{children}</SodaxWalletProvider>
       </QueryClientProvider>
     </SodaxProvider>
   );
