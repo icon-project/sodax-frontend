@@ -43,6 +43,23 @@ export function formatTokenAmount(amount: number | string | bigint, decimals: nu
 }
 
 /**
+ * Truncates a number to at most `decimals` fractional digits **without rounding**.
+ * Use this instead of `Number.toFixed()` for values that feed into calculations or form inputs,
+ * where rounding up could cause "exceeds max" errors.
+ */
+export function truncateToDecimals(value: number, decimals: number): string {
+  if (!Number.isFinite(value)) return '0';
+  // Convert to string with extra precision so we can truncate cleanly
+  const str = value.toFixed(decimals + 4);
+  const [intPart, fracPart = ''] = str.split('.');
+  if (decimals === 0) return intPart;
+  const truncated = fracPart.slice(0, decimals);
+  const result = `${intPart}.${truncated}`;
+  // Remove trailing zeros and dangling dot
+  return result.replace(/\.?0+$/, '') || '0';
+}
+
+/**
  * Truncates a decimal string to at most maxDecimals fractional digits (no rounding).
  * Trims trailing zeros. For non-zero values that truncate to "0" (e.g. 0.00005 with 4 decimals),
  * returns a "< threshold" hint instead so the user knows the value is small but non-zero.

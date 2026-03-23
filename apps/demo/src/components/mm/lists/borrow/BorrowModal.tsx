@@ -25,6 +25,7 @@ import {
   getNativeTokenSymbol,
   formatDecimalForDisplay,
   getSafeMaxAmountForInput,
+  truncateToDecimals,
 } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { formatUnits } from 'viem';
@@ -185,13 +186,13 @@ export function BorrowModal({
           aToken.decimals,
         );
       } else {
-        availableLiquidity = Math.min(
+        availableLiquidity = truncateToDecimals(Math.min(
           Number.parseFloat(
             formatUnits(BigInt(destinationMetrics.formattedReserve.availableLiquidity), aToken.decimals),
           ),
           Number.parseInt(destinationMetrics.formattedReserve.borrowCap) -
             Number.parseFloat(destinationMetrics.formattedReserve.totalScaledVariableDebt),
-        ).toFixed(6);
+        ), 6);
       }
 
       if (availableLiquidity && Number(availableLiquidity) > 0) {
@@ -203,7 +204,7 @@ export function BorrowModal({
 
     // Apply safety margin and format
     const afterSafetyMargin = calculatedMaxBorrow * MAX_BORROW_SAFETY_MARGIN;
-    const finalMaxBorrow = afterSafetyMargin.toFixed(6);
+    const finalMaxBorrow = truncateToDecimals(afterSafetyMargin, 6);
 
     return {
       maxBorrow: finalMaxBorrow !== '0' ? finalMaxBorrow : '0',
@@ -216,7 +217,7 @@ export function BorrowModal({
   const minBorrowAmount = useMemo(() => {
     if (!destinationToken || priceUSD <= 0) return '0';
     const minTokens = MIN_BORROW_USD / priceUSD;
-    return minTokens.toFixed(6);
+    return truncateToDecimals(minTokens, 6);
   }, [destinationToken, priceUSD]);
 
   const sourceWalletProvider = useWalletProvider(sourceChainId);
