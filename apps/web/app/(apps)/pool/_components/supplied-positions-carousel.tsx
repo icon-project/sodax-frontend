@@ -17,6 +17,7 @@ import { Item, ItemContent, ItemMedia } from '@/components/ui/item';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'motion/react';
 import { CircleEllipsisIcon } from 'lucide-react';
+import { usePoolStore } from '@/app/(apps)/pool/_stores/pool-store-provider';
 import { ManagePositionDialog } from './manage-dialog';
 import { SwitchChainDialog } from '@/components/shared/switch-chain-dialog';
 
@@ -36,6 +37,7 @@ type PositionCardProps = {
   chainId: string;
   poolKey: PoolKey;
   poolData: PoolData;
+  apyPercent: number | null;
   onLiquidityValueChange: (positionKey: string, value: number) => void;
 };
 
@@ -62,6 +64,7 @@ function PositionCard({
   chainId,
   poolKey,
   poolData,
+  apyPercent,
   onLiquidityValueChange,
 }: PositionCardProps): React.JSX.Element {
   const { data, isLoading, isError, error } = usePositionInfo({ tokenId, poolKey });
@@ -157,6 +160,7 @@ function PositionCard({
       ? ((currentPriceValue - minPriceValue) / (maxPriceValue - minPriceValue)) * 100
       : 0;
   const clampedCurrentPriceTickLeft = Math.min(100, Math.max(0, currentPriceTickLeft));
+  const apyText = apyPercent === null ? '-- APY' : `${apyPercent.toFixed(2)}% APY`;
 
   return (
     <div
@@ -227,7 +231,7 @@ function PositionCard({
                 <div className={`w-2 h-2 rounded-full ${isInRange ? 'bg-green-500' : 'bg-cherry-bright'}`} />
               </div>
               <Badge className="h-4 min-w-[70px] mix-blend-multiply text-white bg-linear-to-br from-cherry-bright to-cherry-brighter px-2">
-                <span className="text-(length:--body-fine-print) font-['InterBold'] mt-px">11.48% APY</span>
+                <span className="text-(length:--body-fine-print) font-['InterBold'] mt-px">{apyText}</span>
               </Badge>
             </div>
           </ItemContent>
@@ -299,6 +303,8 @@ export function SuppliedPositionsCarousel({
 }: SuppliedPositionsCarouselProps): React.JSX.Element | null {
   const isMobile = useIsMobile();
   const [positionLiquidityByKey, setPositionLiquidityByKey] = useState<Record<string, number>>({});
+  const poolApyPercent = usePoolStore(state => state.poolApyPercent);
+  const fetchPoolApy = usePoolStore(state => state.fetchPoolApy);
   const normalizedPositions = useMemo((): SuppliedPositionItem[] => {
     const seen = new Set<string>();
     return positions
@@ -345,6 +351,9 @@ export function SuppliedPositionsCarousel({
       };
     });
   };
+  useEffect((): void => {
+    void fetchPoolApy();
+  }, [fetchPoolApy]);
 
   if (!poolData || normalizedPositions.length === 0) {
     return null;
@@ -377,6 +386,7 @@ export function SuppliedPositionsCarousel({
                 chainId={position.chainId}
                 poolKey={poolKey}
                 poolData={poolData}
+                apyPercent={poolApyPercent}
                 onLiquidityValueChange={handleLiquidityValueChange}
               />
             </CarouselItem>
