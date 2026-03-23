@@ -33,7 +33,7 @@ import {
   type StellarRawSpokeProviderConfig,
 } from './entities/stellar/StellarSpokeProvider.js';
 import { StacksSpokeProvider, type StacksRawSpokeProvider, type StacksRawSpokeProviderConfig } from './entities/stacks/StacksSpokeProvider.js';
-import { AleoSpokeProvider, type AleoRawSpokeProvider } from './entities/aleo/AleoSpokeProvider.js';
+import { AleoSpokeProvider, type AleoRawSpokeProvider, type AleoRawSpokeProviderConfig } from './entities/aleo/AleoSpokeProvider.js';
 import type {
   BitcoinSpokeProviderType,
   EvmSpokeProviderType,
