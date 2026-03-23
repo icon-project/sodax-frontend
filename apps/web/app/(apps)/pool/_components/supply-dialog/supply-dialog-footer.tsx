@@ -24,9 +24,12 @@ import { type CreateAssetDepositParams, type PoolData, type PoolSpokeAssets, dex
 import type { ChainId, Hash } from '@sodax/types';
 import { chainIdToChainName } from '@/providers/constants';
 import { formatUnits, parseUnits } from 'viem';
-import { cn } from '@/lib/utils';
-
-const DEX_POSITIONS_UPDATED_EVENT = 'sodax-dex-positions-updated';
+import {
+  cn,
+  createDexTokenIdsStorageKey,
+  DEX_POSITIONS_UPDATED_EVENT,
+  dispatchDexPositionsUpdatedEvent,
+} from '@/lib/utils';
 
 interface SupplyDialogFooterProps {
   currentSupplyStep: SupplyStep;
@@ -40,10 +43,6 @@ interface SupplyDialogFooterProps {
   onPendingChange: (pending: boolean) => void;
   poolData: PoolData | null;
   poolSpokeAssets: PoolSpokeAssets | null;
-}
-
-function createDexTokenIdsStorageKey(chainId: string | number, userAddress: string): string {
-  return `sodax-dex-positions-${chainId}-${userAddress}`;
 }
 
 function saveTokenIdToLocalStorage(userAddress: string, chainId: string | number, tokenId: string): void {
@@ -346,6 +345,16 @@ export default function SupplyDialogFooter({
           }),
           spokeProvider,
         });
+
+        if (selectedNetworkChainId) {
+          try {
+            const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+            dispatchDexPositionsUpdatedEvent(selectedNetworkChainId, walletAddress);
+          } catch (eventError) {
+            // Keep supply successful even if local position refresh event fails.
+            console.warn('Failed to dispatch DEX positions updated event', eventError);
+          }
+        }
 
         try {
           const [, hubTxHash] = result;

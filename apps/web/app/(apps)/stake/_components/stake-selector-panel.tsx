@@ -2,10 +2,10 @@ import type React from 'react';
 import { useRef, useMemo } from 'react';
 import { useClickAway } from 'react-use';
 import { cn, formatTokenAmount } from '@/lib/utils';
+import { availableChains } from '@/constants/chains';
 import { STAKE_MODE } from '../_stores/stake-store';
 import type { XToken } from '@sodax/types';
 import {
-  supportedSpokeChains,
   spokeChainConfig,
   INJECTIVE_MAINNET_CHAIN_ID,
   REDBELLY_MAINNET_CHAIN_ID,
@@ -46,11 +46,12 @@ export function StakeSelectorPanel(): React.JSX.Element {
         ? formatTokenAmount(balance, selectedToken.decimals)
         : '0'
       : formatTokenAmount(balance, 18);
-  // Get all SODA tokens from all supported chains
+  // Get all SODA tokens from available chains
   const sodaTokens = useMemo((): XToken[] => {
     const tokens: XToken[] = [];
-    for (const chainId of supportedSpokeChains) {
-      const chainConfig = spokeChainConfig[chainId as SpokeChainId];
+    for (const chain of availableChains) {
+      const chainId = chain.id as SpokeChainId;
+      const chainConfig = spokeChainConfig[chainId];
       if (chainConfig?.supportedTokens && 'SODA' in chainConfig.supportedTokens) {
         const sodaToken = chainConfig.supportedTokens.SODA as XToken;
         if (

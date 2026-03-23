@@ -25,6 +25,8 @@ type AddLiquidityTabContentProps = {
   chainId: SpokeChainId;
   tokenId: string;
   poolData: PoolData;
+  positionSodaBalanceText: string;
+  positionXSodaBalanceText: string;
   liquidityToken0Amount: string;
   liquidityToken1Amount: string;
   isPending: boolean;
@@ -149,6 +151,8 @@ export function AddLiquidityTabContent({
   chainId,
   tokenId,
   poolData,
+  positionSodaBalanceText,
+  positionXSodaBalanceText,
   liquidityToken0Amount,
   liquidityToken1Amount,
   isPending,
@@ -250,7 +254,11 @@ export function AddLiquidityTabContent({
   return (
     <TabsContent value="add">
       <div className="self-stretch mt-4">
-        <PairBalanceHeader chainId={chainId} />
+        <PairBalanceHeader
+          chainId={chainId}
+          sodaBalanceText={positionSodaBalanceText}
+          xSodaBalanceText={positionXSodaBalanceText}
+        />
       </div>
       <div className="self-stretch p-6 bg-blend-multiply bg-almost-white rounded-2xl inline-flex flex-col justify-start items-start gap-2 w-full relative mt-10">
         <div className="absolute -top-8 left-8 translate-y-full z-10 pointer-events-none rotate-180">

@@ -32,6 +32,8 @@ const xSodaToken: XToken = {
 
 type ClaimTabContentProps = {
   chainId: SpokeChainId;
+  positionSodaBalanceText: string;
+  positionXSodaBalanceText: string;
   hasUnclaimedFees: boolean;
   unclaimedFees0: bigint;
   unclaimedFees1: bigint;
@@ -43,6 +45,8 @@ type ClaimTabContentProps = {
 
 export function ClaimTabContent({
   chainId,
+  positionSodaBalanceText,
+  positionXSodaBalanceText,
   hasUnclaimedFees,
   unclaimedFees0,
   unclaimedFees1,
@@ -78,7 +82,11 @@ export function ClaimTabContent({
   return (
     <TabsContent value="claim">
       <div className="mt-4">
-        <PairBalanceHeader chainId={chainId} />
+        <PairBalanceHeader
+          chainId={chainId}
+          sodaBalanceText={positionSodaBalanceText}
+          xSodaBalanceText={positionXSodaBalanceText}
+        />
       </div>
       <div className="relative self-stretch inline-flex flex-col justify-start items-start w-full mt-10">
         <div className="absolute -top-8 left-8 translate-y-full z-10 pointer-events-none rotate-180">

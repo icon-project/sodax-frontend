@@ -6,9 +6,10 @@ import { motion, useAnimationControls } from 'framer-motion';
 import CurrencyLogo from '@/components/shared/currency-logo';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import { cn } from '@/lib/utils';
+import { availableChains } from '@/constants/chains';
 import { PoolNetworkPicker } from './pool-network-picker';
 import type { SpokeChainId, XToken } from '@sodax/types';
-import { supportedSpokeChains, spokeChainConfig } from '@sodax/sdk';
+import { spokeChainConfig } from '@sodax/sdk';
 import { INJECTIVE_MAINNET_CHAIN_ID, REDBELLY_MAINNET_CHAIN_ID, NEAR_MAINNET_CHAIN_ID } from '@sodax/types';
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { usePoolState } from '../_stores/pool-store-provider';
@@ -120,8 +121,9 @@ export function PoolNetworkSelector({
 
   const sodaTokens = useMemo((): XToken[] => {
     const tokens: XToken[] = [];
-    for (const chainId of supportedSpokeChains) {
-      const chainConfig = spokeChainConfig[chainId as SpokeChainId];
+    for (const chain of availableChains) {
+      const chainId = chain.id as SpokeChainId;
+      const chainConfig = spokeChainConfig[chainId];
       if (chainConfig?.supportedTokens && 'SODA' in chainConfig.supportedTokens) {
         const sodaToken = chainConfig.supportedTokens.SODA as XToken;
         if (
