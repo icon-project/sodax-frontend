@@ -48,6 +48,43 @@ type ManagePositionDialogProps = {
   positionInfo: ClPositionInfo;
 };
 
+const DEX_POSITIONS_UPDATED_EVENT = 'sodax-dex-positions-updated';
+
+function createDexTokenIdsStorageKey(chainId: string | number, userAddress: string): string {
+  return `sodax-dex-positions-${chainId}-${userAddress}`;
+}
+
+function dispatchDexPositionsUpdatedEvent(chainId: string | number, userAddress: string): void {
+  globalThis.dispatchEvent(
+    new CustomEvent(DEX_POSITIONS_UPDATED_EVENT, {
+      detail: {
+        chainId,
+        userAddress,
+      },
+    }),
+  );
+}
+
+function removeTokenIdFromLocalStorage(userAddress: string, chainId: string | number, tokenId: string): void {
+  if (typeof globalThis.localStorage === 'undefined') {
+    return;
+  }
+
+  const cleanId = tokenId.trim().toLowerCase();
+  const storageKey = createDexTokenIdsStorageKey(chainId, userAddress);
+  const positions = globalThis.localStorage.getItem(storageKey);
+  const tokenIds = positions ? positions.split(',').map(value => value.trim()) : [];
+  const filteredTokenIds = tokenIds.filter(id => id.trim().toLowerCase() !== cleanId);
+
+  if (filteredTokenIds.length > 0) {
+    globalThis.localStorage.setItem(storageKey, filteredTokenIds.join(','));
+  } else {
+    globalThis.localStorage.removeItem(storageKey);
+  }
+
+  dispatchDexPositionsUpdatedEvent(chainId, userAddress);
+}
+
 function resolveSpokeChainId(chainId: string): SpokeChainId {
   if (!(chainId in spokeChainConfig)) {
     return 'sonic';
@@ -522,11 +559,25 @@ export function ManagePositionDialog({
           });
         }
       }
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['allChainBalances'] }),
-        queryClient.invalidateQueries({ queryKey: ['allChainXSodaBalances'] }),
-      ]);
+      setWithdrawPercentage('0');
       setIsWithdrawSuccess(true);
+      try {
+        const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+        if (parsedPercentage === 100) {
+          removeTokenIdFromLocalStorage(walletAddress, chainId, tokenId);
+        } else {
+          dispatchDexPositionsUpdatedEvent(chainId, walletAddress);
+        }
+      } catch (walletAddressError) {
+        // Keep withdraw successful even when local position cache refresh fails.
+        console.warn('Failed to refresh local DEX position state', walletAddressError);
+      }
+      try {
+        await queryClient.invalidateQueries({ queryKey: ['dex', 'positionInfo'] });
+      } catch (invalidateError) {
+        // Keep success state even when cache invalidation fails.
+        console.warn('Failed to invalidate DEX position query', invalidateError);
+      }
     } catch (withdrawErr) {
       const message = withdrawErr instanceof Error ? withdrawErr.message : 'Withdraw liquidity failed.';
       setWithdrawError(message);
