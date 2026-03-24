@@ -10,8 +10,8 @@ import { GoogleTagManager } from '@next/third-parties/google';
 import { CookieConsentBanner } from '@/components/cookie-consent/cookie-consent-banner';
 import { headers } from 'next/headers';
 import { cookieToInitialState } from 'wagmi';
-import { createWagmiConfig } from '@sodax/wallet-sdk-react';
 import { rpcConfig } from '../providers/constants';
+import { createServerWagmiConfig } from '../providers/create-wagmi-config';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -106,7 +106,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const initialState = cookieToInitialState(
-    createWagmiConfig(rpcConfig),
+    createServerWagmiConfig(rpcConfig),
     (await headers()).get('cookie'), // Note: await headers() in Next.js 15+
   );
 
@@ -115,7 +115,6 @@ export default async function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: Consent Mode v2 defaults must execute synchronously before GTM */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
