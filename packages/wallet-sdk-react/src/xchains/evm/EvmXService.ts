@@ -19,7 +19,7 @@ import { getWagmiChainId, isNativeToken } from '@/utils';
 
 import { type Address, type Chain, defineChain, erc20Abi } from 'viem';
 import { getPublicClient } from 'wagmi/actions';
-import { type Config, createConfig, http } from 'wagmi';
+import { type Config, createConfig, http, createStorage, cookieStorage } from 'wagmi';
 import {
   mainnet,
   avalanche,
@@ -92,6 +92,10 @@ export const createWagmiConfig = (config: RpcConfig, options?: WagmiOptions) => 
       [redbellyMainnet.id]: http(config[REDBELLY_MAINNET_CHAIN_ID]),
       [kaia.id]: http(config[KAIA_MAINNET_CHAIN_ID]),
     },
+    storage: createStorage({
+      storage: cookieStorage,
+      key: 'sodax',
+    }),
   });
 };
 
