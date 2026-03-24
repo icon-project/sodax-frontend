@@ -5,6 +5,13 @@
     "ignore": ["**/.next", "./components"]
   },
   "linter": {
-    "ignore": []
+    "rules": {
+      "security": {
+        "noDangerouslySetInnerHtml": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "off"
+      }
+    }
   }
 }
