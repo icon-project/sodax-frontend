@@ -8,6 +8,10 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppStoreProvider } from '@/stores/app-store-provider';
 import { GoogleTagManager } from '@next/third-parties/google';
 import { CookieConsentBanner } from '@/components/cookie-consent/cookie-consent-banner';
+import { headers } from 'next/headers';
+import { cookieToInitialState } from 'wagmi';
+import { rpcConfig } from '../providers/constants';
+import { createServerWagmiConfig } from '../providers/create-wagmi-config';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
@@ -96,18 +100,23 @@ const structuredData = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const initialState = cookieToInitialState(
+    createServerWagmiConfig(rpcConfig),
+    (await headers()).get('cookie'), // Note: await headers() in Next.js 15+
+  );
+
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: Consent Mode v2 defaults must execute synchronously before GTM */}
-        <script dangerouslySetInnerHTML={{
+        <script
+          dangerouslySetInnerHTML={{
             __html: `
 try{
 window.dataLayer=window.dataLayer||[];
@@ -129,10 +138,11 @@ gtag('consent','default',{'ad_storage':'denied','ad_user_data':'denied','ad_pers
 }`,
           }}
         />
+
         <GoogleTagManager gtmId="GTM-W355PCS6" />
         <SidebarProvider>
           <AppSidebar />
-          <Providers>
+          <Providers initialState={initialState}>
             <AppStoreProvider>{children}</AppStoreProvider>
           </Providers>
         </SidebarProvider>
