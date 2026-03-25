@@ -799,7 +799,6 @@ export class AssetService {
     const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(assetConfig.decimal, vaultAmount);
 
     if (dstChainId === this.hubProvider.chainConfig.chain.id) {
-      calls.push(Erc20Service.encodeTransfer(assetConfig.asset, recipient, translatedAmount));
       if (
         assetConfig.asset.toLowerCase() ===
         this.configService.spokeChainConfig[dstChainId].addresses.wrappedSonic.toLowerCase()
