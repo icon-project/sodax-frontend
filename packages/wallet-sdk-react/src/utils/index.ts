@@ -10,6 +10,8 @@ export const isNativeToken = (xToken: XToken) => {
     '11111111111111111111111111111111', // solana
     'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA', // stellar
     '3443843282313283355522573239085696902919850365217539366784739393210722344986', // aleo
+    'ST000000000000000000002AMW42H.nativetoken', // stacks
+    '0:0', // bitcoin
   ];
 
   return nativeAddresses.includes(xToken.address);

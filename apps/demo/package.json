@@ -1,6 +1,6 @@
 {
   "name": "sodax-demo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "private": true,
   "engines": {
@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "vite --port 3000 --host",
-    "build": "vite build",
+    "build": "NODE_OPTIONS=--max-old-space-size=8192 vite build",
     "preview": "vite preview",
     "test": "true",
     "checkTs": "tsc --noEmit",
@@ -62,7 +62,15 @@
     "vite-tsconfig-paths": "4.3.1"
   },
   "browserslist": {
-    "production": [">0.2%", "not dead", "not op_mini all"],
-    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

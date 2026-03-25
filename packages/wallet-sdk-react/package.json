@@ -7,7 +7,10 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -30,6 +33,9 @@
     "lint": "biome lint . --write"
   },
   "dependencies": {
+    "@stacks/connect": "catalog:",
+    "@stacks/network": "catalog:",
+    "@stacks/transactions": "catalog:",
     "@creit.tech/stellar-wallets-kit": "^1.7.5",
     "@hot-labs/near-connect": "0.10.0",
     "@injectivelabs/networks": "catalog:",
@@ -49,7 +55,7 @@
     "@provablehq/aleo-types": "catalog:",
     "@provablehq/sdk": "catalog:",
     "@provablehq/aleo-wallet-adaptor-react": "catalog:",
-    "near-api-js": "7.1.1",
+    "near-api-js": "catalog:",
     "@sodax/types": "workspace:*",
     "@sodax/wallet-sdk-core": "workspace:*",
     "@solana/spl-token": "catalog:",
@@ -59,6 +65,7 @@
     "@stellar/stellar-sdk": "catalog:",
     "icon-sdk-js": "catalog:",
     "immer": "10.1.1",
+    "sats-connect": "^4.2.1",
     "viem": "catalog:",
     "wagmi": "catalog:",
     "zustand": "4.5.2",

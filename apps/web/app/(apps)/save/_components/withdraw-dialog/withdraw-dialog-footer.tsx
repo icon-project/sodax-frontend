@@ -19,6 +19,7 @@ import type { SpokeProvider } from '@sodax/sdk';
 import { parseUnits } from 'viem';
 import { getChainName } from '@/constants/chains';
 import { useQueryClient } from '@tanstack/react-query';
+import { SAVE_DEFAULT_CHAIN_ID } from '../constants';
 
 interface WithdrawDialogFooterProps {
   currentStep: number;
@@ -71,7 +72,9 @@ export default function WithdrawDialogFooter({
   });
   const { mutateAsync: approve, isPending: isApproving } = useMMApprove();
   const { mutateAsync: withdraw, isPending: isWithdrawing } = useWithdraw();
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain((selectedToken?.xChainId || 'sonic') as ChainId);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(
+    (selectedToken?.xChainId || SAVE_DEFAULT_CHAIN_ID) as ChainId,
+  );
   const { data: tokenPrice } = useTokenPrice(selectedToken as XToken);
   const handleApprove = async (): Promise<void> => {
     if (!selectedToken || withdrawValue <= 0) return;

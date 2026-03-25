@@ -1545,8 +1545,10 @@ export class MoneyMarketService {
       // withdraw the bnUSD debt token from the vault
       calls.push(EvmVaultTokenService.encodeWithdraw(bnUSDVault, bnUSD, translatedAmountIn));
     } else {
-      calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
-      calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
+      if (!this.configService.isValidVault(fromHubAsset.asset)) {
+        calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
+        calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
+      }
     }
 
     calls.push(Erc20Service.encodeApprove(repayToken, this.config.lendingPool, translatedAmountIn));

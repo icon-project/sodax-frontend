@@ -6,3 +6,5 @@ export * from './SolanaWalletProvider.js';
 export * from './StellarWalletProvider.js';
 export * from './NearWalletProvider.js';
 export * from "./AleoWalletProvider.js"
+export * from './StacksWalletProvider.js';
+export * from './BTCWalletProvider.js';

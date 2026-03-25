@@ -7,6 +7,7 @@ import { type SwapStore, createSwapStore } from './swap-store';
 import { parseUnits } from 'viem';
 import { getXChainType, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
 import { validateChainAddress } from '@/lib/utils';
+import { ENTER_DESTINATION_ADDRESS_PLACEHOLDER } from '../_constants/swap-messages';
 
 export type SwapStoreApi = ReturnType<typeof createSwapStore>;
 
@@ -115,10 +116,10 @@ export const useSwapInfo = () => {
       return 'Enter Amount';
     }
     if (isSwapAndSend && customDestinationAddress === '') {
-      return 'Enter destination address';
+      return ENTER_DESTINATION_ADDRESS_PLACEHOLDER;
     }
     if (isSwapAndSend && !validateChainAddress(customDestinationAddress, getXChainType(outputToken.xChainId) || '')) {
-      return 'Address is not valid';
+      return 'Address is not valid'; // this is a message on the button
     }
     if (sourceBalance < parseUnits(inputAmount, inputToken.decimals)) {
       return 'Insufficient balance';

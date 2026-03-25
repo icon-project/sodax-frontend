@@ -32,7 +32,19 @@ const rpcConfig: RpcConfig = {
     horizonRpcUrl: 'https://horizon.stellar.org',
     sorobanRpcUrl: 'https://magical-bitter-frost.stellar-mainnet.quiknode.pro/78709b736890cf5a9bcb36e118b9d18e8ecdb7ee',
   },
+
+  // bitcoin — override radfi endpoints (canary)
+  // bitcoin: {
+  //   rpcUrl: 'https://mempool.space/signet/api',
+  //   radfiApiUrl: 'https://staging.api.radfi.co/api', // https://api.canary.radfi.co/api for prod
+  //   radfiUmsUrl: 'https://staging.ums.radfi.co/api', // https://ums.radfi.co/api for prod
+  // },
+  bitcoin: {
+    radfiApiUrl: 'https://api.radfi.co/api',
+    radfiUmsUrl: 'https://ums.radfi.co/api'
+  },
 };
+
 
 const configMap: Record<SolverEnv, SolverConfigParams> = {
   [SolverEnv.Production]: productionSolverConfig,
@@ -52,7 +64,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <SodaxProvider testnet={false} config={sodaxConfig} rpcConfig={rpcConfig}>
       <QueryClientProvider client={queryClient}>
-        <SodaxWalletProvider rpcConfig={rpcConfig}>{children}</SodaxWalletProvider>
+        <SodaxWalletProvider rpcConfig={rpcConfig} options={{ wagmi: { ssr: false, reconnectOnMount: true } }}>{children}</SodaxWalletProvider>
       </QueryClientProvider>
     </SodaxProvider>
   );

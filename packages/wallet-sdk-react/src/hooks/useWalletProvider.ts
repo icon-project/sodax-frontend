@@ -6,10 +6,14 @@ import type {
   IInjectiveWalletProvider,
   INearWalletProvider,
   ISolanaWalletProvider,
+  IStacksWalletProvider,
   IStellarWalletProvider,
   ISuiWalletProvider,
+  IBitcoinWalletProvider,
 } from '@sodax/types';
 import { useMemo } from 'react';
+import { BitcoinXService } from '../xchains/bitcoin/BitcoinXService';
+import type { BitcoinXConnector } from '../xchains/bitcoin/BitcoinXConnector';
 import {
   AleoWalletProvider,
   EvmWalletProvider,
@@ -19,6 +23,7 @@ import {
   StellarWalletProvider,
   SolanaWalletProvider,
   NearWalletProvider,
+  StacksWalletProvider,
 } from '@sodax/wallet-sdk-core';
 import { getXChainType } from '../actions';
 import { usePublicClient, useWalletClient } from 'wagmi';
@@ -29,6 +34,9 @@ import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
 import type { NearXService } from '../xchains/near/NearXService';
 import type { AleoXService } from '../xchains/aleo/AleoXService';
 import { useWallet as useAleoWallet } from '@provablehq/aleo-wallet-adaptor-react';
+import { useXConnection } from './useXConnection';
+import { useXConnectors } from './useXConnectors';
+import type { StacksXConnector } from '../xchains/stacks';
 
 /**
  * Hook to get the appropriate wallet provider based on the chain type.
@@ -56,8 +64,10 @@ export function useWalletProvider(
   | IInjectiveWalletProvider
   | IStellarWalletProvider
   | ISolanaWalletProvider
+  | IBitcoinWalletProvider
   | INearWalletProvider
   | IAleoWalletProvider
+  | IStacksWalletProvider
   | undefined {
   const xChainType = getXChainType(spokeChainId);
   // EVM-specific hooks
@@ -69,6 +79,9 @@ export function useWalletProvider(
   // Cross-chain hooks
   const xService = useXService(getXChainType(spokeChainId));
   const xAccount = useXAccount(spokeChainId);
+  const stacksConnection = useXConnection('STACKS');
+  const stacksConnectors = useXConnectors('STACKS');
+  const xConnection = useXConnection(xChainType);
 
   return useMemo(() => {
     switch (xChainType) {
@@ -151,6 +164,16 @@ export function useWalletProvider(
         });
       }
 
+      case 'BITCOIN': {
+        if (!xConnection?.xConnectorId) return undefined;
+        const connector = BitcoinXService.getInstance().getXConnectorById(xConnection.xConnectorId) as
+          | BitcoinXConnector
+          | undefined;
+        if (!connector) return undefined;
+        // Recreate from window extension object — works after page reload without reconnect
+        return connector.recreateWalletProvider(xConnection.xAccount);
+      }
+
       case 'NEAR': {
         const nearXService = xService as NearXService;
         if (!nearXService.walletSelector) {
@@ -175,8 +198,31 @@ export function useWalletProvider(
         });
       }
 
+      case 'STACKS': {
+        const address = xAccount.address;
+        if (!address) {
+          return undefined;
+        }
+
+        const activeStacksConnector = stacksConnectors.find(c => c.id === stacksConnection?.xConnectorId) as
+          | StacksXConnector
+          | undefined;
+
+        return new StacksWalletProvider({ address, provider: activeStacksConnector?.getProvider() });
+      }
+
       default:
         return undefined;
     }
-  }, [xChainType, evmPublicClient, evmWalletClient, xService, xAccount, aleoWallet]);
+  }, [
+    xChainType,
+    evmPublicClient,
+    evmWalletClient,
+    xService,
+    xAccount,
+    aleoWallet,
+    stacksConnection,
+    stacksConnectors,
+    xConnection,
+  ]);
 }

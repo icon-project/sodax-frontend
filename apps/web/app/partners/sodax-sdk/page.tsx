@@ -26,7 +26,7 @@ const imgLogoRadfi = '/partners/sodax-sdk/logo-radfi.png';
 const imgLogo1inch = '/partners/sodax-sdk/logo-1inch.svg';
 
 // Team photos
-const imgMinKim = '/partners/sodax-sdk/team-min-kim.png';
+const imgJenniferKim = '/partners/sodax-sdk/team-jennifer-kim.png';
 const imgArosh = '/partners/sodax-sdk/team-arosh.png';
 const imgFez = '/partners/sodax-sdk/team-fez-1.png';
 const imgAnton = '/partners/sodax-sdk/team-anton-andell.png';
@@ -219,7 +219,7 @@ export default function SodaxSDKPage() {
                     CROSS-NETWORK?
                   </h2>
                   <div className="flex flex-row lg:flex-col gap-3">
-                    <TeamMember name="Min Kim" jobTitle="Founder & President" imageSrc={imgMinKim} size="large" />
+                    <TeamMember name="Jennifer Kim" jobTitle="Business Development Lead" imageSrc={imgJenniferKim} size="large" />
                     <TeamMember
                       name="Arosh Ediriweera"
                       jobTitle="Partnerships Manager"
@@ -392,6 +392,9 @@ export default function SodaxSDKPage() {
                   <PartnerLogo description="Money app">
                     <Image src={imgLogoHana} alt="Hana Wallet" width={49} height={19} className="object-contain" />
                   </PartnerLogo>
+                  <PartnerLogo description="Native Bitcoin DEX">
+                    <Image src={imgLogoRadfi} alt="RadFi" width={45} height={26} className="object-contain" />
+                  </PartnerLogo>
                 </div>
               </div>
 
@@ -419,9 +422,6 @@ export default function SodaxSDKPage() {
                       height={26}
                       className="object-contain"
                     />
-                  </PartnerLogo>
-                  <PartnerLogo description="Native Bitcoin DEX">
-                    <Image src={imgLogoRadfi} alt="RadFi" width={45} height={26} className="object-contain" />
                   </PartnerLogo>
                   <PartnerLogo description="Intent-based swaps">
                     <Image src={imgLogo1inch} alt="1inch" width={40} height={10} className="object-contain" />
@@ -453,13 +453,13 @@ export default function SodaxSDKPage() {
                 </p>
                 <p className="font-['InterRegular'] text-xs text-[var(--clay-dark)] leading-relaxed">
                   Sonic, Sui, Base, Ethereum, Arbitrum, Polygon & Polygon zkEVM, Avalanche, BNB Chain, Optimism,
-                  Injective, Stellar, HyperEVM, ICON, LightLink
+                  Stellar, HyperEVM, ICON, LightLink, Kaia, Bitcoin
                 </p>
               </div>
               <div className="flex flex-col gap-2 items-start flex-1">
                 <p className="font-['InterMedium'] text-xs text-[var(--clay)] uppercase tracking-wider">Coming Soon</p>
                 <p className="font-['InterRegular'] text-xs text-[var(--clay-dark)] leading-relaxed">
-                  Bitcoin, NEAR, Redbelly, Stacks, Aleo, Giwa, Kaia
+                  NEAR, Redbelly, Stacks, Aleo, Giwa, Injective
                 </p>
               </div>
             </div>
@@ -659,7 +659,7 @@ export default function SodaxSDKPage() {
                 <br />
                 CROSS-NETWORK?
               </h2>
-              <TeamMember name="Min Kim" jobTitle="Founder & President" imageSrc={imgMinKim} size="large" />
+              <TeamMember name="Jennifer Kim" jobTitle="Business Development Lead" imageSrc={imgJenniferKim} size="large" />
               <TeamMember name="Arosh Ediriweera" jobTitle="Partnerships Manager" imageSrc={imgArosh} size="large" />
             </div>
             <div className="flex gap-4 items-center mt-4">

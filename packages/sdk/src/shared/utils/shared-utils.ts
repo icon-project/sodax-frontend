@@ -15,6 +15,7 @@ import {
   isPartnerFeePercentage,
   isSolanaRawSpokeProviderConfig,
   isSonicRawSpokeProviderConfig,
+  isStacksRawSpokeProviderConfig,
   isStellarRawSpokeProviderConfig,
 } from '../guards.js';
 import type { GetAddressType, GetChainConfigType, PartnerFee, QuoteType } from '../types.js';
@@ -23,6 +24,7 @@ import { toHex } from 'viem';
 import { bcs } from '@mysten/sui/bcs';
 import { PublicKey } from '@solana/web3.js';
 import { Address as StellarAddress } from '@stellar/stellar-sdk';
+import { Cl, serializeCV } from '@stacks/transactions';
 import { EvmWalletAbstraction } from '../services/index.js';
 import {
   StellarRawSpokeProvider,
@@ -31,6 +33,7 @@ import {
   InjectiveRawSpokeProvider,
   SonicRawSpokeProvider,
   NearRawSpokeProvider,
+  StacksRawSpokeProvider,
 } from '../entities/index.js';
 import { SuiRawSpokeProvider } from '../entities/sui/SuiSpokeProvider.js';
 import { AleoRawSpokeProvider } from '../entities/aleo/AleoSpokeProvider.js';
@@ -155,9 +158,6 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
     case 'sonic':
       return address as Hex;
 
-    case 'injective-1':
-      return toHex(Buffer.from(address, 'utf-8'));
-
     case '0x1.icon':
       return toHex(Buffer.from(address.replace('cx', '01').replace('hx', '00') ?? 'f8', 'hex'));
 
@@ -170,7 +170,12 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
     case 'stellar':
       return `0x${StellarAddress.fromString(address).toScVal().toXDR('hex')}`;
 
+    case 'stacks':
+      return `0x${serializeCV(Cl.principal(address))}` as Hex;
+
+    case 'bitcoin':
     case 'near':
+    case 'injective-1':
       return toHex(Buffer.from(address, 'utf-8'));
 
     case 'aleo': {
@@ -280,6 +285,10 @@ export function constructRawSpokeProvider(config: RawSpokeProviderConfig): RawSp
     case 'ALEO': {
       invariant(isAleoRawSpokeProviderConfig(config), 'Invalid Aleo raw spoke provider config');
       return new AleoRawSpokeProvider(config.chainConfig, config.walletAddress, config.rpcUrl);
+    }
+    case 'STACKS': {
+      invariant(isStacksRawSpokeProviderConfig(config), 'Invalid Stacks raw spoke provider config');
+      return new StacksRawSpokeProvider(config.walletAddress, config.chainConfig);
     }
     default: {
       throw new Error(`Unsupported chain type: ${chainType}`);

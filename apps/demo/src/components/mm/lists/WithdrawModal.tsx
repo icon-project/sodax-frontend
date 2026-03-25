@@ -17,7 +17,8 @@ import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@so
 import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 import type { MoneyMarketWithdrawParams } from '@sodax/sdk';
-import { getMmErrorText } from '@/lib/utils';
+import { getMmErrorText, formatDecimalForDisplay, getSafeMaxAmountForInput } from '@/lib/utils';
+import { logger } from '@/lib/logger';
 import { ErrorAlert } from '../ErrorAlert';
 import { useQueryClient } from '@tanstack/react-query';
 import { invalidateMmQueries } from '@/lib/invalidateMmQueries';
@@ -85,12 +86,6 @@ export function WithdrawModal({
   // Note: Withdraw actions don't require approval even on EVM chains (per SDK implementation)
   const isEvmChain = sourceSpokeProvider?.chainConfig?.chain?.type === 'EVM';
 
-  // useMMAllowance already disables itself for 'withdraw' actions (per hook implementation)
-  // So hasAllowed will be undefined for withdraw actions, which is correct
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useMMAllowance({
-    params,
-    spokeProvider: sourceSpokeProvider,
-  });
   const {
     mutateAsync: approve,
     isPending: isApproving,
@@ -114,12 +109,11 @@ export function WithdrawModal({
     // Withdraw actions don't require approval (per SDK implementation)
     // This should never be called for withdraw, but adding safeguard
     if (params.action === 'withdraw') {
-      // console.warn('Approve should not be called for withdraw actions');
+      logger.warn('Approve should not be called for withdraw actions');
       return;
     }
-    // Additional safeguard: don't call approve for non-EVM chains
     if (!isEvmChain) {
-      // console.warn('Approve is not supported for non-EVM chains');
+      logger.warn('Approve is not supported for non-EVM chains');
       return;
     }
     try {
@@ -128,7 +122,7 @@ export function WithdrawModal({
         spokeProvider: sourceSpokeProvider,
       });
     } catch (err) {
-      console.error('Approve failed:', err);
+      logger.error('Approve failed', err);
     }
   };
 
@@ -166,11 +160,11 @@ export function WithdrawModal({
         onOpenChange(false);
       }
     } catch (err) {
-      console.error('Withdraw failed:', err);
+      logger.error('Withdraw failed', err);
     }
   };
-  const handleMaxclick = () => {
-    setAmount(maxWithdraw);
+  const handleMaxclick = (): void => {
+    setAmount(getSafeMaxAmountForInput(maxWithdraw));
   };
 
   const handleOpenChangeInternal = (nextOpen: boolean) => {
@@ -230,7 +224,7 @@ export function WithdrawModal({
             <div className="space-y-1">
               {maxWithdraw && maxWithdraw !== '0' && (
                 <p className="text-xs text-muted-foreground">
-                  Max withdraw: {Number(maxWithdraw).toFixed(6)} {token.symbol}
+                  Max withdraw: {formatDecimalForDisplay(maxWithdraw, 4)} {token.symbol}
                 </p>
               )}
               {/* Show validation messages only when user enters an amount */}
@@ -239,15 +233,10 @@ export function WithdrawModal({
                   const amountNum = Number.parseFloat(amount.replace(',', '.'));
                   if (Number.isNaN(amountNum) || amountNum <= 0) return null;
 
-                  if (
-                    maxWithdraw &&
-                    maxWithdraw !== '0' &&
-                    amountNum > Number.parseFloat(maxWithdraw) &&
-                    !isBusy
-                  ) {
+                  if (maxWithdraw && maxWithdraw !== '0' && amountNum > Number.parseFloat(maxWithdraw) && !isBusy) {
                     return (
                       <ErrorAlert
-                        text={`Amount exceeds maximum withdrawable: ${Number(maxWithdraw).toFixed(6)} ${token.symbol}`}
+                        text={`Amount exceeds maximum withdrawable: ${formatDecimalForDisplay(maxWithdraw, 6)} ${token.symbol}`}
                         variant="compact"
                       />
                     );

@@ -13,8 +13,13 @@ import { StellarXService } from './xchains/stellar';
 import { SuiXService } from './xchains/sui';
 import { IconXService } from './xchains/icon';
 import { IconHanaXConnector } from './xchains/icon/IconHanaXConnector';
+import { BitcoinXService } from './xchains/bitcoin';
+import { UnisatXConnector } from './xchains/bitcoin/UnisatXConnector';
+import { XverseXConnector } from './xchains/bitcoin/XverseXConnector';
+import { OKXXConnector } from './xchains/bitcoin/OKXXConnector';
 import { NearXService } from './xchains/near/NearXService';
 import { AleoXService } from './xchains/aleo';
+import { StacksXService, StacksXConnector, STACKS_PROVIDERS } from './xchains/stacks';
 
 type XWagmiStore = {
   xServices: Partial<Record<ChainType, XService>>;
@@ -26,7 +31,7 @@ type XWagmiStore = {
 
 const initXServices = () => {
   const xServices = {};
-  ['EVM', 'INJECTIVE', 'STELLAR', 'SUI', 'SOLANA', 'ICON', 'NEAR', 'ALEO'].forEach(key => {
+  ['EVM', 'BITCOIN', 'INJECTIVE', 'STELLAR', 'SUI', 'SOLANA', 'ICON', 'NEAR', 'ALEO', 'STACKS'].forEach(key => {
     const xChainType = key as ChainType;
 
     switch (xChainType) {
@@ -42,6 +47,14 @@ const initXServices = () => {
       case 'SOLANA':
         xServices[xChainType] = SolanaXService.getInstance();
         xServices[xChainType].setXConnectors([]);
+        break;
+      case 'BITCOIN':
+        xServices[xChainType] = BitcoinXService.getInstance();
+        xServices[xChainType].setXConnectors([
+          new UnisatXConnector(),
+          new XverseXConnector(),
+          new OKXXConnector(),
+        ]);
         break;
 
       // Injective, Stellar, Icon wallet connectors are supported by sodax wallet-sdk-react sdk.
@@ -64,6 +77,10 @@ const initXServices = () => {
       case 'ALEO':
         xServices[xChainType] = AleoXService.getInstance();
         xServices[xChainType].setXConnectors([]);
+        break;
+      case 'STACKS':
+        xServices[xChainType] = StacksXService.getInstance();
+        xServices[xChainType].setXConnectors(STACKS_PROVIDERS.map(config => new StacksXConnector(config)));
         break;
       default:
         break;

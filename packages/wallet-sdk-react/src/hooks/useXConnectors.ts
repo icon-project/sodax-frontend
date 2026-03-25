@@ -11,6 +11,7 @@ import { useStellarXConnectors } from '../xchains/stellar/useStellarXConnectors'
 import { SuiXConnector } from '../xchains/sui';
 import { AleoXConnector } from '../xchains/aleo';
 import { useXService } from './useXService';
+import { useNearXConnectors } from '../xchains/near/useNearXConnectors';
 
 /**
  * Hook to retrieve available wallet connectors for a specific blockchain type.
@@ -22,7 +23,7 @@ import { useXService } from './useXService';
  * - Solana: Uses Solana wallet adapters (filtered to installed wallets only)
  * - Aleo: Uses Aleo wallet adapters (filtered to installed/loadable wallets only)
  *
- * @param xChainType - The blockchain type to get connectors for ('EVM' | 'SUI' | 'STELLAR' | 'SOLANA' | 'ALEO')
+ * @param xChainType - The blockchain type to get connectors for ('EVM' | 'SUI' | 'STELLAR' | 'SOLANA' | 'NEAR')
  * @returns An array of XConnector instances compatible with the specified chain type
  */
 
@@ -31,9 +32,9 @@ export function useXConnectors(xChainType: ChainType | undefined): XConnector[] 
   const evmConnectors = useConnectors();
   const suiWallets = useWallets();
   const { data: stellarXConnectors } = useStellarXConnectors();
-  const { wallets: aleoWallets } = useAleoWallet();
-
+  const { data: nearXConnectors } = useNearXConnectors();
   const { wallets: solanaWallets } = useWallet();
+  const { wallets: aleoWallets } = useAleoWallet();
 
   const xConnectors = useMemo((): XConnector[] => {
     if (!xChainType || !xService) {
@@ -51,6 +52,8 @@ export function useXConnectors(xChainType: ChainType | undefined): XConnector[] 
         return solanaWallets
           .filter(wallet => wallet.readyState === 'Installed')
           .map(wallet => new SolanaXConnector(wallet));
+      case 'NEAR':
+        return nearXConnectors || [];
       case 'ALEO':
         return aleoWallets
           .filter(wallet => wallet.readyState === 'Installed' || wallet.readyState === 'Loadable')
@@ -58,7 +61,7 @@ export function useXConnectors(xChainType: ChainType | undefined): XConnector[] 
       default:
         return xService.getXConnectors();
     }
-  }, [xService, xChainType, evmConnectors, suiWallets, stellarXConnectors, solanaWallets, aleoWallets]);
+  }, [xService, xChainType, evmConnectors, suiWallets, stellarXConnectors, solanaWallets, nearXConnectors, aleoWallets]);
 
   return xConnectors;
 }

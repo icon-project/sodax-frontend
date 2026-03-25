@@ -14,17 +14,24 @@ import {
   type SonicRawSpokeProvider,
   type RawSpokeProvider,
   type SpokeProviderType,
-  type EvmRawSpokeProviderConfig,
-  type SonicRawSpokeProviderConfig,
-  type RawSpokeProviderConfig,
+  type SpokeProvider,
+    type EvmRawSpokeProviderConfig,
+    type SonicRawSpokeProviderConfig,
+    type RawSpokeProviderConfig,
 } from './entities/Providers.js';
 import { InjectiveSpokeProvider, type InjectiveRawSpokeProvider } from './entities/injective/InjectiveSpokeProvider.js';
 import { IconSpokeProvider, type IconRawSpokeProvider } from './entities/icon/IconSpokeProvider.js';
-import { SolanaSpokeProvider, type SolanaRawSpokeProvider, type SolanaRawSpokeProviderConfig } from './entities/solana/SolanaSpokeProvider.js';
+import {
+  SolanaSpokeProvider,
+  type SolanaRawSpokeProvider,
+  type SolanaRawSpokeProviderConfig,
+} from './entities/solana/SolanaSpokeProvider.js';
 import { SuiSpokeProvider, type SuiRawSpokeProvider } from './entities/sui/SuiSpokeProvider.js';
 import { StellarSpokeProvider, type StellarRawSpokeProvider, type StellarRawSpokeProviderConfig } from './entities/stellar/StellarSpokeProvider.js';
 import { AleoSpokeProvider, type AleoRawSpokeProvider, type AleoRawSpokeProviderConfig } from './entities/aleo/AleoSpokeProvider.js';
+import { StacksSpokeProvider, type StacksRawSpokeProvider, type StacksRawSpokeProviderConfig } from './entities/stacks/StacksSpokeProvider.js';
 import type {
+  BitcoinSpokeProviderType,
   EvmSpokeProviderType,
   IconSpokeProviderType,
   InjectiveSpokeProviderType,
@@ -35,9 +42,12 @@ import type {
   PartnerFeeConfig,
   PartnerFeePercentage,
   Prettify,
+  RawDestinationParams,
   SolanaSpokeProviderType,
   SolverConfigParams,
   SonicSpokeProviderType,
+  StacksSpokeProviderType,
+  SpokeProviderObjectType,
   StellarSpokeProviderType,
   SuiSpokeProviderType,
   AleoSpokeProviderType
@@ -57,9 +67,15 @@ import {
   type IntentRelayChainId,
   SONIC_MAINNET_CHAIN_ID,
   ChainIdToIntentRelayChainId,
+  type SubmitSwapTxResponse,
+  type SubmitSwapTxStatusResponse,
 } from '@sodax/types';
-import { type NearRawSpokeProvider, type NearRawSpokeProviderConfig, NearSpokeProvider } from './entities/near/NearSpokeProvider.js';
-
+import { BitcoinSpokeProvider, type BitcoinRawSpokeProvider } from './entities/btc/BitcoinSpokeProvider.js';
+import {
+    type NearRawSpokeProvider,
+    type NearRawSpokeProviderConfig,
+    NearSpokeProvider,
+} from './entities/near/NearSpokeProvider.js';
 export function isEvmHubChainConfig(value: HubChainConfig): value is EvmHubChainConfig {
   return typeof value === 'object' && value.chain.type === 'EVM';
 }
@@ -202,6 +218,12 @@ export function isStellarSpokeProviderType(value: SpokeProviderType): value is S
   );
 }
 
+export function isBitcoinSpokeProviderType(value: SpokeProviderType): value is BitcoinSpokeProviderType {
+  return (
+    typeof value === 'object' && value !== null && (isBitcoinSpokeProvider(value) || isBitcoinRawSpokeProvider(value))
+  );
+}
+
 export function isStellarSpokeProvider(value: SpokeProviderType): value is StellarSpokeProvider {
   return (
     typeof value === 'object' &&
@@ -209,6 +231,16 @@ export function isStellarSpokeProvider(value: SpokeProviderType): value is Stell
     value instanceof StellarSpokeProvider &&
     !('raw' in value) &&
     value.chainConfig.chain.type === 'STELLAR'
+  );
+}
+
+export function isBitcoinSpokeProvider(value: SpokeProviderType): value is BitcoinSpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof BitcoinSpokeProvider &&
+    !('raw' in value) &&
+    value.chainConfig.chain.type === 'BITCOIN'
   );
 }
 
@@ -274,6 +306,24 @@ export function isAleoSpokeProvider(value: SpokeProviderType): value is AleoSpok
     !('raw' in value) &&
     value.chainConfig.chain.type === 'ALEO'
   );
+}
+
+export function isStacksSpokeProviderType(value: SpokeProviderType): value is StacksSpokeProviderType {
+  return typeof value === 'object' && value !== null && (isStacksSpokeProvider(value) || isStacksRawSpokeProvider(value));
+}
+
+export function isStacksSpokeProvider(value: SpokeProviderType): value is StacksSpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof StacksSpokeProvider &&
+    !('raw' in value) &&
+    value.chainConfig.chain.type === 'STACKS'
+  );
+}
+
+export function isStacksRawSpokeProvider(value: unknown): value is StacksRawSpokeProvider {
+  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'STACKS';
 }
 
 export function isConfiguredSolverConfig(
@@ -466,6 +516,20 @@ export function isRawSpokeProvider(value: unknown): value is RawSpokeProvider {
   );
 }
 
+export function isSpokeProvider(value: unknown): value is SpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletProvider' in value &&
+    'chainConfig' in value &&
+    (!('raw' in value) || value.raw === false)
+  );
+}
+
+export function isSpokeProviderType(value: unknown): value is SpokeProviderType {
+  return isSpokeProvider(value) || isRawSpokeProvider(value);
+}
+
 export function isEvmRawSpokeProvider(value: unknown): value is EvmRawSpokeProvider {
   return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'EVM';
 }
@@ -476,6 +540,10 @@ export function isSolanaRawSpokeProvider(value: unknown): value is SolanaRawSpok
 
 export function isStellarRawSpokeProvider(value: unknown): value is StellarRawSpokeProvider {
   return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'STELLAR';
+}
+
+export function isBitcoinRawSpokeProvider(value: unknown): value is BitcoinRawSpokeProvider {
+  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'BITCOIN';
 }
 
 export function isIconRawSpokeProvider(value: unknown): value is IconRawSpokeProvider {
@@ -504,6 +572,20 @@ export function isNearRawSpokeProvider(value: unknown): value is NearRawSpokePro
 
 export function isAddressString(value: unknown): value is string {
   return typeof value === 'string';
+}
+
+export function isSpokeProviderObjectType(value: unknown): value is SpokeProviderObjectType {
+    return (
+        typeof value === 'object' &&
+        value !== null &&
+        'spokeProvider' in value &&
+        value.spokeProvider !== undefined &&
+        isSpokeProviderType(value.spokeProvider)
+    );
+}
+
+export function isRawDestinationParams(value: unknown): value is RawDestinationParams {
+    return typeof value === 'object' && value !== null && 'toChainId' in value && 'toAddress' in value;
 }
 
 export function isEvmRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is EvmRawSpokeProviderConfig {
@@ -569,4 +651,42 @@ export function isAleoRawSpokeProviderConfig(value: RawSpokeProviderConfig): val
     'chainConfig' in value &&
     value.chainConfig.chain.type === 'ALEO'
   );
+}
+
+export function isStacksRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is StacksRawSpokeProviderConfig {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletAddress' in value &&
+    'chainConfig' in value &&
+    value.chainConfig.chain.type === 'STACKS'
+  );
+}
+
+// Backend API response guards
+export function isSubmitSwapTxResponse(value: unknown): value is SubmitSwapTxResponse {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as Record<string, unknown>).success === 'boolean' &&
+    typeof (value as Record<string, unknown>).message === 'string'
+  );
+}
+
+export function isSubmitSwapTxStatusResponse(value: unknown): value is SubmitSwapTxStatusResponse {
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  if (typeof obj.success !== 'boolean') return false;
+  if (typeof obj.data !== 'object' || obj.data === null) return false;
+  const data = obj.data as Record<string, unknown>;
+  if (typeof data.txHash !== 'string') return false;
+  if (typeof data.srcChainId !== 'string') return false;
+  if (typeof data.status !== 'string') return false;
+  if (typeof data.failedAttempts !== 'number') return false;
+  if (data.result !== undefined) {
+    if (typeof data.result !== 'object' || data.result === null) return false;
+    const result = data.result as Record<string, unknown>;
+    if (typeof result.dstIntentTxHash !== 'string') return false;
+  }
+  return true;
 }

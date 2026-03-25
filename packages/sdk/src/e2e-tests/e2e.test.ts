@@ -3,6 +3,7 @@ import {
   ARBITRUM_MAINNET_CHAIN_ID,
   AVALANCHE_MAINNET_CHAIN_ID,
   BASE_MAINNET_CHAIN_ID,
+  BITCOIN_MAINNET_CHAIN_ID,
   BSC_MAINNET_CHAIN_ID,
   ICON_MAINNET_CHAIN_ID,
   INJECTIVE_MAINNET_CHAIN_ID,
@@ -20,6 +21,7 @@ import {
   ETHEREUM_MAINNET_CHAIN_ID,
   REDBELLY_MAINNET_CHAIN_ID,
   KAIA_MAINNET_CHAIN_ID,
+  STACKS_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { createPublicClient, http, type Address } from 'viem';
 import { sonic } from 'viem/chains';
@@ -104,6 +106,7 @@ describe('e2e', () => {
       '0xac509404f3a3ca3f7766baf65be45a52b1cfccd7', // yapSUI
       '0x514569c788b096595672e0f68ec72387a22ac67b', // trevinSUI
     ],
+    [BITCOIN_MAINNET_CHAIN_ID]: [],
     [SONIC_MAINNET_CHAIN_ID]: [],
     [HYPEREVM_MAINNET_CHAIN_ID]: [],
     [LIGHTLINK_MAINNET_CHAIN_ID]: [],
@@ -111,6 +114,7 @@ describe('e2e', () => {
     [ETHEREUM_MAINNET_CHAIN_ID]: [],
     [REDBELLY_MAINNET_CHAIN_ID]: [],
     [KAIA_MAINNET_CHAIN_ID]: [],
+    [STACKS_MAINNET_CHAIN_ID]: [],
   };
 
   it('Verify money market supported tokens as hub assets are contained in the Soda token vaults', async () => {

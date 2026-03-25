@@ -38,8 +38,16 @@ export const xChainTypes: WalletItemProps[] = [
     xChainType: 'ICON',
   },
   {
+    name: 'Bitcoin',
+    xChainType: 'BITCOIN',
+  },
+  {
     name: 'Near',
     xChainType: 'NEAR',
+  },
+  {
+    name: 'Stacks',
+    xChainType: 'STACKS',
   },
 ];
 

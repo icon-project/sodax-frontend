@@ -6,6 +6,7 @@ import type {
   HubVaultSymbols,
   ETHEREUM_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
+  BITCOIN_MAINNET_CHAIN_ID,
 } from '../constants/index.js';
 import type { InjectiveNetworkEnv } from '../injective/index.js';
 
@@ -15,7 +16,7 @@ export type SpokeChainId = (typeof CHAIN_IDS)[number];
 
 export type ChainId = (typeof CHAIN_IDS)[number];
 
-export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'NEAR', 'ALEO'] as const;
+export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'STACKS', 'NEAR', 'BITCOIN', 'ALEO'] as const;
 export type ChainType = (typeof ChainTypeArr)[number];
 
 export type Chain = {
@@ -56,6 +57,7 @@ export type OriginalAssetAddress = string;
 
 export interface WalletAddressProvider {
   getWalletAddress(): Promise<string>; // The wallet address as a string
+  getPublicKey?: () => Promise<string>;
 }
 
 export type HttpUrl = `http://${string}` | `https://${string}`;
@@ -66,10 +68,21 @@ export type StellarRpcConfig = {
   sorobanRpcUrl?: HttpUrl;
 };
 
+// Type for Bitcoin RPC configuration with Radfi API endpoints
+export type BitcoinRpcConfig = {
+  rpcUrl?: string;
+  radfiApiUrl?: string;
+  radfiUmsUrl?: string;
+};
+
 // Mapped type that uses ChainId as keys and assigns appropriate value types
-// Stellar uses StellarRpcConfig, all other chains use string
+// Stellar uses StellarRpcConfig, Bitcoin uses BitcoinRpcConfig, all other chains use string
 export type RpcConfig = Partial<{
-  [K in ChainId]: K extends typeof STELLAR_MAINNET_CHAIN_ID ? StellarRpcConfig : string;
+  [K in ChainId]: K extends typeof STELLAR_MAINNET_CHAIN_ID
+    ? StellarRpcConfig
+    : K extends typeof BITCOIN_MAINNET_CHAIN_ID
+      ? BitcoinRpcConfig
+      : string;
 }> & { [ETHEREUM_MAINNET_CHAIN_ID]?: string | undefined };
 
 export type IntentRelayChainId = (typeof ChainIdToIntentRelayChainId)[keyof typeof ChainIdToIntentRelayChainId];
@@ -154,7 +167,6 @@ export type SolanaChainConfig = BaseSpokeChainConfig<'SOLANA'> & {
     connection: string;
     xTokenManager: string;
     rateLimit: string;
-    testToken: string;
   };
   chain: SpokeChainInfo<'SOLANA'>;
   rpcUrl: string;
@@ -175,11 +187,21 @@ export type StellarSpokeChainConfig = BaseSpokeChainConfig<'STELLAR'> & {
     connection: string;
     xTokenManager: string;
     rateLimit: string;
-    testToken: string;
   };
   horizonRpcUrl: HttpUrl;
   sorobanRpcUrl: HttpUrl;
   trustlineConfigs: StellarAssetTrustline[];
+};
+
+export type BitcoinSpokeChainConfig = BaseSpokeChainConfig<'BITCOIN'> & {
+  addresses: {
+    assetManager: string;
+  };
+  rpcUrl: string;
+  network: string;
+  radfiApiUrl: string;
+  radfiApiKey: string;
+  radfiUmsUrl: string;
 };
 
 export type InjectiveSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
@@ -190,7 +212,6 @@ export type InjectiveSpokeChainConfig = BaseSpokeChainConfig<'INJECTIVE'> & {
     connection: string;
     xTokenManager: string;
     rateLimit: string;
-    testToken: string;
   };
   nativeToken: string;
   prefix: string;
@@ -215,7 +236,6 @@ export type SuiSpokeChainConfig = BaseSpokeChainConfig<'SUI'> & {
     connection: string;
     xTokenManager: string;
     rateLimit: string;
-    testToken: string;
   };
   rpc_url: string;
 };
@@ -255,6 +275,18 @@ export type AleoSpokeChainConfig = BaseSpokeChainConfig<'ALEO'> & {
   gasPrice: string;
 };
 
+export type StacksSpokeChainConfig = BaseSpokeChainConfig<'STACKS'> & {
+  addresses: {
+    assetManager: string;
+    connection: string;
+    rateLimit: string;
+    xTokenManager: string;
+  };
+  chain: SpokeChainInfo<'STACKS'>;
+  rpcUrl: string;
+  nativeToken: string;
+};
+
 export type SpokeChainConfig =
   | EvmSpokeChainConfig
   | SonicSpokeChainConfig
@@ -262,9 +294,11 @@ export type SpokeChainConfig =
   | IconSpokeChainConfig
   | SuiSpokeChainConfig
   | StellarSpokeChainConfig
+  | BitcoinSpokeChainConfig
   | SolanaChainConfig
   | NearSpokeChainConfig
-  | AleoSpokeChainConfig;
+  | AleoSpokeChainConfig
+  | StacksSpokeChainConfig;
 
 export type SolverConfig = {
   intentsContract: Address; // Intents Contract (Hub)
@@ -301,4 +335,18 @@ export type BridgeLimit = {
   amount: bigint;
   decimals: number;
   type: 'DEPOSIT_LIMIT' | 'WITHDRAWAL_LIMIT';
+};
+
+export type ConcentratedLiquidityConfig = {
+  permit2: Address;
+  clPoolManager: Address;
+  router: Address;
+  clPositionManager: Address;
+  clPositionDescriptor: Address;
+  clQuoter: Address;
+  clTickLens: Address;
+  defaultHook: Address;
+  stataTokenFactory: Address;
+  defaultTickSpacing: number;
+  defaultBitmap: bigint;
 };

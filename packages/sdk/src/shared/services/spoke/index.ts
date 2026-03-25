@@ -7,3 +7,5 @@ export * from './SolanaSpokeService.js';
 export * from './SonicSpokeService.js';
 export * from './StellarSpokeService.js';
 export * from './SuiSpokeService.js';
+export * from './StacksSpokeService.js';
+export * from './BitcoinSpokeService.js';

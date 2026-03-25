@@ -21,14 +21,17 @@ import {
   spokeChainConfig,
   STELLAR_MAINNET_CHAIN_ID,
   StellarSpokeProvider,
+  isBitcoinSpokeProvider,
 } from '@sodax/sdk';
-import type { ChainType, SpokeChainId, XToken } from '@sodax/types';
+import { BITCOIN_MAINNET_CHAIN_ID, type ChainType, type SpokeChainId, type XToken } from '@sodax/types';
 import {
   getXChainType,
   useEvmSwitchChain,
   useWalletProvider,
   useXAccount,
   useXDisconnect,
+  useXConnection,
+  useXService,
 } from '@sodax/wallet-sdk-react';
 import { useAppStore } from '@/zustand/useAppStore';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
@@ -43,7 +46,11 @@ import {
   useSodaxContext,
   useStellarTrustlineCheck,
   useRequestTrustline,
+  loadRadfiSession,
+  useTradingWalletBalance,
+  useBitcoinBalance,
 } from '@sodax/dapp-kit';
+import { BitcoinSetupPanel } from '@/components/bitcoin/BitcoinSetupPanel';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function BridgePage() {
@@ -108,6 +115,21 @@ export default function BridgePage() {
   };
 
   const [open, setOpen] = useState(false);
+  const [isFromBtcReady, setIsFromBtcReady] = useState(false);
+  const [isToBtcReady, setIsToBtcReady] = useState(false);
+
+  // Bitcoin connector info
+  const fromChainType = getXChainType(fromToken.xChainId);
+  const fromBtcConnection = useXConnection(fromChainType);
+  const fromBtcService = useXService(fromChainType);
+  const fromBtcConnector = fromChainType === 'BITCOIN' && fromBtcConnection?.xConnectorId && fromBtcService
+    ? fromBtcService.getXConnectorById(fromBtcConnection.xConnectorId) : undefined;
+
+  const toChainType = getXChainType(toTokenChainId);
+  const toBtcConnection = useXConnection(toChainType);
+  const toBtcService = useXService(toChainType);
+  const toBtcConnector = toChainType === 'BITCOIN' && toBtcConnection?.xConnectorId && toBtcService
+    ? toBtcService.getXConnectorById(toBtcConnection.xConnectorId) : undefined;
 
   const openBridgeModal = () => {
     if (!fromToken || !toToken || !fromAccount.address || !toAccount.address) {
@@ -120,7 +142,9 @@ export default function BridgePage() {
       amount: parseUnits(fromAmount, fromToken?.decimals ?? 0),
       dstChainId: toToken.xChainId,
       dstAsset: toToken?.address,
-      recipient: toAccount.address,
+      recipient: toTokenChainId === BITCOIN_MAINNET_CHAIN_ID && toAccount.address
+        ? (loadRadfiSession(toAccount.address)?.tradingAddress || toAccount.address)
+        : toAccount.address,
     });
     setOpen(true);
   };
@@ -143,6 +167,13 @@ export default function BridgePage() {
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useBridgeAllowance(order, fromProvider);
   const { mutateAsync: bridge, isPending: isBridging } = useBridge(fromProvider);
   const destProvider = useSpokeProvider(order?.dstChainId, useWalletProvider(order?.dstChainId));
+
+  // Bitcoin personal wallet balances
+  const fromBtcAddress = fromToken.xChainId === BITCOIN_MAINNET_CHAIN_ID ? fromAccount.address : undefined;
+  const { data: fromBtcBalance } = useBitcoinBalance(fromBtcAddress);
+  const toBtcAddress = toTokenChainId === BITCOIN_MAINNET_CHAIN_ID ? toAccount.address : undefined;
+  const { data: toBtcBalance } = useBitcoinBalance(toBtcAddress);
+
   const {
     data: hasSufficientTrustline,
     isPending: isTrustlineLoading,
@@ -271,6 +302,17 @@ export default function BridgePage() {
               )}
             </div>
           </div>
+
+          {fromToken.xChainId === BITCOIN_MAINNET_CHAIN_ID && fromProvider && isBitcoinSpokeProvider(fromProvider) && (
+            <BitcoinSetupPanel
+              spokeProvider={fromProvider}
+              onReadyChange={setIsFromBtcReady}
+              nativeBalance={fromBtcBalance}
+              connectorName={fromBtcConnector?.name}
+              connectorIcon={fromBtcConnector?.icon}
+            />
+          )}
+
           <div className="flex justify-center">
             <Button variant="outline" size="icon" onClick={() => handleSwitch()}>
               <ArrowDownUp className="h-4 w-4" />
@@ -318,7 +360,11 @@ export default function BridgePage() {
           <div className="grow">
             <Label htmlFor="toAddress">Destination address</Label>
             <div className="flex items-center gap-2">
-              <Input id="toAddress" type="text" value={toAccount.address || ''} placeholder="" disabled={true} />
+              <Input id="toAddress" type="text" value={
+                toTokenChainId === BITCOIN_MAINNET_CHAIN_ID && toAccount.address
+                  ? (loadRadfiSession(toAccount.address)?.tradingAddress || toAccount.address)
+                  : (toAccount.address || '')
+              } placeholder="" disabled={true} />
               {toAccount.address ? (
                 <Button onClick={handleToAccountDisconnect}>Disconnect</Button>
               ) : (
@@ -326,6 +372,17 @@ export default function BridgePage() {
               )}
             </div>
           </div>
+
+          {toTokenChainId === BITCOIN_MAINNET_CHAIN_ID && destProvider && isBitcoinSpokeProvider(destProvider) && (
+            <BitcoinSetupPanel
+              spokeProvider={destProvider}
+              onReadyChange={setIsToBtcReady}
+              nativeBalance={toBtcBalance}
+              connectorName={toBtcConnector?.name}
+              connectorIcon={toBtcConnector?.icon}
+              isDestination
+            />
+          )}
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           {isBridgeable ? (
@@ -374,15 +431,18 @@ export default function BridgePage() {
             </div>
           </div>
           <DialogFooter>
-            <Button
-              className="w-full"
-              type="button"
-              variant="default"
-              onClick={handleApprove}
-              disabled={isAllowanceLoading || hasAllowed || isApproving}
-            >
-              {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
-            </Button>
+            {/* Approve — only for EVM chains */}
+            {fromChainType === 'EVM' && (
+              <Button
+                className="w-full"
+                type="button"
+                variant="default"
+                onClick={handleApprove}
+                disabled={isAllowanceLoading || hasAllowed || isApproving}
+              >
+                {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
+              </Button>
+            )}
             {isTrustlineLoading && order?.dstChainId === STELLAR_MAINNET_CHAIN_ID && <span>Checking trustline...</span>}
             {order?.dstChainId === STELLAR_MAINNET_CHAIN_ID && !isTrustlineLoading && !hasSufficientTrustline && (
               <Button className="w-full" onClick={() => handleRequestTrustline(order)} disabled={isTrustlineLoading}>
@@ -390,7 +450,7 @@ export default function BridgePage() {
               </Button>
             )}
 
-            {isWrongChain && (
+            {isWrongChain && fromChainType === 'EVM' && (
               <Button className="w-full" type="button" variant="default" onClick={handleSwitchChain}>
                 Switch Chain
               </Button>
@@ -398,7 +458,15 @@ export default function BridgePage() {
 
             {!isWrongChain &&
               (order ? (
-                <Button className="w-full" onClick={() => handleBridge(order)} disabled={!hasAllowed}>
+                <Button
+                  className="w-full"
+                  onClick={() => handleBridge(order)}
+                  disabled={
+                    (fromChainType === 'EVM' && !hasAllowed) ||
+                    (fromToken.xChainId === BITCOIN_MAINNET_CHAIN_ID && !isFromBtcReady) ||
+                    (toTokenChainId === BITCOIN_MAINNET_CHAIN_ID && !isToBtcReady)
+                  }
+                >
                   <ArrowLeftRight className="mr-2 h-4 w-4" /> Bridge
                 </Button>
               ) : (

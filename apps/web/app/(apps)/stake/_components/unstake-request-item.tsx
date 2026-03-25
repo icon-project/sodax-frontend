@@ -5,14 +5,13 @@ import { useClaim, useCancelUnstake } from '@sodax/dapp-kit';
 import { formatTokenAmount, getTimeRemaining } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import LoadingThreeDotsJumping from '@/components/shared/loading-three-dots-jumping';
-import { CircleEllipsis, MinusCircleIcon, XCircleIcon, XIcon } from 'lucide-react';
+import { CircleEllipsis, MinusCircleIcon, XCircleIcon } from 'lucide-react';
 import { useStakeState } from '../_stores/stake-store-provider';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
-import { Dialog, DialogContent, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { chainIdToChainName } from '@/providers/constants';
 import type { ChainId } from '@sodax/types';
-import Image from 'next/image';
+import { SwitchChainDialog } from '@/components/shared/switch-chain-dialog';
+import { trackUnstakeClaimCompleted } from '@/lib/analytics';
 interface UnstakeRequestItemProps {
   request: UnstakeRequestWithPenalty;
   stakingConfig: StakingConfig | undefined;
@@ -91,9 +90,16 @@ export function UnstakeRequestItem({
     }
 
     try {
-      await claim({
+      const [spokeTxHash] = await claim({
         requestId: request.id,
         amount: request.claimableAmount,
+      });
+      trackUnstakeClaimCompleted({
+        request_id: request.id.toString(),
+        claimed_amount: claimableAmountFormatted,
+        penalty_percent: request.penaltyPercentage,
+        source_chain: chainName,
+        transaction_hash: spokeTxHash,
       });
     } catch (error) {
       console.error('Claim error:', error);
@@ -120,8 +126,7 @@ export function UnstakeRequestItem({
   };
 
   const handleSwitchChainClick = (): void => {
-    handleSwitchChain();
-    setIsSwitchChainDialogOpen(false);
+    void handleSwitchChain();
   };
 
   return (
@@ -201,29 +206,14 @@ export function UnstakeRequestItem({
         )}
       </div>
 
-      <Dialog open={isSwitchChainDialogOpen} onOpenChange={setIsSwitchChainDialogOpen}>
-        <DialogContent className="w-full md:!max-w-[480px] p-8 md:p-12 gap-6 bg-vibrant-white" hideCloseButton>
-          <div className="inline-flex justify-start items-center gap-2 w-full">
-            <Image src="/symbol_dark.png" alt="SODAX Symbol" width={16} height={16} className="mix-blend-multiply" />
-            <DialogTitle className="mix-blend-multiply text-espresso font-bold leading-snug text-(size:--body-super-comfortable) flex justify-between items-center w-full">
-              Switch to {chainName} to claim
-              <DialogClose asChild>
-                <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />
-              </DialogClose>
-            </DialogTitle>
-          </div>
-          <div className="flex flex-col gap-4">
-            <p className="text-clay text-(length:--body-comfortable) leading-5">
-              Your SODA is ready to claim on {chainName}.
-            </p>
-          </div>
-          <DialogFooter className="flex justify-end gap-2">
-            <Button type="button" variant="cherry" onClick={handleSwitchChainClick}>
-              Switch to {chainName}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SwitchChainDialog
+        open={isSwitchChainDialogOpen}
+        onOpenChange={setIsSwitchChainDialogOpen}
+        chainName={chainName}
+        onSwitchChain={handleSwitchChainClick}
+        titleAction="claim"
+        description={`Your SODA is ready to claim on ${chainName}.`}
+      />
     </div>
   );
 }

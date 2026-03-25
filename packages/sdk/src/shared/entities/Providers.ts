@@ -35,20 +35,24 @@ import {
   type IIconWalletProvider,
   type IInjectiveWalletProvider,
   type ISolanaWalletProvider,
+  type IStacksWalletProvider,
   type EvmSpokeChainConfig,
   type SonicSpokeChainConfig,
   type SpokeChainConfig,
   type EvmChainId,
   type EvmHubChainConfig,
   type WalletAddressProvider,
+  type IBitcoinWalletProvider,
 } from '@sodax/types';
 import type { ConfigService } from '../config/ConfigService.js';
 import { getHubChainConfig } from '../config/ConfigService.js';
+import type { BitcoinRawSpokeProvider, BitcoinSpokeProvider } from './btc/BitcoinSpokeProvider.js';
 import type {
   StellarRawSpokeProvider,
   StellarRawSpokeProviderConfig,
   StellarSpokeProvider,
 } from './stellar/StellarSpokeProvider.js';
+import type { StacksSpokeProvider, StacksRawSpokeProvider, StacksRawSpokeProviderConfig } from './stacks/StacksSpokeProvider.js';
 
 export type CustomProvider = { request(...args: unknown[]): Promise<unknown> };
 
@@ -216,9 +220,13 @@ export type IWalletProvider =
   | IStellarWalletProvider
   | ISuiWalletProvider
   | IIconWalletProvider
+  | IInjectiveWalletProvider
+  | IStellarWalletProvider
+  | IBitcoinWalletProvider
   | ISolanaWalletProvider
   | INearWalletProvider
-  | IAleoWalletProvider;
+  | IAleoWalletProvider
+  | IStacksWalletProvider;
 
 export type SpokeProvider = (
   | EvmSpokeProvider
@@ -228,6 +236,8 @@ export type SpokeProvider = (
   | StellarSpokeProvider
   | SolanaSpokeProvider
   | SonicSpokeProvider
+  | StacksSpokeProvider
+  | BitcoinSpokeProvider
   | NearSpokeProvider
   | AleoSpokeProvider
 ) &
@@ -241,6 +251,8 @@ export type RawSpokeProvider = (
   | StellarRawSpokeProvider
   | SolanaRawSpokeProvider
   | SonicRawSpokeProvider
+  | StacksRawSpokeProvider
+  | BitcoinRawSpokeProvider
   | NearRawSpokeProvider
   | AleoRawSpokeProvider
 ) &
@@ -254,6 +266,7 @@ export type RawSpokeProviderConfig = (
   | StellarRawSpokeProviderConfig
   | SolanaRawSpokeProviderConfig
   | SonicRawSpokeProviderConfig
+  | StacksRawSpokeProviderConfig
   | NearRawSpokeProviderConfig
   | AleoRawSpokeProviderConfig
 ) & {

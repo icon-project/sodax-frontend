@@ -9,3 +9,5 @@ export * from './solana/index.js';
 export * from './near/index.js';
 export * from './backend/index.js';
 export * from './aleo/index.js';
+export * from './stacks/index.js';
+export * from './btc/index.js';

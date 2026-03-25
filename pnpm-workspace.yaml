@@ -43,3 +43,7 @@ catalog:
   "@provablehq/aleo-wallet-adaptor-puzzle": "0.3.0-alpha.1"
   "@provablehq/aleo-wallet-adaptor-shield": "0.3.0-alpha.1"
   "@provablehq/aleo-wallet-standard": "0.3.0-alpha.1"
+  "@stacks/transactions": "7.3.1"
+  "@stacks/network": "7.3.1"
+  "@stacks/connect": "8.2.6"
+  "near-api-js": "7.2.0"

@@ -18,12 +18,10 @@ import { parseUnits, formatUnits } from 'viem';
 import {
   type CreateIntentParams,
   getSupportedSolverTokens,
-  type Hex,
-  type Intent,
-  type IntentDeliveryInfo,
   type SolverIntentQuoteRequest,
   StellarSpokeProvider,
 } from '@sodax/sdk';
+import type { SubmitSwapTxRequest, SwapIntentData } from '@sodax/types';
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
@@ -36,6 +34,9 @@ import {
   useStellarTrustlineCheck,
   useRequestTrustline,
   useSodaxContext,
+  loadRadfiSession,
+  useTradingWalletBalance,
+    useBackendSubmitSwapTx,
 } from '@sodax/dapp-kit';
 import {
   getXChainType,
@@ -44,6 +45,8 @@ import {
   useXDisconnect,
   useWalletProvider,
   useXBalances,
+  useXConnection,
+  useXService,
 } from '@sodax/wallet-sdk-react';
 import {
   type ChainId,
@@ -53,16 +56,20 @@ import {
   type ChainType,
   ICON_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
+  BITCOIN_MAINNET_CHAIN_ID,
   type XToken,
 } from '@sodax/types';
+import type { Order } from '@/components/solver/OrderStatus';
 import { useAppStore } from '@/zustand/useAppStore';
+import { BitcoinSetupPanel } from '@/components/bitcoin/BitcoinSetupPanel';
+import { isBitcoinSpokeProvider, type BitcoinSpokeProvider } from '@sodax/sdk';
+
+const SUBMIT_TX_API_CONFIG = { baseURL: 'https://canary-api.sodax.com/v1/bes' } as const;
 
 export default function SwapCard({
   setOrders,
 }: {
-  setOrders: (
-    value: SetStateAction<{ intentHash: Hex; intent: Intent; intentDeliveryInfo: IntentDeliveryInfo }[]>,
-  ) => void;
+  setOrders: (value: SetStateAction<Order[]>) => void;
 }) {
   const { sodax } = useSodaxContext();
   //chain and account states
@@ -98,6 +105,29 @@ export default function SwapCard({
   const { requestTrustline } = useRequestTrustline(destToken?.address);
   const [open, setOpen] = useState(false);
   const [slippage, setSlippage] = useState<string>('0.5');
+    const [useSubmitTxApi, setUseSubmitTxApi] = useState(false);
+    const { mutateAsync: submitSwapTx, isPending: isSubmitting } = useBackendSubmitSwapTx({
+        apiConfig: SUBMIT_TX_API_CONFIG,
+    });
+  const [isBitcoinReady, setIsBitcoinReady] = useState(false);
+  const [isDestBitcoinReady, setIsDestBitcoinReady] = useState(false);
+
+  // Bitcoin connector info for fund dialog (source)
+  const sourceChainType = getXChainType(sourceChain);
+  const sourceBtcConnection = useXConnection(sourceChainType);
+  const sourceBtcService = useXService(sourceChainType);
+  const sourceBtcConnector = sourceChainType === 'BITCOIN' && sourceBtcConnection?.xConnectorId && sourceBtcService
+    ? sourceBtcService.getXConnectorById(sourceBtcConnection.xConnectorId)
+    : undefined;
+
+  // Bitcoin connector info (dest)
+  const destChainType = getXChainType(destChain);
+  const destBtcConnection = useXConnection(destChainType);
+  const destBtcService = useXService(destChainType);
+  const destBtcConnector = destChainType === 'BITCOIN' && destBtcConnection?.xConnectorId && destBtcService
+    ? destBtcService.getXConnectorById(destBtcConnection.xConnectorId)
+    : undefined;
+
   const onChangeDirection = () => {
     setSourceChain(destChain);
     setDestChain(sourceChain);
@@ -130,6 +160,20 @@ export default function SwapCard({
     address: destAccount.address,
   });
   const destTokenBalance = destBalances?.[destToken?.address ?? ''] ?? 0n;
+
+  // Bitcoin trading wallet balances
+  const sourceTradingAddress = sourceChain === BITCOIN_MAINNET_CHAIN_ID && sourceAccount.address
+    ? loadRadfiSession(sourceAccount.address)?.tradingAddress : undefined;
+  const destTradingAddress = destChain === BITCOIN_MAINNET_CHAIN_ID && destAccount.address
+    ? loadRadfiSession(destAccount.address)?.tradingAddress : undefined;
+  const { data: srcTradingBal } = useTradingWalletBalance(
+    sourceChain === BITCOIN_MAINNET_CHAIN_ID && sourceProvider && isBitcoinSpokeProvider(sourceProvider) ? sourceProvider : undefined,
+    sourceTradingAddress,
+  );
+  const { data: destTradingBal } = useTradingWalletBalance(
+    destChain === BITCOIN_MAINNET_CHAIN_ID && destProvider && isBitcoinSpokeProvider(destProvider) ? destProvider : undefined,
+    destTradingAddress,
+  );
 
   const payload = useMemo(() => {
     if (!sourceToken || !destToken) {
@@ -218,7 +262,9 @@ export default function SwapCard({
       srcChain: sourceChain, // Chain ID where input tokens originate
       dstChain: destChain, // Chain ID where output tokens should be delivered
       srcAddress: await sourceProvider.walletProvider.getWalletAddress(), // Source address (original address on spoke chain)
-      dstAddress: destAccount.address, // Destination address (original address on spoke chain)
+      dstAddress: destChain === BITCOIN_MAINNET_CHAIN_ID && destAccount.address
+        ? (loadRadfiSession(destAccount.address)?.tradingAddress || destAccount.address)
+        : destAccount.address, // Bitcoin: prefer trading wallet, others: personal wallet
       solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
       data: '0x', // Additional arbitrary data
     } satisfies CreateIntentParams;
@@ -228,14 +274,74 @@ export default function SwapCard({
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceChain as ChainId);
 
+  const handleSubmitTxSwap = async (intentOrderPayload: CreateIntentParams) => {
+    if (!sourceProvider) {
+      console.error('sourceProvider undefined');
+      return;
+    }
+
+    setOpen(false);
+
+    const createIntentResult = await sodax.swaps.createIntent({
+      intentParams: intentOrderPayload,
+      spokeProvider: sourceProvider,
+    });
+
+    if (!createIntentResult.ok) {
+      console.error('Error creating intent:', createIntentResult.error);
+      return;
+    }
+
+    const [spokeTxHash, intent, relayData] = createIntentResult.value;
+    console.log('Intent created. Spoke tx hash:', spokeTxHash);
+
+    const swapIntentData: SwapIntentData = {
+      intentId: intent.intentId.toString(),
+      creator: intent.creator,
+      inputToken: intent.inputToken,
+      outputToken: intent.outputToken,
+      inputAmount: intent.inputAmount.toString(),
+      minOutputAmount: intent.minOutputAmount.toString(),
+      deadline: intent.deadline.toString(),
+      allowPartialFill: intent.allowPartialFill,
+      srcChain: Number(intent.srcChain),
+      dstChain: Number(intent.dstChain),
+      srcAddress: intent.srcAddress,
+      dstAddress: intent.dstAddress,
+      solver: intent.solver,
+      data: intent.data,
+    };
+
+    const request: SubmitSwapTxRequest = {
+      txHash: spokeTxHash,
+      srcChainId: sourceChain,
+      walletAddress: sourceAccount.address ?? '',
+      intent: swapIntentData,
+      relayData,
+    };
+
+    const submitResult = await submitSwapTx(request);
+    console.log('Submit swap tx result:', submitResult);
+
+    setOrders(prev => [
+      ...prev,
+      { mode: 'submit-tx', txHash: spokeTxHash, srcChainId: sourceChain, apiBaseURL: SUBMIT_TX_API_CONFIG.baseURL },
+    ]);
+  };
+
   const handleSwap = async (intentOrderPayload: CreateIntentParams) => {
+    if (useSubmitTxApi) {
+      await handleSubmitTxSwap(intentOrderPayload);
+      return;
+    }
+
     setOpen(false);
     const result = await swap(intentOrderPayload);
 
     if (result.ok) {
       const [response, intent, intentDeliveryInfo] = result.value;
 
-      setOrders(prev => [...prev, { intentHash: response.intent_hash, intent, intentDeliveryInfo }]);
+      setOrders(prev => [...prev, { mode: 'solver', intentHash: response.intent_hash, intent, intentDeliveryInfo }]);
     } else {
       console.error('Error creating and submitting intent:', result.error);
     }
@@ -322,7 +428,12 @@ export default function SwapCard({
         <div className="mix-blend-multiply text-black text-(length:--body-comfortable) font-medium font-['InterRegular'] flex gap-1">
           <span className="hidden sm:inline">Balance:</span>
           <span className="inline">
-            {Number(formatUnits(sourceTokenBalance, sourceToken?.decimals ?? 0)).toFixed(4)}
+            {Number(formatUnits(
+              sourceChain === BITCOIN_MAINNET_CHAIN_ID && srcTradingBal
+                ? srcTradingBal.btcSatoshi
+                : sourceTokenBalance,
+              sourceToken?.decimals ?? 0,
+            )).toFixed(5)}
           </span>
         </div>
         <div className="grow">
@@ -336,6 +447,17 @@ export default function SwapCard({
             )}
           </div>
         </div>
+
+        {sourceChain === BITCOIN_MAINNET_CHAIN_ID && sourceProvider && isBitcoinSpokeProvider(sourceProvider) && (
+          <BitcoinSetupPanel
+            spokeProvider={sourceProvider}
+            onReadyChange={setIsBitcoinReady}
+            nativeBalance={sourceTokenBalance}
+            connectorName={sourceBtcConnector?.name}
+            connectorIcon={sourceBtcConnector?.icon}
+          />
+        )}
+
         <div className="flex justify-center">
           <Button variant="outline" size="icon" onClick={() => onChangeDirection()}>
             <ArrowDownUp className="h-4 w-4" />
@@ -378,12 +500,21 @@ export default function SwapCard({
         </div>
         <div className="mix-blend-multiply text-black text-(length:--body-comfortable) font-medium font-['InterRegular'] flex gap-1">
           <span className="hidden sm:inline">Balance:</span>
-          <span className="inline">{Number(formatUnits(destTokenBalance, destToken?.decimals ?? 0)).toFixed(4)}</span>
+          <span className="inline">{Number(formatUnits(
+            destChain === BITCOIN_MAINNET_CHAIN_ID && destTradingBal
+              ? destTradingBal.btcSatoshi
+              : destTokenBalance,
+            destToken?.decimals ?? 0,
+          )).toFixed(4)}</span>
         </div>
         <div className="grow">
           <Label htmlFor="toAddress">Destination address</Label>
           <div className="flex items-center gap-2">
-            <Input id="toAddress" type="text" value={destAccount.address || ''} placeholder="" disabled={true} />
+            <Input id="toAddress" type="text" value={
+              destChain === BITCOIN_MAINNET_CHAIN_ID && destAccount.address
+                ? (loadRadfiSession(destAccount.address)?.tradingAddress || destAccount.address)
+                : (destAccount.address || '')
+            } placeholder="" disabled={true} />
             {destAccount.address ? (
               <Button onClick={handleDestAccountDisconnect}>Disconnect</Button>
             ) : (
@@ -391,6 +522,17 @@ export default function SwapCard({
             )}
           </div>
         </div>
+
+        {destChain === BITCOIN_MAINNET_CHAIN_ID && destProvider && isBitcoinSpokeProvider(destProvider) && (
+          <BitcoinSetupPanel
+            spokeProvider={destProvider}
+            onReadyChange={setIsDestBitcoinReady}
+            nativeBalance={destTokenBalance}
+            connectorName={destBtcConnector?.name}
+            connectorIcon={destBtcConnector?.icon}
+            isDestination
+          />
+        )}
       </CardContent>
       <CardFooter className="flex flex-col space-y-4">
         <div className="w-full text-sm text-muted-foreground">
@@ -419,6 +561,19 @@ export default function SwapCard({
 
         <div className="">
           {quoteQuery.data?.ok === false && <div className="text-red-500">{quoteQuery.data.error.detail.message}</div>}
+        </div>
+
+        <div className="flex items-center gap-2 w-full">
+          <label htmlFor="submit-tx-toggle" className="text-sm font-medium cursor-pointer">
+            Submit tx to API
+          </label>
+          <input
+            id="submit-tx-toggle"
+            type="checkbox"
+            checked={useSubmitTxApi}
+            onChange={e => setUseSubmitTxApi(e.target.checked)}
+            className="h-4 w-4 cursor-pointer"
+          />
         </div>
 
         <Dialog open={open} onOpenChange={setOpen}>
@@ -457,15 +612,17 @@ export default function SwapCard({
               </div>
             </div>
             <DialogFooter>
-              <Button
-                className="w-full"
-                type="button"
-                variant="default"
-                onClick={handleApprove}
-                disabled={isAllowanceLoading || hasAllowed || isApproving}
-              >
-                {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
-              </Button>
+              {sourceChain !== BITCOIN_MAINNET_CHAIN_ID && (
+                <Button
+                  className="w-full"
+                  type="button"
+                  variant="default"
+                  onClick={handleApprove}
+                  disabled={isAllowanceLoading || hasAllowed || isApproving}
+                >
+                  {isApproving ? 'Approving...' : hasAllowed ? 'Approved' : 'Approve'}
+                </Button>
+              )}
 
               {isWrongChain && (
                 <Button className="w-full" type="button" variant="default" onClick={handleSwitchChain}>
@@ -475,7 +632,15 @@ export default function SwapCard({
 
               {!isWrongChain &&
                 (intentOrderPayload ? (
-                  <Button className="w-full" onClick={() => handleSwap(intentOrderPayload)} disabled={!hasAllowed}>
+                  <Button
+                    className="w-full"
+                    onClick={() => handleSwap(intentOrderPayload)}
+                    disabled={
+                      (sourceChain !== BITCOIN_MAINNET_CHAIN_ID && !hasAllowed) || isSubmitting ||
+                      (sourceChain === BITCOIN_MAINNET_CHAIN_ID && !isBitcoinReady) ||
+                      (destChain === BITCOIN_MAINNET_CHAIN_ID && !isDestBitcoinReady)
+                    }
+                  >
                     <ArrowLeftRight className="mr-2 h-4 w-4" /> Swap
                   </Button>
                 ) : (
