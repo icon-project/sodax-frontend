@@ -224,9 +224,9 @@ export type IWalletProvider =
   | IStellarWalletProvider
   | IBitcoinWalletProvider
   | ISolanaWalletProvider
+  | IStacksWalletProvider
   | INearWalletProvider
-  | IAleoWalletProvider
-  | IStacksWalletProvider;
+  | IAleoWalletProvider;
 
 export type SpokeProvider = (
   | EvmSpokeProvider

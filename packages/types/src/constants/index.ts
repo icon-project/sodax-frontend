@@ -1207,7 +1207,7 @@ export const spokeChainConfig = {
         decimals: 6,
         address: '897442:43',
         xChainId: BITCOIN_MAINNET_CHAIN_ID,
-      }
+      },
     },
     radfiApiUrl: 'https://api.radfi.co/api',
     radfiApiKey: '',
@@ -1719,44 +1719,6 @@ export const spokeChainConfig = {
       },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
-  [ALEO_MAINNET_CHAIN_ID]: {
-    chain: baseChainInfo[ALEO_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'ALEO'>,
-    addresses: {
-      assetManager: 'asset_manager_core_v1.aleo',
-      connection: 'connection_v1.aleo',
-      xTokenManager: '',
-      rateLimit: 'rate_limit_v1.aleo',
-      testToken: '7190692537453907461105790569797103513515746302149567971663963167242253971980',
-    },
-    nativeToken: '3443843282313283355522573239085696902919850365217539366784739393210722344986' as const,
-    bnUSD: '',
-    rpcUrl: 'https://api.provable.com/v2',
-    gasPrice: '0',
-    supportedTokens: {
-      ALEO: {
-        symbol: 'ALEO',
-        name: 'Aleo',
-        decimals: 6,
-        address: '3443843282313283355522573239085696902919850365217539366784739393210722344986',
-        xChainId: ALEO_MAINNET_CHAIN_ID,
-      },
-      testToken: {
-        symbol: 'testToken',
-        name: 'testToken',
-        decimals: 6,
-        address: '7190692537453907461105790569797103513515746302149567971663963167242253971980',
-        xChainId: ALEO_MAINNET_CHAIN_ID,
-      },
-      // NOTE: Supported token requires bnUSD but in aleo it is not deployed yet.
-      bnUSD: {
-        symbol: 'bnUSD',
-        name: 'bnUSD',
-        decimals: 6,
-        address: '',
-        xChainId: ALEO_MAINNET_CHAIN_ID,
-      },
-    } as const,
-  } as const satisfies AleoSpokeChainConfig,
   [STACKS_MAINNET_CHAIN_ID]: {
     addresses: {
       assetManager: 'SP3031RGK734636C8KGW2Y76TEQBTVX59Q472EQH0.asset-manager-state',
@@ -1806,6 +1768,51 @@ export const spokeChainConfig = {
     },
     rpcUrl: 'https://api.mainnet.hiro.so',
   } as const satisfies StacksSpokeChainConfig,
+  [ALEO_MAINNET_CHAIN_ID]: {
+    chain: baseChainInfo[ALEO_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'ALEO'>,
+    addresses: {
+      assetManager: 'asset_manager_core_v1.aleo',
+      connection: 'connection_v1.aleo',
+      xTokenManager: '',
+      rateLimit: 'rate_limit_v1.aleo',
+      testToken: '7190692537453907461105790569797103513515746302149567971663963167242253971980',
+      creditsProgram: 'credits.aleo',
+      tokenRegistry: 'token_registry.aleo',
+    },
+    mappings: {
+      messages: 'messages',
+      account: 'account',
+      authorizedBalances: 'authorized_balances',
+    },
+    nativeToken: '3443843282313283355522573239085696902919850365217539366784739393210722344986' as const,
+    bnUSD: '',
+    rpcUrl: 'https://api.provable.com/v2',
+    gasPrice: '0',
+    supportedTokens: {
+      ALEO: {
+        symbol: 'ALEO',
+        name: 'Aleo',
+        decimals: 6,
+        address: '3443843282313283355522573239085696902919850365217539366784739393210722344986',
+        xChainId: ALEO_MAINNET_CHAIN_ID,
+      },
+      testToken: {
+        symbol: 'testToken',
+        name: 'testToken',
+        decimals: 6,
+        address: '7190692537453907461105790569797103513515746302149567971663963167242253971980',
+        xChainId: ALEO_MAINNET_CHAIN_ID,
+      },
+      // NOTE: Supported token requires bnUSD but in aleo it is not deployed yet.
+      bnUSD: {
+        symbol: 'bnUSD',
+        name: 'bnUSD',
+        decimals: 6,
+        address: '',
+        xChainId: ALEO_MAINNET_CHAIN_ID,
+      },
+    } as const,
+  } as const satisfies AleoSpokeChainConfig,
 } as const satisfies SpokeChainConfigMap;
 
 export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
@@ -2865,8 +2872,8 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       symbol: 'BUSD',
       name: 'BUSD.BUSD.BUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
-    }
-  }
+    },
+  },
 } as const;
 
 export const solverConfig = {

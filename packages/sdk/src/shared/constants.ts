@@ -50,13 +50,13 @@ export const STELLAR_DEFAULT_TX_TIMEOUT_SECONDS = 100;
 export const DEFAULT_DEADLINE_OFFSET = 300n; // 5 minutes in seconds
 export const DEFAULT_BACKEND_API_ENDPOINT = 'https://api.sodax.com/v1/be';
 export const DEFAULT_BACKEND_API_TIMEOUT = 30000; // 30 seconds
+export const U64_MAX = BigInt('18446744073709551615');
 export const DEFAULT_BACKEND_API_HEADERS = {
   'Content-Type': 'application/json',
   Accept: 'application/json',
 };
 export const DEFAULT_RELAYER_API_ENDPOINT = 'https://xcall-relay.nw.iconblockchain.xyz';
 export const VAULT_TOKEN_DECIMALS = 18;
-
 
 // HyperEVM chain is not supported by viem, so we need to define it manually
 export const hyper = /*#__PURE__*/ defineChain({
@@ -162,7 +162,6 @@ export const getAllLegacybnUSDTokens = (): { token: LegacybnUSDToken; chainId: L
     chainId,
   }));
 };
-
 
 const concentratedLiquidityConfig = {
   permit2: '0x000000000022D473030F116dDEE9F6B43aC78BA3',

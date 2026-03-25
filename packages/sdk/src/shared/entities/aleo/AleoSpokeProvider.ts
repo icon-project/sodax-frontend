@@ -11,10 +11,18 @@ import type {
 } from '@sodax/types';
 
 import { isAleoRawSpokeProvider } from '../../guards.js';
-import { AleoNetworkClient, BHP256, ProgramManager, Plaintext, Address as AleoAddress } from '@provablehq/sdk';
+import { AleoNetworkClient, BHP256, ProgramManager, Plaintext } from '@provablehq/sdk';
+import { decodeBech32m } from '../../utils/bech32m.js';
+import { DEFAULT_MAX_RETRY } from '../../constants.js';
 
 export const ALEO_DEFAULT_TIMEOUT = 45000;
 const ALEO_DEFAULT_CHECK_INTERVAL = 2000;
+
+const ALEO_ADDRESS_PREFIX = 'aleo1';
+const ALEO_ADDRESS_LENGTH = 63;
+const ALEO_TX_PREFIX = 'at1';
+const ALEO_TX_LENGTH = 61;
+
 
 /** Base spoke provider for Aleo — handles RPC activities, balance queries, block heights, and transaction verification. */
 export class AleoBaseSpokeProvider {
@@ -35,16 +43,18 @@ export class AleoBaseSpokeProvider {
       throw new Error(`Invalid Aleo address format: ${aleoAddress}`);
     }
 
-    const bytesLe = Array.from(AleoAddress.from_string(aleoAddress).toBytesLe());
-    return toHex(new Uint8Array(bytesLe.reverse()));
+    const { data } = decodeBech32m(aleoAddress);
+    return toHex(new Uint8Array([...data].reverse()));
   }
 
   static isValidAleoAddress(address: string): boolean {
-    return typeof address === 'string' && address.startsWith('aleo1') && address.length === 63;
+    return (
+      typeof address === 'string' && address.startsWith(ALEO_ADDRESS_PREFIX) && address.length === ALEO_ADDRESS_LENGTH
+    );
   }
 
   static isValidTransactionId(txId: string): boolean {
-    return typeof txId === 'string' && txId.startsWith('at1') && txId.length === 61;
+    return typeof txId === 'string' && txId.startsWith(ALEO_TX_PREFIX) && txId.length === ALEO_TX_LENGTH;
   }
 
   static formatAmount(amount: bigint, type = 'u128'): string {
@@ -83,7 +93,7 @@ export class AleoBaseSpokeProvider {
     try {
       const value = await this.networkClient.getProgramMappingValue(
         this.chainConfig.addresses.connection,
-        'messages',
+        this.chainConfig.mappings.messages,
         `${connSn}u128`,
       );
       return value != null;
@@ -92,14 +102,14 @@ export class AleoBaseSpokeProvider {
     }
   }
 
-  async generateUniqueConnSn(inputConnSn?: bigint, maxRetries = 10): Promise<bigint> {
+  async generateUniqueConnSn(inputConnSn?: bigint, maxRetries = DEFAULT_MAX_RETRY): Promise<bigint> {
     if (inputConnSn != null) {
       const used = await this.isConnSnUsed(inputConnSn);
       if (!used) return inputConnSn;
     }
 
     for (let i = 0; i < maxRetries; i++) {
-      // Allocate a 16-byte (128-bit) buffer and fill it with cryptographically
+      // Allocate a 8-byte (64-bit) buffer and fill it with cryptographically
       // secure random values — much stronger than Math.random()
       const bytes = new Uint8Array(8);
       crypto.getRandomValues(bytes);
@@ -125,14 +135,22 @@ export class AleoBaseSpokeProvider {
     try {
       // Native credits: query credits.aleo/account directly
       if (token === this.chainConfig.nativeToken) {
-        const balanceStr = await this.networkClient.getProgramMappingValue('credits.aleo', 'account', walletAddress);
+        const balanceStr = await this.networkClient.getProgramMappingValue(
+          this.chainConfig.addresses.creditsProgram,
+          this.chainConfig.mappings.account,
+          walletAddress,
+        );
         return balanceStr ? BigInt(balanceStr.replace(/[^\d]/g, '')) : 0n;
       }
       const bhp = new BHP256();
       const structLiteral = `{ account: ${walletAddress}, token_id: ${token}field }`;
       const plaintext = Plaintext.fromString(structLiteral);
       const key = bhp.hash(plaintext.toBitsLe()).toString();
-      const result = await this.networkClient.getProgramMappingValue('token_registry.aleo', 'authorized_balances', key);
+      const result = await this.networkClient.getProgramMappingValue(
+        this.chainConfig.addresses.tokenRegistry,
+        this.chainConfig.mappings.authorizedBalances,
+        key,
+      );
       if (result == null) return 0n;
       const match = result.match(/balance:\s*(\d+)u128/);
       return match?.[1] != null ? BigInt(match[1]) : 0n;

@@ -7,10 +7,7 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "src"
-  ],
+  "files": ["dist", "src"],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -46,14 +43,15 @@
     "@injectivelabs/wallet-cosmos": "catalog:",
     "@injectivelabs/wallet-evm": "catalog:",
     "@injectivelabs/wallet-strategy": "catalog:",
+    "@provablehq/sdk": "catalog:",
     "@provablehq/aleo-wallet-adaptor-core": "catalog:",
     "@provablehq/aleo-wallet-adaptor-puzzle": "catalog:",
     "@provablehq/aleo-wallet-adaptor-shield": "catalog:",
+    "@provablehq/aleo-wallet-adaptor-leo": "catalog:",
+    "@provablehq/aleo-types": "catalog:",
     "@provablehq/aleo-wallet-standard": "catalog:",
     "@mysten/dapp-kit": "catalog:",
     "@mysten/sui": "catalog:",
-    "@provablehq/aleo-types": "catalog:",
-    "@provablehq/sdk": "catalog:",
     "@provablehq/aleo-wallet-adaptor-react": "catalog:",
     "near-api-js": "catalog:",
     "@sodax/types": "workspace:*",

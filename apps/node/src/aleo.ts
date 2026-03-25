@@ -146,7 +146,7 @@ async function getUserWallet() {
 }
 
 // Approve and deposit the underlying asset token and then mint shares to the recipient address (user's hub wallet)
-async function depositTo(token: string, amount: number, recipient: Address) {
+async function depositTo(token: string, amount: bigint, recipient: Address) {
   const walletAddress = await aleoSpokeProvider.walletProvider.getWalletAddress();
   const data = '0x';
   const txId = await AleoSpokeService.deposit(
@@ -270,7 +270,7 @@ async function getBalance(token: string) {
   console.log('[getBalance] balance:', balance.toString());
 }
 
-async function getSimulateDepositParams(token: string, amount: number) {
+async function getSimulateDepositParams(token: string, amount: bigint) {
   const walletAddress = await aleoSpokeProvider.walletProvider.getWalletAddress();
   const params = await AleoSpokeService.getSimulateDepositParams(
     {
@@ -298,7 +298,7 @@ async function getSimulateDepositParams(token: string, amount: number) {
   console.log('[getSimulateDepositParams] ✓ all fields populated');
 }
 
-async function estimateGas(token: string, amount: number) {
+async function estimateGas(token: string, amount: bigint) {
   const walletAddress = await aleoSpokeProvider.walletProvider.getWalletAddress();
   const rawTx = await AleoSpokeService.deposit(
     {
@@ -322,7 +322,7 @@ async function main() {
 
   if (functionName === 'deposit') {
     const token = process.argv[3];
-    const amount = Number(process.argv[4]);
+    const amount = BigInt(process.argv[4]);
     const recipient = process.argv[5] as Address;
     await depositTo(token, amount, recipient);
   } else if (functionName === 'withdrawAsset') {
@@ -345,11 +345,11 @@ async function main() {
     await getBalance(token);
   } else if (functionName === 'getSimulateDepositParams') {
     const token = process.argv[3];
-    const amount = Number(process.argv[4]);
+    const amount = BigInt(process.argv[4]);
     await getSimulateDepositParams(token, amount);
   } else if (functionName === 'estimateGas') {
     const token = process.argv[3];
-    const amount = Number(process.argv[4]);
+    const amount = BigInt(process.argv[4]);
     await estimateGas(token, amount);
   } else {
     console.log(

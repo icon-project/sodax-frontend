@@ -16,7 +16,18 @@ export type SpokeChainId = (typeof CHAIN_IDS)[number];
 
 export type ChainId = (typeof CHAIN_IDS)[number];
 
-export const ChainTypeArr = ['ICON', 'EVM', 'INJECTIVE', 'SUI', 'STELLAR', 'SOLANA', 'STACKS', 'NEAR', 'BITCOIN', 'ALEO'] as const;
+export const ChainTypeArr = [
+  'ICON',
+  'EVM',
+  'INJECTIVE',
+  'SUI',
+  'STELLAR',
+  'SOLANA',
+  'STACKS',
+  'NEAR',
+  'BITCOIN',
+  'ALEO',
+] as const;
 export type ChainType = (typeof ChainTypeArr)[number];
 
 export type Chain = {
@@ -261,20 +272,6 @@ export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
   nid: Hex;
 };
 
-export type AleoAddress = `aleo1${string}`;
-export type AleoSpokeChainConfig = BaseSpokeChainConfig<'ALEO'> & {
-  rpcUrl: string;
-  addresses: {
-    assetManager: string;
-    connection: string;
-    xTokenManager: string;
-    rateLimit: string;
-    testToken: string;
-  };
-  nativeToken: string;
-  gasPrice: string;
-};
-
 export type StacksSpokeChainConfig = BaseSpokeChainConfig<'STACKS'> & {
   addresses: {
     assetManager: string;
@@ -286,6 +283,26 @@ export type StacksSpokeChainConfig = BaseSpokeChainConfig<'STACKS'> & {
   rpcUrl: string;
   nativeToken: string;
 };
+export type AleoAddress = `aleo1${string}`;
+export type AleoSpokeChainConfig = BaseSpokeChainConfig<'ALEO'> & {
+  rpcUrl: string;
+  addresses: {
+    assetManager: string;
+    connection: string;
+    xTokenManager: string;
+    rateLimit: string;
+    testToken: string;
+    creditsProgram: string;
+    tokenRegistry: string;
+  };
+  mappings: {
+    messages: string;
+    account: string;
+    authorizedBalances: string;
+  };
+  nativeToken: string;
+  gasPrice: string;
+};
 
 export type SpokeChainConfig =
   | EvmSpokeChainConfig
@@ -296,9 +313,9 @@ export type SpokeChainConfig =
   | StellarSpokeChainConfig
   | BitcoinSpokeChainConfig
   | SolanaChainConfig
+  | StacksSpokeChainConfig
   | NearSpokeChainConfig
-  | AleoSpokeChainConfig
-  | StacksSpokeChainConfig;
+  | AleoSpokeChainConfig;
 
 export type SolverConfig = {
   intentsContract: Address; // Intents Contract (Hub)

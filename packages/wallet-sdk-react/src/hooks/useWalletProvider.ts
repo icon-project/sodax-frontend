@@ -68,6 +68,7 @@ export function useWalletProvider(
   | INearWalletProvider
   | IAleoWalletProvider
   | IStacksWalletProvider
+  | IAleoWalletProvider
   | undefined {
   const xChainType = getXChainType(spokeChainId);
   // EVM-specific hooks
@@ -224,5 +225,5 @@ export function useWalletProvider(
     stacksConnection,
     stacksConnectors,
     xConnection,
-  ]);
+  , aleoWallet]);
 }

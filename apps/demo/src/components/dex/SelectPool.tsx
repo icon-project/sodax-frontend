@@ -4,9 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, AlertCircle } from 'lucide-react';
-import type { PoolKey} from '@sodax/sdk';
-import type { ChainId,  } from '@sodax/types';
-
+import type { PoolKey } from '@sodax/sdk';
+import type { ChainId } from '@sodax/types';
 
 interface SelectPoolProps {
   selectedChainId: ChainId | null;
@@ -76,4 +75,3 @@ export function SelectPool({
     </Card>
   );
 }
-

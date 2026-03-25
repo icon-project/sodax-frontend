@@ -12,6 +12,7 @@ import { SuiXConnector } from '../xchains/sui';
 import { AleoXConnector } from '../xchains/aleo';
 import { useXService } from './useXService';
 import { useNearXConnectors } from '../xchains/near/useNearXConnectors';
+import { useStacksXConnectors } from '../xchains/stacks/useStacksXConnectors';
 
 /**
  * Hook to retrieve available wallet connectors for a specific blockchain type.
@@ -23,7 +24,7 @@ import { useNearXConnectors } from '../xchains/near/useNearXConnectors';
  * - Solana: Uses Solana wallet adapters (filtered to installed wallets only)
  * - Aleo: Uses Aleo wallet adapters (filtered to installed/loadable wallets only)
  *
- * @param xChainType - The blockchain type to get connectors for ('EVM' | 'SUI' | 'STELLAR' | 'SOLANA' | 'NEAR')
+ * @param xChainType - The blockchain type to get connectors for ('EVM' | 'SUI' | 'STELLAR' | 'SOLANA' | 'ALEO' | 'STACKS' | 'NEAR')
  * @returns An array of XConnector instances compatible with the specified chain type
  */
 
@@ -32,6 +33,7 @@ export function useXConnectors(xChainType: ChainType | undefined): XConnector[] 
   const evmConnectors = useConnectors();
   const suiWallets = useWallets();
   const { data: stellarXConnectors } = useStellarXConnectors();
+  const stacksXConnectors = useStacksXConnectors();
   const { data: nearXConnectors } = useNearXConnectors();
   const { wallets: solanaWallets } = useWallet();
   const { wallets: aleoWallets } = useAleoWallet();
@@ -58,10 +60,22 @@ export function useXConnectors(xChainType: ChainType | undefined): XConnector[] 
         return aleoWallets
           .filter(wallet => wallet.readyState === 'Installed' || wallet.readyState === 'Loadable')
           .map(wallet => new AleoXConnector(wallet));
+      case 'STACKS':
+        return stacksXConnectors;
       default:
         return xService.getXConnectors();
     }
-  }, [xService, xChainType, evmConnectors, suiWallets, stellarXConnectors, solanaWallets, nearXConnectors, aleoWallets]);
+  }, [
+    xService,
+    xChainType,
+    evmConnectors,
+    suiWallets,
+    stellarXConnectors,
+    solanaWallets,
+    nearXConnectors,
+    aleoWallets,
+    stacksXConnectors,
+  ]);
 
   return xConnectors;
 }

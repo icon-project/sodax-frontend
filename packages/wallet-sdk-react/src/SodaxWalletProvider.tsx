@@ -21,6 +21,7 @@ import { UnsafeBurnerWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { AleoWalletProvider } from '@provablehq/aleo-wallet-adaptor-react';
 import { PuzzleWalletAdapter } from '@provablehq/aleo-wallet-adaptor-puzzle';
 import { ShieldWalletAdapter } from '@provablehq/aleo-wallet-adaptor-shield';
+import { LeoWalletAdapter } from '@provablehq/aleo-wallet-adaptor-leo';
 import { DecryptPermission } from '@provablehq/aleo-wallet-adaptor-core';
 
 import type { RpcConfig } from '@sodax/types';
@@ -83,8 +84,8 @@ export const SodaxWalletProvider = ({ children, rpcConfig, options, initialState
     }
   }, [rpcConfig]);
 
-  const wallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
-  const aleoWallets = useMemo(() => [new PuzzleWalletAdapter(), new ShieldWalletAdapter()], []);
+  const solanaWallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
+  const aleoWallets = useMemo(() => [new LeoWalletAdapter(), new PuzzleWalletAdapter(), new ShieldWalletAdapter()], []);
   const solana = useMemo(() => ({ ...defaultOptions.solana, ...options?.solana }), [options?.solana]);
   const sui = useMemo(() => ({ ...defaultOptions.sui, ...options?.sui }), [options?.sui]);
 
@@ -94,7 +95,7 @@ export const SodaxWalletProvider = ({ children, rpcConfig, options, initialState
         <SuiClientProvider networks={{ mainnet: { url: getFullnodeUrl('mainnet') } }} defaultNetwork="mainnet">
           <SuiWalletProvider autoConnect={sui.autoConnect}>
             <SolanaConnectionProvider endpoint={rpcConfig['solana'] ?? 'https://api.mainnet-beta.solana.com'}>
-              <SolanaWalletProvider wallets={wallets} autoConnect={solana.autoConnect}>
+              <SolanaWalletProvider wallets={solanaWallets} autoConnect={solana.autoConnect}>
                 <AleoWalletProvider
                   wallets={aleoWallets}
                   autoConnect={true}
