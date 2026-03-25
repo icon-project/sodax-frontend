@@ -24,6 +24,14 @@ const nextConfig = {
       'mongodb',
     ],
   },
+  // Aleo chain: @provablehq/sdk requires WASM + top-level await
+  // Must be excluded from server-side bundling and dynamically imported client-side only
+  // TODO: AleoXService.ts needs to dynamic import @provablehq/sdk instead of static import
+  serverExternalPackages: ['@provablehq/sdk', '@provablehq/wasm'],
+  webpack: (config) => {
+    config.experiments = { ...config.experiments, asyncWebAssembly: true };
+    return config;
+  },
   images: {
     domains: ['storage.herewallet.app'],
     dangerouslyAllowSVG: true,

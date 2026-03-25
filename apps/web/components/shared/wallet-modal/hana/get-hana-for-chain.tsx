@@ -16,6 +16,7 @@ const CHAIN_DISPLAY_NAMES: Record<ChainType, string> = {
   NEAR: 'Near',
   BITCOIN: 'Bitcoin',
   STACKS: 'Stacks',
+  ALEO: 'Aleo',
 };
 
 type GetHanaForChainProps = {

@@ -2,8 +2,6 @@ import type { XAccount } from '@/types';
 import { useConnectWallet } from '@mysten/dapp-kit';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWallet as useAleoWallet } from '@provablehq/aleo-wallet-adaptor-react';
-import { DecryptPermission } from '@provablehq/aleo-wallet-adaptor-core';
-import { AleoXService } from '../xchains/aleo';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import { useConnect } from 'wagmi';
 import type { XConnector } from '../core/XConnector';
@@ -105,6 +103,12 @@ export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XC
           break;
         }
 
+        // Aleo wallet connection is handled here (not in AleoXConnector.connect())
+        // because it requires React hooks (useAleoWallet/selectWallet) which are only
+        // available in this hook context. Same pattern as Solana.
+        // NOTE: selectWallet() already triggers adapter.connect() internally via
+        // @provablehq/aleo-wallet-adaptor-react. Do NOT call adapter.connect() again
+        // or the extension popup will open twice.
         case 'ALEO': {
           const walletName = (xConnector as AleoXConnector).wallet.adapter.name;
           const adapter = (xConnector as AleoXConnector).wallet.adapter;
@@ -112,10 +116,6 @@ export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XC
           if (!adapter) throw new Error('No adapter found for Aleo wallet');
 
           selectWallet(walletName);
-
-          const aleoNetwork = AleoXService.getInstance().network as unknown as Parameters<typeof adapter.connect>[0];
-
-          await adapter.connect(aleoNetwork, DecryptPermission.NoDecrypt, []);
 
           break;
         }
