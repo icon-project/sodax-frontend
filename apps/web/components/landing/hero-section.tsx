@@ -8,18 +8,19 @@ import { SodaxIcon } from '../icons/sodax-icon';
 import { NEWS_ROUTE, PARTNERS_ROUTE, SWAP_ROUTE } from '@/constants/routes';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAppStore } from '@/stores/app-store-provider';
+import { NETWORK_ICON_MAP } from '../partners/network-icons';
 
-const networkIcons = [
-  { src: '/landing/networks/stellar.svg', alt: 'Stellar', opacity: 0.1 },
-  { src: '/landing/networks/avalanche.svg', alt: 'Avalanche', opacity: 0.2 },
-  { src: '/landing/networks/solana.svg', alt: 'Solana', opacity: 0.4 },
-  { src: '/landing/networks/sui.svg', alt: 'Sui', opacity: 0.8 },
-  { src: '/landing/networks/sonic.svg', alt: 'Sonic', opacity: 1 },
-  { src: '/landing/networks/injective.svg', alt: 'Injective', opacity: 1 },
-  { src: '/landing/networks/arbitrum.svg', alt: 'Arbitrum', opacity: 0.8 },
-  { src: '/landing/networks/optimism.svg', alt: 'Optimism', opacity: 0.4 },
-  { src: '/landing/networks/ethereum.svg', alt: 'Ethereum', opacity: 0.2 },
-  { src: '/landing/networks/base.svg', alt: 'Base', opacity: 0.1 },
+const HERO_NETWORKS = [
+  'Stellar',
+  'Avalanche',
+  'Solana',
+  'Sui',
+  'Sonic',
+  'Injective',
+  'Arbitrum',
+  'Optimism',
+  'Ethereum',
+  'Base',
 ];
 
 const HeroSection = (): React.ReactElement => {
@@ -60,9 +61,6 @@ const HeroSection = (): React.ReactElement => {
               <div className="hidden md:block md:ml-[11px]">
                 <SodaxIcon width={84} height={18} fill="white" />
               </div>
-              <div className="mix-blend-screen justify-center text-cherry-bright text-[9px] font-bold font-['InterRegular'] leading-[1.4] ml-2">
-                BETA
-              </div>
             </div>
           </div>
           <div className="flex items-center gap-8">
@@ -94,62 +92,54 @@ const HeroSection = (): React.ReactElement => {
           </div>
         </div>
 
-        {/* Center Content — 3 sections with 72px gap, matching Figma Container */}
-        <div className="flex flex-1 flex-col items-center justify-center w-full px-4 z-20 gap-[72px]">
+        {/* Center Content — 3 sections with 56px gap, matching Figma Container */}
+        <div className="flex flex-1 flex-col items-center justify-center w-full px-4 gap-[56px]">
           {/* 1. Title section */}
-          <div className="flex flex-col items-center gap-[16px] text-center whitespace-nowrap">
+          <div className="flex flex-col items-center text-center whitespace-nowrap z-20">
             <div className="flex flex-col items-center text-[42px] leading-[1.1]">
-              <span className="mix-blend-hard-light text-white font-[InterBlack]">Lorem ipsum dolor</span>
-              <span className="mix-blend-hard-light text-yellow-soda font-[Shrikhand] italic">sit amet</span>
+              <span className="mix-blend-hard-light text-white font-[InterBlack]">Infrastructure for</span>
+              <span className="mix-blend-hard-light text-yellow-soda font-[Shrikhand] italic">modern money</span>
             </div>
-            <p className="text-cream font-[InterRegular] text-(length:--body-super-comfortable) leading-[1.4] whitespace-normal">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-              <br />
-              sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-            </p>
           </div>
 
-          {/* 2. Partners CTA section */}
-          <div className="flex flex-col items-center gap-[16px]">
+          {/* 2. CTA section */}
+          <div className="flex flex-col items-center gap-[16px] z-20">
             <div className="flex items-center justify-center gap-[24px]">
-              {/* Left brace — horizontally flipped */}
+              {/* Left brace */}
               <Image src="/landing/brace-left.svg" alt="" width={32} height={120} className="hidden md:block -scale-x-100" />
               <div className="text-white font-[InterBold] text-(length:--app-title) leading-[1.1] text-center whitespace-nowrap">
-                Consectetur
+                One SDK.
                 <br />
-                adipiscing
+                Scaling DeFi products
                 <br />
-                elit sed
+                across networks.
               </div>
-              {/* Right brace */}
+              {/* Right brace — horizontally flipped */}
               <Image src="/landing/brace-right.svg" alt="" width={32} height={120} className="hidden md:block" />
             </div>
-            <p className="text-cream font-[InterRegular] text-(length:--body-super-comfortable) leading-[1.4] text-center">
-              Ut enim ad minim veniam, quis nostrud
-              <br />
-              exercitation ullamco laboris.
-            </p>
             <a
               href={PARTNERS_ROUTE}
               className="bg-yellow-dark hover:bg-yellow-soda transition-colors h-10 px-6 py-2 rounded-[240px] flex items-center justify-center text-cherry-dark font-[InterBold] text-(length:--body-comfortable) leading-[1.4]"
             >
-              Tempor incididunt
+              Integrate SODAX
             </a>
           </div>
 
-          {/* 3. Network icons */}
-          <div className="flex items-center gap-[24px] opacity-60">
-            {networkIcons.map(icon => (
-              <Image
-                key={icon.alt}
-                src={icon.src}
-                alt={icon.alt}
-                width={24}
-                height={24}
-                className="size-6"
-                style={{ opacity: icon.opacity }}
-              />
-            ))}
+          {/* 3. Network icons — infinite marquee */}
+          <div className="max-w-[480px] overflow-x-clip group/marquee opacity-60 relative">
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-[20%] z-10 bg-linear-to-r from-cherry-soda to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-[20%] z-10 bg-linear-to-l from-cherry-soda to-transparent" />
+            <div className="flex w-max animate-marquee">
+              {[...HERO_NETWORKS, ...HERO_NETWORKS].map((name, i) => {
+                const Icon = NETWORK_ICON_MAP[name];
+                if (!Icon) return null;
+                return (
+                  <div key={`${name}-${i}`} className="mx-3 shrink-0 text-white opacity-40 hover:opacity-100 transition-opacity duration-300">
+                    <Icon width={24} height={24} aria-label={name} />
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
