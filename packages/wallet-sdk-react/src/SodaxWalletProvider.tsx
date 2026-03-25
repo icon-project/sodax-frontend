@@ -32,13 +32,50 @@ import { AleoXService } from './xchains/aleo';
 import { reconnectIcon } from './xchains/icon/actions';
 import { reconnectStellar } from './xchains/stellar/actions';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { State as WagmiState } from 'wagmi';
 
 const queryClient = new QueryClient();
 
-export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.ReactNode; rpcConfig: RpcConfig }) => {
+export type WagmiOptions = {
+  reconnectOnMount?: boolean;
+  ssr?: boolean;
+};
+
+export type SodaxWalletProviderOptions = {
+  wagmi?: WagmiOptions;
+  solana?: {
+    autoConnect?: boolean;
+  };
+  sui?: {
+    autoConnect?: boolean;
+  };
+};
+
+const defaultOptions = {
+  wagmi: {
+    reconnectOnMount: false,
+    ssr: true,
+  },
+  solana: {
+    autoConnect: true,
+  },
+  sui: {
+    autoConnect: true,
+  },
+} satisfies SodaxWalletProviderOptions;
+
+export type SodaxWalletProviderProps = {
+  children: React.ReactNode;
+  rpcConfig: RpcConfig;
+  options?: SodaxWalletProviderOptions;
+  initialState?: WagmiState;
+};
+
+export const SodaxWalletProvider = ({ children, rpcConfig, options, initialState }: SodaxWalletProviderProps) => {
+  const wagmi = useMemo(() => ({ ...defaultOptions.wagmi, ...options?.wagmi }), [options?.wagmi]);
   const wagmiConfig = useMemo(() => {
-    return createWagmiConfig(rpcConfig);
-  }, [rpcConfig]);
+    return createWagmiConfig(rpcConfig, wagmi);
+  }, [rpcConfig, wagmi]);
 
   useMemo(() => {
     const aleoRpcUrl = rpcConfig['aleo'];
@@ -48,20 +85,22 @@ export const SodaxWalletProvider = ({ children, rpcConfig }: { children: React.R
   }, [rpcConfig]);
 
   const solanaWallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
-
   const aleoWallets = useMemo(() => [new LeoWalletAdapter(), new PuzzleWalletAdapter(), new ShieldWalletAdapter()], []);
+  const solana = useMemo(() => ({ ...defaultOptions.solana, ...options?.solana }), [options?.solana]);
+  const sui = useMemo(() => ({ ...defaultOptions.sui, ...options?.sui }), [options?.sui]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <WagmiProvider reconnectOnMount={false} config={wagmiConfig}>
+      <WagmiProvider reconnectOnMount={wagmi.reconnectOnMount} config={wagmiConfig} initialState={initialState}>
         <SuiClientProvider networks={{ mainnet: { url: getFullnodeUrl('mainnet') } }} defaultNetwork="mainnet">
-          <SuiWalletProvider autoConnect={true}>
+          <SuiWalletProvider autoConnect={sui.autoConnect}>
             <SolanaConnectionProvider endpoint={rpcConfig['solana'] ?? 'https://api.mainnet-beta.solana.com'}>
-              <SolanaWalletProvider wallets={solanaWallets} autoConnect>
+              <SolanaWalletProvider wallets={solanaWallets} autoConnect={solana.autoConnect}>
                 <AleoWalletProvider
                   wallets={aleoWallets}
                   autoConnect={true}
                   decryptPermission={DecryptPermission.NoDecrypt}
+                  programs={[]}
                 >
                   <Hydrate rpcConfig={rpcConfig} />
                   {children}

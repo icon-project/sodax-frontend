@@ -413,6 +413,13 @@ export class SpokeService {
         hubProvider,
       );
     }
+    if (isAleoSpokeProviderType(spokeProvider)) {
+      return AleoSpokeService.getSimulateDepositParams(
+        params as GetSpokeDepositParamsType<AleoSpokeProviderType>,
+        spokeProvider,
+        hubProvider,
+      );
+    }
     if (isStacksSpokeProviderType(spokeProvider)) {
       return StacksSpokeService.getSimulateDepositParams(
         params as GetSpokeDepositParamsType<StacksSpokeProviderType>,

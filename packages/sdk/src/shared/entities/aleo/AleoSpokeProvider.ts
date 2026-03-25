@@ -23,6 +23,7 @@ const ALEO_ADDRESS_LENGTH = 63;
 const ALEO_TX_PREFIX = 'at1';
 const ALEO_TX_LENGTH = 61;
 
+
 /** Base spoke provider for Aleo — handles RPC activities, balance queries, block heights, and transaction verification. */
 export class AleoBaseSpokeProvider {
   public readonly chainConfig: AleoSpokeChainConfig;

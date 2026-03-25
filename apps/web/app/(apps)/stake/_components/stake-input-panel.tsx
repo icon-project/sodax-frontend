@@ -22,7 +22,6 @@ import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline
 import { useRequestTrustline, useSpokeProvider } from '@sodax/dapp-kit';
 import { Loader2 } from 'lucide-react';
 import type { SpokeProvider } from '@sodax/sdk';
-import { parseUnits } from 'viem';
 import { ErrorDialog } from '@/components/shared/error-dialog';
 import { SWAP_ROUTE } from '@/constants/routes';
 
@@ -93,7 +92,7 @@ export function StakeInputPanel(): React.JSX.Element {
     try {
       await requestTrustline({
         token: selectedToken.address,
-        amount: parseUnits('1', selectedToken.decimals),
+        amount: stakeValue,
         spokeProvider: spokeProvider as SpokeProvider,
       });
     } catch (error) {
@@ -235,6 +234,7 @@ export function StakeInputPanel(): React.JSX.Element {
                       {isActivatingStellarAccount && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
                     </Button>
                   ) : isStellarChain &&
+                    stakeValue > 0n &&
                     stellarTrustlineValidation?.ok === false &&
                     !hasTrustline &&
                     validateChainAddress(address || '', 'STELLAR') ? (

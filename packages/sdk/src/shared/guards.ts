@@ -27,13 +27,9 @@ import {
   type SolanaRawSpokeProviderConfig,
 } from './entities/solana/SolanaSpokeProvider.js';
 import { SuiSpokeProvider, type SuiRawSpokeProvider } from './entities/sui/SuiSpokeProvider.js';
-import {
-  StellarSpokeProvider,
-  type StellarRawSpokeProvider,
-  type StellarRawSpokeProviderConfig,
-} from './entities/stellar/StellarSpokeProvider.js';
-import { StacksSpokeProvider, type StacksRawSpokeProvider, type StacksRawSpokeProviderConfig } from './entities/stacks/StacksSpokeProvider.js';
+import { StellarSpokeProvider, type StellarRawSpokeProvider, type StellarRawSpokeProviderConfig } from './entities/stellar/StellarSpokeProvider.js';
 import { AleoSpokeProvider, type AleoRawSpokeProvider, type AleoRawSpokeProviderConfig } from './entities/aleo/AleoSpokeProvider.js';
+import { StacksSpokeProvider, type StacksRawSpokeProvider, type StacksRawSpokeProviderConfig } from './entities/stacks/StacksSpokeProvider.js';
 import type {
   BitcoinSpokeProviderType,
   EvmSpokeProviderType,
@@ -298,6 +294,20 @@ export function isSuiSpokeProvider(value: SpokeProviderType): value is SuiSpokeP
   );
 }
 
+export function isAleoSpokeProviderType(value: SpokeProviderType): value is AleoSpokeProviderType {
+  return typeof value === 'object' && value !== null && (isAleoSpokeProvider(value) || isAleoRawSpokeProvider(value));
+}
+
+export function isAleoSpokeProvider(value: SpokeProviderType): value is AleoSpokeProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    value instanceof AleoSpokeProvider &&
+    !('raw' in value) &&
+    value.chainConfig.chain.type === 'ALEO'
+  );
+}
+
 export function isStacksSpokeProviderType(value: SpokeProviderType): value is StacksSpokeProviderType {
   return typeof value === 'object' && value !== null && (isStacksSpokeProvider(value) || isStacksRawSpokeProvider(value));
 }
@@ -314,20 +324,6 @@ export function isStacksSpokeProvider(value: SpokeProviderType): value is Stacks
 
 export function isStacksRawSpokeProvider(value: unknown): value is StacksRawSpokeProvider {
   return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'STACKS';
-}
-
-export function isAleoSpokeProviderType(value: SpokeProviderType): value is AleoSpokeProviderType {
-  return typeof value === 'object' && value !== null && (isAleoSpokeProvider(value) || isAleoRawSpokeProvider(value));
-}
-
-export function isAleoSpokeProvider(value: SpokeProviderType): value is AleoSpokeProvider {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    value instanceof AleoSpokeProvider &&
-    !('raw' in value) &&
-    value.chainConfig.chain.type === 'ALEO'
-  );
 }
 
 export function isConfiguredSolverConfig(
@@ -643,6 +639,19 @@ export function isNearRawSpokeProviderConfig(value: RawSpokeProviderConfig): val
     value.chainConfig.chain.type === 'NEAR'
   );
 }
+export function isAleoRawSpokeProvider(value: unknown): value is AleoRawSpokeProvider {
+  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'ALEO';
+}
+
+export function isAleoRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is AleoRawSpokeProviderConfig {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'walletAddress' in value &&
+    'chainConfig' in value &&
+    value.chainConfig.chain.type === 'ALEO'
+  );
+}
 
 export function isStacksRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is StacksRawSpokeProviderConfig {
   return (
@@ -680,17 +689,4 @@ export function isSubmitSwapTxStatusResponse(value: unknown): value is SubmitSwa
     if (typeof result.dstIntentTxHash !== 'string') return false;
   }
   return true;
-}
-export function isAleoRawSpokeProvider(value: unknown): value is AleoRawSpokeProvider {
-  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'ALEO';
-}
-
-export function isAleoRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is AleoRawSpokeProviderConfig {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'walletAddress' in value &&
-    'chainConfig' in value &&
-    value.chainConfig.chain.type === 'ALEO'
-  );
 }

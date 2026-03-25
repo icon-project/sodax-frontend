@@ -282,13 +282,13 @@ export function constructRawSpokeProvider(config: RawSpokeProviderConfig): RawSp
       invariant(isNearRawSpokeProviderConfig(config), 'Invalid Near raw spoke provider config');
       return new NearRawSpokeProvider(config.chainConfig, config.walletAddress);
     }
-    case 'STACKS': {
-      invariant(isStacksRawSpokeProviderConfig(config), 'Invalid Stacks raw spoke provider config');
-      return new StacksRawSpokeProvider(config.walletAddress, config.chainConfig);
-    }
     case 'ALEO': {
       invariant(isAleoRawSpokeProviderConfig(config), 'Invalid Aleo raw spoke provider config');
       return new AleoRawSpokeProvider(config.chainConfig, config.walletAddress, config.rpcUrl);
+    }
+    case 'STACKS': {
+      invariant(isStacksRawSpokeProviderConfig(config), 'Invalid Stacks raw spoke provider config');
+      return new StacksRawSpokeProvider(config.walletAddress, config.chainConfig);
     }
     default: {
       throw new Error(`Unsupported chain type: ${chainType}`);

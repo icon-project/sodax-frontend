@@ -32,11 +32,11 @@ import type { SuiXService } from '../xchains/sui/SuiXService';
 import { CHAIN_INFO, SupportedChainId } from '../xchains/icon/IconXService';
 import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
 import type { NearXService } from '../xchains/near/NearXService';
+import type { AleoXService } from '../xchains/aleo/AleoXService';
+import { useWallet as useAleoWallet } from '@provablehq/aleo-wallet-adaptor-react';
 import { useXConnection } from './useXConnection';
 import { useXConnectors } from './useXConnectors';
 import type { StacksXConnector } from '../xchains/stacks';
-import type { AleoXService } from '../xchains/aleo/AleoXService';
-import { useWallet as useAleoWallet } from '@provablehq/aleo-wallet-adaptor-react';
 
 /**
  * Hook to get the appropriate wallet provider based on the chain type.
@@ -66,6 +66,7 @@ export function useWalletProvider(
   | ISolanaWalletProvider
   | IBitcoinWalletProvider
   | INearWalletProvider
+  | IAleoWalletProvider
   | IStacksWalletProvider
   | IAleoWalletProvider
   | undefined {
@@ -183,19 +184,6 @@ export function useWalletProvider(
         return new NearWalletProvider({ wallet: nearXService.walletSelector });
       }
 
-      case 'STACKS': {
-        const address = xAccount.address;
-        if (!address) {
-          return undefined;
-        }
-
-        const activeStacksConnector = stacksConnectors.find(c => c.id === stacksConnection?.xConnectorId) as
-          | StacksXConnector
-          | undefined;
-
-        return new StacksWalletProvider({ address, provider: activeStacksConnector?.getProvider() });
-      }
-
       case 'ALEO': {
         const aleoXService = xService as AleoXService;
         const adapter = aleoWallet.wallet?.adapter;
@@ -211,6 +199,19 @@ export function useWalletProvider(
         });
       }
 
+      case 'STACKS': {
+        const address = xAccount.address;
+        if (!address) {
+          return undefined;
+        }
+
+        const activeStacksConnector = stacksConnectors.find(c => c.id === stacksConnection?.xConnectorId) as
+          | StacksXConnector
+          | undefined;
+
+        return new StacksWalletProvider({ address, provider: activeStacksConnector?.getProvider() });
+      }
+
       default:
         return undefined;
     }
@@ -220,6 +221,7 @@ export function useWalletProvider(
     evmWalletClient,
     xService,
     xAccount,
+    aleoWallet,
     stacksConnection,
     stacksConnectors,
     xConnection,

@@ -22,6 +22,7 @@ const DEFAULT_PK_PRIORITY_FEE = 0;
 /** Minimum fee for browser extension wallets — 0.001 ALEO to ensure transaction acceptance */
 const DEFAULT_BROWSER_FEE = 0.001;
 
+
 export type DelegateProvingConfig = {
   apiKey: string;
   consumerId: string;
@@ -240,8 +241,8 @@ export class AleoWalletProvider implements IAleoWalletProvider {
         status: confirmedTx.status as AleoTransactionReceipt['status'],
         type: confirmedTx.type,
         index: confirmedTx.index,
-        transaction: confirmedTx.transaction,
-        finalize: confirmedTx.finalize,
+        transaction: confirmedTx.transaction as unknown,
+        finalize: confirmedTx.finalize as unknown[],
         confirmedAt: new Date(),
       };
     } catch (error) {

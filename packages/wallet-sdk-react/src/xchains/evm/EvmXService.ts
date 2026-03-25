@@ -19,7 +19,7 @@ import { getWagmiChainId, isNativeToken } from '@/utils';
 
 import { type Address, type Chain, defineChain, erc20Abi } from 'viem';
 import { getPublicClient } from 'wagmi/actions';
-import { type Config, createConfig, http } from 'wagmi';
+import { type Config, createConfig, http, createStorage, cookieStorage } from 'wagmi';
 import {
   mainnet,
   avalanche,
@@ -33,6 +33,7 @@ import {
   redbellyMainnet,
   kaia,
 } from 'wagmi/chains';
+import type { WagmiOptions } from '@/SodaxWalletProvider';
 
 // HyperEVM chain is not supported by viem, so we need to define it manually
 export const hyper = /*#__PURE__*/ defineChain({
@@ -60,7 +61,7 @@ export const hyper = /*#__PURE__*/ defineChain({
   },
 });
 
-export const createWagmiConfig = (config: RpcConfig) => {
+export const createWagmiConfig = (config: RpcConfig, options?: WagmiOptions) => {
   return createConfig({
     chains: [
       mainnet,
@@ -76,7 +77,7 @@ export const createWagmiConfig = (config: RpcConfig) => {
       kaia,
       redbellyMainnet,
     ],
-    ssr: true,
+    ssr: options?.ssr,
     transports: {
       [mainnet.id]: http(config[ETHEREUM_MAINNET_CHAIN_ID]),
       [avalanche.id]: http(config[AVALANCHE_MAINNET_CHAIN_ID]),
@@ -91,6 +92,10 @@ export const createWagmiConfig = (config: RpcConfig) => {
       [redbellyMainnet.id]: http(config[REDBELLY_MAINNET_CHAIN_ID]),
       [kaia.id]: http(config[KAIA_MAINNET_CHAIN_ID]),
     },
+    storage: createStorage({
+      storage: cookieStorage,
+      key: 'sodax',
+    }),
   });
 };
 
