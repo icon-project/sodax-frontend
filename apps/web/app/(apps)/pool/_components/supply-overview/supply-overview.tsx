@@ -95,7 +95,7 @@ export function SupplyOverview({ positions, poolKey, poolData }: SupplyOverviewP
         return true;
       }
 
-      return liquidityValue >= MIN_VISIBLE_POSITION_USD;
+      return true;
     });
   }, [normalizedPositions, positionLiquidityByKey]);
 
