@@ -13,7 +13,12 @@ interface ErrorDialogProps {
   title?: string;
 }
 
-export function ErrorDialog({ open, onOpenChange, errorMessage, title = 'Transaction failed' }: ErrorDialogProps): React.JSX.Element {
+export function ErrorDialog({
+  open,
+  onOpenChange,
+  errorMessage,
+  title = 'Transaction failed',
+}: ErrorDialogProps): React.JSX.Element {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md md:max-w-[480px] py-8 px-12 bg-vibrant-white" hideCloseButton>
