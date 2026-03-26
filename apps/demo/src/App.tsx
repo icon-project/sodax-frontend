@@ -26,7 +26,7 @@ const router = createBrowserRouter([
         element: <Navigate to="/money-market" />,
       },
       {
-        path: '/money-market',
+        path: '/money-market/:chainId?',
         element: <MoneyMarketPage />,
       },
       {

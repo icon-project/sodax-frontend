@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router';
 
 import { ChainSelector } from '@/components/shared/ChainSelector';
 import { SupplyAssetsList } from '@/components/mm/lists/SupplyAssetsList';
@@ -9,12 +10,37 @@ import { useGetUserHubWalletAddress } from '@sodax/dapp-kit';
 import { Info, Wallet } from 'lucide-react';
 import { BorrowAssetsList } from '@/components/mm/lists/borrow/BorrowAssetsList';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { baseChainInfo, type ChainId } from '@sodax/types';
+
+const validChainIds = new Set<string>(Object.keys(baseChainInfo));
+const isValidChainId = (id: string | undefined): id is ChainId => !!id && validChainIds.has(id);
 
 export default function MoneyMarketPage() {
   const { openWalletModal, selectedChainId, selectChainId } = useAppStore();
-  const xAccount = useXAccount(selectedChainId);
+  const { chainId: chainIdParam } = useParams<{ chainId: string }>();
+  const navigate = useNavigate();
 
-  const { data: walletAddressOnHub } = useGetUserHubWalletAddress(selectedChainId, xAccount?.address);
+  const chainId = isValidChainId(chainIdParam) ? chainIdParam : selectedChainId;
+
+  useEffect(() => {
+    if (!isValidChainId(chainIdParam)) {
+      navigate(`/money-market/${selectedChainId}`, { replace: true });
+    }
+  }, [chainIdParam, selectedChainId, navigate]);
+
+  useEffect(() => {
+    if (isValidChainId(chainIdParam) && chainIdParam !== selectedChainId) {
+      selectChainId(chainIdParam);
+    }
+  }, [chainIdParam, selectedChainId, selectChainId]);
+
+  const handleSelectChain = (newChainId: ChainId) => {
+    navigate(`/money-market/${newChainId}`);
+  };
+
+  const xAccount = useXAccount(chainId);
+
+  const { data: walletAddressOnHub } = useGetUserHubWalletAddress(chainId, xAccount?.address);
 
   return (
     <main className="min-h-screen bg-linear-to-br from-almost-white via-cream-white to-vibrant-white">
@@ -46,7 +72,7 @@ export default function MoneyMarketPage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium text-clay">Chain:</span>
-              <ChainSelector selectedChainId={selectedChainId} selectChainId={selectChainId} />
+              <ChainSelector selectedChainId={chainId} selectChainId={handleSelectChain} />
               <div className="text-xs text-muted-foreground">
                 This chain is used for collateral (supply) & debt (borrow)
               </div>{' '}
@@ -64,7 +90,7 @@ export default function MoneyMarketPage() {
         {xAccount?.address ? (
           <div className="animate-in fade-in duration-500">
             <SupplyAssetsList />
-            <BorrowAssetsList initialChainId={selectedChainId} />
+            <BorrowAssetsList initialChainId={chainId} />
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[500px] bg-white rounded-xl shadow-sm border border-cherry-grey/20 p-12">
