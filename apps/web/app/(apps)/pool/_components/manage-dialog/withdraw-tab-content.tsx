@@ -40,6 +40,15 @@ function calculateProportionalAmount(amount: bigint, percentageBasisPoints: bigi
   return (amount * percentageBasisPoints) / PERCENTAGE_BASIS_POINTS;
 }
 
+function getRemainingBalanceText(currentBalanceText: string, withdrawnLiquidityText: string): string {
+  const currentBalance = Number(currentBalanceText);
+  const withdrawnLiquidity = Number(withdrawnLiquidityText);
+  if (!Number.isFinite(currentBalance) || !Number.isFinite(withdrawnLiquidity)) {
+    return currentBalanceText;
+  }
+  return Math.max(currentBalance - withdrawnLiquidity, 0).toFixed(2);
+}
+
 type WithdrawTabContentProps = {
   chainId: SpokeChainId;
   poolData: PoolData;
@@ -92,8 +101,14 @@ export function WithdrawTabContent({
       <div className="self-stretch mt-4">
         <PairBalanceHeader
           chainId={chainId}
-          sodaBalanceText={(Number(positionSodaBalanceText) - Number(withdrawToken0Text)).toFixed(2)}
-          xSodaBalanceText={(Number(positionXSodaBalanceText) - Number(withdrawToken1Text)).toFixed(2)}
+          sodaBalanceText={getRemainingBalanceText(
+            positionSodaBalanceText,
+            formatTokenAmount(withdrawToken0FromLiquidity, poolData.token0.decimals, 2),
+          )}
+          xSodaBalanceText={getRemainingBalanceText(
+            positionXSodaBalanceText,
+            formatTokenAmount(withdrawToken1FromLiquidity, poolData.token1.decimals, 2),
+          )}
         />
       </div>
       <div className="self-stretch p-6 bg-blend-multiply bg-almost-white rounded-2xl inline-flex flex-col justify-start items-start gap-4 w-full relative mt-10">
@@ -204,7 +219,7 @@ export function WithdrawTabContent({
         </div>
       </div>
       <Button
-        className="w-full mt-2"
+        className="w-full mt-2 shadow-none!"
         variant="cherry"
         onClick={onWithdrawLiquidity}
         disabled={!isSuccess && (isPending || !hasValidWithdrawSelection)}
