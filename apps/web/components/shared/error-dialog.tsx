@@ -1,4 +1,3 @@
-// apps/web/components/shared/error-dialog.tsx
 'use client';
 
 import type React from 'react';
