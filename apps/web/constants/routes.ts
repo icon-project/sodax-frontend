@@ -10,7 +10,7 @@
 export const HOME_ROUTE = '/';
 export const SWAP_ROUTE = '/swap';
 export const SAVE_ROUTE = '/save';
-export const LOANS_ROUTE = '/loans';
+export const BORROW_ROUTE = '/loans';
 export const STAKE_ROUTE = '/stake';
 export const POOL_ROUTE = '/pool';
 export const MIGRATE_ROUTE = '/migrate';
