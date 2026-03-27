@@ -22,6 +22,7 @@ import {
   REDBELLY_MAINNET_CHAIN_ID,
   KAIA_MAINNET_CHAIN_ID,
   STACKS_MAINNET_CHAIN_ID,
+  ALEO_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 import { createPublicClient, http, type Address } from 'viem';
 import { sonic } from 'viem/chains';
@@ -115,6 +116,7 @@ describe('e2e', () => {
     [REDBELLY_MAINNET_CHAIN_ID]: [],
     [KAIA_MAINNET_CHAIN_ID]: [],
     [STACKS_MAINNET_CHAIN_ID]: [],
+    [ALEO_MAINNET_CHAIN_ID]: [],
   };
 
   it('Verify money market supported tokens as hub assets are contained in the Soda token vaults', async () => {
