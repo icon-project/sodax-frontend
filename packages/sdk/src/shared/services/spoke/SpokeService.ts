@@ -427,13 +427,6 @@ export class SpokeService {
         hubProvider,
       );
     }
-    if (isAleoSpokeProviderType(spokeProvider)) {
-      return AleoSpokeService.getSimulateDepositParams(
-        params as GetSpokeDepositParamsType<AleoSpokeProviderType>,
-        spokeProvider,
-        hubProvider,
-      );
-    }
     throw new Error('[getSimulateDepositParams] Invalid spoke provider');
   }
 
