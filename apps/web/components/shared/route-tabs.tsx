@@ -76,7 +76,7 @@ export const tabConfigs: TabConfig[] = [
     type: 'pool',
     label: 'Pool',
     content: 'a quick pool',
-    enabled: false,
+    enabled: process.env.NEXT_PUBLIC_APP_ENV !== 'production',
     href: POOL_ROUTE,
   },
 ];
@@ -101,9 +101,7 @@ interface RouteTabsProps {
 export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.Element {
   const pathname = usePathname();
   const isPartner = isPartnerRoute(pathname);
-  const usedTabs = isPartner
-    ? partnerTabConfigs
-    : tabConfigs.filter(tab => !(tab.value === 'pool' && process.env.NEXT_PUBLIC_APP_ENV === 'production'));
+  const usedTabs = isPartner ? partnerTabConfigs : tabConfigs;
 
   const mobileTabOrder = ['swap', 'migrate', 'stake', 'pool'] satisfies ReadonlyArray<TabIconType>;
 
@@ -187,7 +185,8 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
             const href = tab.href ?? `/${tab.value}`;
             // Disabled tabs can never be "active" (prevents SOON tabs looking selected).
             const active =
-              tab.enabled && (pathname === href || pathname.startsWith(`${href}/`) || pathname.endsWith(`/${tab.value}`));
+              tab.enabled &&
+              (pathname === href || pathname.startsWith(`${href}/`) || pathname.endsWith(`/${tab.value}`));
 
             return (
               <RouteTabItem
@@ -226,27 +225,27 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
                     .map(value => usedTabs.find(tab => tab.value === value))
                     .filter((tab): tab is TabConfig => Boolean(tab))
               ).map(tab => {
-                  const href = tab.href ?? `/${tab.value}`;
-                  // Mobile active uses `current` (URL-derived) and also respects disabled tabs.
-                  const active = tab.enabled && current === tab.value;
-                  return (
-                    <RouteTabItem
-                      key={tab.value}
-                      href={href}
-                      value={tab.value}
-                      type={tab.type}
-                      label={tab.label}
-                      isActive={active}
-                      isMobile
-                      setRef={setMobileTabRef(tab.value)}
-                      enabled={tab.enabled}
-                      badgeCount={tab.value === 'save' ? suppliedAssetCount : undefined}
-                      showIcon={tab.showIcon !== false}
-                      totalDepositedUsdValue={tab.value === 'save' ? totalDepositedUsdValue : undefined}
-                      apr={tab.value === 'stake' ? STAKING_APR : undefined}
-                    />
-                  );
-                })}
+                const href = tab.href ?? `/${tab.value}`;
+                // Mobile active uses `current` (URL-derived) and also respects disabled tabs.
+                const active = tab.enabled && current === tab.value;
+                return (
+                  <RouteTabItem
+                    key={tab.value}
+                    href={href}
+                    value={tab.value}
+                    type={tab.type}
+                    label={tab.label}
+                    isActive={active}
+                    isMobile
+                    setRef={setMobileTabRef(tab.value)}
+                    enabled={tab.enabled}
+                    badgeCount={tab.value === 'save' ? suppliedAssetCount : undefined}
+                    showIcon={tab.showIcon !== false}
+                    totalDepositedUsdValue={tab.value === 'save' ? totalDepositedUsdValue : undefined}
+                    apr={tab.value === 'stake' ? STAKING_APR : undefined}
+                  />
+                );
+              })}
             </div>
           </div>
 
