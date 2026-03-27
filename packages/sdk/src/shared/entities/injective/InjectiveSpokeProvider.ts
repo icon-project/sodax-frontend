@@ -96,7 +96,7 @@ export class InjectiveBaseSpokeProvider {
     ) as unknown as Promise<State>;
   }
 
-  async getBalance(token: String): Promise<number> {
+  async getBalance(token: string): Promise<number> {
     const response = await this.chainGrpcWasmApi.fetchSmartContractState(
       this.chainConfig.addresses.assetManager,
       toBase64({

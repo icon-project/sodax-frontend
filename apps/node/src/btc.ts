@@ -24,7 +24,7 @@ import { EvmWalletProvider, BitcoinWalletProvider } from '@sodax/wallet-sdk-core
 import { SONIC_MAINNET_CHAIN_ID, type HubChainId, type SpokeChainId, BITCOIN_MAINNET_CHAIN_ID, type BitcoinSpokeChainConfig, getIntentRelayChainId } from '@sodax/types';
 import { solverConfig } from './config.js';
 import type { BitcoinWalletConfig } from '@sodax/wallet-sdk-core';
-import { sleep } from '@injectivelabs/utils';
+const sleep = (s: number) => new Promise((r) => setTimeout(r, s * 1000));
 
 // load PK from .env
 const privateKey = process.env.PRIVATE_KEY;
