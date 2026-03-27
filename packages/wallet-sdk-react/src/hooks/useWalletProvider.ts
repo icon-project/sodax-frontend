@@ -66,7 +66,6 @@ export function useWalletProvider(
   | ISolanaWalletProvider
   | IBitcoinWalletProvider
   | INearWalletProvider
-  | IAleoWalletProvider
   | IStacksWalletProvider
   | IAleoWalletProvider
   | undefined {
