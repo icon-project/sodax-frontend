@@ -24,12 +24,20 @@ export default function useEthereumChainId(): number | null {
     if (walletStrategy.getWallet() !== Wallet.Metamask) return;
 
     const getEthereumChainId = async () => {
-      const chainId = await walletStrategy.getEthereumChainId();
-      setEthereumChainId(Number.parseInt(chainId));
+      try {
+        const chainId = await walletStrategy.getEthereumChainId();
+        setEthereumChainId(Number.parseInt(chainId));
+      } catch (e) {
+        console.warn('Failed to get Ethereum chain ID:', e);
+      }
     };
     getEthereumChainId();
 
-    (walletStrategy.getStrategy() as EvmWalletStrategy).onChainIdChanged(getEthereumChainId);
+    try {
+      (walletStrategy.getStrategy() as EvmWalletStrategy).onChainIdChanged(getEthereumChainId);
+    } catch (e) {
+      console.warn('Failed to subscribe to chain ID changes:', e);
+    }
   }, [injectiveXService?.walletStrategy]);
 
   return ethereumChainId;
