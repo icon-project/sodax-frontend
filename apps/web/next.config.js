@@ -25,10 +25,9 @@ const nextConfig = {
     ],
   },
   // Aleo chain: @provablehq/sdk requires WASM + top-level await
-  // Must be excluded from server-side bundling and dynamically imported client-side only
-  // TODO: AleoXService.ts needs to dynamic import @provablehq/sdk instead of static import
+  // Must be excluded from server-side bundling; SDK packages use dynamic import() client-side
   serverExternalPackages: ['@provablehq/sdk', '@provablehq/wasm'],
-  webpack: (config) => {
+  webpack: config => {
     config.experiments = { ...config.experiments, asyncWebAssembly: true };
     return config;
   },

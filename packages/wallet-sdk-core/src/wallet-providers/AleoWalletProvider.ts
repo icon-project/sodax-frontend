@@ -1,5 +1,3 @@
-import { Account, AleoNetworkClient, ProgramManager, AleoKeyProvider, NetworkRecordProvider } from '@provablehq/sdk';
-
 import type {
   IAleoWalletProvider,
   AleoExecuteOptions,
@@ -14,6 +12,17 @@ import type {
 } from '@provablehq/aleo-types';
 
 import type { WalletAdapter } from '@provablehq/aleo-wallet-standard';
+
+// Lazy-load @provablehq/sdk to avoid pulling 43MB WASM into the webpack bundle graph at import time.
+// The WASM module uses top-level await which breaks SSR and causes OOM during Next.js builds.
+type AleoSDK = typeof import('@provablehq/sdk');
+let sdkPromise: Promise<AleoSDK> | null = null;
+function getAleoSDK(): Promise<AleoSDK> {
+  if (!sdkPromise) {
+    sdkPromise = import('@provablehq/sdk');
+  }
+  return sdkPromise;
+}
 
 export type AleoNetwork = 'mainnet' | 'testnet';
 
@@ -48,7 +57,7 @@ export type AleoWalletConfig = PrivateKeyAleoWalletConfig | BrowserExtensionAleo
 
 export type PkAleoWallet = {
   type: 'privateKey';
-  account: Account;
+  account: InstanceType<Awaited<AleoSDK>['Account']>;
 };
 
 export type BrowserExtensionAleoWallet = {
@@ -75,47 +84,67 @@ export function isBrowserExtensionAleoWallet(wallet: AleoWallet): wallet is Brow
   return wallet.type === 'browserExtension';
 }
 
+// Internal state created lazily when the SDK finishes loading
+type InitializedState = {
+  networkClient: InstanceType<Awaited<AleoSDK>['AleoNetworkClient']>;
+  wallet: AleoWallet;
+  programManager: InstanceType<Awaited<AleoSDK>['ProgramManager']>;
+};
+
 export class AleoWalletProvider implements IAleoWalletProvider {
-  public readonly networkClient: AleoNetworkClient;
-  public readonly wallet: AleoWallet;
-  public readonly programManager: ProgramManager;
-  private readonly keyProvider: AleoKeyProvider;
-  private readonly delegateConfig?: DelegateProvingConfig;
-  private readonly network?: AleoNetwork;
+  private readonly config: AleoWalletConfig;
+  private initPromise: Promise<InitializedState> | null = null;
+  private state: InitializedState | null = null;
 
   constructor(config: AleoWalletConfig) {
-    this.keyProvider = new AleoKeyProvider();
-    this.keyProvider.useCache(true);
-
-    if (isPrivateKeyConfig(config)) {
-      this.network = config.network;
-      this.delegateConfig = config.delegate;
-      this.networkClient = new AleoNetworkClient(config.rpcUrl);
-      const account = new Account({ privateKey: config.privateKey });
-
-      this.wallet = { type: 'privateKey', account };
-
-      const recordProvider = new NetworkRecordProvider(account, this.networkClient);
-
-      this.programManager = new ProgramManager(config.rpcUrl, this.keyProvider, recordProvider);
-      this.programManager.setAccount(account);
-    } else if (isBrowserExtensionConfig(config)) {
-      this.networkClient = new AleoNetworkClient(config.rpcUrl);
-
-      this.wallet = {
-        type: 'browserExtension',
-        adapter: config.provableAdapter,
-        connectedAccount: null,
-      };
-
-      this.programManager = new ProgramManager(
-        config.rpcUrl,
-        this.keyProvider,
-        undefined, // No record provider for browser wallets
-      );
-    } else {
+    if (!isPrivateKeyConfig(config) && !isBrowserExtensionConfig(config)) {
       throw new Error('Invalid wallet configuration');
     }
+    this.config = config;
+  }
+
+  /** Lazily loads the SDK and initialises networkClient / wallet / programManager on first call. */
+  private async ensureInitialized(): Promise<InitializedState> {
+    if (this.state) return this.state;
+
+    if (!this.initPromise) {
+      this.initPromise = this.initialize();
+    }
+    this.state = await this.initPromise;
+    return this.state;
+  }
+
+  private async initialize(): Promise<InitializedState> {
+    const { Account, AleoNetworkClient, ProgramManager, AleoKeyProvider, NetworkRecordProvider } = await getAleoSDK();
+
+    const keyProvider = new AleoKeyProvider();
+    keyProvider.useCache(true);
+
+    if (isPrivateKeyConfig(this.config)) {
+      const networkClient = new AleoNetworkClient(this.config.rpcUrl);
+      const account = new Account({ privateKey: this.config.privateKey });
+      const wallet: PkAleoWallet = { type: 'privateKey', account };
+      const recordProvider = new NetworkRecordProvider(account, networkClient);
+      const programManager = new ProgramManager(this.config.rpcUrl, keyProvider, recordProvider);
+      programManager.setAccount(account);
+
+      return { networkClient, wallet, programManager };
+    }
+
+    const browserConfig = this.config as BrowserExtensionAleoWalletConfig;
+    const networkClient = new AleoNetworkClient(browserConfig.rpcUrl);
+    const wallet: BrowserExtensionAleoWallet = {
+      type: 'browserExtension',
+      adapter: browserConfig.provableAdapter,
+      connectedAccount: null,
+    };
+    const programManager = new ProgramManager(
+      browserConfig.rpcUrl,
+      keyProvider,
+      undefined, // No record provider for browser wallets
+    );
+
+    return { networkClient, wallet, programManager };
   }
 
   async executeAndWait(
@@ -129,33 +158,38 @@ export class AleoWalletProvider implements IAleoWalletProvider {
   }
 
   async getWalletAddress(): Promise<string> {
-    if (isPkAleoWallet(this.wallet)) {
-      return this.wallet.account.address().to_string();
+    const { wallet } = await this.ensureInitialized();
+
+    if (isPkAleoWallet(wallet)) {
+      return wallet.account.address().to_string();
     }
 
-    if (isBrowserExtensionAleoWallet(this.wallet)) {
-      if (!this.wallet.adapter.connected || !this.wallet.adapter.account) {
+    if (isBrowserExtensionAleoWallet(wallet)) {
+      if (!wallet.adapter.connected || !wallet.adapter.account) {
         throw new Error('Browser wallet not connected');
       }
-      return this.wallet.adapter.account.address;
+      return wallet.adapter.account.address;
     }
 
     throw new Error('Invalid wallet configuration');
   }
 
   private getDefaultDelegateUrl(): string {
-    return this.network === 'testnet'
+    const network = isPrivateKeyConfig(this.config) ? this.config.network : undefined;
+    return network === 'testnet'
       ? 'https://api.provable.com/prove/testnet'
       : 'https://api.provable.com/prove/mainnet';
   }
 
   async execute(options: AleoExecuteOptions): Promise<AleoExecutionResult> {
+    const { wallet, programManager } = await this.ensureInitialized();
     const { programName, functionName, inputs, priorityFee, privateFee = false } = options;
+    const delegateConfig = isPrivateKeyConfig(this.config) ? this.config.delegate : undefined;
 
-    if (isPkAleoWallet(this.wallet)) {
+    if (isPkAleoWallet(wallet)) {
       try {
-        if (this.delegateConfig) {
-          const provingRequest = await this.programManager.provingRequest({
+        if (delegateConfig) {
+          const provingRequest = await programManager.provingRequest({
             programName,
             functionName,
             inputs,
@@ -164,11 +198,11 @@ export class AleoWalletProvider implements IAleoWalletProvider {
             broadcast: true,
           });
 
-          const provingResponse = await this.programManager.networkClient.submitProvingRequest({
+          const provingResponse = await programManager.networkClient.submitProvingRequest({
             provingRequest,
-            url: this.delegateConfig.url ?? this.getDefaultDelegateUrl(),
-            apiKey: this.delegateConfig.apiKey,
-            consumerId: this.delegateConfig.consumerId,
+            url: delegateConfig.url ?? this.getDefaultDelegateUrl(),
+            apiKey: delegateConfig.apiKey,
+            consumerId: delegateConfig.consumerId,
             dpsPrivacy: true,
           });
           return {
@@ -176,7 +210,7 @@ export class AleoWalletProvider implements IAleoWalletProvider {
           };
         }
 
-        const txId = await this.programManager.execute({
+        const txId = await programManager.execute({
           programName,
           functionName,
           priorityFee: priorityFee ?? DEFAULT_PK_PRIORITY_FEE,
@@ -191,8 +225,8 @@ export class AleoWalletProvider implements IAleoWalletProvider {
       }
     }
 
-    if (isBrowserExtensionAleoWallet(this.wallet)) {
-      if (!this.wallet.adapter.connected || !this.wallet.adapter.account) {
+    if (isBrowserExtensionAleoWallet(wallet)) {
+      if (!wallet.adapter.connected || !wallet.adapter.account) {
         throw new Error('Browser wallet not connected');
       }
 
@@ -205,7 +239,7 @@ export class AleoWalletProvider implements IAleoWalletProvider {
           privateFee: privateFee || false,
         };
 
-        const result = await this.wallet.adapter.executeTransaction(provableOptions);
+        const result = await wallet.adapter.executeTransaction(provableOptions);
 
         if (!result?.transactionId) {
           throw new Error('No transaction ID returned from browser wallet');
@@ -227,10 +261,11 @@ export class AleoWalletProvider implements IAleoWalletProvider {
     transactionId: string,
     options: AleoWaitForReceiptOptions = {},
   ): Promise<AleoTransactionReceipt> {
+    const { networkClient } = await this.ensureInitialized();
     const { checkInterval = 2000, timeout = 45000 } = options;
 
     try {
-      const confirmedTx = await this.networkClient.waitForTransactionConfirmation(
+      const confirmedTx = await networkClient.waitForTransactionConfirmation(
         transactionId,
         checkInterval,
         timeout,

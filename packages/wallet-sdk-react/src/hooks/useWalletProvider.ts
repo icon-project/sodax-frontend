@@ -73,7 +73,7 @@ export function useWalletProvider(
   const xChainType = getXChainType(spokeChainId);
   // EVM-specific hooks
   const evmPublicClient = usePublicClient();
-  const aleoWallet = useAleoWallet();
+  const { wallet: aleoActiveWallet } = useAleoWallet();
 
   const { data: evmWalletClient } = useWalletClient();
 
@@ -186,7 +186,7 @@ export function useWalletProvider(
 
       case 'ALEO': {
         const aleoXService = xService as AleoXService;
-        const adapter = aleoWallet.wallet?.adapter;
+        const adapter = aleoActiveWallet?.adapter;
 
         if (!adapter) {
           return undefined;
@@ -221,9 +221,9 @@ export function useWalletProvider(
     evmWalletClient,
     xService,
     xAccount,
-    aleoWallet,
+    aleoActiveWallet,
     stacksConnection,
     stacksConnectors,
     xConnection,
-  , aleoWallet]);
+  ]);
 }

@@ -1,7 +1,8 @@
 import type { XAccount } from '@/types';
 import { XConnector } from '@/core';
 import type { Wallet } from '@provablehq/aleo-wallet-adaptor-react';
-import { AleoXService } from './AleoXService';
+import { DecryptPermission } from '@provablehq/aleo-wallet-adaptor-core';
+import { AleoXService } from './AleoXService.js';
 
 export class AleoXConnector extends XConnector {
   wallet: Wallet;
@@ -16,10 +17,21 @@ export class AleoXConnector extends XConnector {
   }
 
   async connect(): Promise<XAccount | undefined> {
-    return;
+    const adapter = this.wallet.adapter;
+    if (!adapter) throw new Error('No adapter found for Aleo wallet');
+
+    const account = await adapter.connect(
+      'mainnet' as Parameters<typeof adapter.connect>[0],
+      DecryptPermission.NoDecrypt,
+      [],
+    );
+
+    return { address: account.address, xChainType: this.xChainType };
   }
 
-  async disconnect(): Promise<void> {}
+  async disconnect(): Promise<void> {
+    await this.wallet.adapter.disconnect();
+  }
 
   public get icon() {
     return this.wallet.adapter.icon;

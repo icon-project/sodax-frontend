@@ -13,6 +13,7 @@ import { getIntentRelayChainId, type AleoRawTransaction, type HubAddress } from 
 import { EvmWalletAbstraction } from '../hub/index.js';
 import { encodeAddress } from '../../utils/shared-utils.js';
 import { isAleoRawSpokeProvider } from '../../guards.js';
+import { U64_MAX } from '../../constants.js';
 
 export type AleoSpokeDepositParams = {
   from: string; // Aleo address (aleo1...)
@@ -170,11 +171,11 @@ export class AleoSpokeService {
 
     const isNative = token.toString() === spokeProvider.chainConfig.nativeToken;
 
+    if (amount > U64_MAX) {
+      throw new Error(`Amount ${amount} exceeds u64 maximum of ${U64_MAX}`);
+    }
+
     if (isNative) {
-      const U64_MAX = BigInt('18446744073709551615');
-      if (amount > U64_MAX) {
-        throw new Error(`Amount ${amount} exceeds u64 maximum of ${U64_MAX}`);
-      }
       return spokeProvider.transferNative(
         token,
         recipient,

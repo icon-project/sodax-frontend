@@ -11,9 +11,19 @@ import type {
 } from '@sodax/types';
 
 import { isAleoRawSpokeProvider } from '../../guards.js';
-import { AleoNetworkClient, BHP256, ProgramManager, Plaintext } from '@provablehq/sdk';
 import { decodeBech32m } from '../../utils/bech32m.js';
 import { DEFAULT_MAX_RETRY } from '../../constants.js';
+
+// Lazy-load @provablehq/sdk to avoid triggering WASM initialization at import time.
+// The WASM module uses top-level await which fails during SSR / Vercel builds.
+type AleoSDK = typeof import('@provablehq/sdk');
+let sdkPromise: Promise<AleoSDK> | null = null;
+function getAleoSDK(): Promise<AleoSDK> {
+  if (!sdkPromise) {
+    sdkPromise = import('@provablehq/sdk');
+  }
+  return sdkPromise;
+}
 
 export const ALEO_DEFAULT_TIMEOUT = 45000;
 const ALEO_DEFAULT_CHECK_INTERVAL = 2000;
@@ -28,14 +38,33 @@ const ALEO_TX_LENGTH = 61;
 export class AleoBaseSpokeProvider {
   public readonly chainConfig: AleoSpokeChainConfig;
   public readonly rpcUrl: string;
-  public readonly networkClient: AleoNetworkClient;
-  public readonly programManager: ProgramManager;
+
+  // Lazily initialized after SDK loads — use ensureClients() in async methods.
+  private _networkClient: Awaited<AleoSDK>['AleoNetworkClient']['prototype'] | null = null;
+  private _programManager: Awaited<AleoSDK>['ProgramManager']['prototype'] | null = null;
 
   constructor(config: AleoSpokeChainConfig, rpcUrl?: string) {
     this.chainConfig = config;
     this.rpcUrl = rpcUrl ?? config.rpcUrl;
-    this.networkClient = new AleoNetworkClient(this.rpcUrl);
-    this.programManager = new ProgramManager(this.rpcUrl);
+  }
+
+  /** Lazily create AleoNetworkClient and ProgramManager on first async call. */
+  private async ensureClients() {
+    if (!this._networkClient) {
+      const { AleoNetworkClient, ProgramManager } = await getAleoSDK();
+      this._networkClient = new AleoNetworkClient(this.rpcUrl);
+      this._programManager = new ProgramManager(this.rpcUrl);
+    }
+  }
+
+  get networkClient() {
+    if (!this._networkClient) throw new Error('Aleo SDK not initialized. Await any async method first.');
+    return this._networkClient;
+  }
+
+  get programManager() {
+    if (!this._programManager) throw new Error('Aleo SDK not initialized. Await any async method first.');
+    return this._programManager;
   }
 
   static getAddressBCSBytes(aleoAddress: string): Hex {
@@ -91,6 +120,7 @@ export class AleoBaseSpokeProvider {
 
   async isConnSnUsed(connSn: bigint): Promise<boolean> {
     try {
+      await this.ensureClients();
       const value = await this.networkClient.getProgramMappingValue(
         this.chainConfig.addresses.connection,
         this.chainConfig.mappings.messages,
@@ -114,10 +144,10 @@ export class AleoBaseSpokeProvider {
       const bytes = new Uint8Array(8);
       crypto.getRandomValues(bytes);
 
-      // Interpret the 16 bytes as a single 128-bit unsigned integer.
+      // Interpret the 8 bytes as a single 64-bit unsigned integer.
       // Each iteration shifts the accumulator left by 8 bits and ORs in the next byte,
-      // effectively concatenating bytes into one BigInt: [b0, b1, ..., b15] → b0<<120 | b1<<112 | ... | b15
-      // Result is always within u128 range (0 to 2^128-1) since we read exactly 16 bytes.
+      // effectively concatenating bytes into one BigInt: [b0, b1, ..., b7] → b0<<56 | b1<<48 | ... | b7
+      // Result is always within u64 range (0 to 2^64-1) since we read exactly 8 bytes.
       const connSn = Array.from(bytes).reduce((acc, b) => (acc << 8n) | BigInt(b), 0n);
 
       // Verify this connSn hasn't already been used in the on-chain messages mapping
@@ -133,6 +163,8 @@ export class AleoBaseSpokeProvider {
     }
 
     try {
+      await this.ensureClients();
+
       // Native credits: query credits.aleo/account directly
       if (token === this.chainConfig.nativeToken) {
         const balanceStr = await this.networkClient.getProgramMappingValue(
@@ -142,6 +174,7 @@ export class AleoBaseSpokeProvider {
         );
         return balanceStr ? BigInt(balanceStr.replace(/[^\d]/g, '')) : 0n;
       }
+      const { BHP256, Plaintext } = await getAleoSDK();
       const bhp = new BHP256();
       const structLiteral = `{ account: ${walletAddress}, token_id: ${token}field }`;
       const plaintext = Plaintext.fromString(structLiteral);
@@ -166,6 +199,7 @@ export class AleoBaseSpokeProvider {
   }
 
   async estimateFee(executeOptions: AleoExecuteOptions): Promise<AleoGasEstimate> {
+    await this.ensureClients();
     const gasEstimate = await this.programManager.estimateExecutionFee(executeOptions);
     return gasEstimate;
   }
