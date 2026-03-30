@@ -8,19 +8,31 @@ import { SodaxIcon } from '../icons/sodax-icon';
 import { NEWS_ROUTE, PARTNERS_ROUTE, SWAP_ROUTE } from '@/constants/routes';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useAppStore } from '@/stores/app-store-provider';
-import { NETWORK_ICON_MAP } from '../partners/network-icons';
+import { NETWORK_ICON_MAP } from '../network-icons';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { getNetworkDocsUrl } from '@/lib/docToUrl';
 
 const HERO_NETWORKS = [
-  'Stellar',
-  'Avalanche',
-  'Solana',
-  'Sui',
-  'Sonic',
-  'Injective',
   'Arbitrum',
-  'Optimism',
-  'Ethereum',
+  'Avalanche',
   'Base',
+  'Bitcoin',
+  'BNB Chain',
+  'Ethereum',
+  'HyperEVM',
+  'ICON',
+  'Kaia',
+  'LightLink',
+  'Near',
+  'Nibiru',
+  'Optimism',
+  'Polygon',
+  'Redbelly',
+  'Solana',
+  'Sonic',
+  'Stacks',
+  'Stellar',
+  'Sui',
 ];
 
 const HeroSection = (): React.ReactElement => {
@@ -35,18 +47,30 @@ const HeroSection = (): React.ReactElement => {
   return (
     <div className="hero-section">
       <div className="min-h-dvh flex flex-col items-center bg-cherry-soda relative overflow-hidden">
-        {/* Background decorative images — hidden on mobile, fluid offset on tablet+ */}
-        <div className="absolute hidden md:block left-[calc(-816px+31.25vw)] top-0 w-[1080px] h-full mix-blend-lighten opacity-60 pointer-events-none">
+        {/*
+          Background decorative images (the "staircase" shapes on each side).
+          - Hidden below lg (1024px) to avoid layout issues on smaller screens.
+          - Positioned with calc(-816px + 31.25vw): on normal screens the images overflow
+            past the viewport edges; on ultra-wide they shift inward and are fully visible.
+          - mask-image creates a 360px fade on BOTH edges of each 1080px image, so the
+            image always blends smoothly into the cherry-soda background — even on ultra-wide
+            where the image edges are fully inside the viewport.
+            Gradient: transparent → black 360px → black calc(100%-360px) → transparent
+            (black = visible, transparent = hidden)
+          - mix-blend-lighten + opacity-60 give the images their subtle, warm appearance.
+        */}
+        <div className="absolute hidden lg:block left-[calc(-816px+31.25vw)] top-0 w-[1080px] h-full mix-blend-lighten opacity-60 pointer-events-none mask-[linear-gradient(to_right,transparent,black_360px,black_calc(100%-360px),transparent)]">
           <Image src="/landing/hero-bg-left.png" alt="" fill className="object-cover" />
         </div>
-        <div className="absolute hidden md:flex right-[calc(-816px+31.25vw)] top-0 w-[1080px] h-full mix-blend-lighten pointer-events-none items-center justify-center">
+        <div className="absolute hidden lg:flex right-[calc(-816px+31.25vw)] top-0 w-[1080px] h-full mix-blend-lighten pointer-events-none items-center justify-center mask-[linear-gradient(to_right,transparent,black_360px,black_calc(100%-360px),transparent)]">
           <div className="-scale-y-100 rotate-180 relative w-[1080px] h-full opacity-60">
             <Image src="/landing/hero-bg-right.png" alt="" fill className="object-cover" />
           </div>
         </div>
-        {/* Left gradient fade */}
+        {/* Viewport-edge gradient overlays — 360px cherry-soda fade anchored to viewport
+            left/right edges. These add a subtle vignette over the entire scene (including
+            content). Separate from the mask-image above which only affects the images. */}
         <div className="absolute left-0 top-0 hidden lg:block w-[360px] h-full bg-linear-to-r from-cherry-soda to-transparent pointer-events-none z-10" />
-        {/* Right gradient fade */}
         <div className="absolute right-0 top-0 hidden lg:block w-[360px] h-full bg-linear-to-l from-cherry-soda to-transparent pointer-events-none z-10" />
 
         {/* Menu Bar */}
@@ -106,7 +130,13 @@ const HeroSection = (): React.ReactElement => {
           <div className="flex flex-col items-center gap-[16px] z-20">
             <div className="flex items-center justify-center gap-[24px]">
               {/* Left brace */}
-              <Image src="/landing/brace-left.svg" alt="" width={32} height={120} className="hidden md:block -scale-x-100" />
+              <Image
+                src="/landing/brace-left.svg"
+                alt=""
+                width={32}
+                height={120}
+                className="hidden md:block -scale-x-100"
+              />
               <div className="text-white font-[InterBold] text-(length:--app-title) leading-[1.1] text-center whitespace-nowrap">
                 One SDK.
                 <br />
@@ -134,9 +164,28 @@ const HeroSection = (): React.ReactElement => {
                 const Icon = NETWORK_ICON_MAP[name];
                 if (!Icon) return null;
                 return (
-                  <div key={`${name}-${i}`} className="mx-3 shrink-0 text-white opacity-40 hover:opacity-100 transition-opacity duration-300">
-                    <Icon width={24} height={24} aria-label={name} />
-                  </div>
+                  <Tooltip key={`${name}-${i}`}>
+                    <TooltipTrigger asChild>
+                      <a
+                        key={`${name}-${i}`}
+                        href={getNetworkDocsUrl(name)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mx-3 shrink-0 text-white opacity-40 hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                        aria-label={`View ${name} documentation`}
+                      >
+                        <Icon width={24} height={24} aria-hidden="true" focusable="false" />
+                      </a>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      variant="bubble"
+                      side="top"
+                      sideOffset={16}
+                      className="h-[54px] items-center gap-2 px-8 py-4 text-(length:--body-comfortable)"
+                    >
+                      {name}
+                    </TooltipContent>
+                  </Tooltip>
                 );
               })}
             </div>
