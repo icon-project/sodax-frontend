@@ -13,26 +13,26 @@ import { NETWORK_ICON_MAP } from '../partners/network-icons';
 import { getNetworkDocsUrl } from '@/lib/docToUrl';
 
 const HERO_NETWORKS = [
-  'Ethereum',
-  'Base',
-  'BNB Chain',
-  'Polygon',
-  'Optimism',
   'Arbitrum',
   'Avalanche',
-  'Kaia',
+  'Base',
+  'Bitcoin',
+  'BNB Chain',
+  'Ethereum',
+  'HyperEVM',
   'ICON',
+  'Kaia',
+  'LightLink',
+  'Near',
   'Nibiru',
+  'Optimism',
+  'Polygon',
+  'Redbelly',
   'Solana',
   'Sonic',
+  'Stacks',
   'Stellar',
   'Sui',
-  'HyperEVM',
-  'Bitcoin',
-  'Near',
-  'Stacks',
-  'Redbelly',
-  'LightLink',
 ];
 
 const HeroSection = (): React.ReactElement => {
