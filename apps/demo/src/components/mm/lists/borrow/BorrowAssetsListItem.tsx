@@ -3,7 +3,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { formatUnits } from 'viem';
 import type { ChainId, XToken } from '@sodax/types';
 import { BorrowButton } from '../BorrowButton';
-import { formatDecimalForDisplay } from '@/lib/utils';
+import { formatDecimalForDisplay, truncateToDecimals } from '@/lib/utils';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import type { FormatReserveUSDResponse, FormatUserSummaryResponse, UserReserveData } from '@sodax/sdk';
 import { useAToken } from '@sodax/dapp-kit';
@@ -72,11 +72,11 @@ export function BorrowAssetsListItem({
     availableLiquidity =
       metrics.formattedReserve.borrowCap === '0'
         ? formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), aToken.decimals)
-        : Math.min(
+        : truncateToDecimals(Math.min(
             Number.parseFloat(formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), aToken.decimals)),
             Number.parseInt(metrics.formattedReserve.borrowCap) -
               Number.parseFloat(metrics.formattedReserve.totalScaledVariableDebt),
-          ).toFixed(6);
+          ), 6);
   }
 
   let maxBorrow = '0';
@@ -106,7 +106,7 @@ export function BorrowAssetsListItem({
 
       const beforeSafetyMargin = Math.min(userLimitTokens, poolLimitTokens);
       const afterSafetyMargin = beforeSafetyMargin * MAX_BORROW_SAFETY_MARGIN;
-      maxBorrow = afterSafetyMargin.toFixed(6);
+      maxBorrow = truncateToDecimals(afterSafetyMargin, 6);
     }
   }
 

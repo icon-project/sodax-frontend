@@ -23,6 +23,13 @@ export const DUST_THRESHOLD = 0.00001;
 export const MAX_BORROW_SAFETY_MARGIN = 0.99;
 
 /**
+ * Safety margin applied to max withdraw calculations.
+ * Reduces the maximum withdrawable amount by 1% to account for interest accrual drift
+ * between the aToken balance read and the actual contract execution.
+ */
+export const MAX_WITHDRAW_SAFETY_MARGIN = 0.99;
+
+/**
  * Timeout in milliseconds for copy-to-clipboard feedback.
  * After copying, the UI shows a checkmark for this duration before reverting.
  */

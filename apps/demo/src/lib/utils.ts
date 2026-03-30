@@ -333,13 +333,36 @@ export function isTxHash(value: unknown): value is `0x${string}` {
 }
 
 /** Returns the full error message/code for display in MM modals (exact error text). */
+/**
+ * Extracts a human-readable message from the nested `data.error` field of a MoneyMarketError.
+ * Handles viem error objects, plain Error instances, and strings.
+ */
+function extractInnerErrorMessage(dataError: unknown): string | undefined {
+  if (!dataError) return undefined;
+  if (typeof dataError === 'string') return dataError;
+  if (dataError instanceof Error) return (dataError as { shortMessage?: string }).shortMessage ?? dataError.message;
+  if (typeof dataError === 'object') {
+    const e = dataError as { shortMessage?: string; message?: string; details?: string };
+    return e.shortMessage ?? e.message ?? e.details;
+  }
+  return undefined;
+}
+
+/** Checks whether the inner error message matches any of the given substrings (case-insensitive). */
+function innerErrorIncludes(msg: string | undefined, ...needles: string[]): boolean {
+  if (!msg) return false;
+  const lower = msg.toLowerCase();
+  return needles.some((n) => lower.includes(n.toLowerCase()));
+}
+
 export function getMmErrorText(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === 'string') return error;
   if (error && typeof error === 'object') {
-    const o = error as { message?: string; code?: string; data?: { payload?: string; error?: unknown } };
+    const o = error as { message?: string; code?: string; data?: { payload?: unknown; error?: unknown } };
+    const innerMsg = extractInnerErrorMessage(o.data?.error);
 
-    // Handle relay timeout errors with a user-friendly message
+    // ── Relay errors ──
     if (o.code === 'RELAY_TIMEOUT') {
       const txHash = o.data?.payload;
       if (txHash && typeof txHash === 'string') {
@@ -348,30 +371,60 @@ export function getMmErrorText(error: unknown): string {
       return 'Transaction timed out while waiting for relay. The transaction may still be processing. Please check the transaction status on the explorer.';
     }
 
-    // Handle submit tx failed errors
     if (o.code === 'SUBMIT_TX_FAILED') {
       return 'Failed to submit transaction to relay. Please try again.';
     }
 
-    // Repay/create intent failed (e.g. deposit simulation reverted on hub with "External call failed")
-    if (o.code === 'CREATE_REPAY_INTENT_FAILED') {
-      const detail = o.data?.error;
-      const msg = typeof detail === 'string' ? detail : '';
-      if (msg.includes('External call failed') || msg.includes('Simulation failed')) {
-        return 'Repay simulation failed on the hub. The transfer may not be allowed in current state (e.g. contract conditions). Please try again or use a smaller amount.';
+    // ── Intent creation failures (simulation reverts) ──
+    if (
+      o.code === 'CREATE_WITHDRAW_INTENT_FAILED' ||
+      o.code === 'CREATE_SUPPLY_INTENT_FAILED' ||
+      o.code === 'CREATE_BORROW_INTENT_FAILED' ||
+      o.code === 'CREATE_REPAY_INTENT_FAILED'
+    ) {
+      const action = o.code.replace('CREATE_', '').replace('_INTENT_FAILED', '').toLowerCase();
+
+      if (innerErrorIncludes(innerMsg, 'insufficient funds for gas', 'exceeds the balance of the account')) {
+        return `Not enough native token to cover gas fees for the ${action} transaction. Please top up your wallet.`;
       }
-      return msg || 'Repay intent could not be created. Please try again.';
+      if (innerErrorIncludes(innerMsg, 'External call failed', 'Simulation failed')) {
+        return `${capitalize(action)} simulation failed on the hub. The amount may exceed what is available or contract conditions are not met. Please try a smaller amount.`;
+      }
+      if (innerErrorIncludes(innerMsg, 'user rejected', 'User denied', 'user cancelled')) {
+        return 'Transaction was rejected in your wallet.';
+      }
+      return innerMsg || `${capitalize(action)} transaction could not be created. Please try again.`;
     }
 
-    // Generic repay failure (e.g. unexpected throw)
-    if (o.code === 'REPAY_UNKNOWN_ERROR') {
-      return 'Repay failed. Please try again. If the problem persists, check your balance and allowance.';
+    // ── Unknown / catch-all errors per action ──
+    if (
+      o.code === 'WITHDRAW_UNKNOWN_ERROR' ||
+      o.code === 'SUPPLY_UNKNOWN_ERROR' ||
+      o.code === 'BORROW_UNKNOWN_ERROR' ||
+      o.code === 'REPAY_UNKNOWN_ERROR'
+    ) {
+      const action = o.code.replace('_UNKNOWN_ERROR', '').toLowerCase();
+
+      if (innerErrorIncludes(innerMsg, 'insufficient funds for gas', 'exceeds the balance of the account')) {
+        return `Not enough native token to cover gas fees for the ${action} transaction. Please top up your wallet.`;
+      }
+      if (innerErrorIncludes(innerMsg, 'External call failed', 'Simulation failed')) {
+        return `${capitalize(action)} simulation failed. The amount may exceed what is available. Please try a smaller amount.`;
+      }
+      if (innerErrorIncludes(innerMsg, 'user rejected', 'User denied', 'user cancelled')) {
+        return 'Transaction was rejected in your wallet.';
+      }
+      return innerMsg || `${capitalize(action)} failed unexpectedly. Please try again.`;
     }
 
     const part = o.message ?? o.code;
     if (typeof part === 'string') return part;
   }
   return String(error);
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 /**

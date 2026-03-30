@@ -8,6 +8,7 @@ import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import { Button } from '@/components/ui/button';
 import { DUST_THRESHOLD, ATOKEN_DECIMALS } from '../constants';
 import { isUserReserveDataArray, isValidAddress } from '../typeGuards';
+import { truncateToDecimals } from '@/lib/utils';
 
 interface SupplyAssetsListItemProps {
   token: XToken;
@@ -51,13 +52,23 @@ export function SupplyAssetsListItem({
 
   // ALWAYS USE ATOKEN_DECIMALS (18) FOR aTOKENS
   const formattedBalance =
-    aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS)).toFixed(5) : '-';
+    aTokenBalance !== undefined ? truncateToDecimals(Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS)), 5) : '-';
 
-  // Simple approach: use formattedBalance (rounded display value) - this was working before
+  // Max withdraw = min(user aToken balance, pool available liquidity) * safety margin.
+  // The safety margin accounts for interest accrual drift between the balance read and execution.
   const maxWithdrawExact = useMemo(() => {
     if (!aTokenBalance || aTokenBalance === 0n || !aTokenAddress) return '0';
-    return formattedBalance !== '-' ? formattedBalance : '0';
-  }, [aTokenBalance, aTokenAddress, formattedBalance]);
+    const userBalance = aTokenBalance;
+    const availableLiquidity = metrics.formattedReserve?.availableLiquidity;
+    let max = userBalance;
+    if (availableLiquidity) {
+      const poolLiquidity = BigInt(availableLiquidity);
+      if (poolLiquidity < max) max = poolLiquidity;
+    }
+    // Apply safety margin: multiply by 99/100 to avoid hitting exact limits
+    max = (max * 99n) / 100n;
+    return formatUnits(max, ATOKEN_DECIMALS);
+  }, [aTokenBalance, aTokenAddress, metrics.formattedReserve?.availableLiquidity]);
 
   // Check if user has meaningful supply: balance exists AND formatted amount is greater than DUST_THRESHOLD
   // This prevents enabling withdraw button for dust amounts that display as "0.00000"
