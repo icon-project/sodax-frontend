@@ -29,6 +29,8 @@ type PositionCardProps = {
   onLiquidityValueChange: (positionKey: string, value: number) => void;
 };
 
+const MIN_VISIBLE_POSITION_USD = 0.01;
+
 function resolveSpokeChainId(chainId: string): SpokeChainId {
   if (!(chainId in spokeChainConfig)) {
     return 'sonic';
@@ -106,7 +108,7 @@ export function PositionCard({
     }
 
     if (isError || !data?.isValid) {
-      onLiquidityValueChange(positionKey, 0);
+      onLiquidityValueChange(positionKey, isManageDialogOpen ? MIN_VISIBLE_POSITION_USD : 0);
       return;
     }
 
@@ -121,10 +123,14 @@ export function PositionCard({
     const sodaAmount = Number.parseFloat(amount0 || '0');
     const xSodaAmount = Number.parseFloat(amount1 || '0');
     const positionTotalUsd = sodaAmount * sodaPrice + xSodaAmount * xSodaPrice;
-    onLiquidityValueChange(positionKey, positionTotalUsd);
+    // Keep the card mounted while the manage dialog is open so async withdraw flow can complete.
+    const nextLiquidityValue =
+      isManageDialogOpen && positionTotalUsd < MIN_VISIBLE_POSITION_USD ? MIN_VISIBLE_POSITION_USD : positionTotalUsd;
+    onLiquidityValueChange(positionKey, nextLiquidityValue);
   }, [
     data,
     isError,
+    isManageDialogOpen,
     isLoading,
     onLiquidityValueChange,
     poolData.token0.decimals,
@@ -190,7 +196,28 @@ export function PositionCard({
       ? ((currentPriceValue - minPriceValue) / (maxPriceValue - minPriceValue)) * 100
       : 0;
   const clampedCurrentPriceTickLeft = Math.min(100, Math.max(0, currentPriceTickLeft));
-  const apyText = apyPercent === null ? '-- APR' : `${apyPercent.toFixed(2)}% APR`;
+  const concentratedAprPercent = useMemo((): number | null => {
+    if (apyPercent === null || !Number.isFinite(apyPercent) || !hasValidRange || !Number.isFinite(currentPriceValue)) {
+      return null;
+    }
+
+    // Estimate concentrated APR from full-range APR using range concentration:
+    // userAPR = fullRangeAPR * (sqrt(P) / (sqrt(P) - sqrt(Pa))).
+    const sqrtP = Math.sqrt(currentPriceValue);
+    const sqrtPa = Math.sqrt(minPriceValue);
+    const denominator = sqrtP - sqrtPa;
+    if (!Number.isFinite(sqrtP) || !Number.isFinite(sqrtPa) || denominator <= 0) {
+      return null;
+    }
+
+    const concentrationFactor = sqrtP / denominator;
+    if (!Number.isFinite(concentrationFactor) || concentrationFactor <= 0) {
+      return null;
+    }
+
+    return apyPercent * concentrationFactor;
+  }, [apyPercent, currentPriceValue, hasValidRange, minPriceValue]);
+  const apyText = concentratedAprPercent === null ? '-- APR' : `${concentratedAprPercent.toFixed(2)}% APR`;
 
   return (
     <div
