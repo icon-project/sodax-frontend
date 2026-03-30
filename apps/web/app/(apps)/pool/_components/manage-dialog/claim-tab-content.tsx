@@ -32,6 +32,7 @@ const xSodaToken: XToken = {
 
 type ClaimTabContentProps = {
   chainId: SpokeChainId;
+  apyPercent: number | null;
   positionSodaBalanceText: string;
   positionXSodaBalanceText: string;
   hasUnclaimedFees: boolean;
@@ -47,6 +48,7 @@ type ClaimTabContentProps = {
 
 export function ClaimTabContent({
   chainId,
+  apyPercent,
   positionSodaBalanceText,
   positionXSodaBalanceText,
   hasUnclaimedFees,
@@ -90,6 +92,7 @@ export function ClaimTabContent({
           chainId={chainId}
           sodaBalanceText={positionSodaBalanceText}
           xSodaBalanceText={positionXSodaBalanceText}
+          apyPercent={apyPercent}
         />
       </div>
       <div className="relative self-stretch inline-flex flex-col justify-start items-start w-full mt-10">

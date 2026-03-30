@@ -31,6 +31,38 @@ type PositionCardProps = {
 
 const MIN_VISIBLE_POSITION_USD = 0.01;
 
+function getConcentrationFactor(priceLower: number, priceUpper: number, priceCurrent: number): number {
+  if (!Number.isFinite(priceLower) || !Number.isFinite(priceUpper) || !Number.isFinite(priceCurrent)) {
+    return 0;
+  }
+  if (priceLower <= 0 || priceUpper <= priceLower) {
+    return 0;
+  }
+  if (priceCurrent < priceLower || priceCurrent > priceUpper) {
+    return 0;
+  }
+
+  const sqrtP = Math.sqrt(priceCurrent);
+  const sqrtPa = Math.sqrt(priceLower);
+  const denominator = sqrtP - sqrtPa;
+
+  if (denominator <= 0) {
+    return 0;
+  }
+
+  // Equivalent to (1 / (sqrtP - sqrtPa)) / (1 / sqrtP).
+  return sqrtP / denominator;
+}
+
+function getUserAPY(fullRangeAPY: number, priceLower: number, priceUpper: number, priceCurrent: number): number {
+  if (!Number.isFinite(fullRangeAPY) || fullRangeAPY < 0) {
+    return 0;
+  }
+
+  const factor = getConcentrationFactor(priceLower, priceUpper, priceCurrent);
+  return fullRangeAPY * factor;
+}
+
 function resolveSpokeChainId(chainId: string): SpokeChainId {
   if (!(chainId in spokeChainConfig)) {
     return 'sonic';
@@ -196,8 +228,9 @@ export function PositionCard({
       ? ((currentPriceValue - minPriceValue) / (maxPriceValue - minPriceValue)) * 100
       : 0;
   const clampedCurrentPriceTickLeft = Math.min(100, Math.max(0, currentPriceTickLeft));
-
-  const apyText = apyPercent === null ? '-- APR' : `${apyPercent.toFixed(2)}% APR`;
+  const userApyPercent =
+    apyPercent === null ? null : getUserAPY(apyPercent, minPriceValue, maxPriceValue, currentPriceValue);
+  const apyText = userApyPercent === null ? '-- APR' : `${userApyPercent.toFixed(2)}% APR`;
 
   return (
     <div
@@ -328,6 +361,7 @@ export function PositionCard({
         initialMinPrice={minPrice}
         initialMaxPrice={maxPrice}
         positionInfo={positionInfo}
+        apyPercent={userApyPercent}
       />
     </div>
   );
