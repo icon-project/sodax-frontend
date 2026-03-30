@@ -22,6 +22,7 @@ import type { RpcConfig } from '@sodax/types';
 import { Hydrate } from './Hydrate';
 import { createWagmiConfig } from './xchains/evm/EvmXService';
 import { reconnectIcon } from './xchains/icon/actions';
+import { reconnectInjective } from './xchains/injective/actions';
 import { reconnectStellar } from './xchains/stellar/actions';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { State as WagmiState } from 'wagmi';
@@ -92,5 +93,5 @@ export const SodaxWalletProvider = ({ children, rpcConfig, options, initialState
 };
 
 reconnectIcon();
-// reconnectInjective();
+reconnectInjective();
 reconnectStellar();

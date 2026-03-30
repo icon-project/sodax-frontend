@@ -1,5 +1,7 @@
 import { useXWagmiStore } from '@/useXWagmiStore';
 import { InjectiveXService } from './InjectiveXService';
+import { isEvmBrowserWallet } from '@injectivelabs/wallet-base';
+import { getInjectiveAddress } from '@injectivelabs/sdk-ts';
 import type { Wallet } from '@injectivelabs/wallet-base';
 
 export const reconnectInjective = async () => {
@@ -8,14 +10,19 @@ export const reconnectInjective = async () => {
 
   const recentXConnectorId = injectiveConnection.xConnectorId;
   const walletStrategy = InjectiveXService.getInstance().walletStrategy;
-  walletStrategy.setWallet(recentXConnectorId as Wallet);
+  await walletStrategy.setWallet(recentXConnectorId as Wallet);
   const addresses = await walletStrategy.getAddresses();
+
+  const address = isEvmBrowserWallet(recentXConnectorId as Wallet)
+    ? getInjectiveAddress(addresses?.[0])
+    : addresses?.[0];
+
   useXWagmiStore.setState({
     xConnections: {
       ...useXWagmiStore.getState().xConnections,
       INJECTIVE: {
         xAccount: {
-          address: addresses?.[0],
+          address,
           xChainType: 'INJECTIVE',
         },
         xConnectorId: recentXConnectorId,
