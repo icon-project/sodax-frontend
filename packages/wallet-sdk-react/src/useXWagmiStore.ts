@@ -7,7 +7,8 @@ import { immer } from 'zustand/middleware/immer';
 import type { XService } from './core';
 import type { XConnection } from './types';
 import { EvmXService } from './xchains/evm';
-import { InjectiveKelprXConnector, InjectiveMetamaskXConnector, InjectiveXService } from './xchains/injective';
+import { InjectiveXConnector, InjectiveXService } from './xchains/injective';
+import { Wallet } from '@injectivelabs/wallet-base';
 import { SolanaXService } from './xchains/solana/SolanaXService';
 import { StellarXService } from './xchains/stellar';
 import { SuiXService } from './xchains/sui';
@@ -49,17 +50,19 @@ const initXServices = () => {
         break;
       case 'BITCOIN':
         xServices[xChainType] = BitcoinXService.getInstance();
-        xServices[xChainType].setXConnectors([
-          new UnisatXConnector(),
-          new XverseXConnector(),
-          new OKXXConnector(),
-        ]);
+        xServices[xChainType].setXConnectors([new UnisatXConnector(), new XverseXConnector(), new OKXXConnector()]);
         break;
 
       // Injective, Stellar, Icon wallet connectors are supported by sodax wallet-sdk-react sdk.
       case 'INJECTIVE':
         xServices[xChainType] = InjectiveXService.getInstance();
-        xServices[xChainType].setXConnectors([new InjectiveMetamaskXConnector(), new InjectiveKelprXConnector()]);
+        xServices[xChainType].setXConnectors([
+          // EVM wallets (auto-detected via EIP-6963)
+          new InjectiveXConnector('MetaMask', Wallet.Metamask),
+          // Cosmos wallets (detected via window globals)
+          new InjectiveXConnector('Keplr', Wallet.Keplr),
+          new InjectiveXConnector('Leap', Wallet.Leap),
+        ]);
         break;
       case 'STELLAR':
         xServices[xChainType] = StellarXService.getInstance();

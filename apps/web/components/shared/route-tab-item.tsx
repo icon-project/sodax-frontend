@@ -24,7 +24,7 @@ interface RouteTabItemProps {
 
 const RouteTabItem: React.FC<RouteTabItemProps> = ({
   href,
-  value,
+  // value,
   type,
   label,
   isActive,
@@ -32,7 +32,7 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
   setRef,
   className = '',
   enabled,
-  badgeCount,
+  // badgeCount,
   showIcon = true,
   totalDepositedUsdValue,
   apr,
@@ -103,7 +103,7 @@ const RouteTabItem: React.FC<RouteTabItemProps> = ({
     return (
       <div
         ref={setRef ? (el: HTMLDivElement | null) => setRef(el as HTMLAnchorElement | null) : undefined}
-        className="cursor-not-allowed py-0 px-0"
+        className="cursor-default py-0 px-0"
       >
         {content}
       </div>

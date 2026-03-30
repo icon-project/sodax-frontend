@@ -9,7 +9,7 @@ import {
   encodeAddress,
 } from '../../../index.js';
 import { EvmWalletAbstraction } from '../hub/index.js';
-import { CosmosTxV1Beta1Tx } from '@injectivelabs/core-proto-ts';
+import { CosmosTxV1Beta1TxPb } from '@injectivelabs/sdk-ts';
 import { getIntentRelayChainId, type HubAddress, type InjectiveRawTransaction } from '@sodax/types';
 
 export type InjectiveSpokeDepositParams = {
@@ -49,7 +49,7 @@ export class InjectiveSpokeService {
     rawTx: InjectiveRawTransaction,
     spokeProvider: InjectiveSpokeProviderType,
   ): Promise<InjectiveGasEstimate> {
-    const txRaw = CosmosTxV1Beta1Tx.TxRaw.fromPartial({
+    const txRaw = CosmosTxV1Beta1TxPb.TxRaw.fromPartial({
       bodyBytes: rawTx.signedDoc.bodyBytes,
       authInfoBytes: rawTx.signedDoc.authInfoBytes,
       signatures: [], // not required for simulation
@@ -137,7 +137,7 @@ export class InjectiveSpokeService {
    * @param {InjectiveSpokeProviderType} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The balance of the token.
    */
-  public static async getDeposit(token: String, spokeProvider: InjectiveSpokeProviderType): Promise<bigint> {
+  public static async getDeposit(token: string, spokeProvider: InjectiveSpokeProviderType): Promise<bigint> {
     const bal = await spokeProvider.getBalance(token);
     return BigInt(bal);
   }

@@ -86,7 +86,15 @@ export function LiquidityInputs({
   const hasSodaBalance = isWalletConnected && selectedSodaBalance > 0n;
   const hasXSodaBalance = isWalletConnected && selectedXSodaBalance > 0n;
   const canShowAnyMaxButton = isWalletConnected && (selectedSodaBalance > 0n || selectedXSodaBalance > 0n);
-  const sodaValue = useMemo((): bigint => parseUnits(sodaAmount, 18), [sodaAmount]);
+  const selectedChainConfig = selectedNetworkChainId ? spokeChainConfig[selectedNetworkChainId] : undefined;
+  const selectedSodaToken =
+    selectedChainConfig?.supportedTokens && 'SODA' in selectedChainConfig.supportedTokens
+      ? (selectedChainConfig.supportedTokens.SODA as XToken)
+      : undefined;
+  const sodaValue = useMemo(
+    (): bigint => parseUnits(sodaAmount, selectedSodaToken?.decimals ?? 18),
+    [sodaAmount, selectedSodaToken?.decimals],
+  );
   const xSodaValue = useMemo((): bigint => parseUnits(xSodaAmount, 18), [xSodaAmount]);
   const hasValidSodaInput = sodaAmount.trim().length > 0 && sodaValue > 0n && sodaValue <= selectedSodaBalance;
   const hasValidXSodaInput = xSodaAmount.trim().length > 0 && xSodaValue > 0n && xSodaValue <= selectedXSodaBalance;
@@ -96,11 +104,7 @@ export function LiquidityInputs({
   const canContinue =
     isWalletConnected && hasSelectedNetwork && hasPoolContext && hasValidSodaInput && hasValidXSodaInput;
   const isStellarChain = selectedNetworkChainId === STELLAR_MAINNET_CHAIN_ID;
-  const selectedChainConfig = selectedNetworkChainId ? spokeChainConfig[selectedNetworkChainId] : undefined;
-  const selectedSodaToken =
-    selectedChainConfig?.supportedTokens && 'SODA' in selectedChainConfig.supportedTokens
-      ? (selectedChainConfig.supportedTokens.SODA as XToken)
-      : undefined;
+
   const { data: stellarAccountValidation } = useValidateStellarAccount(isStellarChain ? address : undefined);
   const {
     activateStellarAccount,
@@ -198,7 +202,7 @@ export function LiquidityInputs({
             {hasSodaBalance ? (
               <InputGroupAddon className="pointer-events-none absolute left-3 top-1 h-auto p-0">
                 <InputGroupText className="text-clay text-[9px] leading-3">
-                  {formatTokenAmount(selectedSodaBalance, 18)}
+                  {formatTokenAmount(selectedSodaBalance, selectedSodaToken?.decimals ?? 18)}
                 </InputGroupText>
               </InputGroupAddon>
             ) : null}
@@ -237,7 +241,7 @@ export function LiquidityInputs({
               size="icon-xs"
               className="text-clay text-[9px] font-['InterRegular'] font-normal border-none! outline-none! leading-0"
               onClick={() => {
-                onSodaAmountChange(formatUnits(selectedSodaBalance, 18).trim());
+                onSodaAmountChange(formatUnits(selectedSodaBalance, selectedSodaToken?.decimals ?? 18).trim());
               }}
             >
               MAX

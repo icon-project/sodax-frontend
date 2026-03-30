@@ -37,9 +37,7 @@
   "dependencies": {
     "@bitcoinerlab/secp256k1": "^1.2.0",
     "@injectivelabs/networks": "catalog:",
-    "@injectivelabs/sdk-ts": "catalog:",
     "@injectivelabs/ts-types": "catalog:",
-    "@injectivelabs/utils": "catalog:",
     "@mysten/sui": "catalog:",
     "@sodax/sdk": "workspace:*",
     "@sodax/types": "workspace:*",

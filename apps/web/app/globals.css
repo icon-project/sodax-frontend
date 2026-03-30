@@ -557,3 +557,12 @@ textarea[readonly] {
   /* Links */
   --cc-link-color: var(--cherry-dark);
 }
+
+/* Push Intercom chat bubble above the mobile bottom nav bar (96px nav + 8px spacing) */
+@media (max-width: 767px) {
+  .intercom-launcher-frame,
+  .intercom-lightweight-app-launcher,
+  .intercom-messenger-frame {
+    bottom: 104px !important;
+  }
+}
