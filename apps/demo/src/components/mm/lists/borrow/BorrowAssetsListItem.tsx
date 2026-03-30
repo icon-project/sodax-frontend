@@ -75,7 +75,7 @@ export function BorrowAssetsListItem({
         : truncateToDecimals(Math.min(
             Number.parseFloat(formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), aToken.decimals)),
             Number.parseInt(metrics.formattedReserve.borrowCap) -
-              Number.parseFloat(metrics.formattedReserve.totalScaledVariableDebt),
+              Number.parseFloat(metrics.formattedReserve.totalVariableDebt),
           ), 6);
   }
 

@@ -191,7 +191,7 @@ export function BorrowModal({
             formatUnits(BigInt(destinationMetrics.formattedReserve.availableLiquidity), aToken.decimals),
           ),
           Number.parseInt(destinationMetrics.formattedReserve.borrowCap) -
-            Number.parseFloat(destinationMetrics.formattedReserve.totalScaledVariableDebt),
+            Number.parseFloat(destinationMetrics.formattedReserve.totalVariableDebt),
         ), 6);
       }
 

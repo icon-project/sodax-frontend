@@ -1,7 +1,7 @@
 import React, { type ReactElement, useMemo } from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { XToken, Address } from '@sodax/types';
-import { formatUnits, parseUnits, isAddress } from 'viem';
+import { formatUnits } from 'viem';
 import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 // import { OldBorrowButton } from './OldBorrowButton';
@@ -54,21 +54,14 @@ export function SupplyAssetsListItem({
   const formattedBalance =
     aTokenBalance !== undefined ? truncateToDecimals(Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS)), 5) : '-';
 
-  // Max withdraw = min(user aToken balance, pool available liquidity) * safety margin.
-  // The safety margin accounts for interest accrual drift between the balance read and execution.
+  // Apply a small safety margin so "Max" doesn't try to withdraw the exact full balance,
+  // which always fails because interest accrues between the balance read and execution.
+  // Compute from raw bigint (not display string) to avoid precision loss from truncation.
   const maxWithdrawExact = useMemo(() => {
     if (!aTokenBalance || aTokenBalance === 0n || !aTokenAddress) return '0';
-    const userBalance = aTokenBalance;
-    const availableLiquidity = metrics.formattedReserve?.availableLiquidity;
-    let max = userBalance;
-    if (availableLiquidity) {
-      const poolLiquidity = BigInt(availableLiquidity);
-      if (poolLiquidity < max) max = poolLiquidity;
-    }
-    // Apply safety margin: multiply by 99/100 to avoid hitting exact limits
-    max = (max * 99n) / 100n;
-    return formatUnits(max, ATOKEN_DECIMALS);
-  }, [aTokenBalance, aTokenAddress, metrics.formattedReserve?.availableLiquidity]);
+    const fullBalance = Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS));
+    return truncateToDecimals(fullBalance * 0.99, token.decimals);
+  }, [aTokenBalance, aTokenAddress, token.decimals]);
 
   // Check if user has meaningful supply: balance exists AND formatted amount is greater than DUST_THRESHOLD
   // This prevents enabling withdraw button for dust amounts that display as "0.00000"
