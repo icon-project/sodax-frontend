@@ -8,6 +8,7 @@ import { InjectiveXService } from '@/xchains/injective';
 import { useXAccount } from './useXAccount';
 import { getEthereumAddress } from '@injectivelabs/sdk-ts';
 import { Wallet } from '@injectivelabs/wallet-base';
+import { useWallet as useAleoWallet } from '@provablehq/aleo-wallet-adaptor-react';
 
 type SignMessageReturnType = `0x${string}` | Uint8Array | string | undefined;
 
@@ -23,6 +24,7 @@ export function useXSignMessage(): UseMutationResult<
   const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
 
   const { address: injectiveAddress } = useXAccount('INJECTIVE');
+  const { signMessage: aleoSignMessage } = useAleoWallet();
 
   return useMutation({
     mutationFn: async ({ xChainType, message }: { xChainType: ChainType; message: string }) => {
@@ -68,6 +70,16 @@ export function useXSignMessage(): UseMutationResult<
             throw new Error('Injective signature not found');
           }
           signature = res;
+          break;
+        }
+
+        case 'ALEO': {
+          if (!aleoSignMessage) {
+            throw new Error('Aleo wallet not connected');
+          }
+
+          const messageBytes = new TextEncoder().encode(message);
+          signature = await aleoSignMessage(messageBytes);
           break;
         }
 

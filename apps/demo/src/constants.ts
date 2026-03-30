@@ -17,6 +17,7 @@ import {
   HYPEREVM_MAINNET_CHAIN_ID,
   KAIA_MAINNET_CHAIN_ID,
   REDBELLY_MAINNET_CHAIN_ID,
+  ALEO_MAINNET_CHAIN_ID,
 } from '@sodax/types';
 
 declare global {
@@ -121,6 +122,7 @@ export const availableChains: ChainUI[] = [
   },
   { id: KAIA_MAINNET_CHAIN_ID, name: 'Kaia', icon: '/chain/0x2019.kaia.png' },
   { id: REDBELLY_MAINNET_CHAIN_ID, name: 'Redbelly', icon: '/chain/redbelly.png' },
+  { id: ALEO_MAINNET_CHAIN_ID, name: 'Aleo', icon: '/chain/aleo.png' },
 ];
 
 /**

@@ -17,10 +17,18 @@ import {
 } from '@solana/wallet-adapter-react';
 import { UnsafeBurnerWalletAdapter } from '@solana/wallet-adapter-wallets';
 
+// aleo
+import { AleoWalletProvider } from '@provablehq/aleo-wallet-adaptor-react';
+import { PuzzleWalletAdapter } from '@provablehq/aleo-wallet-adaptor-puzzle';
+import { ShieldWalletAdapter } from '@provablehq/aleo-wallet-adaptor-shield';
+import { LeoWalletAdapter } from '@provablehq/aleo-wallet-adaptor-leo';
+import { DecryptPermission } from '@provablehq/aleo-wallet-adaptor-core';
+
 import type { RpcConfig } from '@sodax/types';
 
 import { Hydrate } from './Hydrate';
 import { createWagmiConfig } from './xchains/evm/EvmXService';
+import { AleoXService } from './xchains/aleo';
 import { reconnectIcon } from './xchains/icon/actions';
 import { reconnectInjective } from './xchains/injective/actions';
 import { reconnectStellar } from './xchains/stellar/actions';
@@ -70,7 +78,15 @@ export const SodaxWalletProvider = ({ children, rpcConfig, options, initialState
     return createWagmiConfig(rpcConfig, wagmi);
   }, [rpcConfig, wagmi]);
 
-  const wallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
+  useMemo(() => {
+    const aleoRpcUrl = rpcConfig['aleo'];
+    if (aleoRpcUrl) {
+      AleoXService.getInstance().setRpcUrl(aleoRpcUrl);
+    }
+  }, [rpcConfig]);
+
+  const solanaWallets = useMemo(() => [new UnsafeBurnerWalletAdapter()], []);
+  const aleoWallets = useMemo(() => [new LeoWalletAdapter(), new PuzzleWalletAdapter(), new ShieldWalletAdapter()], []);
   const solana = useMemo(() => ({ ...defaultOptions.solana, ...options?.solana }), [options?.solana]);
   const sui = useMemo(() => ({ ...defaultOptions.sui, ...options?.sui }), [options?.sui]);
 
@@ -80,9 +96,16 @@ export const SodaxWalletProvider = ({ children, rpcConfig, options, initialState
         <SuiClientProvider networks={{ mainnet: { url: getFullnodeUrl('mainnet') } }} defaultNetwork="mainnet">
           <SuiWalletProvider autoConnect={sui.autoConnect}>
             <SolanaConnectionProvider endpoint={rpcConfig['solana'] ?? 'https://api.mainnet-beta.solana.com'}>
-              <SolanaWalletProvider wallets={wallets} autoConnect={solana.autoConnect}>
-                <Hydrate rpcConfig={rpcConfig} />
-                {children}
+              <SolanaWalletProvider wallets={solanaWallets} autoConnect={solana.autoConnect}>
+                <AleoWalletProvider
+                  wallets={aleoWallets}
+                  autoConnect={true}
+                  decryptPermission={DecryptPermission.NoDecrypt}
+                  programs={[]}
+                >
+                  <Hydrate rpcConfig={rpcConfig} />
+                  {children}
+                </AleoWalletProvider>
               </SolanaWalletProvider>
             </SolanaConnectionProvider>
           </SuiWalletProvider>

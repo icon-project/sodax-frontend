@@ -1,5 +1,6 @@
 import type {
   ChainId,
+  IAleoWalletProvider,
   IEvmWalletProvider,
   IIconWalletProvider,
   IInjectiveWalletProvider,
@@ -14,6 +15,7 @@ import { useMemo } from 'react';
 import { BitcoinXService } from '../xchains/bitcoin/BitcoinXService';
 import type { BitcoinXConnector } from '../xchains/bitcoin/BitcoinXConnector';
 import {
+  AleoWalletProvider,
   EvmWalletProvider,
   IconWalletProvider,
   SuiWalletProvider,
@@ -30,6 +32,8 @@ import type { SuiXService } from '../xchains/sui/SuiXService';
 import { CHAIN_INFO, SupportedChainId } from '../xchains/icon/IconXService';
 import type { InjectiveXService } from '../xchains/injective/InjectiveXService';
 import type { NearXService } from '../xchains/near/NearXService';
+import type { AleoXService } from '../xchains/aleo/AleoXService';
+import { useWallet as useAleoWallet } from '@provablehq/aleo-wallet-adaptor-react';
 import { useXConnection } from './useXConnection';
 import { useXConnectors } from './useXConnectors';
 import type { StacksXConnector } from '../xchains/stacks';
@@ -63,10 +67,12 @@ export function useWalletProvider(
   | IBitcoinWalletProvider
   | INearWalletProvider
   | IStacksWalletProvider
+  | IAleoWalletProvider
   | undefined {
   const xChainType = getXChainType(spokeChainId);
   // EVM-specific hooks
   const evmPublicClient = usePublicClient();
+  const { wallet: aleoActiveWallet } = useAleoWallet();
 
   const { data: evmWalletClient } = useWalletClient();
 
@@ -177,6 +183,21 @@ export function useWalletProvider(
         return new NearWalletProvider({ wallet: nearXService.walletSelector });
       }
 
+      case 'ALEO': {
+        const aleoXService = xService as AleoXService;
+        const adapter = aleoActiveWallet?.adapter;
+
+        if (!adapter) {
+          return undefined;
+        }
+
+        return new AleoWalletProvider({
+          type: 'browserExtension',
+          rpcUrl: aleoXService.rpcUrl,
+          provableAdapter: adapter,
+        });
+      }
+
       case 'STACKS': {
         const address = xAccount.address;
         if (!address) {
@@ -199,6 +220,7 @@ export function useWalletProvider(
     evmWalletClient,
     xService,
     xAccount,
+    aleoActiveWallet,
     stacksConnection,
     stacksConnectors,
     xConnection,

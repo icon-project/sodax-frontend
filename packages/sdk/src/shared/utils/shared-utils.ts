@@ -8,6 +8,7 @@ import {
   type SpokeProviderType,
 } from '../entities/Providers.js';
 import {
+  isAleoRawSpokeProviderConfig,
   isEvmRawSpokeProviderConfig,
   isNearRawSpokeProviderConfig,
   isPartnerFeeAmount,
@@ -35,6 +36,8 @@ import {
   StacksRawSpokeProvider,
 } from '../entities/index.js';
 import { SuiRawSpokeProvider } from '../entities/sui/SuiSpokeProvider.js';
+import { AleoRawSpokeProvider } from '../entities/aleo/AleoSpokeProvider.js';
+import { decodeBech32m } from './bech32m.js';
 
 export async function retry<T>(
   action: (retryCount: number) => Promise<T>,
@@ -175,6 +178,11 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
     case 'injective-1':
       return toHex(Buffer.from(address, 'utf-8'));
 
+    case 'aleo': {
+      const { data } = decodeBech32m(address);
+      return toHex(new Uint8Array([...data].reverse()));
+    }
+
     default:
       return address as Hex;
   }
@@ -273,6 +281,10 @@ export function constructRawSpokeProvider(config: RawSpokeProviderConfig): RawSp
     case 'NEAR': {
       invariant(isNearRawSpokeProviderConfig(config), 'Invalid Near raw spoke provider config');
       return new NearRawSpokeProvider(config.chainConfig, config.walletAddress);
+    }
+    case 'ALEO': {
+      invariant(isAleoRawSpokeProviderConfig(config), 'Invalid Aleo raw spoke provider config');
+      return new AleoRawSpokeProvider(config.chainConfig, config.walletAddress, config.rpcUrl);
     }
     case 'STACKS': {
       invariant(isStacksRawSpokeProviderConfig(config), 'Invalid Stacks raw spoke provider config');

@@ -1,6 +1,7 @@
 import type { ChainType } from '@sodax/types';
 import { useWallets } from '@mysten/dapp-kit';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWallet as useAleoWallet } from '@provablehq/aleo-wallet-adaptor-react';
 import { useMemo } from 'react';
 import { useConnectors } from 'wagmi';
 import type { XConnector } from '../core';
@@ -8,6 +9,7 @@ import { EvmXConnector } from '../xchains/evm';
 import { SolanaXConnector } from '../xchains/solana';
 import { useStellarXConnectors } from '../xchains/stellar/useStellarXConnectors';
 import { SuiXConnector } from '../xchains/sui';
+import { AleoXConnector } from '../xchains/aleo';
 import { useXService } from './useXService';
 import { useNearXConnectors } from '../xchains/near/useNearXConnectors';
 import { useStacksXConnectors } from '../xchains/stacks/useStacksXConnectors';
@@ -20,8 +22,9 @@ import { useStacksXConnectors } from '../xchains/stacks/useStacksXConnectors';
  * - Sui: Uses Sui wallet adapters
  * - Stellar: Uses custom Stellar connectors
  * - Solana: Uses Solana wallet adapters (filtered to installed wallets only)
+ * - Aleo: Uses Aleo wallet adapters (filtered to installed/loadable wallets only)
  *
- * @param xChainType - The blockchain type to get connectors for ('EVM' | 'SUI' | 'STELLAR' | 'SOLANA' | 'NEAR' | 'STACKS')
+ * @param xChainType - The blockchain type to get connectors for ('EVM' | 'SUI' | 'STELLAR' | 'SOLANA' | 'ALEO' | 'STACKS' | 'NEAR')
  * @returns An array of XConnector instances compatible with the specified chain type
  */
 
@@ -30,9 +33,10 @@ export function useXConnectors(xChainType: ChainType | undefined): XConnector[] 
   const evmConnectors = useConnectors();
   const suiWallets = useWallets();
   const { data: stellarXConnectors } = useStellarXConnectors();
-  const { data: nearXConnectors } = useNearXConnectors();
   const stacksXConnectors = useStacksXConnectors();
+  const { data: nearXConnectors } = useNearXConnectors();
   const { wallets: solanaWallets } = useWallet();
+  const { wallets: aleoWallets } = useAleoWallet();
 
   const xConnectors = useMemo((): XConnector[] => {
     if (!xChainType || !xService) {
@@ -52,6 +56,10 @@ export function useXConnectors(xChainType: ChainType | undefined): XConnector[] 
           .map(wallet => new SolanaXConnector(wallet));
       case 'NEAR':
         return nearXConnectors || [];
+      case 'ALEO':
+        return aleoWallets
+          .filter(wallet => wallet.readyState === 'Installed' || wallet.readyState === 'Loadable')
+          .map(wallet => new AleoXConnector(wallet));
       case 'STACKS':
         return stacksXConnectors;
       default:
@@ -65,6 +73,7 @@ export function useXConnectors(xChainType: ChainType | undefined): XConnector[] 
     stellarXConnectors,
     solanaWallets,
     nearXConnectors,
+    aleoWallets,
     stacksXConnectors,
   ]);
 

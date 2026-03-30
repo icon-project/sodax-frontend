@@ -21,10 +21,13 @@ import {
   type SonicSpokeChainConfig,
   NearSpokeProvider,
   type NearSpokeChainConfig,
+  AleoSpokeProvider,
+  type AleoSpokeChainConfig,
   StacksSpokeProvider,
   type StacksSpokeChainConfig,
 } from '@sodax/sdk';
 import type {
+  IAleoWalletProvider,
   BitcoinSpokeChainConfig,
   BitcoinRpcConfig,
   IBitcoinWalletProvider,
@@ -150,6 +153,13 @@ export function useSpokeProvider(
       return new NearSpokeProvider(
         walletProvider as INearWalletProvider,
         spokeChainConfig[spokeChainId] as NearSpokeChainConfig,
+      );
+    }
+
+    if (xChainType === 'ALEO') {
+      return new AleoSpokeProvider(
+        spokeChainConfig[spokeChainId] as AleoSpokeChainConfig,
+        walletProvider as IAleoWalletProvider,
       );
     }
 

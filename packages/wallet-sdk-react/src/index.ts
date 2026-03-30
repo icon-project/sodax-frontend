@@ -5,6 +5,7 @@ export * from './utils';
 
 export * from './xchains/bitcoin';
 export * from './xchains/evm';
+export * from './xchains/aleo';
 export * from './xchains/icon';
 export * from './xchains/injective';
 export * from './xchains/solana';

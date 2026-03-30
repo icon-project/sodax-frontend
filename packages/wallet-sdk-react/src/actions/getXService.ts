@@ -5,6 +5,7 @@ import { SuiXService } from '..';
 import { EvmXService } from '..';
 import type { XService } from '../core';
 import { NearXService } from '../xchains/near/NearXService';
+import { AleoXService } from '../xchains/aleo';
 import { StacksXService } from '../xchains/stacks/StacksXService';
 
 export function getXService(xChainType: ChainType): XService {
@@ -25,6 +26,8 @@ export function getXService(xChainType: ChainType): XService {
       return StellarXService.getInstance();
     case 'NEAR':
       return NearXService.getInstance();
+    case 'ALEO':
+      return AleoXService.getInstance();
     case 'STACKS':
       return StacksXService.getInstance();
     default:

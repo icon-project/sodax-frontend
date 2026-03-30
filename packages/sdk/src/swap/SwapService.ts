@@ -68,6 +68,7 @@ import {
   type Hash,
   type HttpUrl,
   SOLANA_MAINNET_CHAIN_ID,
+  ALEO_MAINNET_CHAIN_ID,
   type IntentRelayChainId,
   getIntentRelayChainId,
   getSolverConfig,
@@ -185,16 +186,16 @@ export type IntentErrorCode =
 export type IntentErrorData<T extends IntentErrorCode> = T extends 'RELAY_TIMEOUT'
   ? IntentWaitUntilIntentExecutedFailedErrorData
   : T extends 'CREATION_FAILED'
-  ? IntentCreationFailedErrorData
-  : T extends 'SUBMIT_TX_FAILED'
-  ? IntentSubmitTxFailedErrorData
-  : T extends 'POST_EXECUTION_FAILED'
-  ? IntentPostExecutionFailedErrorData
-  : T extends 'UNKNOWN'
-  ? IntentCreationFailedErrorData
-  : T extends 'CANCEL_FAILED'
-  ? IntentCancelFailedErrorData
-  : never;
+    ? IntentCreationFailedErrorData
+    : T extends 'SUBMIT_TX_FAILED'
+      ? IntentSubmitTxFailedErrorData
+      : T extends 'POST_EXECUTION_FAILED'
+        ? IntentPostExecutionFailedErrorData
+        : T extends 'UNKNOWN'
+          ? IntentCreationFailedErrorData
+          : T extends 'CANCEL_FAILED'
+            ? IntentCancelFailedErrorData
+            : never;
 
 export type IntentError<T extends IntentErrorCode = IntentErrorCode> = {
   code: T;
@@ -597,25 +598,28 @@ export class SwapService {
       if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
         const intentRelayChainId = getIntentRelayChainId(params.srcChain).toString();
         const submitPayload: IntentRelayRequest<'submit'> =
-          ((params.srcChain === SOLANA_MAINNET_CHAIN_ID) || (params.srcChain === BITCOIN_MAINNET_CHAIN_ID)) && data
+          (params.srcChain === SOLANA_MAINNET_CHAIN_ID ||
+            params.srcChain === BITCOIN_MAINNET_CHAIN_ID ||
+            params.srcChain === ALEO_MAINNET_CHAIN_ID) &&
+          data
             ? {
-              action: 'submit',
-              params: {
-                chain_id: intentRelayChainId,
-                tx_hash: spokeTxHash,
-                data: {
-                  address: intent.creator,
-                  payload: data,
-                } satisfies SubmitTxExtraData,
-              },
-            }
+                action: 'submit',
+                params: {
+                  chain_id: intentRelayChainId,
+                  tx_hash: spokeTxHash,
+                  data: {
+                    address: intent.creator,
+                    payload: data,
+                  } satisfies SubmitTxExtraData,
+                },
+              }
             : {
-              action: 'submit',
-              params: {
-                chain_id: intentRelayChainId,
-                tx_hash: spokeTxHash,
-              },
-            };
+                action: 'submit',
+                params: {
+                  chain_id: intentRelayChainId,
+                  tx_hash: spokeTxHash,
+                },
+              };
 
         const submitResult = await this.submitIntent(submitPayload);
 
@@ -948,7 +952,7 @@ export class SwapService {
       `Invalid spoke chain (params.dstChain): ${params.dstChain}`,
     );
     //if dstChain is Bitcoin and token is BTC, check minOutputToken should be higher than 546 sats
-    if (params.dstChain === BITCOIN_MAINNET_CHAIN_ID && params.outputToken === "BTC") {
+    if (params.dstChain === BITCOIN_MAINNET_CHAIN_ID && params.outputToken === 'BTC') {
       invariant(
         params.minOutputAmount >= 546n,
         `Invalid minOutputAmount (params.minOutputAmount): ${params.minOutputAmount}`,

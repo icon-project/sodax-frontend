@@ -8,7 +8,7 @@
     "build:packages": "turbo run build:packages",
     "dev": "turbo run dev",
     "dev:web": "turbo run dev --filter=web",
-    "dev:demo": "turbo run dev --filter=demo",
+    "dev:demo": "turbo run dev --filter=sodax-demo",
     "pretty": "turbo run pretty",
     "lint": "turbo run lint",
     "checkTs": "turbo run checkTs",
@@ -31,7 +31,8 @@
     "overrides": {
       "@hpke/core": ">=1.8.0",
       "valibot": ">=1.2.0",
-      "axios": ">=1.13.0"
+      "axios": ">=1.13.0",
+      "zod": ">=3.24.3"
     }
   }
 }
