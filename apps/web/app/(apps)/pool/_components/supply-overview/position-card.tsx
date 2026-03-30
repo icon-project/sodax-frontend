@@ -29,6 +29,8 @@ type PositionCardProps = {
   onLiquidityValueChange: (positionKey: string, value: number) => void;
 };
 
+const MIN_VISIBLE_POSITION_USD = 0.01;
+
 function resolveSpokeChainId(chainId: string): SpokeChainId {
   if (!(chainId in spokeChainConfig)) {
     return 'sonic';
@@ -106,7 +108,7 @@ export function PositionCard({
     }
 
     if (isError || !data?.isValid) {
-      onLiquidityValueChange(positionKey, 0);
+      onLiquidityValueChange(positionKey, isManageDialogOpen ? MIN_VISIBLE_POSITION_USD : 0);
       return;
     }
 
@@ -121,10 +123,14 @@ export function PositionCard({
     const sodaAmount = Number.parseFloat(amount0 || '0');
     const xSodaAmount = Number.parseFloat(amount1 || '0');
     const positionTotalUsd = sodaAmount * sodaPrice + xSodaAmount * xSodaPrice;
-    onLiquidityValueChange(positionKey, positionTotalUsd);
+    // Keep the card mounted while the manage dialog is open so async withdraw flow can complete.
+    const nextLiquidityValue =
+      isManageDialogOpen && positionTotalUsd < MIN_VISIBLE_POSITION_USD ? MIN_VISIBLE_POSITION_USD : positionTotalUsd;
+    onLiquidityValueChange(positionKey, nextLiquidityValue);
   }, [
     data,
     isError,
+    isManageDialogOpen,
     isLoading,
     onLiquidityValueChange,
     poolData.token0.decimals,
@@ -190,6 +196,7 @@ export function PositionCard({
       ? ((currentPriceValue - minPriceValue) / (maxPriceValue - minPriceValue)) * 100
       : 0;
   const clampedCurrentPriceTickLeft = Math.min(100, Math.max(0, currentPriceTickLeft));
+
   const apyText = apyPercent === null ? '-- APR' : `${apyPercent.toFixed(2)}% APR`;
 
   return (

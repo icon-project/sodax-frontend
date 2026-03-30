@@ -40,7 +40,9 @@ type ClaimTabContentProps = {
   error?: string;
   isPending: boolean;
   isClaimPending: boolean;
+  isClaimSuccess: boolean;
   onClaimFees: () => void;
+  onClaimCompleted: () => void;
 };
 
 export function ClaimTabContent({
@@ -53,7 +55,9 @@ export function ClaimTabContent({
   error,
   isPending,
   isClaimPending,
+  isClaimSuccess,
   onClaimFees,
+  onClaimCompleted,
 }: ClaimTabContentProps): React.JSX.Element {
   const xSodaTokenOnCurrentChain: XToken = {
     ...xSodaToken,
@@ -157,8 +161,13 @@ export function ClaimTabContent({
           </div>
         </div>
       </div>
-      <Button variant="cherry" className="w-full mt-2" onClick={onClaimFees} disabled={isPending || !hasUnclaimedFees}>
-        {hasUnclaimedFees ? 'Claim Fee' : 'No Fee to Claim'}
+      <Button
+        variant="cherry"
+        className="w-full mt-2 shadow-none!"
+        onClick={isClaimSuccess ? onClaimCompleted : onClaimFees}
+        disabled={isClaimSuccess ? false : isPending || !hasUnclaimedFees}
+      >
+        {isClaimSuccess ? 'Claim Completed' : hasUnclaimedFees ? 'Claim Fee' : 'No Fee to Claim'}
         {isClaimPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
       </Button>
     </TabsContent>

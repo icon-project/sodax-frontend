@@ -106,10 +106,12 @@ export function ManagePositionDialog({
   const [lockedAddLiquidityAmounts, setLockedAddLiquidityAmounts] = useState<{ token0: string; token1: string } | null>(
     null,
   );
+  const [isShaking, setIsShaking] = useState<boolean>(false);
   const [withdrawError, setWithdrawError] = useState<string>('');
   const [isWithdrawSuccess, setIsWithdrawSuccess] = useState<boolean>(false);
   const [claimError, setClaimError] = useState<string>('');
   const [isClaimActionPending, setIsClaimActionPending] = useState<boolean>(false);
+  const [isClaimSuccess, setIsClaimSuccess] = useState<boolean>(false);
   const spokeChainId = resolveSpokeChainId(chainId);
   const walletProvider = useWalletProvider(spokeChainId);
   const spokeProvider = useSpokeProvider(spokeChainId, walletProvider);
@@ -203,11 +205,13 @@ export function ManagePositionDialog({
     if (open && !wasOpenRef.current) {
       setClaimError('');
       setIsClaimActionPending(false);
+      setIsClaimSuccess(false);
       setAddLiquidityError('');
       setIsAddLiquiditySuccess(false);
       setIsAddLiquidityApproved(false);
       setIsAddLiquidityTransferred(false);
       setLockedAddLiquidityAmounts(null);
+      setIsShaking(false);
       setWithdrawError('');
       setIsWithdrawSuccess(false);
       setActiveTab('claim');
@@ -258,6 +262,9 @@ export function ManagePositionDialog({
     spokeProvider: spokeProvider ?? null,
   });
 
+  const isAddLiquidityActionPending =
+    approveMutation.isPending || depositMutation.isPending || supplyLiquidityMutation.isPending;
+  const isWithdrawActionPending = decreaseLiquidityMutation.isPending || withdrawMutation.isPending;
   const isPending =
     isClaimActionPending ||
     approveMutation.isPending ||
@@ -267,6 +274,28 @@ export function ManagePositionDialog({
     decreaseLiquidityMutation.isPending;
   const claimErrorMessage =
     claimError || (claimRewardsMutation.error instanceof Error ? claimRewardsMutation.error.message : '');
+
+  const refreshDexQueries = useCallback(async (): Promise<void> => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['dex', 'positionInfo', tokenId, poolKey] }),
+      queryClient.invalidateQueries({ queryKey: ['dex', 'poolBalances'] }),
+    ]);
+
+    await Promise.all([
+      queryClient.refetchQueries({ queryKey: ['dex', 'positionInfo', tokenId, poolKey], type: 'active' }),
+      queryClient.refetchQueries({ queryKey: ['dex', 'poolBalances'], type: 'active' }),
+    ]);
+  }, [poolKey, queryClient, tokenId]);
+
+  const handleDialogOpenChange = (nextOpen: boolean): void => {
+    if (!nextOpen && (isClaimActionPending || isAddLiquidityActionPending || isWithdrawActionPending)) {
+      setIsShaking(true);
+      window.setTimeout((): void => setIsShaking(false), 500);
+      return;
+    }
+
+    onOpenChange(nextOpen);
+  };
 
   const handleClaimFees = async (): Promise<void> => {
     if (!spokeProvider) {
@@ -281,6 +310,7 @@ export function ManagePositionDialog({
       return;
     }
     setClaimError('');
+    setIsClaimSuccess(false);
     setIsClaimActionPending(true);
 
     const timeoutErrorMessage = 'Claim request timed out. Please check your wallet and try again.';
@@ -302,9 +332,11 @@ export function ManagePositionDialog({
           }, CLAIM_REQUEST_TIMEOUT_MS);
         }),
       ]);
+      setIsClaimSuccess(true);
     } catch (claimErr) {
       const message = claimErr instanceof Error ? claimErr.message : 'Claim fee failed.';
       setClaimError(message);
+      setIsClaimSuccess(false);
     } finally {
       if (timeoutId) {
         clearTimeout(timeoutId);
@@ -364,13 +396,9 @@ export function ManagePositionDialog({
         }),
         spokeProvider,
       });
-      try {
-        const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-        dispatchDexPositionsUpdatedEvent(chainId, walletAddress);
-      } catch (eventError) {
-        // Keep add-liquidity successful even if local position refresh event fails.
-        console.warn('Failed to dispatch DEX positions updated event', eventError);
-      }
+      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      dispatchDexPositionsUpdatedEvent(chainId, walletAddress);
+
       setLastEditedAmount(null);
       handleToken0AmountChange('');
       handleToken1AmountChange('');
@@ -379,6 +407,7 @@ export function ManagePositionDialog({
       setIsAddLiquidityApproved(false);
       setIsAddLiquidityTransferred(false);
       setIsAddLiquiditySuccess(true);
+      await refreshDexQueries();
     } catch (supplyError) {
       const message = supplyError instanceof Error ? supplyError.message : 'Add liquidity failed.';
       setAddLiquidityError(message);
@@ -501,7 +530,7 @@ export function ManagePositionDialog({
 
   const handleWithdrawLiquidity = async (): Promise<void> => {
     if (isWithdrawSuccess) {
-      onOpenChange(false);
+      handleDialogOpenChange(false);
       return;
     }
     if (!spokeProvider) {
@@ -549,25 +578,15 @@ export function ManagePositionDialog({
           });
         }
       }
+      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      if (parsedPercentage === 100) {
+        removeTokenIdFromLocalStorage(walletAddress, chainId, tokenId);
+      } else {
+        dispatchDexPositionsUpdatedEvent(chainId, walletAddress);
+      }
       setWithdrawPercentage('0');
       setIsWithdrawSuccess(true);
-      try {
-        const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-        if (parsedPercentage === 100) {
-          removeTokenIdFromLocalStorage(walletAddress, chainId, tokenId);
-        } else {
-          dispatchDexPositionsUpdatedEvent(chainId, walletAddress);
-        }
-      } catch (walletAddressError) {
-        // Keep withdraw successful even when local position cache refresh fails.
-        console.warn('Failed to refresh local DEX position state', walletAddressError);
-      }
-      try {
-        await queryClient.invalidateQueries({ queryKey: ['dex', 'positionInfo'] });
-      } catch (invalidateError) {
-        // Keep success state even when cache invalidation fails.
-        console.warn('Failed to invalidate DEX position query', invalidateError);
-      }
+      await refreshDexQueries();
     } catch (withdrawErr) {
       const message = withdrawErr instanceof Error ? withdrawErr.message : 'Withdraw liquidity failed.';
       setWithdrawError(message);
@@ -576,8 +595,13 @@ export function ManagePositionDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-120 h-106 px-6 py-12 sm:px-12" hideCloseButton={true}>
+    <Dialog open={open} onOpenChange={handleDialogOpenChange}>
+      <DialogContent
+        className="sm:max-w-120 h-106 px-6 py-12 sm:px-12"
+        hideCloseButton={true}
+        enableMotion={true}
+        shake={isShaking}
+      >
         <Tabs value={activeTab} onValueChange={value => setActiveTab(value as 'claim' | 'add' | 'withdraw')}>
           <div className="flex justify-between items-center">
             <TabsList className="flex bg-transparent gap-4 p-0 h-4">
@@ -605,7 +629,7 @@ export function ManagePositionDialog({
             </TabsList>
             <XIcon
               className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay"
-              onClick={() => onOpenChange(false)}
+              onClick={() => handleDialogOpenChange(false)}
             />
           </div>
 
@@ -619,7 +643,9 @@ export function ManagePositionDialog({
             error={claimErrorMessage}
             isPending={isPending}
             isClaimPending={isClaimActionPending}
+            isClaimSuccess={isClaimSuccess}
             onClaimFees={() => void handleClaimFees()}
+            onClaimCompleted={() => handleDialogOpenChange(false)}
           />
           <AddLiquidityTabContent
             chainId={spokeChainId}
@@ -644,7 +670,7 @@ export function ManagePositionDialog({
             onTransfer={() => void handleAddLiquidityTransfer()}
             onAddLiquidity={() => void handleAddLiquidity()}
             onSwitchChain={() => void handleSwitchChain()}
-            onSuccessClick={() => onOpenChange(false)}
+            onSuccessClick={() => handleDialogOpenChange(false)}
           />
           <WithdrawTabContent
             chainId={spokeChainId}

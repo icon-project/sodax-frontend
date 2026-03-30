@@ -98,7 +98,7 @@ function LiquidityAmountInput({
   onAmountChange,
 }: LiquidityAmountInputProps): React.JSX.Element {
   return (
-    <InputGroup className="h-10 pl-2 pr-4 bg-almost-white rounded-[32px] flex justify-between items-center mix-blend-multiply">
+    <InputGroup className="h-10 pl-2 pr-4 bg-almost-white rounded-[32px] flex justify-between items-center mix-blend-multiply shadow-none!">
       <InputGroupAddon className="pl-0 pr-2">
         <InputGroupText>
           <Image
@@ -126,8 +126,8 @@ function LiquidityAmountInput({
         />
         {amount.length === 0 ? (
           <span className="pointer-events-none absolute inset-y-0 left-0 top-2 flex items-center gap-1 text-xs">
-            <span className="text-clay-light">0</span>
-            <span className={isOverMax ? 'text-negative' : 'text-cherry-grey'}>{tokenSymbol}</span>
+            <span className="text-espresso">0</span>
+            <span className={isOverMax ? 'text-negative' : 'text-clay'}>{tokenSymbol}</span>
           </span>
         ) : null}
       </div>
@@ -243,6 +243,38 @@ export function AddLiquidityTabContent({
   const hasValidToken1Amount =
     token1Value !== null && token1Value > 0n && token1Value <= token1MaxBalance && !token1IsOverMax;
   const hasValidLiquidityInput = hasValidToken0Amount && hasValidToken1Amount;
+
+  const previewToken0BalanceText = useMemo((): string => {
+    if (token0Value === null) {
+      return '0';
+    }
+    return formatTokenAmount(token0Value, token0Decimals, 2);
+  }, [token0Decimals, token0Value]);
+
+  const previewToken1BalanceText = useMemo((): string => {
+    if (token1Value === null) {
+      return '0';
+    }
+    return formatTokenAmount(token1Value, token1Decimals, 2);
+  }, [token1Decimals, token1Value]);
+
+  const previewSodaBalanceText = useMemo((): string => {
+    const base = Number(positionSodaBalanceText);
+    const added = Number(previewToken0BalanceText);
+    if (!Number.isFinite(base) || !Number.isFinite(added)) {
+      return positionSodaBalanceText;
+    }
+    return (base + added).toFixed(2);
+  }, [positionSodaBalanceText, previewToken0BalanceText]);
+
+  const previewXSodaBalanceText = useMemo((): string => {
+    const base = Number(positionXSodaBalanceText);
+    const added = Number(previewToken1BalanceText);
+    if (!Number.isFinite(base) || !Number.isFinite(added)) {
+      return positionXSodaBalanceText;
+    }
+    return (base + added).toFixed(2);
+  }, [positionXSodaBalanceText, previewToken1BalanceText]);
   const isActionPending = isApproving || isTransferring || isAdding || isPending;
   const canApprove = hasValidLiquidityInput && !isActionPending && !isApproved;
   const canTransfer = hasValidLiquidityInput && !isActionPending && isApproved && !isTransferred;
@@ -256,8 +288,8 @@ export function AddLiquidityTabContent({
       <div className="self-stretch mt-4">
         <PairBalanceHeader
           chainId={chainId}
-          sodaBalanceText={positionSodaBalanceText}
-          xSodaBalanceText={positionXSodaBalanceText}
+          sodaBalanceText={previewSodaBalanceText}
+          xSodaBalanceText={previewXSodaBalanceText}
         />
       </div>
       <div className="self-stretch p-6 bg-blend-multiply bg-almost-white rounded-2xl inline-flex flex-col justify-start items-start gap-2 w-full relative mt-10">
@@ -299,7 +331,7 @@ export function AddLiquidityTabContent({
           <Button
             variant="cherry"
             className={cn(
-              "text-white font-['InterRegular'] transition-all duration-300 ease-in-out",
+              "text-white font-['InterRegular'] transition-all duration-300 ease-in-out shadow-none!",
               isMobile ? 'w-full' : isApproved ? 'w-[40px]' : 'flex-1',
             )}
             onClick={isWrongChain ? onSwitchChain : onApprove}
@@ -322,7 +354,7 @@ export function AddLiquidityTabContent({
           <Button
             variant="cherry"
             className={cn(
-              "text-white font-['InterRegular'] transition-all duration-300 ease-in-out",
+              "text-white font-['InterRegular'] transition-all duration-300 ease-in-out shadow-none!",
               isMobile ? 'w-full' : !isApproved || isTransferred ? 'w-[40px]' : 'flex-1',
             )}
             onClick={isWrongChain ? onSwitchChain : onTransfer}
@@ -347,7 +379,7 @@ export function AddLiquidityTabContent({
           <Button
             variant="cherry"
             className={cn(
-              "text-white font-['InterRegular'] transition-all duration-300 ease-in-out",
+              "text-white font-['InterRegular'] transition-all duration-300 ease-in-out shadow-none!",
               isMobile ? 'w-full' : 'flex-1',
             )}
             onClick={isSuccess ? onSuccessClick : isWrongChain ? onSwitchChain : onAddLiquidity}
