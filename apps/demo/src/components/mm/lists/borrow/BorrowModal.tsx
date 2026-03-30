@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { ChainSelector } from '@/components/shared/ChainSelector';
 import { useEvmSwitchChain, useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { parseUnits } from 'viem';
+import { parseUnits, formatUnits } from 'viem';
 import type { MoneyMarketBorrowParams } from '@sodax/sdk';
 import { useBorrow, useSpokeProvider, useReservesUsdFormat, useAToken, useUserReservesData } from '@sodax/dapp-kit';
 import type { ChainId, XToken } from '@sodax/types';
@@ -28,7 +28,6 @@ import {
   truncateToDecimals,
 } from '@/lib/utils';
 import { logger } from '@/lib/logger';
-import { formatUnits } from 'viem';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import { MIN_BORROW_USD, MAX_BORROW_SAFETY_MARGIN, ZERO_ADDRESS } from '../../constants';
 import type { FormatUserSummaryResponse } from '@sodax/sdk';
@@ -181,10 +180,10 @@ export function BorrowModal({
     if (destinationMetrics.formattedReserve && aToken) {
       let availableLiquidity: string | undefined;
       if (destinationMetrics.formattedReserve.borrowCap === '0') {
-        availableLiquidity = formatUnits(
+        availableLiquidity = truncateToDecimals(Number(formatUnits(
           BigInt(destinationMetrics.formattedReserve.availableLiquidity),
           aToken.decimals,
-        );
+        )), 6);
       } else {
         availableLiquidity = truncateToDecimals(Math.min(
           Number.parseFloat(

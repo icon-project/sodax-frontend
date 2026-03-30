@@ -269,7 +269,7 @@ export function removeTokenIdFromLocalStorage(chainId: SpokeChainId, userAddress
   }
   if (positions.includes(tokenId)) {
     positions.splice(positions.indexOf(tokenId), 1);
-    localStorage.setItem(`sodax-dex-positions-${userAddress}`, positions.join(','));
+    localStorage.setItem(createDexTokenIdsStorageKey(chainId, userAddress), positions.join(','));
   } else {
     console.warn(`Token ID ${tokenId} not found for user ${userAddress}`);
   }

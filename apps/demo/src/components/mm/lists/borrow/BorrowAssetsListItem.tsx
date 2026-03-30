@@ -71,7 +71,7 @@ export function BorrowAssetsListItem({
   if (metrics.formattedReserve && aToken) {
     availableLiquidity =
       metrics.formattedReserve.borrowCap === '0'
-        ? formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), aToken.decimals)
+        ? truncateToDecimals(Number(formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), aToken.decimals)), 6)
         : truncateToDecimals(Math.min(
             Number.parseFloat(formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), aToken.decimals)),
             Number.parseInt(metrics.formattedReserve.borrowCap) -
@@ -117,7 +117,7 @@ export function BorrowAssetsListItem({
   let debtExact = '0';
   if (metrics.userReserve && metrics.formattedReserve) {
     const scaledDebt = metrics.userReserve.scaledVariableDebt;
-    const variableBorrowIndex = BigInt(metrics.formattedReserve.variableBorrowIndex || '1e27');
+    const variableBorrowIndex = BigInt(metrics.formattedReserve.variableBorrowIndex || '1000000000000000000000000000');
     // Multiply scaled debt by borrow index and divide by ray precision (1e27)
     const actualDebtRaw = (scaledDebt * variableBorrowIndex) / BigInt(1e27);
     const tokenDecimals = Number(metrics.formattedReserve.decimals ?? 18);
