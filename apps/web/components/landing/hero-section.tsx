@@ -13,26 +13,23 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { getNetworkDocsUrl } from '@/lib/docToUrl';
 
 const HERO_NETWORKS = [
-  'Arbitrum',
+  'Stellar',
+  'Near',
   'Avalanche',
+  'Polygon',
   'Base',
+  'Solana',
+  'Sonic',
+  'Sui',
+  'Optimism',
+  'Ethereum',
   'Bitcoin',
   'BNB Chain',
-  'Ethereum',
   'HyperEVM',
+  'Arbitrum',
   'ICON',
   'Kaia',
   'LightLink',
-  'Near',
-  'Nibiru',
-  'Optimism',
-  'Polygon',
-  'Redbelly',
-  'Solana',
-  'Sonic',
-  'Stacks',
-  'Stellar',
-  'Sui',
 ];
 
 const HeroSection = (): React.ReactElement => {
