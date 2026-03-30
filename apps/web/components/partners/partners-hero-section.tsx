@@ -2,21 +2,11 @@
 
 import { motion } from 'motion/react';
 import { Bot, PackageOpen, Settings2, Users } from 'lucide-react';
-import { DOCUMENTATION_ROUTE } from '@/constants/routes';
 import { NETWORK_ICON_MAP } from './network-icons';
+import { DOCUMENTATION_ROUTE } from '@/constants/routes';
+import { getNetworkDocsUrl } from '@/lib/docToUrl';
 
 const ease = [0.22, 1, 0.36, 1] as const;
-
-// Helper function to convert network name to documentation anchor
-const getNetworkDocsUrl = (networkName: string): string => {
-  const anchorMap: Record<string, string> = {
-    'BNB Chain': 'bsc',
-    HyperEVM: 'hyperevm',
-    LightLink: 'lightlink',
-  };
-  const anchor = anchorMap[networkName] || networkName.toLowerCase();
-  return `${DOCUMENTATION_ROUTE}/developers/deployments/solver-compatible-assets#${anchor}`;
-};
 
 const NETWORK_NAMES = [
   'Ethereum',
@@ -143,7 +133,7 @@ export default function PartnersHeroSection() {
                   className="group/icon relative mx-8 shrink-0 text-white opacity-20 hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                   aria-label={`View ${name} documentation`}
                 >
-                  <Icon width={40} height={40} aria-label={name} />
+                  <Icon width={40} height={40} />
                   <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 whitespace-nowrap rounded-md bg-black/80 px-2.5 py-1 font-['InterRegular'] text-[11px] text-white opacity-0 scale-95 group-hover/icon:opacity-100 group-hover/icon:scale-100 transition-all duration-200">
                     {name}
                   </span>

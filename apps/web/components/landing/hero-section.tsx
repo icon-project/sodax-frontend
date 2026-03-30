@@ -7,20 +7,32 @@ import { useRouter } from 'next/navigation';
 import { SodaxIcon } from '../icons/sodax-icon';
 import { NEWS_ROUTE, PARTNERS_ROUTE, SWAP_ROUTE } from '@/constants/routes';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAppStore } from '@/stores/app-store-provider';
 import { NETWORK_ICON_MAP } from '../partners/network-icons';
+import { getNetworkDocsUrl } from '@/lib/docToUrl';
 
 const HERO_NETWORKS = [
-  'Stellar',
-  'Avalanche',
-  'Solana',
-  'Sui',
-  'Sonic',
-  'Injective',
-  'Arbitrum',
-  'Optimism',
   'Ethereum',
   'Base',
+  'BNB Chain',
+  'Polygon',
+  'Optimism',
+  'Arbitrum',
+  'Avalanche',
+  'Kaia',
+  'ICON',
+  'Nibiru',
+  'Solana',
+  'Sonic',
+  'Stellar',
+  'Sui',
+  'HyperEVM',
+  'Bitcoin',
+  'Near',
+  'Stacks',
+  'Redbelly',
+  'LightLink',
 ];
 
 const HeroSection = (): React.ReactElement => {
@@ -106,7 +118,13 @@ const HeroSection = (): React.ReactElement => {
           <div className="flex flex-col items-center gap-[16px] z-20">
             <div className="flex items-center justify-center gap-[24px]">
               {/* Left brace */}
-              <Image src="/landing/brace-left.svg" alt="" width={32} height={120} className="hidden md:block -scale-x-100" />
+              <Image
+                src="/landing/brace-left.svg"
+                alt=""
+                width={32}
+                height={120}
+                className="hidden md:block -scale-x-100"
+              />
               <div className="text-white font-[InterBold] text-(length:--app-title) leading-[1.1] text-center whitespace-nowrap">
                 One SDK.
                 <br />
@@ -134,9 +152,28 @@ const HeroSection = (): React.ReactElement => {
                 const Icon = NETWORK_ICON_MAP[name];
                 if (!Icon) return null;
                 return (
-                  <div key={`${name}-${i}`} className="mx-3 shrink-0 text-white opacity-40 hover:opacity-100 transition-opacity duration-300">
-                    <Icon width={24} height={24} aria-label={name} />
-                  </div>
+                  <Tooltip key={`${name}-${i}`}>
+                    <TooltipTrigger asChild>
+                      <a
+                        key={`${name}-${i}`}
+                        href={getNetworkDocsUrl(name)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mx-3 shrink-0 text-white opacity-40 hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                        aria-label={`View ${name} documentation`}
+                      >
+                        <Icon width={24} height={24} aria-hidden="true" focusable="false" />
+                      </a>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      variant="bubble"
+                      side="top"
+                      sideOffset={10}
+                      className="h-[54px] items-center gap-2 px-8 py-4 text-(length:--body-comfortable)"
+                    >
+                      {name}
+                    </TooltipContent>
+                  </Tooltip>
                 );
               })}
             </div>

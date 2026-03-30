@@ -50,7 +50,7 @@ function TooltipContent({
           // default (backward compatible)
           !isSoft && !isBubble && 'rounded-md bg-primary text-primary-foreground px-3 py-1.5',
           // soft (new)
-          isSoft && 'rounded-md bg-cream-white text-espresso px-4 py-2 shadow-lg border border-clay-light/20',
+          isSoft && 'rounded-[32px] bg-white text-espresso px-8 py-[18px] text-sm',
           // bubble (used by save tooltips)
           isBubble && 'rounded-full bg-white text-espresso',
           className,
