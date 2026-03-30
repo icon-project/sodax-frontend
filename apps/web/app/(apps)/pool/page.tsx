@@ -60,10 +60,6 @@ function extractChainIdFromDexPositionsStorageKey(storageKey: string, normalized
 }
 
 export default function PoolPage() {
-  if (process.env.NEXT_PUBLIC_APP_ENV === 'production') {
-    return null;
-  }
-
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [sodaInputAmount, setSodaInputAmount] = useState<string>('');
   const [lastEditedAmount, setLastEditedAmount] = useState<'soda' | 'xsoda' | null>(null);
