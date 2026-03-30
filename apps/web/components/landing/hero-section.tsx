@@ -168,7 +168,7 @@ const HeroSection = (): React.ReactElement => {
                     <TooltipContent
                       variant="bubble"
                       side="top"
-                      sideOffset={10}
+                      sideOffset={16}
                       className="h-[54px] items-center gap-2 px-8 py-4 text-(length:--body-comfortable)"
                     >
                       {name}
