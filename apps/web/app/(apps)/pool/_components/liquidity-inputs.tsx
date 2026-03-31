@@ -121,14 +121,12 @@ export function LiquidityInputs({
   const isOverMax = sodaValue > selectedSodaBalance || xSodaValue > selectedXSodaBalance;
 
   const waLocSodaDecimals = poolData?.token0.decimals ?? 18;
-  const waLocSodaBalance = Number(formatUnits(balances?.token0Balance ?? 0n, waLocSodaDecimals));
-  const waLocSodaMinBalance = 1;
-  const waLocSodaReserveBalance = 0.001;
+  const waLocSodaBalance = balances?.token0Balance ?? 0n;
+  const waLocSodaMinBalance = parseUnits('1', waLocSodaDecimals);
+  const waLocSodaReserveBalance = parseUnits('0.001', waLocSodaDecimals);
   const hasWithdrawableWaLocSoda = isWalletConnected && waLocSodaBalance > waLocSodaMinBalance;
   const waLocSodaWithdrawAmount =
-    waLocSodaBalance > waLocSodaReserveBalance
-      ? parseUnits((waLocSodaBalance - waLocSodaReserveBalance).toString(), waLocSodaDecimals)
-      : 0n;
+    waLocSodaBalance > waLocSodaReserveBalance ? waLocSodaBalance - waLocSodaReserveBalance : 0n;
 
   console.log('waLocSodaWithdrawAmount', waLocSodaWithdrawAmount);
   const hasPoolContext = poolData !== null && poolSpokeAssets !== null;
