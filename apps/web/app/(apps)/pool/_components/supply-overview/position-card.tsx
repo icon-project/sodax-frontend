@@ -19,6 +19,7 @@ import { CircleEllipsisIcon } from 'lucide-react';
 import { ManagePositionDialog } from '../manage-dialog';
 import { SwitchChainDialog } from '@/components/shared/switch-chain-dialog';
 import type { XToken } from '@sodax/types';
+import { getUserAPY } from './utils';
 
 type PositionCardProps = {
   tokenId: string;
@@ -30,38 +31,6 @@ type PositionCardProps = {
 };
 
 const MIN_VISIBLE_POSITION_USD = 0.01;
-
-function getConcentrationFactor(priceLower: number, priceUpper: number, priceCurrent: number): number {
-  if (!Number.isFinite(priceLower) || !Number.isFinite(priceUpper) || !Number.isFinite(priceCurrent)) {
-    return 0;
-  }
-  if (priceLower <= 0 || priceUpper <= priceLower) {
-    return 0;
-  }
-  if (priceCurrent < priceLower || priceCurrent > priceUpper) {
-    return 0;
-  }
-
-  const sqrtP = Math.sqrt(priceCurrent);
-  const sqrtPa = Math.sqrt(priceLower);
-  const denominator = sqrtP - sqrtPa;
-
-  if (denominator <= 0) {
-    return 0;
-  }
-
-  // Equivalent to (1 / (sqrtP - sqrtPa)) / (1 / sqrtP).
-  return sqrtP / denominator;
-}
-
-function getUserAPY(fullRangeAPY: number, priceLower: number, priceUpper: number, priceCurrent: number): number {
-  if (!Number.isFinite(fullRangeAPY) || fullRangeAPY < 0) {
-    return 0;
-  }
-
-  const factor = getConcentrationFactor(priceLower, priceUpper, priceCurrent);
-  return fullRangeAPY * factor;
-}
 
 function resolveSpokeChainId(chainId: string): SpokeChainId {
   if (!(chainId in spokeChainConfig)) {
