@@ -36,20 +36,11 @@ import type { StacksXConnector } from '../xchains/stacks';
 
 /**
  * Hook to get the appropriate wallet provider based on the chain type.
- * Supports EVM, SUI, ICON, INJECTIVE, STELLAR, SOLANA and NEAR chains.
  *
- * @param {ChainId | undefined} spokeChainId - The chain ID to get the wallet provider for. Can be any valid ChainId value.
- * @returns {EvmWalletProvider | SuiWalletProvider | IconWalletProvider | InjectiveWalletProvider | undefined}
- * The appropriate wallet provider instance for the given chain ID, or undefined if:
- * - No chain ID is provided
- * - Chain type is not supported
- * - Required wallet provider options are not available
- *
- * @example
- * ```tsx
- * // Get wallet provider for a specific chain
- * const walletProvider = useWalletProvider('sui');
- * ```
+ * NOTE: This hook still calls wagmi hooks (usePublicClient, useWalletClient) unconditionally.
+ * It requires WagmiProvider to be mounted. When EVM is disabled and WagmiProvider is not mounted,
+ * this hook should not be called with EVM chain IDs.
+ * Full decoupling will be addressed in a follow-up.
  */
 export function useWalletProvider(
   spokeChainId: ChainId | undefined,
@@ -96,9 +87,9 @@ export function useWalletProvider(
       case 'SUI': {
         const suiXService = xService as SuiXService;
         const { client, wallet, account } = {
-          client: suiXService.suiClient,
-          wallet: suiXService.suiWallet,
-          account: suiXService.suiAccount,
+          client: suiXService?.suiClient,
+          wallet: suiXService?.suiWallet,
+          account: suiXService?.suiAccount,
         };
 
         return new SuiWalletProvider({ client, wallet, account });
@@ -120,7 +111,6 @@ export function useWalletProvider(
         const injectiveXService = xService as InjectiveXService;
         if (!injectiveXService) {
           return undefined;
-          // throw new Error('InjectiveXService is not initialized');
         }
 
         return new InjectiveWalletProvider({
@@ -130,7 +120,7 @@ export function useWalletProvider(
 
       case 'STELLAR': {
         const stellarXService = xService as StellarXService;
-        if (!stellarXService.walletsKit) {
+        if (!stellarXService?.walletsKit) {
           return undefined;
         }
 
@@ -144,11 +134,11 @@ export function useWalletProvider(
       case 'SOLANA': {
         const solanaXService = xService as SolanaXService;
 
-        if (!solanaXService.wallet) {
+        if (!solanaXService?.wallet) {
           return undefined;
         }
 
-        if (!solanaXService.connection) {
+        if (!solanaXService?.connection) {
           return undefined;
         }
 
@@ -164,13 +154,12 @@ export function useWalletProvider(
           | BitcoinXConnector
           | undefined;
         if (!connector) return undefined;
-        // Recreate from window extension object — works after page reload without reconnect
         return connector.recreateWalletProvider(xConnection.xAccount);
       }
 
       case 'NEAR': {
         const nearXService = xService as NearXService;
-        if (!nearXService.walletSelector) {
+        if (!nearXService?.walletSelector) {
           return undefined;
         }
 
