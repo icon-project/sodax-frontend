@@ -41,7 +41,8 @@ interface UseReserveMetricsProps {
   userReserves: UserReserveData[];
 }
 
-interface ReserveMetricsResult {
+export interface ReserveMetricsResult {
+  /** Per-reserve user row from the hub UI pool data (supply + debt + collateral flags). */
   userReserve?: UserReserveData;
   formattedReserve?: FormatReserveUSDResponse;
   supplyAPR: string;

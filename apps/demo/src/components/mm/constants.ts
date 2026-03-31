@@ -23,9 +23,12 @@ export const DUST_THRESHOLD = 0.00001;
 export const MAX_BORROW_SAFETY_MARGIN = 0.99;
 
 /**
- * Safety margin applied to max withdraw calculations.
- * Reduces the maximum withdrawable amount by 1% to account for interest accrual drift
- * between the aToken balance read and the actual contract execution.
+ * Safety margin applied to max withdraw calculations in the Markets table.
+ * Reduces the displayed max by 1% vs hub aToken balance for interest accrual drift.
+ *
+ * This does **not** incorporate protocol rules: with outstanding borrows or collateral use,
+ * the hub may allow less than this amount (health factor / liquidation threshold). The label
+ * “Max withdraw” is therefore a UI cap on supply balance, not Aave “maxWithdraw(user)”.
  */
 export const MAX_WITHDRAW_SAFETY_MARGIN = 0.99;
 

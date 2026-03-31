@@ -10,6 +10,13 @@ import { DUST_THRESHOLD, ATOKEN_DECIMALS } from '../constants';
 import { isUserReserveDataArray, isValidAddress } from '../typeGuards';
 import { truncateToDecimals } from '@/lib/utils';
 
+/** Shallow portfolio snapshot from useUserFormattedSummary. */
+export type MmPortfolioWithdrawDebug = {
+  healthFactor: string | undefined;
+  totalBorrowsUSD: string | undefined;
+  totalCollateralUSD: string | undefined;
+};
+
 interface SupplyAssetsListItemProps {
   token: XToken;
   walletBalance: string;
@@ -17,8 +24,10 @@ interface SupplyAssetsListItemProps {
   userReserves: readonly UserReserveData[];
   aTokenBalancesMap?: Map<Address, bigint>;
   onRefreshReserves?: () => void;
-  onWithdrawClick: (token: XToken, maxWithdraw: string) => void;
+  onWithdrawClick: (token: XToken, maxWithdraw: string, isCollateralEnabled: boolean) => void;
   onSupplyClick: (token: XToken, maxSupply: string) => void;
+  /** Optional hub portfolio summary for dev logs (does not change Max math yet). */
+  mmPortfolioDebug?: MmPortfolioWithdrawDebug;
 }
 
 export function SupplyAssetsListItem({
@@ -29,6 +38,7 @@ export function SupplyAssetsListItem({
   aTokenBalancesMap,
   onWithdrawClick,
   onSupplyClick,
+  mmPortfolioDebug,
 }: SupplyAssetsListItemProps): ReactElement {
   // Validate userReserves array before passing to useReserveMetrics
   if (!isUserReserveDataArray(userReserves)) {
@@ -54,9 +64,15 @@ export function SupplyAssetsListItem({
   const formattedBalance =
     aTokenBalance !== undefined ? truncateToDecimals(Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS)), 5) : '-';
 
-  // Apply a small safety margin so "Max" doesn't try to withdraw the exact full balance,
-  // which always fails because interest accrues between the balance read and execution.
-  // Compute from raw bigint (not display string) to avoid precision loss from truncation.
+  /**
+   * "Max" withdraw string shown in the modal — NOT the same as Aave / hub "max withdrawable".
+   *
+   * - This value is ~99% of the user's **hub aToken balance** (see MAX_WITHDRAW_SAFETY_MARGIN in constants),
+   *   using float math only to match the existing UI; it ignores debt, health factor, and collateral locking.
+   * - The **protocol** caps withdrawals when removing supply would drop health factor below 1 or violate reserve rules,
+   *   even if pool TVL is large. So simulation can revert with `External call failed` while UI Max &lt; aToken balance.
+   * - A correct *protocol* max would need pool reads or simulation (e.g. getUserAccountData / HF-aware calc) — future work.
+   */
   const maxWithdrawExact = useMemo(() => {
     if (!aTokenBalance || aTokenBalance === 0n || !aTokenAddress) return '0';
     const fullBalance = Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS));
@@ -139,9 +155,7 @@ export function SupplyAssetsListItem({
             variant="cherry"
             size="sm"
             onClick={() => {
-              // Use the exact calculated max withdraw instead of rounded formattedBalance
-              const maxWithdrawValue = maxWithdrawExact;
-              onWithdrawClick(token, maxWithdrawValue);
+              onWithdrawClick(token, maxWithdrawExact, metrics.userReserve?.usageAsCollateralEnabledOnUser ?? false);
             }}
             disabled={!hasSupply}
             className="flex-1 min-w-[85px]"

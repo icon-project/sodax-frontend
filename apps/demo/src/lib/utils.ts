@@ -245,10 +245,7 @@ export function saveTokenIdToLocalStorage(userAddress: string, chainId: SpokeCha
 
   if (!hasDuplicate) {
     positions.push(tokenId.trim());
-    localStorage.setItem(
-      createDexTokenIdsStorageKey(chainId, userAddress),
-      positions.join(',')
-    );
+    localStorage.setItem(createDexTokenIdsStorageKey(chainId, userAddress), positions.join(','));
   } else {
     console.warn(`Token ID ${tokenId} already exists for user ${userAddress}`);
   }
@@ -332,7 +329,9 @@ export function isTxHash(value: unknown): value is `0x${string}` {
   return typeof value === 'string' && value.startsWith('0x');
 }
 
-/** Returns the full error message/code for display in MM modals (exact error text). */
+/** Max length of appended RPC/revert text inside MM error alerts (keeps UI readable). */
+const MM_ERROR_RAW_DETAIL_MAX_LEN = 900;
+
 /**
  * Extracts a human-readable message from the nested `data.error` field of a MoneyMarketError.
  * Handles viem error objects, plain Error instances, and strings.
@@ -348,11 +347,86 @@ function extractInnerErrorMessage(dataError: unknown): string | undefined {
   return undefined;
 }
 
+/**
+ * Walks `Error.cause`, viem-style `details`, and `{ success, error }` shapes so simulation errors
+ * are not lost when the outer message is only "Simulation failed".
+ */
+function collectNestedErrorText(dataError: unknown, maxDepth = 6): string {
+  const parts: string[] = [];
+  const seen = new Set<unknown>();
+
+  const visit = (v: unknown, depth: number): void => {
+    if (depth > maxDepth || v == null) return;
+    if (typeof v === 'string') {
+      const t = v.trim();
+      if (t.length > 0) parts.push(t);
+      return;
+    }
+    if (seen.has(v)) return;
+    seen.add(v);
+
+    if (v instanceof Error) {
+      const t = v.message.trim();
+      if (t.length > 0) parts.push(t);
+      visit(v.cause, depth + 1);
+      return;
+    }
+
+    if (typeof v === 'object') {
+      const o = v as Record<string, unknown>;
+      if (typeof o.error === 'string' && o.error.trim().length > 0) parts.push(o.error.trim());
+      if (o.error != null && typeof o.error !== 'string') visit(o.error, depth + 1);
+      if (typeof o.details === 'string' && o.details.trim().length > 0) parts.push(o.details.trim());
+      if (typeof o.message === 'string' && o.message.trim().length > 0) parts.push(o.message.trim());
+      if (typeof o.shortMessage === 'string' && o.shortMessage.trim().length > 0) parts.push(o.shortMessage.trim());
+      if ('cause' in o) visit(o.cause, depth + 1);
+    }
+  };
+
+  visit(dataError, 0);
+  return [...new Set(parts)].join('\n');
+}
+
+/** Full searchable text from `data.error` for substring checks and optional display. */
+function getMmDataErrorSearchableText(dataError: unknown): string {
+  const nested = collectNestedErrorText(dataError);
+  if (nested.length > 0) return nested;
+  return extractInnerErrorMessage(dataError) ?? '';
+}
+
 /** Checks whether the inner error message matches any of the given substrings (case-insensitive). */
 function innerErrorIncludes(msg: string | undefined, ...needles: string[]): boolean {
   if (!msg) return false;
   const lower = msg.toLowerCase();
-  return needles.some((n) => lower.includes(n.toLowerCase()));
+  return needles.some(n => lower.includes(n.toLowerCase()));
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function formatHubSimulationFailureMessage(action: string, errorCode: string, dataError: unknown): string {
+  const raw = getMmDataErrorSearchableText(dataError);
+  const rawTrunc = raw.length > MM_ERROR_RAW_DETAIL_MAX_LEN ? `${raw.slice(0, MM_ERROR_RAW_DETAIL_MAX_LEN)}…` : raw;
+
+  const lines = [
+    `${capitalize(action)} simulation failed on hub chain (Sonic).`,
+    '',
+    'Possible causes:',
+    '• Health factor: withdrawing collateral with active borrows.',
+    '• Insufficient pool liquidity (high utilization).',
+    '• Rounding / dust amount issues.',
+    '',
+    'Try a smaller amount or repay debt first.',
+    '',
+    `SDK error code: ${errorCode}`,
+  ];
+
+  if (rawTrunc.length > 0) {
+    lines.push('', 'Detail:', rawTrunc);
+  }
+
+  return lines.join('\n');
 }
 
 export function getMmErrorText(error: unknown): string {
@@ -360,6 +434,7 @@ export function getMmErrorText(error: unknown): string {
   if (typeof error === 'string') return error;
   if (error && typeof error === 'object') {
     const o = error as { message?: string; code?: string; data?: { payload?: unknown; error?: unknown } };
+    const searchableText = getMmDataErrorSearchableText(o.data?.error);
     const innerMsg = extractInnerErrorMessage(o.data?.error);
 
     // ── Relay errors ──
@@ -384,16 +459,20 @@ export function getMmErrorText(error: unknown): string {
     ) {
       const action = o.code.replace('CREATE_', '').replace('_INTENT_FAILED', '').toLowerCase();
 
-      if (innerErrorIncludes(innerMsg, 'insufficient funds for gas', 'exceeds the balance of the account')) {
+      if (innerErrorIncludes(searchableText, 'insufficient funds for gas', 'exceeds the balance of the account')) {
         return `Not enough native token to cover gas fees for the ${action} transaction. Please top up your wallet.`;
       }
-      if (innerErrorIncludes(innerMsg, 'External call failed', 'Simulation failed')) {
-        return `${capitalize(action)} simulation failed on the hub. The amount may exceed what is available or contract conditions are not met. Please try a smaller amount.`;
+      if (innerErrorIncludes(searchableText, 'External call failed', 'Simulation failed', 'Execution reverted')) {
+        return formatHubSimulationFailureMessage(action, o.code ?? 'CREATE_INTENT_FAILED', o.data?.error);
       }
-      if (innerErrorIncludes(innerMsg, 'user rejected', 'User denied', 'user cancelled')) {
+      if (innerErrorIncludes(searchableText, 'user rejected', 'User denied', 'user cancelled')) {
         return 'Transaction was rejected in your wallet.';
       }
-      return innerMsg || `${capitalize(action)} transaction could not be created. Please try again.`;
+      return (
+        searchableText ||
+        innerMsg ||
+        `${capitalize(action)} transaction could not be created. (SDK code: ${o.code ?? 'unknown'})`
+      );
     }
 
     // ── Unknown / catch-all errors per action ──
@@ -405,26 +484,24 @@ export function getMmErrorText(error: unknown): string {
     ) {
       const action = o.code.replace('_UNKNOWN_ERROR', '').toLowerCase();
 
-      if (innerErrorIncludes(innerMsg, 'insufficient funds for gas', 'exceeds the balance of the account')) {
+      if (innerErrorIncludes(searchableText, 'insufficient funds for gas', 'exceeds the balance of the account')) {
         return `Not enough native token to cover gas fees for the ${action} transaction. Please top up your wallet.`;
       }
-      if (innerErrorIncludes(innerMsg, 'External call failed', 'Simulation failed')) {
-        return `${capitalize(action)} simulation failed. The amount may exceed what is available. Please try a smaller amount.`;
+      if (innerErrorIncludes(searchableText, 'External call failed', 'Simulation failed', 'Execution reverted')) {
+        return formatHubSimulationFailureMessage(action, o.code ?? 'UNKNOWN_ERROR', o.data?.error);
       }
-      if (innerErrorIncludes(innerMsg, 'user rejected', 'User denied', 'user cancelled')) {
+      if (innerErrorIncludes(searchableText, 'user rejected', 'User denied', 'user cancelled')) {
         return 'Transaction was rejected in your wallet.';
       }
-      return innerMsg || `${capitalize(action)} failed unexpectedly. Please try again.`;
+      return (
+        searchableText || innerMsg || `${capitalize(action)} failed unexpectedly. (SDK code: ${o.code ?? 'unknown'})`
+      );
     }
 
     const part = o.message ?? o.code;
     if (typeof part === 'string') return part;
   }
   return String(error);
-}
-
-function capitalize(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 /**
