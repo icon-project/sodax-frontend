@@ -1,8 +1,9 @@
 'use client';
 
 import type React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { usePoolStore } from '@/app/(apps)/pool/_stores/pool-store-provider';
+import { getUserAPY } from './supply-overview/utils';
 import PoolChart from './pool-chart';
 
 type PoolInfoCardProps = {
@@ -29,7 +30,28 @@ export function PoolInfoCard({
     void fetchPoolApy();
   }, [fetchPoolApy]);
 
-  const apyText = poolApyPercent === null ? '--' : `${poolApyPercent.toFixed(2)}%`;
+  const selectedRangeApyPercent = useMemo((): number | null => {
+    if (poolApyPercent === null) {
+      return null;
+    }
+
+    if (
+      minPrice === undefined ||
+      maxPrice === undefined ||
+      pairPrice === null ||
+      pairPrice === undefined ||
+      !Number.isFinite(minPrice) ||
+      !Number.isFinite(maxPrice) ||
+      !Number.isFinite(pairPrice) ||
+      maxPrice <= minPrice
+    ) {
+      return poolApyPercent;
+    }
+
+    return getUserAPY(poolApyPercent, minPrice, maxPrice, pairPrice);
+  }, [maxPrice, minPrice, pairPrice, poolApyPercent]);
+
+  const apyText = selectedRangeApyPercent === null ? '--' : `${selectedRangeApyPercent.toFixed(2)}%`;
 
   return (
     <div className="self-stretch flex flex-col justify-start items-start">
