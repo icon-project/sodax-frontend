@@ -18,7 +18,7 @@ import type { XConnection } from '../types';
 import type { ChainActions } from '../context/ChainActionsContext';
 import { SuiXService } from '../xchains/sui';
 import { SuiXConnector } from '../xchains/sui';
-import { useXWagmiStore } from '../useXWagmiStore';
+import { useXWalletStore } from '../useXWalletStore';
 import type { SuiChainConfig } from '../types/config';
 
 const defaultSuiConfig: Required<Pick<SuiChainConfig, 'autoConnect'>> = {
@@ -43,8 +43,8 @@ const SuiHydrator = ({ onRegisterActions }: Pick<SuiProviderProps, 'onRegisterAc
   const { mutateAsync: suiConnectAsync } = useConnectWallet();
   const { mutateAsync: suiDisconnectAsync } = useDisconnectWallet();
   const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
-  const setXConnection = useXWagmiStore(state => state.setXConnection);
-  const unsetXConnection = useXWagmiStore(state => state.unsetXConnection);
+  const setXConnection = useXWalletStore(state => state.setXConnection);
+  const unsetXConnection = useXWalletStore(state => state.unsetXConnection);
 
   // Refs to hold latest hook values
   const connectRef = useRef(suiConnectAsync);
@@ -84,18 +84,23 @@ const SuiHydrator = ({ onRegisterActions }: Pick<SuiProviderProps, 'onRegisterAc
   useEffect(() => {
     const suiConnectors = suiWallets.map(wallet => new SuiXConnector(wallet));
     SuiXService.getInstance().setXConnectors(suiConnectors);
-    useXWagmiStore.getState().setXConnectors('SUI', suiConnectors);
+    useXWalletStore.getState().setXConnectors('SUI', suiConnectors);
   }, [suiWallets]);
 
-  // Hydrate connection state into store
+  // Hydrate connection state into store (set + unset)
+  const wasConnectedRef = useRef(!!useXWalletStore.getState().xConnections.SUI);
   useEffect(() => {
     if (currentWallet && suiAccount?.address) {
+      wasConnectedRef.current = true;
       setXConnection('SUI', {
         xAccount: { address: suiAccount.address, xChainType: 'SUI' },
         xConnectorId: currentWallet.name,
       });
+    } else if (wasConnectedRef.current) {
+      wasConnectedRef.current = false;
+      unsetXConnection('SUI');
     }
-  }, [currentWallet, suiAccount, setXConnection]);
+  }, [currentWallet, suiAccount, setXConnection, unsetXConnection]);
 
   // Register ChainActions — once on mount, uses refs for latest values
   useEffect(() => {
@@ -112,7 +117,7 @@ const SuiHydrator = ({ onRegisterActions }: Pick<SuiProviderProps, 'onRegisterAc
       },
       getConnectors: () => SuiXService.getInstance().getXConnectors(),
       getConnection: (): XConnection | undefined => {
-        return useXWagmiStore.getState().xConnections.SUI;
+        return useXWalletStore.getState().xConnections.SUI;
       },
       signMessage: async (message: string) => {
         const res = await signMessageRef.current({ message: new Uint8Array(new TextEncoder().encode(message)) });

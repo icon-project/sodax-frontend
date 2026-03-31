@@ -1,7 +1,7 @@
 import type { ChainType } from '@sodax/types';
 import { useCallback } from 'react';
 import { getXService } from '../actions';
-import { useXWagmiStore } from '../useXWagmiStore';
+import { useXWalletStore } from '../useXWalletStore';
 import { useChainActionsRegistry } from '../context/ChainActionsContext';
 import type { NearXService } from '@/xchains/near/NearXService';
 
@@ -12,8 +12,8 @@ import type { NearXService } from '@/xchains/near/NearXService';
  * Falls back to XService/XConnector for other chains.
  */
 export function useXDisconnect(): (xChainType: ChainType) => Promise<void> {
-  const xConnections = useXWagmiStore(state => state.xConnections);
-  const unsetXConnection = useXWagmiStore(state => state.unsetXConnection);
+  const xConnections = useXWalletStore(state => state.xConnections);
+  const unsetXConnection = useXWalletStore(state => state.unsetXConnection);
   const actionsRegistry = useChainActionsRegistry();
 
   return useCallback(

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { ChainType } from '@sodax/types';
 import type { XAccount } from '../types';
-import { useXWagmiStore } from '../useXWagmiStore';
+import { useXWalletStore } from '../useXWalletStore';
 
 /**
  * Hook to get all connected accounts across enabled chains.
@@ -9,8 +9,8 @@ import { useXWagmiStore } from '../useXWagmiStore';
  * Reads from store only (single source of truth). Providers hydrate connection state into store.
  */
 export function useXAccounts() {
-  const enabledChains = useXWagmiStore(state => state.enabledChains);
-  const xConnections = useXWagmiStore(state => state.xConnections);
+  const enabledChains = useXWalletStore(state => state.enabledChains);
+  const xConnections = useXWalletStore(state => state.xConnections);
 
   return useMemo(() => {
     const result: Partial<Record<ChainType, XAccount>> = {};

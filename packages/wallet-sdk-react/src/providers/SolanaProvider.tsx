@@ -14,7 +14,7 @@ import type { XConnection } from '../types';
 import type { ChainActions } from '../context/ChainActionsContext';
 import { SolanaXService } from '../xchains/solana/SolanaXService';
 import { SolanaXConnector } from '../xchains/solana';
-import { useXWagmiStore } from '../useXWagmiStore';
+import { useXWalletStore } from '../useXWalletStore';
 import type { SolanaChainConfig } from '../types/config';
 
 const defaultSolanaConfig: Required<Pick<SolanaChainConfig, 'autoConnect'>> = {
@@ -35,8 +35,8 @@ type SolanaProviderProps = {
 const SolanaHydrator = ({ onRegisterActions }: Pick<SolanaProviderProps, 'onRegisterActions'>) => {
   const { connection } = useConnection();
   const solanaWallet = useWallet();
-  const setXConnection = useXWagmiStore(state => state.setXConnection);
-  const unsetXConnection = useXWagmiStore(state => state.unsetXConnection);
+  const setXConnection = useXWalletStore(state => state.setXConnection);
+  const unsetXConnection = useXWalletStore(state => state.unsetXConnection);
 
   // Refs to hold latest hook values
   const walletRef = useRef(solanaWallet);
@@ -66,16 +66,21 @@ const SolanaHydrator = ({ onRegisterActions }: Pick<SolanaProviderProps, 'onRegi
       .filter(wallet => wallet.readyState === 'Installed')
       .map(wallet => new SolanaXConnector(wallet));
     SolanaXService.getInstance().setXConnectors(solanaConnectors);
-    useXWagmiStore.getState().setXConnectors('SOLANA', solanaConnectors);
+    useXWalletStore.getState().setXConnectors('SOLANA', solanaConnectors);
   }, [solanaWallets]);
 
-  // Hydrate connection state into store
+  // Hydrate connection state into store (set + unset)
+  const wasConnectedRef = useRef(!!useXWalletStore.getState().xConnections.SOLANA);
   useEffect(() => {
     if (solanaWallet.connected && solanaWallet.publicKey) {
+      wasConnectedRef.current = true;
       setXConnection('SOLANA', {
         xAccount: { address: solanaWallet.publicKey.toString(), xChainType: 'SOLANA' },
         xConnectorId: `${solanaWallet.wallet?.adapter.name}`,
       });
+    } else if (wasConnectedRef.current) {
+      wasConnectedRef.current = false;
+      unsetConnectionRef.current('SOLANA');
     }
   }, [solanaWallet.connected, solanaWallet.publicKey, solanaWallet.wallet, setXConnection]);
 
@@ -120,6 +125,10 @@ const SolanaHydrator = ({ onRegisterActions }: Pick<SolanaProviderProps, 'onRegi
               reject(err);
             });
           });
+        } else if (!walletRef.current.connected) {
+          // Non-MetaMask wallets: select() sets the wallet, connect() triggers the connection
+          // Guard: skip if autoConnect already handled it
+          await walletRef.current.connect();
         }
 
         return undefined;
@@ -130,14 +139,14 @@ const SolanaHydrator = ({ onRegisterActions }: Pick<SolanaProviderProps, 'onRegi
       },
       getConnectors: () => SolanaXService.getInstance().getXConnectors(),
       getConnection: (): XConnection | undefined => {
-        return useXWagmiStore.getState().xConnections.SOLANA;
+        return useXWalletStore.getState().xConnections.SOLANA;
       },
       signMessage: async (message: string) => {
         if (!walletRef.current.signMessage) {
           throw new Error('Solana wallet not connected');
         }
         const signature = await walletRef.current.signMessage(new TextEncoder().encode(message));
-        return new TextDecoder().decode(signature);
+        return Buffer.from(signature).toString('base64');
       },
     };
     onRegisterActions(actions);
