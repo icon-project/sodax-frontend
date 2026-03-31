@@ -141,8 +141,9 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
   return activeChains.flatMap(chainId => {
     try {
       const tokens = getSupportedSolverTokens(chainId).map(normalizeToken);
+      // Filter out soda vault tokens (sodaUSDC, sodaETH, etc.) on Sonic while keeping non-vault tokens like bnUSD, IbnUSD
       const tokensForChain = chainId === SONIC_MAINNET_CHAIN_ID
-        ? tokens.filter(token => !Object.values(SodaTokens).some(sodaToken => sodaToken.symbol === token.symbol))
+        ? tokens.filter(token => !Object.values(SodaTokens).some(sodaToken => sodaToken.symbol === token.symbol && sodaToken.symbol.toLowerCase().startsWith('soda')))
         : tokens;
 
       return tokensForChain.map(token => ({
@@ -159,8 +160,9 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
 export const getSupportedSolverTokensForChain = (chainId: SpokeChainId): XToken[] => {
   try {
     const tokens = getSupportedSolverTokens(chainId).map(normalizeToken);
+    // Filter out soda vault tokens (sodaUSDC, sodaETH, etc.) on Sonic while keeping non-vault tokens like bnUSD, IbnUSD
     const tokensForChain = chainId === SONIC_MAINNET_CHAIN_ID
-      ? tokens.filter(token => !Object.values(SodaTokens).some(sodaToken => sodaToken.symbol === token.symbol))
+      ? tokens.filter(token => !Object.values(SodaTokens).some(sodaToken => sodaToken.symbol === token.symbol && sodaToken.symbol.toLowerCase().startsWith('soda')))
       : tokens;
 
     return tokensForChain.map(token => ({
