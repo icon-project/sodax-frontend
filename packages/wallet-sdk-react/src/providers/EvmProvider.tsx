@@ -9,7 +9,7 @@ import type { XConnection } from '../types';
 import type { ChainActions } from '../context/ChainActionsContext';
 import { EvmXService, createWagmiConfig } from '../xchains/evm/EvmXService';
 import { EvmXConnector } from '../xchains/evm';
-import { useXWagmiStore } from '../useXWagmiStore';
+import { useXWalletStore } from '../useXWalletStore';
 import type { EvmChainConfig } from '../types/config';
 
 const queryClient = new QueryClient();
@@ -37,8 +37,8 @@ const EvmHydrator = ({ onRegisterActions }: Pick<EvmProviderProps, 'onRegisterAc
   const { signMessageAsync } = useSignMessage();
   const evmConnections = useConnections();
   const { address } = useAccount();
-  const setXConnection = useXWagmiStore(state => state.setXConnection);
-  const unsetXConnection = useXWagmiStore(state => state.unsetXConnection);
+  const setXConnection = useXWalletStore(state => state.setXConnection);
+  const unsetXConnection = useXWalletStore(state => state.unsetXConnection);
 
   // Refs to hold latest hook values — avoids re-registering actions on every render
   const connectRef = useRef(connectAsync);
@@ -65,18 +65,24 @@ const EvmHydrator = ({ onRegisterActions }: Pick<EvmProviderProps, 'onRegisterAc
   useEffect(() => {
     const evmConnectors = connectors.map(c => new EvmXConnector(c));
     EvmXService.getInstance().setXConnectors(evmConnectors);
-    useXWagmiStore.getState().setXConnectors('EVM', evmConnectors);
+    useXWalletStore.getState().setXConnectors('EVM', evmConnectors);
   }, [connectors]);
 
-  // Hydrate connection state into store
+  // Hydrate connection state into store (set + unset)
+  // Initialize from persisted store — if there's a stale connection from localStorage, we need to clear it if wallet doesn't reconnect
+  const wasConnectedRef = useRef(!!useXWalletStore.getState().xConnections.EVM);
   useEffect(() => {
     if (address && evmConnections?.[0]) {
+      wasConnectedRef.current = true;
       setXConnection('EVM', {
         xAccount: { address: address as string, xChainType: 'EVM' },
         xConnectorId: evmConnections[0].connector.id,
       });
+    } else if (wasConnectedRef.current) {
+      wasConnectedRef.current = false;
+      unsetXConnection('EVM');
     }
-  }, [address, evmConnections, setXConnection]);
+  }, [address, evmConnections, setXConnection, unsetXConnection]);
 
   // Register ChainActions — once on mount, uses refs for latest values
   useEffect(() => {
@@ -93,7 +99,7 @@ const EvmHydrator = ({ onRegisterActions }: Pick<EvmProviderProps, 'onRegisterAc
       },
       getConnectors: () => EvmXService.getInstance().getXConnectors(),
       getConnection: (): XConnection | undefined => {
-        return useXWagmiStore.getState().xConnections.EVM;
+        return useXWalletStore.getState().xConnections.EVM;
       },
       signMessage: async (message: string) => {
         const signature = await signMessageRef.current({ message });

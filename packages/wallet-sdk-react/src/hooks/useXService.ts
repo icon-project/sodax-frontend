@@ -1,8 +1,8 @@
 import type { ChainType } from '@sodax/types';
 import type { XService } from '../core';
-import { useXWagmiStore } from '../useXWagmiStore';
+import { useXWalletStore } from '../useXWalletStore';
 
 export function useXService(xChainType: ChainType | undefined): XService | undefined {
-  const xService = useXWagmiStore(state => (xChainType ? state.xServices[xChainType] : undefined));
+  const xService = useXWalletStore(state => (xChainType ? state.xServices[xChainType] : undefined));
   return xService;
 }

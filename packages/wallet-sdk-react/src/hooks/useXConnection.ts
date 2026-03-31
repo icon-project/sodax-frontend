@@ -1,6 +1,6 @@
 import type { ChainType } from '@sodax/types';
 import type { XConnection } from '../types';
-import { useXWagmiStore } from '../useXWagmiStore';
+import { useXWalletStore } from '../useXWalletStore';
 
 /**
  * Hook for accessing connection details for a specific blockchain.
@@ -11,5 +11,5 @@ import { useXWagmiStore } from '../useXWagmiStore';
  * @returns Connection details including account and connector ID, or undefined if not connected
  */
 export function useXConnection(xChainType: ChainType | undefined): XConnection | undefined {
-  return useXWagmiStore(state => (xChainType ? state.xConnections?.[xChainType] : undefined));
+  return useXWalletStore(state => (xChainType ? state.xConnections?.[xChainType] : undefined));
 }

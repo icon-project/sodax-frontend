@@ -1,7 +1,7 @@
 import type { ChainType } from '@sodax/types';
 import { useMemo } from 'react';
 import type { XConnector } from '../core';
-import { useXWagmiStore } from '../useXWagmiStore';
+import { useXWalletStore } from '../useXWalletStore';
 import { useStellarXConnectors } from '../xchains/stellar/useStellarXConnectors';
 import { useNearXConnectors } from '../xchains/near/useNearXConnectors';
 
@@ -15,7 +15,7 @@ import { useNearXConnectors } from '../xchains/near/useNearXConnectors';
  * @returns An array of XConnector instances compatible with the specified chain type
  */
 export function useXConnectors(xChainType: ChainType | undefined): XConnector[] {
-  const xConnectorsByChain = useXWagmiStore(state => state.xConnectorsByChain);
+  const xConnectorsByChain = useXWalletStore(state => state.xConnectorsByChain);
 
   // Stellar and Near discover connectors asynchronously
   const { data: stellarXConnectors } = useStellarXConnectors();

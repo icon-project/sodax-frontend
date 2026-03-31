@@ -13,9 +13,12 @@ import { ChainActionsProvider } from './context/ChainActionsContext';
 import { EvmProvider } from './providers/EvmProvider';
 import { SolanaProvider } from './providers/SolanaProvider';
 import { SuiProvider } from './providers/SuiProvider';
-import { useXWagmiStore } from './useXWagmiStore';
+import { useXWalletStore } from './useXWalletStore';
 import { createNetwork } from '@stacks/network';
 import { StacksXService } from './xchains/stacks/StacksXService';
+import { reconnectIcon } from './xchains/icon/actions';
+import { reconnectInjective } from './xchains/injective/actions';
+import { reconnectStellar } from './xchains/stellar/actions';
 
 // ─── Legacy props (deprecated) ───────────────────────────────────────────────
 
@@ -78,17 +81,46 @@ const resolveLegacyProps = (props: SodaxWalletProviderProps): SodaxWalletConfig 
 
 // ─── Provider ────────────────────────────────────────────────────────────────
 
-export const SodaxWalletProvider = (props: SodaxWalletProviderProps) => {
-  const config = useMemo(() => resolveLegacyProps(props), [props.config, props.rpcConfig, props.options, props.initialState]);
+export const SodaxWalletProvider = ({ children, config: configProp, rpcConfig: rpcConfigProp, options, initialState }: SodaxWalletProviderProps) => {
+  const wagmiReconnectOnMount = options?.wagmi?.reconnectOnMount;
+  const wagmiSsr = options?.wagmi?.ssr;
+  const solanaAutoConnect = options?.solana?.autoConnect;
+  const suiAutoConnect = options?.sui?.autoConnect;
+
+  const config = useMemo(
+    () =>
+      configProp ??
+      resolveLegacyProps({
+        children: null as never,
+        config: configProp,
+        rpcConfig: rpcConfigProp,
+        options: { wagmi: { reconnectOnMount: wagmiReconnectOnMount, ssr: wagmiSsr }, solana: { autoConnect: solanaAutoConnect }, sui: { autoConnect: suiAutoConnect } },
+        initialState,
+      }),
+    [configProp, rpcConfigProp, wagmiReconnectOnMount, wagmiSsr, solanaAutoConnect, suiAutoConnect, initialState],
+  );
   const { chains, rpcConfig } = config;
 
   // Init non-provider chains via store
-  const initChainServices = useXWagmiStore(state => state.initChainServices);
+  const initChainServices = useXWalletStore(state => state.initChainServices);
   const initializedRef = useRef(false);
   useEffect(() => {
     if (!initializedRef.current) {
       initChainServices(chains);
       initializedRef.current = true;
+
+      // Reconnect after persist hydration restores xConnections from localStorage
+      const runReconnect = () => {
+        if (chains.ICON) reconnectIcon();
+        if (chains.INJECTIVE) reconnectInjective();
+        if (chains.STELLAR) reconnectStellar();
+      };
+
+      if (useXWalletStore.persist.hasHydrated()) {
+        runReconnect();
+      } else {
+        useXWalletStore.persist.onFinishHydration(runReconnect);
+      }
     }
   }, [chains, initChainServices]);
 
@@ -118,7 +150,7 @@ export const SodaxWalletProvider = (props: SodaxWalletProviderProps) => {
   }, []);
 
   // Compose providers conditionally
-  let content = <>{props.children}</>;
+  let content = <>{children}</>;
 
   if (chains.SOLANA) {
     content = (

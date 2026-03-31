@@ -1,7 +1,7 @@
 import type { XAccount } from '@/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import type { XConnector } from '../core/XConnector';
-import { useXWagmiStore } from '../useXWagmiStore';
+import { useXWalletStore } from '../useXWalletStore';
 import { useChainActionsRegistry } from '../context/ChainActionsContext';
 
 /**
@@ -11,7 +11,7 @@ import { useChainActionsRegistry } from '../context/ChainActionsContext';
  * Falls back to XConnector.connect() for other chains.
  */
 export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XConnector> {
-  const setXConnection = useXWagmiStore(state => state.setXConnection);
+  const setXConnection = useXWalletStore(state => state.setXConnection);
   const actionsRegistry = useChainActionsRegistry();
 
   return useMutation({
