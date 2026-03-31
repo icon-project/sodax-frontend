@@ -18,6 +18,7 @@ import { formatUnits, parseUnits } from 'viem';
 import { SupplyOverview } from './_components/supply-overview';
 import { useGetUserHubWalletAddress } from '@sodax/dapp-kit';
 import { useDexPositions } from '@/hooks/useDexPositions';
+import type { SpokeChainId } from '@sodax/types';
 
 type DexPositionsUpdatedDetail = {
   chainId: string | number;
@@ -28,11 +29,12 @@ export default function PoolPage() {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [sodaInputAmount, setSodaInputAmount] = useState<string>('');
   const [lastEditedAmount, setLastEditedAmount] = useState<'soda' | 'xsoda' | null>(null);
-  const { selectedNetworkChainId, minPrice, maxPrice, isNetworkPickerOpened } = usePoolState();
+  const { selectedToken, minPrice, maxPrice, isNetworkPickerOpened } = usePoolState();
   const { setSelectedToken, setMinPrice, setMaxPrice, setSodaAmount, setXSodaAmount, setIsNetworkPickerOpened } =
     usePoolActions();
-  const { address } = useXAccount(selectedNetworkChainId ?? undefined);
-  const { data: hubWalletAddress } = useGetUserHubWalletAddress(selectedNetworkChainId ?? undefined, address);
+  const selectedChainId = selectedToken ? (selectedToken.xChainId as SpokeChainId) : null;
+  const { address } = useXAccount(selectedChainId as SpokeChainId);
+  const { data: hubWalletAddress } = useGetUserHubWalletAddress(selectedChainId as SpokeChainId, address);
 
   const fixedPoolKey = dexPools.ASODA_XSODA;
   const { data: poolDataRaw } = usePoolData({ poolKey: fixedPoolKey });
@@ -50,8 +52,8 @@ export default function PoolPage() {
   }, [poolData]);
 
   const { sodax } = useSodaxContext();
-  const walletProvider = useWalletProvider(selectedNetworkChainId ?? undefined);
-  const spokeProvider = useSpokeProvider(selectedNetworkChainId ?? undefined, walletProvider);
+  const walletProvider = useWalletProvider(selectedChainId as SpokeChainId);
+  const spokeProvider = useSpokeProvider(selectedChainId as SpokeChainId, walletProvider);
 
   const poolSpokeAssets = useMemo((): PoolSpokeAssets | null => {
     if (!spokeProvider) {
@@ -127,7 +129,7 @@ export default function PoolPage() {
   const { savedPositions, refetch: refetchSavedPositions } = useDexPositions({
     hubWalletAddress,
     poolId,
-    selectedNetworkChainId,
+    selectedNetworkChainId: selectedChainId,
   });
 
   useEffect(() => {
@@ -186,7 +188,7 @@ export default function PoolPage() {
         <motion.div className="relative self-stretch flex flex-col justify-start items-start" variants={itemVariants}>
           <PoolNetworkSelector
             isNetworkPickerOpened={isNetworkPickerOpened}
-            selectedNetworkChainId={selectedNetworkChainId}
+            selectedChainId={selectedChainId}
             onNetworkPickerOpenChange={setIsNetworkPickerOpened}
             onNetworkSelect={setSelectedToken}
           />
@@ -218,7 +220,7 @@ export default function PoolPage() {
                   onMaxPriceChange={setMaxPrice}
                 />
                 <LiquidityInputs
-                  selectedNetworkChainId={selectedNetworkChainId}
+                  selectedChainId={selectedChainId}
                   sodaAmount={sodaInputAmount}
                   xSodaAmount={liquidityToken1Amount}
                   onSodaAmountChange={handleSodaAmountChange}

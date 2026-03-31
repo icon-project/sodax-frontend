@@ -57,16 +57,16 @@ export default function SupplyDialogFooter({
   poolData,
   poolSpokeAssets,
 }: SupplyDialogFooterProps): React.JSX.Element {
-  const { selectedNetworkChainId, minPrice, maxPrice, sodaAmount, xSodaAmount } = usePoolState();
+  const { selectedChainId, minPrice, maxPrice, sodaAmount, xSodaAmount } = usePoolState();
   const [lockedSupplyAmounts, setLockedSupplyAmounts] = useState<{ token0: string; token1: string } | null>(null);
   const [isTransferred, setIsTransferred] = useState<boolean>(false);
   const [isSupplySubmitting, setIsSupplySubmitting] = useState<boolean>(false);
-  const walletProvider = useWalletProvider(selectedNetworkChainId ?? undefined);
-  const { address } = useXAccount(selectedNetworkChainId ?? undefined);
-  const { data: hubWalletAddress } = useGetUserHubWalletAddress(selectedNetworkChainId ?? undefined, address);
-  const spokeProvider = useSpokeProvider(selectedNetworkChainId ?? undefined, walletProvider);
+  const walletProvider = useWalletProvider(selectedChainId ?? undefined);
+  const { address } = useXAccount(selectedChainId ?? undefined);
+  const { data: hubWalletAddress } = useGetUserHubWalletAddress(selectedChainId ?? undefined, address);
+  const spokeProvider = useSpokeProvider(selectedChainId ?? undefined, walletProvider);
   const activeSpokeProvider = spokeProvider ?? null;
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedNetworkChainId as ChainId);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId as ChainId);
   const fixedPoolKey = dexPools.ASODA_XSODA;
   const { mutateAsync: approveAsset, isPending: isApproving } = useDexApprove();
   const { mutateAsync: depositAsset, isPending: isDepositing } = useDexDeposit();
@@ -328,7 +328,7 @@ export default function SupplyDialogFooter({
           const mintEvent = await sodax.dex.clService.getMintPositionEvent(normalizedHubTxHash);
           saveDexTokenIdToLocalStorage(
             positionsOwnerAddress,
-            selectedNetworkChainId ?? 'sonic',
+            selectedChainId ?? 'sonic',
             mintEvent.tokenId.toString(),
           );
         } catch {
@@ -343,7 +343,7 @@ export default function SupplyDialogFooter({
           type: 'active',
         });
 
-        dispatchDexPositionsUpdatedEvent(selectedNetworkChainId ?? 'sonic', positionsOwnerAddress);
+        dispatchDexPositionsUpdatedEvent(selectedChainId ?? 'sonic', positionsOwnerAddress);
 
         onCompletedChange(true);
       } catch (error) {
@@ -403,7 +403,7 @@ export default function SupplyDialogFooter({
           }
         >
           {isApproveStep && isWrongChain ? (
-            <>Switch to {selectedNetworkChainId ? chainIdToChainName(selectedNetworkChainId) : 'selected network'}</>
+            <>Switch to {selectedChainId ? chainIdToChainName(selectedChainId) : 'selected network'}</>
           ) : isApproved ? (
             <Check className="w-5 h-5" />
           ) : isApproving ? (
@@ -438,7 +438,7 @@ export default function SupplyDialogFooter({
           }
         >
           {isTransferStep && isWrongChain ? (
-            <>Switch to {selectedNetworkChainId ? chainIdToChainName(selectedNetworkChainId) : 'selected network'}</>
+            <>Switch to {selectedChainId ? chainIdToChainName(selectedChainId) : 'selected network'}</>
           ) : isTransferred ? (
             <Check className="w-5 h-5" />
           ) : !isApproved ? (
