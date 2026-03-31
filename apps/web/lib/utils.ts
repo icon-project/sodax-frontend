@@ -42,6 +42,28 @@ export function createDexTokenIdsStorageKey(chainId: string | number, userAddres
   return `sodax-dex-positions-${chainId}-${userAddress}`;
 }
 
+export function saveDexTokenIdToLocalStorage(userAddress: string, chainId: string | number, tokenId: string): void {
+  if (typeof globalThis.localStorage === 'undefined') {
+    return;
+  }
+
+  const cleanId = tokenId.trim().toLowerCase();
+  if (!cleanId) {
+    return;
+  }
+
+  const storageKey = createDexTokenIdsStorageKey(chainId, userAddress);
+  const positions = globalThis.localStorage.getItem(storageKey);
+  const tokenIds = positions ? positions.split(',').map(value => value.trim()) : [];
+  const hasTokenId = tokenIds.some(id => id.trim().toLowerCase() === cleanId);
+
+  if (hasTokenId) {
+    return;
+  }
+
+  globalThis.localStorage.setItem(storageKey, [...tokenIds, tokenId.trim()].join(','));
+}
+
 export function dispatchDexPositionsUpdatedEvent(chainId: string | number, userAddress: string): void {
   globalThis.dispatchEvent(
     new CustomEvent(DEX_POSITIONS_UPDATED_EVENT, {
