@@ -225,6 +225,7 @@ export default function PoolPage() {
                   onXSodaAmountChange={handleXSodaAmountChange}
                   poolData={poolData}
                   poolSpokeAssets={poolSpokeAssets}
+                  fixedPoolKey={fixedPoolKey}
                 />
               </div>
             </div>
