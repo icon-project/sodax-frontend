@@ -71,7 +71,7 @@ const SuiHydrator = ({ onRegisterActions }: Pick<SuiProviderProps, 'onRegisterAc
   useEffect(() => {
     const suiConnectors = suiWallets.map(wallet => new SuiXConnector(wallet));
     SuiXService.getInstance().setXConnectors(suiConnectors);
-    // TODO Phase 4: useXWagmiStore.getState().setXConnectors('SUI', suiConnectors);
+    useXWagmiStore.getState().setXConnectors('SUI', suiConnectors);
   }, [suiWallets]);
 
   // Hydrate connection state into store

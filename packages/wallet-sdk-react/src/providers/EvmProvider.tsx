@@ -52,7 +52,7 @@ const EvmHydrator = ({ onRegisterActions }: Pick<EvmProviderProps, 'onRegisterAc
   useEffect(() => {
     const evmConnectors = connectors.map(c => new EvmXConnector(c));
     EvmXService.getInstance().setXConnectors(evmConnectors);
-    // TODO Phase 4: useXWagmiStore.getState().setXConnectors('EVM', evmConnectors);
+    useXWagmiStore.getState().setXConnectors('EVM', evmConnectors);
   }, [connectors]);
 
   // Hydrate connection state into store
