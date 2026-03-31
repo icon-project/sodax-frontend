@@ -11,7 +11,7 @@ import { InputGroupInput } from '@/components/ui/input-group';
 import { getXChainType, useEvmSwitchChain, useXAccount } from '@sodax/wallet-sdk-react';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalStore } from '@/stores/modal-store-provider';
-import type { ChainId, SpokeChainId } from '@sodax/types';
+import type { SpokeChainId } from '@sodax/types';
 import type { XToken } from '@sodax/types';
 import { chainIdToChainName } from '@/providers/constants';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
