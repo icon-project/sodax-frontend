@@ -16,6 +16,7 @@ import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { dexPools, type PoolSpokeAssets } from '@sodax/sdk';
 import { formatUnits, parseUnits } from 'viem';
 import { SupplyOverview } from './_components/supply-overview';
+import { useGetUserHubWalletAddress } from '@sodax/dapp-kit';
 
 type DexPositionsUpdatedDetail = {
   chainId: string | number;
@@ -27,37 +28,13 @@ type SavedDexPosition = {
   chainId: string;
 };
 
-function parseTokenIdsFromStorageValue(value: string | null): string[] {
-  if (!value) {
-    return [];
-  }
+type PositionsApiItem = {
+  token_id: string;
+  pool_id: string;
+  is_burned: boolean;
+};
 
-  return value
-    .split(',')
-    .map(tokenId => tokenId.trim())
-    .filter(tokenId => tokenId.length > 0);
-}
-
-function isDexPositionsStorageKeyForAddress(storageKey: string, normalizedAddress: string): boolean {
-  const normalizedStorageKey = storageKey.toLowerCase();
-  return (
-    normalizedStorageKey.startsWith('sodax-dex-positions-') && normalizedStorageKey.endsWith(`-${normalizedAddress}`)
-  );
-}
-
-function extractChainIdFromDexPositionsStorageKey(storageKey: string, normalizedAddress: string): string | null {
-  if (!isDexPositionsStorageKeyForAddress(storageKey, normalizedAddress)) {
-    return null;
-  }
-
-  const prefix = 'sodax-dex-positions-';
-  const suffix = `-${normalizedAddress}`;
-  if (storageKey.length <= prefix.length + suffix.length) {
-    return null;
-  }
-
-  return storageKey.slice(prefix.length, storageKey.length - suffix.length);
-}
+const ASODA_XSODA_POOL_ID = '0x1fbed2bab018dd01756162d135964186addbab00158eda8013de8a15948995cd';
 
 export default function PoolPage() {
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -67,6 +44,8 @@ export default function PoolPage() {
   const { setSelectedToken, setMinPrice, setMaxPrice, setSodaAmount, setXSodaAmount, setIsNetworkPickerOpened } =
     usePoolActions();
   const { address } = useXAccount(selectedNetworkChainId ?? undefined);
+  const { data: hubWalletAddress } = useGetUserHubWalletAddress(selectedNetworkChainId ?? undefined, address);
+
   const [savedPositions, setSavedPositions] = useState<SavedDexPosition[]>([]);
   const fixedPoolKey = dexPools.ASODA_XSODA;
   const { data: poolDataRaw } = usePoolData({ poolKey: fixedPoolKey });
@@ -85,6 +64,7 @@ export default function PoolPage() {
   const { sodax } = useSodaxContext();
   const walletProvider = useWalletProvider(selectedNetworkChainId ?? undefined);
   const spokeProvider = useSpokeProvider(selectedNetworkChainId ?? undefined, walletProvider);
+
   const poolSpokeAssets = useMemo((): PoolSpokeAssets | null => {
     if (!spokeProvider) {
       return null;
@@ -157,40 +137,42 @@ export default function PoolPage() {
   );
 
   const loadSavedTokenIds = useCallback((): void => {
-    if (typeof globalThis.localStorage === 'undefined' || !address) {
-      setSavedPositions([]);
-      return;
-    }
-
-    const positionsByTokenId = new Map<string, SavedDexPosition>();
-    const normalizedAddress = address.toLowerCase();
-
-    for (let index = 0; index < globalThis.localStorage.length; index += 1) {
-      const storageKey = globalThis.localStorage.key(index);
-      if (!storageKey) {
-        continue;
+    const fetchPositions = async (): Promise<void> => {
+      if (!hubWalletAddress) {
+        setSavedPositions([]);
+        return;
       }
 
-      const chainId = extractChainIdFromDexPositionsStorageKey(storageKey, normalizedAddress);
-      if (!chainId) {
-        continue;
+      const endpoint = `/api/pool/positions?address=${encodeURIComponent(hubWalletAddress)}&include_burned=false&limit=100&offset=0`;
+      const response = await fetch(endpoint, { method: 'GET', cache: 'no-store' });
+      console.log('response', response);
+      if (!response.ok) {
+        setSavedPositions([]);
+        return;
       }
 
-      const parsedTokenIds = parseTokenIdsFromStorageValue(globalThis.localStorage.getItem(storageKey));
-      for (const tokenId of parsedTokenIds) {
-        const normalizedTokenId = tokenId.toLowerCase();
-        if (positionsByTokenId.has(normalizedTokenId)) {
-          continue;
-        }
-        positionsByTokenId.set(normalizedTokenId, {
-          tokenId,
-          chainId,
-        });
+      const responsePayload = (await response.json()) as unknown;
+      if (!Array.isArray(responsePayload)) {
+        setSavedPositions([]);
+        return;
       }
-    }
 
-    setSavedPositions(Array.from(positionsByTokenId.values()));
-  }, [address]);
+      const positions = responsePayload as PositionsApiItem[];
+      const normalizedPoolId = ASODA_XSODA_POOL_ID.toLowerCase();
+      const nextPositions = positions
+        .filter(position => !position.is_burned && position.pool_id.toLowerCase() === normalizedPoolId)
+        .map(
+          (position): SavedDexPosition => ({
+            tokenId: position.token_id,
+            chainId: selectedNetworkChainId ? String(selectedNetworkChainId) : 'sonic',
+          }),
+        );
+
+      setSavedPositions(nextPositions);
+    };
+
+    void fetchPositions();
+  }, [hubWalletAddress, selectedNetworkChainId]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -217,38 +199,23 @@ export default function PoolPage() {
   }, [loadSavedTokenIds]);
 
   useEffect((): (() => void) => {
-    const onStorageUpdated = (event: StorageEvent): void => {
-      if (!address) {
-        return;
-      }
-      if (event.storageArea !== globalThis.localStorage) {
-        return;
-      }
-      if (event.key && !isDexPositionsStorageKeyForAddress(event.key, address.toLowerCase())) {
-        return;
-      }
-      loadSavedTokenIds();
-    };
-
     const onDexPositionsUpdated = (event: Event): void => {
       const customEvent = event as CustomEvent<DexPositionsUpdatedDetail>;
-      if (!address) {
+      if (!hubWalletAddress) {
         loadSavedTokenIds();
         return;
       }
       const eventAddress = customEvent.detail?.userAddress?.toLowerCase();
-      if (eventAddress === address.toLowerCase()) {
+      if (eventAddress === hubWalletAddress.toLowerCase()) {
         loadSavedTokenIds();
       }
     };
 
-    globalThis.addEventListener('storage', onStorageUpdated);
     globalThis.addEventListener(DEX_POSITIONS_UPDATED_EVENT, onDexPositionsUpdated);
     return () => {
-      globalThis.removeEventListener('storage', onStorageUpdated);
       globalThis.removeEventListener(DEX_POSITIONS_UPDATED_EVENT, onDexPositionsUpdated);
     };
-  }, [address, loadSavedTokenIds]);
+  }, [hubWalletAddress, loadSavedTokenIds]);
 
   return (
     <motion.div
@@ -276,7 +243,7 @@ export default function PoolPage() {
             <div className={cn('self-stretch transition-[filter] duration-300', isNetworkPickerOpened && 'blur-sm')}>
               <PoolInfoCard
                 pairPrice={pairPrice}
-                poolId={'0x1fbed2bab018dd01756162d135964186addbab00158eda8013de8a15948995cd'}
+                poolId={ASODA_XSODA_POOL_ID}
                 minPrice={minPrice}
                 maxPrice={maxPrice}
                 onMinPriceChange={setMinPrice}
