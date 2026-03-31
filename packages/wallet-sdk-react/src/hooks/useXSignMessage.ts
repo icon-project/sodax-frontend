@@ -1,13 +1,11 @@
-import { useWallet } from '@solana/wallet-adapter-react';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import type { ChainType } from '@sodax/types';
-import { useSignMessage } from 'wagmi';
-import { useSignPersonalMessage } from '@mysten/dapp-kit';
 import { StellarXService } from '@/xchains/stellar';
 import { InjectiveXService } from '@/xchains/injective';
 import { useXAccount } from './useXAccount';
 import { getEthereumAddress } from '@injectivelabs/sdk-ts';
 import { Wallet } from '@injectivelabs/wallet-base';
+import { useChainActionsRegistry } from '../context/ChainActionsContext';
 
 type SignMessageReturnType = `0x${string}` | Uint8Array | string | undefined;
 
@@ -17,35 +15,21 @@ export function useXSignMessage(): UseMutationResult<
   { xChainType: ChainType; message: string },
   unknown
 > {
-  const { signMessage } = useWallet();
-  const { signMessageAsync: evmSignMessage } = useSignMessage();
-
-  const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
-
   const { address: injectiveAddress } = useXAccount('INJECTIVE');
+  const actionsRegistry = useChainActionsRegistry();
 
   return useMutation({
     mutationFn: async ({ xChainType, message }: { xChainType: ChainType; message: string }) => {
       let signature: SignMessageReturnType;
 
-      switch (xChainType) {
-        case 'EVM': {
-          signature = await evmSignMessage({ message });
-          break;
-        }
-        case 'SUI': {
-          const res = await signPersonalMessage({ message: new Uint8Array(new TextEncoder().encode(message)) });
-          signature = res.signature;
-          break;
-        }
-        case 'SOLANA': {
-          if (!signMessage) {
-            throw new Error('Solana wallet not connected');
-          }
-          signature = await signMessage(new TextEncoder().encode(message));
-          break;
-        }
+      // Try ChainActions first (EVM, SUI, SOLANA)
+      const chainActions = actionsRegistry[xChainType];
+      if (chainActions?.signMessage) {
+        return await chainActions.signMessage(message);
+      }
 
+      // Fallback for non-provider chains
+      switch (xChainType) {
         case 'STELLAR': {
           const res = await StellarXService.getInstance().walletsKit.signMessage(message);
           signature = res.signedMessage;

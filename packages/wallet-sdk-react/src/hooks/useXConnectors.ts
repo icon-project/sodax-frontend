@@ -1,72 +1,34 @@
 import type { ChainType } from '@sodax/types';
-import { useWallets } from '@mysten/dapp-kit';
-import { useWallet } from '@solana/wallet-adapter-react';
 import { useMemo } from 'react';
-import { useConnectors } from 'wagmi';
 import type { XConnector } from '../core';
-import { EvmXConnector } from '../xchains/evm';
-import { SolanaXConnector } from '../xchains/solana';
+import { useXWagmiStore } from '../useXWagmiStore';
 import { useStellarXConnectors } from '../xchains/stellar/useStellarXConnectors';
-import { SuiXConnector } from '../xchains/sui';
-import { useXService } from './useXService';
 import { useNearXConnectors } from '../xchains/near/useNearXConnectors';
-import { useStacksXConnectors } from '../xchains/stacks/useStacksXConnectors';
 
 /**
  * Hook to retrieve available wallet connectors for a specific blockchain type.
  *
- * This hook aggregates wallet connectors from different blockchain ecosystems:
- * - EVM: Uses wagmi connectors
- * - Sui: Uses Sui wallet adapters
- * - Stellar: Uses custom Stellar connectors
- * - Solana: Uses Solana wallet adapters (filtered to installed wallets only)
+ * Reads connectors from the centralized store (hydrated by chain providers).
+ * Stellar and Near use async discovery hooks as their connectors are detected at runtime.
  *
- * @param xChainType - The blockchain type to get connectors for ('EVM' | 'SUI' | 'STELLAR' | 'SOLANA' | 'NEAR' | 'STACKS')
+ * @param xChainType - The blockchain type to get connectors for
  * @returns An array of XConnector instances compatible with the specified chain type
  */
-
 export function useXConnectors(xChainType: ChainType | undefined): XConnector[] {
-  const xService = useXService(xChainType);
-  const evmConnectors = useConnectors();
-  const suiWallets = useWallets();
+  const xConnectorsByChain = useXWagmiStore(state => state.xConnectorsByChain);
+
+  // Stellar and Near discover connectors asynchronously
   const { data: stellarXConnectors } = useStellarXConnectors();
   const { data: nearXConnectors } = useNearXConnectors();
-  const stacksXConnectors = useStacksXConnectors();
-  const { wallets: solanaWallets } = useWallet();
 
-  const xConnectors = useMemo((): XConnector[] => {
-    if (!xChainType || !xService) {
-      return [];
-    }
+  return useMemo((): XConnector[] => {
+    if (!xChainType) return [];
 
-    switch (xChainType) {
-      case 'EVM':
-        return evmConnectors.map(connector => new EvmXConnector(connector));
-      case 'SUI':
-        return suiWallets.map(wallet => new SuiXConnector(wallet));
-      case 'STELLAR':
-        return stellarXConnectors || [];
-      case 'SOLANA':
-        return solanaWallets
-          .filter(wallet => wallet.readyState === 'Installed')
-          .map(wallet => new SolanaXConnector(wallet));
-      case 'NEAR':
-        return nearXConnectors || [];
-      case 'STACKS':
-        return stacksXConnectors;
-      default:
-        return xService.getXConnectors();
-    }
-  }, [
-    xService,
-    xChainType,
-    evmConnectors,
-    suiWallets,
-    stellarXConnectors,
-    solanaWallets,
-    nearXConnectors,
-    stacksXConnectors,
-  ]);
+    // Stellar and Near have async connector discovery — use their hooks
+    if (xChainType === 'STELLAR') return stellarXConnectors ?? [];
+    if (xChainType === 'NEAR') return nearXConnectors ?? [];
 
-  return xConnectors;
+    // All other chains read from store
+    return xConnectorsByChain[xChainType] ?? [];
+  }, [xChainType, xConnectorsByChain, stellarXConnectors, nearXConnectors]);
 }
