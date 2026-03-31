@@ -1,7 +1,7 @@
 'use client';
 
 // biome-ignore lint/style/useImportType: <explanation>
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import {
   ConnectionProvider as SolanaConnectionProvider,
   WalletProvider as SolanaWalletProvider,
@@ -38,6 +38,13 @@ const SolanaHydrator = ({ onRegisterActions }: Pick<SolanaProviderProps, 'onRegi
   const setXConnection = useXWagmiStore(state => state.setXConnection);
   const unsetXConnection = useXWagmiStore(state => state.unsetXConnection);
 
+  // Refs to hold latest hook values
+  const walletRef = useRef(solanaWallet);
+  const unsetConnectionRef = useRef(unsetXConnection);
+
+  useEffect(() => { walletRef.current = solanaWallet; }, [solanaWallet]);
+  useEffect(() => { unsetConnectionRef.current = unsetXConnection; }, [unsetXConnection]);
+
   // Hydrate connection into singleton
   useEffect(() => {
     if (connection) {
@@ -72,14 +79,14 @@ const SolanaHydrator = ({ onRegisterActions }: Pick<SolanaProviderProps, 'onRegi
     }
   }, [solanaWallet.connected, solanaWallet.publicKey, solanaWallet.wallet, setXConnection]);
 
-  // Register ChainActions
+  // Register ChainActions — once on mount, uses refs for latest values
   useEffect(() => {
     const actions: ChainActions = {
       connect: async (xConnectorId: string) => {
-        const wallet = solanaWallets.find(w => w.adapter.name === xConnectorId);
+        const wallet = walletRef.current.wallets.find(w => w.adapter.name === xConnectorId);
         if (!wallet) return undefined;
 
-        solanaWallet.select(wallet.adapter.name);
+        walletRef.current.select(wallet.adapter.name);
 
         // MetaMask Solana needs special timeout handling
         if (wallet.adapter.name === 'MetaMask') {
@@ -108,34 +115,33 @@ const SolanaHydrator = ({ onRegisterActions }: Pick<SolanaProviderProps, 'onRegi
             wallet.adapter.on('connect', handleConnect);
             wallet.adapter.on('error', handleError);
 
-            solanaWallet.connect().catch(err => {
+            walletRef.current.connect().catch(err => {
               cleanup();
               reject(err);
             });
           });
         }
 
-        // Connection state hydrated via useWallet effects above
         return undefined;
       },
       disconnect: async () => {
-        await solanaWallet.disconnect();
-        unsetXConnection('SOLANA');
+        await walletRef.current.disconnect();
+        unsetConnectionRef.current('SOLANA');
       },
       getConnectors: () => SolanaXService.getInstance().getXConnectors(),
       getConnection: (): XConnection | undefined => {
         return useXWagmiStore.getState().xConnections.SOLANA;
       },
       signMessage: async (message: string) => {
-        if (!solanaWallet.signMessage) {
+        if (!walletRef.current.signMessage) {
           throw new Error('Solana wallet not connected');
         }
-        const signature = await solanaWallet.signMessage(new TextEncoder().encode(message));
+        const signature = await walletRef.current.signMessage(new TextEncoder().encode(message));
         return new TextDecoder().decode(signature);
       },
     };
     onRegisterActions(actions);
-  }, [solanaWallet, solanaWallets, unsetXConnection, onRegisterActions]);
+  }, [onRegisterActions]);
 
   return null;
 };
