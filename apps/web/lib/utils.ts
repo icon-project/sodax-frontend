@@ -142,8 +142,9 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
     try {
       const tokens = getSupportedSolverTokens(chainId).map(normalizeToken);
       // Filter out soda vault tokens (sodaUSDC, sodaETH, etc.) on Sonic while keeping non-vault tokens like bnUSD, IbnUSD
+      // Dedup by address to avoid duplicates from spoke config + SodaTokens overlap
       const tokensForChain = chainId === SONIC_MAINNET_CHAIN_ID
-        ? tokens.filter(token => !Object.values(SodaTokens).some(sodaToken => sodaToken.symbol === token.symbol && sodaToken.symbol.toLowerCase().startsWith('soda')))
+        ? [...new Map(tokens.filter(token => !Object.values(SodaTokens).some(sodaToken => sodaToken.symbol === token.symbol && sodaToken.symbol.toLowerCase().startsWith('soda'))).map(t => [t.address, t])).values()]
         : tokens;
 
       return tokensForChain.map(token => ({
@@ -161,8 +162,9 @@ export const getSupportedSolverTokensForChain = (chainId: SpokeChainId): XToken[
   try {
     const tokens = getSupportedSolverTokens(chainId).map(normalizeToken);
     // Filter out soda vault tokens (sodaUSDC, sodaETH, etc.) on Sonic while keeping non-vault tokens like bnUSD, IbnUSD
+    // Dedup by address to avoid duplicates from spoke config + SodaTokens overlap
     const tokensForChain = chainId === SONIC_MAINNET_CHAIN_ID
-      ? tokens.filter(token => !Object.values(SodaTokens).some(sodaToken => sodaToken.symbol === token.symbol && sodaToken.symbol.toLowerCase().startsWith('soda')))
+      ? [...new Map(tokens.filter(token => !Object.values(SodaTokens).some(sodaToken => sodaToken.symbol === token.symbol && sodaToken.symbol.toLowerCase().startsWith('soda'))).map(t => [t.address, t])).values()]
       : tokens;
 
     return tokensForChain.map(token => ({
