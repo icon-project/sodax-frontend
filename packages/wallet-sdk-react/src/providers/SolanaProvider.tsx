@@ -59,7 +59,7 @@ const SolanaHydrator = ({ onRegisterActions }: Pick<SolanaProviderProps, 'onRegi
       .filter(wallet => wallet.readyState === 'Installed')
       .map(wallet => new SolanaXConnector(wallet));
     SolanaXService.getInstance().setXConnectors(solanaConnectors);
-    // TODO Phase 4: useXWagmiStore.getState().setXConnectors('SOLANA', solanaConnectors);
+    useXWagmiStore.getState().setXConnectors('SOLANA', solanaConnectors);
   }, [solanaWallets]);
 
   // Hydrate connection state into store
