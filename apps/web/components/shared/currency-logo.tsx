@@ -1,5 +1,5 @@
 import type React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import type { XToken } from '@sodax/types';
 
@@ -27,6 +27,16 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({
   logoSrc,
 }) => {
   const [imgError, setImgError] = useState(false);
+  const [chainImgError, setChainImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [currency.symbol, logoSrc]);
+
+  useEffect(() => {
+    setChainImgError(false);
+  }, [currency.xChainId]);
+
   const symbol = currency.symbol.toLowerCase();
   const iconName =
     symbol === 'soda'
@@ -65,14 +75,21 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({
           data-property-1="Active"
           className="h-4 left-[30px] top-[30px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white inline-flex flex-col justify-center items-center overflow-hidden relative"
         >
-          <Image
-            className="w-4 h-4"
-            src={`/chain/${currency.xChainId}.png`}
-            alt={currency.xChainId}
-            width={16}
-            height={16}
-            priority
-          />
+          {chainImgError ? (
+            <div className="w-4 h-4 rounded bg-zinc-200 flex items-center justify-center text-[7px] font-medium text-zinc-500">
+              {currency.xChainId.charAt(0).toUpperCase()}
+            </div>
+          ) : (
+            <Image
+              className="w-4 h-4"
+              src={`/chain/${currency.xChainId}.png`}
+              alt={currency.xChainId}
+              width={16}
+              height={16}
+              priority
+              onError={() => setChainImgError(true)}
+            />
+          )}
           {isChainConnected && (
             <div className="absolute -bottom-[2px] -right-[2px] w-[10px] h-[10px] bg-green-500 rounded-full border-2 border-white shadow-sm" />
           )}
