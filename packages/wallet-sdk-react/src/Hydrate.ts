@@ -1,5 +1,11 @@
 'use client';
 
+/**
+ * @deprecated Hydration logic has been moved to per-chain providers (EvmProvider, SolanaProvider, SuiProvider)
+ * and SodaxWalletProvider. This component is kept for backward compatibility but is no longer used internally.
+ * It will be removed in a future release.
+ */
+
 import { useCurrentAccount, useCurrentWallet, useSuiClient } from '@mysten/dapp-kit';
 import { useEffect } from 'react';
 import { EvmXService } from './xchains/evm';
@@ -11,6 +17,7 @@ import { StacksXService } from './xchains/stacks/StacksXService';
 import { createNetwork } from '@stacks/network';
 import type { RpcConfig } from '@sodax/types';
 
+/** @deprecated Use per-chain providers instead. See EvmProvider, SolanaProvider, SuiProvider. */
 export const Hydrate = ({ rpcConfig }: { rpcConfig: RpcConfig }) => {
   // sui
   const suiClient = useSuiClient();
