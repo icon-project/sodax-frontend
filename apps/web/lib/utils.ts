@@ -135,17 +135,26 @@ function normalizeToken(token: Token): Token {
   return token;
 }
 
+// Filter out soda vault tokens (sodaUSDC, sodaETH, etc.) while keeping non-vault tokens like bnUSD, IbnUSD
+const isSodaVaultToken = (symbol: string) =>
+  Object.values(SodaTokens).some(
+    st => st.symbol === symbol && st.symbol.toLowerCase().startsWith('soda'),
+  );
+
+// Dedup by address (case-insensitive) to avoid duplicates from spoke config + SodaTokens overlap
+const dedupByAddress = (tokens: Token[]): Token[] =>
+  [...new Map(tokens.map(t => [t.address.toLowerCase(), t])).values()];
+
+const filterSonicTokens = (tokens: Token[]): Token[] =>
+  dedupByAddress(tokens.filter(t => !isSodaVaultToken(t.symbol)));
+
 export const getAllSupportedSolverTokens = (): XToken[] => {
   const activeChains = supportedSpokeChains.filter(chainId => availableChains.some(chain => chain.id === chainId));
 
   return activeChains.flatMap(chainId => {
     try {
       const tokens = getSupportedSolverTokens(chainId).map(normalizeToken);
-      // Filter out soda vault tokens (sodaUSDC, sodaETH, etc.) on Sonic while keeping non-vault tokens like bnUSD, IbnUSD
-      // Dedup by address to avoid duplicates from spoke config + SodaTokens overlap
-      const tokensForChain = chainId === SONIC_MAINNET_CHAIN_ID
-        ? [...new Map(tokens.filter(token => !Object.values(SodaTokens).some(sodaToken => sodaToken.symbol === token.symbol && sodaToken.symbol.toLowerCase().startsWith('soda'))).map(t => [t.address, t])).values()]
-        : tokens;
+      const tokensForChain = chainId === SONIC_MAINNET_CHAIN_ID ? filterSonicTokens(tokens) : tokens;
 
       return tokensForChain.map(token => ({
         ...token,
@@ -161,11 +170,7 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
 export const getSupportedSolverTokensForChain = (chainId: SpokeChainId): XToken[] => {
   try {
     const tokens = getSupportedSolverTokens(chainId).map(normalizeToken);
-    // Filter out soda vault tokens (sodaUSDC, sodaETH, etc.) on Sonic while keeping non-vault tokens like bnUSD, IbnUSD
-    // Dedup by address to avoid duplicates from spoke config + SodaTokens overlap
-    const tokensForChain = chainId === SONIC_MAINNET_CHAIN_ID
-      ? [...new Map(tokens.filter(token => !Object.values(SodaTokens).some(sodaToken => sodaToken.symbol === token.symbol && sodaToken.symbol.toLowerCase().startsWith('soda'))).map(t => [t.address, t])).values()]
-      : tokens;
+    const tokensForChain = chainId === SONIC_MAINNET_CHAIN_ID ? filterSonicTokens(tokens) : tokens;
 
     return tokensForChain.map(token => ({
       ...token,
