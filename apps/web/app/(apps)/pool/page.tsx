@@ -34,8 +34,6 @@ type PositionsApiItem = {
   is_burned: boolean;
 };
 
-const ASODA_XSODA_POOL_ID = '0x1fbed2bab018dd01756162d135964186addbab00158eda8013de8a15948995cd';
-
 export default function PoolPage() {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [sodaInputAmount, setSodaInputAmount] = useState<string>('');
@@ -50,6 +48,8 @@ export default function PoolPage() {
   const fixedPoolKey = dexPools.ASODA_XSODA;
   const { data: poolDataRaw } = usePoolData({ poolKey: fixedPoolKey });
   const poolData = poolDataRaw ?? null;
+  console.log('poolData', poolData);
+  const poolId = poolData?.poolId ?? null;
   const pairPrice = useMemo((): number | null => {
     if (!poolData) {
       return null;
@@ -158,7 +158,7 @@ export default function PoolPage() {
       }
 
       const positions = responsePayload as PositionsApiItem[];
-      const normalizedPoolId = ASODA_XSODA_POOL_ID.toLowerCase();
+      const normalizedPoolId = poolId?.toLowerCase() ?? '';
       const nextPositions = positions
         .filter(position => !position.is_burned && position.pool_id.toLowerCase() === normalizedPoolId)
         .map(
@@ -172,7 +172,7 @@ export default function PoolPage() {
     };
 
     void fetchPositions();
-  }, [hubWalletAddress, selectedNetworkChainId]);
+  }, [hubWalletAddress, poolId, selectedNetworkChainId]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -243,7 +243,7 @@ export default function PoolPage() {
             <div className={cn('self-stretch transition-[filter] duration-300', isNetworkPickerOpened && 'blur-sm')}>
               <PoolInfoCard
                 pairPrice={pairPrice}
-                poolId={ASODA_XSODA_POOL_ID}
+                poolId={poolId}
                 minPrice={minPrice}
                 maxPrice={maxPrice}
                 onMinPriceChange={setMinPrice}
