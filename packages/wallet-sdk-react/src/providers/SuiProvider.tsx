@@ -1,7 +1,7 @@
 'use client';
 
 // biome-ignore lint/style/useImportType: <explanation>
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   SuiClientProvider,
   WalletProvider as SuiWalletProvider,
@@ -46,6 +46,19 @@ const SuiHydrator = ({ onRegisterActions }: Pick<SuiProviderProps, 'onRegisterAc
   const setXConnection = useXWagmiStore(state => state.setXConnection);
   const unsetXConnection = useXWagmiStore(state => state.unsetXConnection);
 
+  // Refs to hold latest hook values
+  const connectRef = useRef(suiConnectAsync);
+  const disconnectRef = useRef(suiDisconnectAsync);
+  const signMessageRef = useRef(signPersonalMessage);
+  const unsetConnectionRef = useRef(unsetXConnection);
+  const walletsRef = useRef(suiWallets);
+
+  useEffect(() => { connectRef.current = suiConnectAsync; }, [suiConnectAsync]);
+  useEffect(() => { disconnectRef.current = suiDisconnectAsync; }, [suiDisconnectAsync]);
+  useEffect(() => { signMessageRef.current = signPersonalMessage; }, [signPersonalMessage]);
+  useEffect(() => { unsetConnectionRef.current = unsetXConnection; }, [unsetXConnection]);
+  useEffect(() => { walletsRef.current = suiWallets; }, [suiWallets]);
+
   // Hydrate suiClient into singleton
   useEffect(() => {
     if (suiClient) {
@@ -84,31 +97,30 @@ const SuiHydrator = ({ onRegisterActions }: Pick<SuiProviderProps, 'onRegisterAc
     }
   }, [currentWallet, suiAccount, setXConnection]);
 
-  // Register ChainActions
+  // Register ChainActions — once on mount, uses refs for latest values
   useEffect(() => {
     const actions: ChainActions = {
       connect: async (xConnectorId: string) => {
-        const wallet = suiWallets.find(w => w.name === xConnectorId);
+        const wallet = walletsRef.current.find(w => w.name === xConnectorId);
         if (!wallet) return undefined;
-        await suiConnectAsync({ wallet });
-        // Connection state hydrated via useCurrentAccount/useCurrentWallet effects above
+        await connectRef.current({ wallet });
         return undefined;
       },
       disconnect: async () => {
-        await suiDisconnectAsync();
-        unsetXConnection('SUI');
+        await disconnectRef.current();
+        unsetConnectionRef.current('SUI');
       },
       getConnectors: () => SuiXService.getInstance().getXConnectors(),
       getConnection: (): XConnection | undefined => {
         return useXWagmiStore.getState().xConnections.SUI;
       },
       signMessage: async (message: string) => {
-        const res = await signPersonalMessage({ message: new Uint8Array(new TextEncoder().encode(message)) });
+        const res = await signMessageRef.current({ message: new Uint8Array(new TextEncoder().encode(message)) });
         return res.signature;
       },
     };
     onRegisterActions(actions);
-  }, [suiWallets, suiConnectAsync, suiDisconnectAsync, signPersonalMessage, unsetXConnection, onRegisterActions]);
+  }, [onRegisterActions]);
 
   return null;
 };

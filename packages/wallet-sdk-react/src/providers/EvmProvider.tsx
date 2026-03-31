@@ -1,7 +1,7 @@
 'use client';
 
 // biome-ignore lint/style/useImportType: <explanation>
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { WagmiProvider, useConfig, useConnect, useConnections, useAccount, useDisconnect, useSignMessage } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { RpcConfig } from '@sodax/types';
@@ -40,6 +40,19 @@ const EvmHydrator = ({ onRegisterActions }: Pick<EvmProviderProps, 'onRegisterAc
   const setXConnection = useXWagmiStore(state => state.setXConnection);
   const unsetXConnection = useXWagmiStore(state => state.unsetXConnection);
 
+  // Refs to hold latest hook values — avoids re-registering actions on every render
+  const connectRef = useRef(connectAsync);
+  const disconnectRef = useRef(disconnectAsync);
+  const signMessageRef = useRef(signMessageAsync);
+  const unsetConnectionRef = useRef(unsetXConnection);
+  const wagmiConfigRef = useRef(wagmiConfig);
+
+  useEffect(() => { connectRef.current = connectAsync; }, [connectAsync]);
+  useEffect(() => { disconnectRef.current = disconnectAsync; }, [disconnectAsync]);
+  useEffect(() => { signMessageRef.current = signMessageAsync; }, [signMessageAsync]);
+  useEffect(() => { unsetConnectionRef.current = unsetXConnection; }, [unsetXConnection]);
+  useEffect(() => { wagmiConfigRef.current = wagmiConfig; }, [wagmiConfig]);
+
   // Hydrate wagmiConfig into singleton
   useEffect(() => {
     if (wagmiConfig) {
@@ -65,31 +78,30 @@ const EvmHydrator = ({ onRegisterActions }: Pick<EvmProviderProps, 'onRegisterAc
     }
   }, [address, evmConnections, setXConnection]);
 
-  // Register ChainActions
+  // Register ChainActions — once on mount, uses refs for latest values
   useEffect(() => {
     const actions: ChainActions = {
       connect: async (xConnectorId: string) => {
-        const connector = wagmiConfig.connectors.find(c => c.id === xConnectorId);
+        const connector = wagmiConfigRef.current.connectors.find(c => c.id === xConnectorId);
         if (!connector) return undefined;
-        await connectAsync({ connector });
-        // Connection state hydrated via useAccount/useConnections effects above
+        await connectRef.current({ connector });
         return undefined;
       },
       disconnect: async () => {
-        await disconnectAsync();
-        unsetXConnection('EVM');
+        await disconnectRef.current();
+        unsetConnectionRef.current('EVM');
       },
       getConnectors: () => EvmXService.getInstance().getXConnectors(),
       getConnection: (): XConnection | undefined => {
         return useXWagmiStore.getState().xConnections.EVM;
       },
       signMessage: async (message: string) => {
-        const signature = await signMessageAsync({ message });
+        const signature = await signMessageRef.current({ message });
         return signature;
       },
     };
     onRegisterActions(actions);
-  }, [wagmiConfig, connectAsync, disconnectAsync, signMessageAsync, unsetXConnection, onRegisterActions]);
+  }, [onRegisterActions]);
 
   return null;
 };
