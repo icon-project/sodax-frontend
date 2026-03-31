@@ -169,18 +169,21 @@ export function LiquidityInputs({
         spokeProvider: spokeProvider as SpokeProvider,
       });
     } catch {
-      const errorMsg = 'Failed to add Stellar trustline. Please check your XLM balance and try again.';
+      const errorMsg =
+        'To set up this trustline on the Stellar network, your wallet requires a minimum balance in XLM. Please add funds and try again.';
       setErrorMessage(errorMsg);
       setIsErrorDialogOpen(true);
     }
   };
   useEffect((): void => {
     if (trustlineError) {
-      const errorMsg = 'Failed to add Stellar trustline. Please check your XLM balance and try again.';
+      const errorMsg =
+        'To set up this trustline on the Stellar network, your wallet requires a minimum balance in XLM. Please add funds and try again.';
       setErrorMessage(errorMsg);
       setIsErrorDialogOpen(true);
     }
   }, [trustlineError]);
+
 
   return (
     <>
@@ -370,7 +373,7 @@ export function LiquidityInputs({
         open={isErrorDialogOpen}
         onOpenChange={setIsErrorDialogOpen}
         errorMessage={errorMessage}
-        title="Transaction failed"
+        title="Your wallet needs a small reserve"
       />
     </>
   );

@@ -53,6 +53,7 @@ type WithdrawTabContentProps = {
   chainId: SpokeChainId;
   poolData: PoolData;
   positionInfo: ClPositionInfo;
+  apyPercent: number | null;
   positionSodaBalanceText: string;
   positionXSodaBalanceText: string;
   withdrawPercentage: string;
@@ -69,6 +70,7 @@ export function WithdrawTabContent({
   chainId,
   poolData,
   positionInfo,
+  apyPercent,
   positionSodaBalanceText,
   positionXSodaBalanceText,
   withdrawPercentage,
@@ -109,6 +111,7 @@ export function WithdrawTabContent({
             positionXSodaBalanceText,
             formatTokenAmount(withdrawToken1FromLiquidity, poolData.token1.decimals, 2),
           )}
+          apyPercent={apyPercent}
         />
       </div>
       <div className="self-stretch p-6 bg-blend-multiply bg-almost-white rounded-2xl inline-flex flex-col justify-start items-start gap-4 w-full relative mt-10">

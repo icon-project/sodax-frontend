@@ -78,7 +78,8 @@ export function createDepositParamsProps({
 
   return {
     asset: originalAsset.address,
-    amount: parseUnits(String(amount), token.decimals),
+    // Use deposit token decimals (original asset) for correct unit parsing
+    amount: parseUnits(String(amount), originalAsset.decimals),
     poolToken: token.address,
   };
 }
