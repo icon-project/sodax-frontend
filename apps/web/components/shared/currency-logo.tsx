@@ -1,4 +1,5 @@
 import type React from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import type { XToken } from '@sodax/types';
 
@@ -25,6 +26,7 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({
   hideNetwork = false,
   logoSrc,
 }) => {
+  const [imgError, setImgError] = useState(false);
   const symbol = currency.symbol.toLowerCase();
   const iconName =
     symbol === 'soda'
@@ -42,14 +44,21 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({
         data-property-1="Default"
         className="left-[12px] top-[12px] absolute bg-White rounded-[256px] inline-flex flex-col justify-start items-start overflow-hidden"
       >
-        <Image
-          className="w-6 h-6 rounded-[256px]"
-          src={logoSrc || `/coin/${iconName}.png`}
-          alt={currency.symbol}
-          width={24}
-          height={24}
-          priority
-        />
+        {imgError ? (
+          <div className="w-6 h-6 rounded-[256px] bg-zinc-200 flex items-center justify-center text-[10px] font-medium text-zinc-500">
+            {currency.symbol.charAt(0)}
+          </div>
+        ) : (
+          <Image
+            className="w-6 h-6 rounded-[256px]"
+            src={logoSrc || `/coin/${iconName}.png`}
+            alt={currency.symbol}
+            width={24}
+            height={24}
+            priority
+            onError={() => setImgError(true)}
+          />
+        )}
       </div>
       {!hideNetwork && !isGroup && (tokenCount == null || tokenCount <= 1) && (
         <div
