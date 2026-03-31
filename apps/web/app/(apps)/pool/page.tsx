@@ -17,21 +17,11 @@ import { dexPools, type PoolSpokeAssets } from '@sodax/sdk';
 import { formatUnits, parseUnits } from 'viem';
 import { SupplyOverview } from './_components/supply-overview';
 import { useGetUserHubWalletAddress } from '@sodax/dapp-kit';
+import { useDexPositions } from '@/hooks/useDexPositions';
 
 type DexPositionsUpdatedDetail = {
   chainId: string | number;
   userAddress: string;
-};
-
-type SavedDexPosition = {
-  tokenId: string;
-  chainId: string;
-};
-
-type PositionsApiItem = {
-  token_id: string;
-  pool_id: string;
-  is_burned: boolean;
 };
 
 export default function PoolPage() {
@@ -44,11 +34,9 @@ export default function PoolPage() {
   const { address } = useXAccount(selectedNetworkChainId ?? undefined);
   const { data: hubWalletAddress } = useGetUserHubWalletAddress(selectedNetworkChainId ?? undefined, address);
 
-  const [savedPositions, setSavedPositions] = useState<SavedDexPosition[]>([]);
   const fixedPoolKey = dexPools.ASODA_XSODA;
   const { data: poolDataRaw } = usePoolData({ poolKey: fixedPoolKey });
   const poolData = poolDataRaw ?? null;
-  console.log('poolData', poolData);
   const poolId = poolData?.poolId ?? null;
   const pairPrice = useMemo((): number | null => {
     if (!poolData) {
@@ -136,43 +124,11 @@ export default function PoolPage() {
     [handleToken1AmountChange],
   );
 
-  const loadSavedTokenIds = useCallback((): void => {
-    const fetchPositions = async (): Promise<void> => {
-      if (!hubWalletAddress) {
-        setSavedPositions([]);
-        return;
-      }
-
-      const endpoint = `/api/pool/positions?address=${encodeURIComponent(hubWalletAddress)}&include_burned=false&limit=100&offset=0`;
-      const response = await fetch(endpoint, { method: 'GET', cache: 'no-store' });
-      console.log('response', response);
-      if (!response.ok) {
-        setSavedPositions([]);
-        return;
-      }
-
-      const responsePayload = (await response.json()) as unknown;
-      if (!Array.isArray(responsePayload)) {
-        setSavedPositions([]);
-        return;
-      }
-
-      const positions = responsePayload as PositionsApiItem[];
-      const normalizedPoolId = poolId?.toLowerCase() ?? '';
-      const nextPositions = positions
-        .filter(position => !position.is_burned && position.pool_id.toLowerCase() === normalizedPoolId)
-        .map(
-          (position): SavedDexPosition => ({
-            tokenId: position.token_id,
-            chainId: selectedNetworkChainId ? String(selectedNetworkChainId) : 'sonic',
-          }),
-        );
-
-      setSavedPositions(nextPositions);
-    };
-
-    void fetchPositions();
-  }, [hubWalletAddress, poolId, selectedNetworkChainId]);
+  const { savedPositions, refetch: refetchSavedPositions } = useDexPositions({
+    hubWalletAddress,
+    poolId,
+    selectedNetworkChainId,
+  });
 
   useEffect(() => {
     setTimeout(() => {
@@ -194,20 +150,16 @@ export default function PoolPage() {
     setXSodaAmount(liquidityToken1Amount);
   }, [liquidityToken1Amount, setXSodaAmount]);
 
-  useEffect((): void => {
-    loadSavedTokenIds();
-  }, [loadSavedTokenIds]);
-
   useEffect((): (() => void) => {
     const onDexPositionsUpdated = (event: Event): void => {
       const customEvent = event as CustomEvent<DexPositionsUpdatedDetail>;
       if (!hubWalletAddress) {
-        loadSavedTokenIds();
+        void refetchSavedPositions();
         return;
       }
       const eventAddress = customEvent.detail?.userAddress?.toLowerCase();
       if (eventAddress === hubWalletAddress.toLowerCase()) {
-        loadSavedTokenIds();
+        void refetchSavedPositions();
       }
     };
 
@@ -215,7 +167,7 @@ export default function PoolPage() {
     return () => {
       globalThis.removeEventListener(DEX_POSITIONS_UPDATED_EVENT, onDexPositionsUpdated);
     };
-  }, [hubWalletAddress, loadSavedTokenIds]);
+  }, [hubWalletAddress, refetchSavedPositions]);
 
   return (
     <motion.div

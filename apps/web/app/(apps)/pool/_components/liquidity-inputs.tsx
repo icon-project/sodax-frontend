@@ -184,7 +184,6 @@ export function LiquidityInputs({
     }
   }, [trustlineError]);
 
-
   return (
     <>
       <div className="self-stretch flex flex-col md:flex-row justify-start items-start gap-2 md:gap-4">
