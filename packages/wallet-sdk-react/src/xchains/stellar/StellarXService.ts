@@ -30,7 +30,7 @@ export class StellarXService extends XService {
   public server: StellarSdk.Horizon.Server;
   public sorobanServer: CustomSorobanServer;
 
-  private constructor() {
+  private constructor(horizonRpcUrl?: string, sorobanRpcUrl?: string) {
     super('STELLAR');
 
     this.walletsKit = new StellarWalletsKit({
@@ -38,13 +38,20 @@ export class StellarXService extends XService {
       modules: allowAllModules(),
     });
 
-    this.server = new StellarSdk.Horizon.Server('https://horizon.stellar.org', { allowHttp: true });
-    this.sorobanServer = new CustomSorobanServer('https://rpc.ankr.com/stellar_soroban', {});
+    this.server = new StellarSdk.Horizon.Server(horizonRpcUrl ?? 'https://horizon.stellar.org', { allowHttp: true });
+    this.sorobanServer = new CustomSorobanServer(sorobanRpcUrl ?? 'https://rpc.ankr.com/stellar_soroban', {});
   }
 
-  public static getInstance(): StellarXService {
+  public static getInstance(horizonRpcUrl?: string, sorobanRpcUrl?: string): StellarXService {
     if (!StellarXService.instance) {
-      StellarXService.instance = new StellarXService();
+      StellarXService.instance = new StellarXService(horizonRpcUrl, sorobanRpcUrl);
+    } else {
+      if (horizonRpcUrl) {
+        StellarXService.instance.server = new StellarSdk.Horizon.Server(horizonRpcUrl, { allowHttp: true });
+      }
+      if (sorobanRpcUrl) {
+        StellarXService.instance.sorobanServer = new CustomSorobanServer(sorobanRpcUrl, {});
+      }
     }
     return StellarXService.instance;
   }
