@@ -119,7 +119,7 @@ export function BorrowAssetsListItem({
     const scaledDebt = metrics.userReserve.scaledVariableDebt;
     const variableBorrowIndex = BigInt(metrics.formattedReserve.variableBorrowIndex || '1000000000000000000000000000');
     // Multiply scaled debt by borrow index and divide by ray precision (1e27)
-    const actualDebtRaw = (scaledDebt * variableBorrowIndex) / BigInt(1e27);
+    const actualDebtRaw = (scaledDebt * variableBorrowIndex) / BigInt('1000000000000000000000000000');
     const tokenDecimals = Number(metrics.formattedReserve.decimals ?? 18);
     debtExact = formatUnits(actualDebtRaw, tokenDecimals);
   }

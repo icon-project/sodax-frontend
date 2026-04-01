@@ -111,7 +111,7 @@ export function useReserveMetrics({
       borrowAPY = `${getCompoundedRate(variableBorrowRate).toFixed(4)}%`;
 
       const availableLiquidity = Number(formatUnits(BigInt(formattedReserve.availableLiquidity), 18));
-      const totalVariableDebt = Number(formattedReserve.totalScaledVariableDebt);
+      const totalVariableDebt = Number(formattedReserve.totalVariableDebt);
       const total = availableLiquidity + totalVariableDebt;
       totalSupply = formatCompactNumber(Number(total));
       totalBorrow = formatCompactNumber(Number(totalVariableDebt));

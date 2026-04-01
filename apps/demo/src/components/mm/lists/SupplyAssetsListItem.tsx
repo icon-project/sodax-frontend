@@ -113,10 +113,12 @@ export function SupplyAssetsListItem({
 
   const isHfLimited = useMemo(() => {
     if (!aTokenBalance || aTokenBalance === 0n) return false;
-    const isCollateral = metrics.userReserve?.usageAsCollateralEnabledOnUser ?? false;
-    const totalBorrowsUSD = Number(mmPortfolio?.totalBorrowsUSD ?? '0');
-    return isCollateral && Number.isFinite(totalBorrowsUSD) && totalBorrowsUSD > 0;
-  }, [aTokenBalance, metrics.userReserve, mmPortfolio]);
+    const fullBalance = Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS));
+    const maxWithdrawNum = Number.parseFloat(maxWithdrawExact);
+    // maxWithdrawExact already includes × 0.99 safety margin, so compare against fullBalance × 0.99
+    // to detect whether the HF formula actually reduced the amount below what the balance alone allows
+    return Number.isFinite(maxWithdrawNum) && maxWithdrawNum < fullBalance * 0.98;
+  }, [aTokenBalance, maxWithdrawExact]);
 
   // Check if user has meaningful supply: balance exists AND formatted amount is greater than DUST_THRESHOLD
   // This prevents enabling withdraw button for dust amounts that display as "0.00000"
