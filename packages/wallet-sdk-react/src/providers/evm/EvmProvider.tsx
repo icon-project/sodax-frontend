@@ -5,7 +5,6 @@ import React, { useMemo } from 'react';
 import { WagmiProvider, type State as WagmiState } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { RpcConfig } from '@sodax/types';
-import type { ChainActions } from '../../context/ChainActionsContext';
 import { createWagmiConfig } from '../../xchains/evm/EvmXService';
 import type { EvmChainConfig } from '../../types/config';
 import { EvmHydrator } from './EvmHydrator';
@@ -22,10 +21,9 @@ type EvmProviderProps = {
   children: React.ReactNode;
   config?: EvmChainConfig;
   rpcConfig?: RpcConfig;
-  onRegisterActions: (actions: ChainActions) => void;
 };
 
-export const EvmProvider = ({ children, config, rpcConfig, onRegisterActions }: EvmProviderProps) => {
+export const EvmProvider = ({ children, config, rpcConfig }: EvmProviderProps) => {
   const reconnectOnMount = config?.reconnectOnMount ?? defaultEvmConfig.reconnectOnMount;
   const ssr = config?.ssr ?? defaultEvmConfig.ssr;
 
@@ -37,7 +35,7 @@ export const EvmProvider = ({ children, config, rpcConfig, onRegisterActions }: 
     <QueryClientProvider client={queryClient}>
       <WagmiProvider reconnectOnMount={reconnectOnMount} config={wagmiConfig} initialState={config?.initialState as WagmiState | undefined}>
         <EvmHydrator />
-        <EvmActions onRegisterActions={onRegisterActions} />
+        <EvmActions />
         {children}
       </WagmiProvider>
     </QueryClientProvider>

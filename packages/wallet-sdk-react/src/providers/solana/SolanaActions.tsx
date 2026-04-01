@@ -3,21 +3,17 @@
 import { useEffect, useRef } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import type { XConnection } from '../../types';
-import type { ChainActions } from '../../context/ChainActionsContext';
 import { SolanaXService } from '../../xchains/solana/SolanaXService';
 import { useXWalletStore } from '../../useXWalletStore';
 
-type SolanaActionsProps = {
-  onRegisterActions: (actions: ChainActions) => void;
-};
-
 /**
- * Registers Solana ChainActions into the registry.
+ * Registers Solana ChainActions into the store.
  * Handles MetaMask timeout logic for Solana connect.
  */
-export const SolanaActions = ({ onRegisterActions }: SolanaActionsProps) => {
+export const SolanaActions = () => {
   const solanaWallet = useWallet();
   const unsetXConnection = useXWalletStore(state => state.unsetXConnection);
+  const registerChainActions = useXWalletStore(state => state.registerChainActions);
 
   const walletRef = useRef(solanaWallet);
   const unsetConnectionRef = useRef(unsetXConnection);
@@ -26,7 +22,7 @@ export const SolanaActions = ({ onRegisterActions }: SolanaActionsProps) => {
   useEffect(() => { unsetConnectionRef.current = unsetXConnection; }, [unsetXConnection]);
 
   useEffect(() => {
-    const actions: ChainActions = {
+    registerChainActions('SOLANA', {
       connect: async (xConnectorId: string) => {
         const wallet = walletRef.current.wallets.find(w => w.adapter.name === xConnectorId);
         if (!wallet) return undefined;
@@ -85,9 +81,8 @@ export const SolanaActions = ({ onRegisterActions }: SolanaActionsProps) => {
         const signature = await walletRef.current.signMessage(new TextEncoder().encode(message));
         return Buffer.from(signature).toString('base64');
       },
-    };
-    onRegisterActions(actions);
-  }, [onRegisterActions]);
+    });
+  }, [registerChainActions]);
 
   return null;
 };
