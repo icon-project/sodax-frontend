@@ -1,3 +1,3 @@
-export { EvmProvider } from './EvmProvider';
-export { SolanaProvider } from './SolanaProvider';
-export { SuiProvider } from './SuiProvider';
+export { EvmProvider } from './evm';
+export { SolanaProvider } from './solana';
+export { SuiProvider } from './sui';

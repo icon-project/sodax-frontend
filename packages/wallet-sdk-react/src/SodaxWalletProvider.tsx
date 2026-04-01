@@ -1,24 +1,20 @@
 'use client';
 
 // biome-ignore lint/style/useImportType: <explanation>
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo } from 'react';
 
 import type { RpcConfig } from '@sodax/types';
 import type { State as WagmiState } from 'wagmi';
 
 import type { SodaxWalletConfig } from './types/config';
-import type { ChainActions, ChainActionsRegistry } from './context/ChainActionsContext';
 import { WalletConfigProvider } from './context/WalletConfigContext';
 import { ChainActionsProvider } from './context/ChainActionsContext';
-import { EvmProvider } from './providers/EvmProvider';
-import { SolanaProvider } from './providers/SolanaProvider';
-import { SuiProvider } from './providers/SuiProvider';
-import { useXWalletStore } from './useXWalletStore';
-import { createNetwork } from '@stacks/network';
-import { StacksXService } from './xchains/stacks/StacksXService';
-import { reconnectIcon } from './xchains/icon/actions';
-import { reconnectInjective } from './xchains/injective/actions';
-import { reconnectStellar } from './xchains/stellar/actions';
+import { EvmProvider } from './providers/evm';
+import { SolanaProvider } from './providers/solana';
+import { SuiProvider } from './providers/sui';
+import { useInitChainServices } from './hooks/useInitChainServices';
+import { useStacksHydration } from './hooks/useStacksHydration';
+import { useChainActionsRegistryState } from './hooks/useChainActionsRegistry';
 
 // ─── Legacy props (deprecated) ───────────────────────────────────────────────
 
@@ -52,36 +48,39 @@ export type SodaxWalletProviderProps = {
 
 // ─── Legacy → Config conversion ──────────────────────────────────────────────
 
-const resolveLegacyProps = (props: SodaxWalletProviderProps): SodaxWalletConfig => {
-  if (props.config) return props.config;
-
-  return {
-    chains: {
-      EVM: {
-        reconnectOnMount: props.options?.wagmi?.reconnectOnMount,
-        ssr: props.options?.wagmi?.ssr,
-        initialState: props.initialState,
-      },
-      SOLANA: {
-        autoConnect: props.options?.solana?.autoConnect,
-      },
-      SUI: {
-        autoConnect: props.options?.sui?.autoConnect,
-      },
-      BITCOIN: { enabled: true },
-      ICON: { enabled: true },
-      INJECTIVE: { enabled: true },
-      STELLAR: { enabled: true },
-      NEAR: { enabled: true },
-      STACKS: { enabled: true },
+const resolveLegacyProps = (
+  rpcConfig?: RpcConfig,
+  options?: SodaxWalletProviderOptions,
+  initialState?: WagmiState,
+): SodaxWalletConfig => ({
+  chains: {
+    EVM: {
+      reconnectOnMount: options?.wagmi?.reconnectOnMount,
+      ssr: options?.wagmi?.ssr,
+      initialState,
     },
-    rpcConfig: props.rpcConfig,
-  };
-};
+    SOLANA: { autoConnect: options?.solana?.autoConnect },
+    SUI: { autoConnect: options?.sui?.autoConnect },
+    BITCOIN: { enabled: true },
+    ICON: { enabled: true },
+    INJECTIVE: { enabled: true },
+    STELLAR: { enabled: true },
+    NEAR: { enabled: true },
+    STACKS: { enabled: true },
+  },
+  rpcConfig,
+});
 
 // ─── Provider ────────────────────────────────────────────────────────────────
 
-export const SodaxWalletProvider = ({ children, config: configProp, rpcConfig: rpcConfigProp, options, initialState }: SodaxWalletProviderProps) => {
+export const SodaxWalletProvider = ({
+  children,
+  config: configProp,
+  rpcConfig: rpcConfigProp,
+  options,
+  initialState,
+}: SodaxWalletProviderProps) => {
+  // Stable config — destructure options into primitives to avoid object reference churn
   const wagmiReconnectOnMount = options?.wagmi?.reconnectOnMount;
   const wagmiSsr = options?.wagmi?.ssr;
   const solanaAutoConnect = options?.solana?.autoConnect;
@@ -90,64 +89,24 @@ export const SodaxWalletProvider = ({ children, config: configProp, rpcConfig: r
   const config = useMemo(
     () =>
       configProp ??
-      resolveLegacyProps({
-        children: null as never,
-        config: configProp,
-        rpcConfig: rpcConfigProp,
-        options: { wagmi: { reconnectOnMount: wagmiReconnectOnMount, ssr: wagmiSsr }, solana: { autoConnect: solanaAutoConnect }, sui: { autoConnect: suiAutoConnect } },
+      resolveLegacyProps(
+        rpcConfigProp,
+        { wagmi: { reconnectOnMount: wagmiReconnectOnMount, ssr: wagmiSsr }, solana: { autoConnect: solanaAutoConnect }, sui: { autoConnect: suiAutoConnect } },
         initialState,
-      }),
+      ),
     [configProp, rpcConfigProp, wagmiReconnectOnMount, wagmiSsr, solanaAutoConnect, suiAutoConnect, initialState],
   );
+
   const { chains, rpcConfig } = config;
 
-  // Init non-provider chains via store
-  const initChainServices = useXWalletStore(state => state.initChainServices);
-  const initializedRef = useRef(false);
-  useEffect(() => {
-    if (!initializedRef.current) {
-      initChainServices(chains);
-      initializedRef.current = true;
+  // Initialize chain services + reconnect
+  useInitChainServices(chains);
 
-      // Reconnect after persist hydration restores xConnections from localStorage
-      const runReconnect = () => {
-        if (chains.ICON) reconnectIcon();
-        if (chains.INJECTIVE) reconnectInjective();
-        if (chains.STELLAR) reconnectStellar();
-      };
+  // Hydrate Stacks network
+  useStacksHydration(chains, rpcConfig);
 
-      if (useXWalletStore.persist.hasHydrated()) {
-        runReconnect();
-      } else {
-        useXWalletStore.persist.onFinishHydration(runReconnect);
-      }
-    }
-  }, [chains, initChainServices]);
-
-  // Hydrate Stacks network (was in Hydrate.ts)
-  useEffect(() => {
-    if (chains.STACKS) {
-      StacksXService.getInstance().network = createNetwork({
-        network: 'mainnet',
-        client: { baseUrl: rpcConfig?.stacks ?? 'https://api.mainnet.hiro.so' },
-      });
-    }
-  }, [chains.STACKS, rpcConfig?.stacks]);
-
-  // ChainActions registry — providers register actions via callback
-  const [actionsRegistry, setActionsRegistry] = useState<ChainActionsRegistry>({});
-
-  const registerEvmActions = useCallback((actions: ChainActions) => {
-    setActionsRegistry(prev => ({ ...prev, EVM: actions }));
-  }, []);
-
-  const registerSolanaActions = useCallback((actions: ChainActions) => {
-    setActionsRegistry(prev => ({ ...prev, SOLANA: actions }));
-  }, []);
-
-  const registerSuiActions = useCallback((actions: ChainActions) => {
-    setActionsRegistry(prev => ({ ...prev, SUI: actions }));
-  }, []);
+  // ChainActions registry
+  const { registry, registerEvmActions, registerSolanaActions, registerSuiActions } = useChainActionsRegistryState();
 
   // Compose providers conditionally
   let content = <>{children}</>;
@@ -178,7 +137,7 @@ export const SodaxWalletProvider = ({ children, config: configProp, rpcConfig: r
 
   return (
     <WalletConfigProvider value={config}>
-      <ChainActionsProvider value={actionsRegistry}>
+      <ChainActionsProvider value={registry}>
         {content}
       </ChainActionsProvider>
     </WalletConfigProvider>
