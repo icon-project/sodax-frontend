@@ -1,17 +1,7 @@
 /** @type {import('next').NextConfig} */
 
-import { createRequire } from 'node:module';
-const require = createRequire(import.meta.url);
-
 const nextConfig = {
-  webpack: config => {
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      './core': require.resolve('crypto-js/core'),
-      './sha256': require.resolve('crypto-js/sha256'),
-    };
-    return config;
-  },
+  transpilePackages: ['@injectivelabs/wallet-ledger'],
   eslint: {
     ignoreDuringBuilds: true,
   },
