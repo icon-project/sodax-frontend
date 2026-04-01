@@ -1,4 +1,3 @@
-import { createContext, useContext } from 'react';
 import type { ChainType } from '@sodax/types';
 import type { XAccount, XConnection } from '../types';
 import type { IXConnector } from '../types/interfaces';
@@ -12,16 +11,3 @@ export type ChainActions = {
 };
 
 export type ChainActionsRegistry = Partial<Record<ChainType, ChainActions>>;
-
-const ChainActionsContext = createContext<ChainActionsRegistry>({});
-
-export const ChainActionsProvider = ChainActionsContext.Provider;
-
-export function useChainActions(chainType: ChainType): ChainActions | undefined {
-  const registry = useContext(ChainActionsContext);
-  return registry[chainType];
-}
-
-export function useChainActionsRegistry(): ChainActionsRegistry {
-  return useContext(ChainActionsContext);
-}

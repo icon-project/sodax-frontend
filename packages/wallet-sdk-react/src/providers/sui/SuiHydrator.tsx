@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useCurrentAccount, useCurrentWallet, useSuiClient, useWallets } from '@mysten/dapp-kit';
-import { SuiXService } from '../../xchains/sui';
-import { SuiXConnector } from '../../xchains/sui';
+import { SuiXService, SuiXConnector } from '../../xchains/sui';
 import { useXWalletStore } from '../../useXWalletStore';
 
 /**

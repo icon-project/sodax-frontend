@@ -13,6 +13,7 @@ export * from './xchains/stellar';
 export * from './xchains/sui';
 export * from './xchains/stacks';
 export * from './hooks';
+export * from './useXWalletStore';
 export * from './useXWagmiStore';
 export * from './SodaxWalletProvider';
 

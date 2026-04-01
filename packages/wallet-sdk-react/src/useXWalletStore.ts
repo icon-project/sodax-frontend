@@ -4,7 +4,7 @@ import { createJSONStorage, persist, devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type { XService, XConnector } from './core';
 import type { XConnection, WalletProvider } from './types';
-import type { ChainActions, ChainActionsRegistry } from './context/ChainActionsContext';
+import type { ChainActions } from './context/ChainActionsContext';
 import type { ChainsConfig } from './types/config';
 import { chainRegistry, createChainServices } from './chainRegistry';
 
@@ -15,7 +15,7 @@ type XWalletStore = {
   xConnections: Partial<Record<ChainType, XConnection>>;
   xConnectorsByChain: Partial<Record<ChainType, XConnector[]>>;
   enabledChains: ChainType[];
-  chainActions: ChainActionsRegistry;
+  chainActions: Record<string, ChainActions>;
   walletProviders: Partial<Record<ChainType, WalletProvider>>;
 
   setXConnection: (xChainType: ChainType, xConnection: XConnection) => void;
@@ -67,7 +67,7 @@ export const useXWalletStore = create<XWalletStore>()(
 
         registerChainActions: (xChainType: ChainType, actions: ChainActions) => {
           set(state => {
-            state.chainActions[xChainType] = actions as never;
+            state.chainActions[xChainType] = actions;
           });
         },
 
@@ -87,7 +87,7 @@ export const useXWalletStore = create<XWalletStore>()(
             state.xServices = { ...state.xServices, ...result.xServices };
             state.xConnectorsByChain = { ...state.xConnectorsByChain, ...result.xConnectorsByChain };
             state.enabledChains = result.enabledChains;
-            state.chainActions = { ...state.chainActions, ...result.chainActions } as never;
+            state.chainActions = { ...state.chainActions, ...result.chainActions };
           });
         },
       })),

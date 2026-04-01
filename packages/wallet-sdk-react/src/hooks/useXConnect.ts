@@ -2,7 +2,6 @@ import type { XAccount } from '@/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import type { XConnector } from '../core/XConnector';
 import { useXWalletStore } from '../useXWalletStore';
-import { useChainActionsRegistry } from '../context/ChainActionsContext';
 
 /**
  * Hook for connecting to various blockchain wallets across different chains.
@@ -11,7 +10,7 @@ import { useChainActionsRegistry } from '../context/ChainActionsContext';
  */
 export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XConnector> {
   const setXConnection = useXWalletStore(state => state.setXConnection);
-  const actionsRegistry = useChainActionsRegistry();
+  const actionsRegistry = useXWalletStore(state => state.chainActions);
 
   return useMutation({
     mutationFn: async (xConnector: XConnector) => {

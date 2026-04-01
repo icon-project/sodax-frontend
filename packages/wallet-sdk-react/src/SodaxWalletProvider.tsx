@@ -7,13 +7,11 @@ import type { State as WagmiState } from 'wagmi';
 
 import type { SodaxWalletConfig } from './types/config';
 import { WalletConfigProvider } from './context/WalletConfigContext';
-import { ChainActionsProvider } from './context/ChainActionsContext';
 import { EvmProvider } from './providers/evm';
 import { SolanaProvider } from './providers/solana';
 import { SuiProvider } from './providers/sui';
 import { useInitChainServices } from './hooks/useInitChainServices';
 import { useStacksHydration } from './hooks/useStacksHydration';
-import { useXWalletStore } from './useXWalletStore';
 
 // ─── Legacy props (deprecated) ───────────────────────────────────────────────
 
@@ -60,12 +58,12 @@ const resolveLegacyProps = (
     },
     SOLANA: { autoConnect: options?.solana?.autoConnect },
     SUI: { autoConnect: options?.sui?.autoConnect },
-    BITCOIN: { enabled: true },
-    ICON: { enabled: true },
-    INJECTIVE: { enabled: true },
-    STELLAR: { enabled: true },
-    NEAR: { enabled: true },
-    STACKS: { enabled: true },
+    BITCOIN: {},
+    ICON: {},
+    INJECTIVE: {},
+    STELLAR: {},
+    NEAR: {},
+    STACKS: {},
   },
   rpcConfig,
 });
@@ -103,9 +101,6 @@ export const SodaxWalletProvider = ({
   // Hydrate Stacks network
   useStacksHydration(chains, rpcConfig);
 
-  // ChainActions from store (non-provider chains registered by initChainServices, provider chains by Actions components)
-  const chainActions = useXWalletStore(state => state.chainActions);
-
   // Compose providers conditionally
   let content = <>{children}</>;
 
@@ -135,9 +130,7 @@ export const SodaxWalletProvider = ({
 
   return (
     <WalletConfigProvider value={config}>
-      <ChainActionsProvider value={chainActions}>
-        {content}
-      </ChainActionsProvider>
+      {content}
     </WalletConfigProvider>
   );
 };

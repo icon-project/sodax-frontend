@@ -34,9 +34,7 @@ export type SuiChainConfig = BaseChainConfig & {
 };
 
 /** Configuration for chains that don't require a third-party provider (ICON, Injective, Stellar, Bitcoin, Near, Stacks) */
-export type SimpleChainConfig = BaseChainConfig & {
-  enabled: true;
-};
+export type SimpleChainConfig = BaseChainConfig;
 
 /** Per-chain configuration map. Only listed chains will be mounted. */
 export type ChainsConfig = {

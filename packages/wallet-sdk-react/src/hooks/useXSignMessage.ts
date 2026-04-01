@@ -1,6 +1,6 @@
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import type { ChainType } from '@sodax/types';
-import { useChainActionsRegistry } from '../context/ChainActionsContext';
+import { useXWalletStore } from '../useXWalletStore';
 
 type SignMessageReturnType = `0x${string}` | Uint8Array | string | undefined;
 
@@ -15,7 +15,7 @@ export function useXSignMessage(): UseMutationResult<
   { xChainType: ChainType; message: string },
   unknown
 > {
-  const actionsRegistry = useChainActionsRegistry();
+  const actionsRegistry = useXWalletStore(state => state.chainActions);
 
   return useMutation({
     mutationFn: async ({ xChainType, message }: { xChainType: ChainType; message: string }) => {
