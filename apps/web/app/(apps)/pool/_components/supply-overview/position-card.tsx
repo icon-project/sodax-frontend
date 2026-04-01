@@ -19,6 +19,7 @@ import { CircleEllipsisIcon } from 'lucide-react';
 import { ManagePositionDialog } from '../manage-dialog';
 import { SwitchChainDialog } from '@/components/shared/switch-chain-dialog';
 import type { XToken } from '@sodax/types';
+import { getUserAPY } from './utils';
 
 type PositionCardProps = {
   tokenId: string;
@@ -196,8 +197,9 @@ export function PositionCard({
       ? ((currentPriceValue - minPriceValue) / (maxPriceValue - minPriceValue)) * 100
       : 0;
   const clampedCurrentPriceTickLeft = Math.min(100, Math.max(0, currentPriceTickLeft));
-
-  const apyText = apyPercent === null ? '-- APR' : `${apyPercent.toFixed(2)}% APR`;
+  const userApyPercent =
+    apyPercent === null ? null : getUserAPY(apyPercent, minPriceValue, maxPriceValue, currentPriceValue);
+  const apyText = userApyPercent === null ? '-- APR' : `${userApyPercent.toFixed(2)}% APR`;
 
   return (
     <div
@@ -328,6 +330,7 @@ export function PositionCard({
         initialMinPrice={minPrice}
         initialMaxPrice={maxPrice}
         positionInfo={positionInfo}
+        apyPercent={userApyPercent}
       />
     </div>
   );

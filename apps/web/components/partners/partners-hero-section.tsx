@@ -3,20 +3,10 @@
 import { motion } from 'motion/react';
 import { Bot, PackageOpen, Settings2, Users } from 'lucide-react';
 import { DOCUMENTATION_ROUTE } from '@/constants/routes';
-import { NETWORK_ICON_MAP } from './network-icons';
+import { NETWORK_ICON_MAP } from '../network-icons';
+import { getNetworkDocsUrl } from '@/lib/docToUrl';
 
 const ease = [0.22, 1, 0.36, 1] as const;
-
-// Helper function to convert network name to documentation anchor
-const getNetworkDocsUrl = (networkName: string): string => {
-  const anchorMap: Record<string, string> = {
-    'BNB Chain': 'bsc',
-    HyperEVM: 'hyperevm',
-    LightLink: 'lightlink',
-  };
-  const anchor = anchorMap[networkName] || networkName.toLowerCase();
-  return `${DOCUMENTATION_ROUTE}/developers/deployments/solver-compatible-assets#${anchor}`;
-};
 
 const NETWORK_NAMES = [
   'Ethereum',

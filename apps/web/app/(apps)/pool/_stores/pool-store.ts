@@ -1,7 +1,6 @@
 // apps/web/app/(apps)/pool/_stores/pool-store.ts
 import { createStore } from 'zustand/vanilla';
 import { persist } from 'zustand/middleware';
-import type { SpokeChainId } from '@sodax/types';
 import type { XToken } from '@sodax/types';
 
 export const INITIAL_PRICE = 1;
@@ -23,7 +22,6 @@ function getValidatedApy(value: number | null | undefined): number | null {
 }
 
 export type PoolState = {
-  selectedNetworkChainId: SpokeChainId | null;
   selectedToken: XToken | null;
   minPrice: number;
   maxPrice: number;
@@ -48,7 +46,6 @@ export type PoolActions = {
 export type PoolStore = PoolState & PoolActions;
 
 export const defaultPoolState: PoolState = {
-  selectedNetworkChainId: null,
   selectedToken: null,
   minPrice: INITIAL_MIN_PRICE,
   maxPrice: INITIAL_MAX_PRICE,
@@ -65,10 +62,9 @@ export const createPoolStore = (initState: PoolState = defaultPoolState) => {
       (set, get) => ({
         ...initState,
         setSelectedToken: (token: XToken | null) =>
-          set(state => ({
+          set({
             selectedToken: token,
-            selectedNetworkChainId: (token?.xChainId as SpokeChainId) ?? state.selectedNetworkChainId,
-          })),
+          }),
         setMinPrice: (price: number) => set({ minPrice: price }),
         setMaxPrice: (price: number) => set({ maxPrice: price }),
         setSodaAmount: (amount: string) => set({ sodaAmount: amount }),
@@ -117,17 +113,6 @@ export const createPoolStore = (initState: PoolState = defaultPoolState) => {
       }),
       {
         name: 'sodax-pool-store',
-        partialize: (state): PoolState => ({
-          selectedNetworkChainId: state.selectedNetworkChainId,
-          selectedToken: state.selectedToken,
-          minPrice: state.minPrice,
-          maxPrice: state.maxPrice,
-          sodaAmount: state.sodaAmount,
-          xSodaAmount: state.xSodaAmount,
-          isNetworkPickerOpened: state.isNetworkPickerOpened,
-          poolApyPercent: null,
-          poolApyStatus: 'idle',
-        }),
       },
     ),
   );

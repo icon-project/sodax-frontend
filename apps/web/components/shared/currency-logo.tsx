@@ -1,4 +1,5 @@
 import type React from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import type { XToken } from '@sodax/types';
 
@@ -25,6 +26,17 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({
   hideNetwork = false,
   logoSrc,
 }) => {
+  const [imgError, setImgError] = useState(false);
+  const [chainImgError, setChainImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [currency.symbol, logoSrc]);
+
+  useEffect(() => {
+    setChainImgError(false);
+  }, [currency.xChainId]);
+
   const symbol = currency.symbol.toLowerCase();
   const iconName =
     symbol === 'soda'
@@ -42,28 +54,42 @@ const CurrencyLogo: React.FC<CurrencyLogoProps> = ({
         data-property-1="Default"
         className="left-[12px] top-[12px] absolute bg-White rounded-[256px] inline-flex flex-col justify-start items-start overflow-hidden"
       >
-        <Image
-          className="w-6 h-6 rounded-[256px]"
-          src={logoSrc || `/coin/${iconName}.png`}
-          alt={currency.symbol}
-          width={24}
-          height={24}
-          priority
-        />
+        {imgError ? (
+          <div className="w-6 h-6 rounded-[256px] bg-zinc-200 flex items-center justify-center text-[10px] font-medium text-zinc-500">
+            {currency.symbol.charAt(0)}
+          </div>
+        ) : (
+          <Image
+            className="w-6 h-6 rounded-[256px]"
+            src={logoSrc || `/coin/${iconName}.png`}
+            alt={currency.symbol}
+            width={24}
+            height={24}
+            priority
+            onError={() => setImgError(true)}
+          />
+        )}
       </div>
       {!hideNetwork && !isGroup && (tokenCount == null || tokenCount <= 1) && (
         <div
           data-property-1="Active"
           className="h-4 left-[30px] top-[30px] absolute bg-white rounded shadow-[-2px_0px_2px_0px_rgba(175,145,145,1)] ring ring-2 ring-white inline-flex flex-col justify-center items-center overflow-hidden relative"
         >
-          <Image
-            className="w-4 h-4"
-            src={`/chain/${currency.xChainId}.png`}
-            alt={currency.xChainId}
-            width={16}
-            height={16}
-            priority
-          />
+          {chainImgError ? (
+            <div className="w-4 h-4 rounded bg-zinc-200 flex items-center justify-center text-[7px] font-medium text-zinc-500">
+              {currency.xChainId.charAt(0).toUpperCase()}
+            </div>
+          ) : (
+            <Image
+              className="w-4 h-4"
+              src={`/chain/${currency.xChainId}.png`}
+              alt={currency.xChainId}
+              width={16}
+              height={16}
+              priority
+              onError={() => setChainImgError(true)}
+            />
+          )}
           {isChainConnected && (
             <div className="absolute -bottom-[2px] -right-[2px] w-[10px] h-[10px] bg-green-500 rounded-full border-2 border-white shadow-sm" />
           )}

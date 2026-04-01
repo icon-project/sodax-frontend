@@ -32,30 +32,30 @@ const xSodaToken: XToken = {
 
 type PoolNetworkSelectorProps = {
   isNetworkPickerOpened: boolean;
-  selectedNetworkChainId: SpokeChainId | null;
+  selectedChainId: SpokeChainId | null;
   onNetworkPickerOpenChange: (isOpened: boolean) => void;
   onNetworkSelect: (token: XToken) => void;
 };
 
 export function PoolNetworkSelector({
   isNetworkPickerOpened,
-  selectedNetworkChainId,
+  selectedChainId,
   onNetworkPickerOpenChange,
   onNetworkSelect,
 }: PoolNetworkSelectorProps): React.JSX.Element {
   const assetRef = useRef<HTMLDivElement>(null);
   const networkPickerAnchorRef = useRef<HTMLDivElement>(null);
-  const { address } = useXAccount(selectedNetworkChainId ?? undefined);
+  const { address } = useXAccount(selectedChainId ?? undefined);
   const { selectedToken } = usePoolState();
   const walletConnected = !!address;
   const allChainSodaBalances = useAllChainBalances({ onlySodaTokens: true });
   const subtitleControls = useAnimationControls();
   const [subtitleText, setSubtitleText] = useState<string>('Choose a network');
   const selectedSodaBalance = useMemo((): bigint => {
-    if (!selectedNetworkChainId) {
+    if (!selectedChainId) {
       return 0n;
     }
-    const selectedChainConfig = spokeChainConfig[selectedNetworkChainId];
+    const selectedChainConfig = spokeChainConfig[selectedChainId];
     const selectedSodaToken =
       selectedChainConfig?.supportedTokens && 'SODA' in selectedChainConfig.supportedTokens
         ? (selectedChainConfig.supportedTokens.SODA as XToken)
@@ -66,11 +66,11 @@ export function PoolNetworkSelector({
     }
 
     const selectedSodaBalanceEntry = (allChainSodaBalances[selectedSodaToken.address] || []).find(
-      balanceEntry => balanceEntry.chainId === selectedNetworkChainId,
+      balanceEntry => balanceEntry.chainId === selectedChainId,
     );
 
     return selectedSodaBalanceEntry?.balance ?? 0n;
-  }, [allChainSodaBalances, selectedNetworkChainId]);
+  }, [allChainSodaBalances, selectedChainId]);
 
   useEffect((): (() => void) => {
     let isCancelled = false;
@@ -101,7 +101,7 @@ export function PoolNetworkSelector({
       });
     };
 
-    if (isNetworkPickerOpened || !selectedNetworkChainId) {
+    if (isNetworkPickerOpened || !selectedChainId) {
       setSubtitleText('Choose a network');
       void subtitleControls.start({ scale: 1 });
     } else if (!walletConnected) {
@@ -117,7 +117,7 @@ export function PoolNetworkSelector({
     return (): void => {
       isCancelled = true;
     };
-  }, [isNetworkPickerOpened, selectedNetworkChainId, walletConnected, selectedSodaBalance, subtitleControls]);
+  }, [isNetworkPickerOpened, selectedChainId, walletConnected, selectedSodaBalance, subtitleControls]);
 
   const sodaTokens = useMemo((): XToken[] => {
     const tokens: XToken[] = [];

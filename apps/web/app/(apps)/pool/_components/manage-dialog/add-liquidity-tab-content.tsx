@@ -25,6 +25,7 @@ type AddLiquidityTabContentProps = {
   chainId: SpokeChainId;
   tokenId: string;
   poolData: PoolData;
+  apyPercent: number | null;
   positionSodaBalanceText: string;
   positionXSodaBalanceText: string;
   liquidityToken0Amount: string;
@@ -151,6 +152,7 @@ export function AddLiquidityTabContent({
   chainId,
   tokenId,
   poolData,
+  apyPercent,
   positionSodaBalanceText,
   positionXSodaBalanceText,
   liquidityToken0Amount,
@@ -290,6 +292,7 @@ export function AddLiquidityTabContent({
           chainId={chainId}
           sodaBalanceText={previewSodaBalanceText}
           xSodaBalanceText={previewXSodaBalanceText}
+          apyPercent={apyPercent}
         />
       </div>
       <div className="self-stretch p-6 bg-blend-multiply bg-almost-white rounded-2xl inline-flex flex-col justify-start items-start gap-2 w-full relative mt-10">

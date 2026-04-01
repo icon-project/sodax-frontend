@@ -42,6 +42,28 @@ export function createDexTokenIdsStorageKey(chainId: string | number, userAddres
   return `sodax-dex-positions-${chainId}-${userAddress}`;
 }
 
+export function saveDexTokenIdToLocalStorage(userAddress: string, chainId: string | number, tokenId: string): void {
+  if (typeof globalThis.localStorage === 'undefined') {
+    return;
+  }
+
+  const cleanId = tokenId.trim().toLowerCase();
+  if (!cleanId) {
+    return;
+  }
+
+  const storageKey = createDexTokenIdsStorageKey(chainId, userAddress);
+  const positions = globalThis.localStorage.getItem(storageKey);
+  const tokenIds = positions ? positions.split(',').map(value => value.trim()) : [];
+  const hasTokenId = tokenIds.some(id => id.trim().toLowerCase() === cleanId);
+
+  if (hasTokenId) {
+    return;
+  }
+
+  globalThis.localStorage.setItem(storageKey, [...tokenIds, tokenId.trim()].join(','));
+}
+
 export function dispatchDexPositionsUpdatedEvent(chainId: string | number, userAddress: string): void {
   globalThis.dispatchEvent(
     new CustomEvent(DEX_POSITIONS_UPDATED_EVENT, {
@@ -113,15 +135,26 @@ function normalizeToken(token: Token): Token {
   return token;
 }
 
+// Filter out soda vault tokens (sodaUSDC, sodaETH, etc.) while keeping non-vault tokens like bnUSD, IbnUSD
+const isSodaVaultToken = (symbol: string) =>
+  Object.values(SodaTokens).some(
+    st => st.symbol === symbol && st.symbol.toLowerCase().startsWith('soda'),
+  );
+
+// Dedup by address (case-insensitive) to avoid duplicates from spoke config + SodaTokens overlap
+const dedupByAddress = (tokens: Token[]): Token[] =>
+  [...new Map(tokens.map(t => [t.address.toLowerCase(), t])).values()];
+
+const filterSonicTokens = (tokens: Token[]): Token[] =>
+  dedupByAddress(tokens.filter(t => !isSodaVaultToken(t.symbol)));
+
 export const getAllSupportedSolverTokens = (): XToken[] => {
   const activeChains = supportedSpokeChains.filter(chainId => availableChains.some(chain => chain.id === chainId));
 
   return activeChains.flatMap(chainId => {
     try {
       const tokens = getSupportedSolverTokens(chainId).map(normalizeToken);
-      const tokensForChain = chainId === SONIC_MAINNET_CHAIN_ID
-        ? tokens.filter(token => !Object.values(SodaTokens).some(sodaToken => sodaToken.symbol === token.symbol))
-        : tokens;
+      const tokensForChain = chainId === SONIC_MAINNET_CHAIN_ID ? filterSonicTokens(tokens) : tokens;
 
       return tokensForChain.map(token => ({
         ...token,
@@ -137,9 +170,7 @@ export const getAllSupportedSolverTokens = (): XToken[] => {
 export const getSupportedSolverTokensForChain = (chainId: SpokeChainId): XToken[] => {
   try {
     const tokens = getSupportedSolverTokens(chainId).map(normalizeToken);
-    const tokensForChain = chainId === SONIC_MAINNET_CHAIN_ID
-      ? tokens.filter(token => !Object.values(SodaTokens).some(sodaToken => sodaToken.symbol === token.symbol))
-      : tokens;
+    const tokensForChain = chainId === SONIC_MAINNET_CHAIN_ID ? filterSonicTokens(tokens) : tokens;
 
     return tokensForChain.map(token => ({
       ...token,

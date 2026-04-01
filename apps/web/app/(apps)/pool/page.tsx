@@ -16,65 +16,30 @@ import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { dexPools, type PoolSpokeAssets } from '@sodax/sdk';
 import { formatUnits, parseUnits } from 'viem';
 import { SupplyOverview } from './_components/supply-overview';
+import { useGetUserHubWalletAddress } from '@sodax/dapp-kit';
+import { useDexPositions } from '@/hooks/useDexPositions';
+import type { SpokeChainId } from '@sodax/types';
 
 type DexPositionsUpdatedDetail = {
   chainId: string | number;
   userAddress: string;
 };
 
-type SavedDexPosition = {
-  tokenId: string;
-  chainId: string;
-};
-
-function parseTokenIdsFromStorageValue(value: string | null): string[] {
-  if (!value) {
-    return [];
-  }
-
-  return value
-    .split(',')
-    .map(tokenId => tokenId.trim())
-    .filter(tokenId => tokenId.length > 0);
-}
-
-function isDexPositionsStorageKeyForAddress(storageKey: string, normalizedAddress: string): boolean {
-  const normalizedStorageKey = storageKey.toLowerCase();
-  return (
-    normalizedStorageKey.startsWith('sodax-dex-positions-') && normalizedStorageKey.endsWith(`-${normalizedAddress}`)
-  );
-}
-
-function extractChainIdFromDexPositionsStorageKey(storageKey: string, normalizedAddress: string): string | null {
-  if (!isDexPositionsStorageKeyForAddress(storageKey, normalizedAddress)) {
-    return null;
-  }
-
-  const prefix = 'sodax-dex-positions-';
-  const suffix = `-${normalizedAddress}`;
-  if (storageKey.length <= prefix.length + suffix.length) {
-    return null;
-  }
-
-  return storageKey.slice(prefix.length, storageKey.length - suffix.length);
-}
-
 export default function PoolPage() {
-  if (process.env.NEXT_PUBLIC_APP_ENV === 'production') {
-    return null;
-  }
-
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [sodaInputAmount, setSodaInputAmount] = useState<string>('');
   const [lastEditedAmount, setLastEditedAmount] = useState<'soda' | 'xsoda' | null>(null);
-  const { selectedNetworkChainId, minPrice, maxPrice, isNetworkPickerOpened } = usePoolState();
+  const { selectedToken, minPrice, maxPrice, isNetworkPickerOpened } = usePoolState();
   const { setSelectedToken, setMinPrice, setMaxPrice, setSodaAmount, setXSodaAmount, setIsNetworkPickerOpened } =
     usePoolActions();
-  const { address } = useXAccount(selectedNetworkChainId ?? undefined);
-  const [savedPositions, setSavedPositions] = useState<SavedDexPosition[]>([]);
+  const selectedChainId = selectedToken ? (selectedToken.xChainId as SpokeChainId) : null;
+  const { address } = useXAccount(selectedChainId as SpokeChainId);
+  const { data: hubWalletAddress } = useGetUserHubWalletAddress(selectedChainId as SpokeChainId, address);
+
   const fixedPoolKey = dexPools.ASODA_XSODA;
   const { data: poolDataRaw } = usePoolData({ poolKey: fixedPoolKey });
   const poolData = poolDataRaw ?? null;
+  const poolId = poolData?.poolId ?? null;
   const pairPrice = useMemo((): number | null => {
     if (!poolData) {
       return null;
@@ -87,8 +52,9 @@ export default function PoolPage() {
   }, [poolData]);
 
   const { sodax } = useSodaxContext();
-  const walletProvider = useWalletProvider(selectedNetworkChainId ?? undefined);
-  const spokeProvider = useSpokeProvider(selectedNetworkChainId ?? undefined, walletProvider);
+  const walletProvider = useWalletProvider(selectedChainId as SpokeChainId);
+  const spokeProvider = useSpokeProvider(selectedChainId as SpokeChainId, walletProvider);
+
   const poolSpokeAssets = useMemo((): PoolSpokeAssets | null => {
     if (!spokeProvider) {
       return null;
@@ -160,41 +126,11 @@ export default function PoolPage() {
     [handleToken1AmountChange],
   );
 
-  const loadSavedTokenIds = useCallback((): void => {
-    if (typeof globalThis.localStorage === 'undefined' || !address) {
-      setSavedPositions([]);
-      return;
-    }
-
-    const positionsByTokenId = new Map<string, SavedDexPosition>();
-    const normalizedAddress = address.toLowerCase();
-
-    for (let index = 0; index < globalThis.localStorage.length; index += 1) {
-      const storageKey = globalThis.localStorage.key(index);
-      if (!storageKey) {
-        continue;
-      }
-
-      const chainId = extractChainIdFromDexPositionsStorageKey(storageKey, normalizedAddress);
-      if (!chainId) {
-        continue;
-      }
-
-      const parsedTokenIds = parseTokenIdsFromStorageValue(globalThis.localStorage.getItem(storageKey));
-      for (const tokenId of parsedTokenIds) {
-        const normalizedTokenId = tokenId.toLowerCase();
-        if (positionsByTokenId.has(normalizedTokenId)) {
-          continue;
-        }
-        positionsByTokenId.set(normalizedTokenId, {
-          tokenId,
-          chainId,
-        });
-      }
-    }
-
-    setSavedPositions(Array.from(positionsByTokenId.values()));
-  }, [address]);
+  const { savedPositions, refetch: refetchSavedPositions } = useDexPositions({
+    hubWalletAddress,
+    poolId,
+    selectedNetworkChainId: selectedChainId,
+  });
 
   useEffect(() => {
     setTimeout(() => {
@@ -216,43 +152,24 @@ export default function PoolPage() {
     setXSodaAmount(liquidityToken1Amount);
   }, [liquidityToken1Amount, setXSodaAmount]);
 
-  useEffect((): void => {
-    loadSavedTokenIds();
-  }, [loadSavedTokenIds]);
-
   useEffect((): (() => void) => {
-    const onStorageUpdated = (event: StorageEvent): void => {
-      if (!address) {
-        return;
-      }
-      if (event.storageArea !== globalThis.localStorage) {
-        return;
-      }
-      if (event.key && !isDexPositionsStorageKeyForAddress(event.key, address.toLowerCase())) {
-        return;
-      }
-      loadSavedTokenIds();
-    };
-
     const onDexPositionsUpdated = (event: Event): void => {
       const customEvent = event as CustomEvent<DexPositionsUpdatedDetail>;
-      if (!address) {
-        loadSavedTokenIds();
+      if (!hubWalletAddress) {
+        void refetchSavedPositions();
         return;
       }
       const eventAddress = customEvent.detail?.userAddress?.toLowerCase();
-      if (eventAddress === address.toLowerCase()) {
-        loadSavedTokenIds();
+      if (eventAddress === hubWalletAddress.toLowerCase()) {
+        void refetchSavedPositions();
       }
     };
 
-    globalThis.addEventListener('storage', onStorageUpdated);
     globalThis.addEventListener(DEX_POSITIONS_UPDATED_EVENT, onDexPositionsUpdated);
     return () => {
-      globalThis.removeEventListener('storage', onStorageUpdated);
       globalThis.removeEventListener(DEX_POSITIONS_UPDATED_EVENT, onDexPositionsUpdated);
     };
-  }, [address, loadSavedTokenIds]);
+  }, [hubWalletAddress, refetchSavedPositions]);
 
   return (
     <motion.div
@@ -271,7 +188,7 @@ export default function PoolPage() {
         <motion.div className="relative self-stretch flex flex-col justify-start items-start" variants={itemVariants}>
           <PoolNetworkSelector
             isNetworkPickerOpened={isNetworkPickerOpened}
-            selectedNetworkChainId={selectedNetworkChainId}
+            selectedChainId={selectedChainId}
             onNetworkPickerOpenChange={setIsNetworkPickerOpened}
             onNetworkSelect={setSelectedToken}
           />
@@ -280,7 +197,7 @@ export default function PoolPage() {
             <div className={cn('self-stretch transition-[filter] duration-300', isNetworkPickerOpened && 'blur-sm')}>
               <PoolInfoCard
                 pairPrice={pairPrice}
-                poolId={'0x1fbed2bab018dd01756162d135964186addbab00158eda8013de8a15948995cd'}
+                poolId={poolId}
                 minPrice={minPrice}
                 maxPrice={maxPrice}
                 onMinPriceChange={setMinPrice}
@@ -303,13 +220,14 @@ export default function PoolPage() {
                   onMaxPriceChange={setMaxPrice}
                 />
                 <LiquidityInputs
-                  selectedNetworkChainId={selectedNetworkChainId}
+                  selectedChainId={selectedChainId}
                   sodaAmount={sodaInputAmount}
                   xSodaAmount={liquidityToken1Amount}
                   onSodaAmountChange={handleSodaAmountChange}
                   onXSodaAmountChange={handleXSodaAmountChange}
                   poolData={poolData}
                   poolSpokeAssets={poolSpokeAssets}
+                  fixedPoolKey={fixedPoolKey}
                 />
               </div>
             </div>
