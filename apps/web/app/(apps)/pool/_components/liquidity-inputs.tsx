@@ -8,9 +8,7 @@ import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupText } from '@/components/ui/input-group';
 import { InputGroupAddon } from '@/components/ui/input-group';
 import { InputGroupInput } from '@/components/ui/input-group';
-import { getXChainType, useEvmSwitchChain, useXAccount } from '@sodax/wallet-sdk-react';
-import { MODAL_ID } from '@/stores/modal-store';
-import { useModalStore } from '@/stores/modal-store-provider';
+import { useEvmSwitchChain, useXAccount } from '@sodax/wallet-sdk-react';
 import type { SpokeChainId } from '@sodax/types';
 import type { XToken } from '@sodax/types';
 import { chainIdToChainName } from '@/providers/constants';
@@ -62,7 +60,6 @@ export function LiquidityInputs({
   fixedPoolKey,
 }: LiquidityInputsProps): React.JSX.Element {
   const router = useRouter();
-  const openModal = useModalStore(state => state.openModal);
   const [isSupplyDialogOpen, setIsSupplyDialogOpen] = useState<boolean>(false);
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState<boolean>(false);
   const [isSwitchChainDialogOpen, setIsSwitchChainDialogOpen] = useState<boolean>(false);
@@ -129,7 +126,6 @@ export function LiquidityInputs({
   const waLocSodaWithdrawAmount =
     waLocSodaBalance > waLocSodaReserveBalance ? waLocSodaBalance - waLocSodaReserveBalance : 0n;
 
-  console.log('waLocSodaWithdrawAmount', waLocSodaWithdrawAmount);
   const hasPoolContext = poolData !== null && poolSpokeAssets !== null;
   const hasSelectedNetwork = selectedChainId !== null;
   const canContinue =
@@ -158,12 +154,6 @@ export function LiquidityInputs({
   } = useRequestTrustline(selectedSodaToken?.address);
   const withdrawMutation = useDexWithdraw();
 
-  const handleOpenWalletModal = (): void => {
-    if (!selectedChainId) {
-      return;
-    }
-    openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getXChainType(selectedChainId) });
-  };
   const handleBuySoda = (): void => {
     router.push(SWAP_ROUTE);
   };
@@ -429,8 +419,13 @@ export function LiquidityInputs({
             </Button>
           )
         ) : (
-          <Button variant="cherry" onClick={handleOpenWalletModal} className="px-6" disabled={!selectedChainId}>
-            {selectedChainId ? `Connect ${chainIdToChainName(selectedChainId)}` : 'Select network'}
+          <Button
+            data-type="default"
+            variant="cherry"
+            disabled={true}
+            className="h-10 min-w-28 px-6 py-2 rounded-[240px] flex justify-center items-center gap-1 w-full md:w-auto"
+          >
+            Continue
           </Button>
         )}
       </div>
