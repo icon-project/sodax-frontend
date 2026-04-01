@@ -19,6 +19,7 @@ import { CircleEllipsisIcon } from 'lucide-react';
 import { ManagePositionDialog } from '../manage-dialog';
 import { SwitchChainDialog } from '@/components/shared/switch-chain-dialog';
 import type { XToken } from '@sodax/types';
+import { getUserAPY } from './utils';
 
 type PositionCardProps = {
   tokenId: string;

@@ -4,7 +4,8 @@ import type React from 'react';
 import { useMemo } from 'react';
 import BigNumber from 'bignumber.js';
 import { Loader2, ShieldAlertIcon } from 'lucide-react';
-import { spokeChainConfig } from '@sodax/sdk';
+import { dexPools, spokeChainConfig } from '@sodax/sdk';
+import { usePoolData } from '@sodax/dapp-kit';
 import { Button } from '@/components/ui/button';
 import { TabsContent } from '@/components/ui/tabs';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
@@ -18,14 +19,6 @@ const sodaToken: XToken = {
   name: 'SODA',
   symbol: 'SODA',
   address: '0x0',
-  decimals: 18,
-  xChainId: 'sonic',
-};
-
-const xSodaToken: XToken = {
-  name: 'xSODA',
-  symbol: 'xSODA',
-  address: '0x1',
   decimals: 18,
   xChainId: 'sonic',
 };
@@ -61,10 +54,7 @@ export function ClaimTabContent({
   onClaimFees,
   onClaimCompleted,
 }: ClaimTabContentProps): React.JSX.Element {
-  const xSodaTokenOnCurrentChain: XToken = {
-    ...xSodaToken,
-    xChainId: chainId,
-  };
+  const fixedPoolKey = dexPools.ASODA_XSODA;
   const selectedSodaToken = useMemo((): XToken | undefined => {
     const selectedChainConfig = spokeChainConfig[chainId];
     if (!selectedChainConfig?.supportedTokens || !('SODA' in selectedChainConfig.supportedTokens)) {
@@ -73,7 +63,24 @@ export function ClaimTabContent({
     return selectedChainConfig.supportedTokens.SODA as XToken;
   }, [chainId]);
   const { data: sodaPrice } = useTokenPrice(selectedSodaToken ?? sodaToken);
-  const { data: xSodaPrice } = useTokenPrice(xSodaTokenOnCurrentChain);
+  const { data: poolDataRaw } = usePoolData({ poolKey: fixedPoolKey });
+  const sodaPerXSodaRate = useMemo((): number | null => {
+    if (!poolDataRaw) {
+      return null;
+    }
+    const parsedRate = Number(poolDataRaw.price.toSignificant(18));
+    if (!Number.isFinite(parsedRate) || parsedRate <= 0) {
+      return null;
+    }
+    return parsedRate;
+  }, [poolDataRaw]);
+  const xSodaPrice = useMemo((): number => {
+    if (!sodaPrice || !sodaPerXSodaRate) {
+      return 0;
+    }
+    // Keep xSODA USD valuation consistent with supply flow.
+    return sodaPrice / sodaPerXSodaRate;
+  }, [sodaPerXSodaRate, sodaPrice]);
   const unclaimedSodaText = formatTokenAmount(unclaimedFees0, selectedSodaToken?.decimals ?? 18, 2);
   const unclaimedXSodaText = formatTokenAmount(unclaimedFees1, 18, 2);
   const unclaimedSodaUsdText = useMemo((): string => {

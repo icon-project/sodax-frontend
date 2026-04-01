@@ -335,6 +335,7 @@ export function ManagePositionDialog({
         }),
       ]);
       setIsClaimSuccess(true);
+      await refreshDexQueries();
     } catch (claimErr) {
       const message = claimErr instanceof Error ? claimErr.message : 'Claim fee failed.';
       setClaimError(message);

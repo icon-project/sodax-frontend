@@ -22,6 +22,11 @@ type OhlcApiPoint = {
   close_sqrt: string;
 };
 
+type VolumePoint = {
+  time: number;
+  volume: number;
+};
+
 function normalizeExternalPrice(value: number | null | undefined): number | null {
   if (value === null || value === undefined || !Number.isFinite(value) || value <= 0) {
     return null;
@@ -185,6 +190,53 @@ function parseOhlcPricePoints(payload: unknown): PricePoint[] {
   return deduped;
 }
 
+function parseVolumePoints(payload: unknown): VolumePoint[] {
+  if (!Array.isArray(payload)) {
+    return [];
+  }
+  const points = payload
+    .map((item): VolumePoint | null => {
+      if (!item || typeof item !== 'object') {
+        return null;
+      }
+      const rec = item as Partial<Record<'bucket' | 'volume0', string>>;
+      const bucketTime = rec.bucket ? Date.parse(rec.bucket) : Number.NaN;
+      const volStr = rec.volume0;
+      if (!Number.isFinite(bucketTime) || !volStr || typeof volStr !== 'string') {
+        return null;
+      }
+      // Try to scale assuming 18 decimals; fallback to Number if BigInt fails
+      let volNum: number | null = null;
+      try {
+        const bi = BigInt(volStr);
+        // 1e18 as BigInt scaling is not exact in float; divide before converting
+        const scaled = Number(bi) / 1e18;
+        volNum = Number.isFinite(scaled) ? scaled : null;
+      } catch {
+        const asNum = Number(volStr);
+        volNum = Number.isFinite(asNum) ? asNum : null;
+      }
+      if (volNum === null || volNum < 0) {
+        return null;
+      }
+      return { time: bucketTime, volume: volNum };
+    })
+    .filter((point): point is VolumePoint => point !== null)
+    .sort((a, b) => a.time - b.time);
+  // Deduplicate on time if needed
+  const deduped: VolumePoint[] = [];
+  let lastTime: number | null = null;
+  for (const point of points) {
+    if (point.time !== lastTime) {
+      deduped.push(point);
+      lastTime = point.time;
+    } else {
+      deduped[deduped.length - 1] = point;
+    }
+  }
+  return deduped;
+}
+
 function getInitialPriceBand(prices: PricePoint[], fallbackPrice: number): { min: number; max: number } {
   const validPrices = prices.map(point => point.price).filter(price => Number.isFinite(price) && price > 0);
   const latestValidPrice = validPrices.length > 0 ? validPrices[validPrices.length - 1] : undefined;
@@ -325,6 +377,7 @@ export function PoolChart({
   const externalPairPrice = useMemo(() => normalizeExternalPrice(pairPrice), [pairPrice]);
   const [currentPrice, setCurrentPrice] = useState<number>(externalPairPrice ?? CURRENT_PRICE);
   const [tickData, setTickData] = useState<TickPoint[]>(TICK_DATA);
+  const [volumeData, setVolumeData] = useState<VolumePoint[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   const draggingRef = useRef<'min' | 'max' | 'band' | null>(null);
@@ -388,6 +441,7 @@ export function PoolChart({
 
         const payload: unknown = await response.json();
         const data = parseOhlcPricePoints(payload);
+        const vols = parseVolumePoints(payload);
         if (!data.length || ignore) {
           throw new Error('No valid OHLC points');
         }
@@ -397,6 +451,7 @@ export function PoolChart({
         setAllData(data);
         setCurrentPrice(last);
         setTickData(generateTickData(last, Math.max(80, data.length)));
+        setVolumeData(vols);
         setMinPrice(initialBand.min);
         setMaxPrice(initialBand.max);
       } catch {
@@ -411,6 +466,7 @@ export function PoolChart({
         setAllData(fb);
         setCurrentPrice(last);
         setTickData(generateTickData(last));
+        setVolumeData([]);
         setMinPrice(initialBand.min);
         setMaxPrice(initialBand.max);
       } finally {
@@ -570,6 +626,30 @@ export function PoolChart({
       .attr('height', Math.max(0, INNER_H - minY));
 
     const g = svg.append('g').attr('class', 'chart-content').attr('transform', `translate(${ML.left},${ML.top})`);
+
+    // Draw volume bars (time-based) beneath price line
+    if (visibleData.length > 0 && volumeData.length > 0) {
+      const [vx0, vx1] = d3.extent(visibleData, d => d.time) as [number, number];
+      const volVis = volumeData.filter(v => v.time >= vx0 && v.time <= vx1);
+      const volMax = d3.max(volVis, d => d.volume) ?? 0;
+      if (volVis.length > 0 && volMax > 0) {
+        const volHeight = Math.min(32, Math.max(16, INNER_H * 0.3));
+        const volScale = d3.scaleLinear().domain([0, volMax]).range([0, volHeight]);
+        const barW = Math.max(1, Math.min(8, (INNER_W / Math.max(1, volVis.length)) * 0.9));
+        const volGroup = g.append('g').attr('class', 'volume-bars');
+        volGroup
+          .selectAll('rect')
+          .data(volVis)
+          .enter()
+          .append('rect')
+          .attr('x', d => xScale(d.time) - barW / 2)
+          .attr('y', d => INNER_H - volScale(d.volume))
+          .attr('width', barW)
+          .attr('height', d => volScale(d.volume))
+          .attr('fill', C.tickOutFill)
+          .attr('opacity', 0.6);
+      }
+    }
 
     g.append('rect')
       .attr('class', 'band-hit')
@@ -791,7 +871,19 @@ export function PoolChart({
     drawHLine({ y: maxY, color: C.minMaxLine, label: 'MAX', price: maxPrice });
     drawHLine({ y: cpY, color: C.nowLine, label: 'NOW', price: currentPrice, dashed: true });
     drawHLine({ y: minY, color: C.minMaxLine, label: 'MIN', price: minPrice });
-  }, [minPrice, maxPrice, currentPrice, INNER_W, INNER_H, xScale, yScale, visibleData, activeRange, priceToY]);
+  }, [
+    minPrice,
+    maxPrice,
+    currentPrice,
+    INNER_W,
+    INNER_H,
+    xScale,
+    yScale,
+    visibleData,
+    activeRange,
+    priceToY,
+    volumeData,
+  ]);
 
   useEffect(() => {
     if (!tickSvgRef.current || TICK_IH <= 0) {

@@ -76,7 +76,7 @@ export const tabConfigs: TabConfig[] = [
     type: 'pool',
     label: 'Pool',
     content: 'a quick pool',
-    enabled: process.env.NEXT_PUBLIC_APP_ENV !== 'production',
+    enabled: true,
     href: POOL_ROUTE,
   },
 ];

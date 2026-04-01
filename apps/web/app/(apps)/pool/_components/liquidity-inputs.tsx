@@ -8,9 +8,7 @@ import { Button } from '@/components/ui/button';
 import { InputGroup, InputGroupText } from '@/components/ui/input-group';
 import { InputGroupAddon } from '@/components/ui/input-group';
 import { InputGroupInput } from '@/components/ui/input-group';
-import { getXChainType, useXAccount } from '@sodax/wallet-sdk-react';
-import { MODAL_ID } from '@/stores/modal-store';
-import { useModalStore } from '@/stores/modal-store-provider';
+import { useEvmSwitchChain, useXAccount } from '@sodax/wallet-sdk-react';
 import type { SpokeChainId } from '@sodax/types';
 import type { XToken } from '@sodax/types';
 import { chainIdToChainName } from '@/providers/constants';
@@ -18,53 +16,73 @@ import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import { useAllChainXSodaBalances } from '@/hooks/useAllChainXSodaBalances';
 import { InputGroupButton } from '@/components/ui/input-group';
 import { STAKE_ROUTE, SWAP_ROUTE } from '@/constants/routes';
-import { spokeChainConfig } from '@sodax/sdk';
+import { type PoolKey, spokeChainConfig } from '@sodax/sdk';
 import type { PoolData, PoolSpokeAssets } from '@sodax/sdk';
 import { cn, formatTokenAmount, validateChainAddress } from '@/lib/utils';
 import { formatUnits, parseUnits } from 'viem';
 import { SupplyDialog } from './supply-dialog';
-import { STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
+import { SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
 import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
 import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
-import { useRequestTrustline, useSpokeProvider, useStellarTrustlineCheck } from '@sodax/dapp-kit';
+import {
+  createWithdrawParamsProps,
+  useDexWithdraw,
+  usePoolBalances,
+  useRequestTrustline,
+  useSpokeProvider,
+  useStellarTrustlineCheck,
+} from '@sodax/dapp-kit';
 import { useWalletProvider } from '@sodax/wallet-sdk-react';
 import type { SpokeProvider } from '@sodax/sdk';
 import { Loader2 } from 'lucide-react';
 import { ErrorDialog } from '@/components/shared/error-dialog';
+import { SwitchChainDialog } from '@/components/shared/switch-chain-dialog';
 
 type LiquidityInputsProps = {
-  selectedNetworkChainId: SpokeChainId | null;
+  selectedChainId: SpokeChainId | null;
   sodaAmount: string;
   xSodaAmount: string;
   onSodaAmountChange: (value: string) => void;
   onXSodaAmountChange: (value: string) => void;
   poolData: PoolData | null;
   poolSpokeAssets: PoolSpokeAssets | null;
+  fixedPoolKey: PoolKey;
 };
 
 export function LiquidityInputs({
-  selectedNetworkChainId,
+  selectedChainId,
   sodaAmount,
   xSodaAmount,
   onSodaAmountChange,
   onXSodaAmountChange,
   poolData,
   poolSpokeAssets,
+  fixedPoolKey,
 }: LiquidityInputsProps): React.JSX.Element {
   const router = useRouter();
-  const openModal = useModalStore(state => state.openModal);
   const [isSupplyDialogOpen, setIsSupplyDialogOpen] = useState<boolean>(false);
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState<boolean>(false);
+  const [isSwitchChainDialogOpen, setIsSwitchChainDialogOpen] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const { address } = useXAccount(selectedNetworkChainId ?? undefined);
+  const { address } = useXAccount(selectedChainId as SpokeChainId);
+  const walletProvider = useWalletProvider(selectedChainId as SpokeChainId);
+  const spokeProvider = useSpokeProvider(selectedChainId as SpokeChainId, walletProvider);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(
+    (selectedChainId as SpokeChainId) ?? SONIC_MAINNET_CHAIN_ID,
+  );
+  const { data: balances } = usePoolBalances({
+    poolData,
+    poolKey: fixedPoolKey,
+    spokeProvider: spokeProvider as SpokeProvider,
+  });
   const allChainSodaBalances = useAllChainBalances({ onlySodaTokens: true });
-  const allChainXSodaBalances = useAllChainXSodaBalances(selectedNetworkChainId ? [selectedNetworkChainId] : []);
+  const allChainXSodaBalances = useAllChainXSodaBalances(selectedChainId ? [selectedChainId] : []);
   const isWalletConnected = Boolean(address);
   const selectedSodaBalance = useMemo((): bigint => {
-    if (!selectedNetworkChainId) {
+    if (!selectedChainId) {
       return 0n;
     }
-    const selectedChainConfig = spokeChainConfig[selectedNetworkChainId];
+    const selectedChainConfig = spokeChainConfig[selectedChainId];
     const selectedSodaToken =
       selectedChainConfig?.supportedTokens && 'SODA' in selectedChainConfig.supportedTokens
         ? (selectedChainConfig.supportedTokens.SODA as XToken)
@@ -75,18 +93,18 @@ export function LiquidityInputs({
     }
 
     const selectedSodaBalanceEntry = (allChainSodaBalances[selectedSodaToken.address] || []).find(
-      balanceEntry => balanceEntry.chainId === selectedNetworkChainId,
+      balanceEntry => balanceEntry.chainId === selectedChainId,
     );
 
     return selectedSodaBalanceEntry?.balance ?? 0n;
-  }, [allChainSodaBalances, selectedNetworkChainId]);
-  const selectedXSodaBalance = selectedNetworkChainId ? (allChainXSodaBalances.get(selectedNetworkChainId) ?? 0n) : 0n;
+  }, [allChainSodaBalances, selectedChainId]);
+  const selectedXSodaBalance = selectedChainId ? (allChainXSodaBalances.get(selectedChainId) ?? 0n) : 0n;
   const hasNoSodaBalance = isWalletConnected && selectedSodaBalance <= 0n;
   const hasNoXSodaBalance = isWalletConnected && selectedXSodaBalance <= 0n;
   const hasSodaBalance = isWalletConnected && selectedSodaBalance > 0n;
   const hasXSodaBalance = isWalletConnected && selectedXSodaBalance > 0n;
   const canShowAnyMaxButton = isWalletConnected && (selectedSodaBalance > 0n || selectedXSodaBalance > 0n);
-  const selectedChainConfig = selectedNetworkChainId ? spokeChainConfig[selectedNetworkChainId] : undefined;
+  const selectedChainConfig = selectedChainId ? spokeChainConfig[selectedChainId] : undefined;
   const selectedSodaToken =
     selectedChainConfig?.supportedTokens && 'SODA' in selectedChainConfig.supportedTokens
       ? (selectedChainConfig.supportedTokens.SODA as XToken)
@@ -99,11 +117,20 @@ export function LiquidityInputs({
   const hasValidSodaInput = sodaAmount.trim().length > 0 && sodaValue > 0n && sodaValue <= selectedSodaBalance;
   const hasValidXSodaInput = xSodaAmount.trim().length > 0 && xSodaValue > 0n && xSodaValue <= selectedXSodaBalance;
   const isOverMax = sodaValue > selectedSodaBalance || xSodaValue > selectedXSodaBalance;
+
+  const waLocSodaDecimals = poolData?.token0.decimals ?? 18;
+  const waLocSodaBalance = balances?.token0Balance ?? 0n;
+  const waLocSodaMinBalance = parseUnits('1', waLocSodaDecimals);
+  const waLocSodaReserveBalance = parseUnits('0.001', waLocSodaDecimals);
+  const hasWithdrawableWaLocSoda = isWalletConnected && waLocSodaBalance > waLocSodaMinBalance;
+  const waLocSodaWithdrawAmount =
+    waLocSodaBalance > waLocSodaReserveBalance ? waLocSodaBalance - waLocSodaReserveBalance : 0n;
+
   const hasPoolContext = poolData !== null && poolSpokeAssets !== null;
-  const hasSelectedNetwork = selectedNetworkChainId !== null;
+  const hasSelectedNetwork = selectedChainId !== null;
   const canContinue =
     isWalletConnected && hasSelectedNetwork && hasPoolContext && hasValidSodaInput && hasValidXSodaInput;
-  const isStellarChain = selectedNetworkChainId === STELLAR_MAINNET_CHAIN_ID;
+  const isStellarChain = selectedChainId === STELLAR_MAINNET_CHAIN_ID;
 
   const { data: stellarAccountValidation } = useValidateStellarAccount(isStellarChain ? address : undefined);
   const {
@@ -112,14 +139,12 @@ export function LiquidityInputs({
     isActivated: isActivatedStellarAccount,
   } = useActivateStellarAccount();
 
-  const walletProvider = useWalletProvider(selectedNetworkChainId ?? undefined);
-  const spokeProvider = useSpokeProvider(selectedNetworkChainId ?? undefined, walletProvider);
   const trustlineCheckAmount = sodaValue > 0n ? sodaValue : undefined;
   const { data: hasSufficientTrustline } = useStellarTrustlineCheck(
     selectedSodaToken?.address,
     trustlineCheckAmount,
     spokeProvider,
-    selectedNetworkChainId ?? undefined,
+    selectedChainId ?? undefined,
   );
   const {
     requestTrustline,
@@ -127,18 +152,45 @@ export function LiquidityInputs({
     isRequested: hasTrustline,
     error: trustlineError,
   } = useRequestTrustline(selectedSodaToken?.address);
+  const withdrawMutation = useDexWithdraw();
 
-  const handleOpenWalletModal = (): void => {
-    if (!selectedNetworkChainId) {
-      return;
-    }
-    openModal(MODAL_ID.WALLET_MODAL, { primaryChainType: getXChainType(selectedNetworkChainId) });
-  };
   const handleBuySoda = (): void => {
     router.push(SWAP_ROUTE);
   };
   const handleGetXSoda = (): void => {
     router.push(STAKE_ROUTE);
+  };
+  const handleSwitchChainClick = (): void => {
+    void handleSwitchChain();
+  };
+  const handleWithdrawWaLocSoda = async (): Promise<void> => {
+    if (selectedChainId !== null && isWrongChain) {
+      setIsSwitchChainDialogOpen(true);
+      return;
+    }
+    if (!spokeProvider || !poolData || !poolSpokeAssets) {
+      setErrorMessage('Withdraw is unavailable. Please ensure wallet and pool data are loaded.');
+      setIsErrorDialogOpen(true);
+      return;
+    }
+    if (waLocSodaWithdrawAmount <= 0n) {
+      return;
+    }
+    try {
+      await withdrawMutation.mutateAsync({
+        params: createWithdrawParamsProps({
+          tokenIndex: 0,
+          amount: formatUnits(waLocSodaWithdrawAmount, waLocSodaDecimals),
+          poolData,
+          poolSpokeAssets,
+        }),
+        spokeProvider,
+      });
+    } catch (withdrawError) {
+      const message = withdrawError instanceof Error ? withdrawError.message : 'Failed to withdraw waLocSODA.';
+      setErrorMessage(message);
+      setIsErrorDialogOpen(true);
+    }
   };
   const handleOpenSupplyDialog = (): void => {
     if (!canContinue) {
@@ -337,6 +389,16 @@ export function LiquidityInputs({
               {isRequestingTrustline ? 'Adding Stellar Trustline' : 'Add Stellar Trustline'}
               {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
             </Button>
+          ) : hasWithdrawableWaLocSoda ? (
+            <Button
+              variant="cherry"
+              onClick={() => void handleWithdrawWaLocSoda()}
+              className="px-6"
+              disabled={withdrawMutation.isPending}
+            >
+              {withdrawMutation.isPending ? 'Recovering SODA' : 'Recover locked SODA'}
+              {withdrawMutation.isPending && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
+            </Button>
           ) : !hasNoSodaBalance && hasNoXSodaBalance ? (
             <Button variant="cherry" onClick={handleGetXSoda} className="px-6">
               Get xSODA
@@ -358,8 +420,13 @@ export function LiquidityInputs({
             </Button>
           )
         ) : (
-          <Button variant="cherry" onClick={handleOpenWalletModal} className="px-6" disabled={!selectedNetworkChainId}>
-            {selectedNetworkChainId ? `Connect ${chainIdToChainName(selectedNetworkChainId)}` : 'Select network'}
+          <Button
+            data-type="default"
+            variant="cherry"
+            disabled={true}
+            className="h-10 min-w-28 px-6 py-2 rounded-[240px] flex justify-center items-center gap-1 w-full md:w-auto"
+          >
+            Continue
           </Button>
         )}
       </div>
@@ -374,6 +441,14 @@ export function LiquidityInputs({
         onOpenChange={setIsErrorDialogOpen}
         errorMessage={errorMessage}
         title="Your wallet needs a small reserve"
+      />
+      <SwitchChainDialog
+        open={isSwitchChainDialogOpen}
+        onOpenChange={setIsSwitchChainDialogOpen}
+        chainName={selectedChainId ? chainIdToChainName(selectedChainId) : 'the selected network'}
+        onSwitchChain={handleSwitchChainClick}
+        description="Please switch to the selected network to withdraw waLocSODA."
+        titleAction="withdraw waLocSODA"
       />
     </>
   );
