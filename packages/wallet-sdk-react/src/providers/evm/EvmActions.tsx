@@ -1,5 +1,3 @@
-'use client';
-
 import { useEffect, useRef } from 'react';
 import { useConfig, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import type { XConnection } from '../../types';

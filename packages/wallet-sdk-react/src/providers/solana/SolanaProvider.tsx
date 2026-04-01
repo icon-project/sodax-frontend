@@ -1,7 +1,4 @@
-'use client';
-
-// biome-ignore lint/style/useImportType: <explanation>
-import React, { useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import {
   ConnectionProvider as SolanaConnectionProvider,
   WalletProvider as SolanaWalletProvider,
@@ -17,7 +14,7 @@ const defaultSolanaConfig: Required<Pick<SolanaChainConfig, 'autoConnect'>> = {
 };
 
 type SolanaProviderProps = {
-  children: React.ReactNode;
+  children: ReactNode;
   config?: SolanaChainConfig;
   rpcConfig?: RpcConfig;
 };

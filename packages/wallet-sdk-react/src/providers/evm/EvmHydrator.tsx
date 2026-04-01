@@ -1,7 +1,6 @@
-'use client';
-
 import { useEffect, useRef } from 'react';
-import { useConfig, useConnections, useAccount } from 'wagmi';
+import { useConfig, useConnections, useAccount, usePublicClient, useWalletClient } from 'wagmi';
+import { EvmWalletProvider } from '@sodax/wallet-sdk-core';
 import { EvmXService } from '../../xchains/evm/EvmXService';
 import { EvmXConnector } from '../../xchains/evm';
 import { useXWalletStore } from '../../useXWalletStore';
@@ -14,8 +13,11 @@ export const EvmHydrator = () => {
   const wagmiConfig = useConfig();
   const evmConnections = useConnections();
   const { address } = useAccount();
+  const evmPublicClient = usePublicClient();
+  const { data: evmWalletClient } = useWalletClient();
   const setXConnection = useXWalletStore(state => state.setXConnection);
   const unsetXConnection = useXWalletStore(state => state.unsetXConnection);
+  const setWalletProvider = useXWalletStore(state => state.setWalletProvider);
 
   // Hydrate wagmiConfig into singleton
   useEffect(() => {
@@ -46,6 +48,15 @@ export const EvmHydrator = () => {
       unsetXConnection('EVM');
     }
   }, [address, evmConnections, setXConnection, unsetXConnection]);
+
+  // Hydrate EVM wallet provider into store
+  useEffect(() => {
+    if (evmPublicClient && evmWalletClient) {
+      setWalletProvider('EVM', new EvmWalletProvider({ walletClient: evmWalletClient, publicClient: evmPublicClient }));
+    } else {
+      setWalletProvider('EVM', undefined);
+    }
+  }, [evmPublicClient, evmWalletClient, setWalletProvider]);
 
   return null;
 };

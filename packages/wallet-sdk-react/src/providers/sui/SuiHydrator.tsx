@@ -1,5 +1,3 @@
-'use client';
-
 import { useEffect, useRef } from 'react';
 import { useCurrentAccount, useCurrentWallet, useSuiClient, useWallets } from '@mysten/dapp-kit';
 import { SuiXService } from '../../xchains/sui';
@@ -16,6 +14,7 @@ export const SuiHydrator = () => {
   const suiWallets = useWallets();
   const setXConnection = useXWalletStore(state => state.setXConnection);
   const unsetXConnection = useXWalletStore(state => state.unsetXConnection);
+  const setWalletProvider = useXWalletStore(state => state.setWalletProvider);
 
   useEffect(() => {
     if (suiClient) {
@@ -54,6 +53,15 @@ export const SuiHydrator = () => {
       unsetXConnection('SUI');
     }
   }, [currentWallet, suiAccount, setXConnection, unsetXConnection]);
+
+  // Hydrate SUI wallet provider into store
+  useEffect(() => {
+    if (suiClient && currentWallet && suiAccount) {
+      setWalletProvider('SUI', SuiXService.getInstance().createWalletProvider());
+    } else {
+      setWalletProvider('SUI', undefined);
+    }
+  }, [suiClient, currentWallet, suiAccount, setWalletProvider]);
 
   return null;
 };

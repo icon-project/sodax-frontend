@@ -1,7 +1,6 @@
 'use client';
 
-// biome-ignore lint/style/useImportType: <explanation>
-import React, { useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 
 import type { RpcConfig } from '@sodax/types';
 import type { State as WagmiState } from 'wagmi';
@@ -35,7 +34,7 @@ export type SodaxWalletProviderOptions = {
 
 /** @deprecated Use `config` prop instead */
 export type SodaxWalletProviderProps = {
-  children: React.ReactNode;
+  children: ReactNode;
   /** @deprecated Use `config` prop instead */
   rpcConfig?: RpcConfig;
   /** @deprecated Use `config` prop instead */
@@ -99,7 +98,7 @@ export const SodaxWalletProvider = ({
   const { chains, rpcConfig } = config;
 
   // Initialize chain services + register non-provider ChainActions + reconnect
-  useInitChainServices(chains);
+  useInitChainServices(chains, rpcConfig);
 
   // Hydrate Stacks network
   useStacksHydration(chains, rpcConfig);
@@ -120,7 +119,7 @@ export const SodaxWalletProvider = ({
 
   if (chains.SUI) {
     content = (
-      <SuiProvider config={chains.SUI}>
+      <SuiProvider config={chains.SUI} rpcConfig={rpcConfig}>
         {content}
       </SuiProvider>
     );

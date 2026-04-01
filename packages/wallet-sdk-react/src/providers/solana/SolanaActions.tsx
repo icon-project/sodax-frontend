@@ -1,5 +1,3 @@
-'use client';
-
 import { useEffect, useRef } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import type { XConnection } from '../../types';

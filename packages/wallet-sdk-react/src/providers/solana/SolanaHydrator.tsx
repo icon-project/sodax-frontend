@@ -1,7 +1,6 @@
-'use client';
-
 import { useEffect, useRef } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { SolanaWalletProvider } from '@sodax/wallet-sdk-core';
 import { SolanaXService } from '../../xchains/solana/SolanaXService';
 import { SolanaXConnector } from '../../xchains/solana';
 import { useXWalletStore } from '../../useXWalletStore';
@@ -14,6 +13,7 @@ export const SolanaHydrator = () => {
   const solanaWallet = useWallet();
   const setXConnection = useXWalletStore(state => state.setXConnection);
   const unsetXConnection = useXWalletStore(state => state.unsetXConnection);
+  const setWalletProvider = useXWalletStore(state => state.setWalletProvider);
 
   useEffect(() => {
     if (connection) {
@@ -49,6 +49,18 @@ export const SolanaHydrator = () => {
       unsetXConnection('SOLANA');
     }
   }, [solanaWallet.connected, solanaWallet.publicKey, solanaWallet.wallet, setXConnection, unsetXConnection]);
+
+  // Hydrate Solana wallet provider into store
+  useEffect(() => {
+    if (solanaWallet.connected && solanaWallet.wallet && connection) {
+      setWalletProvider('SOLANA', new SolanaWalletProvider({
+        wallet: solanaWallet,
+        endpoint: connection.rpcEndpoint,
+      }));
+    } else {
+      setWalletProvider('SOLANA', undefined);
+    }
+  }, [solanaWallet, connection, setWalletProvider]);
 
   return null;
 };

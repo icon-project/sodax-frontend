@@ -41,10 +41,10 @@ const rpcConfig: RpcConfig = {
   // },
   bitcoin: {
     radfiApiUrl: 'https://api.radfi.co/api',
-    radfiUmsUrl: 'https://ums.radfi.co/api'
+    radfiUmsUrl: 'https://ums.radfi.co/api',
+    rpcUrl: 'https://mempool.space/signet/api',
   },
 };
-
 
 const configMap: Record<SolverEnv, SolverConfigParams> = {
   [SolverEnv.Production]: productionSolverConfig,
@@ -64,7 +64,9 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <SodaxProvider testnet={false} config={sodaxConfig} rpcConfig={rpcConfig}>
       <QueryClientProvider client={queryClient}>
-        <SodaxWalletProvider rpcConfig={rpcConfig} options={{ wagmi: { ssr: false, reconnectOnMount: true } }}>{children}</SodaxWalletProvider>
+        <SodaxWalletProvider rpcConfig={rpcConfig} options={{ wagmi: { ssr: false, reconnectOnMount: true } }}>
+          {children}
+        </SodaxWalletProvider>
       </QueryClientProvider>
     </SodaxProvider>
   );

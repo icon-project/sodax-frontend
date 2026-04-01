@@ -1,5 +1,3 @@
-'use client';
-
 import { useEffect } from 'react';
 import type { ChainsConfig } from '../types/config';
 import type { RpcConfig } from '@sodax/types';

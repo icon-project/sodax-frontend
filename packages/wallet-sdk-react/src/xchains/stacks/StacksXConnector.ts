@@ -13,8 +13,9 @@ export interface StacksProviderConfig {
 
 /** Resolves a provider from `window` by dot-separated ID, matching @stacks/connect-ui's getProviderFromId */
 function getProviderFromId(id: string): StacksProvider | undefined {
-  // biome-ignore lint/suspicious/noExplicitAny: window property traversal requires any
-  return id.split('.').reduce<any>((acc, part) => acc?.[part], window) as StacksProvider | undefined;
+  return id.split('.').reduce<unknown>((acc, part) => (acc as Record<string, unknown>)?.[part], window) as
+    | StacksProvider
+    | undefined;
 }
 
 export class StacksXConnector extends XConnector {

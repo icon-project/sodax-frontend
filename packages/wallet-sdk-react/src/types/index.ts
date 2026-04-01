@@ -1,7 +1,29 @@
-import type { ChainType } from '@sodax/types';
+import type {
+  ChainType,
+  IEvmWalletProvider,
+  ISuiWalletProvider,
+  IIconWalletProvider,
+  IInjectiveWalletProvider,
+  IStellarWalletProvider,
+  ISolanaWalletProvider,
+  IBitcoinWalletProvider,
+  INearWalletProvider,
+  IStacksWalletProvider,
+} from '@sodax/types';
 
 export type { IXService, IXConnector } from './interfaces';
 export type { SodaxWalletConfig, ChainsConfig, BaseChainConfig, EvmChainConfig, SolanaChainConfig, SuiChainConfig, SimpleChainConfig } from './config';
+
+export type WalletProvider =
+  | IEvmWalletProvider
+  | ISuiWalletProvider
+  | IIconWalletProvider
+  | IInjectiveWalletProvider
+  | IStellarWalletProvider
+  | ISolanaWalletProvider
+  | IBitcoinWalletProvider
+  | INearWalletProvider
+  | IStacksWalletProvider;
 
 export type XAccount = {
   address: string | undefined;

@@ -1,7 +1,4 @@
-'use client';
-
-// biome-ignore lint/style/useImportType: <explanation>
-import React, { useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { WagmiProvider, type State as WagmiState } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { RpcConfig } from '@sodax/types';
@@ -18,7 +15,7 @@ const defaultEvmConfig: Required<Pick<EvmChainConfig, 'reconnectOnMount' | 'ssr'
 };
 
 type EvmProviderProps = {
-  children: React.ReactNode;
+  children: ReactNode;
   config?: EvmChainConfig;
   rpcConfig?: RpcConfig;
 };

@@ -1,6 +1,5 @@
-'use client';
-
 import { useEffect, useRef } from 'react';
+import type { RpcConfig } from '@sodax/types';
 import type { ChainsConfig } from '../types/config';
 import { useXWalletStore } from '../useXWalletStore';
 import { reconnectIcon } from '../xchains/icon/actions';
@@ -11,7 +10,7 @@ import { reconnectStellar } from '../xchains/stellar/actions';
  * Initializes chain services based on config. Runs once on mount.
  * Handles reconnect for ICON/Injective/Stellar after persist hydration.
  */
-export function useInitChainServices(chains: ChainsConfig) {
+export function useInitChainServices(chains: ChainsConfig, rpcConfig?: RpcConfig) {
   const initChainServices = useXWalletStore(state => state.initChainServices);
   const initializedRef = useRef(false);
 
@@ -19,7 +18,7 @@ export function useInitChainServices(chains: ChainsConfig) {
     if (initializedRef.current) return;
     initializedRef.current = true;
 
-    initChainServices(chains);
+    initChainServices(chains, rpcConfig);
 
     const runReconnect = () => {
       if (chains.ICON) reconnectIcon();
@@ -32,5 +31,5 @@ export function useInitChainServices(chains: ChainsConfig) {
     } else {
       useXWalletStore.persist.onFinishHydration(runReconnect);
     }
-  }, [chains, initChainServices]);
+  }, [chains, rpcConfig, initChainServices]);
 }

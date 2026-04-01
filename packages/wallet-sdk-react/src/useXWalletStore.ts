@@ -1,5 +1,3 @@
-'use client';
-
 import type { ChainType } from '@sodax/types';
 import { create } from 'zustand';
 import { createJSONStorage, persist, devtools } from 'zustand/middleware';
@@ -9,7 +7,16 @@ import type { XConnector } from './core';
 import type { XConnection } from './types';
 import type { ChainActions, ChainActionsRegistry } from './context/ChainActionsContext';
 import type { ChainsConfig } from './types/config';
+import type { RpcConfig, BitcoinRpcConfig } from '@sodax/types';
 import type { IXConnector } from './types/interfaces';
+import type { WalletProvider } from './types';
+import {
+  IconWalletProvider,
+  InjectiveWalletProvider,
+  StellarWalletProvider,
+  NearWalletProvider,
+  StacksWalletProvider,
+} from '@sodax/wallet-sdk-core';
 import { EvmXService } from './xchains/evm';
 import { InjectiveXConnector, InjectiveXService } from './xchains/injective';
 import { Wallet } from '@injectivelabs/wallet-base';
@@ -17,7 +24,7 @@ import { getEthereumAddress } from '@injectivelabs/sdk-ts';
 import { SolanaXService } from './xchains/solana/SolanaXService';
 import { StellarXService } from './xchains/stellar';
 import { SuiXService } from './xchains/sui';
-import { IconXService } from './xchains/icon';
+import { IconXService, CHAIN_INFO, SupportedChainId } from './xchains/icon';
 import { IconHanaXConnector } from './xchains/icon/IconHanaXConnector';
 import { BitcoinXService } from './xchains/bitcoin';
 import { UnisatXConnector } from './xchains/bitcoin/UnisatXConnector';
@@ -30,12 +37,14 @@ import type { BitcoinXConnector } from './xchains/bitcoin/BitcoinXConnector';
 // ─── Chain Registry ──────────────────────────────────────────────────────────
 
 type ChainServiceFactory = {
-  createService: () => XService;
+  createService: (rpcConfig?: RpcConfig) => XService;
   defaultConnectors: () => XConnector[];
   /** true = connectors hydrated by React provider, not set here */
   providerManaged: boolean;
   /** Create ChainActions for non-provider chains. Provider chains register their own. */
   createActions?: (service: XService, getStore: () => XWalletStore) => ChainActions;
+  /** Create wallet provider for non-provider chains. Provider chains hydrate their own. */
+  createWalletProvider?: (service: XService, getStore: () => XWalletStore) => WalletProvider | undefined;
 };
 
 /**
@@ -75,7 +84,7 @@ const chainRegistry: Record<string, ChainServiceFactory> = {
     providerManaged: true,
   },
   BITCOIN: {
-    createService: () => BitcoinXService.getInstance(),
+    createService: (rpcConfig) => BitcoinXService.getInstance((rpcConfig?.bitcoin as BitcoinRpcConfig | undefined)?.rpcUrl),
     defaultConnectors: () => [new UnisatXConnector(), new XverseXConnector(), new OKXXConnector()],
     providerManaged: false,
     createActions: (service, getStore) => ({
@@ -90,6 +99,14 @@ const chainRegistry: Record<string, ChainServiceFactory> = {
         return (connector as BitcoinXConnector & { signEcdsaMessage: (msg: string) => Promise<string> }).signEcdsaMessage(message);
       },
     }),
+    createWalletProvider: (service, getStore) => {
+      const store = getStore();
+      const connection = store.xConnections.BITCOIN;
+      if (!connection?.xConnectorId) return undefined;
+      const connector = service.getXConnectorById(connection.xConnectorId) as BitcoinXConnector | undefined;
+      if (!connector) return undefined;
+      return connector.recreateWalletProvider(connection.xAccount);
+    },
   },
   INJECTIVE: {
     createService: () => InjectiveXService.getInstance(),
@@ -117,6 +134,11 @@ const chainRegistry: Record<string, ChainServiceFactory> = {
         return res;
       },
     }),
+    createWalletProvider: (service) => {
+      const injectiveService = service as unknown as InjectiveXService;
+      if (!injectiveService) return undefined;
+      return new InjectiveWalletProvider({ msgBroadcaster: injectiveService.msgBroadcaster });
+    },
   },
   STELLAR: {
     createService: () => StellarXService.getInstance(),
@@ -130,11 +152,24 @@ const chainRegistry: Record<string, ChainServiceFactory> = {
         return res.signedMessage;
       },
     }),
+    createWalletProvider: (service) => {
+      const stellarService = service as unknown as StellarXService;
+      if (!stellarService?.walletsKit) return undefined;
+      return new StellarWalletProvider({ type: 'BROWSER_EXTENSION', walletsKit: stellarService.walletsKit, network: 'PUBLIC' });
+    },
   },
   ICON: {
     createService: () => IconXService.getInstance(),
     defaultConnectors: () => [new IconHanaXConnector()],
     providerManaged: false,
+    createWalletProvider: (_service, getStore) => {
+      const address = getStore().xConnections.ICON?.xAccount.address;
+      if (!address) return undefined;
+      return new IconWalletProvider({
+        walletAddress: address as `hx${string}`,
+        rpcUrl: CHAIN_INFO[SupportedChainId.MAINNET].APIEndpoint as `http${string}`,
+      });
+    },
   },
   NEAR: {
     createService: () => NearXService.getInstance(),
@@ -148,11 +183,26 @@ const chainRegistry: Record<string, ChainServiceFactory> = {
         getStore().unsetXConnection('NEAR');
       },
     }),
+    createWalletProvider: (service) => {
+      const nearService = service as unknown as NearXService;
+      if (!nearService?.walletSelector) return undefined;
+      return new NearWalletProvider({ wallet: nearService.walletSelector });
+    },
   },
   STACKS: {
     createService: () => StacksXService.getInstance(),
     defaultConnectors: () => STACKS_PROVIDERS.map(c => new StacksXConnector(c)),
     providerManaged: false,
+    createWalletProvider: (service, getStore) => {
+      const store = getStore();
+      const connection = store.xConnections.STACKS;
+      const address = connection?.xAccount.address;
+      if (!address) return undefined;
+      const connector = connection?.xConnectorId
+        ? service.getXConnectorById(connection.xConnectorId) as StacksXConnector | undefined
+        : undefined;
+      return new StacksWalletProvider({ address, provider: connector?.getProvider() });
+    },
   },
 };
 
@@ -165,7 +215,7 @@ type ChainServicesResult = {
   chainActions: ChainActionsRegistry;
 };
 
-const createChainServices = (config: ChainsConfig, getStore: () => XWalletStore): ChainServicesResult => {
+const createChainServices = (config: ChainsConfig, getStore: () => XWalletStore, rpcConfig?: RpcConfig): ChainServicesResult => {
   const xServices: Partial<Record<ChainType, XService>> = {};
   const xConnectorsByChain: Partial<Record<ChainType, XConnector[]>> = {};
   const enabledChains: ChainType[] = [];
@@ -176,7 +226,7 @@ const createChainServices = (config: ChainsConfig, getStore: () => XWalletStore)
     if (!chainConfig) continue;
 
     const ct = chainType as ChainType;
-    const service = factory.createService();
+    const service = factory.createService(rpcConfig);
     xServices[ct] = service;
     enabledChains.push(ct);
 
@@ -204,12 +254,14 @@ type XWalletStore = {
   xConnectorsByChain: Partial<Record<ChainType, XConnector[]>>;
   enabledChains: ChainType[];
   chainActions: ChainActionsRegistry;
+  walletProviders: Partial<Record<ChainType, WalletProvider>>;
 
   setXConnection: (xChainType: ChainType, xConnection: XConnection) => void;
   unsetXConnection: (xChainType: ChainType) => void;
   setXConnectors: (xChainType: ChainType, connectors: XConnector[]) => void;
   registerChainActions: (xChainType: ChainType, actions: ChainActions) => void;
-  initChainServices: (config: ChainsConfig) => void;
+  setWalletProvider: (xChainType: ChainType, provider: WalletProvider | undefined) => void;
+  initChainServices: (config: ChainsConfig, rpcConfig?: RpcConfig) => void;
 };
 
 export const useXWalletStore = create<XWalletStore>()(
@@ -221,16 +273,27 @@ export const useXWalletStore = create<XWalletStore>()(
         xConnectorsByChain: {},
         enabledChains: [],
         chainActions: {},
+        walletProviders: {},
 
         setXConnection: (xChainType: ChainType, xConnection: XConnection) => {
           set(state => {
             state.xConnections[xChainType] = xConnection;
           });
+          // Recreate wallet provider for non-provider chains
+          const factory = chainRegistry[xChainType]?.createWalletProvider;
+          if (factory) {
+            const service = get().xServices[xChainType];
+            if (service) {
+              const provider = factory(service, () => get());
+              get().setWalletProvider(xChainType, provider);
+            }
+          }
         },
 
         unsetXConnection: (xChainType: ChainType) => {
           set(state => {
             delete state.xConnections[xChainType];
+            delete state.walletProviders[xChainType];
           });
         },
 
@@ -246,8 +309,18 @@ export const useXWalletStore = create<XWalletStore>()(
           });
         },
 
-        initChainServices: (config: ChainsConfig) => {
-          const result = createChainServices(config, () => get());
+        setWalletProvider: (xChainType: ChainType, provider: WalletProvider | undefined) => {
+          set(state => {
+            if (provider) {
+              (state.walletProviders as Record<string, WalletProvider>)[xChainType] = provider;
+            } else {
+              delete state.walletProviders[xChainType];
+            }
+          });
+        },
+
+        initChainServices: (config: ChainsConfig, rpcConfig?: RpcConfig) => {
+          const result = createChainServices(config, () => get(), rpcConfig);
           set(state => {
             state.xServices = { ...state.xServices, ...result.xServices };
             state.xConnectorsByChain = { ...state.xConnectorsByChain, ...result.xConnectorsByChain };

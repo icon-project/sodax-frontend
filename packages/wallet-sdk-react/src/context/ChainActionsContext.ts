@@ -1,5 +1,3 @@
-'use client';
-
 import { createContext, useContext } from 'react';
 import type { ChainType } from '@sodax/types';
 import type { XAccount, XConnection } from '../types';

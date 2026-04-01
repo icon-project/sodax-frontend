@@ -27,6 +27,10 @@ export type SolanaChainConfig = BaseChainConfig & {
 export type SuiChainConfig = BaseChainConfig & {
   /** @default true */
   autoConnect?: boolean;
+  /** @default 'mainnet' */
+  network?: 'mainnet' | 'testnet' | 'devnet';
+  /** Custom RPC URL. Falls back to Mysten public fullnode if not provided. */
+  rpcUrl?: string;
 };
 
 /** Configuration for chains that don't require a third-party provider (ICON, Injective, Stellar, Bitcoin, Near, Stacks) */
