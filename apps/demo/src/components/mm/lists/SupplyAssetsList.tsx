@@ -36,8 +36,6 @@ export function SupplyAssetsList(): ReactElement {
   const [withdrawData, setWithdrawData] = useState<{
     token: XToken;
     maxWithdraw: string;
-    hasActiveBorrows: boolean;
-    isCollateralEnabled: boolean;
   } | null>(null);
   const [supplyData, setSupplyData] = useState<{
     token: XToken;
@@ -311,24 +309,19 @@ export function SupplyAssetsList(): ReactElement {
                           formattedReserves={formattedReserves}
                           userReserves={userReserves}
                           aTokenBalancesMap={aTokenBalancesMap}
-                          mmPortfolioDebug={
+                          mmPortfolio={
                             userSummary
                               ? {
                                   healthFactor: userSummary.healthFactor,
                                   totalBorrowsUSD: userSummary.totalBorrowsUSD,
                                   totalCollateralUSD: userSummary.totalCollateralUSD,
+                                  currentLiquidationThreshold: userSummary.currentLiquidationThreshold,
                                 }
                               : undefined
                           }
                           onRefreshReserves={handleRefresh}
-                          onWithdrawClick={(token, maxWithdraw, isCollateralEnabled) => {
-                            const borrowsUsd = Number.parseFloat(userSummary?.totalBorrowsUSD ?? '0');
-                            setWithdrawData({
-                              token,
-                              maxWithdraw,
-                              hasActiveBorrows: Number.isFinite(borrowsUsd) && borrowsUsd > 0,
-                              isCollateralEnabled,
-                            });
+                          onWithdrawClick={(token, maxWithdraw) => {
+                            setWithdrawData({ token, maxWithdraw });
                           }}
                           onSupplyClick={(token, maxSupply) => {
                             setSupplyData({ token, maxSupply });
@@ -359,8 +352,6 @@ export function SupplyAssetsList(): ReactElement {
           open={true}
           token={withdrawData.token}
           maxWithdraw={withdrawData.maxWithdraw}
-          hasActiveBorrows={withdrawData.hasActiveBorrows}
-          isCollateralEnabled={withdrawData.isCollateralEnabled}
           inlineSuccess={true}
           onOpenChange={open => {
             if (!open) setWithdrawData(null);

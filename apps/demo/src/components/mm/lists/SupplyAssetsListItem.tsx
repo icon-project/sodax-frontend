@@ -4,17 +4,18 @@ import type { XToken, Address } from '@sodax/types';
 import { formatUnits } from 'viem';
 import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
-// import { OldBorrowButton } from './OldBorrowButton';
 import { Button } from '@/components/ui/button';
 import { DUST_THRESHOLD, ATOKEN_DECIMALS } from '../constants';
 import { isUserReserveDataArray, isValidAddress } from '../typeGuards';
 import { truncateToDecimals } from '@/lib/utils';
 
-/** Shallow portfolio snapshot from useUserFormattedSummary. */
-export type MmPortfolioWithdrawDebug = {
+/** Portfolio snapshot from useUserFormattedSummary used for HF-aware max withdrawal. */
+export type MmPortfolioSummary = {
   healthFactor: string | undefined;
   totalBorrowsUSD: string | undefined;
   totalCollateralUSD: string | undefined;
+  /** Weighted-average liquidation threshold across all collateral (normalized, e.g. "0.8"). */
+  currentLiquidationThreshold: string | undefined;
 };
 
 interface SupplyAssetsListItemProps {
@@ -24,10 +25,10 @@ interface SupplyAssetsListItemProps {
   userReserves: readonly UserReserveData[];
   aTokenBalancesMap?: Map<Address, bigint>;
   onRefreshReserves?: () => void;
-  onWithdrawClick: (token: XToken, maxWithdraw: string, isCollateralEnabled: boolean) => void;
+  onWithdrawClick: (token: XToken, maxWithdraw: string) => void;
   onSupplyClick: (token: XToken, maxSupply: string) => void;
-  /** Optional hub portfolio summary for dev logs (does not change Max math yet). */
-  mmPortfolioDebug?: MmPortfolioWithdrawDebug;
+  /** Hub portfolio summary for HF-aware max withdrawal calculation. */
+  mmPortfolio?: MmPortfolioSummary;
 }
 
 export function SupplyAssetsListItem({
@@ -38,7 +39,7 @@ export function SupplyAssetsListItem({
   aTokenBalancesMap,
   onWithdrawClick,
   onSupplyClick,
-  mmPortfolioDebug,
+  mmPortfolio,
 }: SupplyAssetsListItemProps): ReactElement {
   // Validate userReserves array before passing to useReserveMetrics
   if (!isUserReserveDataArray(userReserves)) {
@@ -65,19 +66,50 @@ export function SupplyAssetsListItem({
     aTokenBalance !== undefined ? truncateToDecimals(Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS)), 5) : '-';
 
   /**
-   * "Max" withdraw string shown in the modal — NOT the same as Aave / hub "max withdrawable".
+   * Health-factor-aware max withdrawal — Aave V3 formula.
    *
-   * - This value is ~99% of the user's **hub aToken balance** (see MAX_WITHDRAW_SAFETY_MARGIN in constants),
-   *   using float math only to match the existing UI; it ignores debt, health factor, and collateral locking.
-   * - The **protocol** caps withdrawals when removing supply would drop health factor below 1 or violate reserve rules,
-   *   even if pool TVL is large. So simulation can revert with `External call failed` while UI Max &lt; aToken balance.
-   * - A correct *protocol* max would need pool reads or simulation (e.g. getUserAccountData / HF-aware calc) — future work.
+   * Reference: Aave V3 Technical Paper, Section 4.1 (Health Factor)
+   * https://github.com/aave/aave-v3-core/blob/master/techpaper/Aave_V3_Technical_Paper.pdf
+   *
+   * HF = (totalCollateral × weightedAvgLT) / totalBorrows
+   *
+   * To keep HF >= 1 after withdrawing:
+   *   excessCollateralUSD = totalCollateralUSD × weightedAvgLT − totalBorrowsUSD
+   *   maxWithdrawUSD      = excessCollateralUSD / thisAssetLT
+   *   maxWithdrawTokens   = maxWithdrawUSD / assetPriceUSD
+   *   maxWithdraw         = min(aTokenBalance, maxWithdrawTokens) × safetyMargin
+   *
+   * Falls back to aTokenBalance × 0.99 when there are no borrows or asset is not collateral.
    */
   const maxWithdrawExact = useMemo(() => {
     if (!aTokenBalance || aTokenBalance === 0n || !aTokenAddress) return '0';
     const fullBalance = Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS));
-    return truncateToDecimals(fullBalance * 0.99, token.decimals);
-  }, [aTokenBalance, aTokenAddress, token.decimals]);
+
+    const isCollateral = metrics.userReserve?.usageAsCollateralEnabledOnUser ?? false;
+    const totalBorrowsUSD = Number(mmPortfolio?.totalBorrowsUSD ?? '0');
+    const hasBorrows = Number.isFinite(totalBorrowsUSD) && totalBorrowsUSD > 0;
+
+    if (!isCollateral || !hasBorrows || !mmPortfolio || !metrics.formattedReserve) {
+      return truncateToDecimals(fullBalance * 0.99, token.decimals);
+    }
+
+    const totalCollateralUSD = Number(mmPortfolio.totalCollateralUSD ?? '0');
+    const weightedAvgLT = Number(mmPortfolio.currentLiquidationThreshold ?? '0');
+    const assetLT = Number(metrics.formattedReserve.formattedReserveLiquidationThreshold ?? '0');
+    const assetPriceUSD = Number(metrics.formattedReserve.priceInUSD ?? '0');
+
+    if (assetLT <= 0 || assetPriceUSD <= 0) {
+      return truncateToDecimals(fullBalance * 0.99, token.decimals);
+    }
+
+    const excessCollateralUSD = totalCollateralUSD * weightedAvgLT - totalBorrowsUSD;
+    if (excessCollateralUSD <= 0) return '0';
+
+    const maxWithdrawTokens = excessCollateralUSD / assetLT / assetPriceUSD;
+    const cappedMax = Math.min(fullBalance, maxWithdrawTokens);
+
+    return truncateToDecimals(cappedMax * 0.99, token.decimals);
+  }, [aTokenBalance, aTokenAddress, token.decimals, metrics.userReserve, metrics.formattedReserve, mmPortfolio]);
 
   // Check if user has meaningful supply: balance exists AND formatted amount is greater than DUST_THRESHOLD
   // This prevents enabling withdraw button for dust amounts that display as "0.00000"
@@ -155,7 +187,7 @@ export function SupplyAssetsListItem({
             variant="cherry"
             size="sm"
             onClick={() => {
-              onWithdrawClick(token, maxWithdrawExact, metrics.userReserve?.usageAsCollateralEnabledOnUser ?? false);
+              onWithdrawClick(token, maxWithdrawExact);
             }}
             disabled={!hasSupply}
             className="flex-1 min-w-[85px]"

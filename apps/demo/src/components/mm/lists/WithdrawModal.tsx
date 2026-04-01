@@ -39,10 +39,6 @@ interface WithdrawModalProps {
     txHash?: `0x${string}`;
   }) => void;
   maxWithdraw: string;
-  /** True when user has any outstanding borrows (totalBorrowsUSD > 0). */
-  hasActiveBorrows?: boolean;
-  /** True when this specific reserve is used as collateral by the user. */
-  isCollateralEnabled?: boolean;
 }
 
 export function WithdrawModal({
@@ -52,8 +48,6 @@ export function WithdrawModal({
   onSuccess,
   maxWithdraw,
   inlineSuccess,
-  hasActiveBorrows,
-  isCollateralEnabled,
 }: WithdrawModalProps) {
   const [amount, setAmount] = useState('');
   const [step, setStep] = useState<'form' | 'success'>('form');
@@ -216,12 +210,6 @@ export function WithdrawModal({
               {maxWithdraw && maxWithdraw !== '0' && (
                 <p className="text-xs text-muted-foreground">
                   Max withdraw (supplied): {formatDecimalForDisplay(maxWithdraw, 4)} {token.symbol}
-                </p>
-              )}
-              {hasActiveBorrows && isCollateralEnabled && (
-                <p className="text-xs text-negative">
-                  This asset is used as collateral. Withdrawing too much will revert (health factor). Repay debt or try
-                  a smaller amount.
                 </p>
               )}
               {amount &&
