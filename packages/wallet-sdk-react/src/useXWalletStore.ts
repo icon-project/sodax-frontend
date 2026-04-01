@@ -22,7 +22,7 @@ import { InjectiveXConnector, InjectiveXService } from './xchains/injective';
 import { Wallet } from '@injectivelabs/wallet-base';
 import { getEthereumAddress } from '@injectivelabs/sdk-ts';
 import { SolanaXService } from './xchains/solana/SolanaXService';
-import { StellarXService } from './xchains/stellar';
+import { StellarXService, StellarWalletsKitXConnector } from './xchains/stellar';
 import { SuiXService } from './xchains/sui';
 import { IconXService, CHAIN_INFO, SupportedChainId } from './xchains/icon';
 import { IconHanaXConnector } from './xchains/icon/IconHanaXConnector';
@@ -31,6 +31,7 @@ import { UnisatXConnector } from './xchains/bitcoin/UnisatXConnector';
 import { XverseXConnector } from './xchains/bitcoin/XverseXConnector';
 import { OKXXConnector } from './xchains/bitcoin/OKXXConnector';
 import { NearXService } from './xchains/near/NearXService';
+import { NearXConnector } from './xchains/near/NearXConnector';
 import { StacksXService, StacksXConnector, STACKS_PROVIDERS } from './xchains/stacks';
 import type { BitcoinXConnector } from './xchains/bitcoin/BitcoinXConnector';
 
@@ -45,6 +46,8 @@ type ChainServiceFactory = {
   createActions?: (service: XService, getStore: () => XWalletStore) => ChainActions;
   /** Create wallet provider for non-provider chains. Provider chains hydrate their own. */
   createWalletProvider?: (service: XService, getStore: () => XWalletStore) => WalletProvider | undefined;
+  /** Async connector discovery — runs after init, updates store when done. */
+  discoverConnectors?: (service: XService, getStore: () => XWalletStore) => Promise<void>;
 };
 
 /**
@@ -144,6 +147,13 @@ const chainRegistry: Record<string, ChainServiceFactory> = {
     createService: () => StellarXService.getInstance(),
     defaultConnectors: () => [],
     providerManaged: false,
+    discoverConnectors: async (service, getStore) => {
+      const stellarService = service as unknown as StellarXService;
+      const wallets = await stellarService.walletsKit.getSupportedWallets();
+      const connectors = wallets.filter(w => w.isAvailable).map(w => new StellarWalletsKitXConnector(w));
+      stellarService.setXConnectors(connectors);
+      getStore().setXConnectors('STELLAR', connectors);
+    },
     createActions: (service, getStore) => ({
       ...createDefaultActions('STELLAR', service, getStore),
       signMessage: async (message: string) => {
@@ -175,6 +185,13 @@ const chainRegistry: Record<string, ChainServiceFactory> = {
     createService: () => NearXService.getInstance(),
     defaultConnectors: () => [],
     providerManaged: false,
+    discoverConnectors: async (service, getStore) => {
+      const nearService = service as unknown as NearXService;
+      await nearService.walletSelector.whenManifestLoaded;
+      const connectors = nearService.walletSelector.availableWallets.map(w => new NearXConnector(w));
+      nearService.setXConnectors(connectors);
+      getStore().setXConnectors('NEAR', connectors);
+    },
     createActions: (service, getStore) => ({
       ...createDefaultActions('NEAR', service, getStore),
       disconnect: async () => {
@@ -240,6 +257,11 @@ const createChainServices = (config: ChainsConfig, getStore: () => XWalletStore,
       chainActions[ct] = factory.createActions
         ? factory.createActions(service, getStore)
         : createDefaultActions(ct, service, getStore);
+
+      // Async connector discovery (Stellar, NEAR) — updates store when done
+      if (factory.discoverConnectors) {
+        factory.discoverConnectors(service, getStore);
+      }
     }
   }
 

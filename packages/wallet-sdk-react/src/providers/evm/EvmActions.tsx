@@ -33,8 +33,10 @@ export const EvmActions = () => {
       connect: async (xConnectorId: string) => {
         const connector = wagmiConfigRef.current.connectors.find(c => c.id === xConnectorId);
         if (!connector) return undefined;
-        await connectRef.current({ connector });
-        return undefined;
+        const result = await connectRef.current({ connector });
+        const address = result.accounts[0];
+        if (!address) return undefined;
+        return { address, xChainType: 'EVM' as const };
       },
       disconnect: async () => {
         await disconnectRef.current();
