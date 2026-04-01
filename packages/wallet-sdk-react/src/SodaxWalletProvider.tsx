@@ -14,7 +14,7 @@ import { SolanaProvider } from './providers/solana';
 import { SuiProvider } from './providers/sui';
 import { useInitChainServices } from './hooks/useInitChainServices';
 import { useStacksHydration } from './hooks/useStacksHydration';
-import { useChainActionsRegistryState } from './hooks/useChainActionsRegistry';
+import { useXWalletStore } from './useXWalletStore';
 
 // ─── Legacy props (deprecated) ───────────────────────────────────────────────
 
@@ -80,7 +80,6 @@ export const SodaxWalletProvider = ({
   options,
   initialState,
 }: SodaxWalletProviderProps) => {
-  // Stable config — destructure options into primitives to avoid object reference churn
   const wagmiReconnectOnMount = options?.wagmi?.reconnectOnMount;
   const wagmiSsr = options?.wagmi?.ssr;
   const solanaAutoConnect = options?.solana?.autoConnect;
@@ -99,21 +98,21 @@ export const SodaxWalletProvider = ({
 
   const { chains, rpcConfig } = config;
 
-  // Initialize chain services + reconnect
+  // Initialize chain services + register non-provider ChainActions + reconnect
   useInitChainServices(chains);
 
   // Hydrate Stacks network
   useStacksHydration(chains, rpcConfig);
 
-  // ChainActions registry
-  const { registry, registerEvmActions, registerSolanaActions, registerSuiActions } = useChainActionsRegistryState();
+  // ChainActions from store (non-provider chains registered by initChainServices, provider chains by Actions components)
+  const chainActions = useXWalletStore(state => state.chainActions);
 
   // Compose providers conditionally
   let content = <>{children}</>;
 
   if (chains.SOLANA) {
     content = (
-      <SolanaProvider config={chains.SOLANA} rpcConfig={rpcConfig} onRegisterActions={registerSolanaActions}>
+      <SolanaProvider config={chains.SOLANA} rpcConfig={rpcConfig}>
         {content}
       </SolanaProvider>
     );
@@ -121,7 +120,7 @@ export const SodaxWalletProvider = ({
 
   if (chains.SUI) {
     content = (
-      <SuiProvider config={chains.SUI} onRegisterActions={registerSuiActions}>
+      <SuiProvider config={chains.SUI}>
         {content}
       </SuiProvider>
     );
@@ -129,7 +128,7 @@ export const SodaxWalletProvider = ({
 
   if (chains.EVM) {
     content = (
-      <EvmProvider config={chains.EVM} rpcConfig={rpcConfig} onRegisterActions={registerEvmActions}>
+      <EvmProvider config={chains.EVM} rpcConfig={rpcConfig}>
         {content}
       </EvmProvider>
     );
@@ -137,7 +136,7 @@ export const SodaxWalletProvider = ({
 
   return (
     <WalletConfigProvider value={config}>
-      <ChainActionsProvider value={registry}>
+      <ChainActionsProvider value={chainActions}>
         {content}
       </ChainActionsProvider>
     </WalletConfigProvider>

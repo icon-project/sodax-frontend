@@ -3,23 +3,19 @@
 import { useEffect, useRef } from 'react';
 import { useConnectWallet, useDisconnectWallet, useWallets, useSignPersonalMessage } from '@mysten/dapp-kit';
 import type { XConnection } from '../../types';
-import type { ChainActions } from '../../context/ChainActionsContext';
 import { SuiXService } from '../../xchains/sui';
 import { useXWalletStore } from '../../useXWalletStore';
 
-type SuiActionsProps = {
-  onRegisterActions: (actions: ChainActions) => void;
-};
-
 /**
- * Registers SUI ChainActions into the registry.
+ * Registers SUI ChainActions into the store.
  */
-export const SuiActions = ({ onRegisterActions }: SuiActionsProps) => {
+export const SuiActions = () => {
   const suiWallets = useWallets();
   const { mutateAsync: suiConnectAsync } = useConnectWallet();
   const { mutateAsync: suiDisconnectAsync } = useDisconnectWallet();
   const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
   const unsetXConnection = useXWalletStore(state => state.unsetXConnection);
+  const registerChainActions = useXWalletStore(state => state.registerChainActions);
 
   const connectRef = useRef(suiConnectAsync);
   const disconnectRef = useRef(suiDisconnectAsync);
@@ -34,7 +30,7 @@ export const SuiActions = ({ onRegisterActions }: SuiActionsProps) => {
   useEffect(() => { walletsRef.current = suiWallets; }, [suiWallets]);
 
   useEffect(() => {
-    const actions: ChainActions = {
+    registerChainActions('SUI', {
       connect: async (xConnectorId: string) => {
         const wallet = walletsRef.current.find(w => w.name === xConnectorId);
         if (!wallet) return undefined;
@@ -53,9 +49,8 @@ export const SuiActions = ({ onRegisterActions }: SuiActionsProps) => {
         const res = await signMessageRef.current({ message: new Uint8Array(new TextEncoder().encode(message)) });
         return res.signature;
       },
-    };
-    onRegisterActions(actions);
-  }, [onRegisterActions]);
+    });
+  }, [registerChainActions]);
 
   return null;
 };

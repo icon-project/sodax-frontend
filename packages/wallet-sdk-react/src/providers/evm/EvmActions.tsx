@@ -3,24 +3,20 @@
 import { useEffect, useRef } from 'react';
 import { useConfig, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import type { XConnection } from '../../types';
-import type { ChainActions } from '../../context/ChainActionsContext';
 import { EvmXService } from '../../xchains/evm/EvmXService';
 import { useXWalletStore } from '../../useXWalletStore';
 
-type EvmActionsProps = {
-  onRegisterActions: (actions: ChainActions) => void;
-};
-
 /**
- * Registers EVM ChainActions into the registry.
+ * Registers EVM ChainActions into the store.
  * Uses refs to hold latest wagmi hook values — registers once on mount.
  */
-export const EvmActions = ({ onRegisterActions }: EvmActionsProps) => {
+export const EvmActions = () => {
   const wagmiConfig = useConfig();
   const { connectAsync } = useConnect();
   const { disconnectAsync } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
   const unsetXConnection = useXWalletStore(state => state.unsetXConnection);
+  const registerChainActions = useXWalletStore(state => state.registerChainActions);
 
   const connectRef = useRef(connectAsync);
   const disconnectRef = useRef(disconnectAsync);
@@ -35,7 +31,7 @@ export const EvmActions = ({ onRegisterActions }: EvmActionsProps) => {
   useEffect(() => { wagmiConfigRef.current = wagmiConfig; }, [wagmiConfig]);
 
   useEffect(() => {
-    const actions: ChainActions = {
+    registerChainActions('EVM', {
       connect: async (xConnectorId: string) => {
         const connector = wagmiConfigRef.current.connectors.find(c => c.id === xConnectorId);
         if (!connector) return undefined;
@@ -54,9 +50,8 @@ export const EvmActions = ({ onRegisterActions }: EvmActionsProps) => {
         const signature = await signMessageRef.current({ message });
         return signature;
       },
-    };
-    onRegisterActions(actions);
-  }, [onRegisterActions]);
+    });
+  }, [registerChainActions]);
 
   return null;
 };
