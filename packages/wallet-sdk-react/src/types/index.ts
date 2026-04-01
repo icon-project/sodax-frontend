@@ -13,6 +13,7 @@ import type {
 
 export type { IXService, IXConnector } from './interfaces';
 export type { SodaxWalletConfig, ChainsConfig, BaseChainConfig, EvmChainConfig, SolanaChainConfig, SuiChainConfig, SimpleChainConfig } from './config';
+export type { ChainActions, ChainActionsRegistry } from './chainActions';
 
 export type WalletProvider =
   | IEvmWalletProvider

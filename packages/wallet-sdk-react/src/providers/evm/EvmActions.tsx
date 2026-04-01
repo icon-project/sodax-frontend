@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { useConfig, useConnect, useDisconnect, useSignMessage } from 'wagmi';
-import type { XConnection } from '../../types';
 import { EvmXService } from '../../xchains/evm/EvmXService';
 import { useXWalletStore } from '../../useXWalletStore';
 
@@ -13,19 +12,16 @@ export const EvmActions = () => {
   const { connectAsync } = useConnect();
   const { disconnectAsync } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
-  const unsetXConnection = useXWalletStore(state => state.unsetXConnection);
   const registerChainActions = useXWalletStore(state => state.registerChainActions);
 
   const connectRef = useRef(connectAsync);
   const disconnectRef = useRef(disconnectAsync);
   const signMessageRef = useRef(signMessageAsync);
-  const unsetConnectionRef = useRef(unsetXConnection);
   const wagmiConfigRef = useRef(wagmiConfig);
 
   useEffect(() => { connectRef.current = connectAsync; }, [connectAsync]);
   useEffect(() => { disconnectRef.current = disconnectAsync; }, [disconnectAsync]);
   useEffect(() => { signMessageRef.current = signMessageAsync; }, [signMessageAsync]);
-  useEffect(() => { unsetConnectionRef.current = unsetXConnection; }, [unsetXConnection]);
   useEffect(() => { wagmiConfigRef.current = wagmiConfig; }, [wagmiConfig]);
 
   useEffect(() => {
@@ -33,19 +29,16 @@ export const EvmActions = () => {
       connect: async (xConnectorId: string) => {
         const connector = wagmiConfigRef.current.connectors.find(c => c.id === xConnectorId);
         if (!connector) return undefined;
-        const result = await connectRef.current({ connector });
-        const address = result.accounts[0];
-        if (!address) return undefined;
-        return { address, xChainType: 'EVM' as const };
+        await connectRef.current({ connector });
+        // EVM connection state is set by EvmHydrator (single writer for provider-managed chains)
+        return undefined;
       },
       disconnect: async () => {
         await disconnectRef.current();
-        unsetConnectionRef.current('EVM');
+        // EVM disconnection state is cleared by EvmHydrator (single writer for provider-managed chains)
       },
       getConnectors: () => EvmXService.getInstance().getXConnectors(),
-      getConnection: (): XConnection | undefined => {
-        return useXWalletStore.getState().xConnections.EVM;
-      },
+      getConnection: () => useXWalletStore.getState().xConnections.EVM,
       signMessage: async (message: string) => {
         const signature = await signMessageRef.current({ message });
         return signature;

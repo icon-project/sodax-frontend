@@ -4,7 +4,7 @@ import { createJSONStorage, persist, devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type { XService, XConnector } from './core';
 import type { XConnection, WalletProvider } from './types';
-import type { ChainActions } from './context/ChainActionsContext';
+import type { ChainActions } from './types/chainActions';
 import type { ChainsConfig } from './types/config';
 import { chainRegistry, createChainServices } from './chainRegistry';
 

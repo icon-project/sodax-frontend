@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import type { XConnection } from '../../types';
 import { SolanaXService } from '../../xchains/solana/SolanaXService';
 import { useXWalletStore } from '../../useXWalletStore';
 
@@ -10,14 +9,11 @@ import { useXWalletStore } from '../../useXWalletStore';
  */
 export const SolanaActions = () => {
   const solanaWallet = useWallet();
-  const unsetXConnection = useXWalletStore(state => state.unsetXConnection);
   const registerChainActions = useXWalletStore(state => state.registerChainActions);
 
   const walletRef = useRef(solanaWallet);
-  const unsetConnectionRef = useRef(unsetXConnection);
 
   useEffect(() => { walletRef.current = solanaWallet; }, [solanaWallet]);
-  useEffect(() => { unsetConnectionRef.current = unsetXConnection; }, [unsetXConnection]);
 
   useEffect(() => {
     registerChainActions('SOLANA', {
@@ -66,12 +62,10 @@ export const SolanaActions = () => {
       },
       disconnect: async () => {
         await walletRef.current.disconnect();
-        unsetConnectionRef.current('SOLANA');
+        // Solana disconnection state is cleared by SolanaHydrator (single writer for provider-managed chains)
       },
       getConnectors: () => SolanaXService.getInstance().getXConnectors(),
-      getConnection: (): XConnection | undefined => {
-        return useXWalletStore.getState().xConnections.SOLANA;
-      },
+      getConnection: () => useXWalletStore.getState().xConnections.SOLANA,
       signMessage: async (message: string) => {
         if (!walletRef.current.signMessage) {
           throw new Error('Solana wallet not connected');

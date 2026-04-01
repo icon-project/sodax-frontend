@@ -19,7 +19,7 @@ import type { XService, XConnector } from './core';
 import type { XConnection, WalletProvider } from './types';
 import type { IXConnector } from './types/interfaces';
 import type { ChainsConfig } from './types/config';
-import type { ChainActions, ChainActionsRegistry } from './context/ChainActionsContext';
+import type { ChainActions, ChainActionsRegistry } from './types/chainActions';
 
 import { EvmXService } from './xchains/evm';
 import { SolanaXService } from './xchains/solana/SolanaXService';
