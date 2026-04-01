@@ -432,7 +432,7 @@ export const SodaTokens = {
   },
   sodaUSDS: {
     symbol: 'sodaUSDS',
-    name: 'Soda sUSDS',
+    name: 'Soda USDS',
     decimals: 18,
     address: '0x243b0c26c8b38793908d7C64e8510f21B19B4613',
     xChainId: SONIC_MAINNET_CHAIN_ID,
@@ -1212,7 +1212,7 @@ export const spokeChainConfig = {
         decimals: 6,
         address: '897442:43',
         xChainId: BITCOIN_MAINNET_CHAIN_ID,
-      }
+      },
     },
     radfiApiUrl: 'https://api.radfi.co/api',
     radfiApiKey: '',
@@ -1380,6 +1380,20 @@ export const spokeChainConfig = {
         name: 'Tether USD',
         decimals: 6,
         address: '0x375f70cf2ae4c00bf37117d0c85a2c71545e6ee05c4a5c7d282cd66a4504b068::usdt::USDT',
+        xChainId: SUI_MAINNET_CHAIN_ID,
+      },
+      DEEP: {
+        symbol: 'DEEP',
+        name: 'DEEP',
+        decimals: 6,
+        address: '0xdeeb7a4662eec9f2f3def03fb937a663dddaa2e215b8078a284d026b7946c270::deep::DEEP',
+        xChainId: SUI_MAINNET_CHAIN_ID,
+      },
+      WAL: {
+        symbol: 'WAL',
+        name: 'WAL',
+        decimals: 9,
+        address: '0x356a26eb9e012a68958082340d4c4116e7f55615cf27affcff209cf0ae544f59::wal::WAL',
         xChainId: SUI_MAINNET_CHAIN_ID,
       },
     },
@@ -2465,6 +2479,20 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'Tether USD',
       vault: SodaTokens.sodaUSDT.address,
     },
+    [spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.DEEP.address]: {
+      asset: '0x93057085a4627cec26b31477a02f62412cc0485f',
+      decimal: 6,
+      symbol: 'DEEP',
+      name: 'DEEP',
+      vault: '0x', // no vault yet
+    },
+    [spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.WAL.address]: {
+      asset: '0x72a726ab67c382e8946a79e9872ea32695661e11',
+      decimal: 9,
+      symbol: 'WAL',
+      name: 'WAL',
+      vault: '0x', // no vault yet
+    },
   },
   [SOLANA_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[SOLANA_MAINNET_CHAIN_ID].supportedTokens.SOL.address]: {
@@ -2823,8 +2851,8 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       symbol: 'BUSD',
       name: 'BUSD.BUSD.BUSD',
       vault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
-    }
-  }
+    },
+  },
 } as const;
 
 export const solverConfig = {
@@ -2953,6 +2981,8 @@ export const swapSupportedTokens = {
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.vSUI,
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.yapSUI,
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.trevinSUI,
+    spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.DEEP,
+    spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.WAL,
   ] as const satisfies XToken[],
   [INJECTIVE_MAINNET_CHAIN_ID]: [
     // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ,
