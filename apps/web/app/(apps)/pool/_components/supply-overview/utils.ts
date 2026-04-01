@@ -8,7 +8,12 @@ export function getConcentrationFactor(priceLower: number, priceUpper: number, p
   const sqrtPa = Math.sqrt(priceLower);
   const sqrtPb = Math.sqrt(priceUpper);
 
-  return (sqrtPb - sqrtPa) / (sqrtPb - sqrtP);
+  const denominator = 2 * sqrtP - sqrtPa - priceCurrent / sqrtPb;
+  if (denominator <= 0) {
+    return 0;
+  }
+
+  return (2 * sqrtP) / denominator;
 }
 
 export function getUserAPY(fullRangeAPY: number, priceLower: number, priceUpper: number, priceCurrent: number): number {
