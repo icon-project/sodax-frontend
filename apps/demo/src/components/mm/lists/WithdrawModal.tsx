@@ -24,7 +24,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { invalidateMmQueries } from '@/lib/invalidateMmQueries';
 import { extractTxHash } from '@/lib/extractTxHash';
 import { ActionSuccessContent, type ActionSuccessData } from './ActionSuccessContent';
-import { Loader2 } from 'lucide-react';
+import { Info, Loader2 } from 'lucide-react';
 
 interface WithdrawModalProps {
   open: boolean;
@@ -39,6 +39,8 @@ interface WithdrawModalProps {
     txHash?: `0x${string}`;
   }) => void;
   maxWithdraw: string;
+  /** True when max withdrawal is reduced due to health factor constraints. */
+  isHfLimited?: boolean;
 }
 
 export function WithdrawModal({
@@ -47,6 +49,7 @@ export function WithdrawModal({
   token,
   onSuccess,
   maxWithdraw,
+  isHfLimited,
   inlineSuccess,
 }: WithdrawModalProps) {
   const [amount, setAmount] = useState('');
@@ -209,7 +212,14 @@ export function WithdrawModal({
             <div className="space-y-1">
               {maxWithdraw && maxWithdraw !== '0' && (
                 <p className="text-xs text-muted-foreground">
-                  Max withdraw (supplied): {formatDecimalForDisplay(maxWithdraw, 4)} {token.symbol}
+                  Max withdraw{isHfLimited ? ' (limited by health factor)' : ' (supplied)'}:{' '}
+                  {formatDecimalForDisplay(maxWithdraw, 4)} {token.symbol}
+                </p>
+              )}
+              {isHfLimited && (
+                <p className="flex items-center gap-1 text-xs text-cherry-soda">
+                  <Info className="w-3 h-3 shrink-0" />
+                  Note: Repay debt to unlock more collateral for withdrawal.
                 </p>
               )}
               {amount &&

@@ -25,7 +25,7 @@ interface SupplyAssetsListItemProps {
   userReserves: readonly UserReserveData[];
   aTokenBalancesMap?: Map<Address, bigint>;
   onRefreshReserves?: () => void;
-  onWithdrawClick: (token: XToken, maxWithdraw: string) => void;
+  onWithdrawClick: (token: XToken, maxWithdraw: string, isHfLimited: boolean) => void;
   onSupplyClick: (token: XToken, maxSupply: string) => void;
   /** Hub portfolio summary for HF-aware max withdrawal calculation. */
   mmPortfolio?: MmPortfolioSummary;
@@ -111,6 +111,13 @@ export function SupplyAssetsListItem({
     return truncateToDecimals(cappedMax * 0.99, token.decimals);
   }, [aTokenBalance, aTokenAddress, token.decimals, metrics.userReserve, metrics.formattedReserve, mmPortfolio]);
 
+  const isHfLimited = useMemo(() => {
+    if (!aTokenBalance || aTokenBalance === 0n) return false;
+    const isCollateral = metrics.userReserve?.usageAsCollateralEnabledOnUser ?? false;
+    const totalBorrowsUSD = Number(mmPortfolio?.totalBorrowsUSD ?? '0');
+    return isCollateral && Number.isFinite(totalBorrowsUSD) && totalBorrowsUSD > 0;
+  }, [aTokenBalance, metrics.userReserve, mmPortfolio]);
+
   // Check if user has meaningful supply: balance exists AND formatted amount is greater than DUST_THRESHOLD
   // This prevents enabling withdraw button for dust amounts that display as "0.00000"
   const hasSupply =
@@ -187,7 +194,7 @@ export function SupplyAssetsListItem({
             variant="cherry"
             size="sm"
             onClick={() => {
-              onWithdrawClick(token, maxWithdrawExact);
+              onWithdrawClick(token, maxWithdrawExact, isHfLimited);
             }}
             disabled={!hasSupply}
             className="flex-1 min-w-[85px]"
