@@ -115,9 +115,10 @@ export function SupplyAssetsListItem({
     if (!aTokenBalance || aTokenBalance === 0n) return false;
     const fullBalance = Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS));
     const maxWithdrawNum = Number.parseFloat(maxWithdrawExact);
-    // maxWithdrawExact already includes × 0.99 safety margin, so compare against fullBalance × 0.99
+    // maxWithdrawExact already includes × 0.99 safety margin, so compare against a slightly lower threshold
     // to detect whether the HF formula actually reduced the amount below what the balance alone allows
-    return Number.isFinite(maxWithdrawNum) && maxWithdrawNum < fullBalance * 0.98;
+    const HF_LIMITED_THRESHOLD = 0.98;
+    return Number.isFinite(maxWithdrawNum) && maxWithdrawNum < fullBalance * HF_LIMITED_THRESHOLD;
   }, [aTokenBalance, maxWithdrawExact]);
 
   // Check if user has meaningful supply: balance exists AND formatted amount is greater than DUST_THRESHOLD

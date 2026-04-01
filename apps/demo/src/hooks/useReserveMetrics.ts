@@ -133,7 +133,7 @@ export function useReserveMetrics({
         // We apply the current liquidity index to get the real,interest-adjusted amount the user has supplied.
         const liquidityIndex = BigInt(formattedReserve.liquidityIndex);
         const scaledBalance = BigInt(userReserve.scaledATokenBalance);
-        const balanceRaw = (scaledBalance * liquidityIndex) / BigInt(1e27);
+        const balanceRaw = (scaledBalance * liquidityIndex) / BigInt('1000000000000000000000000000');
         const suppliedTokens = Number(formatUnits(balanceRaw, decimals));
         const suppliedUsd = suppliedTokens * priceInUsd;
         if (Number.isFinite(suppliedUsd) && suppliedUsd > 0) {
