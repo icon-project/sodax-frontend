@@ -26,12 +26,14 @@ type PairBalanceHeaderProps = {
   chainId: SpokeChainId;
   sodaBalanceText: string;
   xSodaBalanceText: string;
+  apyPercent: number | null;
 };
 
 export function PairBalanceHeader({
   chainId,
   sodaBalanceText,
   xSodaBalanceText,
+  apyPercent,
 }: PairBalanceHeaderProps): React.JSX.Element {
   const poolApyPercent = usePoolStore(state => state.poolApyPercent);
   const fetchPoolApy = usePoolStore(state => state.fetchPoolApy);
@@ -42,7 +44,8 @@ export function PairBalanceHeader({
   useEffect((): void => {
     void fetchPoolApy();
   }, [fetchPoolApy]);
-  const apyText = poolApyPercent === null ? '--' : `${poolApyPercent.toFixed(2)}%`;
+  const resolvedApyPercent = apyPercent ?? poolApyPercent;
+  const apyText = resolvedApyPercent === null ? '--' : `${resolvedApyPercent.toFixed(2)}%`;
 
   return (
     <div className="self-stretch flex justify-between items-start">

@@ -46,6 +46,7 @@ type ManagePositionDialogProps = {
   initialMinPrice: string;
   initialMaxPrice: string;
   positionInfo: ClPositionInfo;
+  apyPercent: number | null;
 };
 
 function removeTokenIdFromLocalStorage(userAddress: string, chainId: string | number, tokenId: string): void {
@@ -89,6 +90,7 @@ export function ManagePositionDialog({
   initialMinPrice,
   initialMaxPrice,
   positionInfo,
+  apyPercent,
 }: ManagePositionDialogProps): React.JSX.Element {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
@@ -333,6 +335,7 @@ export function ManagePositionDialog({
         }),
       ]);
       setIsClaimSuccess(true);
+      await refreshDexQueries();
     } catch (claimErr) {
       const message = claimErr instanceof Error ? claimErr.message : 'Claim fee failed.';
       setClaimError(message);
@@ -635,6 +638,7 @@ export function ManagePositionDialog({
 
           <ClaimTabContent
             chainId={spokeChainId}
+            apyPercent={apyPercent}
             positionSodaBalanceText={positionSodaBalanceText}
             positionXSodaBalanceText={positionXSodaBalanceText}
             hasUnclaimedFees={hasUnclaimedFees}
@@ -651,6 +655,7 @@ export function ManagePositionDialog({
             chainId={spokeChainId}
             tokenId={tokenId}
             poolData={poolData}
+            apyPercent={apyPercent}
             positionSodaBalanceText={positionSodaBalanceText}
             positionXSodaBalanceText={positionXSodaBalanceText}
             liquidityToken0Amount={displaySodaAmount}
@@ -676,6 +681,7 @@ export function ManagePositionDialog({
             chainId={spokeChainId}
             poolData={poolData}
             positionInfo={positionInfo}
+            apyPercent={apyPercent}
             positionSodaBalanceText={positionSodaBalanceText}
             positionXSodaBalanceText={positionXSodaBalanceText}
             withdrawPercentage={withdrawPercentage}

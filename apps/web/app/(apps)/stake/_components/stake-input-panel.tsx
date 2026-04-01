@@ -96,7 +96,8 @@ export function StakeInputPanel(): React.JSX.Element {
         spokeProvider: spokeProvider as SpokeProvider,
       });
     } catch (error) {
-      const errorMsg = 'Failed to add Stellar trustline. Please try again.';
+      const errorMsg =
+        'To set up this trustline on the Stellar network, your wallet requires a minimum balance in XLM. Please add funds and try again.';
       setErrorMessage(errorMsg);
       setIsErrorDialogOpen(true);
     }
@@ -105,7 +106,8 @@ export function StakeInputPanel(): React.JSX.Element {
   // Monitor trustline error from hook
   useEffect(() => {
     if (trustlineError) {
-      const errorMsg = 'Failed to add Stellar trustline. Please try again.';
+      const errorMsg =
+        'To set up this trustline on the Stellar network, your wallet requires a minimum balance in XLM. Please add funds and try again.';
       setErrorMessage(errorMsg);
       setIsErrorDialogOpen(true);
     }
@@ -312,7 +314,7 @@ export function StakeInputPanel(): React.JSX.Element {
         open={isErrorDialogOpen}
         onOpenChange={setIsErrorDialogOpen}
         errorMessage={errorMessage}
-        title="Transaction failed"
+        title="Your wallet needs a small reserve"
       />
     </>
   );
