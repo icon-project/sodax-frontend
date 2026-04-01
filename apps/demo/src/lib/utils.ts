@@ -49,14 +49,11 @@ export function formatTokenAmount(amount: number | string | bigint, decimals: nu
  */
 export function truncateToDecimals(value: number, decimals: number): string {
   if (!Number.isFinite(value)) return '0';
-  // Convert to string with extra precision so we can truncate cleanly
-  const str = value.toFixed(decimals + 4);
-  const [intPart, fracPart = ''] = str.split('.');
-  if (decimals === 0) return intPart;
-  const truncated = fracPart.slice(0, decimals);
-  const result = `${intPart}.${truncated}`;
-  // Remove trailing zeros and dangling dot
-  return result.replace(/\.?0+$/, '') || '0';
+  if (decimals === 0) return String(Math.trunc(value));
+  const scaleFactor = 10 ** decimals;
+  const truncatedValue = Math.trunc(value * scaleFactor) / scaleFactor;
+  const fixedString = truncatedValue.toFixed(decimals);
+  return fixedString.replace(/\.?0+$/, '') || '0';
 }
 
 /**
@@ -355,35 +352,35 @@ function collectNestedErrorText(dataError: unknown, maxDepth = 6): string {
   const parts: string[] = [];
   const seen = new Set<unknown>();
 
-  const visit = (v: unknown, depth: number): void => {
-    if (depth > maxDepth || v == null) return;
-    if (typeof v === 'string') {
-      const t = v.trim();
-      if (t.length > 0) parts.push(t);
+  const collectErrorMessages = (node: unknown, depth: number): void => {
+    if (depth > maxDepth || node == null) return;
+    if (typeof node === 'string') {
+      const trimmed = node.trim();
+      if (trimmed.length > 0) parts.push(trimmed);
       return;
     }
-    if (seen.has(v)) return;
-    seen.add(v);
+    if (seen.has(node)) return;
+    seen.add(node);
 
-    if (v instanceof Error) {
-      const t = v.message.trim();
-      if (t.length > 0) parts.push(t);
-      visit(v.cause, depth + 1);
+    if (node instanceof Error) {
+      const trimmed = node.message.trim();
+      if (trimmed.length > 0) parts.push(trimmed);
+      collectErrorMessages(node.cause, depth + 1);
       return;
     }
 
-    if (typeof v === 'object') {
-      const o = v as Record<string, unknown>;
-      if (typeof o.error === 'string' && o.error.trim().length > 0) parts.push(o.error.trim());
-      if (o.error != null && typeof o.error !== 'string') visit(o.error, depth + 1);
-      if (typeof o.details === 'string' && o.details.trim().length > 0) parts.push(o.details.trim());
-      if (typeof o.message === 'string' && o.message.trim().length > 0) parts.push(o.message.trim());
-      if (typeof o.shortMessage === 'string' && o.shortMessage.trim().length > 0) parts.push(o.shortMessage.trim());
-      if ('cause' in o) visit(o.cause, depth + 1);
+    if (typeof node === 'object') {
+      const errorObj = node as Record<string, unknown>;
+      if (typeof errorObj.error === 'string' && errorObj.error.trim().length > 0) parts.push(errorObj.error.trim());
+      if (errorObj.error != null && typeof errorObj.error !== 'string') collectErrorMessages(errorObj.error, depth + 1);
+      if (typeof errorObj.details === 'string' && errorObj.details.trim().length > 0) parts.push(errorObj.details.trim());
+      if (typeof errorObj.message === 'string' && errorObj.message.trim().length > 0) parts.push(errorObj.message.trim());
+      if (typeof errorObj.shortMessage === 'string' && errorObj.shortMessage.trim().length > 0) parts.push(errorObj.shortMessage.trim());
+      if ('cause' in errorObj) collectErrorMessages(errorObj.cause, depth + 1);
     }
   };
 
-  visit(dataError, 0);
+  collectErrorMessages(dataError, 0);
   return [...new Set(parts)].join('\n');
 }
 
@@ -433,37 +430,37 @@ export function getMmErrorText(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === 'string') return error;
   if (error && typeof error === 'object') {
-    const o = error as { message?: string; code?: string; data?: { payload?: unknown; error?: unknown } };
-    const searchableText = getMmDataErrorSearchableText(o.data?.error);
-    const innerMsg = extractInnerErrorMessage(o.data?.error);
+    const sdkError = error as { message?: string; code?: string; data?: { payload?: unknown; error?: unknown } };
+    const searchableText = getMmDataErrorSearchableText(sdkError.data?.error);
+    const innerMsg = extractInnerErrorMessage(sdkError.data?.error);
 
     // ── Relay errors ──
-    if (o.code === 'RELAY_TIMEOUT') {
-      const txHash = o.data?.payload;
+    if (sdkError.code === 'RELAY_TIMEOUT') {
+      const txHash = sdkError.data?.payload;
       if (txHash && typeof txHash === 'string') {
         return `Transaction timed out while waiting for relay. The transaction may still be processing.\n\nTransaction hash: ${txHash}\n\nPlease check the transaction status on the explorer.`;
       }
       return 'Transaction timed out while waiting for relay. The transaction may still be processing. Please check the transaction status on the explorer.';
     }
 
-    if (o.code === 'SUBMIT_TX_FAILED') {
+    if (sdkError.code === 'SUBMIT_TX_FAILED') {
       return 'Failed to submit transaction to relay. Please try again.';
     }
 
     // ── Intent creation failures (simulation reverts) ──
     if (
-      o.code === 'CREATE_WITHDRAW_INTENT_FAILED' ||
-      o.code === 'CREATE_SUPPLY_INTENT_FAILED' ||
-      o.code === 'CREATE_BORROW_INTENT_FAILED' ||
-      o.code === 'CREATE_REPAY_INTENT_FAILED'
+      sdkError.code === 'CREATE_WITHDRAW_INTENT_FAILED' ||
+      sdkError.code === 'CREATE_SUPPLY_INTENT_FAILED' ||
+      sdkError.code === 'CREATE_BORROW_INTENT_FAILED' ||
+      sdkError.code === 'CREATE_REPAY_INTENT_FAILED'
     ) {
-      const action = o.code.replace('CREATE_', '').replace('_INTENT_FAILED', '').toLowerCase();
+      const action = sdkError.code.replace('CREATE_', '').replace('_INTENT_FAILED', '').toLowerCase();
 
       if (innerErrorIncludes(searchableText, 'insufficient funds for gas', 'exceeds the balance of the account')) {
         return `Not enough native token to cover gas fees for the ${action} transaction. Please top up your wallet.`;
       }
       if (innerErrorIncludes(searchableText, 'External call failed', 'Simulation failed', 'Execution reverted')) {
-        return formatHubSimulationFailureMessage(action, o.code ?? 'CREATE_INTENT_FAILED', o.data?.error);
+        return formatHubSimulationFailureMessage(action, sdkError.code, sdkError.data?.error);
       }
       if (innerErrorIncludes(searchableText, 'user rejected', 'User denied', 'user cancelled')) {
         return 'Transaction was rejected in your wallet.';
@@ -471,34 +468,34 @@ export function getMmErrorText(error: unknown): string {
       return (
         searchableText ||
         innerMsg ||
-        `${capitalize(action)} transaction could not be created. (SDK code: ${o.code ?? 'unknown'})`
+        `${capitalize(action)} transaction could not be created. (SDK code: ${sdkError.code})`
       );
     }
 
     // ── Unknown / catch-all errors per action ──
     if (
-      o.code === 'WITHDRAW_UNKNOWN_ERROR' ||
-      o.code === 'SUPPLY_UNKNOWN_ERROR' ||
-      o.code === 'BORROW_UNKNOWN_ERROR' ||
-      o.code === 'REPAY_UNKNOWN_ERROR'
+      sdkError.code === 'WITHDRAW_UNKNOWN_ERROR' ||
+      sdkError.code === 'SUPPLY_UNKNOWN_ERROR' ||
+      sdkError.code === 'BORROW_UNKNOWN_ERROR' ||
+      sdkError.code === 'REPAY_UNKNOWN_ERROR'
     ) {
-      const action = o.code.replace('_UNKNOWN_ERROR', '').toLowerCase();
+      const action = sdkError.code.replace('_UNKNOWN_ERROR', '').toLowerCase();
 
       if (innerErrorIncludes(searchableText, 'insufficient funds for gas', 'exceeds the balance of the account')) {
         return `Not enough native token to cover gas fees for the ${action} transaction. Please top up your wallet.`;
       }
       if (innerErrorIncludes(searchableText, 'External call failed', 'Simulation failed', 'Execution reverted')) {
-        return formatHubSimulationFailureMessage(action, o.code ?? 'UNKNOWN_ERROR', o.data?.error);
+        return formatHubSimulationFailureMessage(action, sdkError.code, sdkError.data?.error);
       }
       if (innerErrorIncludes(searchableText, 'user rejected', 'User denied', 'user cancelled')) {
         return 'Transaction was rejected in your wallet.';
       }
       return (
-        searchableText || innerMsg || `${capitalize(action)} failed unexpectedly. (SDK code: ${o.code ?? 'unknown'})`
+        searchableText || innerMsg || `${capitalize(action)} failed unexpectedly. (SDK code: ${sdkError.code})`
       );
     }
 
-    const part = o.message ?? o.code;
+    const part = sdkError.message ?? sdkError.code;
     if (typeof part === 'string') return part;
   }
   return String(error);
