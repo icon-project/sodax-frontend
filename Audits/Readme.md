@@ -9,5 +9,5 @@ This directory contains all audit reports for the Sodax project.
 - [Sodax Soroban Smart Contract Audit](https://github.com/icon-project/sodax-frontend/tree/main/Audits/SODAX_Soroban_Smart_Contract_Audit_Report_Final_Report%20(2)%20(1).pdf)
 - [Sodax Relay Audit (November 2025)](https://github.com/icon-project/sodax-frontend/tree/main/Audits/2025_11_12_Final_Sodax_Relay_Audit_Report_1762953394%20(1).pdf)
 - [Sodax Collaborative Audit (August 2025)](https://github.com/icon-project/sodax-frontend/tree/main/Audits/2025.08.01%20-%20Final%20-%20Sodax%20Collaborative%20Audit%20Report%201754078902%20(1)%20(1).pdf)
-- [Near Sodax Contracts Audit](https://github.com/icon-project/sodax-frontend/tree/main/Audits/Final%20Report-%20Near%20Sodax%20contracts%20audit.pdf)
-- [Sodax Collaborative Audit (February 2026)](https://github.com/icon-project/sodax-frontend/tree/main/Audits/2026.02.26%20-%20Final%20-%20Sodax%20Collaborative%20Audit%20Report%201772065303.pdf)
+- [Sodax (Near) Smart Contract Audit](https://github.com/icon-project/sodax-frontend/tree/main/Audits/Final%20Report-%20Near%20Sodax%20contracts%20audit.pdf)
+- [Sodax (Stacks) Smart Contract Audit](https://github.com/icon-project/sodax-frontend/tree/main/Audits/2026.02.26%20-%20Final%20-%20Sodax%20Collaborative%20Audit%20Report%201772065303.pdf)
