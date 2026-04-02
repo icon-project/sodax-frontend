@@ -65,7 +65,7 @@ export class SuiXService extends XService {
 
       return tokenMap;
     } catch (e) {
-      console.log('error', e);
+      console.error('[wallet-sdk-react] SUI getBalances failed:', e);
       return {};
     }
   }

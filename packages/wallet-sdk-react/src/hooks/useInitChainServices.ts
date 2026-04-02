@@ -24,9 +24,17 @@ export function useInitChainServices(chains: ChainsConfig, rpcConfig?: RpcConfig
       // because persist middleware restores xConnections from localStorage)
       cleanupDisabledConnections();
 
-      if (chains.ICON) reconnectIcon();
-      if (chains.INJECTIVE) reconnectInjective();
-      if (chains.STELLAR) reconnectStellar();
+      if (chains.ICON) {
+        reconnectIcon().catch(e => console.warn('[wallet-sdk-react] ICON reconnect failed:', e));
+      }
+
+      if (chains.INJECTIVE) {
+        reconnectInjective().catch(e => console.warn('[wallet-sdk-react] Injective reconnect failed:', e));
+      }
+
+      if (chains.STELLAR) {
+        reconnectStellar().catch(e => console.warn('[wallet-sdk-react] Stellar reconnect failed:', e));
+      }
     };
 
     if (useXWalletStore.persist.hasHydrated()) {
