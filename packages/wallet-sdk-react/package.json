@@ -16,6 +16,16 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
+    },
+    "./xchains/*": {
+      "types": "./dist/xchains/*/index.d.ts",
+      "import": "./dist/xchains/*/index.mjs",
+      "require": "./dist/xchains/*/index.cjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "xchains/*": ["./dist/xchains/*/index.d.ts"]
     }
   },
   "repository": {

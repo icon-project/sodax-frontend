@@ -181,22 +181,50 @@ src/
 └── utils/
 ```
 
+## Sub-path Exports
+
+Concrete chain classes (e.g. `EvmXService`, `XverseXConnector`) are **not** exported from the barrel `index.ts`. This prevents external consumers from accidentally coupling to internal implementations.
+
+**Barrel (`@sodax/wallet-sdk-react`)** exports:
+- Hooks, utils, types, interfaces, `SodaxWalletProvider`
+- `export type` only for `StellarXService`, `XverseXConnector`, `BtcWalletAddressType` (no runtime class)
+
+**Deep imports (`@sodax/wallet-sdk-react/xchains/<chain>`)** export:
+- Concrete classes for advanced use (e.g. `instanceof`, calling chain-specific methods)
+
+```typescript
+// ✅ Normal usage — barrel import
+import { useXConnect, useXAccount, type IXService } from '@sodax/wallet-sdk-react';
+
+// ✅ Advanced usage — deep import for concrete class
+import { XverseXConnector } from '@sodax/wallet-sdk-react/xchains/bitcoin';
+if (connector instanceof XverseXConnector) {
+  connector.setAddressPurpose('payment');
+}
+```
+
+Configuration:
+- `tsup.config.ts` — multi-entry: `src/index.ts` + `src/xchains/*/index.ts`
+- `package.json` `exports` — wildcard `./xchains/*` maps to `dist/xchains/*/index.*`
+- `package.json` `typesVersions` — fallback for `moduleResolution: "node"`
+
 ## Adding a New Chain
 
 1. Create `src/xchains/<chain>/` with `<Chain>XService.ts` and `<Chain>XConnector.ts`
 2. XService must extend `XService` and implement `getBalance()` / `getBalances()`
 3. XConnector must extend `XConnector` and implement `connect()` / `disconnect()`
-4. Add entry to `chainRegistry` in `src/chainRegistry.ts`:
+4. **Create `src/xchains/<chain>/index.ts`** barrel that exports the service + connectors. This enables the sub-path export `@sodax/wallet-sdk-react/xchains/<chain>`. tsup auto-discovers it via the glob entry `src/xchains/*/index.ts`.
+5. Add entry to `chainRegistry` in `src/chainRegistry.ts`:
    - Set `providerManaged: false` for browser-extension chains
    - Provide `createActions` if the chain needs custom `signMessage` logic
    - Provide `createWalletProvider` if the chain needs a wallet provider
    - Provide `discoverConnectors` if connectors require async initialization
-5. Add chain type to `ChainsConfig` in `src/types/config.ts`
-6. If the chain needs a native SDK provider (`providerManaged: true`):
+6. Add chain type to `ChainsConfig` in `src/types/config.ts`
+7. If the chain needs a native SDK provider (`providerManaged: true`):
    - Create `src/providers/<chain>/` with Provider, Hydrator, Actions components
    - Mount conditionally in `SodaxWalletProvider.tsx`
-7. Export from `src/xchains/<chain>/index.ts` and `src/index.ts`
+8. **Do NOT add `export * from './xchains/<chain>'` to `src/index.ts`** — concrete classes stay behind deep imports. If consumers need a type from the barrel, add it as `export type { ... }` only.
 
 ## Build
 
-tsup: dual ESM (`.mjs`) + CJS (`.cjs`). React, React DOM, and React Query are externalized.
+tsup: dual ESM (`.mjs`) + CJS (`.cjs`) with multi-entry (barrel + per-chain sub-paths). React, React DOM, and React Query are externalized.

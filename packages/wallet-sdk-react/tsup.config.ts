@@ -1,7 +1,9 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig(options => ({
-  entry: ['src/index.ts'],
+  // Multi-entry: barrel + per-chain sub-paths (e.g. @sodax/wallet-sdk-react/xchains/bitcoin).
+  // Adding a new chain? Create src/xchains/<chain>/index.ts — the glob picks it up automatically.
+  entry: ['src/index.ts', 'src/xchains/*/index.ts', 'src/xchains/*/index.tsx'],
   format: ['esm', 'cjs'], // Dual format: ESM for web, CJS for Node (optionally ESM too)
   outDir: 'dist',
   splitting: false, // Flat output, easier for consumers

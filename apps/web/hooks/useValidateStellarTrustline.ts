@@ -1,5 +1,6 @@
 import type { XToken } from '@sodax/types';
-import { type StellarXService, useXService } from '@sodax/wallet-sdk-react';
+import { useXService } from '@sodax/wallet-sdk-react';
+import type { StellarXService } from '@sodax/wallet-sdk-react/xchains/stellar';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { Horizon } from '@stellar/stellar-sdk';
 
