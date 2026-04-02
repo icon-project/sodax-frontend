@@ -7,6 +7,10 @@ import { useXWalletStore } from '../useXWalletStore';
  * Hook for connecting to various blockchain wallets across different chains.
  *
  * All chains delegate to ChainActions registered in the store.
+ *
+ * Note: For provider-managed chains (EVM, Solana, Sui), the mutation resolves with `undefined`
+ * because connection state is set reactively by the chain's Hydrator component, not by the
+ * connect action itself. Use `useXConnection` or `useXAccount` to read the connected account.
  */
 export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XConnector> {
   const setXConnection = useXWalletStore(state => state.setXConnection);

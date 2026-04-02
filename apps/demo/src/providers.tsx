@@ -42,7 +42,7 @@ const rpcConfig: RpcConfig = {
   bitcoin: {
     radfiApiUrl: 'https://api.radfi.co/api',
     radfiUmsUrl: 'https://ums.radfi.co/api',
-    rpcUrl: 'https://mempool.space/signet/api',
+    rpcUrl: 'https://mempool.space/api',
   },
 };
 

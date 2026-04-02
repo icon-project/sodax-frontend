@@ -31,6 +31,7 @@ export const EvmProvider = ({ children, config, rpcConfig }: EvmProviderProps) =
     return createWagmiConfig(rpcConfig ?? {}, { reconnectOnMount, ssr });
   }, [rpcConfig, reconnectOnMount, ssr]);
 
+  // wagmi requires its own QueryClientProvider — this is wagmi-internal, not the app's React Query cache.
   return (
     <QueryClientProvider client={queryClientRef.current}>
       <WagmiProvider reconnectOnMount={reconnectOnMount} config={wagmiConfig} initialState={config?.initialState as WagmiState | undefined}>

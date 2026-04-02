@@ -16,8 +16,8 @@ interface UseEvmSwitchChainReturn {
 /**
  * Hook to handle EVM chain switching functionality.
  *
- * NOTE: This hook still calls wagmi hooks (useAccount, useSwitchChain) unconditionally.
- * It requires WagmiProvider to be mounted. When EVM is disabled, this hook should not be called.
+ * @requires EVM chain must be enabled in SodaxWalletConfig — this hook calls wagmi hooks
+ * (useAccount, useSwitchChain) unconditionally, which throw if WagmiProvider is not mounted.
  * Full decoupling will be addressed in a follow-up.
  */
 

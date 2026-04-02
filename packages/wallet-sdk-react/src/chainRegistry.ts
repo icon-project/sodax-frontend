@@ -49,17 +49,17 @@ export type StoreAccessor = () => {
   setWalletProvider: (xChainType: ChainType, provider: WalletProvider | undefined) => void;
 };
 
-export type ChainServiceFactory = {
+export type ChainServiceFactory<S extends XService = XService> = {
   /** Create or get the XService singleton for this chain. */
-  createService: (rpcConfig?: RpcConfig) => XService;
+  createService: (rpcConfig?: RpcConfig) => S;
   /** Static connectors known at build time. Ignored for provider-managed chains. */
   defaultConnectors: () => XConnector[];
   /** true = needs React provider (EVM/Solana/Sui), false = browser extension APIs. */
   providerManaged: boolean;
   /** ChainActions for non-provider chains. If omitted, uses createDefaultActions(). */
-  createActions?: (service: XService, getStore: StoreAccessor) => ChainActions;
+  createActions?: (service: S, getStore: StoreAccessor) => ChainActions;
   /** Wallet provider for non-provider chains. Called on setXConnection(). */
-  createWalletProvider?: (service: XService, getStore: StoreAccessor) => WalletProvider | undefined;
+  createWalletProvider?: (service: S, getStore: StoreAccessor) => WalletProvider | undefined;
   /**
    * Async connector discovery for chains whose available wallets can only be detected at runtime
    * (e.g. browser extension scan, manifest loading). Runs once after init, updates store.xConnectorsByChain when done.
@@ -68,8 +68,18 @@ export type ChainServiceFactory = {
    * Example: Stellar scans for installed browser wallets via walletsKit.getSupportedWallets(),
    * NEAR loads wallet manifest via walletSelector.whenManifestLoaded.
    */
-  discoverConnectors?: (service: XService, getStore: StoreAccessor) => Promise<void>;
+  discoverConnectors?: (service: S, getStore: StoreAccessor) => Promise<void>;
 };
+
+/**
+ * Type-checked factory definition — S is inferred from createService return type,
+ * so all callbacks (createActions, createWalletProvider, discoverConnectors) receive the concrete service type.
+ * Erased to ChainServiceFactory (base) at registry level. Safe because createChainServices always passes
+ * the service instance created by the same factory's createService().
+ */
+function defineChain<S extends XService>(factory: ChainServiceFactory<S>): ChainServiceFactory {
+  return factory as unknown as ChainServiceFactory;
+}
 
 export type ChainServicesResult = {
   xServices: Partial<Record<ChainType, XService>>;
@@ -99,22 +109,22 @@ const createDefaultActions = (chainType: ChainType, service: XService, getStore:
 // ─── Chain Registry ──────────────────────────────────────────────────────────
 
 export const chainRegistry: Record<string, ChainServiceFactory> = {
-  EVM: {
+  EVM: defineChain({
     createService: () => EvmXService.getInstance(),
     defaultConnectors: () => [],
     providerManaged: true,
-  },
-  SUI: {
+  }),
+  SUI: defineChain({
     createService: () => SuiXService.getInstance(),
     defaultConnectors: () => [],
     providerManaged: true,
-  },
-  SOLANA: {
+  }),
+  SOLANA: defineChain({
     createService: () => SolanaXService.getInstance(),
     defaultConnectors: () => [],
     providerManaged: true,
-  },
-  BITCOIN: {
+  }),
+  BITCOIN: defineChain({
     createService: rpcConfig =>
       BitcoinXService.getInstance((rpcConfig?.bitcoin as BitcoinRpcConfig | undefined)?.rpcUrl),
     defaultConnectors: () => [new UnisatXConnector(), new XverseXConnector(), new OKXXConnector()],
@@ -133,13 +143,18 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
         const address = connection?.xAccount.address;
         const addressType = address ? detectBitcoinAddressType(address) : undefined;
         // BIP322 signing for P2WPKH and P2TR; ECDSA for legacy (P2SH, P2PKH)
-        return addressType === 'P2WPKH' || addressType === 'P2TR'
-          ? (
-              connector as BitcoinXConnector & { signBip322Message: (msg: string) => Promise<string> }
-            ).signBip322Message(message)
-          : (connector as BitcoinXConnector & { signEcdsaMessage: (msg: string) => Promise<string> }).signEcdsaMessage(
-              message,
-            );
+        if (addressType === 'P2WPKH' || addressType === 'P2TR') {
+          if (!('signBip322Message' in connector)) {
+            throw new Error(`${connector.id} does not support BIP-322 signing`);
+          }
+          return (connector as BitcoinXConnector & { signBip322Message: (msg: string) => Promise<string> })
+            .signBip322Message(message);
+        }
+        if (!('signEcdsaMessage' in connector)) {
+          throw new Error(`${connector.id} does not support ECDSA signing`);
+        }
+        return (connector as BitcoinXConnector & { signEcdsaMessage: (msg: string) => Promise<string> })
+          .signEcdsaMessage(message);
       },
     }),
     createWalletProvider: (service, getStore) => {
@@ -150,8 +165,8 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
       if (!connector) return undefined;
       return connector.recreateWalletProvider(connection.xAccount);
     },
-  },
-  INJECTIVE: {
+  }),
+  INJECTIVE: defineChain({
     createService: () => InjectiveXService.getInstance(),
     defaultConnectors: () => [
       new InjectiveXConnector('MetaMask', Wallet.Metamask),
@@ -166,9 +181,8 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
         const address = store.xConnections.INJECTIVE?.xAccount.address;
         if (!address) throw new Error('Injective address not found');
 
-        const injectiveService = service as unknown as InjectiveXService;
         const ethereumAddress = getEthereumAddress(address);
-        const walletStrategy = injectiveService.walletStrategy;
+        const walletStrategy = service.walletStrategy;
         const res = await walletStrategy.signArbitrary(
           walletStrategy.getWallet() === Wallet.Metamask ? ethereumAddress : address,
           message,
@@ -178,12 +192,11 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
       },
     }),
     createWalletProvider: service => {
-      const injectiveService = service as unknown as InjectiveXService;
-      if (!injectiveService) return undefined;
-      return new InjectiveWalletProvider({ msgBroadcaster: injectiveService.msgBroadcaster });
+      if (!service) return undefined;
+      return new InjectiveWalletProvider({ msgBroadcaster: service.msgBroadcaster });
     },
-  },
-  STELLAR: {
+  }),
+  STELLAR: defineChain({
     createService: rpcConfig => {
       const stellarRpc = rpcConfig?.stellar as StellarRpcConfig | undefined;
       return StellarXService.getInstance(stellarRpc?.horizonRpcUrl, stellarRpc?.sorobanRpcUrl);
@@ -191,31 +204,30 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
     defaultConnectors: () => [],
     providerManaged: false,
     discoverConnectors: async (service, getStore) => {
-      const stellarService = service as unknown as StellarXService;
-      const wallets = await stellarService.walletsKit.getSupportedWallets();
+      const wallets = await service.walletsKit.getSupportedWallets();
       const connectors = wallets.filter(w => w.isAvailable).map(w => new StellarWalletsKitXConnector(w));
-      stellarService.setXConnectors(connectors);
+      service.setXConnectors(connectors);
       getStore().setXConnectors('STELLAR', connectors);
     },
     createActions: (service, getStore) => ({
       ...createDefaultActions('STELLAR', service, getStore),
       signMessage: async (message: string) => {
-        const stellarService = service as unknown as StellarXService;
-        const res = await stellarService.walletsKit.signMessage(message);
+        const res = await service.walletsKit.signMessage(message);
         return res.signedMessage;
       },
     }),
     createWalletProvider: service => {
-      const stellarService = service as unknown as StellarXService;
-      if (!stellarService?.walletsKit) return undefined;
+      if (!service?.walletsKit) return undefined;
       return new StellarWalletProvider({
         type: 'BROWSER_EXTENSION',
-        walletsKit: stellarService.walletsKit,
+        walletsKit: service.walletsKit,
         network: 'PUBLIC',
       });
     },
-  },
-  ICON: {
+  }),
+  // ICON: signMessage not implemented — Hana wallet does not expose a signing API.
+  // connect/disconnect use createDefaultActions (no createActions override needed).
+  ICON: defineChain({
     createService: rpcConfig => IconXService.getInstance(rpcConfig?.[ICON_MAINNET_CHAIN_ID] as string | undefined),
     defaultConnectors: () => [new IconHanaXConnector()],
     providerManaged: false,
@@ -227,33 +239,30 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
         rpcUrl: CHAIN_INFO[SupportedChainId.MAINNET].APIEndpoint as `http${string}`,
       });
     },
-  },
-  NEAR: {
+  }),
+  NEAR: defineChain({
     createService: () => NearXService.getInstance(),
     defaultConnectors: () => [],
     providerManaged: false,
     discoverConnectors: async (service, getStore) => {
-      const nearService = service as unknown as NearXService;
-      await nearService.walletSelector.whenManifestLoaded;
-      const connectors = nearService.walletSelector.availableWallets.map(w => new NearXConnector(w));
-      nearService.setXConnectors(connectors);
+      await service.walletSelector.whenManifestLoaded;
+      const connectors = service.walletSelector.availableWallets.map(w => new NearXConnector(w));
+      service.setXConnectors(connectors);
       getStore().setXConnectors('NEAR', connectors);
     },
     createActions: (service, getStore) => ({
       ...createDefaultActions('NEAR', service, getStore),
       disconnect: async () => {
-        const nearService = service as unknown as NearXService;
-        nearService.walletSelector.disconnect();
+        service.walletSelector.disconnect();
         getStore().unsetXConnection('NEAR');
       },
     }),
     createWalletProvider: service => {
-      const nearService = service as unknown as NearXService;
-      if (!nearService?.walletSelector) return undefined;
-      return new NearWalletProvider({ wallet: nearService.walletSelector });
+      if (!service?.walletSelector) return undefined;
+      return new NearWalletProvider({ wallet: service.walletSelector });
     },
-  },
-  STACKS: {
+  }),
+  STACKS: defineChain({
     createService: () => StacksXService.getInstance(),
     defaultConnectors: () => STACKS_PROVIDERS.map(c => new StacksXConnector(c)),
     providerManaged: false,
@@ -267,7 +276,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
         : undefined;
       return new StacksWalletProvider({ address, provider: connector?.getProvider() });
     },
-  },
+  }),
 };
 
 // ─── createChainServices ─────────────────────────────────────────────────────
@@ -304,7 +313,9 @@ export const createChainServices = (
 
       // Async connector discovery (Stellar, NEAR) — updates store when done
       if (factory.discoverConnectors) {
-        factory.discoverConnectors(service, getStore);
+        factory.discoverConnectors(service, getStore).catch(err => {
+          console.warn(`[wallet-sdk-react] discoverConnectors failed for ${chainType}:`, err);
+        });
       }
     }
   }

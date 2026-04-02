@@ -109,6 +109,7 @@ export const useXWalletStore = create<XWalletStore>()(
         },
       })),
       {
+        // key kept as 'xwagmi-store' for backward compat — existing users won't lose persisted connections on upgrade
         name: 'xwagmi-store',
         storage: createJSONStorage(() => localStorage),
         partialize: state => ({ xConnections: state.xConnections }),

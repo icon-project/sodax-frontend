@@ -50,17 +50,21 @@ export const SolanaHydrator = () => {
     }
   }, [solanaWallet.connected, solanaWallet.publicKey, solanaWallet.wallet, setXConnection, unsetXConnection]);
 
-  // Hydrate Solana wallet provider into store
+  // Ref holds latest solanaWallet object — useWallet() returns a new ref every render,
+  // so we use primitive fields as deps and read the latest object from the ref.
+  const solanaWalletRef = useRef(solanaWallet);
+  useEffect(() => { solanaWalletRef.current = solanaWallet; }, [solanaWallet]);
+
   useEffect(() => {
     if (solanaWallet.connected && solanaWallet.wallet && connection) {
       setWalletProvider('SOLANA', new SolanaWalletProvider({
-        wallet: solanaWallet,
+        wallet: solanaWalletRef.current,
         endpoint: connection.rpcEndpoint,
       }));
     } else {
       setWalletProvider('SOLANA', undefined);
     }
-  }, [solanaWallet, connection, setWalletProvider]);
+  }, [solanaWallet.connected, solanaWallet.wallet, connection, setWalletProvider]);
 
   return null;
 };

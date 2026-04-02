@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import type { RpcConfig } from '@sodax/types';
 import type { ChainsConfig } from '../types/config';
 import { useXWalletStore } from '../useXWalletStore';
@@ -8,17 +8,15 @@ import { reconnectStellar } from '../xchains/stellar/actions';
 
 /**
  * Initializes chain services based on config. Runs once on mount.
+ * Config is immutable after initial render — dynamic changes require remounting SodaxWalletProvider.
  * Handles reconnect for ICON/Injective/Stellar after persist hydration.
  */
 export function useInitChainServices(chains: ChainsConfig, rpcConfig?: RpcConfig) {
   const initChainServices = useXWalletStore(state => state.initChainServices);
   const cleanupDisabledConnections = useXWalletStore(state => state.cleanupDisabledConnections);
-  const initializedRef = useRef(false);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: run-once on mount — config is immutable after initial render, dynamic changes require remounting SodaxWalletProvider
   useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
-
     initChainServices(chains, rpcConfig);
 
     const afterHydration = () => {
@@ -36,5 +34,5 @@ export function useInitChainServices(chains: ChainsConfig, rpcConfig?: RpcConfig
     } else {
       useXWalletStore.persist.onFinishHydration(afterHydration);
     }
-  }, [chains, rpcConfig, initChainServices, cleanupDisabledConnections]);
+  }, []);
 }

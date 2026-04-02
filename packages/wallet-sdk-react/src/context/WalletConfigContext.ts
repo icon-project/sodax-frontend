@@ -2,6 +2,11 @@ import { createContext, useContext } from 'react';
 import type { ChainType } from '@sodax/types';
 import type { ChainsConfig, SodaxWalletConfig } from '../types';
 
+/**
+ * Config-level context — answers "what did the consumer configure?" (before service init).
+ * For service-level queries (is a chain's XService initialized?), use `state.enabledChains` from useXWalletStore.
+ * Both sources agree in practice since they're populated from the same config at the same time.
+ */
 const WalletConfigContext = createContext<SodaxWalletConfig | null>(null);
 
 export const WalletConfigProvider = WalletConfigContext.Provider;
