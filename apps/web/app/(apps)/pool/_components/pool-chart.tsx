@@ -1,3 +1,4 @@
+// apps/web/app/(apps)/pool/_components/pool-chart.tsx
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { MinusCircleIcon, PlusCircleIcon, Scan } from 'lucide-react';
@@ -320,6 +321,10 @@ const ML = { top: 24, right: 0, bottom: 8, left: 0 };
 const TICK_W = 90;
 const TM = { top: 20, right: 0, bottom: 36, left: 0 };
 
+// When false, disables dragging and zooming of the chart. Min/Max are controlled externally.
+const INTERACTIVE = false as const;
+const SHOW_MIN_MAX_HANDLES = false as const;
+
 type PoolChartProps = {
   pairPrice?: number | null;
   poolId?: string | null;
@@ -549,13 +554,13 @@ export function PoolChart({
 
   useEffect(() => {
     void activeRange;
-    if (zoomBehRef.current && zoomObjRef.current) {
+    if (INTERACTIVE && zoomBehRef.current && zoomObjRef.current) {
       zoomBehRef.current.call(zoomObjRef.current.transform, d3.zoomIdentity);
     }
   }, [activeRange]);
 
   useEffect(() => {
-    if (!mainSvgRef.current || INNER_W <= 0) {
+    if (!INTERACTIVE || !mainSvgRef.current || INNER_W <= 0) {
       return;
     }
 
@@ -658,8 +663,8 @@ export function PoolChart({
       .attr('width', INNER_W)
       .attr('height', Math.max(0, minY - maxY))
       .attr('fill', 'url(#g-band)')
-      .attr('pointer-events', 'all')
-      .style('cursor', 'ns-resize');
+      .attr('pointer-events', INTERACTIVE ? 'all' : 'none')
+      .style('cursor', INTERACTIVE ? 'ns-resize' : 'default');
 
     const line = d3
       .line<PricePoint>()
@@ -782,56 +787,63 @@ export function PoolChart({
         const iconX = cx + 4;
         const iconY = -iconH / 2;
 
-        grp
-          .append('rect')
-          .attr('x', iconX)
-          .attr('y', iconY)
-          .attr('width', iconW)
-          .attr('height', iconH)
-          .attr('fill', 'transparent')
-          .attr('class', label === 'MAX' ? 'hit-max' : 'hit-min')
-          .style('cursor', 'ns-resize');
+        if (SHOW_MIN_MAX_HANDLES) {
+          grp
+            .append('rect')
+            .attr('x', iconX)
+            .attr('y', iconY)
+            .attr('width', iconW)
+            .attr('height', iconH)
+            .attr('fill', 'transparent')
+            .attr('class', label === 'MAX' ? 'hit-max' : 'hit-min')
+            .style('cursor', 'ns-resize');
+        }
 
-        const icon = grp.append('g').attr('transform', `translate(${iconX}, ${iconY})`).attr('pointer-events', 'none');
+        if (SHOW_MIN_MAX_HANDLES) {
+          const icon = grp
+            .append('g')
+            .attr('transform', `translate(${iconX}, ${iconY})`)
+            .attr('pointer-events', 'none');
 
-        const fid = `drag-shadow-${label}`;
-        const iconFilter = icon
-          .append('filter')
-          .attr('id', fid)
-          .attr('x', '0')
-          .attr('y', '0')
-          .attr('width', '40')
-          .attr('height', '40')
-          .attr('filterUnits', 'userSpaceOnUse')
-          .attr('color-interpolation-filters', 'sRGB');
+          const fid = `drag-shadow-${label}`;
+          const iconFilter = icon
+            .append('filter')
+            .attr('id', fid)
+            .attr('x', '0')
+            .attr('y', '0')
+            .attr('width', '40')
+            .attr('height', '40')
+            .attr('filterUnits', 'userSpaceOnUse')
+            .attr('color-interpolation-filters', 'sRGB');
 
-        iconFilter.append('feFlood').attr('flood-opacity', '0').attr('result', 'BackgroundImageFix');
-        iconFilter
-          .append('feColorMatrix')
-          .attr('in', 'SourceAlpha')
-          .attr('type', 'matrix')
-          .attr('values', '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0')
-          .attr('result', 'hardAlpha');
-        iconFilter.append('feOffset').attr('dy', '2');
-        iconFilter.append('feGaussianBlur').attr('stdDeviation', '4');
-        iconFilter.append('feComposite').attr('in2', 'hardAlpha').attr('operator', 'out');
-        iconFilter
-          .append('feColorMatrix')
-          .attr('type', 'matrix')
-          .attr('values', '0 0 0 0 0.930288 0 0 0 0 0.903541 0 0 0 0 0.903541 0 0 0 1 0');
-        const merge = iconFilter.append('feMerge');
-        merge.append('feMergeNode').attr('in', 'BackgroundImageFix');
-        merge.append('feMergeNode').attr('in', 'SourceGraphic');
+          iconFilter.append('feFlood').attr('flood-opacity', '0').attr('result', 'BackgroundImageFix');
+          iconFilter
+            .append('feColorMatrix')
+            .attr('in', 'SourceAlpha')
+            .attr('type', 'matrix')
+            .attr('values', '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0')
+            .attr('result', 'hardAlpha');
+          iconFilter.append('feOffset').attr('dy', '2');
+          iconFilter.append('feGaussianBlur').attr('stdDeviation', '4');
+          iconFilter.append('feComposite').attr('in2', 'hardAlpha').attr('operator', 'out');
+          iconFilter
+            .append('feColorMatrix')
+            .attr('type', 'matrix')
+            .attr('values', '0 0 0 0 0.930288 0 0 0 0 0.903541 0 0 0 0 0.903541 0 0 0 1 0');
+          const merge = iconFilter.append('feMerge');
+          merge.append('feMergeNode').attr('in', 'BackgroundImageFix');
+          merge.append('feMergeNode').attr('in', 'SourceGraphic');
 
-        icon
-          .append('circle')
-          .attr('cx', '20')
-          .attr('cy', '18')
-          .attr('r', '12')
-          .attr('fill', C.handleCircle)
-          .attr('filter', `url(#${fid})`);
-        icon.append('path').attr('d', 'M14 16H26').attr('stroke', C.handleGrip).attr('stroke-linecap', 'round');
-        icon.append('path').attr('d', 'M14 20H26').attr('stroke', C.handleGrip).attr('stroke-linecap', 'round');
+          icon
+            .append('circle')
+            .attr('cx', '20')
+            .attr('cy', '18')
+            .attr('r', '12')
+            .attr('fill', C.handleCircle)
+            .attr('filter', `url(#${fid})`);
+          icon.append('path').attr('d', 'M14 16H26').attr('stroke', C.handleGrip).attr('stroke-linecap', 'round');
+          icon.append('path').attr('d', 'M14 20H26').attr('stroke', C.handleGrip).attr('stroke-linecap', 'round');
+        }
       }
 
       if (dashed) {
@@ -995,6 +1007,9 @@ export function PoolChart({
   }, [minPrice, maxPrice, tickData, TICK_IW, TICK_IH, priceToY]);
 
   useEffect(() => {
+    if (!INTERACTIVE) {
+      return;
+    }
     const svgEl = mainSvgRef.current;
     if (!svgEl) {
       return;
@@ -1005,10 +1020,10 @@ export function PoolChart({
       if (!(target instanceof SVGElement)) {
         return null;
       }
-      if (target.classList.contains('hit-max')) {
+      if (SHOW_MIN_MAX_HANDLES && target.classList.contains('hit-max')) {
         return 'max';
       }
-      if (target.classList.contains('hit-min')) {
+      if (SHOW_MIN_MAX_HANDLES && target.classList.contains('hit-min')) {
         return 'min';
       }
       if (target.classList.contains('band-hit')) {
@@ -1095,13 +1110,13 @@ export function PoolChart({
   }, [yScale, minPrice, maxPrice, currentPrice, INNER_H, yDomainMin, yDomainMax, setMinPrice, setMaxPrice]);
 
   const doZoom = useCallback((factor: number) => {
-    if (zoomBehRef.current && zoomObjRef.current) {
+    if (INTERACTIVE && zoomBehRef.current && zoomObjRef.current) {
       zoomBehRef.current.transition().duration(300).call(zoomObjRef.current.scaleBy, factor);
     }
   }, []);
 
   const doResetZoom = useCallback(() => {
-    if (zoomBehRef.current && zoomObjRef.current) {
+    if (INTERACTIVE && zoomBehRef.current && zoomObjRef.current) {
       zoomBehRef.current.transition().duration(300).call(zoomObjRef.current.transform, d3.zoomIdentity);
     }
   }, []);
@@ -1162,7 +1177,7 @@ export function PoolChart({
                 width={Math.max(0, width - ML.left - ML.right)}
                 height={Math.max(0, INNER_H)}
                 fill="transparent"
-                style={{ cursor: 'crosshair' }}
+                style={{ cursor: INTERACTIVE ? 'crosshair' : 'default' }}
               />
             </svg>
           </div>
@@ -1218,12 +1233,15 @@ export function PoolChart({
           <div className="flex gap-2">
             <MinusCircleIcon
               className="w-4 h-4 text-clay cursor-pointer hover:text-espresso"
-              onClick={() => doZoom(1 / 1.5)}
+              onClick={INTERACTIVE ? () => doZoom(1 / 1.5) : undefined}
             />
-            <Scan className="w-4 h-4 text-clay cursor-pointer hover:text-espresso" onClick={doResetZoom} />
+            <Scan
+              className="w-4 h-4 text-clay cursor-pointer hover:text-espresso"
+              onClick={INTERACTIVE ? doResetZoom : undefined}
+            />
             <PlusCircleIcon
               className="w-4 h-4 text-clay cursor-pointer hover:text-espresso"
-              onClick={() => doZoom(1.5)}
+              onClick={INTERACTIVE ? () => doZoom(1.5) : undefined}
             />
           </div>
         </div>
