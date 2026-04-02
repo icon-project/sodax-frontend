@@ -50,13 +50,15 @@ export type StoreAccessor = () => {
 };
 
 export type ChainServiceFactory = {
+  /** Create or get the XService singleton for this chain. */
   createService: (rpcConfig?: RpcConfig) => XService;
+  /** Static connectors known at build time. Ignored for provider-managed chains. */
   defaultConnectors: () => XConnector[];
-  /** true = connectors hydrated by React provider, not set here */
+  /** true = needs React provider (EVM/Solana/Sui), false = browser extension APIs. */
   providerManaged: boolean;
-  /** Create ChainActions for non-provider chains. Provider chains register their own. */
+  /** ChainActions for non-provider chains. If omitted, uses createDefaultActions(). */
   createActions?: (service: XService, getStore: StoreAccessor) => ChainActions;
-  /** Create wallet provider for non-provider chains. Provider chains hydrate their own. */
+  /** Wallet provider for non-provider chains. Called on setXConnection(). */
   createWalletProvider?: (service: XService, getStore: StoreAccessor) => WalletProvider | undefined;
   /**
    * Async connector discovery for chains whose available wallets can only be detected at runtime

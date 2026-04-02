@@ -9,8 +9,8 @@ React layer over `wallet-sdk-core`. Provides wallet connection, disconnection, s
 Two abstract base classes define the wallet integration contract:
 
 **`XService`** — per-chain service singleton managing connectors and balances:
-- `getBalance(address, xToken: XToken): Promise<bigint>` — balance of a specific token
-- `getBalances(address, xTokens: XToken[]): Promise<Record<string, bigint>>` — balances of multiple tokens
+- `getBalance(address, xToken: XToken): Promise<bigint>` — balance of a specific token (default: `0n`, subclass overrides)
+- `getBalances(address, xTokens: XToken[]): Promise<Record<string, bigint>>` — calls `getBalance()` per token
 - `getXConnectors()`, `setXConnectors()`, `getXConnectorById()`
 
 **`XConnector`** — wallet connector (adapter over native chain SDKs):

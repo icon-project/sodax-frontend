@@ -12,10 +12,12 @@ import { chainRegistry, createChainServices } from './chainRegistry';
 
 type XWalletStore = {
   xServices: Partial<Record<ChainType, XService>>;
+  /** Active wallet connections. Only field persisted to localStorage. */
   xConnections: Partial<Record<ChainType, XConnection>>;
   xConnectorsByChain: Partial<Record<ChainType, XConnector[]>>;
   enabledChains: ChainType[];
   chainActions: Record<string, ChainActions>;
+  /** Wallet providers from wallet-sdk-core. Read by useWalletProvider() hook. */
   walletProviders: Partial<Record<ChainType, WalletProvider>>;
 
   setXConnection: (xChainType: ChainType, xConnection: XConnection) => void;
@@ -23,6 +25,7 @@ type XWalletStore = {
   setXConnectors: (xChainType: ChainType, connectors: XConnector[]) => void;
   registerChainActions: (xChainType: ChainType, actions: ChainActions) => void;
   setWalletProvider: (xChainType: ChainType, provider: WalletProvider | undefined) => void;
+  /** Initialize all chain services from config. Called once by useInitChainServices. */
   initChainServices: (config: ChainsConfig, rpcConfig?: RpcConfig) => void;
 };
 
@@ -41,7 +44,7 @@ export const useXWalletStore = create<XWalletStore>()(
           set(state => {
             state.xConnections[xChainType] = xConnection;
           });
-          // Recreate wallet provider for non-provider chains
+          // Side-effect: recreate wallet provider for non-provider chains (Bitcoin, ICON, etc.)
           const factory = chainRegistry[xChainType]?.createWalletProvider;
           if (factory) {
             const service = get().xServices[xChainType];
