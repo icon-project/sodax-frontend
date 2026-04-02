@@ -29,7 +29,6 @@ export type BitcoinUTXO = {
   };
 };
 
-
 export interface BitcoinTransactionResult {
   txHash: string;
   fee: number;
@@ -37,21 +36,21 @@ export interface BitcoinTransactionResult {
   virtualSize: number;
 }
 
-export type WalletMode = "USER" | "TRADING"
+export type WalletMode = 'USER' | 'TRADING';
 
 export interface Payload {
-  src_address: string
-  data: string
-  src_chain_id: number
-  dst_chain_id: number
-  wallet_used: WalletMode
-  timestamp: number
-  address_type: AddressType
+  src_address: string;
+  data: string;
+  src_chain_id: number;
+  dst_chain_id: number;
+  wallet_used: WalletMode;
+  timestamp: number;
+  address_type: AddressType;
 }
 
 export interface OnDemandPayload {
-  payload_hex: string,
-  signature?: string
+  payload_hex: string;
+  signature?: string;
 }
 
 const BITCOIN_DEFAULT_FEE_RATE = 3;
@@ -76,15 +75,17 @@ export class BitcoinBaseSpokeProvider {
   public radfiAccessToken = '';
   public radfiRefreshToken = '';
 
-
-  constructor(config: BitcoinSpokeChainConfig, radfiConfig: RadfiConfig, walletMode: WalletMode = "USER", rpcURL?: string) {
+  constructor(
+    config: BitcoinSpokeChainConfig,
+    radfiConfig: RadfiConfig,
+    walletMode: WalletMode = 'USER',
+    rpcURL?: string,
+  ) {
     this.chainConfig = config;
     this.rpcUrl = rpcURL ?? config.rpcUrl;
-    this.network = config.network === 'TESTNET'
-      ? bitcoin.networks.testnet
-      : bitcoin.networks.bitcoin;
+    this.network = config.network === 'TESTNET' ? bitcoin.networks.testnet : bitcoin.networks.bitcoin;
     this.radfi = new RadfiProvider(radfiConfig);
-    this.walletMode = walletMode
+    this.walletMode = walletMode;
   }
 
   public setRadfiAccessToken(token: string, refreshToken?: string) {
@@ -110,11 +111,7 @@ export class BitcoinBaseSpokeProvider {
     }
   }
 
-
-  public static async getBalance(
-    tokenAddress: string,
-    provider: BitcoinSpokeProviderType,
-  ): Promise<bigint> {
+  public static async getBalance(tokenAddress: string, provider: BitcoinSpokeProviderType): Promise<bigint> {
     const walletAddress = await provider.walletProvider.getWalletAddress();
 
     // For native BTC (empty token address or special marker)
@@ -126,10 +123,7 @@ export class BitcoinBaseSpokeProvider {
     throw new Error('Token balance queries not yet implemented for non-BTC assets');
   }
 
-  public async fetchScriptPubKey(
-    utxo: BitcoinUTXO,
-    provider: BitcoinSpokeProviderType
-  ): Promise<string> {
+  public async fetchScriptPubKey(utxo: BitcoinUTXO, provider: BitcoinSpokeProviderType): Promise<string> {
     const txHex = await provider.fetchRawTransaction(utxo.txid);
     const tx = bitcoin.Transaction.fromHex(txHex);
     const out = tx.outs[utxo.vout];
@@ -150,7 +144,7 @@ export class BitcoinBaseSpokeProvider {
     feeRate?: number,
   ): Promise<bitcoin.Psbt> {
     const psbt = new bitcoin.Psbt({ network: provider.network });
-    const effectiveFeeRate = feeRate ?? await provider.getFeeEstimate();
+    const effectiveFeeRate = feeRate ?? (await provider.getFeeEstimate());
     const walletAddress = await provider.walletProvider.getWalletAddress();
     const addressType = provider.getAddressType(walletAddress);
 
@@ -160,7 +154,6 @@ export class BitcoinBaseSpokeProvider {
     // ---- Add inputs ----
     for (const utxo of utxos) {
       if (!utxo.status.confirmed) continue;
-
 
       const scriptPubKey = await provider.fetchScriptPubKey(utxo, provider);
       const isTaproot = scriptPubKey.startsWith('51');
@@ -181,8 +174,7 @@ export class BitcoinBaseSpokeProvider {
           },
           tapInternalKey: Buffer.from(tapInternalKey, 'hex'),
         });
-      }
-      else if (isP2SH) {
+      } else if (isP2SH) {
         // P2SH-P2WPKH (Nested SegWit): needs witnessUtxo + redeemScript
         if (!provider.walletProvider.getPublicKey) {
           throw new Error('Missing public key for P2SH-P2WPKH input');
@@ -201,8 +193,7 @@ export class BitcoinBaseSpokeProvider {
           },
           redeemScript,
         });
-      }
-      else if (isSegwitV0) {
+      } else if (isSegwitV0) {
         psbt.addInput({
           hash: utxo.txid,
           index: utxo.vout,
@@ -224,11 +215,7 @@ export class BitcoinBaseSpokeProvider {
       inputSum += utxo.value;
 
       // Conservative estimate WITHOUT assuming change yet
-      const estimatedSize = provider.estimateTxSize(
-        psbt.inputCount,
-        outputs.length,
-        addressType,
-      );
+      const estimatedSize = provider.estimateTxSize(psbt.inputCount, outputs.length, addressType);
       const estimatedFee = Math.ceil(effectiveFeeRate * estimatedSize);
 
       if (inputSum >= outputSum + estimatedFee + DUST_THRESHOLD) {
@@ -245,16 +232,8 @@ export class BitcoinBaseSpokeProvider {
     }
 
     // ---- Final fee & change calculation ----
-    const sizeWithChange = provider.estimateTxSize(
-      psbt.inputCount,
-      outputs.length + 1,
-      addressType,
-    );
-    const sizeWithoutChange = provider.estimateTxSize(
-      psbt.inputCount,
-      outputs.length,
-      addressType,
-    );
+    const sizeWithChange = provider.estimateTxSize(psbt.inputCount, outputs.length + 1, addressType);
+    const sizeWithoutChange = provider.estimateTxSize(psbt.inputCount, outputs.length, addressType);
 
     const feeWithChange = Math.ceil(effectiveFeeRate * sizeWithChange);
     const feeWithoutChange = Math.ceil(effectiveFeeRate * sizeWithoutChange);
@@ -264,12 +243,9 @@ export class BitcoinBaseSpokeProvider {
     if (change < 0) {
       const confirmedCount = utxos.filter(u => u.status.confirmed).length;
       const unconfirmedCount = utxos.length - confirmedCount;
-      const hint = unconfirmedCount > 0
-        ? ` (${unconfirmedCount} unconfirmed UTXO(s) skipped — wait for confirmation)`
-        : '';
-      throw new Error(
-        `Insufficient funds. Need ${outputSum + feeWithChange} satoshis, have ${inputSum}${hint}`,
-      );
+      const hint =
+        unconfirmedCount > 0 ? ` (${unconfirmedCount} unconfirmed UTXO(s) skipped — wait for confirmation)` : '';
+      throw new Error(`Insufficient funds. Need ${outputSum + feeWithChange} satoshis, have ${inputSum}${hint}`);
     }
 
     // ---- Add change only if it makes sense ----
@@ -284,24 +260,17 @@ export class BitcoinBaseSpokeProvider {
       change = inputSum - outputSum - finalFee;
 
       if (change < 0) {
-        throw new Error(
-          `Insufficient funds after dust handling. Need ${outputSum + finalFee}`,
-        );
+        throw new Error(`Insufficient funds after dust handling. Need ${outputSum + finalFee}`);
       }
     }
 
     return psbt;
   }
 
-
-
   /**
    * Deposit operation - transfer BTC to the asset manager
    */
-  public static async deposit<
-    S extends BitcoinSpokeProviderType,
-    R extends boolean = false
-  >(
+  public static async deposit<S extends BitcoinSpokeProviderType, R extends boolean = false>(
     token: string,
     amount: bigint,
     data: string,
@@ -312,9 +281,7 @@ export class BitcoinBaseSpokeProvider {
     try {
       const walletAddress = await provider.walletProvider.getWalletAddress();
 
-      const returnRawTx = (
-        psbtBase64: string
-      ): TxReturnType<S, R> =>
+      const returnRawTx = (psbtBase64: string): TxReturnType<S, R> =>
         ({
           from: walletAddress,
           to: provider.chainConfig.addresses.assetManager,
@@ -323,45 +290,43 @@ export class BitcoinBaseSpokeProvider {
         }) satisfies TxReturnType<BitcoinSpokeProviderType, true> as TxReturnType<S, R>;
 
       // ───────────────── Trading wallet flow ─────────────────
-      if (provider.walletMode === "TRADING") {
-        const tokenId = Object.values(provider.chainConfig.supportedTokens).find(
-          t => t.address === token,
-        )?.address;
+      if (provider.walletMode === 'TRADING') {
+        const tokenId = Object.values(provider.chainConfig.supportedTokens).find(t => t.address === token)?.address;
 
         if (!tokenId) {
           throw new Error(`Unsupported token: ${token}`);
         }
 
-        data = data.startsWith('0x') ? data.slice(2) : data
+        data = data.startsWith('0x') ? data.slice(2) : data;
         data = data.length === 64 ? data : keccak256(`0x${data}`).slice(2);
 
         accessToken = accessToken || provider.radfiAccessToken;
-        const withdrawTx =
-          await provider.radfi.createWithdrawTransaction({
+        const withdrawTx = await provider.radfi.createWithdrawTransaction(
+          {
             token: tokenId,
             amount,
             recipient: provider.chainConfig.addresses.assetManager,
             userAddress: walletAddress,
             data: data,
-          }, accessToken);
+          },
+          accessToken,
+        );
 
         if (raw || isBitcoinRawSpokeProvider(provider)) {
           return returnRawTx(withdrawTx.base64Psbt);
         }
 
-        const signedTx =
-          await provider.walletProvider.signTransaction(
-            withdrawTx.base64Psbt,
-            false
-          );
+        const signedTx = await provider.walletProvider.signTransaction(withdrawTx.base64Psbt, false);
 
         const signedBase64Tx = normalizePsbtToBase64(signedTx);
 
-        return (await provider.radfi.requestRadfiSignature({
-          userAddress: walletAddress,
-          signedBase64Tx,
-        }, accessToken)) satisfies TxReturnType<BitcoinSpokeProviderType, false> as TxReturnType<S, R>;
-
+        return (await provider.radfi.requestRadfiSignature(
+          {
+            userAddress: walletAddress,
+            signedBase64Tx,
+          },
+          accessToken,
+        )) satisfies TxReturnType<BitcoinSpokeProviderType, false> as TxReturnType<S, R>;
       }
 
       // ───────────────── Normal deposit flow ─────────────────
@@ -371,23 +336,23 @@ export class BitcoinBaseSpokeProvider {
         throw new Error('No UTXOs available for deposit');
       }
 
-      const depositPsbt =
-        await BitcoinBaseSpokeProvider.buildDepositPsbt(
-          walletAddress,
-          token,
-          amount,
-          data,
-          utxos,
-          provider
-        );
+      const depositPsbt = await BitcoinBaseSpokeProvider.buildDepositPsbt(
+        walletAddress,
+        token,
+        amount,
+        data,
+        utxos,
+        provider,
+      );
 
       if (raw || isBitcoinRawSpokeProvider(provider)) {
         return returnRawTx(depositPsbt.toBase64());
       }
 
-      return (await provider.signAndBroadcastTransaction(
-        depositPsbt
-      )) satisfies TxReturnType<BitcoinSpokeProviderType, false> as TxReturnType<S, R>;
+      return (await provider.signAndBroadcastTransaction(depositPsbt)) satisfies TxReturnType<
+        BitcoinSpokeProviderType,
+        false
+      > as TxReturnType<S, R>;
     } catch (error) {
       console.error('Error during deposit:', error);
       throw error;
@@ -415,18 +380,10 @@ export class BitcoinBaseSpokeProvider {
         },
       ];
 
-      const psbt = await BitcoinBaseSpokeProvider.buildBitcoinTransaction(
-        utxos,
-        outputs,
-        walletAddress,
-        provider,
-      );
+      const psbt = await BitcoinBaseSpokeProvider.buildBitcoinTransaction(utxos, outputs, walletAddress, provider);
 
-      const OP_RADFI_SODAX_DATA = 0x31
-      const payload = Buffer.concat([
-        Buffer.from([OP_RADFI_SODAX_DATA]),
-        Buffer.from(data.slice(2), 'hex'),
-      ]);
+      const OP_RADFI_SODAX_DATA = 0x31;
+      const payload = Buffer.concat([Buffer.from([OP_RADFI_SODAX_DATA]), Buffer.from(data.slice(2), 'hex')]);
 
       const OP_RETURN = bitcoin.opcodes.OP_RETURN;
       const OP_12 = bitcoin.opcodes.OP_12;
@@ -434,16 +391,12 @@ export class BitcoinBaseSpokeProvider {
         throw new Error('bitcoinjs-lib opcodes OP_RETURN or OP_12 are undefined');
       }
 
-      const script = bitcoin.script.compile([
-        OP_RETURN,
-        OP_12,
-        payload
-      ]);
+      const script = bitcoin.script.compile([OP_RETURN, OP_12, payload]);
 
       psbt.addOutput({
         script: script,
         value: 0,
-      })
+      });
 
       return psbt;
     }
@@ -484,12 +437,20 @@ export class BitcoinBaseSpokeProvider {
     // 31 vB per non-OP_RETURN output
     let inputWeight: number;
     switch (addressType) {
-      case 'P2PKH':  inputWeight = 148; break;
-      case 'P2SH':   inputWeight = 91;  break;
-      case 'P2TR':   inputWeight = 58;  break;
-      default:        inputWeight = 68;  break;
+      case 'P2PKH':
+        inputWeight = 148;
+        break;
+      case 'P2SH':
+        inputWeight = 91;
+        break;
+      case 'P2TR':
+        inputWeight = 58;
+        break;
+      default:
+        inputWeight = 68;
+        break;
     }
-    return Math.ceil(10.5 + 44 + (inputCount * inputWeight) + (outputCount * 31));
+    return Math.ceil(10.5 + 44 + inputCount * inputWeight + outputCount * 31);
   }
 
   public getAddressType(address: string): AddressType {
@@ -504,11 +465,11 @@ export class BitcoinBaseSpokeProvider {
       dst_chain_id: payload.dst_chain_id,
       wallet_used: payload.wallet_used,
       timestamp: payload.timestamp,
-      address_type: payload.address_type
-    }
+      address_type: payload.address_type,
+    };
 
-    const json = JSON.stringify(ordered)
-    return json
+    const json = JSON.stringify(ordered);
+    return json;
   }
 
   public static async encodeWithdrawalData<S extends BitcoinSpokeProviderType, R extends boolean = false>(
@@ -519,7 +480,7 @@ export class BitcoinBaseSpokeProvider {
   ): Promise<string> {
     let srcAddress = await provider.walletProvider.getWalletAddress();
     const addressType = provider.getAddressType(srcAddress);
-    if (provider.walletMode === "TRADING") {
+    if (provider.walletMode === 'TRADING') {
       srcAddress = await provider.radfi
         .getTradingWallet(srcAddress)
         .then(res => res.tradingAddress)
@@ -532,14 +493,14 @@ export class BitcoinBaseSpokeProvider {
       dst_chain_id: Number(getIntentRelayChainId(dstChainId)),
       wallet_used: provider.walletMode,
       timestamp: Date.now(),
-      address_type: addressType
-    }
-    const orderedPayload = provider.encodePayloadToBytes(payload)
+      address_type: addressType,
+    };
+    const orderedPayload = provider.encodePayloadToBytes(payload);
 
     const onDemandWithdraw: OnDemandPayload = {
       payload_hex: Buffer.from(orderedPayload).toString('hex'),
-      signature: undefined
-    }
+      signature: undefined,
+    };
 
     if (raw || isBitcoinRawSpokeProvider(provider)) {
       return JSON.stringify(onDemandWithdraw);
@@ -550,9 +511,7 @@ export class BitcoinBaseSpokeProvider {
     onDemandWithdraw.signature = signature;
     return JSON.stringify(onDemandWithdraw);
   }
-
 }
-
 
 /**
  * Raw Bitcoin Spoke Provider - for building unsigned transactions
@@ -566,7 +525,7 @@ export class BitcoinRawSpokeProvider extends BitcoinBaseSpokeProvider implements
     publicKey: string,
     chainConfig: BitcoinSpokeChainConfig,
     radfiConfig: RadfiConfig,
-    walletMode: WalletMode = "USER",
+    walletMode: WalletMode = 'USER',
     rpcUrl?: string,
   ) {
     super(chainConfig, radfiConfig, walletMode, rpcUrl);
@@ -576,7 +535,6 @@ export class BitcoinRawSpokeProvider extends BitcoinBaseSpokeProvider implements
     };
   }
 }
-
 
 /**
  * Bitcoin Spoke Provider - with signing capabilities
@@ -588,7 +546,7 @@ export class BitcoinSpokeProvider extends BitcoinBaseSpokeProvider implements IS
     walletProvider: IBitcoinWalletProvider,
     chainConfig: BitcoinSpokeChainConfig,
     radfiConfig: RadfiConfig,
-    walletMode: WalletMode = "USER",
+    walletMode: WalletMode = 'USER',
     rpcUrl?: string,
   ) {
     super(chainConfig, radfiConfig, walletMode, rpcUrl);
@@ -610,10 +568,12 @@ export class BitcoinSpokeProvider extends BitcoinBaseSpokeProvider implements IS
   }
 
   /**
-   * Authenticate with Radfi: BIP322-sign a login message, then call the Radfi API.
+   * Authenticate with Radfi: BIP322-sign, ECDSA-sign a login message, then call the Radfi API.
    * Returns accessToken, refreshToken, and tradingAddress.
    */
-  public async authenticateWithWallet(cachedPublicKey?: string): Promise<{ accessToken: string; refreshToken: string; tradingAddress: string; publicKey: string }> {
+  public async authenticateWithWallet(
+    cachedPublicKey?: string,
+  ): Promise<{ accessToken: string; refreshToken: string; tradingAddress: string; publicKey: string }> {
     const address = await this.walletProvider.getWalletAddress();
 
     let publicKey = cachedPublicKey;
@@ -630,9 +590,10 @@ export class BitcoinSpokeProvider extends BitcoinBaseSpokeProvider implements IS
     const message = `Login to Radfi via Sodax: ${Date.now()}`;
     const addressType = this.getAddressType(address);
     // BIP322 signing is supported for P2WPKH and P2TR; P2SH and P2PKH use ECDSA
-    const signature = addressType === 'P2WPKH' || addressType === 'P2TR'
-      ? await this.walletProvider.signBip322Message(message)
-      : await this.walletProvider.signEcdsaMessage(message);
+    const signature =
+      addressType === 'P2WPKH' || addressType === 'P2TR'
+        ? await this.walletProvider.signBip322Message(message)
+        : await this.walletProvider.signEcdsaMessage(message);
 
     const result = await this.radfi.authenticate({ message, signature, address, publicKey });
     this.setRadfiAccessToken(result.accessToken, result.refreshToken);
@@ -668,9 +629,7 @@ export class BitcoinSpokeProvider extends BitcoinBaseSpokeProvider implements IS
   /**
    * Sign and broadcast a Bitcoin transaction
    */
-  public async signAndBroadcastTransaction(
-    psbt: bitcoin.Psbt | string
-  ): Promise<string> {
+  public async signAndBroadcastTransaction(psbt: bitcoin.Psbt | string): Promise<string> {
     const psbtBase64 = typeof psbt === 'string' ? psbt : psbt.toBase64();
     const signedPsbtHex = await this.walletProvider.signTransaction(psbtBase64);
     const txHash = await this.broadcastTransaction(signedPsbtHex);

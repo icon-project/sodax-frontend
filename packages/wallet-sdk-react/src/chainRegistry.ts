@@ -4,6 +4,7 @@ import {
   type BitcoinRpcConfig,
   type StellarRpcConfig,
   ICON_MAINNET_CHAIN_ID,
+  detectBitcoinAddressType,
 } from '@sodax/types';
 import {
   IconWalletProvider,
@@ -57,7 +58,14 @@ export type ChainServiceFactory = {
   createActions?: (service: XService, getStore: StoreAccessor) => ChainActions;
   /** Create wallet provider for non-provider chains. Provider chains hydrate their own. */
   createWalletProvider?: (service: XService, getStore: StoreAccessor) => WalletProvider | undefined;
-  /** Async connector discovery — runs after init, updates store when done. */
+  /**
+   * Async connector discovery for chains whose available wallets can only be detected at runtime
+   * (e.g. browser extension scan, manifest loading). Runs once after init, updates store.xConnectorsByChain when done.
+   * Use when wallet detection requires async operations — if connectors are known statically, use defaultConnectors() instead.
+   *
+   * Example: Stellar scans for installed browser wallets via walletsKit.getSupportedWallets(),
+   * NEAR loads wallet manifest via walletSelector.whenManifestLoaded.
+   */
   discoverConnectors?: (service: XService, getStore: StoreAccessor) => Promise<void>;
 };
 
@@ -113,14 +121,23 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
       ...createDefaultActions('BITCOIN', service, getStore),
       signMessage: async (message: string) => {
         const store = getStore();
-        const connectorId = store.xConnections.BITCOIN?.xConnectorId;
-        const connector = connectorId ? service.getXConnectorById(connectorId) : undefined;
-        if (!connector || !('signEcdsaMessage' in connector)) {
-          throw new Error('Bitcoin wallet not connected or does not support signMessage');
+        const connection = store.xConnections.BITCOIN;
+        const connector = connection?.xConnectorId
+          ? (service.getXConnectorById(connection.xConnectorId) as BitcoinXConnector | undefined)
+          : undefined;
+        if (!connector) {
+          throw new Error('Bitcoin wallet not connected');
         }
-        return (
-          connector as BitcoinXConnector & { signEcdsaMessage: (msg: string) => Promise<string> }
-        ).signEcdsaMessage(message);
+        const address = connection?.xAccount.address;
+        const addressType = address ? detectBitcoinAddressType(address) : undefined;
+        // BIP322 signing for P2WPKH and P2TR; ECDSA for legacy (P2SH, P2PKH)
+        return addressType === 'P2WPKH' || addressType === 'P2TR'
+          ? (
+              connector as BitcoinXConnector & { signBip322Message: (msg: string) => Promise<string> }
+            ).signBip322Message(message)
+          : (connector as BitcoinXConnector & { signEcdsaMessage: (msg: string) => Promise<string> }).signEcdsaMessage(
+              message,
+            );
       },
     }),
     createWalletProvider: (service, getStore) => {
