@@ -76,6 +76,8 @@ Centralized state with persistence:
 Middleware stack: `devtools` → `persist` → `immer`
 Only `xConnections` is persisted (key: `'xwagmi-store'`).
 
+**Persist hydration caveat**: `initChainServices` runs before persist hydration completes. Persist then restores `xConnections` from localStorage, which may include connections for now-disabled chains. `cleanupDisabledConnections()` runs after hydration to remove these stale connections.
+
 **`useXWagmiStore`** is a deprecated alias for `useXWalletStore`.
 
 ### Configurable Chain Opt-In

@@ -12,6 +12,7 @@ import { reconnectStellar } from '../xchains/stellar/actions';
  */
 export function useInitChainServices(chains: ChainsConfig, rpcConfig?: RpcConfig) {
   const initChainServices = useXWalletStore(state => state.initChainServices);
+  const cleanupDisabledConnections = useXWalletStore(state => state.cleanupDisabledConnections);
   const initializedRef = useRef(false);
 
   useEffect(() => {
@@ -20,16 +21,20 @@ export function useInitChainServices(chains: ChainsConfig, rpcConfig?: RpcConfig
 
     initChainServices(chains, rpcConfig);
 
-    const runReconnect = () => {
+    const afterHydration = () => {
+      // Clean up persisted connections for disabled chains (must run after hydration
+      // because persist middleware restores xConnections from localStorage)
+      cleanupDisabledConnections();
+
       if (chains.ICON) reconnectIcon();
       if (chains.INJECTIVE) reconnectInjective();
       if (chains.STELLAR) reconnectStellar();
     };
 
     if (useXWalletStore.persist.hasHydrated()) {
-      runReconnect();
+      afterHydration();
     } else {
-      useXWalletStore.persist.onFinishHydration(runReconnect);
+      useXWalletStore.persist.onFinishHydration(afterHydration);
     }
-  }, [chains, rpcConfig, initChainServices]);
+  }, [chains, rpcConfig, initChainServices, cleanupDisabledConnections]);
 }

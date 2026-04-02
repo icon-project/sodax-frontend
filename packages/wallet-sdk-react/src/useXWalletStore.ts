@@ -27,6 +27,8 @@ type XWalletStore = {
   setWalletProvider: (xChainType: ChainType, provider: WalletProvider | undefined) => void;
   /** Initialize all chain services from config. Called once by useInitChainServices. */
   initChainServices: (config: ChainsConfig, rpcConfig?: RpcConfig) => void;
+  /** Remove persisted connections for chains not in enabledChains. Called after persist hydration. */
+  cleanupDisabledConnections: () => void;
 };
 
 export const useXWalletStore = create<XWalletStore>()(
@@ -87,10 +89,22 @@ export const useXWalletStore = create<XWalletStore>()(
         initChainServices: (config: ChainsConfig, rpcConfig?: RpcConfig) => {
           const result = createChainServices(config, () => get(), rpcConfig);
           set(state => {
-            state.xServices = { ...state.xServices, ...result.xServices };
-            state.xConnectorsByChain = { ...state.xConnectorsByChain, ...result.xConnectorsByChain };
+            // Replace (not merge) — disabled chains must not retain stale state
+            state.xServices = result.xServices;
+            state.xConnectorsByChain = result.xConnectorsByChain;
             state.enabledChains = result.enabledChains;
-            state.chainActions = { ...state.chainActions, ...result.chainActions };
+            state.chainActions = result.chainActions;
+          });
+        },
+
+        cleanupDisabledConnections: () => {
+          set(state => {
+            for (const chainType of Object.keys(state.xConnections)) {
+              if (!state.enabledChains.includes(chainType as ChainType)) {
+                delete state.xConnections[chainType as ChainType];
+                delete state.walletProviders[chainType as ChainType];
+              }
+            }
           });
         },
       })),
