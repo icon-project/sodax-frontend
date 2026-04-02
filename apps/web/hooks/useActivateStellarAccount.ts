@@ -1,5 +1,6 @@
 // apps/web/hooks/useActivateStellarAccount.ts
-import { type StellarXService, useXService } from '@sodax/wallet-sdk-react';
+import { useXService } from '@sodax/wallet-sdk-react';
+import type { StellarXService } from '@sodax/wallet-sdk-react/xchains/stellar';
 import { BASE_FEE, Networks, Operation, TransactionBuilder } from '@stellar/stellar-sdk';
 import { useCallback, useState } from 'react';
 
