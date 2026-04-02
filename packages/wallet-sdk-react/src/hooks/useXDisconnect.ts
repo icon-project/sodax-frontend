@@ -15,6 +15,8 @@ export function useXDisconnect(): (xChainType: ChainType) => Promise<void> {
       const chainActions = actionsRegistry[xChainType];
       if (chainActions) {
         await chainActions.disconnect();
+      } else {
+        console.warn(`[useXDisconnect] No chain actions registered for "${xChainType}". Is it enabled in config.chains?`);
       }
     },
     [actionsRegistry],

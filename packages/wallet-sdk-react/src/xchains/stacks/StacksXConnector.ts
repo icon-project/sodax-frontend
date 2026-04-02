@@ -37,8 +37,8 @@ export class StacksXConnector extends XConnector {
     }
 
     const response = await request({ provider }, 'stx_getAddresses');
-    // @ts-ignore
-    const stxAddress = response.addresses.find(a => a.purpose === 'stacks');
+    // Stacks SDK types don't include `purpose` on AddressEntry, but wallets return it at runtime
+    const stxAddress = response.addresses.find(a => (a as unknown as { purpose?: string }).purpose === 'stacks');
 
     if (!stxAddress) {
       return undefined;

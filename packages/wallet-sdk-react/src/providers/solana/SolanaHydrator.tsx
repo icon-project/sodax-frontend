@@ -21,11 +21,14 @@ export const SolanaHydrator = () => {
     }
   }, [connection]);
 
+  // Ref holds latest solanaWallet object — useWallet() returns a new ref every render,
+  // so we use primitive fields as deps and read the latest object from the ref.
+  const solanaWalletRef = useRef(solanaWallet);
+  useEffect(() => { solanaWalletRef.current = solanaWallet; });
+
   useEffect(() => {
-    if (solanaWallet) {
-      SolanaXService.getInstance().wallet = solanaWallet;
-    }
-  }, [solanaWallet]);
+    SolanaXService.getInstance().wallet = solanaWalletRef.current;
+  }, [solanaWallet.connected, solanaWallet.wallet]);
 
   const solanaWallets = solanaWallet.wallets;
   useEffect(() => {
@@ -49,11 +52,6 @@ export const SolanaHydrator = () => {
       unsetXConnection('SOLANA');
     }
   }, [solanaWallet.connected, solanaWallet.publicKey, solanaWallet.wallet, setXConnection, unsetXConnection]);
-
-  // Ref holds latest solanaWallet object — useWallet() returns a new ref every render,
-  // so we use primitive fields as deps and read the latest object from the ref.
-  const solanaWalletRef = useRef(solanaWallet);
-  useEffect(() => { solanaWalletRef.current = solanaWallet; }, [solanaWallet]);
 
   useEffect(() => {
     if (solanaWallet.connected && solanaWallet.wallet && connection) {
