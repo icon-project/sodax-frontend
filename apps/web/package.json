@@ -36,7 +36,6 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@radix-ui/react-visually-hidden": "^1.1.2",
     "@rainbow-me/rainbowkit": "^2.2.8",
-    "//sodax": "TODO(sdk-v2-release): revert @sodax/* to pinned versions when publishing SDK v2",
     "@sodax/dapp-kit": "workspace:*",
     "@sodax/sdk": "workspace:*",
     "@sodax/types": "workspace:*",
