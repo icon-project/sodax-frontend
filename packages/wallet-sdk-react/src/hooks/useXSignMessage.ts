@@ -21,7 +21,8 @@ export function useXSignMessage(): UseMutationResult<
     mutationFn: async ({ xChainType, message }: { xChainType: ChainType; message: string }) => {
       const chainActions = actionsRegistry[xChainType];
       if (!chainActions?.signMessage) {
-        throw new Error(`signMessage not supported for chain "${xChainType}"`);
+        console.warn(`[useXSignMessage] signMessage not supported for chain "${xChainType}"`);
+        return undefined;
       }
       return await chainActions.signMessage(message);
     },
