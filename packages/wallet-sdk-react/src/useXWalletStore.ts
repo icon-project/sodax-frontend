@@ -89,11 +89,13 @@ export const useXWalletStore = create<XWalletStore>()(
         initChainServices: (config: ChainsConfig, rpcConfig?: RpcConfig) => {
           const result = createChainServices(config, () => get(), rpcConfig);
           set(state => {
-            // Replace (not merge) — disabled chains must not retain stale state
             state.xServices = result.xServices;
-            state.xConnectorsByChain = result.xConnectorsByChain;
             state.enabledChains = result.enabledChains;
-            state.chainActions = result.chainActions;
+            // Merge connectors and chainActions — provider-managed chains (EVM/Solana/Sui)
+            // hydrate these via their Hydrator/Actions components, which may run before
+            // or after this effect due to React's bottom-up effect ordering.
+            Object.assign(state.xConnectorsByChain, result.xConnectorsByChain);
+            Object.assign(state.chainActions, result.chainActions);
           });
         },
 

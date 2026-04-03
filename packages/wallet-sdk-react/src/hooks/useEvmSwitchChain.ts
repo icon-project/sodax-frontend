@@ -4,6 +4,7 @@ import { baseChainInfo, type ChainId } from '@sodax/types';
 import { getXChainType } from '@/actions';
 import type { InjectiveXService } from '@/xchains/injective';
 import { useXService } from '@/hooks/useXService';
+import { useIsChainEnabled } from '@/context/WalletConfigContext';
 import useEthereumChainId from './useEthereumChainId';
 import { mainnet } from 'viem/chains';
 import { Wallet } from '@injectivelabs/wallet-base';
@@ -12,14 +13,6 @@ interface UseEvmSwitchChainReturn {
   isWrongChain: boolean;
   handleSwitchChain: () => void;
 }
-
-/**
- * Hook to handle EVM chain switching functionality.
- *
- * @requires EVM chain must be enabled in SodaxWalletConfig — this hook calls wagmi hooks
- * (useAccount, useSwitchChain) unconditionally, which throw if WagmiProvider is not mounted.
- * Full decoupling will be addressed in a follow-up.
- */
 
 export const switchEthereumChain = async () => {
   const metamaskProvider = (window as any).ethereum as any;
@@ -39,7 +32,21 @@ export const switchEthereumChain = async () => {
   ]);
 };
 
+/**
+ * Hook to handle EVM chain switching functionality.
+ * Safe to call when EVM is disabled — returns no-op values.
+ */
 export const useEvmSwitchChain = (expectedXChainId: ChainId): UseEvmSwitchChainReturn => {
+  const evmEnabled = useIsChainEnabled('EVM');
+
+  if (!evmEnabled) {
+    return { isWrongChain: false, handleSwitchChain: () => {} };
+  }
+
+  return useEvmSwitchChainInner(expectedXChainId);
+};
+
+const useEvmSwitchChainInner = (expectedXChainId: ChainId): UseEvmSwitchChainReturn => {
   const xChainType = getXChainType(expectedXChainId);
   const expectedChainId = baseChainInfo[expectedXChainId].chainId as number;
 

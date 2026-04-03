@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useConfig, useConnections, useAccount, usePublicClient, useWalletClient } from 'wagmi';
+import { useConfig, useConnectors, useConnections, useAccount, usePublicClient, useWalletClient } from 'wagmi';
 import { EvmWalletProvider } from '@sodax/wallet-sdk-core';
 import { EvmXService } from '../../xchains/evm/EvmXService';
 import { EvmXConnector } from '../../xchains/evm';
@@ -26,8 +26,8 @@ export const EvmHydrator = () => {
     }
   }, [wagmiConfig]);
 
-  // Hydrate connectors into store
-  const connectors = wagmiConfig.connectors;
+  // Hydrate connectors into store (useConnectors is reactive to EIP-6963 discovery)
+  const connectors = useConnectors();
   useEffect(() => {
     const evmConnectors = connectors.map(c => new EvmXConnector(c));
     EvmXService.getInstance().setXConnectors(evmConnectors);
