@@ -30,7 +30,7 @@ const carouselItems = [
   { id: 11, src: '/coin/op.png', alt: 'OPTIMISM' },
 ];
 
-const ExchangeHeroSection = ({ onSwapClick }: { onSwapClick: () => void }): React.ReactElement => {
+const ExchangeHeroSection = (): React.ReactElement => {
   const imgRef = useRef<HTMLImageElement>(null);
   const carouselRef = useRef(null);
   const [api, setApi] = useState<CarouselApi>();
