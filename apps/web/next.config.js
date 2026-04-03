@@ -5,6 +5,41 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 
 const nextConfig = {
+  async redirects() {
+    return [
+      {
+        source: '/swap',
+        destination: '/exchange/swap',
+        permanent: true,
+      },
+      {
+        source: '/migrate',
+        destination: '/exchange/migrate',
+        permanent: true,
+      },
+      {
+        source: '/stake',
+        destination: '/exchange/stake',
+        permanent: true,
+      },
+      {
+        source: '/pool',
+        destination: '/exchange/pool',
+        permanent: true,
+      },
+    ];
+  },
+  async rewrites() {
+    return [
+      { source: '/exchange/swap', destination: '/swap' },
+      { source: '/exchange/save', destination: '/save' },
+      { source: '/exchange/loans', destination: '/loans' },
+      { source: '/exchange/migrate', destination: '/migrate' },
+      { source: '/exchange/stake', destination: '/stake' },
+      { source: '/exchange/pool', destination: '/pool' },
+      { source: '/exchange/partner-dashboard', destination: '/partner-dashboard' },
+    ];
+  },
   webpack: config => {
     config.resolve.fallback = {
       ...config.resolve.fallback,
