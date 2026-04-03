@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { ChainType } from '@sodax/types';
-import type { ChainsConfig, SodaxWalletConfig } from '../types';
+import type { ChainsConfig, SodaxWalletConfig } from '../types/config';
 
 /**
  * Config-level context — answers "what did the consumer configure?" (before service init).
