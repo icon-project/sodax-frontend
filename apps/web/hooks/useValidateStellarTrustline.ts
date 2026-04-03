@@ -1,6 +1,6 @@
 import type { XToken } from '@sodax/types';
-import { useXService } from '@sodax/wallet-sdk-react';
-import type { StellarXService } from '@sodax/wallet-sdk-react/xchains/stellar';
+// TODO: after upgrading wallet-sdk-react, change to: import type { StellarXService } from '@sodax/wallet-sdk-react/xchains/stellar'
+import { type StellarXService, useXService } from '@sodax/wallet-sdk-react';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { Horizon } from '@stellar/stellar-sdk';
 
