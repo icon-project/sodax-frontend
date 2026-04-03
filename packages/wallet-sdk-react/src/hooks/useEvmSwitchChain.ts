@@ -35,6 +35,14 @@ export const switchEthereumChain = async () => {
 /**
  * Hook to handle EVM chain switching functionality.
  * Safe to call when EVM is disabled — returns no-op values.
+ *
+ * Conditionally delegates to useEvmSwitchChainInner which uses wagmi hooks
+ * (useAccount, useSwitchChain) that require WagmiProvider. When EVM is disabled,
+ * WagmiProvider is not mounted, so we must not call those hooks.
+ *
+ * This technically violates Rules of Hooks (conditional hook call), but is safe
+ * because `evmEnabled` is derived from config which is immutable after mount —
+ * the branch never changes during the component's lifetime.
  */
 export const useEvmSwitchChain = (expectedXChainId: ChainId): UseEvmSwitchChainReturn => {
   const evmEnabled = useIsChainEnabled('EVM');
