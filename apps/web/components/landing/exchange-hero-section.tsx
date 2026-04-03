@@ -54,7 +54,7 @@ const ExchangeHeroSection = (): React.ReactElement => {
 
   return (
     <div className="hero-section h-full">
-      <div className="h-full sm:h-[860px] flex flex-col items-center bg-cherry-soda relative">
+      <div className="h-full flex flex-col items-center bg-cherry-soda relative">
         <Image
           className="mix-blend-screen absolute max-md:top-[52%] max-md:left-1/2 max-md:-translate-x-1/2 max-md:translate-y-[-50%] sm:-right-5 sm:bottom-30 lg:left-1/2 lg:bottom-2 w-[297px] h-[445px] sm:w-[408px] sm:h-[612px] lg:w-[541px] lg:h-[811px]"
           src="/girl.png"
