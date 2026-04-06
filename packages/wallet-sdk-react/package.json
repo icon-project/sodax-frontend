@@ -25,7 +25,9 @@
   },
   "typesVersions": {
     "*": {
-      "xchains/*": ["./dist/xchains/*/index.d.ts"]
+      "xchains/*": [
+        "./dist/xchains/*/index.d.ts"
+      ]
     }
   },
   "repository": {
@@ -66,6 +68,7 @@
     "@solana/wallet-adapter-wallets": "0.19.30",
     "@solana/web3.js": "catalog:",
     "@stellar/stellar-sdk": "catalog:",
+    "@walletconnect/ethereum-provider": "^2.23.9",
     "icon-sdk-js": "catalog:",
     "immer": "10.1.1",
     "sats-connect": "^4.2.1",

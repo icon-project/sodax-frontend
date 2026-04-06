@@ -22,6 +22,9 @@ export class EvmXConnector extends XConnector {
     return this.connector.id;
   }
   public get icon() {
+    if (!this.connector.icon && this.connector.type === 'walletConnect') {
+      return 'https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Icon/Blue%20(Default)/Icon.svg';
+    }
     return this.connector.icon;
   }
 }

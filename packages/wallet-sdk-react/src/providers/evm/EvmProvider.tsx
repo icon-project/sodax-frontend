@@ -27,9 +27,11 @@ export const EvmProvider = ({ children, config, rpcConfig }: EvmProviderProps) =
     queryClientRef.current = new QueryClient();
   }
 
+  const walletConnectConfig = config?.walletConnect;
+
   const wagmiConfig = useMemo(() => {
-    return createWagmiConfig(rpcConfig ?? {}, { reconnectOnMount, ssr });
-  }, [rpcConfig, reconnectOnMount, ssr]);
+    return createWagmiConfig(rpcConfig ?? {}, { reconnectOnMount, ssr, walletConnect: walletConnectConfig });
+  }, [rpcConfig, reconnectOnMount, ssr, walletConnectConfig]);
 
   // wagmi requires its own QueryClientProvider — this is wagmi-internal, not the app's React Query cache.
   return (
