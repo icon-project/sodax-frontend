@@ -27,6 +27,7 @@ export const EvmProvider = ({ children, config, rpcConfig }: EvmProviderProps) =
     queryClientRef.current = new QueryClient();
   }
 
+  // Stable ref — EvmProvider is internal, only mounted by SodaxWalletProvider which memoizes config.
   const walletConnectConfig = config?.walletConnect;
 
   const wagmiConfig = useMemo(() => {
