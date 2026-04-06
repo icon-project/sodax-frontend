@@ -19,8 +19,7 @@ import { getWagmiChainId, isNativeToken } from '@/utils';
 
 import { type Address, type Chain, defineChain, erc20Abi } from 'viem';
 import { getPublicClient } from 'wagmi/actions';
-import { type Config, createConfig, http, createStorage, cookieStorage } from 'wagmi';
-import { walletConnect } from 'wagmi/connectors';
+import { type Config, type CreateConnectorFn, createConfig, http, createStorage, cookieStorage } from 'wagmi';
 import {
   mainnet,
   avalanche,
@@ -35,7 +34,6 @@ import {
   kaia,
 } from 'wagmi/chains';
 import type { WagmiOptions } from '@/SodaxWalletProvider';
-import type { EvmChainConfig } from '@/types/config';
 
 // HyperEVM chain is not supported by viem, so we need to define it manually
 export const hyper = /*#__PURE__*/ defineChain({
@@ -63,11 +61,7 @@ export const hyper = /*#__PURE__*/ defineChain({
   },
 });
 
-export const createWagmiConfig = (config: RpcConfig, options?: WagmiOptions & Pick<EvmChainConfig, 'walletConnect'>): Config => {
-  const connectors = options?.walletConnect
-    ? [walletConnect({ showQrModal: true, ...options.walletConnect })]
-    : [];
-
+export const createWagmiConfig = (config: RpcConfig, options?: WagmiOptions & { connectors?: CreateConnectorFn[] }): Config => {
   return createConfig({
     chains: [
       mainnet,
@@ -83,7 +77,7 @@ export const createWagmiConfig = (config: RpcConfig, options?: WagmiOptions & Pi
       kaia,
       redbellyMainnet,
     ],
-    connectors,
+    connectors: options?.connectors ?? [],
     ssr: options?.ssr,
     transports: {
       [mainnet.id]: http(config[ETHEREUM_MAINNET_CHAIN_ID]),
