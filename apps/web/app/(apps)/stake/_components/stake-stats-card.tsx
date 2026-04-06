@@ -19,7 +19,7 @@ export function StakeStatsCard(): React.JSX.Element {
     userXSodaBalance,
     stakeMode,
     isLoadingBalanceCalculation,
-    stakingInfo,
+    totalStaked,
   } = useStakeState();
 
   const { setStakeMode } = useStakeActions();
@@ -100,7 +100,7 @@ export function StakeStatsCard(): React.JSX.Element {
             </Tooltip>{' '}
           </div>
           <div className="justify-center text-clay text-(length:--body-small) font-normal leading-4">
-            {formatCompactNumber(formatTokenAmount(stakingInfo?.totalStaked || 0n, 18))} total staked
+            {formatCompactNumber(formatTokenAmount(totalStaked, 18))} total staked
           </div>
         </div>
       </div>
