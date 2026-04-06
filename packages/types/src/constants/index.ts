@@ -1796,13 +1796,6 @@ export const spokeChainConfig = {
         address: '3443843282313283355522573239085696902919850365217539366784739393210722344986',
         xChainId: ALEO_MAINNET_CHAIN_ID,
       },
-      testToken: {
-        symbol: 'testToken',
-        name: 'testToken',
-        decimals: 6,
-        address: '7190692537453907461105790569797103513515746302149567971663963167242253971980',
-        xChainId: ALEO_MAINNET_CHAIN_ID,
-      },
       // NOTE: Supported token requires bnUSD but in aleo it is not deployed yet.
       bnUSD: {
         symbol: 'bnUSD',
@@ -2807,7 +2800,7 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
   },
   [ALEO_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[ALEO_MAINNET_CHAIN_ID].nativeToken]: {
-      asset: '0x0000000000000000000000000000000000000000',
+      asset: '0xf7af7a9763d12bddab20ebc74601b161483f8728',
       decimal: 6,
       symbol: 'ALEO',
       name: 'Aleo',
@@ -3053,7 +3046,6 @@ export const swapSupportedTokens = {
   ] as const satisfies XToken[],
   [ALEO_MAINNET_CHAIN_ID]: [
     spokeChainConfig[ALEO_MAINNET_CHAIN_ID].supportedTokens.ALEO,
-    spokeChainConfig[ALEO_MAINNET_CHAIN_ID].supportedTokens.testToken,
   ] as const satisfies XToken[],
   [STACKS_MAINNET_CHAIN_ID]: [
     spokeChainConfig[STACKS_MAINNET_CHAIN_ID].supportedTokens.STX,

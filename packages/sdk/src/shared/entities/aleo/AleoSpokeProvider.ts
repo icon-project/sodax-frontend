@@ -67,6 +67,11 @@ export class AleoBaseSpokeProvider {
     return this._programManager;
   }
 
+  async getNetworkClient() {
+    await this.ensureClients();
+    return this.networkClient;
+  }
+
   static getAddressBCSBytes(aleoAddress: string): Hex {
     if (!AleoBaseSpokeProvider.isValidAleoAddress(aleoAddress)) {
       throw new Error(`Invalid Aleo address format: ${aleoAddress}`);
@@ -209,7 +214,7 @@ export class AleoBaseSpokeProvider {
    * Both have identical params — only the function name differs.
    */
   private async executeTransfer<S extends AleoSpokeProviderType, R extends boolean = false>(
-    functionName: 'transfer_token_public' | 'transfer_native_public',
+    functionName: 'transfer' | 'transferNative',
     token: bigint,
     dstAddress: Hex,
     amount: bigint,
@@ -268,7 +273,7 @@ export class AleoBaseSpokeProvider {
     raw?: R,
   ): Promise<TxReturnType<S, R>> {
     return this.executeTransfer(
-      'transfer_token_public',
+      'transfer',
       token,
       dstAddress,
       amount,
@@ -299,7 +304,7 @@ export class AleoBaseSpokeProvider {
     raw?: R,
   ): Promise<TxReturnType<S, R>> {
     return this.executeTransfer(
-      'transfer_native_public',
+      'transferNative',
       token,
       dstAddress,
       amount,
