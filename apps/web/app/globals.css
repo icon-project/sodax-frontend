@@ -560,11 +560,17 @@ textarea[readonly] {
 
 /* Push Intercom chat bubble above the mobile bottom nav bar (96px nav + 8px spacing) */
 @media (max-width: 767px) {
+  :root {
+    --intercom-mobile-bottom-offset: 114px;
+  }
+
+  /* Intercom may re-apply inline styles after boot; keep this rule more specific. */
+  #intercom-container .intercom-launcher-frame,
+  #intercom-container .intercom-lightweight-app-launcher,
+  #intercom-container .intercom-messenger-frame,
   .intercom-launcher-frame,
   .intercom-lightweight-app-launcher,
   .intercom-messenger-frame {
-    bottom: 104px !important;
+    bottom: calc(var(--intercom-mobile-bottom-offset) + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
-/* TODO gosia */
-/* Push Intercom chat bubble above the mobile bottom nav bar (96px nav + 8px spacing) */

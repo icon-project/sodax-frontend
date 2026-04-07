@@ -8,6 +8,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppStoreProvider } from '@/stores/app-store-provider';
 import { GoogleTagManager } from '@next/third-parties/google';
 import { CookieConsentBanner } from '@/components/cookie-consent/cookie-consent-banner';
+import IntercomMobileOffsetFix from '@/components/shared/intercom/intercom-mobile-offset-fix';
 import { headers } from 'next/headers';
 import { cookieToInitialState } from 'wagmi';
 import { rpcConfig } from '../providers/constants';
@@ -147,6 +148,7 @@ gtag('consent','default',{'ad_storage':'denied','ad_user_data':'denied','ad_pers
           </Providers>
         </SidebarProvider>
         <CookieConsentBanner />
+        <IntercomMobileOffsetFix />
       </body>
     </html>
   );
