@@ -5,13 +5,12 @@ import { isNativeToken } from '../../utils';
 
 // Lazy-load @provablehq/sdk to avoid triggering WASM initialization at import time.
 // The WASM module uses top-level await which fails during SSR / Vercel builds.
+// The SDK default export resolves to testnet — we must import the network-specific build.
 type AleoSDK = typeof import('@provablehq/sdk');
-let sdkPromise: Promise<AleoSDK> | null = null;
-function getAleoSDK(): Promise<AleoSDK> {
-  if (!sdkPromise) {
-    sdkPromise = import('@provablehq/sdk');
-  }
-  return sdkPromise;
+
+function loadAleoSDK(network: Network): Promise<AleoSDK> {
+  if (network === Network.TESTNET) return import('@provablehq/sdk/testnet.js') as unknown as Promise<AleoSDK>;
+  return import('@provablehq/sdk/mainnet.js') as unknown as Promise<AleoSDK>;
 }
 
 export class AleoXService extends XService {
@@ -28,7 +27,7 @@ export class AleoXService extends XService {
 
   private async ensureNetworkClient() {
     if (!this._networkClient) {
-      const { AleoNetworkClient } = await getAleoSDK();
+      const { AleoNetworkClient } = await loadAleoSDK(this.network);
       this._networkClient = new AleoNetworkClient(this.rpcUrl);
     }
     return this._networkClient;
@@ -71,7 +70,7 @@ export class AleoXService extends XService {
 
         return 0n;
       }
-      const { BHP256, Plaintext } = await getAleoSDK();
+      const { BHP256, Plaintext } = await loadAleoSDK(this.network);
       const bhp = new BHP256();
       const structLiteral = `{ account: ${address}, token_id: ${xToken.address}field }`;
       const plaintext = Plaintext.fromString(structLiteral);

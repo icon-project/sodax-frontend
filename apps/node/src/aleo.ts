@@ -55,10 +55,9 @@ const aleoWalletProvider = new AleoWalletProvider({
   network: IS_TESTNET === 'true' ? 'testnet' : 'mainnet',
   delegate: {
     apiKey: PROVABLE_API_KEY,
-    consumerId: PROVABLE_CONSUMER_ID
+    consumerId: PROVABLE_CONSUMER_ID,
   },
 });
-
 
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
@@ -252,7 +251,7 @@ async function createIntent(amount: number, inputToken: string, outputToken: str
 
   if (!executionResult.ok) {
     console.error('[createIntent] solver submission failed:', executionResult.error);
-    throw new Error(`createIntent solver submission failed`);
+    throw new Error('createIntent solver submission failed');
   }
 
   console.log('[createIntent] solver response:', executionResult.value);
