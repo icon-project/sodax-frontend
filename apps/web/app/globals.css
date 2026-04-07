@@ -566,3 +566,5 @@ textarea[readonly] {
     bottom: 104px !important;
   }
 }
+/* TODO gosia */
+/* Push Intercom chat bubble above the mobile bottom nav bar (96px nav + 8px spacing) */
