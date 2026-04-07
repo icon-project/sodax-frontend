@@ -291,7 +291,6 @@ export type AleoSpokeChainConfig = BaseSpokeChainConfig<'ALEO'> & {
     connection: string;
     xTokenManager: string;
     rateLimit: string;
-    testToken: string;
     creditsProgram: string;
     tokenRegistry: string;
   };

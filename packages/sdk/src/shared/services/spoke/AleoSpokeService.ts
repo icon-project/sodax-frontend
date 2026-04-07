@@ -177,7 +177,7 @@ export class AleoSpokeService {
     }
 
     if (isNative) {
-      return spokeProvider.transferNative(
+      return spokeProvider.transfer_native_public(
         token,
         recipient,
         amount,

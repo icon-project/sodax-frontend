@@ -1775,7 +1775,6 @@ export const spokeChainConfig = {
       connection: 'connection_v1.aleo',
       xTokenManager: '',
       rateLimit: 'rate_limit_v1.aleo',
-      testToken: '7190692537453907461105790569797103513515746302149567971663963167242253971980',
       creditsProgram: 'credits.aleo',
       tokenRegistry: 'token_registry.aleo',
     },
@@ -2800,19 +2799,12 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
   },
   [ALEO_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[ALEO_MAINNET_CHAIN_ID].nativeToken]: {
-      asset: '0xf7af7a9763d12bddab20ebc74601b161483f8728',
+      asset: '0xEd7c473183e66c933e355da282481D464Dc11fc5',
       decimal: 6,
       symbol: 'ALEO',
       name: 'Aleo',
       vault: '0x0000000000000000000000000000000000000000',
-    },
-    [spokeChainConfig[ALEO_MAINNET_CHAIN_ID].addresses.testToken]: {
-      asset: '0xDb38c51BcB3066cd8279f10723A0dE948f21285d',
-      decimal: 6,
-      symbol: 'testToken',
-      name: 'testToken',
-      vault: '0x0000000000000000000000000000000000000000',
-    },
+    }
   },
   [STACKS_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[STACKS_MAINNET_CHAIN_ID].nativeToken]: {

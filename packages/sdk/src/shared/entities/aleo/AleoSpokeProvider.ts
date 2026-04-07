@@ -214,7 +214,7 @@ export class AleoBaseSpokeProvider {
    * Both have identical params — only the function name differs.
    */
   private async executeTransfer<S extends AleoSpokeProviderType, R extends boolean = false>(
-    functionName: 'transfer' | 'transferNative',
+    functionName: 'transfer_token_public' | 'transfer_native_public',
     token: bigint,
     dstAddress: Hex,
     amount: bigint,
@@ -273,7 +273,7 @@ export class AleoBaseSpokeProvider {
     raw?: R,
   ): Promise<TxReturnType<S, R>> {
     return this.executeTransfer(
-      'transfer',
+      'transfer_token_public',
       token,
       dstAddress,
       amount,
@@ -291,7 +291,7 @@ export class AleoBaseSpokeProvider {
    * Transfer native credits cross-chain via asset_manager.aleo/transfer_native.
    * Uses: credits.aleo/transfer_public for the token transfer.
    */
-  async transferNative<S extends AleoSpokeProviderType, R extends boolean = false>(
+  async transfer_native_public<S extends AleoSpokeProviderType, R extends boolean = false>(
     token: bigint,
     dstAddress: Hex,
     amount: bigint,
@@ -304,7 +304,7 @@ export class AleoBaseSpokeProvider {
     raw?: R,
   ): Promise<TxReturnType<S, R>> {
     return this.executeTransfer(
-      'transferNative',
+      'transfer_native_public',
       token,
       dstAddress,
       amount,

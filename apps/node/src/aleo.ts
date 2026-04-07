@@ -52,13 +52,13 @@ const aleoWalletProvider = new AleoWalletProvider({
   type: 'privateKey',
   rpcUrl: ALEO_RPC_URL,
   privateKey: ALEO_PRIVATE_KEY,
-  network: IS_TESTNET ? 'testnet' : 'mainnet',
+  network: IS_TESTNET === 'true' ? 'testnet' : 'mainnet',
   delegate: {
     apiKey: PROVABLE_API_KEY,
-    consumerId: PROVABLE_CONSUMER_ID,
-    url: PROVABLE_DELEGATE_URL,
+    consumerId: PROVABLE_CONSUMER_ID
   },
 });
+
 
 const hubConfig = {
   hubRpcUrl: HUB_RPC_URL,
@@ -348,6 +348,7 @@ async function estimateGas(token: string, amount: bigint) {
 
 async function main() {
   const functionName = process.argv[2];
+  console.log('AleoWalletProvider initialized with wallet address:', await aleoWalletProvider);
 
   if (functionName === 'deposit') {
     const token = process.argv[3];
