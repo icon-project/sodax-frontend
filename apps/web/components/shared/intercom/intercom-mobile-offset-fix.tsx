@@ -7,9 +7,25 @@
 import { useEffect } from 'react';
 
 const MOBILE_MAX_WIDTH_PX = 767;
+const MOBILE_NAV_ID = 'sodax-mobile-bottom-nav';
+const DEFAULT_GAP_PX = 8;
 
 function getBottomValue(): string {
   return 'calc(var(--intercom-mobile-bottom-offset) + env(safe-area-inset-bottom, 0px))';
+}
+
+function setIntercomBottomOffsetFromNav(): void {
+  const nav = document.getElementById(MOBILE_NAV_ID);
+  if (!nav) {
+    return;
+  }
+
+  const navHeight = Math.ceil(nav.getBoundingClientRect().height);
+  const computed = window.getComputedStyle(document.documentElement);
+  const gap = Number.parseInt(computed.getPropertyValue('--intercom-mobile-gap-px').trim(), 10);
+  const gapPx = Number.isFinite(gap) ? gap : DEFAULT_GAP_PX;
+
+  document.documentElement.style.setProperty('--intercom-mobile-bottom-offset', `${navHeight + gapPx}px`);
 }
 
 function applyIntercomBottomOffset(): void {
@@ -48,7 +64,26 @@ export default function IntercomMobileOffsetFix(): React.ReactElement | null {
       return;
     }
 
+    setIntercomBottomOffsetFromNav();
     applyIntercomBottomOffset();
+
+    const nav = document.getElementById(MOBILE_NAV_ID);
+    const resizeObserver = nav
+      ? new ResizeObserver(() => {
+          setIntercomBottomOffsetFromNav();
+          applyIntercomBottomOffset();
+        })
+      : null;
+
+    if (nav && resizeObserver) {
+      resizeObserver.observe(nav);
+    }
+
+    const onResize = (): void => {
+      setIntercomBottomOffsetFromNav();
+      applyIntercomBottomOffset();
+    };
+    window.addEventListener('resize', onResize);
 
     const containerObserver = new MutationObserver(() => {
       applyIntercomBottomOffset();
@@ -76,6 +111,8 @@ export default function IntercomMobileOffsetFix(): React.ReactElement | null {
     rootObserver.observe(document.documentElement, { childList: true, subtree: true });
 
     return () => {
+      window.removeEventListener('resize', onResize);
+      resizeObserver?.disconnect();
       rootObserver.disconnect();
       containerObserver.disconnect();
     };
