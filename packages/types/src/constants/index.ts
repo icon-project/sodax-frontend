@@ -844,7 +844,7 @@ export const spokeChainConfig = {
     chain: baseChainInfo[BSC_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'EVM'>,
     addresses: {
       assetManager: '0x348BE44F63A458be9C1b13D6fD8e99048F297Bc3',
-      connection: '0x4555aC13D7338D9E671584C1D118c06B2a3C88eD',
+      connection: '0xA143488cDc5B74B366231E6A4d5a55A2D9Dc8484',
     },
     nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0x8428FedC020737a5A2291F46cB1B80613eD71638',

@@ -7,6 +7,7 @@ import { type StakeStore, createStakeStore, STAKE_MODE } from './stake-store';
 import { useSpokeProvider, useStakingInfo, useStakeRatio, useConvertedAssets } from '@sodax/dapp-kit';
 import { useWalletProvider } from '@sodax/wallet-sdk-react';
 import { parseUnits } from 'viem';
+import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
 
 export type StakeStoreApi = ReturnType<typeof createStakeStore>;
 
@@ -44,6 +45,13 @@ export const useStakeState = () => {
   const unstakeMethod = useStakeStore(state => state.unstakeMethod);
   const currentUnstakeStep = useStakeStore(state => state.currentUnstakeStep);
   const isNetworkPickerOpened = useStakeStore(state => state.isNetworkPickerOpened);
+  // Fetch protocol-level total staked from a canonical chain so it is available
+  // before the user selects a token/network.
+  const totalStakedWalletProvider = useWalletProvider(SONIC_MAINNET_CHAIN_ID);
+  const totalStakedSpokeProvider = useSpokeProvider(SONIC_MAINNET_CHAIN_ID, totalStakedWalletProvider);
+  const { data: totalStakingInfo } = useStakingInfo(totalStakedSpokeProvider);
+
+  // User-specific staking info should only load after a network/token is selected.
   const walletProvider = useWalletProvider(selectedToken?.xChainId);
   const spokeProvider = useSpokeProvider(selectedToken?.xChainId, walletProvider);
   const { data: stakingInfo, isLoading: isLoadingStakingInfo } = useStakingInfo(spokeProvider);
@@ -85,6 +93,7 @@ export const useStakeState = () => {
       userXSodaValue: stakingInfo.userXSodaValue,
     };
   }, [stakingInfo, isLoadingStakingInfo]);
+  const totalStaked = totalStakingInfo?.totalStaked ?? 0n;
 
   const stakeValueInSoda: bigint = useMemo(() => {
     if (stakeMode === STAKE_MODE.STAKING) {
@@ -144,6 +153,7 @@ export const useStakeState = () => {
     userXSodaValue,
     stakingInfo,
     isLoadingStakingInfo,
+    totalStaked,
     totalUserXSodaBalance,
     totalUserXSodaValue,
     isNetworkPickerOpened,
