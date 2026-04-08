@@ -63,7 +63,7 @@ function parseVolumeToBigInt(value: string | number | undefined): bigint {
     return 0n;
   }
 
-  const decimalParts = basePart.split('.');
+  const decimalParts = basePart?.split('.') ?? [];
   const whole = decimalParts[0] ?? '0';
   const fraction = decimalParts[1] ?? '';
   const digits = `${whole}${fraction}`.replace(/^0+/, '') || '0';
