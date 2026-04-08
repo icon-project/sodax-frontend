@@ -11,7 +11,6 @@ import { InputGroupInput } from '@/components/ui/input-group';
 import { useEvmSwitchChain, useXAccount } from '@sodax/wallet-sdk-react';
 import type { SpokeChainId } from '@sodax/types';
 import type { XToken } from '@sodax/types';
-import { chainIdToChainName } from '@/providers/constants';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import { useAllChainXSodaBalances } from '@/hooks/useAllChainXSodaBalances';
 import { InputGroupButton } from '@/components/ui/input-group';
@@ -25,8 +24,6 @@ import { SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
 import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
 import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
 import {
-  createWithdrawParamsProps,
-  useDexWithdraw,
   usePoolBalances,
   useRequestTrustline,
   useSpokeProvider,
@@ -36,7 +33,7 @@ import { useWalletProvider } from '@sodax/wallet-sdk-react';
 import type { SpokeProvider } from '@sodax/sdk';
 import { Loader2 } from 'lucide-react';
 import { ErrorDialog } from '@/components/shared/error-dialog';
-import { SwitchChainDialog } from '@/components/shared/switch-chain-dialog';
+import { RecoveryDialog } from './recovery-dialog';
 
 type LiquidityInputsProps = {
   selectedChainId: SpokeChainId | null;
@@ -62,7 +59,6 @@ export function LiquidityInputs({
   const router = useRouter();
   const [isSupplyDialogOpen, setIsSupplyDialogOpen] = useState<boolean>(false);
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState<boolean>(false);
-  const [isSwitchChainDialogOpen, setIsSwitchChainDialogOpen] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
   const { address } = useXAccount(selectedChainId as SpokeChainId);
   const walletProvider = useWalletProvider(selectedChainId as SpokeChainId);
@@ -118,13 +114,7 @@ export function LiquidityInputs({
   const hasValidXSodaInput = xSodaAmount.trim().length > 0 && xSodaValue > 0n && xSodaValue <= selectedXSodaBalance;
   const isOverMax = sodaValue > selectedSodaBalance || xSodaValue > selectedXSodaBalance;
 
-  const waLocSodaDecimals = poolData?.token0.decimals ?? 18;
   const waLocSodaBalance = balances?.token0Balance ?? 0n;
-  const waLocSodaMinBalance = parseUnits('1', waLocSodaDecimals);
-  const waLocSodaReserveBalance = parseUnits('0.001', waLocSodaDecimals);
-  const hasWithdrawableWaLocSoda = isWalletConnected && waLocSodaBalance > waLocSodaMinBalance;
-  const waLocSodaWithdrawAmount =
-    waLocSodaBalance > waLocSodaReserveBalance ? waLocSodaBalance - waLocSodaReserveBalance : 0n;
 
   const hasPoolContext = poolData !== null && poolSpokeAssets !== null;
   const hasSelectedNetwork = selectedChainId !== null;
@@ -152,7 +142,6 @@ export function LiquidityInputs({
     isRequested: hasTrustline,
     error: trustlineError,
   } = useRequestTrustline(selectedSodaToken?.address);
-  const withdrawMutation = useDexWithdraw();
 
   const handleBuySoda = (): void => {
     router.push(SWAP_ROUTE);
@@ -162,35 +151,6 @@ export function LiquidityInputs({
   };
   const handleSwitchChainClick = (): void => {
     void handleSwitchChain();
-  };
-  const handleWithdrawWaLocSoda = async (): Promise<void> => {
-    if (selectedChainId !== null && isWrongChain) {
-      setIsSwitchChainDialogOpen(true);
-      return;
-    }
-    if (!spokeProvider || !poolData || !poolSpokeAssets) {
-      setErrorMessage('Withdraw is unavailable. Please ensure wallet and pool data are loaded.');
-      setIsErrorDialogOpen(true);
-      return;
-    }
-    if (waLocSodaWithdrawAmount <= 0n) {
-      return;
-    }
-    try {
-      await withdrawMutation.mutateAsync({
-        params: createWithdrawParamsProps({
-          tokenIndex: 0,
-          amount: formatUnits(waLocSodaWithdrawAmount, waLocSodaDecimals),
-          poolData,
-          poolSpokeAssets,
-        }),
-        spokeProvider,
-      });
-    } catch (withdrawError) {
-      const message = withdrawError instanceof Error ? withdrawError.message : 'Failed to withdraw waLocSODA.';
-      setErrorMessage(message);
-      setIsErrorDialogOpen(true);
-    }
   };
   const handleOpenSupplyDialog = (): void => {
     if (!canContinue) {
@@ -388,16 +348,6 @@ export function LiquidityInputs({
               {isRequestingTrustline ? 'Adding Stellar Trustline' : 'Add Stellar Trustline'}
               {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
             </Button>
-          ) : hasWithdrawableWaLocSoda ? (
-            <Button
-              variant="cherry"
-              onClick={() => void handleWithdrawWaLocSoda()}
-              className="px-6"
-              disabled={withdrawMutation.isPending}
-            >
-              {withdrawMutation.isPending ? 'Recovering SODA' : 'Recover locked SODA'}
-              {withdrawMutation.isPending && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
-            </Button>
           ) : !hasNoSodaBalance && hasNoXSodaBalance ? (
             <Button variant="cherry" onClick={handleGetXSoda} className="px-6">
               Get xSODA
@@ -435,19 +385,21 @@ export function LiquidityInputs({
         poolData={poolData}
         poolSpokeAssets={poolSpokeAssets}
       />
+      <RecoveryDialog
+        selectedChainId={selectedChainId}
+        isWalletConnected={isWalletConnected}
+        isWrongChain={isWrongChain}
+        onSwitchChain={handleSwitchChainClick}
+        spokeProvider={spokeProvider ?? null}
+        poolData={poolData}
+        poolSpokeAssets={poolSpokeAssets}
+        waLocSodaBalance={waLocSodaBalance}
+      />
       <ErrorDialog
         open={isErrorDialogOpen}
         onOpenChange={setIsErrorDialogOpen}
         errorMessage={errorMessage}
         title="Your wallet needs a small reserve"
-      />
-      <SwitchChainDialog
-        open={isSwitchChainDialogOpen}
-        onOpenChange={setIsSwitchChainDialogOpen}
-        chainName={selectedChainId ? chainIdToChainName(selectedChainId) : 'the selected network'}
-        onSwitchChain={handleSwitchChainClick}
-        description="Please switch to the selected network to withdraw waLocSODA."
-        titleAction="withdraw waLocSODA"
       />
     </>
   );
