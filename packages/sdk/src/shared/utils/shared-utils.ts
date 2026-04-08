@@ -144,6 +144,17 @@ export function BigIntToHex(value: bigint): Hex {
   return `0x${value.toString(16)}`;
 }
 
+/**
+ * Encodes an address for a given spoke chain.
+ *
+ * ⚠️ For the `'stacks'` chain: this function is synchronous but depends on an
+ * async preload of `@stacks/transactions` (lazy-loaded to avoid Next.js 16
+ * Turbopack scope-hoisting cycle, see PR #1074). The preload kicks off at SDK
+ * module init; if you call this in the same tick as `import` (e.g. SSR
+ * prerender) the preload microtask may not have resolved yet and the call will
+ * throw. Await `loadStacksTransactions()` from `stacks-utils.js` first if you
+ * cannot tolerate that race window.
+ */
 export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex {
   switch (spokeChainId) {
     case '0xa86a.avax':

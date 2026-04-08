@@ -29,8 +29,8 @@ export function getStacksTransactions(): typeof import('@stacks/transactions') {
 // can hit the throw above. Unreachable from real consumers (only SSR prerender; see PR #1074).
 // Proper fix if it ever bites: async encodeAddressAsync that awaits loadStacksTransactions().
 // Do NOT use top-level await — breaks CJS dist.
-void loadStacksTransactions().catch(() => {
-  /* swallow — error surfaces at use site */
+void loadStacksTransactions().catch(err => {
+  console.warn('[sodax/sdk] @stacks/transactions preload failed:', err);
 });
 
 export async function waitForStacksTransaction(txid: string, rpc_url: string): Promise<boolean> {
