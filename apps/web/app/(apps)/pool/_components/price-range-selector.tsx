@@ -17,15 +17,15 @@ export function PriceRangeSelector({
   onMaxPriceChange,
   step = 0.01,
 }: PriceRangeSelectorProps): React.JSX.Element {
-  const [minInput, setMinInput] = useState<string>(minPrice.toFixed(2));
-  const [maxInput, setMaxInput] = useState<string>(maxPrice.toFixed(2));
+  const [minInput, setMinInput] = useState<string>(minPrice.toFixed(4));
+  const [maxInput, setMaxInput] = useState<string>(maxPrice.toFixed(4));
 
   useEffect((): void => {
-    setMinInput(minPrice.toFixed(2));
+    setMinInput(minPrice.toFixed(4));
   }, [minPrice]);
 
   useEffect((): void => {
-    setMaxInput(maxPrice.toFixed(2));
+    setMaxInput(maxPrice.toFixed(4));
   }, [maxPrice]);
 
   const parseAndRoundInput = (value: string): number | null => {
@@ -38,33 +38,33 @@ export function PriceRangeSelector({
       return null;
     }
 
-    return +parsedValue.toFixed(2);
+    return +parsedValue.toFixed(4);
   };
 
   const commitMinInput = (): void => {
     const parsedValue = parseAndRoundInput(minInput);
     if (parsedValue === null) {
-      setMinInput(minPrice.toFixed(2));
+      setMinInput(minPrice.toFixed(4));
       return;
     }
 
     const maxAllowedMin = Math.max(0, +(maxPrice - step).toFixed(2));
     const nextMinPrice = Math.min(Math.max(0, parsedValue), maxAllowedMin);
     onMinPriceChange(nextMinPrice);
-    setMinInput(nextMinPrice.toFixed(2));
+    setMinInput(nextMinPrice.toFixed(4));
   };
 
   const commitMaxInput = (): void => {
     const parsedValue = parseAndRoundInput(maxInput);
     if (parsedValue === null) {
-      setMaxInput(maxPrice.toFixed(2));
+      setMaxInput(maxPrice.toFixed(4));
       return;
     }
 
     const minAllowedMax = +(minPrice + step).toFixed(2);
     const nextMaxPrice = Math.max(parsedValue, minAllowedMax);
     onMaxPriceChange(nextMaxPrice);
-    setMaxInput(nextMaxPrice.toFixed(2));
+    setMaxInput(nextMaxPrice.toFixed(4));
   };
 
   const handleMinInputChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
@@ -89,26 +89,26 @@ export function PriceRangeSelector({
   };
 
   const handleDecreaseMin = (): void => {
-    const newPrice = Math.max(0, +(minPrice - step).toFixed(2));
+    const newPrice = Math.max(0, +(minPrice - step).toFixed(4));
     onMinPriceChange(newPrice);
   };
 
   const handleIncreaseMin = (): void => {
-    const newPrice = +(minPrice + step).toFixed(2);
+    const newPrice = +(minPrice + step).toFixed(4);
     if (newPrice < maxPrice) {
       onMinPriceChange(newPrice);
     }
   };
 
   const handleDecreaseMax = (): void => {
-    const newPrice = +(maxPrice - step).toFixed(2);
+    const newPrice = +(maxPrice - step).toFixed(4);
     if (newPrice > minPrice) {
       onMaxPriceChange(newPrice);
     }
   };
 
   const handleIncreaseMax = (): void => {
-    const newPrice = +(maxPrice + step).toFixed(2);
+    const newPrice = +(maxPrice + step).toFixed(4);
     onMaxPriceChange(newPrice);
   };
 
@@ -135,7 +135,7 @@ export function PriceRangeSelector({
                 onChange={handleMinInputChange}
                 onBlur={commitMinInput}
                 onKeyDown={(event): void => handleInputKeyDown(event, commitMinInput)}
-                className="w-10 h-7 broder-none rounded justify-start text-espresso text-(length:--body-comfortable) font-['InterBold'] leading-5 tabular-nums bg-transparent focus-visible:outline-none focus-visible:ring-none focus-visible:ring-none"
+                className="w-12 h-7 broder-none rounded justify-start text-espresso text-(length:--body-comfortable) font-['InterBold'] leading-5 tabular-nums bg-transparent focus-visible:outline-none focus-visible:ring-none focus-visible:ring-none"
               />
               <button
                 type="button"
@@ -173,7 +173,7 @@ export function PriceRangeSelector({
                 onChange={handleMaxInputChange}
                 onBlur={commitMaxInput}
                 onKeyDown={(event): void => handleInputKeyDown(event, commitMaxInput)}
-                className="w-10 h-7 border-none rounded justify-start text-espresso text-(length:--body-comfortable) font-['InterBold'] leading-5 tabular-nums bg-transparent focus-visible:outline-none focus-visible:ring-none focus-visible:ring-none"
+                className="w-12 h-7 border-none rounded justify-start text-espresso text-(length:--body-comfortable) font-['InterBold'] leading-5 tabular-nums bg-transparent focus-visible:outline-none focus-visible:ring-none focus-visible:ring-none"
               />
               <button
                 type="button"
