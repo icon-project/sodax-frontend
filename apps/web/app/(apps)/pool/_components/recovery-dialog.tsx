@@ -26,6 +26,8 @@ type RecoveryDialogProps = {
   poolData: PoolData | null;
   poolSpokeAssets: PoolSpokeAssets | null;
   waLocSodaBalance: bigint;
+  /** When true, suppresses auto-opening (e.g. while the supply dialog is active). */
+  suppressAutoOpen?: boolean;
 };
 
 export function RecoveryDialog({
@@ -37,6 +39,7 @@ export function RecoveryDialog({
   poolData,
   poolSpokeAssets,
   waLocSodaBalance,
+  suppressAutoOpen = false,
 }: RecoveryDialogProps): React.JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
@@ -125,10 +128,10 @@ export function RecoveryDialog({
   //   4. Without the guard, this effect would see "stranded SODA + modal closed" → reopen!
   //   5. With the guard, we skip the reopen. Once balance refetches, guard resets.
   useEffect((): void => {
-    if (hasWithdrawableWaLocSoda && !hasCompletedRecovery) {
+    if (hasWithdrawableWaLocSoda && !hasCompletedRecovery && !suppressAutoOpen) {
       setIsOpen(true);
     }
-  }, [hasWithdrawableWaLocSoda, hasCompletedRecovery]);
+  }, [hasWithdrawableWaLocSoda, hasCompletedRecovery, suppressAutoOpen]);
 
   return (
     <>

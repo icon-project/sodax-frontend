@@ -394,6 +394,7 @@ export function LiquidityInputs({
         poolData={poolData}
         poolSpokeAssets={poolSpokeAssets}
         waLocSodaBalance={waLocSodaBalance}
+        suppressAutoOpen={isSupplyDialogOpen}
       />
       <ErrorDialog
         open={isErrorDialogOpen}

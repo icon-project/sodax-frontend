@@ -338,6 +338,9 @@ export default function SupplyDialogFooter({
         await queryClient.invalidateQueries({
           queryKey: ['poolSavedPositions'],
         });
+        await queryClient.invalidateQueries({
+          queryKey: ['dex', 'poolBalances'],
+        });
         await queryClient.refetchQueries({
           queryKey: ['poolSavedPositions'],
           type: 'active',
