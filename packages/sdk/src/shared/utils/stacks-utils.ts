@@ -25,6 +25,10 @@ export function getStacksTransactions(): typeof import('@stacks/transactions') {
 // stacks chain id) find the cache populated by the time they run. The Promise resolves in
 // background; module init is non-blocking. If the load is genuinely needed before it completes,
 // the throw above gives a clear error message.
+// Known microtask race: sync encodeAddress('stacks', …) called in same tick as SDK import
+// can hit the throw above. Unreachable from real consumers (only SSR prerender; see PR #1074).
+// Proper fix if it ever bites: async encodeAddressAsync that awaits loadStacksTransactions().
+// Do NOT use top-level await — breaks CJS dist.
 void loadStacksTransactions().catch(() => {
   /* swallow — error surfaces at use site */
 });
