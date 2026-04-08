@@ -456,8 +456,8 @@ export const SodaTokensAsHubAssets: Record<string, HubAsset> = Object.values(Sod
 export const hubChainConfig = {
   chain: baseChainInfo[SONIC_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'EVM'>,
   addresses: {
-    assetManager: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
-    hubWallet: '0xA0ed3047D358648F2C0583B415CffCA571FDB544',
+    assetManager: '0x1B06762a8B9286f6A1B290579834e555a5F60557',
+    hubWallet: '0x103328BFB6321AD198D5dc4075a171f01c0472E5',
     xTokenManager: '0x5bD2843de9D6b0e6A05d0FB742072274EA3C6CA3',
     icxMigration: '0x8294DE9fc60F5ABCc19245E5857071d7C42B9875',
     balnSwap: '0x610a90B61b89a98b954d5750E94834Aa45d08d10',
@@ -1186,7 +1186,7 @@ export const spokeChainConfig = {
   } as const satisfies InjectiveSpokeChainConfig,
   [BITCOIN_MAINNET_CHAIN_ID]: {
     addresses: {
-      assetManager: 'bc1pxguu2r4p9jcxp3gj7dh4r4jd9qzccwpyap3nj5nlapy28s76lhrqw522fz',
+      assetManager: 'tb1pfqugvtvt28a27jrhk4s27ky5n4vwf7nr50ar67xfjs87k80f3qjq0rv725',
     },
     chain: baseChainInfo[BITCOIN_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'BITCOIN'>,
     bnUSD: 'no',
@@ -1218,7 +1218,7 @@ export const spokeChainConfig = {
     radfiApiKey: '',
     radfiUmsUrl: 'https://ums.radfi.co/api',
     network: 'MAINNET',
-    rpcUrl: 'https://mempool.space/api',
+    rpcUrl: 'https://mempool.space/signet/api',
   } as const satisfies BitcoinSpokeChainConfig,
   [STELLAR_MAINNET_CHAIN_ID]: {
     addresses: {
@@ -2839,11 +2839,11 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
   },
   [BITCOIN_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BTC.address]: {
-      asset: '0xeb0393893b5bf98a50073d6740738b08e575058b',
+      asset: '0x8862C633d77f634EC9F659010EB83165f6274F19',
       decimal: 8,
       symbol: 'BTC',
       name: 'Bitcoin',
-      vault: '0x7A1A5555842Ad2D0eD274d09b5c4406a95799D5d',
+      vault: '0x6486795C12e731F38C58a559f059c4eb01D31EC9',
     },
     [spokeChainConfig[BITCOIN_MAINNET_CHAIN_ID].supportedTokens.BUSD.address]: {
       asset: '0xdb41c7d09406026d4582bc2fc6d6319c323fe1bb',

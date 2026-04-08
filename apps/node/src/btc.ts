@@ -45,7 +45,7 @@ const config: BitcoinWalletConfig = {
   type: 'PRIVATE_KEY',
   network: IS_TESTNET ? 'TESTNET' : 'MAINNET',
   privateKey: privateKey as Hex,
-  addressType: 'P2WPKH',
+  addressType: 'P2TR',
 };
 
 const radfiConfig: RadfiConfig = {
@@ -180,7 +180,7 @@ async function depositTo(token: Address, amount: bigint, recipient: Address) {
 }
 
 async function getRadfiAccessToken(walletAddress: string) {
-  const message = "Login to Radfi via Sodax";
+  const message = Date.now().toString();
   const bip322Signature = await spokeProvider.walletProvider.signBip322Message(message);
 
   if (!spokeProvider.walletProvider.getPublicKey) {

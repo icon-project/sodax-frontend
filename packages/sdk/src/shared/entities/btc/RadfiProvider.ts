@@ -82,6 +82,8 @@ export class RadfiProvider {
       body: JSON.stringify(params),
     });
 
+    console.log('Radfi auth response status:', res);
+
     if (!res.ok) {
       const err = await res.json();
       throw new Error(err.message || 'Radfi authentication failed');
