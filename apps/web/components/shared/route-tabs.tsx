@@ -27,6 +27,7 @@ export interface TabConfig {
   enabled: boolean;
   href?: string;
   showIcon?: boolean;
+  hidden?: boolean;
 }
 
 export const tabConfigs: TabConfig[] = [
@@ -37,6 +38,7 @@ export const tabConfigs: TabConfig[] = [
     content: 'a quick swap',
     enabled: true,
     href: SWAP_ROUTE,
+    hidden: false,
   },
   {
     value: 'save',
@@ -45,6 +47,7 @@ export const tabConfigs: TabConfig[] = [
     content: 'a quick save',
     enabled: process.env.NEXT_PUBLIC_APP_ENV !== 'production',
     href: SAVE_ROUTE,
+    hidden: true,
   },
   {
     value: 'loans',
@@ -53,6 +56,7 @@ export const tabConfigs: TabConfig[] = [
     content: 'a quick borrow',
     enabled: false,
     href: BORROW_ROUTE,
+    hidden: true,
   },
   {
     value: 'migrate',
@@ -61,6 +65,7 @@ export const tabConfigs: TabConfig[] = [
     content: 'a quick migrate',
     enabled: true,
     href: MIGRATE_ROUTE,
+    hidden: false,
   },
   {
     value: 'stake',
@@ -69,6 +74,7 @@ export const tabConfigs: TabConfig[] = [
     content: 'a quick stake',
     enabled: true,
     href: STAKE_ROUTE,
+    hidden: false,
   },
 
   {
@@ -78,6 +84,7 @@ export const tabConfigs: TabConfig[] = [
     content: 'a quick pool',
     enabled: true,
     href: POOL_ROUTE,
+    hidden: false,
   },
 ];
 
@@ -101,7 +108,7 @@ interface RouteTabsProps {
 export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.Element {
   const pathname = usePathname();
   const isPartner = isPartnerRoute(pathname);
-  const usedTabs = isPartner ? partnerTabConfigs : tabConfigs;
+  const usedTabs = (isPartner ? partnerTabConfigs : tabConfigs).filter(t => !t.hidden);
 
   const mobileTabOrder = ['swap', 'migrate', 'stake', 'pool'] satisfies ReadonlyArray<TabIconType>;
 
