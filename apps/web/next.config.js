@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
-  transpilePackages: ['@injectivelabs/wallet-ledger'],
   eslint: {
     ignoreDuringBuilds: true,
   },
