@@ -1,0 +1,27 @@
+{
+  "name": "example-next-js-16",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3016",
+    "build": "next build",
+    "verify": "next build && node verify-build.mjs",
+    "start": "next start --port 3016",
+    "clean": "rm -rf .next node_modules .turbo"
+  },
+  "dependencies": {
+    "@sodax/sdk": "workspace:*",
+    "@sodax/types": "workspace:*",
+    "@stacks/transactions": "7.3.1",
+    "next": "^16.0.0",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "typescript": "catalog:"
+  }
+}
