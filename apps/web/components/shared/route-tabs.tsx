@@ -215,7 +215,7 @@ export function RouteTabs({ tabs, hrefPrefix }: RouteTabsProps = {}): React.JSX.
       </div>
 
       {/* Mobile bottom tab bar (explicit order; can differ from desktop). */}
-      <div className="md:hidden fixed -bottom-24 left-0 right-0 z-50 h-24">
+      <div id="sodax-mobile-bottom-nav" className="md:hidden fixed -bottom-24 left-0 right-0 z-50 h-24">
         <div className="relative">
           <div ref={mobileTabsContainerRef} className="w-full px-4 py-4 bg-cream-white h-24 flex">
             <div className="grid grid-cols-4 gap-4 bg-transparent py-0 w-full">
