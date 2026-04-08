@@ -27,7 +27,7 @@ import { CircleEllipsisIcon, PlusCircleIcon, MinusCircleIcon, XIcon } from 'luci
 import { AddLiquidityTabContent } from '@/app/(apps)/pool/_components/manage-dialog/add-liquidity-tab-content';
 import { Button } from '@/components/ui/button';
 import { ClaimTabContent } from '@/app/(apps)/pool/_components/manage-dialog/claim-tab-content';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WithdrawTabContent } from '@/app/(apps)/pool/_components/manage-dialog/withdraw-tab-content';
 import { formatUnits, parseUnits } from 'viem';
@@ -605,6 +605,7 @@ export function ManagePositionDialog({
         enableMotion={true}
         shake={isShaking}
       >
+        <DialogTitle></DialogTitle>
         <Tabs value={activeTab} onValueChange={value => setActiveTab(value as 'claim' | 'add' | 'withdraw')}>
           <div className="flex justify-between items-center">
             <TabsList className="flex bg-transparent gap-4 p-0 h-4">

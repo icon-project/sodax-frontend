@@ -32,6 +32,7 @@ export function useDexPositions({
   const queryResult = useQuery<SavedDexPosition[], Error>({
     queryKey: ['poolSavedPositions', hubWalletAddress, poolId, selectedNetworkChainId],
     enabled: Boolean(hubWalletAddress),
+    gcTime: 0,
     queryFn: async (): Promise<SavedDexPosition[]> => {
       if (!hubWalletAddress) {
         return [];
