@@ -3,6 +3,7 @@ import { formatUnits } from 'viem';
 import { hubAssets, type XToken } from '@sodax/types';
 import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { formatCompactNumber } from '@/lib/utils';
+import { AAVE_INDEX_PRECISION } from '@/components/mm/constants';
 
 /**
  * React hook that computes key financial metrics for a money market reserve.
@@ -133,7 +134,7 @@ export function useReserveMetrics({
         // We apply the current liquidity index to get the real,interest-adjusted amount the user has supplied.
         const liquidityIndex = BigInt(formattedReserve.liquidityIndex);
         const scaledBalance = BigInt(userReserve.scaledATokenBalance);
-        const balanceRaw = (scaledBalance * liquidityIndex) / BigInt('1000000000000000000000000000');
+        const balanceRaw = (scaledBalance * liquidityIndex) / AAVE_INDEX_PRECISION;
         const suppliedTokens = Number(formatUnits(balanceRaw, decimals));
         const suppliedUsd = suppliedTokens * priceInUsd;
         if (Number.isFinite(suppliedUsd) && suppliedUsd > 0) {

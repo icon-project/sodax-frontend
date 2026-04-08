@@ -3,6 +3,7 @@
 
 import type { QueryClient } from '@tanstack/react-query';
 import type { ChainId } from '@sodax/types';
+import { POST_TX_REFETCH_DELAY, POST_TX_REFETCH_DELAY_LONG } from '@/components/mm/constants';
 
 export type InvalidateMmQueriesParams = {
   mmChainIds: readonly ChainId[];
@@ -63,6 +64,6 @@ export function invalidateMmQueries(
   };
 
   refetchAll();
-  setTimeout(refetchAll, 2_000);
-  setTimeout(refetchAll, 5_000);
+  setTimeout(refetchAll, POST_TX_REFETCH_DELAY);
+  setTimeout(refetchAll, POST_TX_REFETCH_DELAY_LONG);
 }

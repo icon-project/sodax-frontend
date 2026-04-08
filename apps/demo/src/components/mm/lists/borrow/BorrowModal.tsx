@@ -29,7 +29,7 @@ import {
 } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
-import { MIN_BORROW_USD, MAX_BORROW_SAFETY_MARGIN, ZERO_ADDRESS } from '../../constants';
+import { MIN_BORROW_USD, MAX_BORROW_SAFETY_MARGIN, ZERO_ADDRESS, AMOUNT_DISPLAY_DECIMALS } from '../../constants';
 import type { FormatUserSummaryResponse } from '@sodax/sdk';
 import { isUserReserveDataArray, isValidEvmAddress } from '../../typeGuards';
 import { isAddress } from 'viem';
@@ -183,7 +183,7 @@ export function BorrowModal({
         availableLiquidity = truncateToDecimals(Number(formatUnits(
           BigInt(destinationMetrics.formattedReserve.availableLiquidity),
           aToken.decimals,
-        )), 6);
+        )), AMOUNT_DISPLAY_DECIMALS);
       } else {
         availableLiquidity = truncateToDecimals(Math.min(
           Number.parseFloat(
@@ -191,7 +191,7 @@ export function BorrowModal({
           ),
           Number.parseFloat(destinationMetrics.formattedReserve.borrowCap) -
             Number.parseFloat(destinationMetrics.formattedReserve.totalVariableDebt),
-        ), 6);
+        ), AMOUNT_DISPLAY_DECIMALS);
       }
 
       if (availableLiquidity && Number(availableLiquidity) > 0) {
@@ -203,7 +203,7 @@ export function BorrowModal({
 
     // Apply safety margin and format
     const afterSafetyMargin = calculatedMaxBorrow * MAX_BORROW_SAFETY_MARGIN;
-    const finalMaxBorrow = truncateToDecimals(afterSafetyMargin, 6);
+    const finalMaxBorrow = truncateToDecimals(afterSafetyMargin, AMOUNT_DISPLAY_DECIMALS);
 
     return {
       maxBorrow: finalMaxBorrow !== '0' ? finalMaxBorrow : '0',
@@ -216,7 +216,7 @@ export function BorrowModal({
   const minBorrowAmount = useMemo(() => {
     if (!destinationToken || priceUSD <= 0) return '0';
     const minTokens = MIN_BORROW_USD / priceUSD;
-    return truncateToDecimals(minTokens, 6);
+    return truncateToDecimals(minTokens, AMOUNT_DISPLAY_DECIMALS);
   }, [destinationToken, priceUSD]);
 
   const sourceWalletProvider = useWalletProvider(sourceChainId);

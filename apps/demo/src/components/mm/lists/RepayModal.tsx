@@ -26,6 +26,7 @@ import {
   getSafeMaxAmountForInput,
   truncateToDecimals,
 } from '@/lib/utils';
+import { AMOUNT_DISPLAY_DECIMALS } from '../constants';
 import { logger } from '@/lib/logger';
 import { useXBalances, useXAccount } from '@sodax/wallet-sdk-react';
 import { getChainName } from '@/constants';
@@ -310,7 +311,7 @@ export function RepayModal({
               Debt lives on: <strong>{getChainName(toChainId)}</strong> (cannot be changed)
             </p>
             <p className="text-xs text-muted-foreground">
-              Your balance: {isBalanceUnknown ? '—' : truncateToDecimals(userBalance, 6)} {sourceToken?.symbol || token.symbol}
+              Your balance: {isBalanceUnknown ? '—' : truncateToDecimals(userBalance, AMOUNT_DISPLAY_DECIMALS)} {sourceToken?.symbol || token.symbol}
             </p>
           </div>
 
@@ -352,7 +353,7 @@ export function RepayModal({
                   if (!isBalanceUnknown && insufficientBalance && !isBusy) {
                     return (
                       <ErrorAlert
-                        text={`Insufficient balance. You have ${truncateToDecimals(userBalance ?? 0, 6)} ${sourceToken?.symbol || token.symbol}, but need ${truncateToDecimals(amountNum, 6)} ${sourceToken?.symbol || token.symbol}`}
+                        text={`Insufficient balance. You have ${truncateToDecimals(userBalance ?? 0, AMOUNT_DISPLAY_DECIMALS)} ${sourceToken?.symbol || token.symbol}, but need ${truncateToDecimals(amountNum, AMOUNT_DISPLAY_DECIMALS)} ${sourceToken?.symbol || token.symbol}`}
                         variant="compact"
                       />
                     );

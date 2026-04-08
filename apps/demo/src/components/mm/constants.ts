@@ -51,3 +51,46 @@ export const TX_HASH_DISPLAY_LENGTH = 5;
  * Health factors below this value indicate the account is at risk of liquidation.
  */
 export const MIN_SAFE_HEALTH_FACTOR = 1;
+
+/**
+ * Safety margin applied to max withdrawal calculations.
+ * Reduces the maximum withdrawable amount by 1% to prevent rounding/dust
+ * issues that could cause "exceeds balance" reverts on-chain.
+ */
+export const MAX_WITHDRAW_SAFETY_MARGIN = 0.99;
+
+/**
+ * Threshold for detecting whether a withdrawal is limited by health factor.
+ * If maxWithdraw < fullBalance × this value, the HF formula actually constrained
+ * the withdrawal (not just the safety margin alone).
+ */
+export const HF_LIMITED_THRESHOLD = 0.98;
+
+/**
+ * Default number of decimal places for displaying token amounts (e.g. borrow, repay, liquidity).
+ */
+export const AMOUNT_DISPLAY_DECIMALS = 6;
+
+/**
+ * Number of decimal places for displaying aToken (supply) balances.
+ */
+export const BALANCE_DISPLAY_DECIMALS = 5;
+
+/**
+ * Aave V3 index precision factor (1e27).
+ * Scaled balances and debt are stored on-chain divided by this factor.
+ * To get the actual amount: scaledBalance × liquidityIndex / AAVE_INDEX_PRECISION.
+ */
+export const AAVE_INDEX_PRECISION = BigInt('1000000000000000000000000000');
+
+/**
+ * Delay in milliseconds before the first deferred refetch after a money market transaction.
+ * Gives chains time to confirm the transaction before re-querying balances.
+ */
+export const POST_TX_REFETCH_DELAY = 2_000;
+
+/**
+ * Longer delay in milliseconds for a second deferred refetch after a money market transaction.
+ * Covers slower chains that need more time for on-chain state to update.
+ */
+export const POST_TX_REFETCH_DELAY_LONG = 5_000;

@@ -5,7 +5,7 @@ import { formatUnits } from 'viem';
 import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import { Button } from '@/components/ui/button';
-import { DUST_THRESHOLD, ATOKEN_DECIMALS } from '../constants';
+import { DUST_THRESHOLD, ATOKEN_DECIMALS, MAX_WITHDRAW_SAFETY_MARGIN, HF_LIMITED_THRESHOLD, BALANCE_DISPLAY_DECIMALS } from '../constants';
 import { isUserReserveDataArray, isValidAddress } from '../typeGuards';
 import { truncateToDecimals } from '@/lib/utils';
 
@@ -63,7 +63,7 @@ export function SupplyAssetsListItem({
 
   // ALWAYS USE ATOKEN_DECIMALS (18) FOR aTOKENS
   const formattedBalance =
-    aTokenBalance !== undefined ? truncateToDecimals(Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS)), 5) : '-';
+    aTokenBalance !== undefined ? truncateToDecimals(Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS)), BALANCE_DISPLAY_DECIMALS) : '-';
 
   /**
    * Health-factor-aware max withdrawal — Aave V3 formula.
@@ -90,7 +90,7 @@ export function SupplyAssetsListItem({
     const hasBorrows = Number.isFinite(totalBorrowsUSD) && totalBorrowsUSD > 0;
 
     if (!isCollateral || !hasBorrows || !mmPortfolio || !metrics.formattedReserve) {
-      return truncateToDecimals(fullBalance * 0.99, token.decimals);
+      return truncateToDecimals(fullBalance * MAX_WITHDRAW_SAFETY_MARGIN, token.decimals);
     }
 
     const totalCollateralUSD = Number(mmPortfolio.totalCollateralUSD ?? '0');
@@ -99,7 +99,7 @@ export function SupplyAssetsListItem({
     const assetPriceUSD = Number(metrics.formattedReserve.priceInUSD ?? '0');
 
     if (assetLT <= 0 || assetPriceUSD <= 0) {
-      return truncateToDecimals(fullBalance * 0.99, token.decimals);
+      return truncateToDecimals(fullBalance * MAX_WITHDRAW_SAFETY_MARGIN, token.decimals);
     }
 
     const excessCollateralUSD = totalCollateralUSD * weightedAvgLT - totalBorrowsUSD;
@@ -108,16 +108,15 @@ export function SupplyAssetsListItem({
     const maxWithdrawTokens = excessCollateralUSD / assetLT / assetPriceUSD;
     const cappedMax = Math.min(fullBalance, maxWithdrawTokens);
 
-    return truncateToDecimals(cappedMax * 0.99, token.decimals);
+    return truncateToDecimals(cappedMax * MAX_WITHDRAW_SAFETY_MARGIN, token.decimals);
   }, [aTokenBalance, aTokenAddress, token.decimals, metrics.userReserve, metrics.formattedReserve, mmPortfolio]);
 
   const isHfLimited = useMemo(() => {
     if (!aTokenBalance || aTokenBalance === 0n) return false;
     const fullBalance = Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS));
     const maxWithdrawNum = Number.parseFloat(maxWithdrawExact);
-    // maxWithdrawExact already includes × 0.99 safety margin, so compare against a slightly lower threshold
+    // maxWithdrawExact already includes the safety margin, so compare against a slightly lower threshold
     // to detect whether the HF formula actually reduced the amount below what the balance alone allows
-    const HF_LIMITED_THRESHOLD = 0.98;
     return Number.isFinite(maxWithdrawNum) && maxWithdrawNum < fullBalance * HF_LIMITED_THRESHOLD;
   }, [aTokenBalance, maxWithdrawExact]);
 
