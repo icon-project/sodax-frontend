@@ -23,7 +23,10 @@ const geistMono = localFont({
   variable: '--font-geist-mono',
 });
 
+const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://sodax.com';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(baseUrl),
   title: 'SODAX · Infrastructure for Modern Money',
   description:
     'SODAX is a cross-network execution and liquidity system that helps applications support complex financial actions without becoming cross-network infrastructure companies.',
@@ -50,7 +53,7 @@ export const metadata: Metadata = {
     siteName: 'SODAX',
     images: [
       {
-        url: 'https://sodax.com/link-preview.png',
+        url: '/link-preview.png',
         width: 1200,
         height: 630,
         alt: 'SODAX · Infrastructure for Modern Money',
@@ -62,7 +65,7 @@ export const metadata: Metadata = {
     title: 'SODAX · Infrastructure for Modern Money',
     description:
       'SODAX is a cross-network execution and liquidity system that helps applications support complex financial actions without becoming cross-network infrastructure companies.',
-    images: ['https://sodax.com/link-preview.png'],
+    images: ['/link-preview.png'],
     site: '@gosodax',
     creator: '@gosodax',
   },
