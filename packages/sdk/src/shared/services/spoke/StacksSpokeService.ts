@@ -2,15 +2,8 @@ import type { Address, Hex } from 'viem';
 import { EvmWalletAbstraction } from '../hub/index.js';
 import type { EvmHubProvider } from '../../entities/index.js';
 import { StacksRawSpokeProvider } from '../../entities/stacks/StacksSpokeProvider.js';
-import {
-  Cl,
-  noneCV,
-  parseContractId,
-  PostConditionMode,
-  someCV,
-  uintCV,
-  type ContractIdString,
-} from '@stacks/transactions';
+import type { ContractIdString } from '@stacks/transactions';
+import { loadStacksTransactions } from '../../utils/stacks-utils.js';
 import { getIntentRelayChainId } from '@sodax/types';
 import type { HubAddress, StacksTransactionParams } from '@sodax/types';
 import type {
@@ -144,6 +137,7 @@ export class StacksSpokeService {
     spokeProvider: StacksSpokeProviderType,
     raw?: R,
   ): PromiseStacksTxReturnType<R> {
+    const { Cl, noneCV, parseContractId, PostConditionMode, someCV, uintCV } = await loadStacksTransactions();
     const assetManagerImpl = await spokeProvider.getImplContractAddress(
       spokeProvider.chainConfig.addresses.assetManager,
     );
@@ -183,6 +177,7 @@ export class StacksSpokeService {
     spokeProvider: StacksSpokeProviderType,
     raw?: R,
   ): PromiseStacksTxReturnType<R> {
+    const { Cl, parseContractId, PostConditionMode, uintCV } = await loadStacksTransactions();
     const [connectionAddress, connectionName] = parseContractId(
       spokeProvider.chainConfig.addresses.connection as ContractIdString,
     );

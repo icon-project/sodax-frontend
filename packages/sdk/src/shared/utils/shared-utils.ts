@@ -23,7 +23,7 @@ import { toHex } from 'viem';
 import { bcs } from '@mysten/sui/bcs';
 import { PublicKey } from '@solana/web3.js';
 import { Address as StellarAddress } from '@stellar/stellar-sdk';
-import { Cl, serializeCV } from '@stacks/transactions';
+import { getStacksTransactions } from './stacks-utils.js';
 import { EvmWalletAbstraction } from '../services/index.js';
 import {
   StellarRawSpokeProvider,
@@ -167,8 +167,10 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
     case 'stellar':
       return `0x${StellarAddress.fromString(address).toScVal().toXDR('hex')}`;
 
-    case 'stacks':
+    case 'stacks': {
+      const { Cl, serializeCV } = getStacksTransactions();
       return `0x${serializeCV(Cl.principal(address))}` as Hex;
+    }
 
     case 'bitcoin':
     case 'near':

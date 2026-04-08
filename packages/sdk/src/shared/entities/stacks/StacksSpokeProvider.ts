@@ -5,28 +5,43 @@ import type {
   WalletAddressProvider,
 } from '@sodax/types';
 import type { IRawSpokeProvider, ISpokeProvider } from '../Providers.js';
-import { type StacksNetwork, createNetwork } from '@stacks/network';
-import {
-  Cl,
-  type ClarityValue,
-  fetchCallReadOnlyFunction,
-  parseContractId,
-  type ContractIdString,
-  type ContractPrincipalCV,
-  type UIntCV,
+import type { StacksNetwork } from '@stacks/network';
+import type {
+  ClarityValue,
+  ContractIdString,
+  ContractPrincipalCV,
+  UIntCV,
 } from '@stacks/transactions';
+import { loadStacksTransactions } from '../../utils/stacks-utils.js';
+
+// Lazy load @stacks/network to avoid Next.js 16 Turbopack scope-hoisting cycle (issue #1070).
+let _stacksNet: typeof import('@stacks/network') | undefined;
+async function loadStacksNetwork(): Promise<typeof import('@stacks/network')> {
+  if (!_stacksNet) {
+    _stacksNet = await import('@stacks/network');
+  }
+  return _stacksNet;
+}
 
 abstract class StacksBaseSpokeProvider {
   public chainConfig: StacksSpokeChainConfig;
-  protected network: StacksNetwork;
+  protected _network?: StacksNetwork;
 
   constructor(config: StacksSpokeChainConfig) {
     this.chainConfig = config;
-    this.network = createNetwork({ network: 'mainnet', client: { baseUrl: config.rpcUrl } });
+  }
+
+  protected async getNetwork(): Promise<StacksNetwork> {
+    if (!this._network) {
+      const { createNetwork } = await loadStacksNetwork();
+      this._network = createNetwork({ network: 'mainnet', client: { baseUrl: this.chainConfig.rpcUrl } });
+    }
+    return this._network;
   }
 
   async getSTXBalance(address: string): Promise<bigint> {
-    const url = `${this.network.client.baseUrl}/extended/v1/address/${address}/balances`;
+    const network = await this.getNetwork();
+    const url = `${network.client.baseUrl}/extended/v1/address/${address}/balances`;
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`Error fetching STX balance: ${response.statusText}`);
@@ -36,19 +51,22 @@ abstract class StacksBaseSpokeProvider {
   }
 
   async readTokenBalance(token: string, address: string): Promise<bigint> {
+    const { Cl, parseContractId, fetchCallReadOnlyFunction } = await loadStacksTransactions();
+    const network = await this.getNetwork();
     const [contractAddress, contractName] = parseContractId(token as ContractIdString);
     const result = (await fetchCallReadOnlyFunction({
       contractAddress: contractAddress as string,
       contractName: contractName as string,
       functionName: 'get-balance',
       functionArgs: [Cl.principal(address)],
-      network: this.network,
+      network,
       senderAddress: address,
     })) as { value: UIntCV };
     return result.value.value as bigint;
   }
 
   async getImplContractAddress(stateContract: string): Promise<string> {
+    const { parseContractId } = await loadStacksTransactions();
     const [contractAddress, contractName] = parseContractId(stateContract as ContractIdString);
     const txParams = {
       contractAddress: contractAddress as string,
@@ -94,12 +112,14 @@ export class StacksRawSpokeProvider extends StacksBaseSpokeProvider implements I
   }
 
   protected override async walletReadContract(txParams: StacksTransactionParams) {
+    const { fetchCallReadOnlyFunction } = await loadStacksTransactions();
+    const network = await this.getNetwork();
     return fetchCallReadOnlyFunction({
       contractAddress: txParams.contractAddress,
       contractName: txParams.contractName,
       functionName: txParams.functionName,
       functionArgs: txParams.functionArgs,
-      network: this.network,
+      network,
       senderAddress: await this.walletProvider.getWalletAddress(),
     });
   }
