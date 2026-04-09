@@ -23,7 +23,7 @@ import { toHex } from 'viem';
 import { bcs } from '@mysten/sui/bcs';
 import { PublicKey } from '@solana/web3.js';
 import { Address as StellarAddress } from '@stellar/stellar-sdk';
-import { getStacksTransactions } from './stacks-utils.js';
+import { serializeAddressData as serializeStacksPrincipal } from './stacks-utils.js';
 import { EvmWalletAbstraction } from '../services/index.js';
 import {
   StellarRawSpokeProvider,
@@ -145,15 +145,11 @@ export function BigIntToHex(value: bigint): Hex {
 }
 
 /**
- * Encodes an address for a given spoke chain.
- *
- * ⚠️ For the `'stacks'` chain: this function is synchronous but depends on an
- * async preload of `@stacks/transactions` (lazy-loaded to avoid Next.js 16
- * Turbopack scope-hoisting cycle, see PR #1074). The preload kicks off at SDK
- * module init; if you call this in the same tick as `import` (e.g. SSR
- * prerender) the preload microtask may not have resolved yet and the call will
- * throw. Await `loadStacksTransactions()` from `stacks-utils.js` first if you
- * cannot tolerate that race window.
+ * Encodes an address for a given spoke chain. Fully synchronous on every chain,
+ * including `'stacks'`: the Clarity StandardPrincipal serialization is done
+ * inline (see `serializeAddressData` in `stacks-utils.ts`) without depending
+ * on `@stacks/transactions`, which is incompatible with Next.js 16 Turbopack
+ * scope hoisting (#1070).
  */
 export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex {
   switch (spokeChainId) {
@@ -178,10 +174,8 @@ export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex 
     case 'stellar':
       return `0x${StellarAddress.fromString(address).toScVal().toXDR('hex')}`;
 
-    case 'stacks': {
-      const { Cl, serializeCV } = getStacksTransactions();
-      return `0x${serializeCV(Cl.principal(address))}` as Hex;
-    }
+    case 'stacks':
+      return serializeStacksPrincipal(address);
 
     case 'bitcoin':
     case 'near':

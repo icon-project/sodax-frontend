@@ -74,6 +74,7 @@
     "bignumber.js": "catalog:",
     "bitcoinjs-lib": "^6.1.5",
     "bn.js": "^5.2.1",
+    "c32check": "2.0.0",
     "ecpair": "^2.0.1",
     "icon-sdk-js": "catalog:",
     "near-api-js": "catalog:",
