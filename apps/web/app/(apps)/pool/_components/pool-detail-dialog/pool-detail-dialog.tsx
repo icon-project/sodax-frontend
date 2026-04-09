@@ -139,7 +139,7 @@ export function PoolDetailDialog({
                       24H fees
                     </div>
                     <div className="justify-center text-(length:--body-small) text-espresso font-bold font-['Inter'] leading-4">
-                      {formatUsd(calculatedVolume24hUsd * 0.1)}
+                      {formatUsd(calculatedVolume24hUsd * 0.001)}
                     </div>
                   </div>
                 </div>
