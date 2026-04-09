@@ -3,7 +3,6 @@ import { Resend } from 'resend';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const RESEND_TEMPLATE_ID = process.env.RESEND_LEAD_MAGNET_TEMPLATE_ID;
 const NOTION_API_KEY = process.env.NOTION_LEAD_MAGNET_TOKEN;
 const NOTION_DATABASE_ID = process.env.NOTION_LEAD_MAGNET_DB_ID;
@@ -33,6 +32,7 @@ async function sendResendEmail(email: string): Promise<void> {
     return;
   }
 
+  const resend = new Resend(process.env.RESEND_API_KEY);
   const pdfPath = join(process.cwd(), 'public', 'lead-magnet', 'sodax-builders-guide-to-defi.pdf');
   const pdfContent = await readFile(pdfPath);
 
