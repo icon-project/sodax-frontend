@@ -32,7 +32,6 @@ export function PoolInfoCard({
   useEffect((): void => {
     void fetchPoolApy();
   }, [fetchPoolApy]);
-
   const selectedRangeApyPercent = useMemo((): number | null => {
     if (poolApyPercent === null) {
       return null;
@@ -54,7 +53,7 @@ export function PoolInfoCard({
     return getUserAPY(poolApyPercent, minPrice, maxPrice, pairPrice);
   }, [maxPrice, minPrice, pairPrice, poolApyPercent]);
 
-  const apyText = selectedRangeApyPercent === null ? '--' : `${selectedRangeApyPercent.toFixed(2)}%`;
+  const apyText = selectedRangeApyPercent === null ? '0%' : `${selectedRangeApyPercent.toFixed(2)}%`;
 
   return (
     <div className="self-stretch flex flex-col justify-start items-start">
