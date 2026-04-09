@@ -128,7 +128,7 @@ export function serializeAddressData(address: string): Hex {
   // node, not by us.
   const nameBytes = new TextEncoder().encode(contractName);
   if (nameBytes.length > 128) {
-    throw new Error(`Stacks contract name too long: ${contractName.length} bytes`);
+    throw new Error(`Stacks contract name too long: ${nameBytes.length} bytes`);
   }
   const lenHex = nameBytes.length.toString(16).padStart(2, '0');
   const nameHex = Buffer.from(nameBytes).toString('hex');
