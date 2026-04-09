@@ -6,8 +6,6 @@ import { sodaToken, xSodaToken } from '../pool-network-selector';
 import { XIcon } from 'lucide-react';
 import { usePoolState } from '../../_stores/pool-store-provider';
 import { PoolLiquidityChart, type LiquidityBucket } from './pool-liquidity-chart';
-import { formatUnits } from 'viem';
-import { useTokenPrice } from '@/hooks/useTokenPrice';
 
 type PoolDetailDialogProps = {
   open: boolean;
@@ -28,7 +26,6 @@ export function PoolDetailDialog({
   const [buckets, setBuckets] = useState<LiquidityBucket[]>([]);
   const [totalLiquidityUsd, setTotalLiquidityUsd] = useState<string>('0');
   const [calculatedVolume24hUsd, setCalculatedVolume24hUsd] = useState<number>(0);
-  const { data: sodaPrice } = useTokenPrice(sodaToken);
   useEffect((): (() => void) => {
     if (!poolId) {
       setCalculatedVolume24hUsd(0);
@@ -45,19 +42,9 @@ export function PoolDetailDialog({
           setCalculatedVolume24hUsd(0);
           return;
         }
-
-        const volumeData = (await volumeResponse.json()) as { totalVolume0?: string; totalVolume1?: string };
-        const rawVolume0 = volumeData.totalVolume0 ?? '0';
-        const rawVolume1 = volumeData.totalVolume1 ?? '0';
-        const volume0 = Number(formatUnits(BigInt(rawVolume0), 18));
-        const volume1 = Number(formatUnits(BigInt(rawVolume1), 18));
-
-        // Convert xSODA amount into SODA notional using pair ratio, then to USD by SODA USD price.
-        const safePairPrice =
-          pairPrice !== null && pairPrice !== undefined && Number.isFinite(pairPrice) && pairPrice > 0 ? pairPrice : 1;
-        const totalSodaNotional = volume0 + volume1 * safePairPrice;
-        const usdValue = Number(totalSodaNotional) * (Number(sodaPrice) ?? 0);
-        setCalculatedVolume24hUsd(Number.isFinite(usdValue) ? usdValue : 0);
+        const volumeData = (await volumeResponse.json()) as { totalVolumeUsd?: string | number };
+        const parsedTotalVolumeUsd = Number(volumeData.totalVolumeUsd ?? 0);
+        setCalculatedVolume24hUsd(Number.isFinite(parsedTotalVolumeUsd) ? parsedTotalVolumeUsd : 0);
       } catch {
         if (!controller.signal.aborted) {
           setCalculatedVolume24hUsd(0);
@@ -69,7 +56,7 @@ export function PoolDetailDialog({
     return () => {
       controller.abort();
     };
-  }, [pairPrice, poolId, sodaPrice]);
+  }, [poolId]);
 
   useEffect((): (() => void) => {
     if (!poolId) {
@@ -139,7 +126,7 @@ export function PoolDetailDialog({
                       24H fees
                     </div>
                     <div className="justify-center text-(length:--body-small) text-espresso font-bold font-['Inter'] leading-4">
-                      {formatUsd(calculatedVolume24hUsd * 0.1)}
+                      {formatUsd(calculatedVolume24hUsd * 0.001)}
                     </div>
                   </div>
                 </div>
