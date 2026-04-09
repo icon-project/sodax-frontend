@@ -12,6 +12,7 @@ type UpstreamVolumeBucket = {
   volume0?: string | number;
   volume1?: string | number;
   trade_count?: number;
+  volume_usd?: string | number;
 };
 
 type PoolVolumeSuccess = {
@@ -23,6 +24,7 @@ type PoolVolumeSuccess = {
   tradeCount: number;
   totalVolume0: string;
   totalVolume1: string;
+  totalVolumeUsd: string;
 };
 
 type PoolVolumeError = {
@@ -120,9 +122,11 @@ export async function GET(request: NextRequest): Promise<NextResponse<PoolVolume
         acc.volume0 += parseVolumeToBigInt(item.volume0);
         acc.volume1 += parseVolumeToBigInt(item.volume1);
         acc.tradeCount += Number.isFinite(item.trade_count) ? Number(item.trade_count) : 0;
+        const parsedVolumeUsd = Number(item.volume_usd ?? 0);
+        acc.volumeUsd += Number.isFinite(parsedVolumeUsd) ? parsedVolumeUsd : 0;
         return acc;
       },
-      { volume0: 0n, volume1: 0n, tradeCount: 0 },
+      { volume0: 0n, volume1: 0n, tradeCount: 0, volumeUsd: 0 },
     );
 
     return NextResponse.json({
@@ -134,6 +138,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<PoolVolume
       tradeCount: totals.tradeCount,
       totalVolume0: totals.volume0.toString(),
       totalVolume1: totals.volume1.toString(),
+      totalVolumeUsd: totals.volumeUsd.toString(),
     });
   } catch (error) {
     console.error('GET /api/pool/volume error:', error);
