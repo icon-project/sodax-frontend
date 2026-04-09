@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { SolanaXService } from '../../xchains/solana/SolanaXService';
 import { useXWalletStore } from '../../useXWalletStore';
+import { SOLANA_METAMASK_CONNECT_TIMEOUT_MS } from '../../constants';
 
 /**
  * Registers Solana ChainActions into the store.
@@ -19,7 +20,13 @@ export const SolanaActions = () => {
     registerChainActions('SOLANA', {
       connect: async (xConnectorId: string) => {
         const wallet = walletRef.current.wallets.find(w => w.adapter.name === xConnectorId);
-        if (!wallet) return undefined;
+        if (!wallet) {
+          console.warn(
+            `[SolanaActions] connect: wallet "${xConnectorId}" not found in adapter list`,
+            walletRef.current.wallets.map(w => w.adapter.name),
+          );
+          return undefined;
+        }
 
         walletRef.current.select(wallet.adapter.name);
 
@@ -28,7 +35,7 @@ export const SolanaActions = () => {
             const timeout = setTimeout(() => {
               cleanup();
               reject(new Error('Wallet connection timeout'));
-            }, 30000);
+            }, SOLANA_METAMASK_CONNECT_TIMEOUT_MS);
 
             const handleConnect = () => {
               cleanup();

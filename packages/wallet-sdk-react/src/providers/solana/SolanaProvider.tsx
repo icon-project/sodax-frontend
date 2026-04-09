@@ -7,10 +7,7 @@ import type { RpcConfig } from '@sodax/types';
 import type { SolanaChainConfig } from '../../types/config';
 import { SolanaHydrator } from './SolanaHydrator';
 import { SolanaActions } from './SolanaActions';
-
-const defaultSolanaConfig: Required<Pick<SolanaChainConfig, 'autoConnect'>> = {
-  autoConnect: true,
-};
+import { SOLANA_DEFAULT_AUTO_CONNECT, SOLANA_DEFAULT_RPC_URL } from '../../constants';
 
 const emptyWallets: [] = [];
 
@@ -21,8 +18,8 @@ type SolanaProviderProps = {
 };
 
 export const SolanaProvider = ({ children, config, rpcConfig }: SolanaProviderProps) => {
-  const autoConnect = config?.autoConnect ?? defaultSolanaConfig.autoConnect;
-  const endpoint = rpcConfig?.solana ?? 'https://api.mainnet-beta.solana.com';
+  const autoConnect = config?.autoConnect ?? SOLANA_DEFAULT_AUTO_CONNECT;
+  const endpoint = rpcConfig?.solana ?? SOLANA_DEFAULT_RPC_URL;
 
   return (
     <SolanaConnectionProvider endpoint={endpoint}>

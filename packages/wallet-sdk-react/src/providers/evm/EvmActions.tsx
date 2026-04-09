@@ -28,7 +28,13 @@ export const EvmActions = () => {
     registerChainActions('EVM', {
       connect: async (xConnectorId: string) => {
         const connector = wagmiConfigRef.current.connectors.find(c => c.id === xConnectorId);
-        if (!connector) return undefined;
+        if (!connector) {
+          console.warn(
+            `[EvmActions] connect: connector "${xConnectorId}" not found in wagmi config`,
+            wagmiConfigRef.current.connectors.map(c => c.id),
+          );
+          return undefined;
+        }
         await connectRef.current({ connector });
         // EVM connection state is set by EvmHydrator (single writer for provider-managed chains)
         return undefined;

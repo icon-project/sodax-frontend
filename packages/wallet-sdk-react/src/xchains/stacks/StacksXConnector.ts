@@ -41,6 +41,10 @@ export class StacksXConnector extends XConnector {
     const stxAddress = response.addresses.find(a => (a as unknown as { purpose?: string }).purpose === 'stacks');
 
     if (!stxAddress) {
+      console.warn(
+        `[StacksXConnector] ${this.config.name}: no address with purpose="stacks" returned from stx_getAddresses`,
+        response.addresses,
+      );
       return undefined;
     }
 

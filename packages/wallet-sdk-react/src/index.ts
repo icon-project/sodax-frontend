@@ -10,7 +10,6 @@ export * from './useXWagmiStore';
 export * from './SodaxWalletProvider';
 
 export * from './types';
-export type * from './types';
 
 // ---------------------------------------------------------------------------
 // Sub-path exports: concrete chain classes are NOT re-exported here.
