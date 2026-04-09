@@ -1,14 +1,18 @@
 import { NextResponse } from 'next/server';
+import { Resend } from 'resend';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const NOTION_API_KEY = process.env.NOTION_API_KEY;
+const resend = new Resend(process.env.RESEND_API_KEY);
+const RESEND_TEMPLATE_ID = process.env.RESEND_LEAD_MAGNET_TEMPLATE_ID;
+const NOTION_API_KEY = process.env.NOTION_LEAD_MAGNET_TOKEN;
 const NOTION_DATABASE_ID = process.env.NOTION_LEAD_MAGNET_DB_ID;
 const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function verifyTurnstile(token: string): Promise<boolean> {
-  if (!TURNSTILE_SECRET_KEY) return true; // Skip verification if key not configured
+  if (!TURNSTILE_SECRET_KEY) return true;
 
   const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
     method: 'POST',
@@ -24,31 +28,27 @@ async function verifyTurnstile(token: string): Promise<boolean> {
 }
 
 async function sendResendEmail(email: string): Promise<void> {
-  if (!RESEND_API_KEY) {
-    console.warn('[lead-magnet] RESEND_API_KEY not configured — skipping email send');
+  if (!process.env.RESEND_API_KEY || !RESEND_TEMPLATE_ID) {
+    console.warn('[lead-magnet] RESEND_API_KEY or RESEND_LEAD_MAGNET_TEMPLATE_ID not configured — skipping email send');
     return;
   }
 
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: 'SODAX <hello@sodax.com>',
-      to: [email],
-      subject: "The Builder's Guide to Cross-Network DeFi",
-      html: `<p>Thanks for your interest in SODAX!</p>
-<p>Here's your copy of <strong>The Builder's Guide to Cross-Network DeFi</strong>.</p>
-<p><a href="https://sodax.com/lead-magnet/sodax-quickstart.pdf">Download the guide</a></p>
-<p>— The SODAX Team</p>`,
-    }),
+  const pdfPath = join(process.cwd(), 'public', 'lead-magnet', 'sodax-builders-guide-to-defi.pdf');
+  const pdfContent = await readFile(pdfPath);
+
+  const { error } = await resend.emails.send({
+    to: [email],
+    attachments: [
+      {
+        filename: 'SODAX-Builders-Guide-to-Cross-Network-DeFi.pdf',
+        content: pdfContent,
+      },
+    ],
+    template: { id: RESEND_TEMPLATE_ID },
   });
 
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Resend API error: ${res.status} ${body}`);
+  if (error) {
+    throw new Error(`Resend error: ${error.message}`);
   }
 }
 
@@ -68,9 +68,9 @@ async function pushToNotion(email: string): Promise<void> {
     body: JSON.stringify({
       parent: { database_id: NOTION_DATABASE_ID },
       properties: {
+        Name: { title: [{ text: { content: email } }] },
         Email: { email },
-        Source: { select: { name: 'Homepage Lead Magnet' } },
-        Date: { date: { start: new Date().toISOString() } },
+        Source: { select: { name: 'Lead Magnet (homepage)' } },
       },
     }),
   });
@@ -78,7 +78,6 @@ async function pushToNotion(email: string): Promise<void> {
   if (!res.ok) {
     const body = await res.text();
     console.error(`[lead-magnet] Notion API error: ${res.status} ${body}`);
-    // Don't throw — CRM failure shouldn't block the user
   }
 }
 
@@ -91,7 +90,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
     }
 
-    // Verify Turnstile if token provided and secret configured
     if (turnstileToken && TURNSTILE_SECRET_KEY) {
       const valid = await verifyTurnstile(turnstileToken);
       if (!valid) {
@@ -99,8 +97,19 @@ export async function POST(request: Request) {
       }
     }
 
-    // Send email and push to CRM in parallel
-    await Promise.all([sendResendEmail(email), pushToNotion(email)]);
+    // Email delivery is critical; CRM push is best-effort
+    const [emailResult, notionResult] = await Promise.allSettled([
+      sendResendEmail(email),
+      pushToNotion(email),
+    ]);
+
+    if (notionResult.status === 'rejected') {
+      console.error('[lead-magnet] Notion push failed:', notionResult.reason);
+    }
+
+    if (emailResult.status === 'rejected') {
+      throw emailResult.reason;
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
