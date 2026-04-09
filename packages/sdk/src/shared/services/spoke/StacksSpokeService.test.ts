@@ -1,10 +1,22 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Cl } from '@stacks/transactions';
+import { Cl, type ClarityValue } from '@stacks/transactions';
 import { StacksRawSpokeProvider } from '../../entities/stacks/StacksSpokeProvider.js';
 import { StacksSpokeService } from './StacksSpokeService.js';
 import { spokeChainConfig } from '@sodax/types';
 import { STACKS_MAINNET_CHAIN_ID, type StacksSpokeChainConfig } from '@sodax/types';
 import type { Hex } from 'viem';
+
+// `StacksRawTransaction` in shared/types.ts is intentionally loose
+// (`{[key: string]: string | object | number}`) to satisfy the union return
+// type of SpokeService.deposit. The actual shape is well-defined though, so
+// we narrow it locally for the assertions below.
+type StacksReqData = {
+  contractAddress: string;
+  contractName: string;
+  functionName: string;
+  functionArgs: ClarityValue[];
+  postConditionMode: number;
+};
 
 // Snapshot test for the exact `reqData` payload that StacksSpokeService.deposit
 // passes to the wallet (Xverse) for signing. This is the very last point at
@@ -46,12 +58,12 @@ describe('StacksSpokeService.deposit (raw mode) — reqData snapshot for #1070',
   // params.to, so we need a stub hubProvider whose publicClient.readContract
   // resolves. The returned value is unused because every test passes
   // params.to explicitly.
-  // biome-ignore lint/suspicious/noExplicitAny: minimal hub provider stub
   const mockHubProvider = {
     publicClient: {
       readContract: vi.fn().mockResolvedValue('0x0000000000000000000000000000000000000000'),
     },
     chainConfig: { addresses: { hubWallet: '0x0000000000000000000000000000000000000000' } },
+    // biome-ignore lint/suspicious/noExplicitAny: minimal stub satisfying the EvmHubProvider shape we touch
   } as any;
 
   it('STX native deposit produces expected reqData', async () => {
@@ -71,15 +83,16 @@ describe('StacksSpokeService.deposit (raw mode) — reqData snapshot for #1070',
     );
 
     // Top-level shape
-    expect(reqData.contractAddress).toBe('SP3031RGK734636C8KGW2Y76TEQBTVX59Q472EQH0');
-    expect(reqData.contractName).toBe('asset-manager-impl');
-    expect(reqData.functionName).toBe('transfer');
-    expect(reqData.functionArgs).toHaveLength(5);
-    expect(reqData.postConditionMode).toBe(1); // PostConditionMode.Allow
+    const tx = reqData as unknown as StacksReqData;
+    expect(tx.contractAddress).toBe('SP3031RGK734636C8KGW2Y76TEQBTVX59Q472EQH0');
+    expect(tx.contractName).toBe('asset-manager-impl');
+    expect(tx.functionName).toBe('transfer');
+    expect(tx.functionArgs).toHaveLength(5);
+    expect(tx.postConditionMode).toBe(1); // PostConditionMode.Allow
 
     // Serialize each function arg to hex and compare with byte-for-byte
     // expected values captured from main branch reqData log.
-    const serialized = reqData.functionArgs.map(a => Cl.serialize(a));
+    const serialized = tx.functionArgs.map((a: ClarityValue) => Cl.serialize(a));
 
     // arg0: NoneCV (token = STX native)
     expect(serialized[0]).toBe('09');
@@ -100,7 +113,8 @@ describe('StacksSpokeService.deposit (raw mode) — reqData snapshot for #1070',
 
   it('SIP-10 token deposit (sBTC) wraps token in someCV(Cl.principal(...))', async () => {
     const provider = makeRawProvider();
-    const sBTCAddress = stacksConfig.supportedTokens.sBTC.address;
+    const sBTCAddress = stacksConfig.supportedTokens.sBTC?.address;
+    if (!sBTCAddress) throw new Error('sBTC not in stacks config');
 
     const reqData = await StacksSpokeService.deposit(
       {
@@ -115,7 +129,8 @@ describe('StacksSpokeService.deposit (raw mode) — reqData snapshot for #1070',
       true,
     );
 
-    const serialized = reqData.functionArgs.map(a => Cl.serialize(a));
+    const tx = reqData as unknown as StacksReqData;
+    const serialized = tx.functionArgs.map((a: ClarityValue) => Cl.serialize(a));
 
     // arg0: SomeCV(ContractPrincipal(sbtc-token))
     //   0a       = OptionalSome wrapper
@@ -172,7 +187,8 @@ describe('StacksSpokeService.deposit (raw mode) — reqData snapshot for #1070',
       true,
     );
 
-    const serialized = reqData.functionArgs.map(a => Cl.serialize(a));
+    const tx = reqData as unknown as StacksReqData;
+    const serialized = tx.functionArgs.map((a: ClarityValue) => Cl.serialize(a));
     expect(serialized[0]).toBe(expected);
     // Other args identical to STX/sBTC cases
     expect(serialized[1]).toBe('020000001454980e4f826a77e942a5f4d891a758c23009dc8d');
@@ -198,7 +214,8 @@ describe('StacksSpokeService.deposit (raw mode) — reqData snapshot for #1070',
       true,
     );
 
-    const serialized = reqData.functionArgs.map(a => Cl.serialize(a));
+    const tx = reqData as unknown as StacksReqData;
+    const serialized = tx.functionArgs.map((a: ClarityValue) => Cl.serialize(a));
     // arg3: BufferCV(0xdeadbeef) — length 4
     expect(serialized[3]).toBe('0200000004deadbeef');
   });

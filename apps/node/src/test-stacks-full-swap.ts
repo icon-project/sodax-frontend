@@ -120,11 +120,11 @@ const [arg0, arg1, arg2, arg3, arg4] = r.functionArgs;
 
 // arg0: token = STX native → noneCV()
 const arg0Hex = Cl.serialize(arg0);
-if (arg0Hex === '09') ok(`arg0 = NoneCV (STX native)`);
+if (arg0Hex === '09') ok('arg0 = NoneCV (STX native)');
 else fail(`arg0 mismatch: ${arg0Hex}`);
 
 // arg1: recipient buffer = hub address (20 bytes) — must equal EXPECTED_HUB
-const expectedArg1 = `020000001454980e4f826a77e942a5f4d891a758c23009dc8d`;
+const expectedArg1 = '020000001454980e4f826a77e942a5f4d891a758c23009dc8d';
 const arg1Hex = Cl.serialize(arg1);
 if (arg1Hex.toLowerCase() === expectedArg1.toLowerCase()) ok(`arg1 = BufferCV(hub ${EXPECTED_HUB})`);
 else fail(`arg1 mismatch:\n    got ${arg1Hex}\n    exp ${expectedArg1}`);
@@ -132,7 +132,7 @@ else fail(`arg1 mismatch:\n    got ${arg1Hex}\n    exp ${expectedArg1}`);
 // arg2: amount = 1_000_000 → uintCV
 const expectedArg2 = '01000000000000000000000000000f4240';
 const arg2Hex = Cl.serialize(arg2);
-if (arg2Hex === expectedArg2) ok(`arg2 = UIntCV(1_000_000)`);
+if (arg2Hex === expectedArg2) ok('arg2 = UIntCV(1_000_000)');
 else fail(`arg2 mismatch: ${arg2Hex}`);
 
 // arg3: cross-chain payload buffer — contains random intentId + non-deterministic
@@ -152,7 +152,7 @@ else fail(`arg3 missing user encoded address (found ${occurrences}x, expected �
 // arg4: connection-v3 contract principal — fully deterministic, snapshot it
 const expectedArg4 = '0616c030e21338c86199889c382f1cda75d7adf4a9b90d636f6e6e656374696f6e2d7633';
 const arg4Hex = Cl.serialize(arg4);
-if (arg4Hex === expectedArg4) ok(`arg4 = ContractPrincipalCV(connection-v3)`);
+if (arg4Hex === expectedArg4) ok('arg4 = ContractPrincipalCV(connection-v3)');
 else fail(`arg4 mismatch:\n    got ${arg4Hex}\n    exp ${expectedArg4}`);
 
 if (failed) {
