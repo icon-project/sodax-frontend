@@ -1,3 +1,4 @@
+// apps/web/components/landing/lead-magnet-cta.tsx — Homepage lead magnet CTA with Turnstile + email submit
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
@@ -28,23 +29,38 @@ const OVERSHOOT_EASE = [0.34, 1.56, 0.64, 1] as const;
 
 // --- Shared sub-components ---
 
-function BackButton({ onClick, disabled = false }: { onClick: () => void; disabled?: boolean }) {
+function BackButton({
+  onClick,
+  disabled = false,
+}: {
+  onClick: () => void;
+  disabled?: boolean;
+}): React.ReactElement {
   return (
     <motion.div
       initial={{ opacity: 0, x: 8 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.3, ease: [...OVERSHOOT_EASE] }}
+      className="relative z-0 h-12 shrink-0"
     >
-      <Button
-        variant="cherry"
-        size="icon"
+      <button
+        type="button"
         onClick={onClick}
         disabled={disabled}
-        className="relative z-10 size-12 -mr-6 rounded-full hover:bg-cherry-bright/20"
         aria-label="Go back"
+        className="group/back relative mr-[-24px] h-12 w-14 shrink-0 rounded-l-[32px] rounded-r-none border-none bg-transparent p-0 outline-none disabled:pointer-events-none disabled:opacity-50 cursor-pointer"
       >
-        <ArrowLeft className="size-4" />
-      </Button>
+        <span
+          aria-hidden
+          className="absolute inset-0 rounded-l-[32px] rounded-r-none bg-cherry-bright/20 transition-colors duration-300 group-hover/back:bg-cherry-bright/30"
+        />
+
+        <ArrowLeft
+          className="absolute left-3 top-4 size-4 shrink-0 text-cherry-bright transition-colors duration-300 group-hover/back:text-white"
+          strokeWidth={1.5}
+          aria-hidden
+        />
+      </button>
     </motion.div>
   );
 }
@@ -113,8 +129,12 @@ function EmailInputField({
     <motion.div
       animate={{ width: fieldWidth }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="flex items-center h-12 rounded-full border-4 border-cherry-bright px-6 shrink-0"
+      className="relative z-10 flex items-center h-12 rounded-[32px] px-6 shrink-0 bg-cherry-soda"
     >
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 border-4 border-cherry-bright rounded-[32px] pointer-events-none"
+      />
       <div className="relative flex-1">
         {/* Hidden sizer — measures the actual text width */}
         <span className="invisible whitespace-pre font-[InterRegular] text-base leading-[1.4]">
@@ -148,6 +168,7 @@ export const LeadMagnetCTA = (): React.ReactElement => {
   const [email, setEmail] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const turnstileRef = useRef<TurnstileInstance>(null);
+  const turnstileTokenRef = useRef<string | null>(null);
 
   const [typedPlaceholder, setTypedPlaceholder] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -192,15 +213,25 @@ export const LeadMagnetCTA = (): React.ReactElement => {
 
     try {
       const startTime = Date.now();
-      const turnstileToken = turnstileRef.current?.getResponse();
+      let turnstileToken: string | undefined =
+        turnstileTokenRef.current ?? turnstileRef.current?.getResponse() ?? undefined;
+
+      if (TURNSTILE_SITE_KEY && turnstileRef.current) {
+        try {
+          turnstileToken = await turnstileRef.current.getResponsePromise(45000, 300);
+        } catch {
+          turnstileToken = turnstileRef.current.getResponse() ?? turnstileTokenRef.current ?? undefined;
+        }
+      }
 
       const res = await fetch('/api/lead-magnet', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, turnstileToken }),
+        body: JSON.stringify({ email, turnstileToken: turnstileToken ?? null }),
       });
 
       // Reset Turnstile for potential retry
+      turnstileTokenRef.current = null;
       turnstileRef.current?.reset();
 
       const elapsed = Date.now() - startTime;
@@ -288,7 +319,11 @@ export const LeadMagnetCTA = (): React.ReactElement => {
         <>
           <div className="flex items-center justify-center">
             <BackButton onClick={handleBack} disabled />
-            <div className="flex items-center h-12 rounded-full border-4 border-cherry-bright px-6 min-w-[204px]">
+            <div className="relative z-10 flex items-center h-12 rounded-[32px] px-6 min-w-[204px] bg-cherry-soda">
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 border-4 border-cherry-bright rounded-[32px] pointer-events-none"
+              />
               <span className="text-white font-[InterRegular] text-base leading-[1.4]">{email}</span>
               <Loader2 className="ml-2 size-4 text-white animate-spin shrink-0" />
             </div>
@@ -302,7 +337,11 @@ export const LeadMagnetCTA = (): React.ReactElement => {
       return (
         <>
           <div className="flex items-center justify-center">
-            <div className="flex items-center h-12 rounded-full border-4 border-cherry-bright px-6 min-w-[204px]">
+            <div className="relative flex items-center h-12 rounded-[32px] px-6 min-w-[204px]">
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 border-4 border-cherry-bright rounded-[32px] pointer-events-none"
+              />
               <span className="text-cherry-brighter font-[InterRegular] text-base leading-[1.4]">{email}</span>
               <Check className="ml-2 size-4 text-white shrink-0" />
             </div>
@@ -326,14 +365,13 @@ export const LeadMagnetCTA = (): React.ReactElement => {
           <EmailInputField {...sharedInputProps} />
         </div>
         <p className="text-sm leading-[1.4]" role="alert">
-          <span className="text-cherry-brighter">Something went wrong. </span>
+          <span className="text-cherry-brighter">Couldn't send. </span>
           <a
             href={LEAD_MAGNET_PDF_ROUTE}
             download
             className="text-white font-[InterBold] hover:underline inline-flex items-center gap-1"
           >
-            <Download className="size-3.5" />
-            Download directly
+            Download instead <Download className="size-3.5" />
           </a>
         </p>
       </>
@@ -341,11 +379,27 @@ export const LeadMagnetCTA = (): React.ReactElement => {
   };
 
   return (
-    <div key={state} className="flex flex-col items-center gap-4 animate-fadeIn">
-      {renderContent()}
+    <>
+      <div key={state} className="flex flex-col items-center gap-4 animate-fadeIn">
+        {renderContent()}
+      </div>
       {TURNSTILE_SITE_KEY && (
-        <Turnstile ref={turnstileRef} siteKey={TURNSTILE_SITE_KEY} options={{ size: 'invisible' }} />
+        <Turnstile
+          ref={turnstileRef}
+          siteKey={TURNSTILE_SITE_KEY}
+          options={{ size: 'invisible', refreshExpired: 'auto', execution: 'render' }}
+          onSuccess={token => {
+            turnstileTokenRef.current = token;
+          }}
+          onExpire={() => {
+            turnstileTokenRef.current = null;
+          }}
+          onError={code => {
+            console.warn('[lead-magnet] Turnstile error:', code);
+            turnstileTokenRef.current = null;
+          }}
+        />
       )}
-    </div>
+    </>
   );
 };

@@ -4,10 +4,15 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { isValidEmail } from '@/lib/validate-email';
 
+// apps/web/app/api/lead-magnet/route.ts — POST handler for lead magnet signup (email + optional Turnstile)
 const RESEND_TEMPLATE_ID = process.env.RESEND_LEAD_MAGNET_TEMPLATE_ID;
 const NOTION_API_KEY = process.env.NOTION_LEAD_MAGNET_TOKEN;
 const NOTION_DATABASE_ID = process.env.NOTION_LEAD_MAGNET_DB_ID;
 const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
+/** When `true` in development, Turnstile verification is skipped (localhost / PAT issues). Never use in production. */
+const SKIP_TURNSTILE_IN_DEV =
+  process.env.NODE_ENV === 'development' && process.env.LEAD_MAGNET_SKIP_TURNSTILE === 'true';
+const TURNSTILE_REQUIRED = Boolean(TURNSTILE_SECRET_KEY) && !SKIP_TURNSTILE_IN_DEV;
 
 async function verifyTurnstile(token: string): Promise<boolean> {
   if (!TURNSTILE_SECRET_KEY) return true;
@@ -89,7 +94,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
     }
 
-    if (TURNSTILE_SECRET_KEY) {
+    if (TURNSTILE_REQUIRED) {
       if (!turnstileToken) {
         return NextResponse.json({ error: 'Bot verification token required' }, { status: 400 });
       }
@@ -100,10 +105,7 @@ export async function POST(request: Request) {
     }
 
     // Email delivery is critical; CRM push is best-effort
-    const [emailResult, notionResult] = await Promise.allSettled([
-      sendResendEmail(email),
-      pushToNotion(email),
-    ]);
+    const [emailResult, notionResult] = await Promise.allSettled([sendResendEmail(email), pushToNotion(email)]);
 
     if (notionResult.status === 'rejected') {
       console.error('[lead-magnet] Notion push failed:', notionResult.reason);

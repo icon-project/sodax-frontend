@@ -3,6 +3,7 @@
 import type React from 'react';
 
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { SodaxIcon } from '../icons/sodax-icon';
 import { NEWS_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -32,12 +33,7 @@ const HERO_NETWORKS = [
 ];
 
 const HeroSection = (): React.ReactElement => {
-  const scrollToPartners = () => {
-    const el = document.getElementById('partners-section');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  const router = useRouter();
 
   return (
     <div className="hero-section">
@@ -103,7 +99,7 @@ const HeroSection = (): React.ReactElement => {
             </ul>
             <button
               type="button"
-              onClick={scrollToPartners}
+              onClick={() => router.push(PARTNERS_ROUTE)}
               className="bg-yellow-dark hover:bg-yellow-soda transition-all hover:scale-[102%] h-10 px-6 font-[InterBold] rounded-full text-[14px] cursor-pointer text-cherry-dark"
             >
               Discover SODAX
