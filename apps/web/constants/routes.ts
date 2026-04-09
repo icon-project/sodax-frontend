@@ -65,6 +65,7 @@ export const YOUTUBE_ROUTE = 'https://www.youtube.com/@gosodax';
 // ── External apps & partners ───────────────────────────────────────────────
 export const BALANCED_DEFI_ROUTE = 'https://app.balanced.network/';
 export const HANA_WALLET_ROUTE = 'https://www.hanawallet.io/';
+export const HOUDINI_SWAP_ROUTE = 'https://app.houdiniswap.com/';
 
 // ── Resources & tools (external) ───────────────────────────────────────────
 /** Frontend repo (this app). */

@@ -5,8 +5,9 @@ interface CoffeeCupIconProps {
   stroke?: string;
 }
 
-export function CoffeeCupIcon({ width = 16, height = 16, className = '', stroke = '#CC9E9A' }: CoffeeCupIconProps) {
+export function CoffeeCupIcon({ width = 16, height = 16, className = '', stroke = 'currentColor' }: CoffeeCupIconProps) {
   return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: <explanation>
     <svg
       width={width}
       height={height}

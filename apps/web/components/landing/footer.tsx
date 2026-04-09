@@ -10,6 +10,7 @@ import {
   BRAND_KIT_ROUTE,
   DISCORD_ROUTE,
   DOCUMENTATION_GITBOOK_ROUTE,
+  EXCHANGE_ROUTE,
   GITHUB_ROUTE,
   GLOSSARY_ROUTE,
   HANA_WALLET_ROUTE,
@@ -17,7 +18,6 @@ import {
   NEWS_ROUTE,
   PARTNER_DASHBOARD_ROUTE,
   SODAX_SCAN_ROUTE,
-  SWAP_ROUTE,
   X_ROUTE,
 } from '@/constants/routes';
 import { showCookiePreferences } from '@/components/cookie-consent/cookie-consent-banner';
@@ -51,18 +51,17 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">
             using soda
           </div>
-          <FooterLink href={SWAP_ROUTE}>SODAX Swap</FooterLink>
+          <FooterLink href={EXCHANGE_ROUTE}>SODAX Exchange</FooterLink>{' '}
+          <FooterLink href={HANA_WALLET_ROUTE} showArrow>
+            Houdini Swap{' '}
+          </FooterLink>{' '}
+          <FooterLink href={BALANCED_DEFI_ROUTE} showArrow>
+            Balanced DeFi
+          </FooterLink>{' '}
           <FooterLink href={HANA_WALLET_ROUTE} showArrow>
             Hana Wallet
           </FooterLink>
-          <FooterLink href={BALANCED_DEFI_ROUTE} showArrow>
-            Balanced DeFi
-          </FooterLink>
-          <FooterLink href={PARTNER_DASHBOARD_ROUTE} showArrow>
-            <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">
-              partner portal
-            </div>
-          </FooterLink>
+          <FooterLink href={PARTNER_DASHBOARD_ROUTE}>Partner Portal</FooterLink>
         </div>
         <div className="inline-flex flex-col justify-start items-start gap-3 w-33.5">
           <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">

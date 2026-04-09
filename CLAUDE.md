@@ -42,6 +42,7 @@ pnpm clean                # Remove all node_modules, dist, .turbo, .next
 ## Common Pitfalls
 
 - **Never use `bigint` in types that will be passed to `JSON.stringify`** — it throws `TypeError` at runtime. Use `string` for numeric fields in API request/response types. If `bigint` is needed in domain types, convert to string before serialization.
+- **Always use standard Tailwind utility classes instead of arbitrary pixel values** when an equivalent exists. Examples: `text-sm` not `text-[14px]`, `text-base` not `text-[16px]`, `h-4` not `h-[16px]`, `size-4` not `size-[16px]`. Only use arbitrary values (e.g. `min-w-[204px]`, `leading-[1.4]`) when no standard utility matches. Font families use arbitrary values (`font-[InterRegular]`, `font-[InterBold]`) — this is the project convention since fonts are registered as CSS custom properties in `globals.css`.
 
 
 ### Running tests for a specific package
