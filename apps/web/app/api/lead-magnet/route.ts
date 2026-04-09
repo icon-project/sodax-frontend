@@ -86,7 +86,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email, turnstileToken } = body as { email?: string; turnstileToken?: string };
 
-    if (!email || !EMAIL_REGEX.test(email)) {
+    if (!email || email.length > 254 || !EMAIL_REGEX.test(email)) {
       return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
     }
 
