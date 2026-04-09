@@ -6,7 +6,8 @@ import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import { ArrowLeft, Send, Check, Loader2, Download } from 'lucide-react';
 import { CoffeeCupIcon } from '../icons/coffee-cup-icon';
 import { Button } from '@/components/ui/button';
-import { PARTNERS_ROUTE } from '@/constants/routes';
+import { LEAD_MAGNET_PDF_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
+import { isValidEmail } from '@/lib/validate-email';
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
@@ -18,8 +19,7 @@ enum State {
   Error = 'error',
 }
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const FAKE_DELAY_MS = 2000;
+const MIN_SENDING_MS = 2000;
 const PLACEHOLDER_TEXT = 'Enter your email';
 const TYPEWRITER_SPEED_MS = 60;
 // Delay before the send icon slides in — matches total typewriter duration
@@ -151,7 +151,7 @@ export const LeadMagnetCTA = (): React.ReactElement => {
 
   const [typedPlaceholder, setTypedPlaceholder] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const isValidEmail = EMAIL_REGEX.test(email);
+  const emailValid = isValidEmail(email);
 
   // Typewriter effect for placeholder when entering input state
   useEffect(() => {
@@ -186,7 +186,7 @@ export const LeadMagnetCTA = (): React.ReactElement => {
   }, []);
 
   const handleSubmit = useCallback(async () => {
-    if (!isValidEmail) return;
+    if (!emailValid) return;
 
     setState(State.Sending);
 
@@ -204,17 +204,21 @@ export const LeadMagnetCTA = (): React.ReactElement => {
       turnstileRef.current?.reset();
 
       const elapsed = Date.now() - startTime;
-      if (elapsed < FAKE_DELAY_MS) {
-        await new Promise(r => setTimeout(r, FAKE_DELAY_MS - elapsed));
+      if (elapsed < MIN_SENDING_MS) {
+        await new Promise(r => setTimeout(r, MIN_SENDING_MS - elapsed));
       }
 
-      if (!res.ok) throw new Error('Failed to send');
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error ?? 'Failed to send');
+      }
 
       setState(State.Success);
-    } catch {
+    } catch (err) {
+      console.error('[lead-magnet]', err instanceof Error ? err.message : err);
       setState(State.Error);
     }
-  }, [email, isValidEmail]);
+  }, [email, emailValid]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -232,7 +236,7 @@ export const LeadMagnetCTA = (): React.ReactElement => {
   const sharedInputProps = {
     inputRef,
     email,
-    isValidEmail,
+    isValidEmail: emailValid,
     typedPlaceholder,
     isTyping,
     onEmailChange: setEmail,
@@ -324,7 +328,7 @@ export const LeadMagnetCTA = (): React.ReactElement => {
         <p className="text-sm leading-[1.4]" role="alert">
           <span className="text-cherry-brighter">Something went wrong. </span>
           <a
-            href="/lead-magnet/sodax-builders-guide-to-defi.pdf"
+            href={LEAD_MAGNET_PDF_ROUTE}
             download
             className="text-white font-[InterBold] hover:underline inline-flex items-center gap-1"
           >

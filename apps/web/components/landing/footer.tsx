@@ -14,6 +14,7 @@ import {
   GITHUB_ROUTE,
   GLOSSARY_ROUTE,
   HANA_WALLET_ROUTE,
+  HOUDINI_SWAP_ROUTE,
   LINKTREE_ROUTE,
   NEWS_ROUTE,
   PARTNER_DASHBOARD_ROUTE,
@@ -52,7 +53,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
             using soda
           </div>
           <FooterLink href={EXCHANGE_ROUTE}>SODAX Exchange</FooterLink>{' '}
-          <FooterLink href={HANA_WALLET_ROUTE} showArrow>
+          <FooterLink href={HOUDINI_SWAP_ROUTE} showArrow>
             Houdini Swap{' '}
           </FooterLink>{' '}
           <FooterLink href={BALANCED_DEFI_ROUTE} showArrow>

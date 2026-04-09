@@ -2,13 +2,12 @@ import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { isValidEmail } from '@/lib/validate-email';
 
 const RESEND_TEMPLATE_ID = process.env.RESEND_LEAD_MAGNET_TEMPLATE_ID;
 const NOTION_API_KEY = process.env.NOTION_LEAD_MAGNET_TOKEN;
 const NOTION_DATABASE_ID = process.env.NOTION_LEAD_MAGNET_DB_ID;
 const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 async function verifyTurnstile(token: string): Promise<boolean> {
   if (!TURNSTILE_SECRET_KEY) return true;
@@ -86,11 +85,14 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { email, turnstileToken } = body as { email?: string; turnstileToken?: string };
 
-    if (!email || email.length > 254 || !EMAIL_REGEX.test(email)) {
+    if (!email || !isValidEmail(email)) {
       return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
     }
 
-    if (turnstileToken && TURNSTILE_SECRET_KEY) {
+    if (TURNSTILE_SECRET_KEY) {
+      if (!turnstileToken) {
+        return NextResponse.json({ error: 'Bot verification token required' }, { status: 400 });
+      }
       const valid = await verifyTurnstile(turnstileToken);
       if (!valid) {
         return NextResponse.json({ error: 'Bot verification failed' }, { status: 403 });
