@@ -97,11 +97,12 @@ function SendButton({ isValidEmail, onSubmit }: { isValidEmail: boolean; onSubmi
   );
 }
 
-// Figma spec: baseInputWidth=140, charWidth≈9, fieldPadding=64 (px-6 * 2 + send icon)
-const BASE_INPUT_WIDTH = 140;
-const CHAR_WIDTH = 9;
-const FIELD_PADDING = 64;
-const MAX_INPUT_WIDTH = 300;
+// Dynamic field sizing — the input pill grows as the user types, capped to avoid overflow.
+// Values derived from Figma spec (Inter 16px metrics).
+const BASE_INPUT_WIDTH = 140; // min width of the text area (px) — fits ~15 chars comfortably
+const CHAR_WIDTH = 9; // average character width at 16px Inter (px)
+const FIELD_PADDING = 64; // horizontal padding: 24px (px-6) × 2 + 16px send icon area
+const MAX_INPUT_WIDTH = 300; // hard cap so the pill never exceeds the hero on mobile
 
 function EmailInputField({
   inputRef,

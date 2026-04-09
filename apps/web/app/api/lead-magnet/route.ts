@@ -5,9 +5,13 @@ import { join } from 'node:path';
 import { isValidEmail } from '@/lib/validate-email';
 
 // apps/web/app/api/lead-magnet/route.ts — POST handler for lead magnet signup (email + optional Turnstile)
+/** Resend template ID for the lead-magnet delivery email (contains PDF attachment + "Builder's Guide" copy). */
 const RESEND_TEMPLATE_ID = process.env.RESEND_LEAD_MAGNET_TEMPLATE_ID;
+/** Notion internal integration token — scoped to the lead-magnet CRM database. */
 const NOTION_API_KEY = process.env.NOTION_LEAD_MAGNET_TOKEN;
+/** Notion database where each signup is logged as a row (Name, Email, Source columns). */
 const NOTION_DATABASE_ID = process.env.NOTION_LEAD_MAGNET_DB_ID;
+/** Cloudflare Turnstile server-side secret — used to verify the invisible challenge token. */
 const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
 /** When `true` in development, Turnstile verification is skipped (localhost / PAT issues). Never use in production. */
 const SKIP_TURNSTILE_IN_DEV =
