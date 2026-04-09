@@ -9,21 +9,33 @@ import type { Hex } from 'viem';
 // cycle (issue #1070).
 //
 // `c32check` itself is small (no Stacks SDK transitive deps) and bundlers
-// handle it cleanly. The version is locked to 2.0.0 — exactly what
-// @stacks/transactions@7.3.1 depends on — so the differential test in
+// handle it cleanly. The version is locked to **exactly** 2.0.0 (no caret)
+// — exactly what @stacks/transactions@7.3.1 depends on — so pnpm dedupes
+// both consumers to the same instance and the differential test in
 // stacks-utils.test.ts (which compares output against the real
 // @stacks/transactions module via loadStacksTransactions) is meaningful.
+//
+// IMPORTANT: do NOT relax this pin to ^2.0.0. If a future @stacks/transactions
+// release bumps c32check to a major version with breaking encoding behavior,
+// we want CI to fail loudly via the differential test rather than silently
+// resolve to a different package version. Run `pnpm why c32check` after any
+// @stacks/transactions bump to verify both consumers still resolve to the
+// same version.
 
 // Lazy loader for the full @stacks/transactions module. Still required for
 // real on-chain operations (tx signing, contract reads, post-conditions) in
 // StacksSpokeProvider/Service. Address encoding does NOT need this anymore.
-let _stacksTx: typeof import('@stacks/transactions') | undefined;
+//
+// We cache the *promise*, not the resolved module, so two concurrent
+// first-callers share a single in-flight import() instead of both entering
+// the conditional branch and racing on assignment.
+let _stacksTxPromise: Promise<typeof import('@stacks/transactions')> | undefined;
 
-export async function loadStacksTransactions(): Promise<typeof import('@stacks/transactions')> {
-  if (!_stacksTx) {
-    _stacksTx = await import('@stacks/transactions');
+export function loadStacksTransactions(): Promise<typeof import('@stacks/transactions')> {
+  if (!_stacksTxPromise) {
+    _stacksTxPromise = import('@stacks/transactions');
   }
-  return _stacksTx;
+  return _stacksTxPromise;
 }
 
 export async function waitForStacksTransaction(txid: string, rpc_url: string): Promise<boolean> {
@@ -102,18 +114,24 @@ export function serializeAddressData(address: string): Hex {
   const [version, hash160Hex] = c32addressDecode(c32Addr);
   const versionHex = version.toString(16).padStart(2, '0');
 
-  // UTF-8 byte length of contract name (Stacks contract names are ASCII per
-  // spec — `^[a-zA-Z]([a-zA-Z0-9]|[-_])*$`, max 40 chars — but encode as
-  // UTF-8 byte length to match @stacks/transactions exactly).
+  // UTF-8 byte length of contract name. Stacks contract names are ASCII per
+  // spec (`^[a-zA-Z]([a-zA-Z0-9]|[-_])*$`, max 40 chars), but we use the
+  // UTF-8 byte length to mirror @stacks/transactions LP-string encoding
+  // exactly.
+  //
+  // The 128-byte ceiling here is intentionally LOOSER than the 40-char
+  // protocol cap. @stacks/transactions' Cl.principal does NOT validate
+  // contract name length at serialization time — it just emits the bytes —
+  // so tightening this to 40 would diverge from the differential test
+  // reference. Treat 128 as a sanity guardrail (still fits in the 1-byte
+  // length prefix); the protocol cap is enforced on-chain by the Stacks
+  // node, not by us.
   const nameBytes = new TextEncoder().encode(contractName);
   if (nameBytes.length > 128) {
     throw new Error(`Stacks contract name too long: ${contractName.length} bytes`);
   }
   const lenHex = nameBytes.length.toString(16).padStart(2, '0');
-  let nameHex = '';
-  for (const b of nameBytes) {
-    nameHex += b.toString(16).padStart(2, '0');
-  }
+  const nameHex = Buffer.from(nameBytes).toString('hex');
 
   return `0x06${versionHex}${hash160Hex}${lenHex}${nameHex}` as Hex;
 }

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev --port 3016",
     "build": "next build",
-    "verify": "next build && node verify-build.mjs",
+    "verify": "rm -rf .next && next build && node verify-build.mjs",
     "start": "next start --port 3016",
     "clean": "rm -rf .next node_modules .turbo"
   },

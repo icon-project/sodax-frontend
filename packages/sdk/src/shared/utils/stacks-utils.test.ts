@@ -48,8 +48,11 @@ const ADDRESSES = [
   'SP120SBRBQJ00MCWS7TM5R8WJNTTKD5K0HFRC2CNE.usdcx',
   // Native STX wrapper (testnet-version address used as marker on mainnet)
   'ST000000000000000000002AMW42H.nativetoken',
-  // Edge: shortest possible contract name
+  // Edge: shortest possible contract name (1 char)
   'SP000000000000000000002Q6VF78.x',
+  // Edge: maximum protocol-allowed contract name length (40 chars). The
+  // serializer accepts up to 128 bytes; this case pins the spec boundary.
+  'SP000000000000000000002Q6VF78.abcdefghij0123456789abcdefghij0123456789',
 
   // ── Edge cases (consistency with @stacks/transactions matters even
   //    for malformed/non-canonical input — these were near-miss bugs) ──
@@ -87,8 +90,24 @@ describe('Stacks address serialization (issue #1070)', () => {
   });
 
   it('rejects invalid Stacks addresses', () => {
+    // Wrong leading char ('X' instead of 'S')
     expect(() => serializeAddressData('XP000000000000000000002Q6VF78')).toThrow();
+    // Bad checksum (last char flipped)
     expect(() => serializeAddressData('SP000000000000000000002Q6VF79')).toThrow();
+    // Too short to be a valid Stacks address (< 5 chars)
+    expect(() => serializeAddressData('SP1')).toThrow();
+    // Too long to fit a 20-byte hash160 + checksum after c32 decode
+    expect(() => serializeAddressData(`SP${'1'.repeat(60)}`)).toThrow();
+    // Empty contract name after dot
+    expect(() => serializeAddressData('SP000000000000000000002Q6VF78.')).toThrow();
+  });
+
+  it('rejects oversized contract names', () => {
+    // 129-byte name exceeds the 128-byte sanity guardrail
+    const longName = 'a'.repeat(129);
+    expect(() => serializeAddressData(`SP000000000000000000002Q6VF78.${longName}`)).toThrow(
+      /contract name too long/,
+    );
   });
 
   it('loadStacksTransactions still resolves the package for async tx-signing paths', async () => {
