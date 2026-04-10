@@ -1,45 +1,43 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { encodeAddress } from '@sodax/sdk';
+import { encodeAddress, serializeAddressData, Sodax, StacksRawSpokeProvider } from '@sodax/sdk';
+import { spokeChainConfig, STACKS_MAINNET_CHAIN_ID } from '@sodax/types';
+import type { StacksSpokeChainConfig } from '@sodax/types';
 
 // Client component — exercises the Turbopack browser bundle of @sodax/sdk.
-// The SSR test in app/page.tsx covers the server bundle; this covers the
-// client bundle, which Turbopack produces separately and could in theory
-// have a different scope-hoisting outcome. See issue #1070.
+// Same tests as SSR page but in client context.
 export default function ClientPage() {
-  const [encoded, setEncoded] = useState<string>('loading...');
-  const [attempts, setAttempts] = useState(0);
+  const [results, setResults] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    let n = 0;
-    const id = setInterval(() => {
-      try {
-        const r = encodeAddress('stacks', 'SP000000000000000000002Q6VF78');
-        setEncoded(r);
-        setAttempts(n);
-        clearInterval(id);
-      } catch (e) {
-        n++;
-        setAttempts(n);
-        if (n > 50) {
-          setEncoded(`FAILED: ${String(e)}`);
-          clearInterval(id);
-        }
-      }
-    }, 10);
-    return () => clearInterval(id);
+    const encoded = encodeAddress('stacks', 'SP000000000000000000002Q6VF78');
+    const encodedContract = encodeAddress('stacks', 'SP3031RGK734636C8KGW2Y76TEQBTVX59Q472EQH0.asset-manager-impl');
+    const encodedAddressOnly = encodeAddress('stacks', 'SP3031RGK734636C8KGW2Y76TEQBTVX59Q472EQH0');
+    const serialized = serializeAddressData('SP1D5PA98M0PF9Z4Q4N2CDTMTD7XSZ6GE7QQG5XBX');
+    const sdk = new Sodax();
+    const stacksConfig = spokeChainConfig[STACKS_MAINNET_CHAIN_ID] as StacksSpokeChainConfig;
+    const provider = new StacksRawSpokeProvider('SP1D5PA98M0PF9Z4Q4N2CDTMTD7XSZ6GE7QQG5XBX', stacksConfig);
+
+    setResults({
+      encoded,
+      encodedContract,
+      encodedAddressOnly,
+      serialized,
+      sdk: sdk ? 'ok' : 'fail',
+      provider: provider ? 'ok' : 'fail',
+    });
   }, []);
 
   return (
     <main style={{ padding: 24, fontFamily: 'sans-serif' }}>
-      <h1>sodax next16 — client bundle stacks lazy path test</h1>
-      <p data-testid="encoded">encoded: {encoded}</p>
-      <p>retries: {attempts}</p>
-      <p>
-        Open browser devtools console — if Turbopack client bundle has the cycle bug, you will see
-        <code> Module XXX was instantiated... </code> here.
-      </p>
+      <h1>sodax next16 — client stacks integration test</h1>
+      <p data-testid="encoded">encoded: {results.encoded ?? 'loading...'}</p>
+      <p data-testid="encoded-contract">encodedContract: {results.encodedContract ?? 'loading...'}</p>
+      <p data-testid="encoded-address-only">encodedAddressOnly: {results.encodedAddressOnly ?? 'loading...'}</p>
+      <p data-testid="serialized">serialized: {results.serialized ?? 'loading...'}</p>
+      <p data-testid="sdk">sdk: {results.sdk ?? 'loading...'}</p>
+      <p data-testid="provider">provider: {results.provider ?? 'loading...'}</p>
     </main>
   );
 }
