@@ -47,7 +47,7 @@ export const tabConfigs: TabConfig[] = [
     content: 'a quick save',
     enabled: process.env.NEXT_PUBLIC_APP_ENV !== 'production',
     href: SAVE_ROUTE,
-    hidden: true,
+    hidden: process.env.NEXT_PUBLIC_APP_ENV === 'production',
   },
   {
     value: 'loans',
