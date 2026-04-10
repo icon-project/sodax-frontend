@@ -28,7 +28,7 @@ enum State {
   Error = 'error',
 }
 
-const MIN_SENDING_MS = 2000;
+const MIN_SENDING_MS = 5000;
 const SLOW_SEND_MS = 4000; // After this long in the spinner, show "Download instead" fallback
 const PLACEHOLDER_TEXT = 'Enter your email';
 const TYPEWRITER_SPEED_MS = 60;
@@ -245,6 +245,8 @@ export const LeadMagnetCTA = (): React.ReactElement => {
     trackLeadMagnetCtaClicked({ variant_id: variant.id });
     setState(State.Input);
     setTimeout(() => inputRef.current?.focus(), 50);
+    // Pre-execute Turnstile challenge while user types their email — removes it from the submit critical path
+    turnstileRef.current?.execute();
   }, [variant]);
 
   const handleBack = useCallback(() => {
@@ -263,14 +265,19 @@ export const LeadMagnetCTA = (): React.ReactElement => {
       let turnstileToken: string | undefined =
         turnstileTokenRef.current ?? turnstileRef.current?.getResponse() ?? undefined;
 
-      // Explicitly trigger the challenge at submit time (Safari ITP kills auto-render challenges)
+      // Challenge was pre-executed in handleGetQuickstart — wait briefly for it to finish
       if (TURNSTILE_SITE_KEY && turnstileRef.current && !turnstileToken) {
         try {
-          turnstileRef.current.execute();
-          turnstileToken = await turnstileRef.current.getResponsePromise(15000, 300);
+          turnstileToken = await turnstileRef.current.getResponsePromise(5000, 200);
         } catch {
-          // Final fallback — grab whatever's available
-          turnstileToken = turnstileRef.current.getResponse() ?? turnstileTokenRef.current ?? undefined;
+          // Token still not ready — reset and retry once (Safari ITP edge case)
+          try {
+            turnstileRef.current.reset();
+            turnstileRef.current.execute();
+            turnstileToken = await turnstileRef.current.getResponsePromise(5000, 200);
+          } catch {
+            turnstileToken = turnstileRef.current.getResponse() ?? turnstileTokenRef.current ?? undefined;
+          }
         }
       }
 
