@@ -103,7 +103,7 @@ function SendButton({ isValidEmail, onSubmit }: { isValidEmail: boolean; onSubmi
 const BASE_INPUT_WIDTH = 140; // min width of the text area (px) — fits ~15 chars comfortably
 const CHAR_WIDTH = 9; // average character width at 16px Inter (px)
 const FIELD_PADDING = 64; // horizontal padding: 24px (px-6) × 2 + 16px send icon area
-const MAX_INPUT_WIDTH = 300; // hard cap so the pill never exceeds the hero on mobile
+const MAX_INPUT_WIDTH = 500; // cap — fits emails up to ~55 chars before stopping growth
 
 function EmailInputField({
   inputRef,
@@ -135,15 +135,15 @@ function EmailInputField({
         aria-hidden="true"
         className="absolute inset-0 border-4 border-cherry-bright rounded-[32px] pointer-events-none"
       />
-      <div className="relative flex-1">
+      <div className="relative flex-1 overflow-hidden">
         {/* Hidden sizer — measures the actual text width */}
         <span className="invisible whitespace-pre font-[InterRegular] text-base leading-[1.4]">
           {email || typedPlaceholder || ' '}
         </span>
         {!email && (
           <span className="absolute inset-0 flex items-center text-cherry-brighter font-[InterRegular] text-base leading-[1.4] pointer-events-none">
+            {typedPlaceholder && <span className="mr-px w-px h-4 bg-white animate-blink" />}
             {typedPlaceholder}
-            {typedPlaceholder && <span className="ml-px w-px h-4 bg-white animate-pulse" />}
           </span>
         )}
         <input

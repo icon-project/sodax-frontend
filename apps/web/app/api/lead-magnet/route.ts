@@ -123,7 +123,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[lead-magnet] Error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    // Log the full error server-side; return a generic message to the client
+    console.error('[lead-magnet] Error:', error instanceof Error ? error.message : error);
+    return NextResponse.json({ error: 'Something went wrong — please try again' }, { status: 500 });
   }
 }
