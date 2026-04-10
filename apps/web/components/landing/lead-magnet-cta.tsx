@@ -9,6 +9,14 @@ import { CoffeeCupIcon } from '../icons/coffee-cup-icon';
 import { Button } from '@/components/ui/button';
 import { LEAD_MAGNET_PDF_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
 import { isValidEmail } from '@/lib/validate-email';
+import {
+  trackLeadMagnetCtaViewed,
+  trackLeadMagnetCtaClicked,
+  trackLeadMagnetEmailSubmitted,
+  trackLeadMagnetEmailSuccess,
+  trackLeadMagnetEmailError,
+  trackLeadMagnetPdfDownloaded,
+} from '@/lib/analytics';
 
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '';
 
@@ -26,6 +34,20 @@ const TYPEWRITER_SPEED_MS = 60;
 // Delay before the send icon slides in — matches total typewriter duration
 const TYPEWRITER_DURATION_S = (PLACEHOLDER_TEXT.length * TYPEWRITER_SPEED_MS) / 1000;
 const OVERSHOOT_EASE = [0.34, 1.56, 0.64, 1] as const;
+
+// --- A/B test variants ---
+
+const VARIANTS = [
+  { id: 'a', prefix: 'No time? ', cta: "Get the Builder's Guide" },
+  { id: 'b', prefix: 'Need a shortcut? ', cta: "Grab the Builder's Guide" },
+  { id: 'c', prefix: 'Evaluate later. ', cta: 'Get the free guide' },
+  { id: 'd', prefix: 'What does your app need? ', cta: "Get the Builder's Guide" },
+  { id: 'e', prefix: 'Level up your product. ', cta: "Get the Builder's Guide" },
+] as const;
+
+type Variant = (typeof VARIANTS)[number];
+
+const VARIANT_STORAGE_KEY = 'sodax_lm_variant';
 
 // --- Shared sub-components ---
 
@@ -175,6 +197,22 @@ export const LeadMagnetCTA = (): React.ReactElement => {
   const [isTyping, setIsTyping] = useState(false);
   const emailValid = isValidEmail(email);
 
+  // A/B variant — resolve from localStorage or assign randomly, track impression
+  const [variant, setVariant] = useState<Variant>(VARIANTS[0]);
+  useEffect(() => {
+    let picked: Variant;
+    const stored = localStorage.getItem(VARIANT_STORAGE_KEY);
+    const found = VARIANTS.find(v => v.id === stored);
+    if (found) {
+      picked = found;
+    } else {
+      picked = VARIANTS[Math.floor(Math.random() * VARIANTS.length)] ?? VARIANTS[0];
+      localStorage.setItem(VARIANT_STORAGE_KEY, picked.id);
+    }
+    setVariant(picked);
+    trackLeadMagnetCtaViewed({ variant_id: picked.id });
+  }, []);
+
   // Typewriter effect for placeholder when entering input state
   useEffect(() => {
     if (state !== State.Input && state !== State.Error) {
@@ -198,9 +236,10 @@ export const LeadMagnetCTA = (): React.ReactElement => {
   }, [state]);
 
   const handleGetQuickstart = useCallback(() => {
+    trackLeadMagnetCtaClicked({ variant_id: variant.id });
     setState(State.Input);
     setTimeout(() => inputRef.current?.focus(), 50);
-  }, []);
+  }, [variant]);
 
   const handleBack = useCallback(() => {
     setState(State.Idle);
@@ -211,6 +250,7 @@ export const LeadMagnetCTA = (): React.ReactElement => {
     if (!emailValid) return;
 
     setState(State.Sending);
+    trackLeadMagnetEmailSubmitted({ variant_id: variant.id });
 
     try {
       const startTime = Date.now();
@@ -246,11 +286,13 @@ export const LeadMagnetCTA = (): React.ReactElement => {
       }
 
       setState(State.Success);
+      trackLeadMagnetEmailSuccess({ variant_id: variant.id });
     } catch (err) {
       console.error('[lead-magnet]', err instanceof Error ? err.message : err);
       setState(State.Error);
+      trackLeadMagnetEmailError({ variant_id: variant.id });
     }
-  }, [email, emailValid]);
+  }, [email, emailValid, variant]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -287,13 +329,13 @@ export const LeadMagnetCTA = (): React.ReactElement => {
             Integrate SODAX
           </a>
           <p className="text-sm leading-[1.4]">
-            <span className="text-cherry-brighter">No time? </span>
+            <span className="text-cherry-brighter">{variant.prefix}</span>
             <button
               type="button"
               onClick={handleGetQuickstart}
               className="text-white font-[InterBold] hover:underline cursor-pointer bg-transparent border-none p-0"
             >
-              Get the Builder's Guide
+              {variant.cta}
             </button>
           </p>
         </>
@@ -370,6 +412,7 @@ export const LeadMagnetCTA = (): React.ReactElement => {
           <a
             href={LEAD_MAGNET_PDF_ROUTE}
             download
+            onClick={() => trackLeadMagnetPdfDownloaded({ variant_id: variant.id })}
             className="text-white font-[InterBold] hover:underline inline-flex items-center gap-1"
           >
             Download instead <Download className="size-3.5" />
