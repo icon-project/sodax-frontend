@@ -156,7 +156,10 @@ export function StakeInputPanel(): React.JSX.Element {
             max={sliderMaxValue === 0 ? 1 : sliderMaxValue}
             step={0.01}
             value={[Number(stakeTypedValue)]}
-            onValueChange={value => setStakeTypedValue(value[0] ? value[0].toString() : '')}
+            onValueChange={value => {
+              const v = value[0];
+              setStakeTypedValue(v ? v.toFixed(2) : '0');
+            }}
             className="h-10 data-[orientation=horizontal]:h-1 data-[disabled]:!opacity-100"
             trackClassName="bg-cream-white data-[orientation=horizontal]:h-1"
             rangeClassName={cn('[background-size:20px_20px]', 'bg-cherry-bright')}

@@ -142,7 +142,7 @@ export function StakeSelectorPanel(): React.JSX.Element {
                           className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
                           onClick={e => {
                             e.stopPropagation(); // Don't toggle network picker.
-                            setStakeValueByPercent(percent, balance);
+                            setStakeValueByPercent(percent, balance, 18);
                           }}
                         >
                           {percent}%
@@ -153,7 +153,9 @@ export function StakeSelectorPanel(): React.JSX.Element {
                       className="h-4 px-2 mix-blend-multiply bg-cream-white rounded-[256px] text-[9px] font-bold uppercase text-clay -mt-[2px] hover:bg-cherry-brighter hover:text-espresso active:bg-cream-white active:text-espresso"
                       onClick={e => {
                         e.stopPropagation(); // Don't toggle network picker.
-                        setStakeValueByPercent(100, balance);
+                        const decimals =
+                          stakeMode === STAKE_MODE.STAKING ? (selectedToken?.decimals ?? 18) : 18;
+                        setStakeValueByPercent(100, balance, decimals);
                       }}
                     >
                       MAX

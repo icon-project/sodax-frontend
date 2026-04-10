@@ -38,7 +38,7 @@ export type StakeState = {
 
 export type StakeActions = {
   setStakeTypedValue: (value: string) => void;
-  setStakeValueByPercent: (percent: number, maxValue: bigint) => void;
+  setStakeValueByPercent: (percent: number, maxValue: bigint, decimals?: number) => void;
   setCurrentStakeStep: (step: STAKE_STEP) => void;
   setTotalStakedUsdValue: (value: number) => void;
   setSelectedToken: (token: XToken | null) => void;
@@ -72,13 +72,18 @@ export const createStakeStore = (initState: StakeState = defaultStakeState) => {
       set({ stakeTypedValue: value });
     },
 
-    setStakeValueByPercent: (percent: number, maxValue: bigint) => {
+    setStakeValueByPercent: (percent: number, maxValue: bigint, decimals = 18) => {
+      let value: bigint;
       if (percent >= 100) {
-        set({ stakeTypedValue: formatUnits(maxValue, 18) });
-        return;
+        value = maxValue;
+      } else {
+        value = BigInt(
+          new BigNumber(maxValue.toString()).multipliedBy(Math.round(percent)).dividedBy(100).toFixed(0),
+        );
       }
-      const value = BigInt(new BigNumber(maxValue).multipliedBy(Math.round(percent)).dividedBy(100).toFixed(0));
-      set({ stakeTypedValue: formatUnits(value, 18) });
+      const raw = formatUnits(value, decimals);
+      const formatted = new BigNumber(raw).toFixed(2, BigNumber.ROUND_DOWN);
+      set({ stakeTypedValue: formatted });
     },
 
     setCurrentStakeStep: (step: STAKE_STEP) => set({ currentStakeStep: step }),
