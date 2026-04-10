@@ -92,7 +92,10 @@ export class UnisatXConnector extends BitcoinXConnector {
 
     const accounts = await window.unisat.requestAccounts();
     const address = accounts[0];
-    if (!address) return undefined;
+    if (!address) {
+      console.warn('[UnisatXConnector] connect: requestAccounts returned no address');
+      return undefined;
+    }
 
     this.walletProvider = new UnisatWalletProvider(window.unisat, address);
 
