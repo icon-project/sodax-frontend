@@ -74,6 +74,16 @@ export const rpcConfig: RpcConfig = {
     hyper: 'https://hyperliquid-mainnet.g.alchemy.com/v2/fnxOcaJJQBJZeMMFpLqwg',
   }),
 
+  ...(!isProduction && {
+    sonic: 'https://rpc.soniclabs.com',
+    '0x2105.base': 'https://base-rpc.publicnode.com',
+    '0x38.bsc': 'https://public-bsc-mainnet.fastnode.io',
+    '0xa.optimism': 'https://optimism-rpc.publicnode.com',
+    '0x89.polygon': 'https://rpc-mainnet.matic.quiknode.pro',
+    ethereum: 'https://ethereum-rpc.publicnode.com',
+    hyper: 'https://rpc.hyperliquid.xyz/evm',
+  }),
+
   // Other chains
   '0x1.icon': 'https://ctz.solidwallet.io/api/v3',
   solana: !isProduction
