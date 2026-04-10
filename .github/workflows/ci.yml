@@ -51,3 +51,6 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Next.js 16 Turbopack regression check
+        run: pnpm --filter example-next-js-16 verify

@@ -1,44 +1,68 @@
 #!/usr/bin/env node
-// Asserts that the SSR-prerendered page successfully ran the lazy stacks
-// code path inside @sodax/sdk. Fails build if not. See issue #1070.
+// Regression test for #1070: verifies SSR page renders correct Stacks
+// encoded addresses and client page builds without crash after
+// Next.js 16 Turbopack production build.
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 
-const candidates = [
-  '.next/server/app/index.html',
-  '.next/server/app/page.html',
-];
+let failed = false;
+const fail = (msg) => {
+  console.error(`FAIL: ${msg}`);
+  failed = true;
+};
+const ok = (msg) => console.log(`OK: ${msg}`);
 
-let html;
-let used;
-for (const path of candidates) {
-  try {
-    html = readFileSync(path, 'utf8');
-    used = path;
-    break;
-  } catch {}
+// Expected values from SSR page (server component renders synchronously)
+const EXPECTED = {
+  encoded: '0x05160000000000000000000000000000000000000000',
+  encodedContract: '0x0616c030e21338c86199889c382f1cda75d7adf4a9b91261737365742d6d616e616765722d696d706c',
+  encodedAddressOnly: '0x0516c030e21338c86199889c382f1cda75d7adf4a9b9',
+  serialized: '0x05165a5b2928a02cf4fc972544c6ea9a69fb9f9a0e3d',
+  sdk: 'ok',
+  provider: 'ok',
+};
+
+// --- SSR page: check exact values in prerendered HTML ---
+{
+  const paths = ['.next/server/app/index.html', '.next/server/app/page.html'];
+  let html;
+  let used;
+  for (const path of paths) {
+    try {
+      html = readFileSync(path, 'utf8');
+      used = path;
+      break;
+    } catch {}
+  }
+
+  if (!html) {
+    fail(`ssr: could not find prerendered HTML in ${paths.join(', ')}`);
+  } else {
+    for (const [key, expected] of Object.entries(EXPECTED)) {
+      if (html.includes(expected)) {
+        ok(`ssr ${key}: ${expected.slice(0, 40)}${expected.length > 40 ? '...' : ''}`);
+      } else {
+        fail(`ssr ${key}: expected value not found in ${used}`);
+      }
+    }
+  }
 }
 
-if (!html) {
-  console.error('verify-build: could not find prerendered HTML in', candidates);
+// --- Client page: confirm it built without Turbopack crash ---
+// Client component renders via useEffect, so prerendered HTML only has
+// "loading..." — we just verify the page was built successfully.
+{
+  const paths = ['.next/server/app/client.html', '.next/server/app/client/index.html'];
+  const exists = paths.some(p => existsSync(p));
+  if (exists) {
+    ok('client page built successfully');
+  } else {
+    fail('client page not found — Turbopack build may have crashed');
+  }
+}
+
+if (failed) {
+  console.error('\nverify-build: FAILED');
   process.exit(1);
 }
-
-if (html.includes('FAILED')) {
-  console.error('verify-build: BROKEN — page reported FAILED.');
-  console.error(html.match(/FAILED[^"]*/)?.[0] ?? '');
-  process.exit(1);
-}
-
-// Stacks principal `SP000000000000000000002Q6VF78` serialized via Cl.principal()
-// + serializeCV() always begins with `0x0516` (Clarity StandardPrincipal version 0x05,
-// type 0x16 = principal). Use this as the runtime success signature.
-const hexMatch = html.match(/0x05[0-9a-f]{40,}/i);
-if (!hexMatch) {
-  console.error(`verify-build: BROKEN — no Stacks principal hex found in ${used}`);
-  console.error('  Expected pattern: 0x05XX... (Cl.principal serialized)');
-  process.exit(1);
-}
-
-console.log(`verify-build: OK — lazy stacks path works at Turbopack SSR prerender.`);
-console.log(`  ${used}: encoded ${hexMatch[0]}`);
+console.log('\nverify-build: OK — SSR values correct, client page built');
