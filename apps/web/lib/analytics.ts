@@ -74,6 +74,8 @@ export interface AddLiquidityCompletedEvent {
   amount_soda: string;
   amount_xsoda: string;
   source_chain: string;
+  spoke_transaction_hash: string;
+  hub_transaction_hash: string;
 }
 
 export interface WithdrawLiquidityCompletedEvent {
@@ -81,6 +83,8 @@ export interface WithdrawLiquidityCompletedEvent {
   position_id: string;
   withdraw_percentage: number;
   source_chain: string;
+  spoke_transaction_hash: string;
+  hub_transaction_hash: string;
 }
 
 export interface ClaimFeesCompletedEvent {
@@ -89,6 +93,8 @@ export interface ClaimFeesCompletedEvent {
   fees_soda: string;
   fees_xsoda: string;
   source_chain: string;
+  spoke_transaction_hash: string;
+  hub_transaction_hash: string;
 }
 
 // Extend Window interface for dataLayer

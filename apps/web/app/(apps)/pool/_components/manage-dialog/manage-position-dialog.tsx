@@ -21,7 +21,7 @@ import {
 } from '@sodax/dapp-kit';
 import { spokeChainConfig } from '@sodax/sdk';
 import type { ClPositionInfo, PoolData, PoolKey, PoolSpokeAssets } from '@sodax/sdk';
-import type { ChainId, SpokeChainId } from '@sodax/types';
+import type { SpokeChainId } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { CircleEllipsisIcon, PlusCircleIcon, MinusCircleIcon, XIcon } from 'lucide-react';
 import { AddLiquidityTabContent } from '@/app/(apps)/pool/_components/manage-dialog/add-liquidity-tab-content';
@@ -320,7 +320,7 @@ export function ManagePositionDialog({
     const timeoutErrorMessage = 'Claim request timed out. Please check your wallet and try again.';
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     try {
-      await Promise.race([
+      const [claimSpokeTxHash, claimHubTxHash] = await Promise.race([
         claimRewardsMutation.mutateAsync({
           params: {
             poolKey,
@@ -339,9 +339,11 @@ export function ManagePositionDialog({
       setIsClaimSuccess(true);
       trackClaimFeesCompleted({
         position_id: tokenId,
-        fees_soda: formatUnits(unclaimedFees0, poolData.token0.decimals),
+        fees_soda: convertPoolTokenToSodaAmount(formatUnits(unclaimedFees0, poolData.token0.decimals)),
         fees_xsoda: formatUnits(unclaimedFees1, poolData.token1.decimals),
-        source_chain: chainIdToChainName(spokeChainId as ChainId),
+        source_chain: chainIdToChainName(spokeChainId),
+        spoke_transaction_hash: claimSpokeTxHash,
+        hub_transaction_hash: claimHubTxHash,
       });
       await refreshDexQueries();
     } catch (claimErr) {
@@ -393,7 +395,7 @@ export function ManagePositionDialog({
     setIsAddLiquiditySuccess(false);
 
     try {
-      await supplyLiquidityMutation.mutateAsync({
+      const [addSpokeTxHash, addHubTxHash] = await supplyLiquidityMutation.mutateAsync({
         params: createSupplyLiquidityParamsProps({
           poolData,
           poolKey,
@@ -420,9 +422,11 @@ export function ManagePositionDialog({
       setIsAddLiquiditySuccess(true);
       trackAddLiquidityCompleted({
         position_id: tokenId,
-        amount_soda: supplyToken0Amount,
+        amount_soda: convertPoolTokenToSodaAmount(supplyToken0Amount),
         amount_xsoda: supplyToken1Amount,
-        source_chain: chainIdToChainName(spokeChainId as ChainId),
+        source_chain: chainIdToChainName(spokeChainId),
+        spoke_transaction_hash: addSpokeTxHash,
+        hub_transaction_hash: addHubTxHash,
       });
       await refreshDexQueries();
     } catch (supplyError) {
@@ -566,7 +570,7 @@ export function ManagePositionDialog({
     }
 
     try {
-      await decreaseLiquidityMutation.mutateAsync({
+      const [withdrawSpokeTxHash, withdrawHubTxHash] = await decreaseLiquidityMutation.mutateAsync({
         params: createDecreaseLiquidityParamsProps({
           poolKey,
           tokenId,
@@ -606,7 +610,9 @@ export function ManagePositionDialog({
       trackWithdrawLiquidityCompleted({
         position_id: tokenId,
         withdraw_percentage: parsedPercentage,
-        source_chain: chainIdToChainName(spokeChainId as ChainId),
+        source_chain: chainIdToChainName(spokeChainId),
+        spoke_transaction_hash: withdrawSpokeTxHash,
+        hub_transaction_hash: withdrawHubTxHash,
       });
       await refreshDexQueries();
     } catch (withdrawErr) {
