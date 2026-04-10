@@ -58,16 +58,20 @@ export const SolanaHydrator = () => {
     }
   }, [solanaWallet.connected, solanaWallet.publicKey, solanaWallet.wallet, setXConnection, unsetXConnection]);
 
-  // Memoize wallet provider so a new instance is only created when its inputs change.
+  // Memoize wallet provider. Must wait for publicKey to be available — without it,
+  // SolanaWalletProvider.getWalletAddress() throws "Wallet public key is not initialized".
+  // Use solanaWallet directly (not ref) because useMemo runs DURING render, before the
+  // effect that syncs the ref — ref would be one render behind.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: solanaWallet object ref changes every render but we only care about the listed primitive/stable fields; adding solanaWallet itself would defeat memoization
   const walletProvider = useMemo(() => {
-    if (solanaWallet.connected && solanaWallet.wallet && connection) {
+    if (solanaWallet.connected && solanaWallet.publicKey && solanaWallet.wallet && connection) {
       return new SolanaWalletProvider({
-        wallet: solanaWalletRef.current,
+        wallet: solanaWallet,
         endpoint: connection.rpcEndpoint,
       });
     }
     return undefined;
-  }, [solanaWallet.connected, solanaWallet.wallet, connection]);
+  }, [solanaWallet.connected, solanaWallet.publicKey, solanaWallet.wallet, connection]);
 
   useEffect(() => {
     SolanaXService.getInstance().wallet = solanaWalletRef.current;

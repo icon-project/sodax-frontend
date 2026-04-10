@@ -6,14 +6,22 @@ import { SOLANA_METAMASK_CONNECT_TIMEOUT_MS } from '../../constants';
 
 /**
  * Registers Solana ChainActions into the store.
- * Handles MetaMask timeout logic for Solana connect.
+ *
+ * Connect strategy:
+ * - select() tells wallet-adapter-react which wallet to use.
+ * - Guard: if adapter is already connected (autoConnect on refresh) or connecting
+ *   (autoConnect in progress), skip — no duplicate connect.
+ * - Otherwise: adapter.connect() directly (bypasses React state, avoids
+ *   WalletNotSelectedError from stale ref after select()).
+ * - MetaMask: event-based adapter.connect() with timeout (adapter requires it).
  */
 export const SolanaActions = () => {
   const solanaWallet = useWallet();
   const registerChainActions = useXWalletStore(state => state.registerChainActions);
 
+  // Ref keeps latest useWallet() value for closures registered once via registerChainActions.
+  // Without ref, closures would capture stale values from the initial render.
   const walletRef = useRef(solanaWallet);
-
   useEffect(() => { walletRef.current = solanaWallet; }, [solanaWallet]);
 
   useEffect(() => {
@@ -30,6 +38,12 @@ export const SolanaActions = () => {
 
         walletRef.current.select(wallet.adapter.name);
 
+        // Check adapter directly (sync, source of truth) — NOT React state (async, stale in closures).
+        // Covers: autoConnect already connected, autoConnect in progress, duplicate click.
+        if (wallet.adapter.connected || wallet.adapter.connecting) {
+          return undefined;
+        }
+
         if (wallet.adapter.name === 'MetaMask') {
           await new Promise<void>((resolve, reject) => {
             const timeout = setTimeout(() => {
@@ -37,16 +51,8 @@ export const SolanaActions = () => {
               reject(new Error('Wallet connection timeout'));
             }, SOLANA_METAMASK_CONNECT_TIMEOUT_MS);
 
-            const handleConnect = () => {
-              cleanup();
-              resolve();
-            };
-
-            const handleError = (error: Error) => {
-              cleanup();
-              reject(error);
-            };
-
+            const handleConnect = () => { cleanup(); resolve(); };
+            const handleError = (error: Error) => { cleanup(); reject(error); };
             const cleanup = () => {
               clearTimeout(timeout);
               wallet.adapter.off('connect', handleConnect);
@@ -55,16 +61,9 @@ export const SolanaActions = () => {
 
             wallet.adapter.on('connect', handleConnect);
             wallet.adapter.on('error', handleError);
-
-            walletRef.current.connect().catch(err => {
-              cleanup();
-              reject(err);
-            });
+            wallet.adapter.connect().catch(err => { cleanup(); reject(err); });
           });
-        } else if (!walletRef.current.connected) {
-          // Use adapter.connect() directly — walletRef.current.connect() goes through
-          // React state which may not have settled after select() yet, causing
-          // WalletNotSelectedError.
+        } else {
           await wallet.adapter.connect();
         }
 
@@ -72,7 +71,6 @@ export const SolanaActions = () => {
       },
       disconnect: async () => {
         await walletRef.current.disconnect();
-        // Solana disconnection state is cleared by SolanaHydrator (single writer for provider-managed chains)
       },
       getConnectors: () => SolanaXService.getInstance().getXConnectors(),
       getConnection: () => useXWalletStore.getState().xConnections.SOLANA,
