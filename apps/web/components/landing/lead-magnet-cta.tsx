@@ -408,12 +408,13 @@ export const LeadMagnetCTA = (): React.ReactElement => {
       return (
         <>
           <div className="flex items-center justify-center">
-            <div className="relative flex items-center h-12 rounded-[32px] px-6 min-w-[204px]">
+            <BackButton onClick={handleBack} />
+            <div className="relative z-10 flex items-center h-12 rounded-[32px] px-6 min-w-[204px] bg-cherry-soda">
               <div
                 aria-hidden="true"
                 className="absolute inset-0 border-4 border-cherry-bright rounded-[32px] pointer-events-none"
               />
-              <span className="text-cherry-brighter font-[InterRegular] text-base leading-[1.4]">{email}</span>
+              <span className="text-white font-[InterRegular] text-base leading-[1.4]">{email}</span>
               <Check className="ml-2 size-4 text-white shrink-0" />
             </div>
           </div>
@@ -452,7 +453,7 @@ export const LeadMagnetCTA = (): React.ReactElement => {
 
   return (
     <>
-      <div key={state} className="flex flex-col items-center gap-4 animate-fadeIn">
+      <div className="flex flex-col items-center gap-4">
         {renderContent()}
       </div>
       {TURNSTILE_SITE_KEY && (

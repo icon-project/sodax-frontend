@@ -126,7 +126,7 @@ const HeroSection = (): React.ReactElement => {
                 alt=""
                 width={32}
                 height={120}
-                className="hidden md:block -scale-x-100"
+                className="-scale-x-100"
               />
               <div className="text-white font-[InterBold] text-(length:--app-title) leading-[1.1] text-center whitespace-nowrap">
                 One SDK.
@@ -136,7 +136,7 @@ const HeroSection = (): React.ReactElement => {
                 across networks.
               </div>
               {/* Right brace — horizontally flipped */}
-              <Image src="/landing/brace-right.svg" alt="" width={32} height={120} className="hidden md:block" />
+              <Image src="/landing/brace-right.svg" alt="" width={32} height={120} />
             </div>
             <LeadMagnetCTA />
           </div>
