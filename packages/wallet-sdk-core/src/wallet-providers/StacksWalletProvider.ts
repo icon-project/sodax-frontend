@@ -10,7 +10,6 @@ import {
   type PostConditionModeName,
 } from '@stacks/transactions';
 import type { StacksProvider } from '@stacks/connect';
-import { request } from '@stacks/connect';
 
 import type { IStacksWalletProvider, StacksTransactionParams } from '@sodax/types';
 
@@ -109,6 +108,7 @@ export class StacksWalletProvider implements IStacksWalletProvider {
   }
 
   private async sendTransactionWithAdapter(txParams: StacksTransactionParams): Promise<string> {
+    const { request } = await import('@stacks/connect');
     const browserWallet = this.wallet as StacksBrowserExtensionWallet;
     const contract = `${txParams.contractAddress}.${txParams.contractName}` as `${string}.${string}`;
 

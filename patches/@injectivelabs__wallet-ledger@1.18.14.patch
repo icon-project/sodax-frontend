@@ -1,0 +1,30 @@
+diff --git a/dist/esm/Eth-DezsK7L6.js b/dist/esm/Eth-DezsK7L6.js
+--- a/dist/esm/Eth-DezsK7L6.js
++++ b/dist/esm/Eth-DezsK7L6.js
+@@ -17,7 +17,7 @@
+ var require_core = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+ 	(function(root, factory) {
+ 		if (typeof exports === "object") module.exports = exports = factory();
+-		else if (typeof define === "function" && define.amd) define([], factory);
++		else if (false) {}
+ 		else root.CryptoJS = factory();
+ 	})(exports, function() {
+ 		/**
+@@ -288,7 +288,7 @@
+ var require_sha256 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+ 	(function(root, factory) {
+ 		if (typeof exports === "object") module.exports = exports = factory(require_core());
+-		else if (typeof define === "function" && define.amd) define(["./core"], factory);
++		else if (false) {}
+ 		else factory(root.CryptoJS);
+ 	})(exports, function(CryptoJS) {
+ 		(function(Math$1) {
+@@ -428,7 +428,7 @@
+ var require_sha224 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+ 	(function(root, factory, undef) {
+ 		if (typeof exports === "object") module.exports = exports = factory(require_core(), require_sha256());
+-		else if (typeof define === "function" && define.amd) define(["./core", "./sha256"], factory);
++		else if (false) {}
+ 		else factory(root.CryptoJS);
+ 	})(exports, function(CryptoJS) {
+ 		(function() {

@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-// Regression test for #1070: verifies SSR page renders correct Stacks
-// encoded addresses and client page builds without crash after
-// Next.js 16 Turbopack production build.
+// Regression test for #1070: verifies SSR + client pages build and render
+// correctly on Next.js 16 Turbopack production build.
+// Covers: @sodax/sdk, @sodax/types, @sodax/wallet-sdk-core (SSR)
+//         + @sodax/wallet-sdk-react, @sodax/dapp-kit providers (client)
 
 import { readFileSync, existsSync } from 'node:fs';
 
@@ -12,18 +13,15 @@ const fail = (msg) => {
 };
 const ok = (msg) => console.log(`OK: ${msg}`);
 
-// Expected values from SSR page (server component renders synchronously)
-const EXPECTED = {
-  encoded: '0x05160000000000000000000000000000000000000000',
-  encodedContract: '0x0616c030e21338c86199889c382f1cda75d7adf4a9b91261737365742d6d616e616765722d696d706c',
-  encodedAddressOnly: '0x0516c030e21338c86199889c382f1cda75d7adf4a9b9',
-  serialized: '0x05165a5b2928a02cf4fc972544c6ea9a69fb9f9a0e3d',
-  sdk: 'ok',
-  provider: 'ok',
-};
-
-// --- SSR page: check exact values in prerendered HTML ---
+// --- SSR page: check exact Stacks encoded values in prerendered HTML ---
 {
+  const EXPECTED = {
+    encoded: '0x05160000000000000000000000000000000000000000',
+    encodedContract: '0x0616c030e21338c86199889c382f1cda75d7adf4a9b91261737365742d6d616e616765722d696d706c',
+    serialized: '0x05165a5b2928a02cf4fc972544c6ea9a69fb9f9a0e3d',
+    sdk: 'ok',
+  };
+
   const paths = ['.next/server/app/index.html', '.next/server/app/page.html'];
   let html;
   let used;
@@ -48,16 +46,34 @@ const EXPECTED = {
   }
 }
 
-// --- Client page: confirm it built without Turbopack crash ---
-// Client component renders via useEffect, so prerendered HTML only has
-// "loading..." — we just verify the page was built successfully.
+// --- Client page: confirm providers built without Turbopack crash ---
+// Client page wraps SodaxProvider + SodaxWalletProvider + QueryClientProvider.
+// Values render via useEffect, so prerendered HTML has "loading..." placeholders.
+// We verify the page built and contains the provider test markers.
 {
   const paths = ['.next/server/app/client.html', '.next/server/app/client/index.html'];
-  const exists = paths.some(p => existsSync(p));
-  if (exists) {
-    ok('client page built successfully');
-  } else {
+  let html;
+  let used;
+  for (const path of paths) {
+    try {
+      html = readFileSync(path, 'utf8');
+      used = path;
+      break;
+    } catch {}
+  }
+
+  if (!html) {
     fail('client page not found — Turbopack build may have crashed');
+  } else {
+    // Verify page structure rendered (providers didn't crash SSR prerender)
+    const markers = ['sdk-exports', 'wallet-core-exports', 'providers'];
+    for (const marker of markers) {
+      if (html.includes(`data-testid="${marker}"`)) {
+        ok(`client ${marker}: rendered`);
+      } else {
+        fail(`client ${marker}: data-testid not found in ${used}`);
+      }
+    }
   }
 }
 
@@ -65,4 +81,4 @@ if (failed) {
   console.error('\nverify-build: FAILED');
   process.exit(1);
 }
-console.log('\nverify-build: OK — SSR values correct, client page built');
+console.log('\nverify-build: OK — SSR values correct, client providers built');

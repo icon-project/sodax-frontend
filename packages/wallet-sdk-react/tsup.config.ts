@@ -10,7 +10,10 @@ export default defineConfig(options => ({
   clean: true,
   target: 'node18', // ✅ Use Node 18 baseline (modern features)
   treeshake: true,
-  external: ['react', 'react-dom', '@tanstack/react-query'],
+  external: ['react', 'react-dom', '@tanstack/react-query', 'crypto', 'node:crypto'], // Externalize Node crypto builtin for bundled @stacks/* transitive deps
+  noExternal: [
+    '@stacks/transactions', '@stacks/network', // Force-bundle to avoid Turbopack scope-hoisting cycle (#1070)
+  ],
   esbuildOptions(options) {
     options.platform = 'neutral'; // Don't assume node/browser — supports both
     options.mainFields = ['module', 'main'];

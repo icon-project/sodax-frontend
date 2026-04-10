@@ -1,7 +1,6 @@
 import type { XAccount } from '@/types';
 import { XConnector } from '@/core';
 import type { StacksProvider } from '@stacks/connect';
-import { request, disconnect } from '@stacks/connect';
 
 export interface StacksProviderConfig {
   /** The provider ID matching the window path, e.g. 'LeatherProvider' or 'XverseProviders.BitcoinProvider' */
@@ -35,6 +34,7 @@ export class StacksXConnector extends XConnector {
       return undefined;
     }
 
+    const { request } = await import('@stacks/connect');
     const response = await request({ provider }, 'stx_getAddresses');
     // @ts-ignore
     const stxAddress = response.addresses.find(a => a.purpose === 'stacks');
@@ -50,6 +50,7 @@ export class StacksXConnector extends XConnector {
   }
 
   async disconnect(): Promise<void> {
+    const { disconnect } = await import('@stacks/connect');
     disconnect();
   }
 
