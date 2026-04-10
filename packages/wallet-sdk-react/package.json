@@ -39,6 +39,7 @@
     "clean": "rm -rf dist && rm -rf node_modules && rm -rf .turbo",
     "pretty": "biome format . --write",
     "checkTs": "tsc --noEmit",
+    "test": "vitest run",
     "knip": "knip",
     "lint": "biome lint . --write"
   },
@@ -77,6 +78,7 @@
   },
   "devDependencies": {
     "@types/react": "^19.0.8",
+    "happy-dom": "^20.8.9",
     "knip": "5.30.5",
     "tsup": "catalog:",
     "typescript": "catalog:",

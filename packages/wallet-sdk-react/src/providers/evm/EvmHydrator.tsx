@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useConfig, useConnectors, useConnections, useAccount, usePublicClient, useWalletClient } from 'wagmi';
 import { EvmWalletProvider } from '@sodax/wallet-sdk-core';
 import { EvmXService } from '../../xchains/evm/EvmXService';
@@ -11,6 +11,7 @@ import { useXWalletStore } from '../../useXWalletStore';
  */
 export const EvmHydrator = () => {
   const wagmiConfig = useConfig();
+  const connectors = useConnectors();
   const evmConnections = useConnections();
   const { address } = useAccount();
   const evmPublicClient = usePublicClient();
@@ -27,12 +28,11 @@ export const EvmHydrator = () => {
   }, [wagmiConfig]);
 
   // Hydrate connectors into store (useConnectors is reactive to EIP-6963 discovery)
-  const connectors = useConnectors();
+  const evmConnectors = useMemo(() => connectors.map(c => new EvmXConnector(c)), [connectors]);
   useEffect(() => {
-    const evmConnectors = connectors.map(c => new EvmXConnector(c));
     EvmXService.getInstance().setXConnectors(evmConnectors);
     useXWalletStore.getState().setXConnectors('EVM', evmConnectors);
-  }, [connectors]);
+  }, [evmConnectors]);
 
   // Hydrate connection state into store (set + unset)
   const wasConnectedRef = useRef(!!useXWalletStore.getState().xConnections.EVM);
@@ -49,14 +49,20 @@ export const EvmHydrator = () => {
     }
   }, [address, evmConnections, setXConnection, unsetXConnection]);
 
-  // Hydrate EVM wallet provider into store
-  useEffect(() => {
+  // Memoize wallet provider so a new instance is only created when client refs actually change.
+  // wagmi returns new client object refs across some renders even when underlying state is stable —
+  // without memoization, the store would receive a new EvmWalletProvider on every render, causing
+  // every consumer of useWalletProvider('EVM') to re-render unnecessarily.
+  const walletProvider = useMemo(() => {
     if (evmPublicClient && evmWalletClient) {
-      setWalletProvider('EVM', new EvmWalletProvider({ walletClient: evmWalletClient, publicClient: evmPublicClient }));
-    } else {
-      setWalletProvider('EVM', undefined);
+      return new EvmWalletProvider({ walletClient: evmWalletClient, publicClient: evmPublicClient });
     }
-  }, [evmPublicClient, evmWalletClient, setWalletProvider]);
+    return undefined;
+  }, [evmPublicClient, evmWalletClient]);
+
+  useEffect(() => {
+    setWalletProvider('EVM', walletProvider);
+  }, [walletProvider, setWalletProvider]);
 
   return null;
 };

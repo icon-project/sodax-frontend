@@ -62,7 +62,10 @@ export const SolanaActions = () => {
             });
           });
         } else if (!walletRef.current.connected) {
-          await walletRef.current.connect();
+          // Use adapter.connect() directly — walletRef.current.connect() goes through
+          // React state which may not have settled after select() yet, causing
+          // WalletNotSelectedError.
+          await wallet.adapter.connect();
         }
 
         return undefined;

@@ -19,10 +19,13 @@ export const EvmActions = () => {
   const signMessageRef = useRef(signMessageAsync);
   const wagmiConfigRef = useRef(wagmiConfig);
 
-  useEffect(() => { connectRef.current = connectAsync; }, [connectAsync]);
-  useEffect(() => { disconnectRef.current = disconnectAsync; }, [disconnectAsync]);
-  useEffect(() => { signMessageRef.current = signMessageAsync; }, [signMessageAsync]);
-  useEffect(() => { wagmiConfigRef.current = wagmiConfig; }, [wagmiConfig]);
+  // Sync all wagmi hook refs in a single effect to avoid 4 separate effect commits per render.
+  useEffect(() => {
+    connectRef.current = connectAsync;
+    disconnectRef.current = disconnectAsync;
+    signMessageRef.current = signMessageAsync;
+    wagmiConfigRef.current = wagmiConfig;
+  }, [connectAsync, disconnectAsync, signMessageAsync, wagmiConfig]);
 
   useEffect(() => {
     registerChainActions('EVM', {

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { SolanaWalletProvider } from '@sodax/wallet-sdk-core';
 import { SolanaXService } from '../../xchains/solana/SolanaXService';
@@ -21,19 +21,28 @@ export const SolanaHydrator = () => {
     }
   }, [connection]);
 
-  // useWallet() returns a new object ref every render — use a ref so effects
-  // that need the full object can read it without listing the object as a dep.
+  // useWallet() returns a new object ref every render — keep a ref so effects
+  // can read the full object without listing it as a dep.
+  // Empty deps array means this effect runs after every render to keep the ref fresh.
   const solanaWalletRef = useRef(solanaWallet);
-  useEffect(() => { solanaWalletRef.current = solanaWallet; });
-
-  const solanaWallets = solanaWallet.wallets;
   useEffect(() => {
-    const solanaConnectors = solanaWallets
-      .filter(wallet => wallet.readyState === 'Installed')
-      .map(wallet => new SolanaXConnector(wallet));
+    solanaWalletRef.current = solanaWallet;
+  });
+
+  // Memoize installed connectors. solanaWallet.wallets is an unstable array reference,
+  // but we only care about the installed subset and stable adapter identity.
+  const solanaConnectors = useMemo(
+    () =>
+      solanaWallet.wallets
+        .filter(wallet => wallet.readyState === 'Installed')
+        .map(wallet => new SolanaXConnector(wallet)),
+    [solanaWallet.wallets],
+  );
+
+  useEffect(() => {
     SolanaXService.getInstance().setXConnectors(solanaConnectors);
     useXWalletStore.getState().setXConnectors('SOLANA', solanaConnectors);
-  }, [solanaWallets]);
+  }, [solanaConnectors]);
 
   const wasConnectedRef = useRef(!!useXWalletStore.getState().xConnections.SOLANA);
   useEffect(() => {
@@ -49,17 +58,21 @@ export const SolanaHydrator = () => {
     }
   }, [solanaWallet.connected, solanaWallet.publicKey, solanaWallet.wallet, setXConnection, unsetXConnection]);
 
-  useEffect(() => {
-    SolanaXService.getInstance().wallet = solanaWalletRef.current;
+  // Memoize wallet provider so a new instance is only created when its inputs change.
+  const walletProvider = useMemo(() => {
     if (solanaWallet.connected && solanaWallet.wallet && connection) {
-      setWalletProvider('SOLANA', new SolanaWalletProvider({
+      return new SolanaWalletProvider({
         wallet: solanaWalletRef.current,
         endpoint: connection.rpcEndpoint,
-      }));
-    } else {
-      setWalletProvider('SOLANA', undefined);
+      });
     }
-  }, [solanaWallet.connected, solanaWallet.wallet, connection, setWalletProvider]);
+    return undefined;
+  }, [solanaWallet.connected, solanaWallet.wallet, connection]);
+
+  useEffect(() => {
+    SolanaXService.getInstance().wallet = solanaWalletRef.current;
+    setWalletProvider('SOLANA', walletProvider);
+  }, [walletProvider, setWalletProvider]);
 
   return null;
 };
