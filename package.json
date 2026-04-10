@@ -32,9 +32,6 @@
       "@hpke/core": ">=1.8.0",
       "valibot": ">=1.2.0",
       "axios": "1.13.2"
-    },
-    "patchedDependencies": {
-      "@injectivelabs/wallet-ledger@1.18.14": "patches/@injectivelabs__wallet-ledger@1.18.14.patch"
     }
   }
 }

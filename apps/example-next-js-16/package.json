@@ -18,6 +18,7 @@
     "@sodax/wallet-sdk-react": "workspace:*",
     "@stacks/transactions": "7.3.1",
     "crypto-js": "^4.2.0",
+    "string-replace-loader": "^3.1.0",
     "@tanstack/react-query": "catalog:",
     "next": "^16.0.0",
     "react": "catalog:",
