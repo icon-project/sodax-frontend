@@ -7,20 +7,17 @@ import { SOLANA_METAMASK_CONNECT_TIMEOUT_MS } from '../../constants';
 /**
  * Registers Solana ChainActions into the store.
  *
- * Connect strategy:
- * - select() tells wallet-adapter-react which wallet to use.
- * - Guard: if adapter is already connected (autoConnect on refresh) or connecting
- *   (autoConnect in progress), skip — no duplicate connect.
- * - Otherwise: adapter.connect() directly (bypasses React state, avoids
- *   WalletNotSelectedError from stale ref after select()).
- * - MetaMask: event-based adapter.connect() with timeout (adapter requires it).
+ * Connect strategy (unified for all Solana wallets including MetaMask):
+ * 1. select() tells wallet-adapter-react which wallet to use.
+ * 2. If already connected (autoConnect on refresh), skip.
+ * 3. Listen for adapter 'connect'/'error' events first.
+ * 4. Trigger walletRef.current.connect() after a tick (React needs to flush select() state).
+ * 5. Resolve/reject based on adapter events — no timing dependency.
  */
 export const SolanaActions = () => {
   const solanaWallet = useWallet();
   const registerChainActions = useXWalletStore(state => state.registerChainActions);
 
-  // Ref keeps latest useWallet() value for closures registered once via registerChainActions.
-  // Without ref, closures would capture stale values from the initial render.
   const walletRef = useRef(solanaWallet);
   useEffect(() => { walletRef.current = solanaWallet; }, [solanaWallet]);
 
@@ -38,34 +35,39 @@ export const SolanaActions = () => {
 
         walletRef.current.select(wallet.adapter.name);
 
-        // Check adapter directly (sync, source of truth) — NOT React state (async, stale in closures).
-        // Covers: autoConnect already connected, autoConnect in progress, duplicate click.
-        if (wallet.adapter.connected || wallet.adapter.connecting) {
+        // Already connected (e.g. autoConnect on page refresh) — nothing to do
+        if (wallet.adapter.connected) {
           return undefined;
         }
 
-        if (wallet.adapter.name === 'MetaMask') {
-          await new Promise<void>((resolve, reject) => {
-            const timeout = setTimeout(() => {
-              cleanup();
-              reject(new Error('Wallet connection timeout'));
-            }, SOLANA_METAMASK_CONNECT_TIMEOUT_MS);
+        // Event-driven connect: listen for result first, then trigger.
+        // Works for all wallets (Phantom, MetaMask, etc.) without timing assumptions.
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            cleanup();
+            reject(new Error('Wallet connection timeout'));
+          }, SOLANA_METAMASK_CONNECT_TIMEOUT_MS);
 
-            const handleConnect = () => { cleanup(); resolve(); };
-            const handleError = (error: Error) => { cleanup(); reject(error); };
-            const cleanup = () => {
-              clearTimeout(timeout);
-              wallet.adapter.off('connect', handleConnect);
-              wallet.adapter.off('error', handleError);
-            };
+          const onConnect = () => { cleanup(); resolve(); };
+          const onError = (err: Error) => { cleanup(); reject(err); };
+          const cleanup = () => {
+            clearTimeout(timeout);
+            wallet.adapter.off('connect', onConnect);
+            wallet.adapter.off('error', onError);
+          };
 
-            wallet.adapter.on('connect', handleConnect);
-            wallet.adapter.on('error', handleError);
-            wallet.adapter.connect().catch(err => { cleanup(); reject(err); });
-          });
-        } else {
-          await wallet.adapter.connect();
-        }
+          wallet.adapter.on('connect', onConnect);
+          wallet.adapter.on('error', onError);
+
+          // Yield one tick so React can flush select() state, then trigger connect
+          // through React layer. If autoConnect is already connecting, skip — the
+          // event listeners above will catch the result either way.
+          setTimeout(() => {
+            if (!wallet.adapter.connected && !wallet.adapter.connecting) {
+              walletRef.current.connect().catch(err => { cleanup(); reject(err); });
+            }
+          }, 0);
+        });
 
         return undefined;
       },
