@@ -481,6 +481,16 @@
   animation: fadeIn 600ms ease-out;
 }
 
+/* Hard on/off cursor blink — used in lead-magnet-cta.tsx typewriter placeholder */
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
 
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {

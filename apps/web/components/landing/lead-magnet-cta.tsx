@@ -28,7 +28,8 @@ enum State {
   Error = 'error',
 }
 
-const MIN_SENDING_MS = 4000;
+const MIN_SENDING_MS = 2000;
+const SLOW_SEND_MS = 4000; // After this long in the spinner, show "Download instead" fallback
 const PLACEHOLDER_TEXT = 'Enter your email';
 const TYPEWRITER_SPEED_MS = 60;
 // Delay before the send icon slides in — matches total typewriter duration
@@ -124,14 +125,13 @@ function SendButton({ isValidEmail, onSubmit }: { isValidEmail: boolean; onSubmi
 const BASE_INPUT_WIDTH = 140; // min width of the text area (px) — fits ~15 chars comfortably
 const CHAR_WIDTH = 9; // average character width at 16px Inter (px)
 const FIELD_PADDING = 64; // horizontal padding: 24px (px-6) × 2 + 16px send icon area
-const MAX_INPUT_WIDTH = 300; // hard cap so the pill never exceeds the hero on mobile
+const MAX_INPUT_WIDTH = 500; // cap — fits emails up to ~55 chars before stopping growth
 
 function EmailInputField({
   inputRef,
   email,
   isValidEmail,
   typedPlaceholder,
-  isTyping,
   onEmailChange,
   onKeyDown,
   onSubmit,
@@ -140,7 +140,6 @@ function EmailInputField({
   email: string;
   isValidEmail: boolean;
   typedPlaceholder: string;
-  isTyping: boolean;
   onEmailChange: (value: string) => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
   onSubmit: () => void;
@@ -158,15 +157,15 @@ function EmailInputField({
         aria-hidden="true"
         className="absolute inset-0 border-4 border-cherry-bright rounded-[32px] pointer-events-none"
       />
-      <div className="relative flex-1">
+      <div className="relative flex-1 overflow-hidden">
         {/* Hidden sizer — measures the actual text width */}
         <span className="invisible whitespace-pre font-[InterRegular] text-base leading-[1.4]">
           {email || typedPlaceholder || ' '}
         </span>
         {!email && (
           <span className="absolute inset-0 flex items-center text-cherry-brighter font-[InterRegular] text-base leading-[1.4] pointer-events-none">
+            {typedPlaceholder && <span className="mr-px w-px h-4 bg-white animate-blink" />}
             {typedPlaceholder}
-            {typedPlaceholder && <span className="ml-px w-px h-4 bg-white animate-pulse" />}
           </span>
         )}
         <input
@@ -194,7 +193,7 @@ export const LeadMagnetCTA = (): React.ReactElement => {
   const turnstileTokenRef = useRef<string | null>(null);
 
   const [typedPlaceholder, setTypedPlaceholder] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [showSlowFallback, setShowSlowFallback] = useState(false);
   const emailValid = isValidEmail(email);
 
   // A/B variant — resolve from localStorage or assign randomly, track impression
@@ -213,21 +212,28 @@ export const LeadMagnetCTA = (): React.ReactElement => {
     trackLeadMagnetCtaViewed({ variant_id: picked.id });
   }, []);
 
+  // Show "Taking too long?" fallback after SLOW_SEND_MS in the sending state
+  useEffect(() => {
+    if (state !== State.Sending) {
+      setShowSlowFallback(false);
+      return;
+    }
+    const timer = setTimeout(() => setShowSlowFallback(true), SLOW_SEND_MS);
+    return () => clearTimeout(timer);
+  }, [state]);
+
   // Typewriter effect for placeholder when entering input state
   useEffect(() => {
     if (state !== State.Input && state !== State.Error) {
       setTypedPlaceholder('');
-      setIsTyping(false);
       return;
     }
     let i = 0;
     setTypedPlaceholder('');
-    setIsTyping(true);
     const interval = setInterval(() => {
       i++;
       if (i > PLACEHOLDER_TEXT.length) {
         clearInterval(interval);
-        setIsTyping(false);
         return;
       }
       setTypedPlaceholder(PLACEHOLDER_TEXT.slice(0, i));
@@ -312,7 +318,6 @@ export const LeadMagnetCTA = (): React.ReactElement => {
     email,
     isValidEmail: emailValid,
     typedPlaceholder,
-    isTyping,
     onEmailChange: setEmail,
     onKeyDown: handleKeyDown,
     onSubmit: handleSubmit,
@@ -371,7 +376,20 @@ export const LeadMagnetCTA = (): React.ReactElement => {
               <Loader2 className="ml-2 size-4 text-white animate-spin shrink-0" />
             </div>
           </div>
-          <p className="text-sm leading-[1.4] text-white font-[InterBold]">On its way...</p>
+          {showSlowFallback ? (
+            <p className="text-sm leading-[1.4]">
+              <span className="text-cherry-brighter">Taking too long? </span>
+              <a
+                href={LEAD_MAGNET_PDF_ROUTE}
+                download
+                className="text-white font-[InterBold] hover:underline inline-flex items-center gap-1"
+              >
+                Download instead <Download className="size-3.5" />
+              </a>
+            </p>
+          ) : (
+            <p className="text-sm leading-[1.4] text-white font-[InterBold]">On its way...</p>
+          )}
         </>
       );
     }

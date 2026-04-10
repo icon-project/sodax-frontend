@@ -62,7 +62,9 @@ export async function POST(request: Request) {
     // Always return 200 so Resend knows we received it (otherwise it retries)
     return NextResponse.json({ received: true });
   } catch (error) {
+    // Return 200 even on error — returning 4xx causes Resend to retry indefinitely.
+    // A misconfigured secret or bad payload shouldn't trigger a retry storm.
     console.error('[resend-webhook] Error:', error);
-    return NextResponse.json({ error: 'Webhook verification failed' }, { status: 400 });
+    return NextResponse.json({ received: true });
   }
 }

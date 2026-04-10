@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { isValidEmail } from '@/lib/validate-email';
 
@@ -13,13 +13,16 @@ const NOTION_API_KEY = process.env.NOTION_LEAD_MAGNET_TOKEN;
 const NOTION_DATABASE_ID = process.env.NOTION_LEAD_MAGNET_DB_ID;
 /** Cloudflare Turnstile server-side secret — used to verify the invisible challenge token. */
 const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
+// Cache the PDF buffer at module level — it never changes and avoids re-reading 2.4 MB on every request
+const pdfContent = readFileSync(join(process.cwd(), 'public', 'lead-magnet', 'sodax-builders-guide-to-defi.pdf'));
 /** When `true` in development, Turnstile verification is skipped (localhost / PAT issues). Never use in production. */
 const SKIP_TURNSTILE_IN_DEV =
   process.env.NODE_ENV === 'development' && process.env.LEAD_MAGNET_SKIP_TURNSTILE === 'true';
 const TURNSTILE_REQUIRED = Boolean(TURNSTILE_SECRET_KEY) && !SKIP_TURNSTILE_IN_DEV;
 
 async function verifyTurnstile(token: string): Promise<boolean> {
-  if (!TURNSTILE_SECRET_KEY) return true;
+  // TURNSTILE_SECRET_KEY is guaranteed to exist — this function is only called when TURNSTILE_REQUIRED is true
+  if (!TURNSTILE_SECRET_KEY) throw new Error('TURNSTILE_SECRET_KEY not configured');
 
   const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
     method: 'POST',
@@ -41,8 +44,6 @@ async function sendResendEmail(email: string): Promise<void> {
   }
 
   const resend = new Resend(process.env.RESEND_API_KEY);
-  const pdfPath = join(process.cwd(), 'public', 'lead-magnet', 'sodax-builders-guide-to-defi.pdf');
-  const pdfContent = await readFile(pdfPath);
 
   const { error } = await resend.emails.send({
     to: [email],
@@ -52,6 +53,7 @@ async function sendResendEmail(email: string): Promise<void> {
         content: pdfContent,
       },
     ],
+    // `from` is configured in https://resend.com/templates(partnerships@sodax.com)
     template: { id: RESEND_TEMPLATE_ID },
   });
 
@@ -121,7 +123,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[lead-magnet] Error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    // Log the full error server-side; return a generic message to the client
+    console.error('[lead-magnet] Error:', error instanceof Error ? error.message : error);
+    return NextResponse.json({ error: 'Something went wrong — please try again' }, { status: 500 });
   }
 }
