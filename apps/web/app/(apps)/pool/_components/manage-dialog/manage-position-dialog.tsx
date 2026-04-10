@@ -21,7 +21,7 @@ import {
 } from '@sodax/dapp-kit';
 import { spokeChainConfig } from '@sodax/sdk';
 import type { ClPositionInfo, PoolData, PoolKey, PoolSpokeAssets } from '@sodax/sdk';
-import type { SpokeChainId } from '@sodax/types';
+import type { ChainId, SpokeChainId } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { CircleEllipsisIcon, PlusCircleIcon, MinusCircleIcon, XIcon } from 'lucide-react';
 import { AddLiquidityTabContent } from '@/app/(apps)/pool/_components/manage-dialog/add-liquidity-tab-content';
@@ -33,6 +33,8 @@ import { WithdrawTabContent } from '@/app/(apps)/pool/_components/manage-dialog/
 import { formatUnits, parseUnits } from 'viem';
 import type { CreateAssetDepositParams } from '@sodax/sdk';
 import { createDexTokenIdsStorageKey, dispatchDexPositionsUpdatedEvent, formatTokenAmount } from '@/lib/utils';
+import { trackAddLiquidityCompleted, trackWithdrawLiquidityCompleted, trackClaimFeesCompleted } from '@/lib/analytics';
+import { chainIdToChainName } from '@/providers/constants';
 
 type ManagePositionDialogProps = {
   open: boolean;
@@ -335,6 +337,12 @@ export function ManagePositionDialog({
         }),
       ]);
       setIsClaimSuccess(true);
+      trackClaimFeesCompleted({
+        position_id: tokenId,
+        fees_soda: formatUnits(unclaimedFees0, poolData.token0.decimals),
+        fees_xsoda: formatUnits(unclaimedFees1, poolData.token1.decimals),
+        source_chain: chainIdToChainName(spokeChainId as ChainId),
+      });
       await refreshDexQueries();
     } catch (claimErr) {
       const message = claimErr instanceof Error ? claimErr.message : 'Claim fee failed.';
@@ -410,6 +418,12 @@ export function ManagePositionDialog({
       setIsAddLiquidityApproved(false);
       setIsAddLiquidityTransferred(false);
       setIsAddLiquiditySuccess(true);
+      trackAddLiquidityCompleted({
+        position_id: tokenId,
+        amount_soda: supplyToken0Amount,
+        amount_xsoda: supplyToken1Amount,
+        source_chain: chainIdToChainName(spokeChainId as ChainId),
+      });
       await refreshDexQueries();
     } catch (supplyError) {
       const message = supplyError instanceof Error ? supplyError.message : 'Add liquidity failed.';
@@ -589,6 +603,11 @@ export function ManagePositionDialog({
       }
       setWithdrawPercentage('0');
       setIsWithdrawSuccess(true);
+      trackWithdrawLiquidityCompleted({
+        position_id: tokenId,
+        withdraw_percentage: parsedPercentage,
+        source_chain: chainIdToChainName(spokeChainId as ChainId),
+      });
       await refreshDexQueries();
     } catch (withdrawErr) {
       const message = withdrawErr instanceof Error ? withdrawErr.message : 'Withdraw liquidity failed.';
