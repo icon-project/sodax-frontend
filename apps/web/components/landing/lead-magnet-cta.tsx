@@ -263,10 +263,13 @@ export const LeadMagnetCTA = (): React.ReactElement => {
       let turnstileToken: string | undefined =
         turnstileTokenRef.current ?? turnstileRef.current?.getResponse() ?? undefined;
 
-      if (TURNSTILE_SITE_KEY && turnstileRef.current) {
+      // Explicitly trigger the challenge at submit time (Safari ITP kills auto-render challenges)
+      if (TURNSTILE_SITE_KEY && turnstileRef.current && !turnstileToken) {
         try {
-          turnstileToken = await turnstileRef.current.getResponsePromise(45000, 300);
+          turnstileRef.current.execute();
+          turnstileToken = await turnstileRef.current.getResponsePromise(15000, 300);
         } catch {
+          // Final fallback — grab whatever's available
           turnstileToken = turnstileRef.current.getResponse() ?? turnstileTokenRef.current ?? undefined;
         }
       }
@@ -449,7 +452,7 @@ export const LeadMagnetCTA = (): React.ReactElement => {
         <Turnstile
           ref={turnstileRef}
           siteKey={TURNSTILE_SITE_KEY}
-          options={{ size: 'invisible', refreshExpired: 'auto', execution: 'render' }}
+          options={{ size: 'invisible', refreshExpired: 'auto', execution: 'execute' }}
           onSuccess={token => {
             turnstileTokenRef.current = token;
           }}
