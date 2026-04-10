@@ -56,6 +56,47 @@ export interface MigrationCompletedEvent {
   hub_transaction_hash: string;
 }
 
+// Pool events
+
+export interface SupplyLiquidityCompletedEvent {
+  event: 'supply_liquidity_completed';
+  amount_soda: string;
+  amount_xsoda: string;
+  min_price: string;
+  max_price: string;
+  source_chain: string;
+  transaction_hash: string;
+}
+
+export interface AddLiquidityCompletedEvent {
+  event: 'add_liquidity_completed';
+  position_id: string;
+  amount_soda: string;
+  amount_xsoda: string;
+  source_chain: string;
+  spoke_transaction_hash: string;
+  hub_transaction_hash: string;
+}
+
+export interface WithdrawLiquidityCompletedEvent {
+  event: 'withdraw_liquidity_completed';
+  position_id: string;
+  withdraw_percentage: number;
+  source_chain: string;
+  spoke_transaction_hash: string;
+  hub_transaction_hash: string;
+}
+
+export interface ClaimFeesCompletedEvent {
+  event: 'claim_fees_completed';
+  position_id: string;
+  fees_soda: string;
+  fees_xsoda: string;
+  source_chain: string;
+  spoke_transaction_hash: string;
+  hub_transaction_hash: string;
+}
+
 // Extend Window interface for dataLayer
 declare global {
   interface Window {
@@ -123,4 +164,22 @@ export function trackMigrationCompleted(params: Omit<MigrationCompletedEvent, 'e
     event: 'migration_completed',
     ...params,
   });
+}
+
+// Pool tracking
+
+export function trackSupplyLiquidityCompleted(params: Omit<SupplyLiquidityCompletedEvent, 'event'>): void {
+  pushToDataLayer({ event: 'supply_liquidity_completed', ...params });
+}
+
+export function trackAddLiquidityCompleted(params: Omit<AddLiquidityCompletedEvent, 'event'>): void {
+  pushToDataLayer({ event: 'add_liquidity_completed', ...params });
+}
+
+export function trackWithdrawLiquidityCompleted(params: Omit<WithdrawLiquidityCompletedEvent, 'event'>): void {
+  pushToDataLayer({ event: 'withdraw_liquidity_completed', ...params });
+}
+
+export function trackClaimFeesCompleted(params: Omit<ClaimFeesCompletedEvent, 'event'>): void {
+  pushToDataLayer({ event: 'claim_fees_completed', ...params });
 }
