@@ -3,12 +3,12 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { formatUnits } from 'viem';
 import type { ChainId, XToken } from '@sodax/types';
 import { BorrowButton } from '../BorrowButton';
-import { formatDecimalForDisplay } from '@/lib/utils';
+import { formatDecimalForDisplay, truncateToDecimals } from '@/lib/utils';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
 import type { FormatReserveUSDResponse, FormatUserSummaryResponse, UserReserveData } from '@sodax/sdk';
 import { useAToken } from '@sodax/dapp-kit';
 import { Button } from '@/components/ui/button';
-import { MAX_BORROW_SAFETY_MARGIN, ZERO_ADDRESS } from '../../constants';
+import { MAX_BORROW_SAFETY_MARGIN, ZERO_ADDRESS, AMOUNT_DISPLAY_DECIMALS, AAVE_INDEX_PRECISION } from '../../constants';
 import { isUserReserveDataArray, isValidEvmAddress } from '../../typeGuards';
 
 interface BorrowAssetsListItemProps {
@@ -71,12 +71,12 @@ export function BorrowAssetsListItem({
   if (metrics.formattedReserve && aToken) {
     availableLiquidity =
       metrics.formattedReserve.borrowCap === '0'
-        ? formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), aToken.decimals)
-        : Math.min(
+        ? truncateToDecimals(Number(formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), aToken.decimals)), AMOUNT_DISPLAY_DECIMALS)
+        : truncateToDecimals(Math.min(
             Number.parseFloat(formatUnits(BigInt(metrics.formattedReserve.availableLiquidity), aToken.decimals)),
-            Number.parseInt(metrics.formattedReserve.borrowCap) -
-              Number.parseFloat(metrics.formattedReserve.totalScaledVariableDebt),
-          ).toFixed(6);
+            Number.parseFloat(metrics.formattedReserve.borrowCap) -
+              Number.parseFloat(metrics.formattedReserve.totalVariableDebt),
+          ), AMOUNT_DISPLAY_DECIMALS);
   }
 
   let maxBorrow = '0';
@@ -106,7 +106,7 @@ export function BorrowAssetsListItem({
 
       const beforeSafetyMargin = Math.min(userLimitTokens, poolLimitTokens);
       const afterSafetyMargin = beforeSafetyMargin * MAX_BORROW_SAFETY_MARGIN;
-      maxBorrow = afterSafetyMargin.toFixed(6);
+      maxBorrow = truncateToDecimals(afterSafetyMargin, AMOUNT_DISPLAY_DECIMALS);
     }
   }
 
@@ -117,9 +117,9 @@ export function BorrowAssetsListItem({
   let debtExact = '0';
   if (metrics.userReserve && metrics.formattedReserve) {
     const scaledDebt = metrics.userReserve.scaledVariableDebt;
-    const variableBorrowIndex = BigInt(metrics.formattedReserve.variableBorrowIndex || '1e27');
+    const variableBorrowIndex = BigInt(metrics.formattedReserve.variableBorrowIndex || AAVE_INDEX_PRECISION.toString());
     // Multiply scaled debt by borrow index and divide by ray precision (1e27)
-    const actualDebtRaw = (scaledDebt * variableBorrowIndex) / BigInt(1e27);
+    const actualDebtRaw = (scaledDebt * variableBorrowIndex) / AAVE_INDEX_PRECISION;
     const tokenDecimals = Number(metrics.formattedReserve.decimals ?? 18);
     debtExact = formatUnits(actualDebtRaw, tokenDecimals);
   }
