@@ -11,8 +11,6 @@ const RESEND_WEBHOOK_SECRET = process.env.RESEND_WEBHOOK_SECRET;
 const NOTION_API_KEY = process.env.NOTION_LEAD_MAGNET_TOKEN;
 const NOTION_DATABASE_ID = process.env.NOTION_LEAD_MAGNET_DB_ID;
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 /**
  * Verify that the incoming request is genuinely from Resend (not spoofed).
  * Resend signs every webhook with svix headers — we check the signature against our secret.
@@ -30,6 +28,10 @@ function verifyWebhook(payload: string, headers: Headers): WebhookEventPayload {
   if (!svixId || !svixTimestamp || !svixSignature) {
     throw new Error('Missing svix headers');
   }
+
+  // Create Resend instance at call time (not module level) so the build doesn't fail
+  // when RESEND_API_KEY isn't available during static page collection
+  const resend = new Resend(process.env.RESEND_API_KEY);
 
   return resend.webhooks.verify({
     payload,
