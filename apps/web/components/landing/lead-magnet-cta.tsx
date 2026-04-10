@@ -20,7 +20,7 @@ enum State {
   Error = 'error',
 }
 
-const MIN_SENDING_MS = 3000;
+const MIN_SENDING_MS = 4000;
 const PLACEHOLDER_TEXT = 'Enter your email';
 const TYPEWRITER_SPEED_MS = 60;
 // Delay before the send icon slides in — matches total typewriter duration
