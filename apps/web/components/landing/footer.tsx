@@ -47,7 +47,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           </div>
 
           {/* Navigation columns */}
-          <nav className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 sm:gap-x-12 lg:gap-x-16">
+          <nav className="grid grid-cols-2 gap-x-8 gap-y-10 sm:flex sm:gap-12 lg:gap-16">
             {/* Products */}
             <div className="col-span-2 sm:col-span-1">
               <h3 className="text-cherry-bright text-base font-normal font-['Shrikhand'] leading-5">
