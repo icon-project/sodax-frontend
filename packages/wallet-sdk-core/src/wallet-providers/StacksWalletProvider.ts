@@ -13,7 +13,10 @@ import type { StacksProvider } from '@stacks/connect';
 
 import type { IStacksWalletProvider, StacksTransactionParams } from '@sodax/types';
 
-/** Lazy-load @stacks/connect to avoid Turbopack scope-hoisting cycle (#1070) */
+/**
+ * Lazy-load @stacks/connect to avoid Turbopack scope-hoisting cycle (#1070).
+ * Cannot bundle via noExternal because transitive deps (@reown/appkit → node-fetch) crash at SSR runtime.
+ */
 let stacksConnectPromise: Promise<typeof import('@stacks/connect')> | undefined;
 function getStacksConnect() {
   if (!stacksConnectPromise) {
