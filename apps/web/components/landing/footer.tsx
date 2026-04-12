@@ -42,8 +42,9 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           {/* Logo */}
           <div className="shrink-0">
             <div className="flex items-center">
-              <Image src="/soda-cherry-grey.svg" alt="SODAX Symbol" width={30} height={32} />
-              <span className="ml-2 font-black text-2xl text-cherry-grey">SODAX</span>
+              <Image src="/soda-cherry.png" alt="SODAX Symbol" width={32} height={32} className="sm:hidden" />
+              <Image src="/soda-cherry-grey.svg" alt="SODAX Symbol" width={30} height={32} className="hidden sm:block" />
+              <span className="ml-2 font-black text-2xl text-cherry-bright sm:text-cherry-grey">SODAX</span>
             </div>
           </div>
 
