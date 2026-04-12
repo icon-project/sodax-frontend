@@ -18,7 +18,8 @@ function getProviderFromId(id: string): StacksProvider | undefined {
 
 /**
  * Lazy-load @stacks/connect to avoid Turbopack scope-hoisting cycle (#1070).
- * Cannot bundle via noExternal because transitive deps (@reown/appkit → node-fetch) crash at SSR runtime.
+ * Cannot bundle via noExternal because transitive deps (@reown/appkit → WalletConnect → node-fetch)
+ * import Node builtins (stream, http) that fail on platform: neutral and crash at SSR.
  */
 let stacksConnectPromise: Promise<typeof import('@stacks/connect')> | undefined;
 function getStacksConnect() {
