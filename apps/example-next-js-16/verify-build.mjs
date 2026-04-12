@@ -167,6 +167,8 @@ async function runRuntimeChecks() {
     process.exit(1);
   }
   console.log('\nverify-build: OK — SSR values correct, client providers built, runtime OK');
+  process.exit(0);
 }
 
+server.on('error', () => {}); // suppress ECONNRESET from kill()
 runRuntimeChecks();
