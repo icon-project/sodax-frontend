@@ -1,6 +1,5 @@
-import { defineConfig } from 'tsup';
 import type { Plugin } from 'esbuild';
-
+import { defineConfig } from 'tsup';
 /**
  * esbuild plugin that stubs hardware/external wallet packages from
  * @injectivelabs/wallet-strategy. These are dynamically imported by
@@ -20,7 +19,7 @@ const stubInjectiveHardwareWallets: Plugin = {
       '@injectivelabs/wallet-wallet-connect',
     ];
     for (const pkg of stubbed) {
-      build.onResolve({ filter: new RegExp(`^${pkg.replace(/\//g, '\\/')}$`) }, () => ({
+      build.onResolve({ filter: new RegExp(`^${pkg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`) }, () => ({
         path: pkg,
         namespace: 'stub',
       }));
@@ -44,7 +43,8 @@ export default defineConfig(options => ({
   treeshake: true,
   external: ['react', 'react-dom', '@tanstack/react-query', 'crypto', 'node:crypto'],
   noExternal: [
-    '@stacks/transactions', '@stacks/network', // Turbopack scope-hoisting cycle (#1070)
+    '@stacks/transactions',
+    '@stacks/network', // Turbopack scope-hoisting cycle (#1070)
     '@injectivelabs/wallet-strategy', // Bundle + stub hardware wallets to avoid Turbopack CryptoJS UMD issue (#1070)
   ],
   esbuildPlugins: [stubInjectiveHardwareWallets],
