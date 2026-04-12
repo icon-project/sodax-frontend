@@ -19,7 +19,7 @@ const TermsModal: React.FC<TermsModalProps> = ({ open, onOpenChange }) => {
             onClick={() => onOpenChange(false)}
             className="flex items-center gap-2 text-white hover:text-yellow-soda transition-colors"
           ></button>
-          <Image src="/symbol.png" alt="SODAX Symbol" width={24} height={24} className="mr-2" />
+          <Image src="/soda-yellow.png" alt="SODAX Symbol" width={24} height={24} className="mr-2" />
           <div className="text-center text-black text-lg font-['InterBold'] leading-snug">Terms and conditions</div>
         </div>
 

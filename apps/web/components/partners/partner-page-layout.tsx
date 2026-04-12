@@ -79,7 +79,7 @@ export function PartnerPageLayout({ metadata, children, backLink, backText }: Pa
               name: 'SODAX',
               logo: {
                 '@type': 'ImageObject',
-                url: 'https://sodax.com/symbol.png',
+                url: 'https://sodax.com/soda-yellow.png',
               },
             },
             about: {

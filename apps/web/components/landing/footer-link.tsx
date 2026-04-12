@@ -32,7 +32,7 @@ const FooterLink: React.FC<FooterLinkProps> = ({
         target="_blank"
         rel="noopener noreferrer"
         className={cn(
-          'group inline-flex items-center gap-2 text-black text-[13px] font-medium font-["InterMedium"] leading-[16px] hover:text-cherry-bright hover:font-bold transition-colors',
+          'group inline-flex items-center gap-2 text-black text-xs leading-[1.4] hover:text-cherry-bright transition-colors',
           className,
         )}
         onClick={onClick}
@@ -43,14 +43,14 @@ const FooterLink: React.FC<FooterLinkProps> = ({
           <ArrowUpRight
             width={16}
             height={16}
-            className={cn('text-cherry-bright group-hover:stroke-[3.5] transition-all', arrowClassName)}
+            className={cn('text-clay-light group-hover:text-cherry-bright transition-all', arrowClassName)}
           />
         )}
         {showArrowDown && (
           <ArrowDown
             width={16}
             height={16}
-            className={cn('text-cherry-bright group-hover:stroke-[3.5] transition-all', arrowClassName)}
+            className={cn('text-clay-light group-hover:text-cherry-bright transition-all', arrowClassName)}
           />
         )}
       </a>
@@ -61,7 +61,7 @@ const FooterLink: React.FC<FooterLinkProps> = ({
   return (
     <Link
       className={cn(
-        'group inline-flex items-center gap-2 text-black text-[13px] font-medium font-["InterMedium"] leading-[16px] hover:text-cherry-bright hover:font-bold transition-colors',
+        'group inline-flex items-center gap-2 text-black text-xs leading-[1.4] hover:text-cherry-bright transition-colors',
         className,
       )}
       onClick={onClick}
@@ -73,14 +73,14 @@ const FooterLink: React.FC<FooterLinkProps> = ({
         <ArrowUpRight
           width={16}
           height={16}
-          className={cn('text-cherry-bright group-hover:stroke-[3.5] transition-all', arrowClassName)}
+          className={cn('text-clay-light group-hover:text-cherry-bright transition-all', arrowClassName)}
         />
       )}
       {showArrowDown && (
         <ArrowDown
           width={16}
           height={16}
-          className={cn('text-cherry-bright group-hover:stroke-[3.5] transition-all', arrowClassName)}
+          className={cn('text-clay-light group-hover:text-cherry-bright transition-all', arrowClassName)}
         />
       )}
     </Link>

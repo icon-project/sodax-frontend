@@ -19,6 +19,7 @@ import {
   X_ROUTE,
 } from '@/constants/routes';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useState } from 'react';
 
 interface FooterProps {
@@ -35,113 +36,131 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
 
   return (
     <footer className="bg-almost-white">
-      <div className="mx-auto max-w-6xl px-6 pt-16 pb-8 sm:px-8">
-        {/* Brand + navigation */}
-        <div className="lg:flex lg:justify-between lg:gap-16">
+      <div className="mx-auto max-w-[944px] px-6 pt-20 pb-20 sm:px-8 sm:pt-[120px] sm:pb-[120px]">
+        {/* Logo + Navigation columns */}
+        <div className="flex flex-wrap items-start justify-between gap-y-10">
           {/* Logo */}
-          <div className="mb-10 lg:mb-0 lg:shrink-0">
+          <div className="shrink-0">
             <div className="flex items-center">
-              <Image src="/symbol2.png" alt="SODAX Symbol" width={32} height={32} />
-              <span className="ml-2 font-black text-2xl text-cherry-bright">SODAX</span>
+              <Image src="/soda-cherry-grey.svg" alt="SODAX Symbol" width={30} height={32} />
+              <span className="ml-2 font-black text-2xl text-cherry-grey">SODAX</span>
             </div>
           </div>
 
           {/* Navigation columns */}
-          <nav className="grid grid-cols-2 gap-x-8 gap-y-10 sm:flex sm:gap-12 lg:gap-16">
-            {/* Products */}
-            <div className="col-span-2 sm:col-span-1">
-              <h3 className="text-cherry-bright text-base font-normal font-['Shrikhand'] leading-5">
-                cross-network products
-              </h3>
-              <div className="mt-4 flex flex-col gap-3">
-                <FooterLink href={EXCHANGE_ROUTE} className="text-sm font-semibold">
-                  Exchange
-                </FooterLink>
-                <div className="flex flex-col gap-2 pl-3 border-l border-cherry-brighter/40">
-                  <FooterLink href={SWAP_FOR_APPS_ROUTE} className="text-[12px] text-clay-dark">
-                    Swaps for apps
-                  </FooterLink>
-                  <FooterLink href={LEAD_BORROW_FOR_APPS_ROUTE} className="text-[12px] text-clay-dark">
-                    Lend / Borrow for apps
-                  </FooterLink>
-                  <FooterLink href={BRIDGE_SERVICES_ROUTE} className="text-[12px] text-clay-dark">
-                    Bridge service
-                  </FooterLink>
-                </div>
-                <FooterLink href={PARTNER_DASHBOARD_ROUTE}>Partner Portal</FooterLink>
+          <nav className="flex flex-wrap gap-10">
+            {/* Cross-network products */}
+            <div className="flex flex-col gap-2">
+              <h3 className="text-[9px] font-bold uppercase leading-[1.2] text-clay-light">Cross-network products</h3>
+              <div className="flex flex-col gap-2">
+                {/* B2B filled bubbles */}
+                <a
+                  href={SWAP_FOR_APPS_ROUTE}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-6 items-center justify-center rounded-full bg-cream-white px-3 text-xs text-espresso leading-[1.4] hover:opacity-80 transition-opacity"
+                >
+                  Intent swaps for apps
+                </a>
+                <a
+                  href={LEAD_BORROW_FOR_APPS_ROUTE}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-6 items-center justify-center rounded-full bg-cream-white px-3 text-xs text-espresso leading-[1.4] hover:opacity-80 transition-opacity"
+                >
+                  Lend / Borrow for apps
+                </a>
+                <a
+                  href={BRIDGE_SERVICES_ROUTE}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-6 items-center justify-center rounded-full bg-cream-white px-3 text-xs text-espresso leading-[1.4] hover:opacity-80 transition-opacity"
+                >
+                  Bridge service
+                </a>
+                {/* B2C outline bubble */}
+                <Link
+                  href={EXCHANGE_ROUTE}
+                  className="flex h-6 items-center justify-center rounded-full border-2 border-cream-white px-3 text-xs text-clay leading-[1.4] hover:opacity-80 transition-opacity"
+                >
+                  SODAX Exchange
+                </Link>
               </div>
             </div>
 
-            {/* Social */}
-            <div>
-              <h3 className="text-cherry-bright text-base font-normal font-['Shrikhand'] leading-5">social</h3>
-              <div className="mt-4 flex flex-col gap-3">
-                <FooterLink href={X_ROUTE} showArrow>
-                  X (Twitter)
-                </FooterLink>
-                <FooterLink href={DISCORD_ROUTE} showArrow>
-                  Discord
-                </FooterLink>
-                <FooterLink href={LINKEDIN_ROUTE} showArrow>
-                  LinkedIn
-                </FooterLink>
-                <FooterLink href={GITHUB_ROUTE} showArrow>
-                  GitHub
-                </FooterLink>
-              </div>
+            {/* Socials */}
+            <div className="flex flex-col gap-2">
+              <h3 className="text-[9px] font-bold uppercase leading-[1.2] text-clay-light">Socials</h3>
+              <FooterLink href={X_ROUTE} showArrow>
+                X (Twitter)
+              </FooterLink>
+              <FooterLink href={DISCORD_ROUTE} showArrow>
+                Discord
+              </FooterLink>
+              <FooterLink href={LINKEDIN_ROUTE} showArrow>
+                LinkedIn
+              </FooterLink>
+              <FooterLink href={GITHUB_ROUTE} showArrow>
+                GitHub
+              </FooterLink>
             </div>
 
             {/* Resources */}
-            <div>
-              <h3 className="text-cherry-bright text-base font-normal font-['Shrikhand'] leading-5">resources</h3>
-              <div className="mt-4 flex flex-col gap-3">
-                <FooterLink href={DOCUMENTATION_GITBOOK_ROUTE} showArrow>
-                  Documentation
-                </FooterLink>
-                <FooterLink href={SODAX_SCAN_ROUTE} showArrow>
-                  Transaction Scanner
-                </FooterLink>
-                <FooterLink
-                  href={BRAND_KIT_ROUTE}
-                  showArrowDown
-                  onClick={() => {
-                    const link = document.createElement('a');
-                    link.href = BRAND_KIT_ROUTE;
-                    link.download = 'SODAX.logos.and.token.zip';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                  }}
-                >
-                  Brand Kit
-                </FooterLink>
-                <FooterLink href={NEWS_ROUTE}>News</FooterLink>
-              </div>
+            <div className="flex flex-col gap-2">
+              <h3 className="text-[9px] font-bold uppercase leading-[1.2] text-clay-light">Resources</h3>
+              <FooterLink href={DOCUMENTATION_GITBOOK_ROUTE} showArrow>
+                Documentation
+              </FooterLink>
+              <FooterLink href={SODAX_SCAN_ROUTE} showArrow>
+                Transaction scanner
+              </FooterLink>
+              <FooterLink
+                href={BRAND_KIT_ROUTE}
+                showArrowDown
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = BRAND_KIT_ROUTE;
+                  link.download = 'SODAX.logos.and.token.zip';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+              >
+                Brand Kit
+              </FooterLink>
+              <FooterLink href={NEWS_ROUTE}>News</FooterLink>
+              <FooterLink href={PARTNER_DASHBOARD_ROUTE}>Partner portal</FooterLink>
             </div>
           </nav>
         </div>
 
+        {/* Divider */}
+        <div className="mt-6 border-t border-clay-light/30" />
+
         {/* Bottom bar */}
-        <div className="mt-12 border-t border-cherry-brighter/30 pt-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-xs font-['InterMedium'] text-cherry-bright">
-              © 2026 ICON Foundation. All rights reserved.
-            </p>
-            <div className="flex gap-4">
-              <FooterLink href="#" onClick={handleTermsClick} className="text-xs text-cherry-bright">
-                Terms
-              </FooterLink>
-              <FooterLink
-                href="#"
-                onClick={e => {
-                  e.preventDefault();
-                  showCookiePreferences();
-                }}
-                className="text-xs text-cherry-bright"
-              >
-                Cookie Settings
-              </FooterLink>
-            </div>
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-clay-light leading-[1.4]">&copy; 2026 ICON Foundation. All rights reserved.</p>
+          <div className="flex gap-4">
+            <FooterLink href={NEWS_ROUTE} className="text-xs text-clay-light hover:text-espresso">
+              News
+            </FooterLink>
+            <button
+              type="button"
+              onClick={handleTermsClick}
+              className="text-xs text-clay-light leading-[1.4] hover:text-espresso transition-colors cursor-pointer"
+            >
+              Terms
+            </button>
+            <button
+              type="button"
+              onClick={e => {
+                e.preventDefault();
+                showCookiePreferences();
+              }}
+              className="text-xs text-clay-light leading-[1.4] hover:text-espresso transition-colors cursor-pointer"
+            >
+              Cookie settings
+            </button>
           </div>
         </div>
       </div>

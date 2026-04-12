@@ -289,7 +289,7 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
               <DialogTitle className="flex w-full justify-between items-center h-6">
                 <div className="inline-flex justify-center items-center gap-2">
                   <Image
-                    src="/symbol_dark.png"
+                    src="/soda-yellow-sm.png"
                     alt="SODAX Symbol"
                     width={16}
                     height={16}
