@@ -16,6 +16,17 @@ function getProviderFromId(id: string): StacksProvider | undefined {
   return id.split('.').reduce<any>((acc, part) => acc?.[part], window) as StacksProvider | undefined;
 }
 
+/** Lazy-load @stacks/connect to avoid Turbopack scope-hoisting cycle (#1070) */
+let stacksConnectCache: typeof import('@stacks/connect') | undefined;
+async function getStacksConnect() {
+  if (!stacksConnectCache) {
+    const mod = await import('@stacks/connect');
+    if (!mod.request || !mod.disconnect) throw new Error('@stacks/connect loaded but missing exports');
+    stacksConnectCache = mod;
+  }
+  return stacksConnectCache;
+}
+
 export class StacksXConnector extends XConnector {
   private readonly config: StacksProviderConfig;
 
@@ -34,24 +45,32 @@ export class StacksXConnector extends XConnector {
       return undefined;
     }
 
-    const { request } = await import('@stacks/connect');
-    const response = await request({ provider }, 'stx_getAddresses');
-    // @ts-ignore
-    const stxAddress = response.addresses.find(a => a.purpose === 'stacks');
+    try {
+      const { request } = await getStacksConnect();
+      const response = await request({ provider }, 'stx_getAddresses') as { addresses: { address: string; purpose: string }[] };
+      const stxAddress = response.addresses.find(a => a.purpose === 'stacks');
 
-    if (!stxAddress) {
+      if (!stxAddress) {
+        return undefined;
+      }
+
+      return {
+        address: stxAddress.address,
+        xChainType: this.xChainType,
+      };
+    } catch (e) {
+      console.warn('[StacksXConnector] connect failed:', e);
       return undefined;
     }
-
-    return {
-      address: stxAddress.address,
-      xChainType: this.xChainType,
-    };
   }
 
   async disconnect(): Promise<void> {
-    const { disconnect } = await import('@stacks/connect');
-    disconnect();
+    try {
+      const { disconnect } = await getStacksConnect();
+      disconnect();
+    } catch (e) {
+      console.warn('[StacksXConnector] disconnect failed:', e);
+    }
   }
 
   public get icon(): string {

@@ -98,6 +98,7 @@ server.stderr.on('data', (d) => { serverOutput += d.toString(); });
 // Wait for server ready, then run checks
 const timeout = setTimeout(() => {
   fail('server did not start within 30s');
+  console.error('Server output:\n', serverOutput);
   server.kill();
   process.exit(1);
 }, 30_000);
@@ -116,7 +117,7 @@ async function waitForServer() {
 
 async function fetchAndCheck(path, checks) {
   const url = `http://localhost:${PORT}${path}`;
-  const res = await fetch(url);
+  const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
   if (!res.ok) {
     fail(`${path}: HTTP ${res.status}`);
     return;
@@ -161,6 +162,7 @@ async function runRuntimeChecks() {
   }
 
   if (failed) {
+    console.error('Server output:\n', serverOutput);
     console.error('\nverify-build: FAILED');
     process.exit(1);
   }

@@ -16,7 +16,6 @@
     "@sodax/types": "workspace:*",
     "@sodax/wallet-sdk-core": "workspace:*",
     "@sodax/wallet-sdk-react": "workspace:*",
-    "@stacks/transactions": "7.3.1",
     "@tanstack/react-query": "catalog:",
     "next": "^16.0.0",
     "react": "catalog:",
