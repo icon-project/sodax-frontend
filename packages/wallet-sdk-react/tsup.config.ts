@@ -1,5 +1,7 @@
-import type { Plugin } from 'esbuild';
-import { defineConfig } from 'tsup';
+import { defineConfig, type Options } from 'tsup';
+
+type EsbuildPlugin = NonNullable<Options['esbuildPlugins']>[number];
+
 /**
  * esbuild plugin that stubs hardware/external wallet packages from
  * @injectivelabs/wallet-strategy. These are dynamically imported by
@@ -8,7 +10,7 @@ import { defineConfig } from 'tsup';
  * resolving wallet-ledger's CryptoJS UMD code which contains AMD
  * define(["./core"]) patterns that break Next.js 16 builds. (#1070)
  */
-const stubInjectiveHardwareWallets: Plugin = {
+const stubInjectiveHardwareWallets: EsbuildPlugin = {
   name: 'stub-injective-hardware-wallets',
   setup(build) {
     const stubbed = [

@@ -171,4 +171,13 @@ async function runRuntimeChecks() {
 }
 
 server.on('error', () => {}); // suppress ECONNRESET from kill()
+server.on('close', (code) => {
+  // If server exits before runtime checks finish (e.g. port conflict, crash),
+  // fail immediately instead of waiting for the 30s timeout.
+  if (!server.killed) {
+    fail(`server exited unexpectedly with code ${code}`);
+    console.error('Server output:\n', serverOutput);
+    process.exit(1);
+  }
+});
 runRuntimeChecks();
