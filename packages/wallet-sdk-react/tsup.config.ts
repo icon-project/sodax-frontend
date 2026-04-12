@@ -44,10 +44,14 @@ export default defineConfig(options => ({
   target: 'node18', // ✅ Use Node 18 baseline (modern features)
   treeshake: true,
   external: ['react', 'react-dom', '@tanstack/react-query', 'crypto', 'node:crypto'],
+  // TODO(#1070): @stacks/* bundling is a workaround for Turbopack scope-hoisting cycle.
+  // Revert when Turbopack or @stacks/transactions fixes the circular dependency upstream.
+  // TODO(#1070): @injectivelabs/wallet-strategy bundling + stub is a workaround for CryptoJS UMD.
+  // If Ledger/Trezor support is needed for Injective, revisit the stub plugin above.
   noExternal: [
     '@stacks/transactions',
-    '@stacks/network', // Turbopack scope-hoisting cycle (#1070)
-    '@injectivelabs/wallet-strategy', // Bundle + stub hardware wallets to avoid Turbopack CryptoJS UMD issue (#1070)
+    '@stacks/network',
+    '@injectivelabs/wallet-strategy',
   ],
   esbuildPlugins: [stubInjectiveHardwareWallets],
   esbuildOptions(options) {

@@ -11,9 +11,11 @@ export default defineConfig(options => ({
   target: 'node18', // ✅ Use Node 18 baseline (modern features)
   treeshake: true,
   external: ['crypto', 'node:crypto'], // Externalize Node crypto builtin for bundled @stacks/* transitive deps
+  // TODO(#1070): @stacks/* bundling is a workaround for Turbopack scope-hoisting cycle.
+  // Revert when Turbopack or @stacks/transactions fixes the circular dependency upstream.
   noExternal: [
     'near-api-js', '@sodax/types',
-    '@stacks/transactions', '@stacks/network', // Force-bundle to avoid Turbopack scope-hoisting cycle (#1070)
+    '@stacks/transactions', '@stacks/network',
   ],
   esbuildOptions(options) {
     options.platform = 'neutral'; // Don't assume node/browser — supports both

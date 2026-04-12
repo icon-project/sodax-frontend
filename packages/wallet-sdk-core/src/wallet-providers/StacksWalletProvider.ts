@@ -13,6 +13,15 @@ import type { StacksProvider } from '@stacks/connect';
 
 import type { IStacksWalletProvider, StacksTransactionParams } from '@sodax/types';
 
+/** Lazy-load @stacks/connect to avoid Turbopack scope-hoisting cycle (#1070) */
+let stacksConnectPromise: Promise<typeof import('@stacks/connect')> | undefined;
+function getStacksConnect() {
+  if (!stacksConnectPromise) {
+    stacksConnectPromise = import('@stacks/connect');
+  }
+  return stacksConnectPromise;
+}
+
 // Private key wallet config
 export type PrivateKeyStacksWalletConfig = {
   privateKey: string;
@@ -108,7 +117,7 @@ export class StacksWalletProvider implements IStacksWalletProvider {
   }
 
   private async sendTransactionWithAdapter(txParams: StacksTransactionParams): Promise<string> {
-    const { request } = await import('@stacks/connect');
+    const { request } = await getStacksConnect();
     const browserWallet = this.wallet as StacksBrowserExtensionWallet;
     const contract = `${txParams.contractAddress}.${txParams.contractName}` as `${string}.${string}`;
 

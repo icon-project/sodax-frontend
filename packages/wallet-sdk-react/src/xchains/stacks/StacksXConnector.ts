@@ -17,14 +17,15 @@ function getProviderFromId(id: string): StacksProvider | undefined {
 }
 
 /** Lazy-load @stacks/connect to avoid Turbopack scope-hoisting cycle (#1070) */
-let stacksConnectCache: typeof import('@stacks/connect') | undefined;
-async function getStacksConnect() {
-  if (!stacksConnectCache) {
-    const mod = await import('@stacks/connect');
-    if (!mod.request || !mod.disconnect) throw new Error('@stacks/connect loaded but missing exports');
-    stacksConnectCache = mod;
+let stacksConnectPromise: Promise<typeof import('@stacks/connect')> | undefined;
+function getStacksConnect() {
+  if (!stacksConnectPromise) {
+    stacksConnectPromise = import('@stacks/connect').then(mod => {
+      if (!mod.request || !mod.disconnect) throw new Error('@stacks/connect loaded but missing exports');
+      return mod;
+    });
   }
-  return stacksConnectCache;
+  return stacksConnectPromise;
 }
 
 export class StacksXConnector extends XConnector {
