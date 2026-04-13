@@ -600,6 +600,6 @@ textarea[readonly] {
   .intercom-launcher-frame,
   .intercom-lightweight-app-launcher,
   .intercom-messenger-frame {
-    bottom: 114px !important;
+    bottom: calc(var(--intercom-mobile-bottom-offset) + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
