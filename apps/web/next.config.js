@@ -4,6 +4,19 @@
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 
+// --- Content Security Policy ---------------------------------------------------
+// Only restrict what we need to. Adding script-src would block GTM and every
+// other third-party script — not worth the whack-a-mole. Turnstile only needs
+// frame-src to create its invisible iframe.
+const cspDirectives = {
+  'frame-ancestors': ["'none'"],
+  'frame-src': ["'self'", 'https://challenges.cloudflare.com'],
+};
+
+const cspHeader = Object.entries(cspDirectives)
+  .map(([key, vals]) => `${key} ${vals.join(' ')}`)
+  .join('; ');
+
 const nextConfig = {
   async redirects() {
     return [
@@ -72,21 +85,23 @@ const nextConfig = {
     ],
   },
   images: {
-    domains: ['storage.herewallet.app'],
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: 'https',
+        hostname: 'storage.herewallet.app',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'stellar.creit.tech',
-        port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: '*.public.blob.vercel-storage.com',
-        port: '',
         pathname: '/**',
       },
     ],
@@ -116,7 +131,7 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "frame-ancestors 'none';", // Modern protection
+            value: cspHeader,
           },
         ],
       },

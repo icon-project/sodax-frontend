@@ -65,6 +65,7 @@ export const YOUTUBE_ROUTE = 'https://www.youtube.com/@gosodax';
 // ── External apps & partners ───────────────────────────────────────────────
 export const BALANCED_DEFI_ROUTE = 'https://app.balanced.network/';
 export const HANA_WALLET_ROUTE = 'https://www.hanawallet.io/';
+export const HOUDINI_SWAP_ROUTE = 'https://app.houdiniswap.com/';
 
 // ── Resources & tools (external) ───────────────────────────────────────────
 /** Frontend repo (this app). */
@@ -83,6 +84,7 @@ export const REDDIT_SUBMIT_BASE_ROUTE = 'https://reddit.com/submit';
 
 // Partner-specific URLs (lightlink, amped, etc.) live in partner pages; add here
 // only if reused. Explorer base URLs stay in config (web3.ts, chain-explorers.ts).
+export const LEAD_MAGNET_PDF_ROUTE = '/lead-magnet/sodax-builders-guide-to-defi.pdf';
 export const INTEGRATION_OPTIONS_ROUTE = '/partners#integration-options';
 export const CASE_STUDIES_ROUTE = '/partners#case-studies';
 export const SODA_TOKEN_ROUTE = '/community/soda-token';

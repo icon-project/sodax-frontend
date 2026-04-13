@@ -56,6 +56,38 @@ export interface MigrationCompletedEvent {
   hub_transaction_hash: string;
 }
 
+// Lead magnet events — all include variant_id for A/B testing
+
+export interface LeadMagnetCtaViewedEvent {
+  event: 'lead_magnet_cta_viewed';
+  variant_id: string;
+}
+
+export interface LeadMagnetCtaClickedEvent {
+  event: 'lead_magnet_cta_clicked';
+  variant_id: string;
+}
+
+export interface LeadMagnetEmailSubmittedEvent {
+  event: 'lead_magnet_email_submitted';
+  variant_id: string;
+}
+
+export interface LeadMagnetEmailSuccessEvent {
+  event: 'lead_magnet_email_success';
+  variant_id: string;
+}
+
+export interface LeadMagnetEmailErrorEvent {
+  event: 'lead_magnet_email_error';
+  variant_id: string;
+}
+
+export interface LeadMagnetPdfDownloadedEvent {
+  event: 'lead_magnet_pdf_downloaded';
+  variant_id: string;
+}
+
 // Pool events
 
 export interface SupplyLiquidityCompletedEvent {
@@ -164,6 +196,32 @@ export function trackMigrationCompleted(params: Omit<MigrationCompletedEvent, 'e
     event: 'migration_completed',
     ...params,
   });
+}
+
+// Lead magnet tracking
+
+export function trackLeadMagnetCtaViewed(params: Omit<LeadMagnetCtaViewedEvent, 'event'>): void {
+  pushToDataLayer({ event: 'lead_magnet_cta_viewed', ...params });
+}
+
+export function trackLeadMagnetCtaClicked(params: Omit<LeadMagnetCtaClickedEvent, 'event'>): void {
+  pushToDataLayer({ event: 'lead_magnet_cta_clicked', ...params });
+}
+
+export function trackLeadMagnetEmailSubmitted(params: Omit<LeadMagnetEmailSubmittedEvent, 'event'>): void {
+  pushToDataLayer({ event: 'lead_magnet_email_submitted', ...params });
+}
+
+export function trackLeadMagnetEmailSuccess(params: Omit<LeadMagnetEmailSuccessEvent, 'event'>): void {
+  pushToDataLayer({ event: 'lead_magnet_email_success', ...params });
+}
+
+export function trackLeadMagnetEmailError(params: Omit<LeadMagnetEmailErrorEvent, 'event'>): void {
+  pushToDataLayer({ event: 'lead_magnet_email_error', ...params });
+}
+
+export function trackLeadMagnetPdfDownloaded(params: Omit<LeadMagnetPdfDownloadedEvent, 'event'>): void {
+  pushToDataLayer({ event: 'lead_magnet_pdf_downloaded', ...params });
 }
 
 // Pool tracking
