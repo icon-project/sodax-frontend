@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useCurrentAccount, useCurrentWallet, useSuiClient, useWallets } from '@mysten/dapp-kit';
+import { SuiWalletProvider } from '@sodax/wallet-sdk-core';
 import { SuiXService, SuiXConnector } from '../../xchains/sui';
 import { useXWalletStore } from '../../useXWalletStore';
 
@@ -47,10 +48,12 @@ export const SuiHydrator = () => {
     }
   }, [currentWallet, suiAccount, setXConnection, unsetXConnection]);
 
-  // Memoize the wallet provider so a new instance is only created when its inputs change.
+  // Create wallet provider directly from hook values (not singleton) — useMemo runs during
+  // render, before the useEffect that syncs values into the singleton. Reading from the
+  // singleton here would use stale fields from the previous render.
   const walletProvider = useMemo(() => {
     if (suiClient && currentWallet && suiAccount) {
-      return SuiXService.getInstance().createWalletProvider();
+      return new SuiWalletProvider({ client: suiClient, wallet: currentWallet, account: suiAccount });
     }
     return undefined;
   }, [suiClient, currentWallet, suiAccount]);

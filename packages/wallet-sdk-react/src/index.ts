@@ -6,7 +6,6 @@ export * from './utils';
 
 export * from './hooks';
 export * from './useXWalletStore';
-export * from './useXWagmiStore';
 export * from './SodaxWalletProvider';
 
 export * from './types';
