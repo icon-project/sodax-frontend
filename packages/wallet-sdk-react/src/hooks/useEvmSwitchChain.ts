@@ -14,6 +14,8 @@ interface UseEvmSwitchChainReturn {
   handleSwitchChain: () => void;
 }
 
+const EVM_DISABLED_RESULT: UseEvmSwitchChainReturn = { isWrongChain: false, handleSwitchChain: () => {} };
+
 export const switchEthereumChain = async () => {
   const metamaskProvider = (window as any).ethereum as any;
 
@@ -48,7 +50,7 @@ export const useEvmSwitchChain = (expectedXChainId: ChainId): UseEvmSwitchChainR
   const evmEnabled = useIsChainEnabled('EVM');
 
   if (!evmEnabled) {
-    return { isWrongChain: false, handleSwitchChain: () => {} };
+    return EVM_DISABLED_RESULT;
   }
 
   return useEvmSwitchChainInner(expectedXChainId);
