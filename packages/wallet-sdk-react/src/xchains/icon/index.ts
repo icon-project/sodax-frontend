@@ -1,2 +1,2 @@
-export { IconXService } from './IconXService';
+export { IconXService, CHAIN_INFO, SupportedChainId } from './IconXService';
 export { IconHanaXConnector } from './IconHanaXConnector';

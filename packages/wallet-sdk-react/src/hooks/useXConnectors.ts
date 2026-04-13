@@ -1,72 +1,26 @@
 import type { ChainType } from '@sodax/types';
-import { useWallets } from '@mysten/dapp-kit';
-import { useWallet } from '@solana/wallet-adapter-react';
-import { useMemo } from 'react';
-import { useConnectors } from 'wagmi';
 import type { XConnector } from '../core';
-import { EvmXConnector } from '../xchains/evm';
-import { SolanaXConnector } from '../xchains/solana';
-import { useStellarXConnectors } from '../xchains/stellar/useStellarXConnectors';
-import { SuiXConnector } from '../xchains/sui';
-import { useXService } from './useXService';
-import { useNearXConnectors } from '../xchains/near/useNearXConnectors';
-import { useStacksXConnectors } from '../xchains/stacks/useStacksXConnectors';
+import { useXWalletStore } from '../useXWalletStore';
+
+const warnedChains = new Set<ChainType>();
 
 /**
  * Hook to retrieve available wallet connectors for a specific blockchain type.
+ * Reads from the centralized store — connectors are hydrated by chain providers
+ * or discovered async during initChainServices (Stellar, NEAR).
  *
- * This hook aggregates wallet connectors from different blockchain ecosystems:
- * - EVM: Uses wagmi connectors
- * - Sui: Uses Sui wallet adapters
- * - Stellar: Uses custom Stellar connectors
- * - Solana: Uses Solana wallet adapters (filtered to installed wallets only)
- *
- * @param xChainType - The blockchain type to get connectors for ('EVM' | 'SUI' | 'STELLAR' | 'SOLANA' | 'NEAR' | 'STACKS')
- * @returns An array of XConnector instances compatible with the specified chain type
+ * Logs a one-time warning per chain if the requested chain is not enabled in
+ * SodaxWalletProvider config.chains, to help debug missing connector lists.
  */
-
 export function useXConnectors(xChainType: ChainType | undefined): XConnector[] {
-  const xService = useXService(xChainType);
-  const evmConnectors = useConnectors();
-  const suiWallets = useWallets();
-  const { data: stellarXConnectors } = useStellarXConnectors();
-  const { data: nearXConnectors } = useNearXConnectors();
-  const stacksXConnectors = useStacksXConnectors();
-  const { wallets: solanaWallets } = useWallet();
-
-  const xConnectors = useMemo((): XConnector[] => {
-    if (!xChainType || !xService) {
-      return [];
+  return useXWalletStore(state => {
+    if (!xChainType) return [];
+    if (!state.enabledChains.includes(xChainType) && !warnedChains.has(xChainType)) {
+      warnedChains.add(xChainType);
+      console.warn(
+        `[useXConnectors] chain "${xChainType}" is not enabled in SodaxWalletProvider config.chains — returning empty list`,
+      );
     }
-
-    switch (xChainType) {
-      case 'EVM':
-        return evmConnectors.map(connector => new EvmXConnector(connector));
-      case 'SUI':
-        return suiWallets.map(wallet => new SuiXConnector(wallet));
-      case 'STELLAR':
-        return stellarXConnectors || [];
-      case 'SOLANA':
-        return solanaWallets
-          .filter(wallet => wallet.readyState === 'Installed')
-          .map(wallet => new SolanaXConnector(wallet));
-      case 'NEAR':
-        return nearXConnectors || [];
-      case 'STACKS':
-        return stacksXConnectors;
-      default:
-        return xService.getXConnectors();
-    }
-  }, [
-    xService,
-    xChainType,
-    evmConnectors,
-    suiWallets,
-    stellarXConnectors,
-    solanaWallets,
-    nearXConnectors,
-    stacksXConnectors,
-  ]);
-
-  return xConnectors;
+    return state.xConnectorsByChain[xChainType] ?? [];
+  });
 }

@@ -41,16 +41,16 @@ export class IconXService extends XService {
 
   public iconService: IconService;
 
-  private constructor() {
+  private constructor(rpcUrl?: string) {
     super('ICON');
     this.iconService = new IconServiceConstructor(
-      new IconServiceConstructor.HttpProvider(CHAIN_INFO[SupportedChainId.MAINNET].APIEndpoint),
+      new IconServiceConstructor.HttpProvider(rpcUrl ?? CHAIN_INFO[SupportedChainId.MAINNET].APIEndpoint),
     );
   }
 
-  public static getInstance(): IconXService {
+  public static getInstance(rpcUrl?: string): IconXService {
     if (!IconXService.instance) {
-      IconXService.instance = new IconXService();
+      IconXService.instance = new IconXService(rpcUrl);
     }
     return IconXService.instance;
   }

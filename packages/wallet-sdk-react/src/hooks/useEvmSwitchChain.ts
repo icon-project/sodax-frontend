@@ -4,6 +4,7 @@ import { baseChainInfo, type ChainId } from '@sodax/types';
 import { getXChainType } from '@/actions';
 import type { InjectiveXService } from '@/xchains/injective';
 import { useXService } from '@/hooks/useXService';
+import { useIsChainEnabled } from '@/context/WalletConfigContext';
 import useEthereumChainId from './useEthereumChainId';
 import { mainnet } from 'viem/chains';
 import { Wallet } from '@injectivelabs/wallet-base';
@@ -13,27 +14,7 @@ interface UseEvmSwitchChainReturn {
   handleSwitchChain: () => void;
 }
 
-/**
- * Hook to handle EVM chain switching functionality
- *
- * @param expectedXChainId - The target chain ID to switch to (e.g. '0xa.optimism', '0x89.polygon')
- * @returns {Object} Object containing:
- *   - isWrongChain: boolean indicating if current chain differs from expected chain
- *   - handleSwitchChain: function to trigger chain switch to expected chain
- *
- * @example
- * ```tsx
- * function ChainSwitchButton({ targetChain }: { targetChain: ChainId }) {
- *   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(targetChain);
- *
- *   return (
- *     <Button onClick={handleSwitchChain} disabled={!isWrongChain}>
- *       Switch Network
- *     </Button>
- *   );
- * }
- * ```
- */
+const EVM_DISABLED_RESULT: UseEvmSwitchChainReturn = { isWrongChain: false, handleSwitchChain: () => {} };
 
 export const switchEthereumChain = async () => {
   const metamaskProvider = (window as any).ethereum as any;
@@ -53,7 +34,29 @@ export const switchEthereumChain = async () => {
   ]);
 };
 
+/**
+ * Hook to handle EVM chain switching functionality.
+ * Safe to call when EVM is disabled — returns no-op values.
+ *
+ * Conditionally delegates to useEvmSwitchChainInner which uses wagmi hooks
+ * (useAccount, useSwitchChain) that require WagmiProvider. When EVM is disabled,
+ * WagmiProvider is not mounted, so we must not call those hooks.
+ *
+ * This technically violates Rules of Hooks (conditional hook call), but is safe
+ * because `evmEnabled` is derived from config which is immutable after mount —
+ * the branch never changes during the component's lifetime.
+ */
 export const useEvmSwitchChain = (expectedXChainId: ChainId): UseEvmSwitchChainReturn => {
+  const evmEnabled = useIsChainEnabled('EVM');
+
+  if (!evmEnabled) {
+    return EVM_DISABLED_RESULT;
+  }
+
+  return useEvmSwitchChainInner(expectedXChainId);
+};
+
+const useEvmSwitchChainInner = (expectedXChainId: ChainId): UseEvmSwitchChainReturn => {
   const xChainType = getXChainType(expectedXChainId);
   const expectedChainId = baseChainInfo[expectedXChainId].chainId as number;
 

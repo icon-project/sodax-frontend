@@ -1,7 +1,6 @@
 import type { InjectiveXService } from '@/xchains/injective';
 import { Wallet } from '@injectivelabs/wallet-base';
-import React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useXService } from './useXService';
 import type { EvmWalletStrategy } from '@injectivelabs/wallet-evm';
 
@@ -17,7 +16,7 @@ import type { EvmWalletStrategy } from '@injectivelabs/wallet-evm';
  */
 export default function useEthereumChainId(): number | null {
   const injectiveXService = useXService('INJECTIVE') as unknown as InjectiveXService;
-  const [ethereumChainId, setEthereumChainId] = React.useState<number | null>(null);
+  const [ethereumChainId, setEthereumChainId] = useState<number | null>(null);
   useEffect(() => {
     if (!injectiveXService?.walletStrategy?.getWallet()) return;
     const walletStrategy = injectiveXService.walletStrategy;

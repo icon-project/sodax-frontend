@@ -1,3 +1,4 @@
+// TODO: after upgrading wallet-sdk-react, change to: import type { StellarXService } from '@sodax/wallet-sdk-react/xchains/stellar'
 import { type StellarXService, useXService } from '@sodax/wallet-sdk-react';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useState } from 'react';

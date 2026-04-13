@@ -91,7 +91,10 @@ export class OKXXConnector extends BitcoinXConnector {
     }
 
     const { address } = await okx.connect();
-    if (!address) return undefined;
+    if (!address) {
+      console.warn('[OKXXConnector] connect: okx.connect() returned no address');
+      return undefined;
+    }
 
     this.walletProvider = new OKXWalletProvider(okx, address);
 

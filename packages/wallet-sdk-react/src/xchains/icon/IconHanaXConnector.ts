@@ -26,6 +26,7 @@ export class IconHanaXConnector extends XConnector {
       };
     }
 
+    console.warn('[IconHanaXConnector] connect: unexpected response from Hana wallet', detail);
     return undefined;
   }
 

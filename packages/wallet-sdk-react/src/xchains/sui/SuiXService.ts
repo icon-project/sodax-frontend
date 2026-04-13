@@ -1,5 +1,6 @@
 import { XService } from '@/core/XService';
-import type { XToken } from '@sodax/types';
+import type { XToken, ISuiWalletProvider } from '@sodax/types';
+import { SuiWalletProvider } from '@sodax/wallet-sdk-core';
 import { isNativeToken } from '@/utils';
 
 export class SuiXService extends XService {
@@ -18,6 +19,17 @@ export class SuiXService extends XService {
       SuiXService.instance = new SuiXService();
     }
     return SuiXService.instance;
+  }
+
+  createWalletProvider(): ISuiWalletProvider | undefined {
+    if (!this.suiClient || !this.suiWallet || !this.suiAccount) {
+      console.warn(
+        '[SuiXService] createWalletProvider: missing dependencies — wallet not connected yet',
+        { hasClient: !!this.suiClient, hasWallet: !!this.suiWallet, hasAccount: !!this.suiAccount },
+      );
+      return undefined;
+    }
+    return new SuiWalletProvider({ client: this.suiClient, wallet: this.suiWallet, account: this.suiAccount });
   }
 
   // getBalance is not used because getBalances uses getAllBalances which returns all balances
@@ -59,7 +71,7 @@ export class SuiXService extends XService {
 
       return tokenMap;
     } catch (e) {
-      console.log('error', e);
+      console.error('[wallet-sdk-react] SUI getBalances failed:', e);
       return {};
     }
   }
