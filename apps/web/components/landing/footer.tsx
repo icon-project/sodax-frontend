@@ -43,7 +43,13 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
           <div className="shrink-0">
             <div className="flex items-center">
               <Image src="/soda-cherry.png" alt="SODAX Symbol" width={32} height={32} className="sm:hidden" />
-              <Image src="/soda-cherry-grey.svg" alt="SODAX Symbol" width={30} height={32} className="hidden sm:block" />
+              <Image
+                src="/soda-cherry-grey.svg"
+                alt="SODAX Symbol"
+                width={30}
+                height={32}
+                className="hidden sm:block"
+              />
               <span className="ml-2 font-black text-2xl text-cherry-bright sm:text-cherry-grey">SODAX</span>
             </div>
           </div>
@@ -59,7 +65,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
                   href={SWAP_FOR_APPS_ROUTE}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-6 items-center justify-center rounded-full bg-cream-white px-3 text-xs text-espresso leading-[1.4] hover:opacity-80 transition-opacity"
+                  className="flex h-6 w-fit items-center rounded-full bg-cream-white px-3 text-xs text-espresso leading-[1.4] hover:bg-cherry-grey transition-colors"
                 >
                   Intent swaps for apps
                 </a>
@@ -67,7 +73,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
                   href={LEAD_BORROW_FOR_APPS_ROUTE}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-6 items-center justify-center rounded-full bg-cream-white px-3 text-xs text-espresso leading-[1.4] hover:opacity-80 transition-opacity"
+                  className="flex h-6 w-fit items-center rounded-full bg-cream-white px-3 text-xs text-espresso leading-[1.4] hover:bg-cherry-grey transition-colors"
                 >
                   Lend / Borrow for apps
                 </a>
@@ -75,14 +81,14 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
                   href={BRIDGE_SERVICES_ROUTE}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-6 items-center justify-center rounded-full bg-cream-white px-3 text-xs text-espresso leading-[1.4] hover:opacity-80 transition-opacity"
+                  className="flex h-6 w-fit items-center rounded-full bg-cream-white px-3 text-xs text-espresso leading-[1.4] hover:bg-cherry-grey transition-colors"
                 >
                   Bridge service
                 </a>
                 {/* B2C outline bubble */}
                 <Link
                   href={EXCHANGE_ROUTE}
-                  className="flex h-6 items-center justify-center rounded-full border-2 border-cream-white px-3 text-xs text-clay leading-[1.4] hover:opacity-80 transition-opacity"
+                  className="flex h-6 w-fit items-center rounded-full border-2 border-cream-white px-3 text-xs text-clay leading-[1.4] hover:border-cherry-grey transition-colors"
                 >
                   SODAX Exchange
                 </Link>
@@ -129,7 +135,6 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
               >
                 Brand Kit
               </FooterLink>
-              <FooterLink href={NEWS_ROUTE}>News</FooterLink>
               <FooterLink href={PARTNER_DASHBOARD_ROUTE}>Partner portal</FooterLink>
             </div>
           </nav>
@@ -141,14 +146,14 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
         {/* Bottom bar */}
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-xs text-clay-light leading-[1.4]">&copy; 2026 ICON Foundation. All rights reserved.</p>
-          <div className="flex gap-4">
-            <FooterLink href={NEWS_ROUTE} className="text-xs text-clay-light hover:text-espresso">
+          <div className="flex items-center gap-4">
+            <FooterLink href={NEWS_ROUTE} className="text-clay-light hover:text-espresso">
               News
             </FooterLink>
             <button
               type="button"
               onClick={handleTermsClick}
-              className="text-xs text-clay-light leading-[1.4] hover:text-espresso transition-colors cursor-pointer"
+              className="inline-flex items-center text-xs text-clay-light leading-[1.4] hover:text-espresso transition-colors cursor-pointer"
             >
               Terms
             </button>
@@ -158,7 +163,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
                 e.preventDefault();
                 showCookiePreferences();
               }}
-              className="text-xs text-clay-light leading-[1.4] hover:text-espresso transition-colors cursor-pointer"
+              className="inline-flex items-center text-xs text-clay-light leading-[1.4] hover:text-espresso transition-colors cursor-pointer"
             >
               Cookie settings
             </button>

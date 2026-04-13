@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { MarketingHeader } from '@/components/shared/marketing-header';
-import { PartnerSimpleFooter } from './partner-simple-footer';
+import Footer from '@/components/landing/footer';
 
 export interface PartnerMetadata {
   partnerName: string;
@@ -57,7 +57,7 @@ export function PartnerPageLayout({ metadata, children, backLink, backText }: Pa
       </div>
 
       {/* Footer */}
-      <PartnerSimpleFooter />
+      <Footer />
 
       {/* Structured Data */}
       <script
