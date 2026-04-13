@@ -33,7 +33,7 @@
     "url": "https://github.com/icon-project/sodax-frontend"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "NODE_OPTIONS=--max-old-space-size=8192 tsup",
     "dev": "tsup --watch ./src",
     "prepublishOnly": "tsup",
     "clean": "rm -rf dist && rm -rf node_modules && rm -rf .turbo",
