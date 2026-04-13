@@ -28,13 +28,6 @@ const AppSidebar = (): React.ReactElement => {
             width={295}
             height={731}
           />
-          <Image
-            className="mix-blend-lighten absolute bottom-0 right-0"
-            src="/girl1.png"
-            alt="background"
-            width={541}
-            height={811}
-          />
           <button type="button" className="absolute left-[32px] top-[48px]" onClick={toggleSidebar}>
             <CloseIcon width={24} height={24} fill="white" />
           </button>
@@ -43,18 +36,18 @@ const AppSidebar = (): React.ReactElement => {
             <Image src="/symbol.png" alt="SODAX Symbol" width={32} height={32} />
             <SidebarMenu className="gap-6">
               <SidebarMenuItem>
-                <Link href={SWAP_ROUTE} className="text-(length:--body-super-comfortable) text-white font-medium">
-                  <p>Launch apps</p>
+                <Link href={PARTNERS_ROUTE} className="text-(length:--body-super-comfortable) text-white font-medium">
+                  <p>Partners</p>
                 </Link>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <Link href={NEWS_ROUTE} className="text-(length:--body-super-comfortable) text-white font-medium">
                   <p>News</p>
                 </Link>
-              </SidebarMenuItem>
+              </SidebarMenuItem>{' '}
               <SidebarMenuItem>
-                <Link href={PARTNERS_ROUTE} className="text-(length:--body-super-comfortable) text-white font-medium">
-                  <p>Partners</p>
+                <Link href={SWAP_ROUTE} className="text-(length:--body-super-comfortable) text-white font-medium">
+                  <p>SODAX Exchange</p>
                 </Link>
               </SidebarMenuItem>
             </SidebarMenu>
