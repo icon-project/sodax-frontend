@@ -53,7 +53,9 @@ export const SuiHydrator = () => {
   // singleton here would use stale fields from the previous render.
   const walletProvider = useMemo(() => {
     if (suiClient && currentWallet && suiAccount) {
-      return new SuiWalletProvider({ client: suiClient, wallet: currentWallet, account: suiAccount });
+      // Cast needed: @mysten/dapp-kit and wallet-sdk-core resolve different @mysten/sui versions.
+      // Runtime types are compatible; this mirrors the `any`-typed singleton fields in SuiXService.
+      return new SuiWalletProvider({ client: suiClient as any, wallet: currentWallet as any, account: suiAccount as any });
     }
     return undefined;
   }, [suiClient, currentWallet, suiAccount]);
