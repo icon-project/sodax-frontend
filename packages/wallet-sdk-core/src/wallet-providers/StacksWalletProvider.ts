@@ -1,6 +1,6 @@
-import { networkFrom, type StacksNetwork } from '@stacks/network';
-
 import {
+  networkFrom,
+  type StacksNetwork,
   broadcastTransaction,
   fetchCallReadOnlyFunction,
   getAddressFromPrivateKey,
@@ -8,7 +8,7 @@ import {
   PostConditionMode,
   type ClarityValue,
   type PostConditionModeName,
-} from '@stacks/transactions';
+} from '@sodax/sdk/stacks-internal';
 import type { StacksProvider } from '@stacks/connect';
 
 import type { IStacksWalletProvider, StacksTransactionParams } from '@sodax/types';

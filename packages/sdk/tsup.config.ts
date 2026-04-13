@@ -1,7 +1,7 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig(options => ({
-  entry: ['src/index.ts'],
+  entry: ['src/index.ts', 'src/stacks-internal.ts'],
   format: ['esm', 'cjs'], // Dual format: ESM for web, CJS for Node (optionally ESM too)
   outDir: 'dist',
   splitting: false, // Flat output, easier for consumers

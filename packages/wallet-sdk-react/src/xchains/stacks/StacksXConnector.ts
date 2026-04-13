@@ -51,7 +51,9 @@ export class StacksXConnector extends XConnector {
     }
 
     const { request } = await getStacksConnect();
-    const response = await request({ provider }, 'stx_getAddresses') as unknown as { addresses: { address: string; purpose: string }[] };
+    const response = (await request({ provider }, 'stx_getAddresses')) as unknown as {
+      addresses: { address: string; purpose: string }[];
+    };
     const stxAddress = response.addresses.find(a => a.purpose === 'stacks');
 
     if (!stxAddress) {

@@ -842,6 +842,9 @@ importers:
       '@mysten/wallet-standard':
         specifier: 'catalog:'
         version: 0.15.6(typescript@5.5.4)
+      '@sodax/sdk':
+        specifier: workspace:*
+        version: link:../sdk
       '@sodax/types':
         specifier: workspace:*
         version: link:../types
@@ -857,12 +860,6 @@ importers:
       '@stacks/connect':
         specifier: 'catalog:'
         version: 8.2.6(@react-native-async-storage/async-storage@1.24.0(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.9)(bufferutil@4.1.0)(react@19.1.4)(utf-8-validate@5.0.10)))(@types/react@19.2.9)(@vercel/blob@2.0.1)(bufferutil@4.1.0)(encoding@0.1.13)(lit@3.3.0)(react@19.1.4)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)
-      '@stacks/network':
-        specifier: 'catalog:'
-        version: 7.3.1(encoding@0.1.13)
-      '@stacks/transactions':
-        specifier: 'catalog:'
-        version: 7.3.1(encoding@0.1.13)
       '@stellar/stellar-sdk':
         specifier: 'catalog:'
         version: 12.3.0
@@ -951,6 +948,9 @@ importers:
       '@mysten/sui':
         specifier: 'catalog:'
         version: 1.21.2(typescript@5.5.4)
+      '@sodax/sdk':
+        specifier: workspace:*
+        version: link:../sdk
       '@sodax/types':
         specifier: workspace:*
         version: link:../types
@@ -972,12 +972,6 @@ importers:
       '@stacks/connect':
         specifier: 'catalog:'
         version: 8.2.6(@react-native-async-storage/async-storage@1.24.0(react-native@0.83.1(@babel/core@7.28.6)(@types/react@19.2.9)(bufferutil@4.1.0)(react@19.1.4)(utf-8-validate@5.0.10)))(@types/react@19.2.9)(@vercel/blob@2.0.1)(bufferutil@4.1.0)(encoding@0.1.13)(lit@3.3.0)(react@19.1.4)(typescript@5.5.4)(utf-8-validate@5.0.10)(zod@3.25.76)
-      '@stacks/network':
-        specifier: 'catalog:'
-        version: 7.3.1(encoding@0.1.13)
-      '@stacks/transactions':
-        specifier: 'catalog:'
-        version: 7.3.1(encoding@0.1.13)
       '@stellar/stellar-sdk':
         specifier: 'catalog:'
         version: 12.3.0

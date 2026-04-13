@@ -8,7 +8,7 @@ import { SuiXService } from './xchains/sui';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useConfig } from 'wagmi';
 import { StacksXService } from './xchains/stacks/StacksXService';
-import { createNetwork } from '@stacks/network';
+import { createNetwork } from '@sodax/sdk/stacks-internal';
 import type { RpcConfig } from '@sodax/types';
 
 export const Hydrate = ({ rpcConfig }: { rpcConfig: RpcConfig }) => {
