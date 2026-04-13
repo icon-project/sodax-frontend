@@ -44,27 +44,20 @@ export function PriceRangeSelector({
   const commitMinInput = (): void => {
     const parsedValue = parseAndRoundInput(minInput);
     if (parsedValue === null) {
-      setMinInput(minPrice.toFixed(4));
       return;
     }
-
-    const maxAllowedMin = Math.max(0, +(maxPrice - step).toFixed(2));
-    const nextMinPrice = Math.min(Math.max(0, parsedValue), maxAllowedMin);
-    onMinPriceChange(nextMinPrice);
-    setMinInput(nextMinPrice.toFixed(4));
+    onMinPriceChange(parsedValue);
+    setMinInput(parsedValue.toFixed(4));
   };
 
   const commitMaxInput = (): void => {
     const parsedValue = parseAndRoundInput(maxInput);
     if (parsedValue === null) {
-      setMaxInput(maxPrice.toFixed(4));
       return;
     }
 
-    const minAllowedMax = +(minPrice + step).toFixed(2);
-    const nextMaxPrice = Math.max(parsedValue, minAllowedMax);
-    onMaxPriceChange(nextMaxPrice);
-    setMaxInput(nextMaxPrice.toFixed(4));
+    onMaxPriceChange(parsedValue);
+    setMaxInput(parsedValue.toFixed(4));
   };
 
   const handleMinInputChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
