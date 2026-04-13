@@ -19,7 +19,7 @@ import { getWagmiChainId, isNativeToken } from '@/utils';
 
 import { type Address, type Chain, defineChain, erc20Abi } from 'viem';
 import { getPublicClient } from 'wagmi/actions';
-import { type Config, createConfig, http, createStorage, cookieStorage } from 'wagmi';
+import { type Config, type CreateConnectorFn, createConfig, http, createStorage, cookieStorage } from 'wagmi';
 import {
   mainnet,
   avalanche,
@@ -64,7 +64,7 @@ export const hyper = /*#__PURE__*/ defineChain({
   },
 });
 
-export const createWagmiConfig = (config: RpcConfig, options?: WagmiOptions) => {
+export const createWagmiConfig = (config: RpcConfig, options?: WagmiOptions & { connectors?: CreateConnectorFn[] }): Config => {
   return createConfig({
     chains: [
       mainnet,
@@ -80,6 +80,7 @@ export const createWagmiConfig = (config: RpcConfig, options?: WagmiOptions) => 
       kaia,
       redbellyMainnet,
     ],
+    connectors: options?.connectors ?? [],
     ssr: options?.ssr,
     transports: {
       [mainnet.id]: http(config[ETHEREUM_MAINNET_CHAIN_ID]),

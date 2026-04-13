@@ -1,4 +1,5 @@
 import type { RpcConfig } from '@sodax/types';
+import type { WalletConnectParameters } from 'wagmi/connectors';
 import type { IXConnector } from './interfaces';
 
 /** Base chain configuration shared by all chain types */
@@ -15,6 +16,8 @@ export type EvmChainConfig = BaseChainConfig & {
   ssr?: boolean;
   /** Wagmi SSR hydration state — pass cookieToInitialState() to avoid disconnect flash on first load (Next.js only). */
   initialState?: unknown;
+  /** WalletConnect configuration. If provided, WalletConnect connector is added to wagmi config. Extends wagmi's WalletConnectParameters. */
+  walletConnect?: WalletConnectParameters;
 };
 
 /** Solana chain provider configuration */

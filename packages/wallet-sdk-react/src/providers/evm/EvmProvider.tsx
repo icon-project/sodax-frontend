@@ -1,4 +1,5 @@
-import { type ReactNode, useMemo, useRef } from 'react';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import type { CreateConnectorFn } from 'wagmi';
 import { WagmiProvider, type State as WagmiState } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { RpcConfig } from '@sodax/types';
@@ -23,9 +24,24 @@ export const EvmProvider = ({ children, config, rpcConfig }: EvmProviderProps) =
     queryClientRef.current = new QueryClient();
   }
 
+  const [wcConnector, setWcConnector] = useState<CreateConnectorFn | null>(null);
+  const walletConnectConfig = config?.walletConnect;
+
+  useEffect(() => {
+    if (!walletConnectConfig) return;
+    if (!walletConnectConfig.projectId) {
+      console.warn('[wallet-sdk-react] walletConnect.projectId is required — WalletConnect connector skipped.');
+      return;
+    }
+    import('wagmi/connectors').then(({ walletConnect }) => {
+      setWcConnector(() => walletConnect({ showQrModal: true, ...walletConnectConfig }));
+    });
+  }, [walletConnectConfig]);
+
   const wagmiConfig = useMemo(() => {
-    return createWagmiConfig(rpcConfig ?? {}, { reconnectOnMount, ssr });
-  }, [rpcConfig, reconnectOnMount, ssr]);
+    const connectors = wcConnector ? [wcConnector] : [];
+    return createWagmiConfig(rpcConfig ?? {}, { reconnectOnMount, ssr, connectors });
+  }, [rpcConfig, reconnectOnMount, ssr, wcConnector]);
 
   // wagmi requires its own QueryClientProvider — this is wagmi-internal, not the app's React Query cache.
   return (

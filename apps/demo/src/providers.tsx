@@ -55,6 +55,28 @@ const configMap: Record<SolverEnv, SolverConfigParams> = {
 export default function Providers({ children }: { children: ReactNode }) {
   const { solverEnvironment } = useAppStore();
 
+  const walletConfig = useMemo(() => {
+    const wcProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
+    const evmConfig: Record<string, unknown> = { ssr: false, reconnectOnMount: true };
+    if (wcProjectId) {
+      evmConfig.walletConnect = { projectId: wcProjectId };
+    }
+    return {
+      chains: {
+        EVM: evmConfig,
+        SOLANA: {},
+        SUI: {},
+        BITCOIN: {},
+        ICON: {},
+        INJECTIVE: {},
+        STELLAR: {},
+        NEAR: {},
+        STACKS: {},
+      },
+      rpcConfig,
+    };
+  }, []);
+
   const sodaxConfig: SodaxConfig = useMemo(() => {
     return {
       swaps: configMap[solverEnvironment],
@@ -64,24 +86,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <SodaxProvider testnet={false} config={sodaxConfig} rpcConfig={rpcConfig}>
       <QueryClientProvider client={queryClient}>
-        <SodaxWalletProvider
-          config={{
-            chains: {
-              EVM: { ssr: false, reconnectOnMount: true },
-              SOLANA: {},
-              SUI: {},
-              BITCOIN: {},
-              ICON: {},
-              INJECTIVE: {},
-              STELLAR: {},
-              NEAR: {},
-              STACKS: {},
-            },
-            rpcConfig,
-          }}
-        >
-          {children}
-        </SodaxWalletProvider>
+        <SodaxWalletProvider config={walletConfig}>{children}</SodaxWalletProvider>
       </QueryClientProvider>
     </SodaxProvider>
   );

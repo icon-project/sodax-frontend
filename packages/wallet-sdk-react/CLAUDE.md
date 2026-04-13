@@ -85,7 +85,7 @@ Only `xConnections` is persisted (key: `'xwagmi-store'`).
 ```typescript
 {
   chains: {
-    EVM?: EvmChainConfig,      // reconnectOnMount, ssr, initialState
+    EVM?: EvmChainConfig,      // reconnectOnMount, ssr, initialState, walletConnect
     SOLANA?: SolanaChainConfig, // autoConnect
     SUI?: SuiChainConfig,      // autoConnect, network, rpcUrl
     BITCOIN?: SimpleChainConfig,
@@ -97,6 +97,39 @@ Only `xConnections` is persisted (key: `'xwagmi-store'`).
 ```
 
 Only listed chains are mounted. **Breaking change from v1**: old top-level props (`rpcConfig`, `options`, `initialState`) are removed — consumers must use the new `config` object.
+
+### WalletConnect (Non-Injected Wallets)
+
+Default EVM wallet discovery uses EIP-6963 (browser extension injection only). Partners using enterprise custody solutions (e.g. Fireblocks) cannot install browser extensions — they need WalletConnect protocol to connect. The `walletConnect` field in `EvmChainConfig` extends wagmi's `WalletConnectParameters` directly — all wagmi options are available:
+
+```typescript
+{
+  chains: {
+    EVM: {
+      walletConnect: {
+        projectId: 'wc-cloud-project-id',  // required — from cloud.walletconnect.com
+        // showQrModal, isNewChainsStale, qrModalOptions, etc.
+      },
+    },
+  },
+}
+```
+
+When `walletConnect` is provided, a WalletConnect connector is added to the wagmi config. `EvmHydrator` discovers it automatically via `useConnectors()` — no UI changes needed. If `walletConnect` is omitted, only EIP-6963 injected wallets are available (default behavior).
+
+To restrict the modal to specific wallets (e.g. Fireblocks only):
+
+```typescript
+walletConnect: {
+  projectId: '...',
+  qrModalOptions: {
+    explorerRecommendedWalletIds: ['<fireblocks-wallet-id>'],
+    explorerExcludedWalletIds: 'ALL', // hides all other wallets
+  },
+}
+```
+
+**Note:** `qrModalOptions` extends `QrModalOptions` from `@walletconnect/ethereum-provider`. Key filtering options: `explorerRecommendedWalletIds` (prioritize), `explorerExcludedWalletIds` (hide — use `"ALL"` to hide everything except recommended). Wallet IDs are from the WalletConnect Explorer.
 
 ### Provider Stack (`src/SodaxWalletProvider.tsx`)
 
