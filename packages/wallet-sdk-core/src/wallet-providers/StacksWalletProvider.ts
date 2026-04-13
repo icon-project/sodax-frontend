@@ -10,24 +10,9 @@ import {
   type PostConditionModeName,
 } from '@stacks/transactions';
 import type { StacksProvider } from '@stacks/connect';
+import { request } from '@stacks/connect';
 
 import type { IStacksWalletProvider, StacksTransactionParams } from '@sodax/types';
-
-/**
- * Lazy-load @stacks/connect to avoid Turbopack scope-hoisting cycle (#1070).
- * Cannot bundle via noExternal because transitive deps (@reown/appkit → WalletConnect → node-fetch)
- * import Node builtins (stream, http) that fail on platform: neutral and crash at SSR.
- */
-let stacksConnectPromise: Promise<typeof import('@stacks/connect')> | undefined;
-function getStacksConnect() {
-  if (!stacksConnectPromise) {
-    stacksConnectPromise = import('@stacks/connect').then(mod => {
-      if (!mod.request) throw new Error('@stacks/connect loaded but missing exports');
-      return mod;
-    });
-  }
-  return stacksConnectPromise;
-}
 
 // Private key wallet config
 export type PrivateKeyStacksWalletConfig = {
@@ -124,7 +109,6 @@ export class StacksWalletProvider implements IStacksWalletProvider {
   }
 
   private async sendTransactionWithAdapter(txParams: StacksTransactionParams): Promise<string> {
-    const { request } = await getStacksConnect();
     const browserWallet = this.wallet as StacksBrowserExtensionWallet;
     const contract = `${txParams.contractAddress}.${txParams.contractName}` as `${string}.${string}`;
 
