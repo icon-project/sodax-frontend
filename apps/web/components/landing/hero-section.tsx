@@ -5,9 +5,8 @@ import type React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { SodaxIcon } from '../icons/sodax-icon';
-import { NEWS_ROUTE, PARTNERS_ROUTE, SWAP_ROUTE } from '@/constants/routes';
+import { EXCHANGE_ROUTE, NEWS_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { useAppStore } from '@/stores/app-store-provider';
 import { NETWORK_ICON_MAP } from '../network-icons';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getNetworkDocsUrl } from '@/lib/docToUrl';
@@ -34,11 +33,9 @@ const HERO_NETWORKS = [
 
 const HeroSection = (): React.ReactElement => {
   const router = useRouter();
-  const { setShouldTriggerAnimation } = useAppStore(state => state);
 
   const handleLaunchApps = () => {
-    router.push(SWAP_ROUTE);
-    setShouldTriggerAnimation(true);
+    router.push(EXCHANGE_ROUTE);
   };
 
   return (

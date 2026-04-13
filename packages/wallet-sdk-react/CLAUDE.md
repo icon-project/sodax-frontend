@@ -78,8 +78,6 @@ Only `xConnections` is persisted (key: `'xwagmi-store'`).
 
 **Persist hydration caveat**: `initChainServices` runs before persist hydration completes. Persist then restores `xConnections` from localStorage, which may include connections for now-disabled chains. `cleanupDisabledConnections()` runs after hydration to remove these stale connections.
 
-**`useXWagmiStore`** is a deprecated alias for `useXWalletStore`.
-
 ### Configurable Chain Opt-In
 
 `SodaxWalletProvider` accepts a `config` prop (`SodaxWalletConfig`):
@@ -98,7 +96,7 @@ Only `xConnections` is persisted (key: `'xwagmi-store'`).
 }
 ```
 
-Only listed chains are mounted. Legacy props (`rpcConfig`, `options`, `initialState`) are converted via `resolveLegacyProps()` with all 9 chains enabled.
+Only listed chains are mounted. **Breaking change from v1**: old top-level props (`rpcConfig`, `options`, `initialState`) are removed — consumers must use the new `config` object.
 
 ### WalletConnect (Non-Injected Wallets)
 
@@ -191,8 +189,7 @@ All hooks read from the Zustand store — no direct chain SDK hook usage:
 src/
 ├── index.ts                    # Barrel export
 ├── SodaxWalletProvider.tsx     # Root provider (configurable)
-├── useXWalletStore.ts          # Zustand store
-├── useXWagmiStore.ts           # Deprecated alias for useXWalletStore
+├── useXWalletStore.ts          # Zustand store (v1 name: useXWagmiStore)
 ├── chainRegistry.ts            # Chain registry + createChainServices
 ├── core/                       # XService + XConnector abstract classes
 ├── hooks/                      # All hooks (store-first pattern)

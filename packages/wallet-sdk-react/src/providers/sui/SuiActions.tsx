@@ -27,7 +27,13 @@ export const SuiActions = () => {
     registerChainActions('SUI', {
       connect: async (xConnectorId: string) => {
         const wallet = walletsRef.current.find(w => w.name === xConnectorId);
-        if (!wallet) return undefined;
+        if (!wallet) {
+          console.warn(
+            `[SuiActions] connect: wallet "${xConnectorId}" not found in adapter list`,
+            walletsRef.current.map(w => w.name),
+          );
+          return undefined;
+        }
         await connectRef.current({ wallet });
         return undefined;
       },

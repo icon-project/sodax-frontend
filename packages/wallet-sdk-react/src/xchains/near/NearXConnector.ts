@@ -22,6 +22,7 @@ export class NearXConnector extends XConnector {
     const accounts = await wallet.getAccounts();
 
     if (accounts.length === 0 || accounts[0] === undefined) {
+      console.warn(`[NearXConnector] connect: ${this._wallet.manifest.name} returned no accounts`);
       return undefined;
     }
 

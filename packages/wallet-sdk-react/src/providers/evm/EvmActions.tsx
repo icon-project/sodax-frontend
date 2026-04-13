@@ -19,16 +19,25 @@ export const EvmActions = () => {
   const signMessageRef = useRef(signMessageAsync);
   const wagmiConfigRef = useRef(wagmiConfig);
 
-  useEffect(() => { connectRef.current = connectAsync; }, [connectAsync]);
-  useEffect(() => { disconnectRef.current = disconnectAsync; }, [disconnectAsync]);
-  useEffect(() => { signMessageRef.current = signMessageAsync; }, [signMessageAsync]);
-  useEffect(() => { wagmiConfigRef.current = wagmiConfig; }, [wagmiConfig]);
+  // Sync all wagmi hook refs in a single effect to avoid 4 separate effect commits per render.
+  useEffect(() => {
+    connectRef.current = connectAsync;
+    disconnectRef.current = disconnectAsync;
+    signMessageRef.current = signMessageAsync;
+    wagmiConfigRef.current = wagmiConfig;
+  }, [connectAsync, disconnectAsync, signMessageAsync, wagmiConfig]);
 
   useEffect(() => {
     registerChainActions('EVM', {
       connect: async (xConnectorId: string) => {
         const connector = wagmiConfigRef.current.connectors.find(c => c.id === xConnectorId);
-        if (!connector) return undefined;
+        if (!connector) {
+          console.warn(
+            `[EvmActions] connect: connector "${xConnectorId}" not found in wagmi config`,
+            wagmiConfigRef.current.connectors.map(c => c.id),
+          );
+          return undefined;
+        }
         await connectRef.current({ connector });
         // EVM connection state is set by EvmHydrator (single writer for provider-managed chains)
         return undefined;
