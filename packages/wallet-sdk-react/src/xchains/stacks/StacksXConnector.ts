@@ -50,32 +50,24 @@ export class StacksXConnector extends XConnector {
       return undefined;
     }
 
-    try {
-      const { request } = await getStacksConnect();
-      const response = await request({ provider }, 'stx_getAddresses') as unknown as { addresses: { address: string; purpose: string }[] };
-      const stxAddress = response.addresses.find(a => a.purpose === 'stacks');
+    const { request } = await getStacksConnect();
+    const response = await request({ provider }, 'stx_getAddresses') as unknown as { addresses: { address: string; purpose: string }[] };
+    const stxAddress = response.addresses.find(a => a.purpose === 'stacks');
 
-      if (!stxAddress) {
-        return undefined;
-      }
-
-      return {
-        address: stxAddress.address,
-        xChainType: this.xChainType,
-      };
-    } catch (e) {
-      console.warn('[StacksXConnector] connect failed:', e);
+    if (!stxAddress) {
+      console.warn('[StacksXConnector] wallet returned no stacks-purpose address');
       return undefined;
     }
+
+    return {
+      address: stxAddress.address,
+      xChainType: this.xChainType,
+    };
   }
 
   async disconnect(): Promise<void> {
-    try {
-      const { disconnect } = await getStacksConnect();
-      disconnect();
-    } catch (e) {
-      console.warn('[StacksXConnector] disconnect failed:', e);
-    }
+    const { disconnect } = await getStacksConnect();
+    disconnect();
   }
 
   public get icon(): string {

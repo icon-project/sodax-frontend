@@ -21,7 +21,10 @@ import type { IStacksWalletProvider, StacksTransactionParams } from '@sodax/type
 let stacksConnectPromise: Promise<typeof import('@stacks/connect')> | undefined;
 function getStacksConnect() {
   if (!stacksConnectPromise) {
-    stacksConnectPromise = import('@stacks/connect');
+    stacksConnectPromise = import('@stacks/connect').then(mod => {
+      if (!mod.request) throw new Error('@stacks/connect loaded but missing exports');
+      return mod;
+    });
   }
   return stacksConnectPromise;
 }
