@@ -1,6 +1,7 @@
 import type { XAccount } from '@/types';
 import { XConnector } from '@/core';
 import type { StacksProvider } from '@stacks/connect';
+import { request, disconnect } from '@stacks/connect';
 
 export interface StacksProviderConfig {
   /** The provider ID matching the window path, e.g. 'LeatherProvider' or 'XverseProviders.BitcoinProvider' */
@@ -14,22 +15,6 @@ export interface StacksProviderConfig {
 function getProviderFromId(id: string): StacksProvider | undefined {
   // biome-ignore lint/suspicious/noExplicitAny: window property traversal requires any
   return id.split('.').reduce<any>((acc, part) => acc?.[part], window) as StacksProvider | undefined;
-}
-
-/**
- * Lazy-load @stacks/connect to avoid Turbopack scope-hoisting cycle (#1070).
- * Cannot bundle via noExternal because transitive deps (@reown/appkit → WalletConnect → node-fetch)
- * import Node builtins (stream, http) that fail on platform: neutral and crash at SSR.
- */
-let stacksConnectPromise: Promise<typeof import('@stacks/connect')> | undefined;
-function getStacksConnect() {
-  if (!stacksConnectPromise) {
-    stacksConnectPromise = import('@stacks/connect').then(mod => {
-      if (!mod.request || !mod.disconnect) throw new Error('@stacks/connect loaded but missing exports');
-      return mod;
-    });
-  }
-  return stacksConnectPromise;
 }
 
 export class StacksXConnector extends XConnector {
@@ -50,8 +35,9 @@ export class StacksXConnector extends XConnector {
       return undefined;
     }
 
-    const { request } = await getStacksConnect();
-    const response = await request({ provider }, 'stx_getAddresses') as unknown as { addresses: { address: string; purpose: string }[] };
+    const response = (await request({ provider }, 'stx_getAddresses')) as unknown as {
+      addresses: { address: string; purpose: string }[];
+    };
     const stxAddress = response.addresses.find(a => a.purpose === 'stacks');
 
     if (!stxAddress) {
@@ -66,7 +52,6 @@ export class StacksXConnector extends XConnector {
   }
 
   async disconnect(): Promise<void> {
-    const { disconnect } = await getStacksConnect();
     disconnect();
   }
 
