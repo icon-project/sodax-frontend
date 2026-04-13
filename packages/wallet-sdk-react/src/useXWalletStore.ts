@@ -16,7 +16,7 @@ type XWalletStore = {
   xConnections: Partial<Record<ChainType, XConnection>>;
   xConnectorsByChain: Partial<Record<ChainType, XConnector[]>>;
   enabledChains: ChainType[];
-  chainActions: Record<string, ChainActions>;
+  chainActions: Partial<Record<ChainType, ChainActions>>;
   /** Wallet providers from wallet-sdk-core. Read by useWalletProvider() hook. */
   walletProviders: Partial<Record<ChainType, WalletProvider>>;
 

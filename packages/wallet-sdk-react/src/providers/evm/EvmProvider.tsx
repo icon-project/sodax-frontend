@@ -7,11 +7,7 @@ import { createWagmiConfig } from '../../xchains/evm/EvmXService';
 import type { EvmChainConfig } from '../../types/config';
 import { EvmHydrator } from './EvmHydrator';
 import { EvmActions } from './EvmActions';
-
-const defaultEvmConfig: Required<Pick<EvmChainConfig, 'reconnectOnMount' | 'ssr'>> = {
-  reconnectOnMount: false,
-  ssr: true,
-};
+import { EVM_DEFAULT_RECONNECT_ON_MOUNT, EVM_DEFAULT_SSR } from '../../constants';
 
 type EvmProviderProps = {
   children: ReactNode;
@@ -20,8 +16,8 @@ type EvmProviderProps = {
 };
 
 export const EvmProvider = ({ children, config, rpcConfig }: EvmProviderProps) => {
-  const reconnectOnMount = config?.reconnectOnMount ?? defaultEvmConfig.reconnectOnMount;
-  const ssr = config?.ssr ?? defaultEvmConfig.ssr;
+  const reconnectOnMount = config?.reconnectOnMount ?? EVM_DEFAULT_RECONNECT_ON_MOUNT;
+  const ssr = config?.ssr ?? EVM_DEFAULT_SSR;
 
   const queryClientRef = useRef<QueryClient>(null);
   if (!queryClientRef.current) {

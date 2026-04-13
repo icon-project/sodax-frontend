@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useCurrentAccount, useCurrentWallet, useSuiClient, useWallets } from '@mysten/dapp-kit';
+import { SuiWalletProvider } from '@sodax/wallet-sdk-core';
 import { SuiXService, SuiXConnector } from '../../xchains/sui';
 import { useXWalletStore } from '../../useXWalletStore';
 
@@ -15,29 +16,23 @@ export const SuiHydrator = () => {
   const unsetXConnection = useXWalletStore(state => state.unsetXConnection);
   const setWalletProvider = useXWalletStore(state => state.setWalletProvider);
 
+  // Sync dapp-kit values into the SuiXService singleton in a single effect.
+  // The singleton is read by SuiXService.createWalletProvider() and balance methods.
   useEffect(() => {
-    if (suiClient) {
-      SuiXService.getInstance().suiClient = suiClient;
-    }
-  }, [suiClient]);
+    const service = SuiXService.getInstance();
+    if (suiClient) service.suiClient = suiClient;
+    if (currentWallet) service.suiWallet = currentWallet;
+    if (suiAccount) service.suiAccount = suiAccount;
+  }, [suiClient, currentWallet, suiAccount]);
 
+  // Memoize the connector list — useWallets returns a new array reference even when the
+  // underlying wallet set hasn't changed. Without memoization, every render would create
+  // new XConnector instances and trigger downstream re-renders.
+  const suiConnectors = useMemo(() => suiWallets.map(wallet => new SuiXConnector(wallet)), [suiWallets]);
   useEffect(() => {
-    if (currentWallet) {
-      SuiXService.getInstance().suiWallet = currentWallet;
-    }
-  }, [currentWallet]);
-
-  useEffect(() => {
-    if (suiAccount) {
-      SuiXService.getInstance().suiAccount = suiAccount;
-    }
-  }, [suiAccount]);
-
-  useEffect(() => {
-    const suiConnectors = suiWallets.map(wallet => new SuiXConnector(wallet));
     SuiXService.getInstance().setXConnectors(suiConnectors);
     useXWalletStore.getState().setXConnectors('SUI', suiConnectors);
-  }, [suiWallets]);
+  }, [suiConnectors]);
 
   const wasConnectedRef = useRef(!!useXWalletStore.getState().xConnections.SUI);
   useEffect(() => {
@@ -53,14 +48,21 @@ export const SuiHydrator = () => {
     }
   }, [currentWallet, suiAccount, setXConnection, unsetXConnection]);
 
-  // Hydrate SUI wallet provider into store
-  useEffect(() => {
+  // Create wallet provider directly from hook values (not singleton) — useMemo runs during
+  // render, before the useEffect that syncs values into the singleton. Reading from the
+  // singleton here would use stale fields from the previous render.
+  const walletProvider = useMemo(() => {
     if (suiClient && currentWallet && suiAccount) {
-      setWalletProvider('SUI', SuiXService.getInstance().createWalletProvider());
-    } else {
-      setWalletProvider('SUI', undefined);
+      // Cast needed: @mysten/dapp-kit and wallet-sdk-core resolve different @mysten/sui versions.
+      // Runtime types are compatible; this mirrors the `any`-typed singleton fields in SuiXService.
+      return new SuiWalletProvider({ client: suiClient as any, wallet: currentWallet as any, account: suiAccount as any });
     }
-  }, [suiClient, currentWallet, suiAccount, setWalletProvider]);
+    return undefined;
+  }, [suiClient, currentWallet, suiAccount]);
+
+  useEffect(() => {
+    setWalletProvider('SUI', walletProvider);
+  }, [walletProvider, setWalletProvider]);
 
   return null;
 };

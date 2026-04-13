@@ -1,30 +1,13 @@
-import type {
-  ChainType,
-  IEvmWalletProvider,
-  ISuiWalletProvider,
-  IIconWalletProvider,
-  IInjectiveWalletProvider,
-  IStellarWalletProvider,
-  ISolanaWalletProvider,
-  IBitcoinWalletProvider,
-  INearWalletProvider,
-  IStacksWalletProvider,
-} from '@sodax/types';
+import type { ChainType } from '@sodax/types';
 
-export type { IXService, IXConnector } from './interfaces';
-export type { SodaxWalletConfig, ChainsConfig, BaseChainConfig, EvmChainConfig, SolanaChainConfig, SuiChainConfig, SimpleChainConfig } from './config';
-export type { ChainActions, ChainActionsRegistry } from './chainActions';
+export * from './interfaces';
+export * from './config';
+export * from './chainActions';
 
-export type WalletProvider =
-  | IEvmWalletProvider
-  | ISuiWalletProvider
-  | IIconWalletProvider
-  | IInjectiveWalletProvider
-  | IStellarWalletProvider
-  | ISolanaWalletProvider
-  | IBitcoinWalletProvider
-  | INearWalletProvider
-  | IStacksWalletProvider;
+// Re-export the canonical wallet provider union from @sodax/sdk so wallet-sdk-react
+// stays a single source of truth — keeping `WalletProvider` as a local alias for
+// historical call sites within this package.
+export type { IWalletProvider as WalletProvider } from '@sodax/sdk';
 
 export type XAccount = {
   address: string | undefined;
@@ -36,13 +19,3 @@ export type XConnection = {
   xAccount: XAccount;
   xConnectorId: string;
 };
-
-export type CurrencyKey = string;
-
-export enum WalletId {
-  METAMASK = 'metamask',
-  HANA = 'hana',
-  PHANTOM = 'phantom',
-  SUI = 'sui',
-  KEPLR = 'keplr',
-}

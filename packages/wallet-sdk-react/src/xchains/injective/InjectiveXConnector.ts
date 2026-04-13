@@ -29,6 +29,7 @@ export class InjectiveXConnector extends XConnector {
 
   async connect(): Promise<XAccount | undefined> {
     if (isCosmosBrowserWallet(this.wallet) && !isCosmosWalletInstalled(this.wallet)) {
+      console.warn(`[InjectiveXConnector] connect: ${this.wallet} cosmos wallet not installed`);
       return undefined;
     }
 
@@ -36,7 +37,10 @@ export class InjectiveXConnector extends XConnector {
     await walletStrategy.setWallet(this.wallet);
     const addresses = await walletStrategy.getAddresses();
 
-    if (!addresses?.length) return undefined;
+    if (!addresses?.length) {
+      console.warn(`[InjectiveXConnector] connect: ${this.wallet} returned no addresses`);
+      return undefined;
+    }
 
     const address = isEvmBrowserWallet(this.wallet) ? getInjectiveAddress(addresses[0]) : addresses[0];
 
