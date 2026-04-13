@@ -5,11 +5,12 @@ import type React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { SodaxIcon } from '../icons/sodax-icon';
-import { EXCHANGE_ROUTE, NEWS_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
+import { NEWS_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { NETWORK_ICON_MAP } from '../network-icons';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getNetworkDocsUrl } from '@/lib/docToUrl';
+import { LeadMagnetCTA } from './lead-magnet-cta';
 
 const HERO_NETWORKS = [
   'Stellar',
@@ -33,10 +34,6 @@ const HERO_NETWORKS = [
 
 const HeroSection = (): React.ReactElement => {
   const router = useRouter();
-
-  const handleLaunchApps = () => {
-    router.push(EXCHANGE_ROUTE);
-  };
 
   return (
     <div className="hero-section">
@@ -102,10 +99,10 @@ const HeroSection = (): React.ReactElement => {
             </ul>
             <button
               type="button"
-              onClick={handleLaunchApps}
-              className="bg-yellow-dark hover:bg-yellow-soda transition-all hover:scale-[102%] w-34 md:w-43 h-10 font-[Shrikhand] rounded-full text-[14px] cursor-pointer text-cherry-dark"
+              onClick={() => router.push(PARTNERS_ROUTE)}
+              className="bg-yellow-dark hover:bg-yellow-soda transition-all hover:scale-[102%] h-10 px-6 font-[InterBold] rounded-full text-[14px] cursor-pointer text-cherry-dark"
             >
-              launch apps
+              Discover SODAX
             </button>
           </div>
         </div>
@@ -129,7 +126,7 @@ const HeroSection = (): React.ReactElement => {
                 alt=""
                 width={32}
                 height={120}
-                className="hidden md:block -scale-x-100"
+                className="-scale-x-100"
               />
               <div className="text-white font-[InterBold] text-(length:--app-title) leading-[1.1] text-center whitespace-nowrap">
                 One SDK.
@@ -139,14 +136,9 @@ const HeroSection = (): React.ReactElement => {
                 across networks.
               </div>
               {/* Right brace — horizontally flipped */}
-              <Image src="/landing/brace-right.svg" alt="" width={32} height={120} className="hidden md:block" />
+              <Image src="/landing/brace-right.svg" alt="" width={32} height={120} />
             </div>
-            <a
-              href={PARTNERS_ROUTE}
-              className="bg-yellow-dark hover:bg-yellow-soda transition-colors h-10 px-6 py-2 rounded-[240px] flex items-center justify-center text-cherry-dark font-[InterBold] text-(length:--body-comfortable) leading-[1.4]"
-            >
-              Integrate SODAX
-            </a>
+            <LeadMagnetCTA />
           </div>
 
           {/* 3. Network icons — infinite marquee */}
