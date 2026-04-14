@@ -4,39 +4,14 @@ import { type NextRequest, NextResponse } from 'next/server';
  * EU/EEA/UK country codes (31 total).
  * Used to determine if the cookie consent banner should be shown.
  */
+// biome-ignore format: compact country code table is more readable
 const EU_EEA_UK_COUNTRY_CODES = new Set([
   // EU (27)
-  'AT',
-  'BE',
-  'BG',
-  'HR',
-  'CY',
-  'CZ',
-  'DK',
-  'EE',
-  'FI',
-  'FR',
-  'DE',
-  'GR',
-  'HU',
-  'IE',
-  'IT',
-  'LV',
-  'LT',
-  'LU',
-  'MT',
-  'NL',
-  'PL',
-  'PT',
-  'RO',
-  'SK',
-  'SI',
-  'ES',
-  'SE',
+  'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR',
+  'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL',
+  'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE',
   // EEA non-EU (3)
-  'IS',
-  'LI',
-  'NO',
+  'IS', 'LI', 'NO',
   // UK (1)
   'GB',
 ]);
