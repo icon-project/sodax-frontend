@@ -65,7 +65,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
                   href={SWAP_FOR_APPS_ROUTE}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-6 w-fit items-center rounded-full bg-cream-white px-3 text-xs text-espresso leading-[1.4] hover:bg-cherry-grey transition-colors"
+                  className="flex h-6 w-fit items-center rounded-full bg-cream-white px-3 pt-0.5 text-xs text-espresso leading-[1.4] hover:bg-cherry-grey transition-colors"
                 >
                   Intent swaps for apps
                 </a>
@@ -73,7 +73,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
                   href={LEAD_BORROW_FOR_APPS_ROUTE}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-6 w-fit items-center rounded-full bg-cream-white px-3 text-xs text-espresso leading-[1.4] hover:bg-cherry-grey transition-colors"
+                  className="flex h-6 w-fit items-center rounded-full bg-cream-white px-3 pt-0.5 text-xs text-espresso leading-[1.4] hover:bg-cherry-grey transition-colors"
                 >
                   Lend / Borrow for apps
                 </a>
@@ -81,14 +81,14 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
                   href={BRIDGE_SERVICES_ROUTE}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-6 w-fit items-center rounded-full bg-cream-white px-3 text-xs text-espresso leading-[1.4] hover:bg-cherry-grey transition-colors"
+                  className="flex h-6 w-fit items-center rounded-full bg-cream-white px-3 pt-0.5 text-xs text-espresso leading-[1.4] hover:bg-cherry-grey transition-colors"
                 >
                   Bridge service
                 </a>
                 {/* B2C outline bubble */}
                 <Link
                   href={EXCHANGE_ROUTE}
-                  className="flex h-6 w-fit items-center rounded-full border-2 border-cream-white px-3 text-xs text-clay leading-[1.4] hover:border-cherry-grey transition-colors"
+                  className="flex h-6 w-fit items-center rounded-full border-2 border-cream-white px-3 pt-0.5 text-xs text-clay leading-[1.4] hover:border-cherry-grey transition-colors"
                 >
                   SODAX Exchange
                 </Link>
