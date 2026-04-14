@@ -2,9 +2,10 @@
 
 Regression test app for [icon-project/sodax-frontend#1070](https://github.com/icon-project/sodax-frontend/issues/1070).
 
-A minimal Next.js 16 (Turbopack) app that consumes `@sodax/sdk` from the
-workspace and exercises the lazy `@stacks/transactions` loading paths in
-both the server and client bundles.
+A minimal Next.js 16 (Turbopack) app that consumes `@sodax/sdk`,
+`@sodax/wallet-sdk-core`, `@sodax/wallet-sdk-react`, and `@sodax/dapp-kit`
+from the workspace, and exercises the `@stacks/*` bundling paths in both
+the server and client bundles.
 
 ## Background
 
@@ -16,45 +17,68 @@ Error: Module XXXXXX was instantiated because it was required from module YYYYYY
 but the module factory is not available.
 ```
 
-Root cause: Turbopack scope-hoists `@stacks/transactions` (a transitive
-dep of `@sodax/sdk`) and hits an internal cycle in that package.
-The bug reproduces with a bare named import (`import { Cl } from '@stacks/transactions'`)
-in a fresh Next 16 app — no Sodax code required — so the root cause is
-upstream Turbopack, not Sodax. See PLAN doc for the full investigation.
+Root causes (all upstream Turbopack scope-hoisting bugs):
 
-The SDK-side fix converts the 4 SDK files that touch `@stacks/transactions`
-and `@stacks/network` from top-level static imports to lazy
-`await import()` inside async functions, with a sync cache and
-fire-and-forget preload for the synchronous `encodeAddress` path. The dist
-no longer contains any top-level static `@stacks/*` import, so Turbopack
-never scope-hoists the package, and the cycle is never reached.
+1. **`@stacks/transactions`** — Turbopack scope-hoists named imports and
+   hits an internal cycle. Reproduces with a bare `import { Cl } from
+   '@stacks/transactions'` in a fresh Next 16 app — no Sodax code required.
+2. **`@stacks/connect`** — imports `@stacks/transactions` internally →
+   same cycle in the client bundle.
+3. **`@injectivelabs/wallet-ledger`** — bundles CryptoJS UMD with dead
+   AMD `define(["./core"])` branches that Turbopack parses as real imports.
+
+### Fix (this PR)
+
+- **`@stacks/transactions` + `@stacks/network`** — bundled once into
+  `@sodax/sdk` dist via tsup `noExternal`, exposed through the
+  `@sodax/sdk/stacks-internal` sub-export. `wallet-sdk-core` and
+  `wallet-sdk-react` import from there, so the code ships exactly once
+  across the entire dependency chain.
+- **`@stacks/connect`** — bundled into `wallet-sdk-core` and
+  `wallet-sdk-react` dist. Unused transitive deps
+  (`@reown/appkit`, `@stacks/connect-ui`, `cross-fetch`) are replaced
+  with noop stubs via an esbuild `onResolve` plugin. SODAX only uses
+  browser extension wallets (Leather, Xverse) and passes the provider
+  directly via `request({ provider }, ...)`, so WalletConnect / UI
+  picker code is never reached.
+- **Injective hardware wallets** — `wallet-ledger`, `wallet-trezor`,
+  `wallet-magic`, `wallet-turnkey`, `wallet-wallet-connect` stubbed to
+  empty modules (SODAX only uses browser wallets).
+
+The dist no longer contains any top-level import that triggers a
+Turbopack cycle, so the build succeeds.
 
 ## Routes
 
 - `/` — **server component.** Runs at SSR prerender during `next build`.
-  Calls `encodeAddress('stacks', ...)` which exercises SDK's lazy
-  `await import('@stacks/transactions')` chain at runtime. Verified
-  automatically by `verify-build.mjs`, which greps the prerendered HTML
-  for the expected Stacks principal hex (`0x0516...`).
+  Calls `encodeAddress('stacks', ...)` and `serializeAddressData(...)`,
+  which exercise the bundled `@stacks/transactions` code path at runtime.
+  Verified automatically by `verify-build.mjs`, which greps the
+  prerendered HTML for expected Stacks principal hex values.
 
 - `/client` — **client component.** Exercises the Turbopack browser
-  bundle of `@sodax/sdk`. Same lazy path, different bundle — Turbopack
-  produces server and client bundles separately and could in theory have
+  bundle of the full provider stack (`SodaxProvider`, `SodaxWalletProvider`,
+  `QueryClientProvider`) and all 9 chain connectors. Turbopack produces
+  server and client bundles separately and could in theory have
   different scope-hoisting outcomes, so we test both.
 
 ## Verifying
 
-### SSR / server bundle (automated, run in CI)
+### Automated (run in CI)
 
 ```bash
 pnpm --filter example-next-js-16 verify
 ```
 
-Builds the app and asserts that the prerendered HTML contains the
-expected Stacks principal hex `0x0516...`. Exits 1 if the lazy stacks
-path failed to run during SSR.
+Runs `next build` then `verify-build.mjs`, which:
+1. Greps the prerendered SSR HTML for expected Stacks hex values.
+2. Starts `next start`, fetches `/` and `/client`, and asserts the
+   provider stack renders without hydration errors or Turbopack module
+   factory errors.
 
-### Client / browser bundle (manual)
+Exits 1 on any failure.
+
+### Manual client inspection
 
 ```bash
 pnpm --filter example-next-js-16 build
@@ -62,19 +86,12 @@ pnpm --filter example-next-js-16 start
 # open http://localhost:3016/client
 ```
 
-Expect: page renders `encoded: 0x05160000...` within ~100ms of mount.
+Expect: page renders the SDK/wallet-core export counts, encoded Stacks
+values, and a wallet connect UI for all 9 chains within ~100ms of mount.
 
 Failure signals:
-- Page text shows `FAILED: ...` — lazy path threw on every retry.
 - Browser DevTools console shows
   `Module XXX was instantiated... module factory is not available` —
-  client bundle still has the cycle.
-
-## Reproducing the original bug locally
-
-To see the bug come back:
-
-1. Revert the lazy-load changes in `packages/sdk/src/shared/{utils/stacks-utils.ts,utils/shared-utils.ts,services/spoke/StacksSpokeService.ts,entities/stacks/StacksSpokeProvider.ts}`
-2. `pnpm --filter @sodax/sdk build`
-3. `rm -rf apps/example-next-js-16/.next && pnpm --filter example-next-js-16 build`
-4. Build fails at "Generating static pages" with the module-factory error.
+  the Turbopack cycle is back.
+- `Module not found: Can't resolve './core'` — a new Injective CryptoJS
+  path slipped past the stub plugin.
