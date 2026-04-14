@@ -69,7 +69,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <LandingPage />
               </div>
               <ModalStoreProvider>
-                <div
+                <main
                   className={cn(
                     'w-full sm:min-h-screen',
                     isPartner ? 'min-h-full overflow-visible' : 'max-h-screen sm:max-h-none overflow-hidden',
@@ -126,7 +126,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   <WalletModal />
                   <TermsConfirmationModal />
                   <Toaster />
-                </div>
+                </main>
               </ModalStoreProvider>
             </PoolStoreProvider>
           </StakeStoreProvider>

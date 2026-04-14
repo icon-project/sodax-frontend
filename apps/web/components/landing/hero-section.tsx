@@ -51,7 +51,7 @@ const HeroSection = (): React.ReactElement => {
           - mix-blend-lighten + opacity-60 give the images their subtle, warm appearance.
         */}
         <div className="absolute hidden lg:block left-[calc(-816px+31.25vw)] top-0 w-[1080px] h-full mix-blend-lighten opacity-60 pointer-events-none mask-[linear-gradient(to_right,transparent,black_360px,black_calc(100%-360px),transparent)]">
-          <Image src="/landing/hero-bg-left.png" alt="" fill className="object-cover" />
+          <Image src="/landing/hero-bg-left.png" alt="" fill className="object-cover" priority />
         </div>
         <div className="absolute hidden lg:flex right-[calc(-816px+31.25vw)] top-0 w-[1080px] h-full mix-blend-lighten pointer-events-none items-center justify-center mask-[linear-gradient(to_right,transparent,black_360px,black_calc(100%-360px),transparent)]">
           <div className="-scale-y-100 rotate-180 relative w-[1080px] h-full opacity-60">

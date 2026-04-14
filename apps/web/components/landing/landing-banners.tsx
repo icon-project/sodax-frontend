@@ -82,7 +82,7 @@ export default function LandingBanners(): ReactElement {
           width: 681,
           height: 267,
           className:
-            'mix-blend-multiply absolute bottom-15 md:bottom-18 lg:bottom-19 left-1/2 transform -translate-x-1/2 h-[209px] md:w-[681px] max-w-[681px]',
+            'mix-blend-multiply absolute bottom-15 md:bottom-18 lg:bottom-19 left-1/2 transform -translate-x-1/2 h-[209px] w-auto md:w-[681px] max-w-[681px]',
         }}
         title={
           <div className="flex items-center gap-4">
