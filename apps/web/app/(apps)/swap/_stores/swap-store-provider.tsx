@@ -6,7 +6,7 @@ import { useStore } from 'zustand';
 import { type SwapStore, createSwapStore } from './swap-store';
 import { parseUnits } from 'viem';
 import { getXChainType, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
-import { validateChainAddress } from '@/lib/utils';
+import { validateChainAddress } from '@/lib/address-validation';
 import { ENTER_DESTINATION_ADDRESS_PLACEHOLDER } from '../_constants/swap-messages';
 
 export type SwapStoreApi = ReturnType<typeof createSwapStore>;
