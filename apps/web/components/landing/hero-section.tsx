@@ -36,6 +36,7 @@ const HeroSection = (): React.ReactElement => {
   const router = useRouter();
   const [activeTouchIndex, setActiveTouchIndex] = useState<number | null>(null);
   const touchBoundaryRef = useRef<HTMLDivElement>(null);
+  const touchTriggeredRef = useRef(false);
 
   // On mobile dismiss tooltip when tapping outside the marquee
   useEffect(() => {
@@ -155,9 +156,15 @@ const HeroSection = (): React.ReactElement => {
                         className="mx-3 shrink-0 text-white opacity-40 hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                         aria-label={`View ${name} documentation`}
                         onTouchStart={e => {
-                          if (activeTouchIndex === i) return; // second tap navigates normally
+                          touchTriggeredRef.current = true;
                           e.preventDefault();
-                          setActiveTouchIndex(i);
+                          setActiveTouchIndex(prev => (prev === i ? null : i));
+                        }}
+                        onClick={e => {
+                          if (touchTriggeredRef.current) {
+                            e.preventDefault();
+                            touchTriggeredRef.current = false;
+                          }
                         }}
                       >
                         <Icon width={24} height={24} aria-hidden="true" focusable="false" />
@@ -169,7 +176,14 @@ const HeroSection = (): React.ReactElement => {
                       sideOffset={16}
                       className="h-[54px] items-center gap-2 px-8 py-4 text-(length:--body-comfortable)"
                     >
-                      {name}
+                      <a
+                        href={getNetworkDocsUrl(name)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center"
+                      >
+                        {name}
+                      </a>
                     </TooltipContent>
                   </Tooltip>
                 );
