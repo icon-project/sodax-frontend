@@ -40,8 +40,6 @@ pnpm clean                # Remove all node_modules, dist, .turbo, .next
 ```
 
 ## Common Pitfalls
-
-- **Only change code directly related to the task at hand.** Do not refactor, restyle, rename, or "improve" surrounding code that is not part of the requested changes. Unrelated modifications risk breaking existing behavior (e.g., removing hover effects, animations, or styles that were intentionally designed). If you notice something that could be improved but is outside the scope of the request, mention it to the user instead of changing it.
 - **Never use `bigint` in types that will be passed to `JSON.stringify`** — it throws `TypeError` at runtime. Use `string` for numeric fields in API request/response types. If `bigint` is needed in domain types, convert to string before serialization.
 
 
