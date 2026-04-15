@@ -2985,10 +2985,10 @@ export const swapSupportedTokens = {
     spokeChainConfig[SUI_MAINNET_CHAIN_ID].supportedTokens.WAL,
   ] as const satisfies XToken[],
   [INJECTIVE_MAINNET_CHAIN_ID]: [
-    // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ,
-    // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.bnUSD, // NOTE: Not Implemented
-    // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
-    spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.SODA,
+    spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.INJ,
+    spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.bnUSD,
+    spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.USDC,
+    // spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID].supportedTokens.SODA, // NOTE: not in solver wiki
   ] as const satisfies XToken[],
   [NEAR_MAINNET_CHAIN_ID]: [
     spokeChainConfig[NEAR_MAINNET_CHAIN_ID].supportedTokens.NEAR,

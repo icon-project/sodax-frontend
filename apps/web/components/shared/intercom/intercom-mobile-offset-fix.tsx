@@ -47,9 +47,14 @@ function applyIntercomBottomOffset(): void {
   );
 
   for (const el of candidates) {
-    el.style.setProperty('bottom', bottom, 'important');
+    // Avoid redundant inline style writes; those can retrigger MutationObserver loops on mobile.
+    if (el.style.getPropertyValue('bottom') !== bottom) {
+      el.style.setProperty('bottom', bottom, 'important');
+    }
     // Some Intercom variants use logical properties.
-    el.style.setProperty('inset-block-end', bottom, 'important');
+    if (el.style.getPropertyValue('inset-block-end') !== bottom) {
+      el.style.setProperty('inset-block-end', bottom, 'important');
+    }
   }
 }
 
@@ -64,14 +69,24 @@ export default function IntercomMobileOffsetFix(): React.ReactElement | null {
       return;
     }
 
-    setIntercomBottomOffsetFromNav();
-    applyIntercomBottomOffset();
+    let rafId: number | null = null;
+    const scheduleApply = (): void => {
+      if (rafId !== null) {
+        return;
+      }
+      rafId = window.requestAnimationFrame(() => {
+        rafId = null;
+        setIntercomBottomOffsetFromNav();
+        applyIntercomBottomOffset();
+      });
+    };
+
+    scheduleApply();
 
     const nav = document.getElementById(MOBILE_NAV_ID);
     const resizeObserver = nav
       ? new ResizeObserver(() => {
-          setIntercomBottomOffsetFromNav();
-          applyIntercomBottomOffset();
+          scheduleApply();
         })
       : null;
 
@@ -80,13 +95,12 @@ export default function IntercomMobileOffsetFix(): React.ReactElement | null {
     }
 
     const onResize = (): void => {
-      setIntercomBottomOffsetFromNav();
-      applyIntercomBottomOffset();
+      scheduleApply();
     };
     window.addEventListener('resize', onResize);
 
     const containerObserver = new MutationObserver(() => {
-      applyIntercomBottomOffset();
+      scheduleApply();
     });
 
     // Intercom may mount late, so observe the document until it appears.
@@ -96,7 +110,7 @@ export default function IntercomMobileOffsetFix(): React.ReactElement | null {
         return;
       }
 
-      applyIntercomBottomOffset();
+      scheduleApply();
 
       containerObserver.observe(container, {
         attributes: true,
@@ -111,6 +125,9 @@ export default function IntercomMobileOffsetFix(): React.ReactElement | null {
     rootObserver.observe(document.documentElement, { childList: true, subtree: true });
 
     return () => {
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+      }
       window.removeEventListener('resize', onResize);
       resizeObserver?.disconnect();
       rootObserver.disconnect();

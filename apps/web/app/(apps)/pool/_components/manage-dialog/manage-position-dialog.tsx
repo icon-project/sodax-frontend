@@ -33,6 +33,10 @@ import { WithdrawTabContent } from '@/app/(apps)/pool/_components/manage-dialog/
 import { formatUnits, parseUnits } from 'viem';
 import type { CreateAssetDepositParams } from '@sodax/sdk';
 import { createDexTokenIdsStorageKey, dispatchDexPositionsUpdatedEvent, formatTokenAmount } from '@/lib/utils';
+import { trackAddLiquidityCompleted, trackWithdrawLiquidityCompleted, trackClaimFeesCompleted } from '@/lib/analytics';
+import { chainIdToChainName } from '@/providers/constants';
+
+const WITHDRAW_LIQUIDITY_SLIPPAGE_PERCENT = 0.5;
 
 type ManagePositionDialogProps = {
   open: boolean;
@@ -318,7 +322,7 @@ export function ManagePositionDialog({
     const timeoutErrorMessage = 'Claim request timed out. Please check your wallet and try again.';
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
     try {
-      await Promise.race([
+      const [claimSpokeTxHash, claimHubTxHash] = await Promise.race([
         claimRewardsMutation.mutateAsync({
           params: {
             poolKey,
@@ -335,6 +339,14 @@ export function ManagePositionDialog({
         }),
       ]);
       setIsClaimSuccess(true);
+      trackClaimFeesCompleted({
+        position_id: tokenId,
+        fees_soda: convertPoolTokenToSodaAmount(formatUnits(unclaimedFees0, poolData.token0.decimals)),
+        fees_xsoda: formatUnits(unclaimedFees1, poolData.token1.decimals),
+        source_chain: chainIdToChainName(spokeChainId),
+        spoke_transaction_hash: claimSpokeTxHash,
+        hub_transaction_hash: claimHubTxHash,
+      });
       await refreshDexQueries();
     } catch (claimErr) {
       const message = claimErr instanceof Error ? claimErr.message : 'Claim fee failed.';
@@ -385,7 +397,7 @@ export function ManagePositionDialog({
     setIsAddLiquiditySuccess(false);
 
     try {
-      await supplyLiquidityMutation.mutateAsync({
+      const [addSpokeTxHash, addHubTxHash] = await supplyLiquidityMutation.mutateAsync({
         params: createSupplyLiquidityParamsProps({
           poolData,
           poolKey,
@@ -410,6 +422,14 @@ export function ManagePositionDialog({
       setIsAddLiquidityApproved(false);
       setIsAddLiquidityTransferred(false);
       setIsAddLiquiditySuccess(true);
+      trackAddLiquidityCompleted({
+        position_id: tokenId,
+        amount_soda: convertPoolTokenToSodaAmount(supplyToken0Amount),
+        amount_xsoda: supplyToken1Amount,
+        source_chain: chainIdToChainName(spokeChainId),
+        spoke_transaction_hash: addSpokeTxHash,
+        hub_transaction_hash: addHubTxHash,
+      });
       await refreshDexQueries();
     } catch (supplyError) {
       const message = supplyError instanceof Error ? supplyError.message : 'Add liquidity failed.';
@@ -552,13 +572,13 @@ export function ManagePositionDialog({
     }
 
     try {
-      await decreaseLiquidityMutation.mutateAsync({
+      const [withdrawSpokeTxHash, withdrawHubTxHash] = await decreaseLiquidityMutation.mutateAsync({
         params: createDecreaseLiquidityParamsProps({
           poolKey,
           tokenId,
           percentage: parsedPercentage,
           positionInfo,
-          slippageTolerance: '0.5',
+          slippageTolerance: WITHDRAW_LIQUIDITY_SLIPPAGE_PERCENT.toString(),
         }),
         spokeProvider,
       });
@@ -568,12 +588,16 @@ export function ManagePositionDialog({
           percentageBasisPoints >= 10000n
             ? positionInfo.amount0
             : (positionInfo.amount0 * percentageBasisPoints) / 10000n;
-        const withdrawToken0Amount = decreasedToken0Amount + positionInfo.unclaimedFees0;
-        if (withdrawToken0Amount > 0n) {
+
+        const withdrawSlippageMultiplier = BigInt(Math.floor((100 - WITHDRAW_LIQUIDITY_SLIPPAGE_PERCENT) * 100));
+        const token0WithdrawAmount =
+          decreasedToken0Amount === 0n ? 0n : (decreasedToken0Amount * withdrawSlippageMultiplier) / 10000n;
+
+        if (token0WithdrawAmount > 0n) {
           await withdrawMutation.mutateAsync({
             params: createWithdrawParamsProps({
               tokenIndex: 0,
-              amount: formatUnits(withdrawToken0Amount, poolData.token0.decimals),
+              amount: formatUnits(token0WithdrawAmount, poolData.token0.decimals),
               poolData,
               poolSpokeAssets,
             }),
@@ -589,6 +613,13 @@ export function ManagePositionDialog({
       }
       setWithdrawPercentage('0');
       setIsWithdrawSuccess(true);
+      trackWithdrawLiquidityCompleted({
+        position_id: tokenId,
+        withdraw_percentage: parsedPercentage,
+        source_chain: chainIdToChainName(spokeChainId),
+        spoke_transaction_hash: withdrawSpokeTxHash,
+        hub_transaction_hash: withdrawHubTxHash,
+      });
       await refreshDexQueries();
     } catch (withdrawErr) {
       const message = withdrawErr instanceof Error ? withdrawErr.message : 'Withdraw liquidity failed.';
