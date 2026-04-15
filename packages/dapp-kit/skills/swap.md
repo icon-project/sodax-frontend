@@ -180,6 +180,16 @@ const { mutateAsync: cancelLimitOrder } = useCancelLimitOrder({ spokeProvider })
 await createLimitOrder({ params: intentParams });
 ```
 
+## Gotchas
+
+### Token list has duplicate addresses
+
+`getSupportedSolverTokens()` can return multiple tokens sharing the same contract address (same token on different chains). When rendering token lists, use a composite key like `${token.address}-${token.blockchain_id}` — not `token.address` alone.
+
+### Balance display
+
+Balances come from `@sodax/wallet-sdk-react`, not from dapp-kit. See `wallet-connectivity.md` for `useXBalances`.
+
 ## Types
 
 ```typescript

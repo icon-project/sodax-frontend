@@ -53,6 +53,26 @@ function MyFeature() {
 }
 ```
 
+## Fetch Token Balances
+
+`useXBalances` from `@sodax/wallet-sdk-react` fetches on-chain balances for a wallet address:
+
+```tsx
+import { useXBalances } from '@sodax/wallet-sdk-react';
+import { BSC_MAINNET_CHAIN_ID } from '@sodax/sdk';
+
+function TokenBalance({ walletAddress }: { walletAddress: string }) {
+  const { data: balances } = useXBalances({
+    address: walletAddress,
+    chainId: BSC_MAINNET_CHAIN_ID,
+  });
+
+  // balances is a map of token address → balance (bigint)
+}
+```
+
+Use this alongside any feature hook to show the user's available balance before a swap, bridge, supply, etc.
+
 ## Use in Feature Hooks
 
 Every mutation hook takes `{ spokeProvider }` at initialization:

@@ -1,8 +1,55 @@
 # @sodax/dapp-kit Skills
 
-AI-agent-friendly scaffolding guides for building React dApps with `@sodax/dapp-kit`.
+Scaffolding guides that let you add SODAX features to your React app in one prompt. These skills are built for and tested with [Claude Code](https://docs.anthropic.com/en/docs/claude-code). Point it at a skill file, and it generates the correct hooks, providers, and types for you.
 
-Each skill covers one feature domain with ready-to-use hook examples. All hooks follow the **single-object-parameter** convention.
+## Frontend vs Backend
+
+These skills are for **frontend (React) integration** — wallet connection, React hooks, UI components.
+
+**If you're building a backend** (API server, bot, script), you don't need `@sodax/dapp-kit` or `@sodax/wallet-sdk-react` at all. Use `@sodax/sdk` directly with a private key:
+
+```ts
+import { Sodax, EvmSpokeProvider } from '@sodax/sdk';
+
+const sodax = new Sodax({ rpcConfig: { /* ... */ } });
+const spokeProvider = new EvmSpokeProvider({ privateKey: '0x...' });
+const quote = await sodax.swaps.getQuote({ /* ... */ });
+const result = await sodax.swaps.swap({ intentParams, spokeProvider });
+```
+
+No React, no wallet connection, no hooks. See `packages/sdk/CLAUDE.md` for SDK-only usage.
+
+## Quick Start
+
+Skills ship with the npm package. After installing `@sodax/dapp-kit`:
+
+**1. Set up providers** (do this first)
+
+> Read `node_modules/@sodax/dapp-kit/skills/setup.md` and set up my React app with @sodax/dapp-kit.
+
+**2. Add wallet connectivity**
+
+> Read `node_modules/@sodax/dapp-kit/skills/wallet-connectivity.md` and add wallet connection to my app.
+
+**3. Add a feature** — pick any one:
+
+> Read `node_modules/@sodax/dapp-kit/skills/swap.md` and add cross-chain swap to my app.
+
+> Read `node_modules/@sodax/dapp-kit/skills/money-market.md` and add lending and borrowing to my app.
+
+> Read `node_modules/@sodax/dapp-kit/skills/staking.md` and add SODA staking to my app.
+
+The pattern is always: `Read node_modules/@sodax/dapp-kit/skills/<feature>.md` + what you want to build.
+
+### Tips
+
+- One feature per prompt gets better results than asking for everything at once
+- Always do setup + wallet-connectivity before any feature
+- Available features: `swap`, `bridge`, `money-market`, `staking`, `migration`, `dex`, `bitcoin`, `backend-queries`
+
+---
+
+*Internal devs working in this monorepo: use `skills/<feature>.md` instead of the `node_modules` path, and reference sibling hooks for patterns.*
 
 ## Dependency Graph
 
