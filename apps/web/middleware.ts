@@ -47,5 +47,8 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|fonts|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|zip|toml)).*)'],
+  // biome-ignore format: keep original multi-line format to minimise PR diff
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|fonts|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|zip|toml)).*)',
+  ],
 };
