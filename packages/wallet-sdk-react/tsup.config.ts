@@ -27,7 +27,7 @@ export default defineConfig([
     // so `instanceof XverseXConnector` works when imported from either location.
     splitting: true,
     clean: true,
-    dts: !isWatchMode,
+    dts: !isWatchMode, // skip slow .d.ts generation during watch — only needed for production builds
     outExtension() {
       return { js: '.mjs' };
     },
