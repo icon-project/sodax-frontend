@@ -29,21 +29,29 @@ Root causes (all upstream Turbopack scope-hoisting bugs):
 
 ### Fix (this PR)
 
-- **`@stacks/transactions` + `@stacks/network`** — bundled once into
-  `@sodax/sdk` dist via tsup `noExternal`, exposed through the
-  `@sodax/sdk/stacks-internal` sub-export. `wallet-sdk-core` and
-  `wallet-sdk-react` import from there, so the code ships exactly once
-  across the entire dependency chain.
-- **`@stacks/connect`** — bundled into `wallet-sdk-core` and
-  `wallet-sdk-react` dist. Unused transitive deps
-  (`@reown/appkit`, `@stacks/connect-ui`, `cross-fetch`) are replaced
-  with noop stubs via an esbuild `onResolve` plugin. SODAX only uses
-  browser extension wallets (Leather, Xverse) and passes the provider
-  directly via `request({ provider }, ...)`, so WalletConnect / UI
-  picker code is never reached.
-- **Injective hardware wallets** — `wallet-ledger`, `wallet-trezor`,
-  `wallet-magic`, `wallet-turnkey`, `wallet-wallet-connect` stubbed to
-  empty modules (SODAX only uses browser wallets).
+Problem dependencies are isolated into a dedicated `@sodax/libs` package
+that sits at the bottom of the monorepo dependency chain. Each problem
+dep is exposed through its own subpath, bundled with the necessary
+workarounds. Downstream packages (`sdk`, `wallet-sdk-core`,
+`wallet-sdk-react`) consume the subpaths — the code ships exactly once
+across the entire chain.
+
+- **`@stacks/transactions` + `@stacks/network`** — bundled into
+  `@sodax/libs/stacks/core` via tsup `noExternal`.
+- **`@stacks/connect`** — bundled into `@sodax/libs/stacks/connect`.
+  Unused transitive deps (`@reown/appkit`, `@stacks/connect-ui`,
+  `cross-fetch`) are replaced with noop stubs via an esbuild `onResolve`
+  plugin. SODAX only uses browser extension wallets (Leather, Xverse)
+  and passes the provider directly via `request({ provider }, ...)`,
+  so WalletConnect / UI picker code is never reached.
+  A build-time script (`verify-stacks-connect-ui-stub.mjs`) catches
+  drift in `@stacks/connect-ui` named imports.
+- **`@injectivelabs/wallet-strategy`** — bundled into
+  `@sodax/libs/injective/wallet-strategy`. Hardware wallet packages
+  (`wallet-ledger`, `wallet-trezor`, `wallet-magic`, `wallet-turnkey`,
+  `wallet-wallet-connect`) — dynamically imported by `wallet-strategy`
+  and statically analyzed by Turbopack — are stubbed to empty modules
+  (SODAX only uses browser wallets).
 
 The dist no longer contains any top-level import that triggers a
 Turbopack cycle, so the build succeeds.

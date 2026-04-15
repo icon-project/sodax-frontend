@@ -42,7 +42,6 @@
     "@injectivelabs/wallet-core": "catalog:",
     "@injectivelabs/wallet-cosmos": "catalog:",
     "@injectivelabs/wallet-evm": "catalog:",
-    "@injectivelabs/wallet-strategy": "catalog:",
     "@mysten/dapp-kit": "catalog:",
     "@mysten/sui": "catalog:",
     "@sodax/libs": "workspace:*",

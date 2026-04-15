@@ -5,7 +5,7 @@ import { ChainId as InjectiveChainId } from '@injectivelabs/ts-types';
 import { MsgBroadcaster } from '@injectivelabs/wallet-core';
 import type { XToken } from '@sodax/types';
 import { mainnet } from 'wagmi/chains';
-import { WalletStrategy } from '@injectivelabs/wallet-strategy';
+import { WalletStrategy } from '@sodax/libs/injective/wallet-strategy';
 
 export class InjectiveXService extends XService {
   private static instance: InjectiveXService;

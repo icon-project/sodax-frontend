@@ -31,6 +31,11 @@
       "types": "./dist/stacks/connect/index.d.ts",
       "import": "./dist/stacks/connect/index.mjs",
       "require": "./dist/stacks/connect/index.cjs"
+    },
+    "./injective/wallet-strategy": {
+      "types": "./dist/injective/wallet-strategy/index.d.ts",
+      "import": "./dist/injective/wallet-strategy/index.mjs",
+      "require": "./dist/injective/wallet-strategy/index.cjs"
     }
   },
   "engines": {
@@ -48,6 +53,7 @@
     "clean": "rm -rf node_modules && rm -rf dist && rm -rf .turbo"
   },
   "dependencies": {
+    "@injectivelabs/wallet-strategy": "catalog:",
     "@stacks/connect": "catalog:",
     "@stacks/network": "catalog:",
     "@stacks/transactions": "catalog:"
