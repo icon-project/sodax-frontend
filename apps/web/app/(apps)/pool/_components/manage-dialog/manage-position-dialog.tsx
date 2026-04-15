@@ -36,6 +36,8 @@ import { createDexTokenIdsStorageKey, dispatchDexPositionsUpdatedEvent, formatTo
 import { trackAddLiquidityCompleted, trackWithdrawLiquidityCompleted, trackClaimFeesCompleted } from '@/lib/analytics';
 import { chainIdToChainName } from '@/providers/constants';
 
+const WITHDRAW_LIQUIDITY_SLIPPAGE_PERCENT = 0.5;
+
 type ManagePositionDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -576,7 +578,7 @@ export function ManagePositionDialog({
           tokenId,
           percentage: parsedPercentage,
           positionInfo,
-          slippageTolerance: '0.5',
+          slippageTolerance: WITHDRAW_LIQUIDITY_SLIPPAGE_PERCENT.toString(),
         }),
         spokeProvider,
       });
@@ -587,11 +589,15 @@ export function ManagePositionDialog({
             ? positionInfo.amount0
             : (positionInfo.amount0 * percentageBasisPoints) / 10000n;
 
-        if (decreasedToken0Amount > 0n) {
+        const withdrawSlippageMultiplier = BigInt(Math.floor((100 - WITHDRAW_LIQUIDITY_SLIPPAGE_PERCENT) * 100));
+        const token0WithdrawAmount =
+          decreasedToken0Amount === 0n ? 0n : (decreasedToken0Amount * withdrawSlippageMultiplier) / 10000n;
+
+        if (token0WithdrawAmount > 0n) {
           await withdrawMutation.mutateAsync({
             params: createWithdrawParamsProps({
               tokenIndex: 0,
-              amount: formatUnits(decreasedToken0Amount, poolData.token0.decimals),
+              amount: formatUnits(token0WithdrawAmount, poolData.token0.decimals),
               poolData,
               poolSpokeAssets,
             }),
