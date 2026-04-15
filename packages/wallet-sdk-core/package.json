@@ -69,7 +69,6 @@
     "@solana/wallet-adapter-base": "catalog:",
     "@solana/web3.js": "catalog:",
     "@stellar/stellar-sdk": "catalog:",
-    "@stacks/connect": "catalog:",
     "bip322-js": "^3.0.0",
     "bitcoinjs-lib": "^6.1.5",
     "ecpair": "^2.0.1",

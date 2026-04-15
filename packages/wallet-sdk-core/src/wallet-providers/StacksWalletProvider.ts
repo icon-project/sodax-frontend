@@ -8,9 +8,9 @@ import {
   PostConditionMode,
   type ClarityValue,
   type PostConditionModeName,
-} from '@sodax/libs/stacks';
-import type { StacksProvider } from '@stacks/connect';
-import { request } from '@stacks/connect';
+} from '@sodax/libs/stacks/core';
+import type { StacksProvider } from '@sodax/libs/stacks/connect';
+import { request } from '@sodax/libs/stacks/connect';
 
 import type { IStacksWalletProvider, StacksTransactionParams } from '@sodax/types';
 

@@ -52,7 +52,6 @@
     "@solana/wallet-adapter-react": "0.15.35",
     "@solana/wallet-adapter-wallets": "0.19.30",
     "@solana/web3.js": "catalog:",
-    "@stacks/connect": "catalog:",
     "@stellar/stellar-sdk": "catalog:",
     "bs58": "6.0.0",
     "icon-sdk-js": "catalog:",

@@ -15,7 +15,7 @@ import {
   type ContractIdString,
   type ContractPrincipalCV,
   type UIntCV,
-} from '@sodax/libs/stacks';
+} from '@sodax/libs/stacks/core';
 
 abstract class StacksBaseSpokeProvider {
   public chainConfig: StacksSpokeChainConfig;

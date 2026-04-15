@@ -1,7 +1,7 @@
 import type { XAccount } from '@/types';
 import { XConnector } from '@/core';
-import type { StacksProvider } from '@stacks/connect';
-import { request, disconnect } from '@stacks/connect';
+import type { StacksProvider } from '@sodax/libs/stacks/connect';
+import { request, disconnect } from '@sodax/libs/stacks/connect';
 
 export interface StacksProviderConfig {
   /** The provider ID matching the window path, e.g. 'LeatherProvider' or 'XverseProviders.BitcoinProvider' */

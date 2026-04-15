@@ -1,4 +1,4 @@
-import { Cl, serializeCV } from '@sodax/libs/stacks';
+import { Cl, serializeCV } from '@sodax/libs/stacks/core';
 import type { Hex } from 'viem';
 
 export async function waitForStacksTransaction(txid: string, rpc_url: string): Promise<boolean> {
