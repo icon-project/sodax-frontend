@@ -10,8 +10,8 @@ export default defineConfig(options => ({
   clean: true,
   target: 'node18', // ✅ Use Node 18 baseline (modern features)
   treeshake: true,
-  external: ['crypto', 'node:crypto'],
-  noExternal: ['near-api-js', '@sodax/types'],
+  external: [], // tsup still externalizes all dependencies by default; this is additive, not a replacement
+  noExternal: ['near-api-js', '@sodax/types'], // Force-bundle ESM-only packages for CJS compatibility
   esbuildOptions(options) {
     options.platform = 'neutral'; // Don't assume node/browser — supports both
     options.mainFields = ['module', 'main'];
