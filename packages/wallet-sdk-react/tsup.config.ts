@@ -1,5 +1,7 @@
 import { defineConfig } from 'tsup';
 
+const isWatchMode = process.argv.includes('--watch');
+
 const sharedConfig = {
   // Multi-entry: barrel + per-chain sub-paths (e.g. @sodax/wallet-sdk-react/xchains/bitcoin).
   // Adding a new chain? Create src/xchains/<chain>/index.ts — the glob picks it up automatically.
@@ -25,7 +27,7 @@ export default defineConfig([
     // so `instanceof XverseXConnector` works when imported from either location.
     splitting: true,
     clean: true,
-    dts: true,
+    dts: !isWatchMode,
     outExtension() {
       return { js: '.mjs' };
     },

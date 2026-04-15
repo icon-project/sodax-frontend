@@ -25,15 +25,15 @@ export function useInitChainServices(chains: ChainsConfig, rpcConfig?: RpcConfig
       cleanupDisabledConnections();
 
       if (chains.ICON) {
-        reconnectIcon().catch(e => console.warn('[wallet-sdk-react] ICON reconnect failed:', e));
+        reconnectIcon().catch(error => console.warn('[wallet-sdk-react] ICON reconnect failed:', error));
       }
 
       if (chains.INJECTIVE) {
-        reconnectInjective().catch(e => console.warn('[wallet-sdk-react] Injective reconnect failed:', e));
+        reconnectInjective().catch(error => console.warn('[wallet-sdk-react] Injective reconnect failed:', error));
       }
 
       if (chains.STELLAR) {
-        reconnectStellar().catch(e => console.warn('[wallet-sdk-react] Stellar reconnect failed:', e));
+        reconnectStellar().catch(error => console.warn('[wallet-sdk-react] Stellar reconnect failed:', error));
       }
     };
 

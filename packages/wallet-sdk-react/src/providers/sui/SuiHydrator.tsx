@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useCurrentAccount, useCurrentWallet, useSuiClient, useWallets } from '@mysten/dapp-kit';
-import { SuiWalletProvider, type BrowserExtensionSuiWalletConfig } from '@sodax/wallet-sdk-core';
+import { SuiWalletProvider } from '@sodax/wallet-sdk-core';
 import { SuiXService, SuiXConnector } from '../../xchains/sui';
 import { useXWalletStore } from '../../useXWalletStore';
+import { assert, hasFunctionProperty, hasStringProperty, isRecord } from '@/shared/guards';
 
 /**
  * Hydrates SUI state from @mysten/dapp-kit hooks into SuiXService singleton and store.
  */
-export const SuiHydrator = () => {
+export const SuiHydrator = (): null => {
   const suiClient = useSuiClient();
   const { currentWallet } = useCurrentWallet();
   const suiAccount = useCurrentAccount();
@@ -53,15 +54,29 @@ export const SuiHydrator = () => {
   // singleton here would use stale fields from the previous render.
   const walletProvider = useMemo(() => {
     if (suiClient && currentWallet && suiAccount) {
+      const clientOk =
+        isRecord(suiClient) &&
+        hasFunctionProperty(suiClient, 'executeTransactionBlock') &&
+        hasFunctionProperty(suiClient, 'devInspectTransactionBlock') &&
+        hasFunctionProperty(suiClient, 'getCoins');
+      assert(clientOk, '[SuiHydrator] invalid Sui client shape');
+
+      const walletOk = isRecord(currentWallet) && hasStringProperty(currentWallet, 'name');
+      assert(walletOk, '[SuiHydrator] invalid Sui wallet shape');
+
+      const accountOk = isRecord(suiAccount) && hasStringProperty(suiAccount, 'address');
+      assert(accountOk, '[SuiHydrator] invalid Sui account shape');
+
       // @mysten/dapp-kit and wallet-sdk-core may resolve different @mysten/sui versions.
       // The types are structurally identical but nominally different.
       // `as unknown as T` documents a known, intentional version-mismatch cast —
       // unlike `as any`, it doesn't silence unrelated type errors.
+      type SuiWalletProviderConfig = ConstructorParameters<typeof SuiWalletProvider>[0];
       return new SuiWalletProvider({
-        client: suiClient as unknown as BrowserExtensionSuiWalletConfig['client'],
-        wallet: currentWallet as unknown as BrowserExtensionSuiWalletConfig['wallet'],
-        account: suiAccount as unknown as BrowserExtensionSuiWalletConfig['account'],
-      });
+        client: suiClient,
+        wallet: currentWallet,
+        account: suiAccount,
+      } as unknown as SuiWalletProviderConfig);
     }
     return undefined;
   }, [suiClient, currentWallet, suiAccount]);

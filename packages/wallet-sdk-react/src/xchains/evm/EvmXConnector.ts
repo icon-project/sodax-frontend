@@ -20,10 +20,10 @@ export class EvmXConnector extends XConnector {
     return;
   }
 
-  public get id() {
+  public override get id(): string {
     return this.connector.id;
   }
-  public get icon() {
+  public override get icon(): string | undefined {
     if (!this.connector.icon && this.connector.type === 'walletConnect') {
       return WALLETCONNECT_ICON;
     }

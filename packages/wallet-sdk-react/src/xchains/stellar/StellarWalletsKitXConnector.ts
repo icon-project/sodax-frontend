@@ -47,7 +47,7 @@ export class StellarWalletsKitXConnector extends XConnector {
 
   async disconnect(): Promise<void> {}
 
-  public get icon() {
+  public override get icon(): string {
     return this._wallet.icon;
   }
 }
