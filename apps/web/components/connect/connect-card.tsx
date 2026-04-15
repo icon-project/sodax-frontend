@@ -1,9 +1,10 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Mail, Send } from 'lucide-react';
+import { ArrowUpRight, Mail, Send } from 'lucide-react';
 import { SodaxIcon } from '@/components/icons/sodax-icon';
 import { DISCORD_ROUTE, DOCUMENTATION_ROUTE, HOME_ROUTE, X_ROUTE } from '@/constants/routes';
 import type { ConnectEntry } from '@/lib/connect';
+import { CopyButton } from './copy-button';
 
 interface ConnectCardProps {
   entry: ConnectEntry;
@@ -28,29 +29,45 @@ function LinkedInIcon({ className }: { className?: string }) {
   );
 }
 
-interface ContactLinkProps {
+interface ContactRowProps {
+  /** URL or mailto: — opens the native app / site on tap */
   href: string;
   label: string;
-  value: string;
+  /** What the user sees (shortened, no protocol) */
+  displayValue: string;
+  /** What goes to the clipboard — bare email or full URL (with protocol) */
+  copyValue: string;
   icon: React.ReactNode;
 }
 
-function ContactLink({ href, label, value, icon }: ContactLinkProps) {
+/**
+ * Two tap-targets per row: the pill link navigates to the platform (mailto,
+ * tg, https…) and the round button copies the value. Conferences have patchy
+ * wifi, so copy is the reliable path — the link is a best-effort shortcut.
+ */
+function ContactRow({ href, label, displayValue, copyValue, icon }: ContactRowProps) {
   return (
-    <Link
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-4 w-full px-5 h-14 rounded-full bg-white/10 hover:bg-white/15 active:bg-white/20 transition-colors border border-white/10"
-    >
-      <span className="flex items-center justify-center size-9 rounded-full bg-white/10 text-white shrink-0">
-        {icon}
-      </span>
-      <span className="flex flex-col min-w-0">
-        <span className="text-cherry-brighter text-xs font-[InterRegular] leading-tight">{label}</span>
-        <span className="text-white text-sm font-[InterBold] truncate">{value}</span>
-      </span>
-    </Link>
+    <div className="flex items-center gap-2 w-full">
+      <Link
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group flex items-center gap-4 flex-1 min-w-0 pl-2 pr-5 h-14 rounded-full bg-white/[0.08] hover:bg-white/15 active:bg-white/20 transition-colors border border-white/20"
+      >
+        <span className="flex items-center justify-center size-10 rounded-full bg-white/15 text-white shrink-0">
+          {icon}
+        </span>
+        <span className="flex flex-col min-w-0 flex-1">
+          <span className="text-cherry-brighter text-xs font-[InterRegular] leading-tight">{label}</span>
+          <span className="text-white text-sm font-[InterBold] truncate">{displayValue}</span>
+        </span>
+        <ArrowUpRight
+          className="size-4 text-cherry-brighter shrink-0 group-hover:text-white transition-colors"
+          aria-hidden="true"
+        />
+      </Link>
+      <CopyButton value={copyValue} label={`Copy ${label.toLowerCase()}`} />
+    </div>
   );
 }
 
@@ -106,41 +123,58 @@ export function ConnectCard({ entry, avatarProxyUrl }: ConnectCardProps) {
         {hasContact && (
           <div className="flex flex-col gap-3 w-full">
             {entry.email && (
-              <ContactLink
+              <ContactRow
                 href={`mailto:${entry.email}`}
                 label="Email"
-                value={entry.email}
+                displayValue={entry.email}
+                copyValue={entry.email}
                 icon={<Mail className="size-4" />}
               />
             )}
             {entry.telegram && (
-              <ContactLink
+              <ContactRow
                 href={entry.telegram}
                 label="Telegram"
-                value={displayUrl(entry.telegram)}
+                displayValue={displayUrl(entry.telegram)}
+                copyValue={entry.telegram}
                 icon={<Send className="size-4" />}
               />
             )}
             {entry.x && (
-              <ContactLink href={entry.x} label="X" value={displayUrl(entry.x)} icon={<XIcon className="size-4" />} />
+              <ContactRow
+                href={entry.x}
+                label="X"
+                displayValue={displayUrl(entry.x)}
+                copyValue={entry.x}
+                icon={<XIcon className="size-4" />}
+              />
             )}
             {entry.linkedin && (
-              <ContactLink
+              <ContactRow
                 href={entry.linkedin}
                 label="LinkedIn"
-                value={displayUrl(entry.linkedin)}
+                displayValue={displayUrl(entry.linkedin)}
+                copyValue={entry.linkedin}
                 icon={<LinkedInIcon className="size-4" />}
               />
             )}
           </div>
         )}
 
-        {/* Tagline */}
-        <div className="mt-auto pt-8 flex flex-col items-center gap-2 text-center">
-          <p className="text-cherry-brighter text-xs font-[InterRegular] uppercase tracking-wider">SODAX</p>
-          <p className="text-white/80 text-sm font-[InterRegular] leading-relaxed max-w-xs">
-            The cross-network execution layer for modern money.
-          </p>
+        {/* Hero-style signature — mirrors the sodax.com homepage treatment */}
+        <div className="mt-auto pt-10 flex items-center justify-center gap-3 sm:gap-4">
+          <Image
+            src="/landing/brace-left.svg"
+            alt=""
+            width={20}
+            height={64}
+            className="-scale-x-100 h-14 w-auto opacity-90"
+          />
+          <div className="flex flex-col items-center text-center text-xl leading-[1.1] whitespace-nowrap">
+            <span className="mix-blend-hard-light text-white font-[InterBlack]">Infrastructure for</span>
+            <span className="mix-blend-hard-light text-yellow-soda font-[Shrikhand] italic">modern money</span>
+          </div>
+          <Image src="/landing/brace-right.svg" alt="" width={20} height={64} className="h-14 w-auto opacity-90" />
         </div>
       </main>
 
