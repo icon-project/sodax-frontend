@@ -586,12 +586,12 @@ export function ManagePositionDialog({
           percentageBasisPoints >= 10000n
             ? positionInfo.amount0
             : (positionInfo.amount0 * percentageBasisPoints) / 10000n;
-        const withdrawToken0Amount = decreasedToken0Amount + positionInfo.unclaimedFees0;
-        if (withdrawToken0Amount > 0n) {
+
+        if (decreasedToken0Amount > 0n) {
           await withdrawMutation.mutateAsync({
             params: createWithdrawParamsProps({
               tokenIndex: 0,
-              amount: formatUnits(withdrawToken0Amount, poolData.token0.decimals),
+              amount: formatUnits(decreasedToken0Amount, poolData.token0.decimals),
               poolData,
               poolSpokeAssets,
             }),
