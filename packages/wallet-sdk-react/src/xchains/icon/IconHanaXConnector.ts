@@ -3,14 +3,20 @@ import { ICONexRequestEventType, ICONexResponseEventType, request } from './icon
 
 import { XConnector } from '@/core/XConnector';
 
+// Declare the shape of the Hana wallet extension injected into window.
+// This is better than `window as any` because it documents exactly what we expect.
+interface WindowWithHana {
+  hanaWallet?: { isAvailable?: boolean };
+}
+
 export class IconHanaXConnector extends XConnector {
   constructor() {
     super('ICON', 'Hana Wallet', 'hana');
   }
 
   async connect(): Promise<XAccount | undefined> {
-    const { hanaWallet } = window as any;
-    if (window && !hanaWallet && !hanaWallet?.isAvailable) {
+    const { hanaWallet } = window as unknown as WindowWithHana;
+    if (!hanaWallet || !hanaWallet.isAvailable) {
       window.open('https://chromewebstore.google.com/detail/hana-wallet/jfdlamikmbghhapbgfoogdffldioobgl', '_blank');
       return;
     }

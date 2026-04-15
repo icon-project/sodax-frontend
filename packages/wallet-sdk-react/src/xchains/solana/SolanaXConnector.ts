@@ -1,11 +1,13 @@
 import type { XAccount } from '@/types';
+// Wallet is the type from useWallet().wallets — each entry has .adapter (name, icon) and .readyState.
+import type { Wallet } from '@solana/wallet-adapter-react';
 
 import { XConnector } from '@/core';
 import { SolanaXService } from './SolanaXService';
 
 export class SolanaXConnector extends XConnector {
-  wallet: any;
-  constructor(wallet: any) {
+  wallet: Wallet;
+  constructor(wallet: Wallet) {
     super('SOLANA', wallet?.adapter.name, wallet?.adapter.name);
     this.wallet = wallet;
   }

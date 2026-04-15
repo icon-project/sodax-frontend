@@ -1,14 +1,25 @@
 import { XService } from '@/core/XService';
 import type { XToken, ISuiWalletProvider } from '@sodax/types';
-import { SuiWalletProvider } from '@sodax/wallet-sdk-core';
+import { type BrowserExtensionSuiWalletConfig, SuiWalletProvider } from '@sodax/wallet-sdk-core';
 import { isNativeToken } from '@/utils';
+
+// These fields are hydrated by SuiHydrator from @mysten/dapp-kit hooks.
+// We use structural interfaces instead of importing nominal types from @mysten/wallet-standard
+// because dapp-kit may resolve a different version than wallet-sdk-core, causing nominal mismatch.
+// The `getBalance` method is the only field we call directly — the rest are passed through.
+interface SuiClientLike {
+  getBalance(input: { owner: string; coinType: string }): Promise<{ totalBalance: string }>;
+}
 
 export class SuiXService extends XService {
   private static instance: SuiXService;
 
-  public suiClient: any; // TODO: define suiClient type
-  public suiWallet: any; // TODO: define suiWallet type
-  public suiAccount: any; // TODO: define suiAccount type
+  // Hydrated by SuiHydrator. Start undefined because wallet may not be connected yet.
+  // suiClient is typed structurally for the methods we call directly.
+  // suiWallet/suiAccount are opaque — stored and passed through to SuiWalletProvider.
+  public suiClient: SuiClientLike | undefined;
+  public suiWallet: unknown;
+  public suiAccount: unknown;
 
   private constructor() {
     super('SUI');
@@ -29,13 +40,21 @@ export class SuiXService extends XService {
       );
       return undefined;
     }
-    return new SuiWalletProvider({ client: this.suiClient, wallet: this.suiWallet, account: this.suiAccount });
+    // Version mismatch cast: dapp-kit hooks return types from their bundled @mysten/wallet-standard,
+    // which differs nominally from wallet-sdk-core's version. Structurally identical at runtime.
+    return new SuiWalletProvider({
+      client: this.suiClient as unknown as BrowserExtensionSuiWalletConfig['client'],
+      wallet: this.suiWallet as unknown as BrowserExtensionSuiWalletConfig['wallet'],
+      account: this.suiAccount as unknown as BrowserExtensionSuiWalletConfig['account'],
+    });
   }
 
   // getBalance is not used because getBalances uses getAllBalances which returns all balances
 
   async getBalances(address: string | undefined, xTokens: readonly XToken[]): Promise<Record<string, bigint>> {
-    if (!address) return {};
+    if (!address || !this.suiClient) return {};
+    // Capture in local so the closure sees a narrowed (non-undefined) reference.
+    const client = this.suiClient;
     try {
       const balancePromises = xTokens.map(async xToken => {
         let coinType = isNativeToken(xToken) ? '0x2::sui::SUI' : xToken.address;
@@ -49,7 +68,7 @@ export class SuiXService extends XService {
             '0x3917a812fe4a6d6bc779c5ab53f8a80ba741f8af04121193fc44e0f662e2ceb::balanced_dollar::BALANCED_DOLLAR';
         }
 
-        const balance = await this.suiClient.getBalance({
+        const balance = await client.getBalance({
           owner: address,
           coinType: coinType,
         });

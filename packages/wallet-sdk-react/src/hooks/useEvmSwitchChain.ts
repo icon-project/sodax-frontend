@@ -7,6 +7,9 @@ import { useXService } from '@/hooks/useXService';
 import { useIsChainEnabled } from '@/context/WalletConfigContext';
 import useEthereumChainId from './useEthereumChainId';
 import { mainnet } from 'viem/chains';
+// EIP1193Provider is the standard interface for injected ethereum providers (MetaMask, etc).
+// It types .request() for JSON-RPC calls and .on()/.removeListener() for events.
+import type { EIP1193Provider } from 'viem';
 import { Wallet } from '@injectivelabs/wallet-base';
 
 interface UseEvmSwitchChainReturn {
@@ -17,7 +20,9 @@ interface UseEvmSwitchChainReturn {
 const EVM_DISABLED_RESULT: UseEvmSwitchChainReturn = { isWrongChain: false, handleSwitchChain: () => {} };
 
 export const switchEthereumChain = async () => {
-  const metamaskProvider = (window as any).ethereum as any;
+  // window.ethereum is injected by wallet extensions. We cast to EIP1193Provider
+  // (the EIP-1193 standard) which types .request() and .on() properly.
+  const metamaskProvider = (window as unknown as { ethereum: EIP1193Provider }).ethereum;
 
   return await Promise.race([
     metamaskProvider.request({
@@ -25,8 +30,10 @@ export const switchEthereumChain = async () => {
       params: [{ chainId: '0x1' }],
     }),
     new Promise<void>(resolve =>
-      metamaskProvider.on('change', ({ chain }: { chain: { id: number } }) => {
-        if (chain?.id === 1) {
+      // EIP-1193 standard event: 'chainChanged' fires with a hex chain ID string.
+      // The old code used 'change' with { chain: { id: number } } — not a real EIP-1193 event.
+      metamaskProvider.on('chainChanged', (chainId: string) => {
+        if (chainId === '0x1') {
           resolve();
         }
       }),
