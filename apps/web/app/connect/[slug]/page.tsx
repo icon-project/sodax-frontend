@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ConnectCard } from '@/components/connect/connect-card';
+import { connectRoute } from '@/constants/routes';
 import { getAllConnectSlugs, getConnectEntryBySlug } from '@/lib/connect';
 
 // ISR: re-render pages every 5 minutes. Well under Notion's ~1h presigned-URL
@@ -26,7 +27,8 @@ export async function generateMetadata({
     return { title: 'Not found — SODAX' };
   }
 
-  const url = `https://sodax.com/connect/${entry.slug}`;
+  const path = connectRoute(entry.slug);
+  const url = `https://sodax.com${path}`;
   const title = entry.role ? `${entry.name}, ${entry.role} — SODAX` : `${entry.name} — SODAX`;
   const description = entry.role
     ? `Connect with ${entry.name}, ${entry.role} at SODAX — the cross-network execution layer for modern money.`
@@ -68,5 +70,5 @@ export default async function ConnectSlugPage({
 
   if (!entry) notFound();
 
-  return <ConnectCard entry={entry} avatarProxyUrl={`/connect/${entry.slug}/avatar`} />;
+  return <ConnectCard entry={entry} avatarProxyUrl={`${connectRoute(entry.slug)}/avatar`} />;
 }

@@ -36,7 +36,9 @@ export function CopyButton({ value, label }: CopyButtonProps) {
         if (navigator.clipboard?.writeText) {
           await navigator.clipboard.writeText(value);
         } else {
-          // Fallback for insecure contexts / older browsers
+          // Fallback for insecure contexts / older browsers. execCommand
+          // returns a boolean and can fail silently — surface the failure
+          // so the catch block keeps the UI honest.
           const textarea = document.createElement('textarea');
           textarea.value = value;
           textarea.setAttribute('readonly', '');
@@ -44,8 +46,9 @@ export function CopyButton({ value, label }: CopyButtonProps) {
           textarea.style.left = '-9999px';
           document.body.appendChild(textarea);
           textarea.select();
-          document.execCommand('copy');
+          const ok = document.execCommand('copy');
           document.body.removeChild(textarea);
+          if (!ok) throw new Error('execCommand copy returned false');
         }
 
         setCopied(true);

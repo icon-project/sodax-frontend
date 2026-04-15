@@ -66,9 +66,16 @@ function resolveFileUrl(file: NotionFile | undefined): string | null {
   return file.file?.url ?? file.external?.url ?? null;
 }
 
+/**
+ * Valid URL-safe slugs: lowercase letters, digits, and hyphens only.
+ * Rejects anything that could break a URL path segment (`/`, `#`, `?`, spaces, etc.)
+ * so bad CMS data can't produce broken or ambiguous Connect URLs.
+ */
+const SLUG_PATTERN = /^[a-z0-9-]+$/;
+
 function parseEntry(page: NotionConnectPage): ConnectEntry | null {
   const slug = richText(page.properties.slug).trim().toLowerCase();
-  if (!slug) return null;
+  if (!slug || !SLUG_PATTERN.test(slug)) return null;
 
   return {
     id: page.id,
@@ -86,7 +93,14 @@ function parseEntry(page: NotionConnectPage): ConnectEntry | null {
 function connectConfig(): { token: string; dbId: string } | null {
   const token = process.env.NOTION_CONSENSUS_MIAMI_TOKEN;
   const dbId = process.env.NOTION_CONNECT_DB_ID;
-  if (!token || !dbId) return null;
+  if (!token || !dbId) {
+    // Warn so ops can tell a misconfigured deployment apart from legitimate
+    // 404s. Matches the pattern used in apps/web/lib/notion.ts.
+    console.warn(
+      `[connect] Missing Notion config — set NOTION_CONSENSUS_MIAMI_TOKEN and NOTION_CONNECT_DB_ID. (token=${Boolean(token)}, dbId=${Boolean(dbId)})`,
+    );
+    return null;
+  }
   return { token, dbId };
 }
 
