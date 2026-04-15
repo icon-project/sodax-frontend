@@ -17,6 +17,13 @@ const EU_EEA_UK_COUNTRY_CODES = new Set([
 ]);
 
 export function middleware(request: NextRequest) {
+  // ── Consensus Miami kill switch ─────────────────────────────────────────────
+  // Set CONSENSUS_MIAMI_ENABLED=false in Vercel to disable the page (redirects
+  // to homepage). Any other value — including missing — means enabled.
+  if (request.nextUrl.pathname === '/consensus-miami' && process.env.CONSENSUS_MIAMI_ENABLED === 'false') {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
   const response = NextResponse.next();
 
   // Only set the cookie if it hasn't been set yet

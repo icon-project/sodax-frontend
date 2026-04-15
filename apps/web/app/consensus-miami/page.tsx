@@ -2,9 +2,6 @@ import type { Metadata } from 'next';
 import { DISCORD_ROUTE, X_ROUTE } from '@/constants/routes';
 import { ConsensusMiamiPage } from '@/components/consensus-miami/consensus-miami-page';
 
-/** Force static generation — serves as cached HTML, no server work per request. */
-export const dynamic = 'force-static';
-
 export const metadata: Metadata = {
   title: 'SODAX at Consensus Miami 2026',
   description:

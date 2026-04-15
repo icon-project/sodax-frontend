@@ -46,43 +46,55 @@ export function ConsensusMiamiPage() {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-8 sm:px-10">
-        <div className="w-full max-w-md flex flex-col items-center text-center gap-8">
-          {/* Hero — always visible */}
-          <div className="flex flex-col items-center gap-4">
-            <h1 className="font-[Shrikhand] text-3xl sm:text-4xl leading-tight text-white">
-              Infrastructure for <span className="text-yellow-dark">modern money</span>
-            </h1>
-            <p className="text-cherry-brighter text-sm font-[InterRegular] leading-relaxed">
-              Meet us at Consensus Miami · May 5–7, 2026
-            </p>
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-8 sm:px-10 gap-14">
+        {/* Hero — always visible */}
+        <div className="flex flex-col items-center text-center whitespace-nowrap">
+          <div className="flex flex-col items-center text-3xl sm:text-4xl md:text-[42px] leading-[1.1]">
+            <span className="mix-blend-hard-light text-white font-[InterBlack]">Infrastructure for</span>
+            <span className="mix-blend-hard-light text-yellow-soda font-[Shrikhand] italic">modern money</span>
+          </div>
+        </div>
+
+        {/* Braces + tagline + fork — styled like homepage CTA section */}
+        <div className="flex flex-col items-center gap-6">
+          <div className="flex items-center justify-center gap-4 sm:gap-6">
+            <Image
+              src="/landing/brace-left.svg"
+              alt=""
+              width={28}
+              height={104}
+              className="-scale-x-100 h-20 w-auto sm:h-28"
+            />
+            <div className="text-white font-[InterBold] text-2xl md:text-[28px] leading-[1.2] text-center whitespace-nowrap">
+              Check in with SODAX.
+            </div>
+            <Image src="/landing/brace-right.svg" alt="" width={28} height={104} className="h-20 w-auto sm:h-28" />
           </div>
 
-          {/* Fork buttons — shown when no flow selected */}
-          {flow === 'none' && (
-            <div className="flex flex-col gap-3 w-full">
-              <button
-                type="button"
-                onClick={() => setFlow('project')}
-                className="w-full h-14 rounded-2xl bg-yellow-dark hover:bg-yellow-soda text-cherry-dark font-[InterBold] text-base transition-all hover:scale-[1.02] cursor-pointer"
-              >
-                I&apos;m building a project
-              </button>
-              <button
-                type="button"
-                onClick={() => setFlow('retail')}
-                className="w-full h-14 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-[InterBold] text-base border border-white/20 transition-all hover:scale-[1.02] cursor-pointer"
-              >
-                I&apos;m exploring DeFi
-              </button>
-            </div>
-          )}
+          {/* Fork or active flow */}
+          <div className="w-full max-w-md flex flex-col items-center gap-4">
+            {flow === 'none' && (
+              <div className="flex flex-col gap-3 w-full items-center">
+                <button
+                  type="button"
+                  onClick={() => setFlow('project')}
+                  className="bg-yellow-dark hover:bg-yellow-soda transition-all hover:scale-[102%] h-12 w-64 font-[InterBold] rounded-full text-sm cursor-pointer text-cherry-dark"
+                >
+                  I'm building a project
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFlow('retail')}
+                  className="hover:scale-[102%] transition-all h-12 w-64 font-[InterBold] rounded-full text-sm cursor-pointer text-cherry-brighter hover:text-white bg-transparent border border-cherry-brighter hover:border-white"
+                >
+                  I'm just exploring DeFi
+                </button>
+              </div>
+            )}
 
-          {/* Flow A — Projects */}
-          {flow === 'project' && <ProjectFlow onBack={() => setFlow('none')} />}
-
-          {/* Flow B — Retail */}
-          {flow === 'retail' && <RetailFlow onBack={() => setFlow('none')} />}
+            {flow === 'project' && <ProjectFlow onBack={() => setFlow('none')} />}
+            {flow === 'retail' && <RetailFlow onBack={() => setFlow('none')} />}
+          </div>
         </div>
       </main>
 
