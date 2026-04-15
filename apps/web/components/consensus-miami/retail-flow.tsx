@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { ArrowLeft, Check, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { X_INTENT_FOLLOW_ROUTE } from '@/constants/routes';
+import { isValidEmail } from '@/lib/validate-email';
 
 /** Latest news article CTA — update this when the exchange announcement drops. */
 const LATEST_NEWS_URL = '/news/sodax-partners-with-balanced-to-power-a-cross-network-money-market-and-exchange';
-import { isValidEmail } from '@/lib/validate-email';
 
 interface RetailFlowProps {
   onBack: () => void;

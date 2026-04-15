@@ -41,15 +41,21 @@ async function createCompany(name: string): Promise<string | null> {
   return data.id;
 }
 
+/**
+ * Push a new contact into the BD CRM. Returns:
+ *   - `'ok'` on success
+ *   - `'skipped'` if Notion env vars aren't configured (local dev fallback — treated as success by the handler)
+ *   - `'failed'` if Notion is configured but the API call failed
+ */
 async function createContact(data: {
   email: string;
   type: 'project' | 'retail';
   projectName?: string;
   role?: string;
-}): Promise<void> {
+}): Promise<'ok' | 'skipped' | 'failed'> {
   if (!NOTION_API_KEY || !NOTION_CONTACTS_DB_ID) {
     console.warn('[consensus-miami] Notion keys not configured — skipping CRM push');
-    return;
+    return 'skipped';
   }
 
   // If a project name is provided, create the company first to get a linkable ID
@@ -58,12 +64,18 @@ async function createContact(data: {
     companyPageId = await createCompany(data.projectName);
   }
 
+  // Keep the project name in Notes as a fallback when the company relation couldn't be created
+  const notesParts = [`Type: ${data.type}`];
+  if (data.projectName && !companyPageId) {
+    notesParts.push(`Project: ${data.projectName}`);
+  }
+
   const properties: Record<string, unknown> = {
     Name: { title: [{ text: { content: data.email } }] },
     Email: { email: data.email },
     Source: { select: { name: 'Consensus Miami 2026' } },
     'Relationship Strength': { select: { name: 'Cold' } },
-    Notes: { rich_text: [{ text: { content: `Type: ${data.type}` } }] },
+    Notes: { rich_text: [{ text: { content: notesParts.join(' · ') } }] },
   };
 
   if (data.role) {
@@ -86,7 +98,10 @@ async function createContact(data: {
   if (!res.ok) {
     const body = await res.text();
     console.error(`[consensus-miami] Notion Contacts API error: ${res.status} ${body}`);
+    return 'failed';
   }
+
+  return 'ok';
 }
 
 export async function POST(request: Request) {
@@ -107,7 +122,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid type — must be "project" or "retail"' }, { status: 400 });
     }
 
-    await createContact({ email, type, projectName, role });
+    const result = await createContact({ email, type, projectName, role });
+
+    if (result === 'failed') {
+      return NextResponse.json({ error: 'Could not save lead — please try again' }, { status: 502 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
