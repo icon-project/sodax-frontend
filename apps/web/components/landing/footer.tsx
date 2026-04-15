@@ -90,7 +90,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
                   href={EXCHANGE_ROUTE}
                   className="flex h-6 w-fit items-center rounded-full border-2 border-cream-white px-3 pt-0.5 text-xs text-clay leading-[1.4] hover:border-cherry-grey transition-colors"
                 >
-                  SODAX Exchange
+                  SODA Exchange
                 </Link>
               </div>
             </div>
