@@ -42,15 +42,17 @@ export const switchEthereumChain = async (): Promise<unknown> => {
       method: 'wallet_switchEthereumChain',
       params: [{ chainId: '0x1' }],
     }),
-    new Promise<void>(resolve =>
+    new Promise<void>(resolve => {
       // EIP-1193 standard event: 'chainChanged' fires with a hex chain ID string.
       // The old code used 'change' with { chain: { id: number } } — not a real EIP-1193 event.
-      metamaskProvider.on('chainChanged', (chainId: string) => {
+      const handler = (chainId: string) => {
         if (chainId === '0x1') {
+          metamaskProvider.removeListener('chainChanged', handler);
           resolve();
         }
-      }),
-    ),
+      };
+      metamaskProvider.on('chainChanged', handler);
+    }),
   ]);
 };
 

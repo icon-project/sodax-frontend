@@ -9,7 +9,7 @@ import { assert, hasOptionalStringProperty, hasStringProperty, isRecord } from '
 // @mysten/dapp-kit may resolve a different version, causing nominal mismatch.
 // Structural typing avoids this: as long as the object has these fields, it works.
 interface SuiWalletInfo {
-  id: string;
+  id?: string;
   name: string;
   icon?: string;
 }

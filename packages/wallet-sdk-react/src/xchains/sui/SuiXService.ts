@@ -2,7 +2,7 @@ import { XService } from '@/core/XService';
 import type { XToken, ISuiWalletProvider } from '@sodax/types';
 import { SuiWalletProvider } from '@sodax/wallet-sdk-core';
 import { isNativeToken } from '@/utils';
-import { assert, hasFunctionProperty, hasStringProperty, isRecord } from '@/shared/guards';
+import { assertSuiProviderShape } from '@/shared/guards';
 
 // These fields are hydrated by SuiHydrator from @mysten/dapp-kit hooks.
 // We use structural interfaces instead of importing nominal types from @mysten/wallet-standard
@@ -44,18 +44,7 @@ export class SuiXService extends XService {
 
     // Runtime validation before passing data to wallet-sdk-core. This avoids "trust me bro" casting.
     // Note: we validate the minimum shape we rely on; the exact nominal types may differ by package version.
-    const clientOk =
-      isRecord(this.suiClient) &&
-      hasFunctionProperty(this.suiClient, 'executeTransactionBlock') &&
-      hasFunctionProperty(this.suiClient, 'devInspectTransactionBlock') &&
-      hasFunctionProperty(this.suiClient, 'getCoins');
-    assert(clientOk, '[SuiXService] createWalletProvider: invalid Sui client shape');
-
-    const walletOk = isRecord(this.suiWallet) && hasStringProperty(this.suiWallet, 'name');
-    assert(walletOk, '[SuiXService] createWalletProvider: invalid Sui wallet shape');
-
-    const accountOk = isRecord(this.suiAccount) && hasStringProperty(this.suiAccount, 'address');
-    assert(accountOk, '[SuiXService] createWalletProvider: invalid Sui account shape');
+    assertSuiProviderShape('SuiXService', this.suiClient, this.suiWallet, this.suiAccount);
 
     // Version mismatch cast: dapp-kit hooks return types from their bundled @mysten/wallet-standard,
     // which differs nominally from wallet-sdk-core's version. Structurally identical at runtime.

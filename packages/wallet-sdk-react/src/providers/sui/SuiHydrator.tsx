@@ -3,7 +3,7 @@ import { useCurrentAccount, useCurrentWallet, useSuiClient, useWallets } from '@
 import { SuiWalletProvider } from '@sodax/wallet-sdk-core';
 import { SuiXService, SuiXConnector } from '../../xchains/sui';
 import { useXWalletStore } from '../../useXWalletStore';
-import { assert, hasFunctionProperty, hasStringProperty, isRecord } from '@/shared/guards';
+import { assertSuiProviderShape } from '@/shared/guards';
 
 /**
  * Hydrates SUI state from @mysten/dapp-kit hooks into SuiXService singleton and store.
@@ -54,18 +54,7 @@ export const SuiHydrator = (): null => {
   // singleton here would use stale fields from the previous render.
   const walletProvider = useMemo(() => {
     if (suiClient && currentWallet && suiAccount) {
-      const clientOk =
-        isRecord(suiClient) &&
-        hasFunctionProperty(suiClient, 'executeTransactionBlock') &&
-        hasFunctionProperty(suiClient, 'devInspectTransactionBlock') &&
-        hasFunctionProperty(suiClient, 'getCoins');
-      assert(clientOk, '[SuiHydrator] invalid Sui client shape');
-
-      const walletOk = isRecord(currentWallet) && hasStringProperty(currentWallet, 'name');
-      assert(walletOk, '[SuiHydrator] invalid Sui wallet shape');
-
-      const accountOk = isRecord(suiAccount) && hasStringProperty(suiAccount, 'address');
-      assert(accountOk, '[SuiHydrator] invalid Sui account shape');
+      assertSuiProviderShape('SuiHydrator', suiClient, currentWallet, suiAccount);
 
       // @mysten/dapp-kit and wallet-sdk-core may resolve different @mysten/sui versions.
       // The types are structurally identical but nominally different.
