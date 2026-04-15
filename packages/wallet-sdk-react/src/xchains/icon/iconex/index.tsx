@@ -19,21 +19,26 @@ export enum ICONexResponseEventType {
 
 export interface ICONexRequestEvent {
   type: ICONexRequestEventType;
-  payload?: any;
+  // Request payload varies by event type (JSON-RPC params, signing data, etc).
+  // `unknown` forces callers to validate before using — safer than `any`.
+  payload?: unknown;
 }
 
 export interface ICONexResponseEvent {
   type: ICONexResponseEventType;
-  payload?: any;
+  // Response payload is always a string: wallet address, tx hash, or signature.
+  payload?: string;
 }
 
 export type ICONexEvent = ICONexRequestEvent | ICONexResponseEvent;
 
 export const request = (event: ICONexRequestEvent): Promise<ICONexResponseEvent> => {
   return new Promise((resolve, reject) => {
-    const handler = evt => {
+    // evt is a CustomEvent dispatched by the ICONex/Hana extension. Type the handler
+    // param so evt.detail is properly typed instead of implicit `any`.
+    const handler = (evt: Event) => {
       window.removeEventListener(ICONEX_RELAY_RESPONSE, handler);
-      resolve(evt.detail);
+      resolve((evt as CustomEvent<ICONexResponseEvent>).detail);
     };
 
     window.addEventListener(ICONEX_RELAY_RESPONSE, handler);

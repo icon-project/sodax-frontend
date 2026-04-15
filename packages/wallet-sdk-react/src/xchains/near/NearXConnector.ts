@@ -37,7 +37,7 @@ export class NearXConnector extends XConnector {
     await walletSelector.disconnect(this._wallet);
   }
 
-  public get icon() {
+  public override get icon(): string {
     return this._wallet.manifest.icon;
   }
 }

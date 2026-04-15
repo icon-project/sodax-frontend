@@ -3,11 +3,7 @@
   "extends": ["../../biome.json"],
   "files": {},
   "linter": {
-    "rules": {
-      "suspicious": {
-        "noExplicitAny": "off"
-      }
-    },
+    "rules": {},
     "ignore": ["tsup.config.ts"]
   }
 }

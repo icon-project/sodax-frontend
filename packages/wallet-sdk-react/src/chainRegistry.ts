@@ -141,20 +141,31 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
           throw new Error('Bitcoin wallet not connected');
         }
         const address = connection?.xAccount.address;
-        const addressType = address ? detectBitcoinAddressType(address) : undefined;
-        // BIP322 signing for P2WPKH and P2TR; ECDSA for legacy (P2SH, P2PKH)
-        if (addressType === 'P2WPKH' || addressType === 'P2TR') {
-          if (!('signBip322Message' in connector)) {
-            throw new Error(`${connector.id} does not support BIP-322 signing`);
+        if (!address) throw new Error('Bitcoin address not found');
+        const addressType = detectBitcoinAddressType(address);
+
+        switch (addressType) {
+          case 'P2WPKH':
+          case 'P2TR': {
+            if (!('signBip322Message' in connector)) {
+              throw new Error(`${connector.id} does not support BIP-322 signing`);
+            }
+            return (connector as BitcoinXConnector & { signBip322Message: (msg: string) => Promise<string> })
+              .signBip322Message(message);
           }
-          return (connector as BitcoinXConnector & { signBip322Message: (msg: string) => Promise<string> })
-            .signBip322Message(message);
+          case 'P2SH':
+          case 'P2PKH': {
+            if (!('signEcdsaMessage' in connector)) {
+              throw new Error(`${connector.id} does not support ECDSA signing`);
+            }
+            return (connector as BitcoinXConnector & { signEcdsaMessage: (msg: string) => Promise<string> })
+              .signEcdsaMessage(message);
+          }
+          default: {
+            const _exhaustiveCheck: never = addressType;
+            throw new Error(`Unhandled Bitcoin address type: ${_exhaustiveCheck}`);
+          }
         }
-        if (!('signEcdsaMessage' in connector)) {
-          throw new Error(`${connector.id} does not support ECDSA signing`);
-        }
-        return (connector as BitcoinXConnector & { signEcdsaMessage: (msg: string) => Promise<string> })
-          .signEcdsaMessage(message);
       },
     }),
     createWalletProvider: (service, getStore) => {

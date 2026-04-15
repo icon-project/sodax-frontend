@@ -3,11 +3,12 @@ import { useCurrentAccount, useCurrentWallet, useSuiClient, useWallets } from '@
 import { SuiWalletProvider } from '@sodax/wallet-sdk-core';
 import { SuiXService, SuiXConnector } from '../../xchains/sui';
 import { useXWalletStore } from '../../useXWalletStore';
+import { assertSuiProviderShape } from '@/shared/guards';
 
 /**
  * Hydrates SUI state from @mysten/dapp-kit hooks into SuiXService singleton and store.
  */
-export const SuiHydrator = () => {
+export const SuiHydrator = (): null => {
   const suiClient = useSuiClient();
   const { currentWallet } = useCurrentWallet();
   const suiAccount = useCurrentAccount();
@@ -53,9 +54,18 @@ export const SuiHydrator = () => {
   // singleton here would use stale fields from the previous render.
   const walletProvider = useMemo(() => {
     if (suiClient && currentWallet && suiAccount) {
-      // Cast needed: @mysten/dapp-kit and wallet-sdk-core resolve different @mysten/sui versions.
-      // Runtime types are compatible; this mirrors the `any`-typed singleton fields in SuiXService.
-      return new SuiWalletProvider({ client: suiClient as any, wallet: currentWallet as any, account: suiAccount as any });
+      assertSuiProviderShape('SuiHydrator', suiClient, currentWallet, suiAccount);
+
+      // @mysten/dapp-kit and wallet-sdk-core may resolve different @mysten/sui versions.
+      // The types are structurally identical but nominally different.
+      // `as unknown as T` documents a known, intentional version-mismatch cast —
+      // unlike `as any`, it doesn't silence unrelated type errors.
+      type SuiWalletProviderConfig = ConstructorParameters<typeof SuiWalletProvider>[0];
+      return new SuiWalletProvider({
+        client: suiClient,
+        wallet: currentWallet,
+        account: suiAccount,
+      } as unknown as SuiWalletProviderConfig);
     }
     return undefined;
   }, [suiClient, currentWallet, suiAccount]);

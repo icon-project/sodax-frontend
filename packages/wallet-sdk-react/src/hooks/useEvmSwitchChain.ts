@@ -2,12 +2,16 @@ import { useCallback, useMemo } from 'react';
 import { useAccount, useSwitchChain } from 'wagmi';
 import { baseChainInfo, type ChainId } from '@sodax/types';
 import { getXChainType } from '@/actions';
-import type { InjectiveXService } from '@/xchains/injective';
+import { InjectiveXService } from '@/xchains/injective';
 import { useXService } from '@/hooks/useXService';
 import { useIsChainEnabled } from '@/context/WalletConfigContext';
 import useEthereumChainId from './useEthereumChainId';
 import { mainnet } from 'viem/chains';
+// EIP1193Provider is the standard interface for injected ethereum providers (MetaMask, etc).
+// It types .request() for JSON-RPC calls and .on()/.removeListener() for events.
+import type { EIP1193Provider } from 'viem';
 import { Wallet } from '@injectivelabs/wallet-base';
+import { assert, hasFunctionProperty, isRecord } from '@/shared/guards';
 
 interface UseEvmSwitchChainReturn {
   isWrongChain: boolean;
@@ -16,21 +20,39 @@ interface UseEvmSwitchChainReturn {
 
 const EVM_DISABLED_RESULT: UseEvmSwitchChainReturn = { isWrongChain: false, handleSwitchChain: () => {} };
 
-export const switchEthereumChain = async () => {
-  const metamaskProvider = (window as any).ethereum as any;
+const isEip1193Provider = (value: unknown): value is EIP1193Provider => {
+  return isRecord(value) && hasFunctionProperty(value, 'request') && hasFunctionProperty(value, 'on');
+};
+
+const getInjectedEthereumProvider = (): EIP1193Provider => {
+  const maybeEthereum = (window as unknown as Record<string, unknown>).ethereum;
+  assert(isEip1193Provider(maybeEthereum), '[useEvmSwitchChain] window.ethereum is not an EIP-1193 provider');
+  return maybeEthereum;
+};
+
+const isInjectiveXService = (value: unknown): value is InjectiveXService => {
+  return typeof value === 'object' && value !== null && value instanceof InjectiveXService;
+};
+
+export const switchEthereumChain = async (): Promise<unknown> => {
+  const metamaskProvider = getInjectedEthereumProvider();
 
   return await Promise.race([
     metamaskProvider.request({
       method: 'wallet_switchEthereumChain',
       params: [{ chainId: '0x1' }],
     }),
-    new Promise<void>(resolve =>
-      metamaskProvider.on('change', ({ chain }: { chain: { id: number } }) => {
-        if (chain?.id === 1) {
+    new Promise<void>(resolve => {
+      // EIP-1193 standard event: 'chainChanged' fires with a hex chain ID string.
+      // The old code used 'change' with { chain: { id: number } } — not a real EIP-1193 event.
+      const handler = (chainId: string) => {
+        if (chainId === '0x1') {
+          metamaskProvider.removeListener('chainChanged', handler);
           resolve();
         }
-      }),
-    ),
+      };
+      metamaskProvider.on('chainChanged', handler);
+    }),
   ]);
 };
 
@@ -58,9 +80,11 @@ export const useEvmSwitchChain = (expectedXChainId: ChainId): UseEvmSwitchChainR
 
 const useEvmSwitchChainInner = (expectedXChainId: ChainId): UseEvmSwitchChainReturn => {
   const xChainType = getXChainType(expectedXChainId);
-  const expectedChainId = baseChainInfo[expectedXChainId].chainId as number;
+  const expectedChainId = baseChainInfo[expectedXChainId].chainId;
+  assert(typeof expectedChainId === 'number', '[useEvmSwitchChain] expected numeric EVM chainId');
 
-  const injectiveXService = useXService('INJECTIVE') as unknown as InjectiveXService;
+  const xService = useXService('INJECTIVE');
+  const injectiveXService = isInjectiveXService(xService) ? xService : undefined;
   const ethereumChainId = useEthereumChainId();
 
   const { chainId } = useAccount();
@@ -68,7 +92,7 @@ const useEvmSwitchChainInner = (expectedXChainId: ChainId): UseEvmSwitchChainRet
     return (
       (xChainType === 'EVM' && chainId !== expectedChainId) ||
       (xChainType === 'INJECTIVE' &&
-        injectiveXService &&
+        injectiveXService !== undefined &&
         injectiveXService.walletStrategy.getWallet() === Wallet.Metamask &&
         ethereumChainId !== mainnet.id)
     );
