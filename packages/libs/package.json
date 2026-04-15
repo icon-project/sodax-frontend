@@ -1,0 +1,54 @@
+{
+  "name": "@sodax/libs",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "0.0.1-rc.0",
+  "license": "MIT",
+  "description": "Sodax shared bundled libraries (internal dependency isolation)",
+  "keywords": [
+    "sodax",
+    "libs",
+    "internal"
+  ],
+  "homepage": "https://github.com/icon-project/sodax-frontend/tree/main/packages/libs",
+  "bugs": {
+    "url": "https://github.com/icon-project/sodax-frontend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/icon-project/sodax-frontend"
+  },
+  "type": "module",
+  "exports": {
+    "./stacks": {
+      "types": "./dist/stacks/index.d.ts",
+      "import": "./dist/stacks/index.mjs",
+      "require": "./dist/stacks/index.cjs"
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "checkTs": "tsc --noEmit",
+    "pretty": "biome format . --write",
+    "lint": "biome lint . --write",
+    "clean": "rm -rf node_modules && rm -rf dist && rm -rf .turbo"
+  },
+  "dependencies": {
+    "@stacks/network": "catalog:",
+    "@stacks/transactions": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
+  }
+}

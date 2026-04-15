@@ -5,8 +5,9 @@ import type {
   WalletAddressProvider,
 } from '@sodax/types';
 import type { IRawSpokeProvider, ISpokeProvider } from '../Providers.js';
-import { type StacksNetwork, createNetwork } from '@stacks/network';
 import {
+  type StacksNetwork,
+  createNetwork,
   Cl,
   type ClarityValue,
   fetchCallReadOnlyFunction,
@@ -14,7 +15,7 @@ import {
   type ContractIdString,
   type ContractPrincipalCV,
   type UIntCV,
-} from '@stacks/transactions';
+} from '@sodax/libs/stacks';
 
 abstract class StacksBaseSpokeProvider {
   public chainConfig: StacksSpokeChainConfig;

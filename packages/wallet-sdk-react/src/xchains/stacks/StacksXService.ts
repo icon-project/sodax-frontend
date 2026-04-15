@@ -1,6 +1,6 @@
 import { XService } from '@/core/XService';
 import type { XToken } from '@sodax/types';
-import { fetchCallReadOnlyFunction, Cl, type UIntCV, type ResponseOkCV, networkFrom, type StacksNetwork } from '@sodax/sdk/stacks-internal';
+import { fetchCallReadOnlyFunction, Cl, type UIntCV, type ResponseOkCV, networkFrom, type StacksNetwork } from '@sodax/libs/stacks';
 
 export class StacksXService extends XService {
   private static instance: StacksXService;

@@ -10,7 +10,7 @@ import {
   someCV,
   uintCV,
   type ContractIdString,
-} from '@stacks/transactions';
+} from '@sodax/libs/stacks';
 import { getIntentRelayChainId } from '@sodax/types';
 import type { HubAddress, StacksTransactionParams } from '@sodax/types';
 import type {

@@ -1,10 +1,13 @@
 /**
- * Internal re-exports of @stacks/transactions and @stacks/network.
- * These packages are bundled into @sodax/sdk to avoid Turbopack scope-hoisting cycle (#1070).
- * wallet-sdk-core and wallet-sdk-react import from here instead of @stacks/* directly,
- * so the code is bundled only once across the entire dependency chain.
+ * Bundled re-exports of @stacks/transactions and @stacks/network.
  *
- * NOT part of the public API — only for internal SODAX packages.
+ * TODO(#1070): These packages are bundled here via tsup `noExternal` to work
+ * around a Turbopack scope-hoisting cycle that crashes Next.js 16 builds.
+ * Consumers (sdk, wallet-sdk-core, wallet-sdk-react) import from
+ * `@sodax/libs/stacks` so the code is bundled only once across the chain.
+ *
+ * Remove this package and revert consumers to `@stacks/*` imports when the
+ * upstream cycle is fixed.
  */
 
 // @stacks/transactions — values
@@ -13,6 +16,8 @@ export {
   serializeCV,
   someCV,
   uintCV,
+  noneCV,
+  parseContractId,
   broadcastTransaction,
   fetchCallReadOnlyFunction,
   getAddressFromPrivateKey,
@@ -29,6 +34,7 @@ export type {
   UIntCV,
   ResponseOkCV,
   PostConditionModeName,
+  PostCondition,
 } from '@stacks/transactions';
 
 // @stacks/network — values

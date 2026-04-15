@@ -63,7 +63,7 @@
     "@injectivelabs/wallet-core": "catalog:",
     "@mysten/sui": "catalog:",
     "@mysten/wallet-standard": "catalog:",
-    "@sodax/sdk": "workspace:*",
+    "@sodax/libs": "workspace:*",
     "@sodax/types": "workspace:*",
     "@solana/spl-token": "catalog:",
     "@solana/wallet-adapter-base": "catalog:",

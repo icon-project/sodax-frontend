@@ -8,7 +8,7 @@ import {
   PostConditionMode,
   type ClarityValue,
   type PostConditionModeName,
-} from '@sodax/sdk/stacks-internal';
+} from '@sodax/libs/stacks';
 import type { StacksProvider } from '@stacks/connect';
 import { request } from '@stacks/connect';
 
