@@ -75,21 +75,13 @@ const ExchangeHeroSection = (): React.ReactElement => {
               <div className="hidden md:block md:ml-[11px]">
                 <SodaxIcon width={84} height={18} fill="white" />
               </div>
-              <div className="mix-blend-screen justify-center text-[#edc1bc] text-[9px] font-bold font-['InterRegular'] leading-[1.4] ml-2">
-                BETA
-              </div>
-            </div>
-            <div className="justify-center text-cream hidden lg:flex ml-8 gap-1">
-              <span className="text-xs font-bold font-[InterRegular] leading-none">Infrastructure for</span>
-              <span className="text-xs font-normal font-[Shrikhand] leading-none mt-[1px]">modern money</span>
             </div>
           </div>
           <div className="flex items-center gap-8">
-            {/* Navigation Menu and Button */}
-            <ul className="hidden lg:flex gap-4 z-10">
+            <ul className="hidden lg:flex gap-6 z-10">
               <li>
                 <a
-                  className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
+                  className="text-cream font-[InterRegular] text-[14px] transition-all hover:opacity-80 cursor-pointer"
                   href={NEWS_ROUTE}
                 >
                   News
@@ -97,23 +89,20 @@ const ExchangeHeroSection = (): React.ReactElement => {
               </li>
               <li>
                 <a
-                  className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
+                  className="text-cream font-[InterRegular] text-[14px] transition-all hover:opacity-80 cursor-pointer"
                   href={PARTNERS_ROUTE}
                 >
                   Partners
                 </a>
               </li>
             </ul>
-            <div className="inline-flex justify-center items-start relative">
-              <MainCtaButton
-                onClick={() => {
-                  router.push(SWAP_ROUTE);
-                  setShouldTriggerAnimation(true);
-                }}
-              >
-                launch apps
-              </MainCtaButton>
-            </div>
+            <button
+              type="button"
+              onClick={() => router.push(PARTNERS_ROUTE)}
+              className="bg-yellow-dark hover:bg-yellow-soda transition-all hover:scale-[102%] h-10 px-6 font-[InterBold] rounded-full text-[14px] cursor-pointer text-cherry-dark"
+            >
+              Discover SODAX
+            </button>
           </div>
         </div>
         <Image
@@ -126,24 +115,24 @@ const ExchangeHeroSection = (): React.ReactElement => {
         />
 
         {/* Center Content */}
-        <div className="flex flex-col h-[700px] w-[310px] sm:w-[400px] md:w-[700px] lg:w-[900px] lg:pt-53 md:pt-41 pt-10 lg:mr-10">
+        <div className="flex flex-col h-[700px] lg:h-auto w-[310px] sm:w-[400px] md:w-[700px] lg:w-[900px] pt-10 sm:pt-28 md:pt-41 lg:pt-[clamp(13.25rem,calc(100vh-38rem),25rem)] lg:mr-10">
           <div className="flex flex-col justify-center  w-full">
             <Label className="mix-blend-hard-light text-[54px] sm:text-[90px] md:text-[122px] lg:text-[156px] leading-none text-yellow-soda font-[InterBlack] lg:leading-[113px]">
-              FRESH DEFI
+              USE SODA
             </Label>
             <div className="leading-[1.1] text-white font-[InterBlack] text-(length:--main-title) md:mt-6">
-              to grow your finances
+              trade, stake and earn
             </div>
           </div>
-          <div className="flex h-[66px] md:mt-10 mt-96">
+          <div className="flex h-[66px] mt-96 sm:mt-24 md:mt-10">
             <div className="flex md:hidden">
               <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
               <div className="flex flex-col w-40 pl-4 pr-10 justify-center">
                 <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2]">
-                  Swap, save and borrow
+                  Cross-network DeFi
                 </div>
                 <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
-                  Across networks
+                  All in one place
                 </div>
               </div>
             </div>
@@ -154,25 +143,25 @@ const ExchangeHeroSection = (): React.ReactElement => {
                   Swap your assets
                 </div>
                 <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
-                  At leading rates
+                  At optimal rates
                 </div>
               </div>
               <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
               <div className="flex flex-col w-42 pl-4 pr-10 justify-center">
                 <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2]">
-                  Build your savings
+                  Migrate ICX to SODA
                 </div>
                 <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
-                  Across networks
+                  Claim your tokens
                 </div>
               </div>
               <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
               <div className="flex flex-col w-39 pl-4 justify-center">
                 <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2]">
-                  Borrow stables or assets
+                  Stake and supply
                 </div>
                 <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
-                  Without a bank
+                  Fueled by fees
                 </div>
               </div>
             </div>
@@ -222,7 +211,7 @@ const ExchangeHeroSection = (): React.ReactElement => {
                   setShouldTriggerAnimation(true);
                 }}
               >
-                launch apps
+                Launch apps
               </MainCtaButton>
             </div>
           </div>
