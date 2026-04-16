@@ -2,7 +2,7 @@ import Image from 'next/image';
 import type { Metadata } from 'next';
 import { ArrowRight, ExternalLink } from 'lucide-react';
 import { MarketingHeader } from '@/components/shared/marketing-header';
-import { PartnerSimpleFooter } from '@/components/partners/partner-simple-footer';
+import Footer from '@/components/landing/footer';
 import { PageActions } from '@/components/partners/page-actions';
 import { AnimatedSection, AnimatedScrollSection } from '@/components/partners/animated-section';
 import { DOCUMENTATION_ROUTE, X_ROUTE } from '@/constants/routes';
@@ -684,7 +684,7 @@ export default function SodaxSDKPage() {
         </div>
       </div>
 
-      <PartnerSimpleFooter />
+      <Footer />
     </div>
   );
 }

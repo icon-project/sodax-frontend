@@ -123,7 +123,7 @@ export default async function GlossaryPage() {
             {/* Header Section */}
             <div className="flex gap-2 items-center mb-8">
               <div className="relative w-8 h-8">
-                <Image src="/symbol2.png" alt="SODAX Symbol" width={32} height={32} />
+                <Image src="/soda-cherry.png" alt="SODAX Symbol" width={32} height={32} />
               </div>
               <h1 className="text-[32px] font-bold leading-[1.1] text-espresso">Glossary</h1>
             </div>

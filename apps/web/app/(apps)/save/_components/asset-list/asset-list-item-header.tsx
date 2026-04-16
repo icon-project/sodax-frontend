@@ -23,7 +23,7 @@ function UserInfo({ isVisible, token }: { isVisible: boolean; token: XToken | un
       animate={{ opacity: isVisible ? 1 : 0 }}
       transition={{ duration: 0.3, delay: isVisible ? 0.15 : 0 }}
     >
-      <Image src="/symbol3.png" width={16} height={16} alt="symbol3" />
+      <Image src="/soda-grey.png" width={16} height={16} alt="symbol3" />
     </motion.div>
   );
 }

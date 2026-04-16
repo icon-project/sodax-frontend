@@ -4,6 +4,7 @@ import { type NextRequest, NextResponse } from 'next/server';
  * EU/EEA/UK country codes (31 total).
  * Used to determine if the cookie consent banner should be shown.
  */
+// biome-ignore format: compact country code table is more readable
 const EU_EEA_UK_COUNTRY_CODES = new Set([
   // EU (27)
   'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR',
@@ -16,6 +17,13 @@ const EU_EEA_UK_COUNTRY_CODES = new Set([
 ]);
 
 export function middleware(request: NextRequest) {
+  // ── Consensus Miami kill switch ─────────────────────────────────────────────
+  // Set CONSENSUS_MIAMI_ENABLED=false in Vercel to disable the page (redirects
+  // to homepage). Any other value — including missing — means enabled.
+  if (request.nextUrl.pathname.startsWith('/consensus-miami') && process.env.CONSENSUS_MIAMI_ENABLED === 'false') {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
   const response = NextResponse.next();
 
   // Only set the cookie if it hasn't been set yet
@@ -39,6 +47,7 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
+  // biome-ignore format: keep original multi-line format to minimise PR diff
   matcher: [
     '/((?!_next/static|_next/image|favicon.ico|fonts|.*\\.(?:png|jpg|jpeg|gif|svg|ico|webp|zip|toml)).*)',
   ],

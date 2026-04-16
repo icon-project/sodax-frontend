@@ -67,7 +67,7 @@ export default function SodaxAdvantageSection() {
         {/* Header */}
         <div className="flex flex-col gap-4 items-center px-4">
           <div className="flex gap-2 items-center">
-            <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="shrink-0" />
+            <Image src="/soda-yellow-sm.png" alt="SODAX" width={32} height={32} className="shrink-0" />
             <h2 className="font-['InterBold'] text-[26px] sm:text-[32px] leading-[1.1] text-espresso">
               What SODAX handles
             </h2>
@@ -211,7 +211,7 @@ export default function SodaxAdvantageSection() {
 
         {/* Three-Layer SDK Architecture */}
         <div className="flex gap-2 items-center justify-center px-4">
-          <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="shrink-0" />
+          <Image src="/soda-yellow-sm.png" alt="SODAX" width={32} height={32} className="shrink-0" />
           <h2 className="font-['InterBold'] text-[24px] sm:text-[28px] md:text-[32px] leading-[1.1] text-espresso text-center">
             Three-layer SDK architecture
           </h2>
