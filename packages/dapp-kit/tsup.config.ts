@@ -9,4 +9,9 @@ export default defineConfig(options => ({
   treeshake: true,
   splitting: true,
   sourcemap: true,
+  outExtension({ format }) {
+    return {
+      js: format === 'esm' ? '.mjs' : '.cjs',
+    };
+  },
 }));
