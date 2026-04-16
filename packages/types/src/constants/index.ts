@@ -1186,7 +1186,7 @@ export const spokeChainConfig = {
   } as const satisfies InjectiveSpokeChainConfig,
   [BITCOIN_MAINNET_CHAIN_ID]: {
     addresses: {
-      assetManager: 'bc1pxguu2r4p9jcxp3gj7dh4r4jd9qzccwpyap3nj5nlapy28s76lhrqw522fz',
+      assetManager: 'bc1pcz4pyrfgv7v6tx8a404mafyvt73cnm80yuv8tqwrywxmqxpja8ys4pjyl5',
     },
     chain: baseChainInfo[BITCOIN_MAINNET_CHAIN_ID] satisfies BaseSpokeChainInfo<'BITCOIN'>,
     bnUSD: 'no',
