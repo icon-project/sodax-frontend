@@ -7,8 +7,6 @@ import {
   type MigrationError,
   type RelayError,
   type RelayErrorCode,
-  IconSpokeProvider,
-  SonicSpokeProvider,
   EvmHubProvider,
   type EvmHubProviderConfig,
   SpokeService,
@@ -20,8 +18,8 @@ import {
   type IcxTokenType,
   type MigrationAction,
   type UnifiedBnUSDMigrateParams,
-  bnUSDLegacySpokeChainIds,
-  newbnUSDSpokeChainIds,
+  bnUSDLegacySpokeChainKeys,
+  newbnUSDSpokeChainKeys,
   bnUSDLegacyTokens,
   bnUSDNewTokens,
   isLegacybnUSDChainId,
@@ -32,17 +30,8 @@ import {
   getHubChainConfig,
   DEFAULT_RELAYER_API_ENDPOINT,
 } from '../index.js';
-import {
-  ICON_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-  spokeChainConfig,
-  getIntentRelayChainId,
-  type EvmRawTransaction,
-  type IIconWalletProvider,
-  type IEvmWalletProvider,
-  type SpokeChainId,
-  type Address,
-} from '@sodax/types';
+import type { EvmRawTransaction, IIconWalletProvider, IEvmWalletProvider, SpokeChainKey, Address } from '@sodax/types';
+import { ChainKeys, spokeChainConfig, getIntentRelayChainId } from '@sodax/types';
 import * as IntentRelayApiService from '../shared/services/intentRelay/IntentRelayApiService.js';
 import * as SharedUtils from '../shared/utils/shared-utils.js';
 
@@ -63,8 +52,8 @@ const mockRevertMigrationParams: IcxCreateRevertMigrationParams = {
 
 // bnUSD Migration test parameters using real constants
 const mockBnUSDLegacyToNewParams: UnifiedBnUSDMigrateParams = {
-  srcChainId: ICON_MAINNET_CHAIN_ID,
-  dstChainId: SONIC_MAINNET_CHAIN_ID,
+  srcChainId: ChainKeys.ICON_MAINNET,
+  dstChainId: ChainKeys.SONIC_MAINNET,
   srcbnUSD: bnUSDLegacyTokens[0]?.address ?? 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb', // ICON legacy bnUSD
   dstbnUSD: bnUSDNewTokens[0]?.address ?? '0xE801CA34E19aBCbFeA12025378D19c4FBE250131', // Sonic new bnUSD
   amount: 1000000000000000000n, // 1 bnUSD with 18 decimals
@@ -72,8 +61,8 @@ const mockBnUSDLegacyToNewParams: UnifiedBnUSDMigrateParams = {
 } satisfies UnifiedBnUSDMigrateParams;
 
 const mockBnUSDNewToLegacyParams: UnifiedBnUSDMigrateParams = {
-  srcChainId: SONIC_MAINNET_CHAIN_ID,
-  dstChainId: ICON_MAINNET_CHAIN_ID,
+  srcChainId: ChainKeys.SONIC_MAINNET,
+  dstChainId: ChainKeys.ICON_MAINNET,
   srcbnUSD: bnUSDNewTokens[0]?.address ?? '0xE801CA34E19aBCbFeA12025378D19c4FBE250131', // Sonic new bnUSD
   dstbnUSD: bnUSDLegacyTokens[0]?.address ?? 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb', // ICON legacy bnUSD
   amount: 1000000000000000000n, // 1 bnUSD with 18 decimals
@@ -97,11 +86,11 @@ const mockHubConfig: EvmHubProviderConfig = {
   chainConfig: getHubChainConfig(),
 } satisfies EvmHubProviderConfig;
 
-const mockIconSpokeProvider = new IconSpokeProvider(mockIconWalletProvider, spokeChainConfig[ICON_MAINNET_CHAIN_ID]);
+const mockIconSpokeProvider = new IconSpokeProvider(mockIconWalletProvider, spokeChainConfig[ChainKeys.ICON_MAINNET]);
 
 const mockSonicSpokeProvider = new SonicSpokeProvider(
   mockSonicWalletProvider,
-  spokeChainConfig[SONIC_MAINNET_CHAIN_ID],
+  spokeChainConfig[ChainKeys.SONIC_MAINNET],
 );
 
 const mockHubProvider = new EvmHubProvider({ config: mockHubConfig, configService: sodax.config });
@@ -112,9 +101,9 @@ const mockHubTxHash = '0xfedcba0987654321fedcba0987654321fedcba0987654321fedcba0
 const mockPacketData = {
   src_tx_hash: mockTxHash,
   status: 'pending',
-  src_chain_id: Number(getIntentRelayChainId(ICON_MAINNET_CHAIN_ID)),
+  src_chain_id: Number(getIntentRelayChainId(ChainKeys.ICON_MAINNET)),
   src_address: mockIconWalletProvider.getWalletAddress(),
-  dst_chain_id: Number(getIntentRelayChainId(SONIC_MAINNET_CHAIN_ID)),
+  dst_chain_id: Number(getIntentRelayChainId(ChainKeys.SONIC_MAINNET)),
   conn_sn: 1,
   dst_address: mockSonicWalletProvider.getWalletAddress(),
   dst_tx_hash: mockHubTxHash,
@@ -785,9 +774,9 @@ describe('MigrationService', () => {
       await migrationService.createRevertSodaToIcxMigrationIntent(mockRevertMigrationParams, mockSonicSpokeProvider);
 
       expect(revertMigrationSpy).toHaveBeenCalledWith({
-        wICX: spokeChainConfig[ICON_MAINNET_CHAIN_ID].addresses.wICX,
+        wICX: spokeChainConfig[ChainKeys.ICON_MAINNET].addresses.wICX,
         amount: mockRevertMigrationParams.amount,
-        to: encodeAddress(ICON_MAINNET_CHAIN_ID, mockRevertMigrationParams.to),
+        to: encodeAddress(ChainKeys.ICON_MAINNET, mockRevertMigrationParams.to),
         userWallet: '0xUserRouterAddress',
       });
     });
@@ -1050,7 +1039,7 @@ describe('MigrationService', () => {
       it('should return error for invalid source chain ID', async () => {
         const invalidParams = {
           ...mockBnUSDLegacyToNewParams,
-          srcChainId: 'invalid-chain' as SpokeChainId,
+          srcChainId: 'invalid-chain' as SpokeChainKey,
         };
 
         const result = await migrationService.createMigratebnUSDIntent(invalidParams, mockIconSpokeProvider);
@@ -1064,7 +1053,7 @@ describe('MigrationService', () => {
       it('should return error for invalid destination chain ID', async () => {
         const invalidParams = {
           ...mockBnUSDLegacyToNewParams,
-          dstChainId: 'invalid-chain' as SpokeChainId,
+          dstChainId: 'invalid-chain' as SpokeChainKey,
         };
 
         const result = await migrationService.createMigratebnUSDIntent(invalidParams, mockIconSpokeProvider);
@@ -1162,8 +1151,8 @@ describe('MigrationService', () => {
       it('should return error if neither srcbnUSD nor dstbnUSD is a legacy bnUSD token (even if unchecked)', async () => {
         const invalidParams = {
           ...mockBnUSDLegacyToNewParams,
-          srcChainId: 'invalid-chain' as SpokeChainId,
-          dstChainId: 'invalid-chain' as SpokeChainId,
+          srcChainId: 'invalid-chain' as SpokeChainKey,
+          dstChainId: 'invalid-chain' as SpokeChainKey,
           srcbnUSD: '0xnotlegacy',
           dstbnUSD: '0xnotlegacy',
           amount: 1n,
@@ -1196,13 +1185,13 @@ describe('MigrationService', () => {
 
     describe('bnUSD Constants and Helper Functions', () => {
       it('should correctly identify legacy bnUSD chains', () => {
-        expect(bnUSDLegacySpokeChainIds).toContain(ICON_MAINNET_CHAIN_ID);
-        expect(isLegacybnUSDChainId(ICON_MAINNET_CHAIN_ID)).toBe(true);
+        expect(bnUSDLegacySpokeChainKeys).toContain(ChainKeys.ICON_MAINNET);
+        expect(isLegacybnUSDChainId(ChainKeys.ICON_MAINNET)).toBe(true);
       });
 
       it('should correctly identify new bnUSD chains', () => {
-        expect(newbnUSDSpokeChainIds).toContain(SONIC_MAINNET_CHAIN_ID);
-        expect(isNewbnUSDChainId(SONIC_MAINNET_CHAIN_ID)).toBe(true);
+        expect(newbnUSDSpokeChainKeys).toContain(ChainKeys.SONIC_MAINNET);
+        expect(isNewbnUSDChainId(ChainKeys.SONIC_MAINNET)).toBe(true);
       });
 
       it('should correctly identify legacy bnUSD tokens', () => {

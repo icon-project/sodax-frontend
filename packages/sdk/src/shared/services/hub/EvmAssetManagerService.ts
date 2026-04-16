@@ -1,12 +1,12 @@
 import { type Address, type Hex, type PublicClient, encodeFunctionData } from 'viem';
 import { assetManagerAbi } from '../../abis/index.js';
-import type { EvmHubProvider } from '../../entities/Providers.js';
-import type { EvmContractCall } from '../../types.js';
+import type { EvmContractCall } from '../../types/types.js';
 import { encodeContractCalls } from '../../utils/evm-utils.js';
 import { EvmVaultTokenService } from './EvmVaultTokenService.js';
-import type { SpokeChainId, AssetInfo } from '@sodax/types';
+import type { SpokeChainKey, AssetInfo } from '@sodax/types';
 import type { ConfigService } from '../../config/ConfigService.js';
 import { Erc20Service } from '../erc-20/index.js';
+import type { EvmHubProvider } from '../../entities/EvmHubProvider.js';
 
 export type EvmDepositToDataParams = {
   token: Hex | string;
@@ -73,7 +73,7 @@ export class EvmAssetManagerService {
    */
   public static depositToData(
     params: EvmDepositToDataParams,
-    spokeChainId: SpokeChainId,
+    spokeChainId: SpokeChainKey,
     configService: ConfigService,
   ): Hex {
     const calls: EvmContractCall[] = [];
@@ -83,12 +83,12 @@ export class EvmAssetManagerService {
       throw new Error('[depositToData] Hub asset not found');
     }
 
-    const assetAddress = assetConfig.asset;
+    const assetAddress = assetConfig.hubAsset;
     const vaultAddress = assetConfig.vault;
 
     calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, params.amount));
     calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, params.amount));
-    const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(assetConfig.decimal, params.amount);
+    const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(assetConfig.decimals, params.amount);
     calls.push(Erc20Service.encodeTransfer(vaultAddress, params.to, translatedAmount));
 
     return encodeContractCalls(calls);
@@ -105,7 +105,7 @@ export class EvmAssetManagerService {
   public static withdrawAssetData(
     params: EvmWithdrawAssetDataParams,
     hubProvider: EvmHubProvider,
-    spokeChainId: SpokeChainId,
+    spokeChainId: SpokeChainKey,
   ): Hex {
     const calls: EvmContractCall[] = [];
     const assetConfig = hubProvider.configService.getHubAssetInfo(spokeChainId, params.token);
@@ -114,7 +114,7 @@ export class EvmAssetManagerService {
       throw new Error('[withdrawAssetData] Hub asset not found');
     }
 
-    const assetAddress = assetConfig.asset;
+    const assetAddress = assetConfig.hubAsset;
 
     calls.push(
       EvmAssetManagerService.encodeTransfer(

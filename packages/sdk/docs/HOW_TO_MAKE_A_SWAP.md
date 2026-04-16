@@ -42,10 +42,10 @@ await sodax.initialize();
 If you need to use custom solver configuration or hub provider settings, you can pass them when creating the Sodax instance:
 
 ```typescript
-import { Sodax, getSolverConfig, getHubChainConfig, SONIC_MAINNET_CHAIN_ID } from "@sodax/sdk";
+import { Sodax, getSolverConfig, getHubChainConfig, ChainKeys } from "@sodax/sdk";
 
 const sodax = new Sodax({
-  swap: getSolverConfig(SONIC_MAINNET_CHAIN_ID), // Custom solver config
+  swap: getSolverConfig(ChainKeys.SONIC_MAINNET), // Custom solver config
   hubProviderConfig: {
     hubRpcUrl: 'https://rpc.soniclabs.com',
     chainConfig: getHubChainConfig(),
@@ -66,7 +66,7 @@ For EVM chains (Arbitrum, Polygon, BSC, etc.):
 ```typescript
 import {
   EvmSpokeProvider,
-  ARBITRUM_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type IEvmWalletProvider,
   type Hex
@@ -75,7 +75,7 @@ import { EvmWalletProvider } from "@sodax/wallet-sdk-core";
 
 const evmWalletProvider = new EvmWalletProvider({
   privateKey: '0x...' as Hex, // Your private key
-  chainId: ARBITRUM_MAINNET_CHAIN_ID,
+  chainId: ChainKeys.ARBITRUM_MAINNET,
   rpcUrl: 'https://arb1.arbitrum.io/rpc', // Arbitrum RPC URL
 });
 
@@ -85,7 +85,7 @@ const evmWalletProvider = new EvmWalletProvider({
 // Create Arbitrum spoke provider
 const arbSpokeProvider = new EvmSpokeProvider(
   evmWalletProvider,
-  spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID]
+  spokeChainConfig[ChainKeys.ARBITRUM_MAINNET]
 );
 ```
 
@@ -101,7 +101,7 @@ Before creating a swap, you may want to check which tokens are supported for swa
 
 ```typescript
 // Get all supported swap tokens for a specific chain
-const supportedTokens = sodax.swaps.getSupportedSwapTokensByChainId(ARBITRUM_MAINNET_CHAIN_ID);
+const supportedTokens = sodax.swaps.getSupportedSwapTokensByChainId(ChainKeys.ARBITRUM_MAINNET);
 console.log('Supported tokens on Arbitrum:', supportedTokens);
 
 // Get all supported swap tokens across all chains
@@ -122,15 +122,14 @@ Before executing a swap, it's good practice to get a quote to show users the exp
 
 ```typescript
 import {
-  ARBITRUM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type SolverIntentQuoteRequest
 } from "@sodax/sdk";
 
 // Get native token addresses from chain configuration
-const arbEthToken = spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].nativeToken; // ETH on Arbitrum
-const polygonPolToken = spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].nativeToken; // POL on Polygon
+const arbEthToken = spokeChainConfig[ChainKeys.ARBITRUM_MAINNET].nativeToken; // ETH on Arbitrum
+const polygonPolToken = spokeChainConfig[ChainKeys.POLYGON_MAINNET].nativeToken; // POL on Polygon
 
 // Amount to swap - IMPORTANT: Amount must be in the token's smallest unit
 // For example, ETH has 18 decimals, so 0.0001 ETH = 100000000000000n (0.0001 * 10^18)
@@ -140,8 +139,8 @@ const inputAmount = 100000000000000n; // 0.0001 ETH (18 decimals)
 const quoteRequest = {
   token_src: arbEthToken,
   token_dst: polygonPolToken,
-  token_src_blockchain_id: ARBITRUM_MAINNET_CHAIN_ID,
-  token_dst_blockchain_id: POLYGON_MAINNET_CHAIN_ID,
+  token_src_blockchain_id: ChainKeys.ARBITRUM_MAINNET,
+  token_dst_blockchain_id: ChainKeys.POLYGON_MAINNET,
   amount: inputAmount,
   quote_type: 'exact_input',
 } satisfies SolverIntentQuoteRequest;
@@ -175,8 +174,8 @@ const createIntentParams: CreateIntentParams = {
   minOutputAmount: 900000n, // Minimum output you're willing to accept
   deadline: 0n, // 0 = no deadline, or use sodax.swaps.getSwapDeadline() for a deadline
   allowPartialFill: false,
-  srcChain: ARBITRUM_MAINNET_CHAIN_ID,
-  dstChain: POLYGON_MAINNET_CHAIN_ID,
+  srcChain: ChainKeys.ARBITRUM_MAINNET,
+  dstChain: ChainKeys.POLYGON_MAINNET,
   srcAddress: await evmWalletProvider.getWalletAddress(),
   dstAddress: await evmWalletProvider.getWalletAddress(), // Destination address
   solver: '0x0000000000000000000000000000000000000000', // address(0) = any solver
@@ -259,8 +258,8 @@ const createIntentParams: CreateIntentParams = {
   minOutputAmount: 900000n, // Minimum output (should be based on quote from Step 3)
   deadline: deadline, // or 0n for no deadline
   allowPartialFill: false, // Set to true if you want to allow partial fills
-  srcChain: ARBITRUM_MAINNET_CHAIN_ID,
-  dstChain: POLYGON_MAINNET_CHAIN_ID,
+  srcChain: ChainKeys.ARBITRUM_MAINNET,
+  dstChain: ChainKeys.POLYGON_MAINNET,
   srcAddress: walletAddress, // Must match your wallet address
   dstAddress: walletAddress, // Where to receive output tokens
   solver: '0x0000000000000000000000000000000000000000', // address(0) = any solver
@@ -543,8 +542,7 @@ Here's a complete end-to-end example combining all the steps. For a production-r
 import {
   Sodax,
   EvmSpokeProvider,
-  ARBITRUM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type CreateIntentParams,
   type SolverIntentQuoteRequest,
@@ -572,21 +570,21 @@ async function executeSwap(
     console.log('Step 2: Creating spoke provider...');
     const arbSpokeProvider = new EvmSpokeProvider(
       evmWalletProvider,
-      spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID]
+      spokeChainConfig[ChainKeys.ARBITRUM_MAINNET]
     );
     console.log('Spoke provider created');
 
     // Get native token addresses from chain configuration
-    const arbEthToken = spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].nativeToken; // ETH on Arbitrum
-    const polygonPolToken = spokeChainConfig[POLYGON_MAINNET_CHAIN_ID].nativeToken; // POL on Polygon
+    const arbEthToken = spokeChainConfig[ChainKeys.ARBITRUM_MAINNET].nativeToken; // ETH on Arbitrum
+    const polygonPolToken = spokeChainConfig[ChainKeys.POLYGON_MAINNET].nativeToken; // POL on Polygon
 
     // Step 3: Get Quote
     console.log('Step 3: Getting quote...');
     const quoteRequest: SolverIntentQuoteRequest = {
       token_src: arbEthToken,
       token_dst: polygonPolToken,
-      token_src_blockchain_id: ARBITRUM_MAINNET_CHAIN_ID,
-      token_dst_blockchain_id: POLYGON_MAINNET_CHAIN_ID,
+      token_src_blockchain_id: ChainKeys.ARBITRUM_MAINNET,
+      token_dst_blockchain_id: ChainKeys.POLYGON_MAINNET,
       amount: inputAmount,
       quote_type: 'exact_input',
     };
@@ -614,8 +612,8 @@ async function executeSwap(
       minOutputAmount: (quotedAmount * 95n) / 100n, // 5% slippage tolerance
       deadline: deadline,
       allowPartialFill: false,
-      srcChain: ARBITRUM_MAINNET_CHAIN_ID,
-      dstChain: POLYGON_MAINNET_CHAIN_ID,
+      srcChain: ChainKeys.ARBITRUM_MAINNET,
+      dstChain: ChainKeys.POLYGON_MAINNET,
       srcAddress: walletAddress,
       dstAddress: walletAddress,
       solver: '0x0000000000000000000000000000000000000000',

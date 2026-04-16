@@ -1,5 +1,4 @@
 import { type Address, getMoneyMarketConfig } from '@sodax/types';
-import type { EvmHubProvider } from '../shared/entities/Providers.js';
 import { uiPoolDataAbi } from '../shared/abis/uiPoolData.abi.js';
 import type {
   AggregatedReserveData,
@@ -14,13 +13,14 @@ import type {
   UiPoolDataProviderInterface,
 } from './MoneyMarketTypes.js';
 import { erc20BnusdAbi } from '../shared/abis/erc20-bnusd.abi.js';
+import type { HubProvider } from '../shared/types/types.js';
 
 export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
-  private readonly hubProvider: EvmHubProvider;
+  private readonly hubProvider: HubProvider;
   private readonly uiPoolDataProvider: Address;
   private readonly poolAddressesProvider: Address;
 
-  constructor(hubProvider: EvmHubProvider) {
+  constructor(hubProvider: HubProvider) {
     this.hubProvider = hubProvider;
     this.uiPoolDataProvider = getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).uiPoolDataProvider;
     this.poolAddressesProvider = getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).poolAddressesProvider;

@@ -8,7 +8,7 @@ import type {
   SonicSpokeProviderType,
   SpokeTxHash,
   StellarSpokeProviderType,
-} from './../shared/types.js';
+} from '../shared/types/types.js';
 import type { Address, Hex } from 'viem';
 import {
   DEFAULT_RELAYER_API_ENDPOINT,
@@ -17,7 +17,6 @@ import {
   EvmAssetManagerService,
   type Result,
   type TxReturnType,
-  type SpokeProvider,
   SpokeService,
   encodeAddress,
   Erc20Service,
@@ -33,25 +32,25 @@ import {
   isEvmSpokeProviderType,
   isSonicSpokeProviderType,
   HubService,
-  isHubSpokeProvider,
+  isHubChainId,
   isSpokeProviderObjectType,
   isRawDestinationParams,
   wrappedSonicAbi,
   isSolanaSpokeProviderType,
+  type HubProvider,
 } from '../index.js';
 import {
   SodaTokens,
   type ConcentratedLiquidityConfig,
   type HttpUrl,
   type OriginalAssetAddress,
-  type SpokeChainId,
+  type SpokeChainKey,
 } from '@sodax/types';
 import { encodeFunctionData, erc20Abi, isAddress } from 'viem';
 import invariant from 'tiny-invariant';
 import { getConcentratedLiquidityConfig } from '../shared/constants.js';
 import { stataTokenFactoryAbi } from '../shared/abis/stataTokenFactory.abi.js';
-import type { EvmHubProvider, SpokeProviderType } from '../shared/entities/Providers.js';
-import type { GetAddressType, GetSpokeDepositParamsType, HubTxHash } from '../shared/types.js';
+import type { GetAddressType, GetSpokeDepositParamsType, HubTxHash } from '../shared/types/types.js';
 
 // Local type definitions
 export type AssetServiceConfig = {
@@ -153,15 +152,19 @@ export type AssetServiceError<T extends AssetServiceErrorCode> = {
 
 export type AssetServiceConstructorParams = {
   config?: AssetServiceConfigParams;
-  hubProvider: EvmHubProvider;
+  hubProvider: HubProvider;
   relayerApiEndpoint?: HttpUrl;
   configService: ConfigService;
 };
 
+/**
+ * AssetService is a service that provides functionalities for asset operations.
+ * @namespace SodaxFeatures
+ */
 export class AssetService {
   public readonly config: AssetServiceConfig;
   private readonly relayerApiEndpoint: HttpUrl;
-  private readonly hubProvider: EvmHubProvider;
+  private readonly hubProvider: HubProvider;
   private readonly configService: ConfigService;
 
   constructor({ config, hubProvider, relayerApiEndpoint, configService }: AssetServiceConstructorParams) {
@@ -227,7 +230,7 @@ export class AssetService {
 
       // For non-EVM/non-Sonic chains, no approval is required
       if (isEvmSpokeProviderType(spokeProvider) || isSonicSpokeProviderType(spokeProvider)) {
-        const spender = isHubSpokeProvider(spokeProvider, this.hubProvider)
+        const spender = isHubChainId(spokeProvider, this.hubProvider)
           ? await HubService.getUserRouter(
               walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
               this.hubProvider,
@@ -321,7 +324,7 @@ export class AssetService {
       if (isEvmSpokeProviderType(spokeProvider) || isSonicSpokeProviderType(spokeProvider)) {
         invariant(isAddress(params.asset), 'Invalid source asset address for EVM chain');
 
-        const spender = isHubSpokeProvider(spokeProvider, this.hubProvider)
+        const spender = isHubChainId(spokeProvider, this.hubProvider)
           ? await HubService.getUserRouter(
               walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
               this.hubProvider,
@@ -525,7 +528,7 @@ export class AssetService {
     asset,
     poolToken,
   }: {
-    chainId: SpokeChainId;
+    chainId: SpokeChainKey;
     asset: OriginalAssetAddress;
     poolToken: Address;
   }): boolean {
@@ -593,7 +596,7 @@ export class AssetService {
       }
 
       let intentTxHash: string | null = null;
-      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
+      if (!isHubChainId(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
@@ -672,7 +675,7 @@ export class AssetService {
       }
 
       let intentTxHash: string | null = null;
-      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
+      if (!isHubChainId(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
@@ -716,7 +719,7 @@ export class AssetService {
 
   public async getTokenWrapAction(
     address: OriginalAssetAddress,
-    spokeChainId: SpokeChainId,
+    spokeChainId: SpokeChainKey,
     amount: bigint,
     poolToken: Address,
     recipient: Address,
@@ -727,11 +730,11 @@ export class AssetService {
     }
 
     const calls: EvmContractCall[] = [];
-    if (!this.configService.isValidVault(assetConfig.asset)) {
-      calls.push(Erc20Service.encodeApprove(assetConfig.asset, assetConfig.vault, amount));
-      calls.push(EvmVaultTokenService.encodeDeposit(assetConfig.vault, assetConfig.asset, amount));
+    if (!this.configService.isValidVault(assetConfig.hubAsset)) {
+      calls.push(Erc20Service.encodeApprove(assetConfig.hubAsset, assetConfig.vault, amount));
+      calls.push(EvmVaultTokenService.encodeDeposit(assetConfig.vault, assetConfig.hubAsset, amount));
     }
-    const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(assetConfig.decimal, amount);
+    const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(assetConfig.decimals, amount);
 
     if (poolToken.toLowerCase() === assetConfig.vault.toLowerCase()) {
       return calls;
@@ -763,7 +766,7 @@ export class AssetService {
    * @returns The token unwrap action
    */
   public async getTokenUnwrapAction(
-    dstChainId: SpokeChainId,
+    dstChainId: SpokeChainKey,
     address: OriginalAssetAddress,
     amount: bigint,
     userAddress: Address,
@@ -795,16 +798,16 @@ export class AssetService {
       calls.push(Erc4626Service.encodeRedeem(dexToken, amount, userAddress, userAddress));
     }
 
-    calls.push(EvmVaultTokenService.encodeWithdraw(assetConfig.vault, assetConfig.asset, vaultAmount));
-    const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(assetConfig.decimal, vaultAmount);
+    calls.push(EvmVaultTokenService.encodeWithdraw(assetConfig.vault, assetConfig.hubAsset, vaultAmount));
+    const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(assetConfig.decimals, vaultAmount);
 
     if (dstChainId === this.hubProvider.chainConfig.chain.id) {
       if (
-        assetConfig.asset.toLowerCase() ===
+        assetConfig.hubAsset.toLowerCase() ===
         this.configService.spokeChainConfig[dstChainId].addresses.wrappedSonic.toLowerCase()
       ) {
         const withdrawToCall = {
-          address: assetConfig.asset,
+          address: assetConfig.hubAsset,
           value: 0n,
           data: encodeFunctionData({
             abi: wrappedSonicAbi,
@@ -815,12 +818,12 @@ export class AssetService {
 
         calls.push(withdrawToCall);
       } else {
-        calls.push(Erc20Service.encodeTransfer(assetConfig.asset, recipient, translatedAmount));
+        calls.push(Erc20Service.encodeTransfer(assetConfig.hubAsset, recipient, translatedAmount));
       }
     } else {
       calls.push(
         EvmAssetManagerService.encodeTransfer(
-          assetConfig.asset,
+          assetConfig.hubAsset,
           recipient,
           translatedAmount,
           this.hubProvider.chainConfig.addresses.assetManager,

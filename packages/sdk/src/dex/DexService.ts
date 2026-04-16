@@ -1,8 +1,8 @@
-import type { EvmHubProvider } from '../shared/entities/Providers.js';
 import type { HttpUrl } from '@sodax/types';
 import type { ConfigService } from './../shared/config/ConfigService.js';
 import { AssetService, type AssetServiceConfig } from './AssetService.js';
 import { ClService } from './ConcentratedLiquidityService.js';
+import type { HubProvider } from '../shared/types/types.js';
 
 export type DexServiceConfig = {
   assetServiceConfig?: AssetServiceConfig;
@@ -10,11 +10,15 @@ export type DexServiceConfig = {
 
 export type DexServiceConstructorParams = {
   configService: ConfigService;
-  hubProvider: EvmHubProvider;
+  hubProvider: HubProvider;
   relayerApiEndpoint?: HttpUrl;
   config?: DexServiceConfig;
 };
 
+/**
+ * DexService is a main class that provides underlying services for DEX operations.
+ * @namespace SodaxFeatures
+ */
 export class DexService {
   public readonly assetService: AssetService;
   public readonly clService: ClService;

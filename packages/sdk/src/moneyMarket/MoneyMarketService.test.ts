@@ -1,11 +1,9 @@
-import { WalletAbstractionService } from '../shared/services/hub/WalletAbstractionService.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   MoneyMarketService,
   moneyMarketReserveAssets,
   type EvmHubProviderConfig,
   getHubChainConfig,
-  EvmWalletAbstraction,
   SpokeService,
   type PacketData,
   type MoneyMarketSupplyParams,
@@ -28,7 +26,6 @@ import {
   type MoneyMarketEncodeBorrowParams,
   type MoneyMarketEncodeRepayParams,
   type MoneyMarketEncodeRepayWithATokensParams,
-  hubAssets,
   HubService,
 } from '../index.js';
 import { Sodax } from '../shared/entities/Sodax.js';
@@ -36,14 +33,8 @@ import { EvmSpokeProvider } from '../shared/entities/Providers.js';
 import { EvmHubProvider } from '../shared/entities/Providers.js';
 import { SonicSpokeProvider } from '../shared/entities/Providers.js';
 import * as IntentRelayApiService from '../shared/services/intentRelay/IntentRelayApiService.js';
-import {
-  BSC_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-  type IEvmWalletProvider,
-  spokeChainConfig,
-  type Address,
-  type EvmRawTransaction,
-} from '@sodax/types';
+import type { IEvmWalletProvider, Address, EvmRawTransaction } from '@sodax/types';
+import { ChainKeys, spokeChainConfig } from '@sodax/types';
 import { decodeFunctionData } from 'viem';
 
 const sodax = new Sodax();
@@ -65,8 +56,8 @@ describe('MoneyMarketService', () => {
   const mockHubAddress = '0x1111111111111111111111111111111111111111' satisfies Address;
 
   // Create real provider instances
-  const bscSpokeProvider = new EvmSpokeProvider(mockEvmWalletProvider, spokeChainConfig[BSC_MAINNET_CHAIN_ID]);
-  const sonicSpokeProvider = new SonicSpokeProvider(mockSonicWalletProvider, spokeChainConfig[SONIC_MAINNET_CHAIN_ID]);
+  const bscSpokeProvider = new EvmSpokeProvider(mockEvmWalletProvider, spokeChainConfig[ChainKeys.BSC_MAINNET]);
+  const sonicSpokeProvider = new SonicSpokeProvider(mockSonicWalletProvider, spokeChainConfig[ChainKeys.SONIC_MAINNET]);
 
   // Hub provider configuration
   const hubConfig = {
@@ -89,8 +80,8 @@ describe('MoneyMarketService', () => {
   });
 
   // Test parameters - use real supported tokens
-  const bscSupportedTokens = moneyMarket.getSupportedTokensByChainId(BSC_MAINNET_CHAIN_ID);
-  const sonicSupportedTokens = moneyMarket.getSupportedTokensByChainId(SONIC_MAINNET_CHAIN_ID);
+  const bscSupportedTokens = moneyMarket.getSupportedTokensByChainId(ChainKeys.BSC_MAINNET);
+  const sonicSupportedTokens = moneyMarket.getSupportedTokensByChainId(ChainKeys.SONIC_MAINNET);
 
   const bscTestToken = bscSupportedTokens[0]?.address as Address; // ETHB
   const sonicTestToken = sonicSupportedTokens[0]?.address as Address; // WETH
@@ -256,7 +247,7 @@ describe('MoneyMarketService', () => {
 
     describe('Integration with real supported tokens', () => {
       it('should work with real supported BSC tokens', async () => {
-        const supportedTokens = moneyMarket.getSupportedTokensByChainId(BSC_MAINNET_CHAIN_ID);
+        const supportedTokens = moneyMarket.getSupportedTokensByChainId(ChainKeys.BSC_MAINNET);
         expect(supportedTokens.length).toBeGreaterThan(0);
 
         const tokenAddress = supportedTokens[0]?.address;
@@ -1327,7 +1318,7 @@ describe('MoneyMarketService', () => {
   describe('encoding methods', () => {
     const mockToken = '0x0000000000000000000000000000000000000000' as Address;
     const mockVault =
-      hubAssets['0xa86a.avax'][mockToken]?.vault ?? ('0x0000000000000000000000000000000000000001' as Address);
+      spokeChainConfig[ChainKeys.AVALANCHE_MAINNET].supportedTokens.AVAX?.vault ?? ('0x0000000000000000000000000000000000000001' as Address);
     const mockLendingPool = '0x3333333333333333333333333333333333333333' as Address;
     const mockUser = '0x4444444444444444444444444444444444444444' as Address;
     const mockAmount = 1000000000000000000n; // 1 token with 18 decimals

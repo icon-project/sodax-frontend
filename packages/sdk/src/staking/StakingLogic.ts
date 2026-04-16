@@ -2,7 +2,7 @@
 import { type Address, type Hex, type HttpTransport, type PublicClient, encodeFunctionData } from 'viem';
 import { stakedSodaAbi } from '../shared/abis/stakedSoda.abi.js';
 import { stakingRouterAbi } from '../shared/abis/stakingRouter.abi.js';
-import type { EvmContractCall, UserUnstakeInfo } from '../shared/types.js';
+import type { EvmContractCall, UserUnstakeInfo } from '../shared/types/types.js';
 
 export class StakingLogic {
   private constructor() {}

@@ -1,8 +1,7 @@
 import { encodeFunctionData, type Address } from 'viem';
 import { permit2Abi } from '../abis/permit2.abi.js';
 import type { EvmSpokeProvider, SonicSpokeProvider, EvmHubProvider } from '../entities/Providers.js';
-import type { PromiseEvmTxReturnType, EvmContractCall, EvmReturnType, Result } from '../types.js';
-
+import type { PromiseEvmTxReturnType, EvmContractCall, EvmReturnType, Result } from '../types/types.js';
 
 export interface PermitDetails {
   token: Address;

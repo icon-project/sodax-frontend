@@ -11,13 +11,8 @@ import {
   type StakingParams,
   type UnstakeParams,
 } from '../index.js';
-import {
-  BSC_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-  spokeChainConfig,
-  type Hash,
-  type IEvmWalletProvider,
-} from '@sodax/types';
+import type { Hash, IEvmWalletProvider } from '@sodax/types';
+import { ChainKeys, spokeChainConfig } from '@sodax/types';
 
 describe('StakingService', () => {
   const sodax = new Sodax();
@@ -28,10 +23,10 @@ describe('StakingService', () => {
     waitForTransactionReceipt: vi.fn(),
   } as unknown as IEvmWalletProvider;
 
-  const mockBscSpokeProvider = new EvmSpokeProvider(mockEvmWalletProvider, spokeChainConfig[BSC_MAINNET_CHAIN_ID]);
+  const mockBscSpokeProvider = new EvmSpokeProvider(mockEvmWalletProvider, spokeChainConfig[ChainKeys.BSC_MAINNET]);
   const mockSonicSpokeProvider = new SonicSpokeProvider(
     mockEvmWalletProvider,
-    spokeChainConfig[SONIC_MAINNET_CHAIN_ID],
+    spokeChainConfig[ChainKeys.SONIC_MAINNET],
   );
 
   const mockCreatorHubWalletAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`;

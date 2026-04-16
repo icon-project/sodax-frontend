@@ -10,7 +10,8 @@ import {
   type EvmHubProviderConfig,
   Sodax,
 } from '../../../index.js';
-import { BSC_MAINNET_CHAIN_ID, spokeChainConfig, type IEvmWalletProvider } from '@sodax/types';
+import type { IEvmWalletProvider } from '@sodax/types';
+import { ChainKeys, spokeChainConfig } from '@sodax/types';
 
 describe('EvmAssetManagerService', async () => {
   const sodax = new Sodax();
@@ -22,7 +23,7 @@ describe('EvmAssetManagerService', async () => {
     waitForTransactionReceipt: vi.fn(),
   } as unknown as IEvmWalletProvider;
 
-  const mockBscSpokeProvider = new EvmSpokeProvider(mockEvmWalletProvider, spokeChainConfig[BSC_MAINNET_CHAIN_ID]);
+  const mockBscSpokeProvider = new EvmSpokeProvider(mockEvmWalletProvider, spokeChainConfig[ChainKeys.BSC_MAINNET]);
 
   const mockHubConfig = {
     hubRpcUrl: 'https://rpc.soniclabs.com',

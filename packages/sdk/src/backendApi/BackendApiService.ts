@@ -2,14 +2,13 @@
 /**
  * BackendApiService - Proxy service for Sodax Backend API
  * Acts as a wrapper around all backend API endpoints for Solver and Money Market functionality
+ * @namespace SodaxFeatures
  */
 
 import type {
   Address,
   GetAllConfigApiResponse,
   GetChainsApiResponse,
-  GetHubAssetsApiResponse,
-  GetHubAssetsByChainIdApiResponse,
   GetMoneyMarketReserveAssetsApiResponse,
   GetMoneyMarketTokensApiResponse,
   GetMoneyMarketTokensByChainIdApiResponse,
@@ -18,18 +17,18 @@ import type {
   GetSwapTokensApiResponse,
   GetSwapTokensByChainIdApiResponse,
   IConfigApi,
-  SpokeChainId,
+  SpokeChainKey,
   SubmitSwapTxRequest,
   SubmitSwapTxResponse,
   GetSubmitSwapTxStatusParams,
   SubmitSwapTxStatusResponse,
+  BackendApiConfig
 } from '@sodax/types';
 import {
   DEFAULT_BACKEND_API_ENDPOINT,
   DEFAULT_BACKEND_API_HEADERS,
   DEFAULT_BACKEND_API_TIMEOUT,
 } from '../shared/constants.js';
-import type { BackendApiConfig } from '../shared/types.js';
 import { isSubmitSwapTxResponse, isSubmitSwapTxStatusResponse } from '../shared/guards.js';
 
 // Base types for API responses
@@ -475,7 +474,7 @@ export class BackendApiService implements IConfigApi {
    * @returns Promise<GetSwapTokensByChainIdApiResponse>
    */
   public async getSwapTokensByChainId(
-    chainId: SpokeChainId,
+    chainId: SpokeChainKey,
     config?: RequestOverrideConfig,
   ): Promise<GetSwapTokensByChainIdApiResponse> {
     return this.makeRequest<GetSwapTokensByChainIdApiResponse>(`/config/swap/${chainId}/tokens`, {
@@ -514,33 +513,10 @@ export class BackendApiService implements IConfigApi {
    * @returns Promise<GetMoneyMarketTokensByChainIdApiResponse>
    */
   public async getMoneyMarketTokensByChainId(
-    chainId: SpokeChainId,
+    chainId: SpokeChainKey,
     config?: RequestOverrideConfig,
   ): Promise<GetMoneyMarketTokensByChainIdApiResponse> {
     return this.makeRequest<GetMoneyMarketTokensByChainIdApiResponse>(`/config/money-market/${chainId}/tokens`, {
-      ...config,
-      method: 'GET',
-    });
-  }
-
-  /**
-   * Get all supported hub assets (assets representing spoke token deposit)
-   * @returns Promise<GetHubAssetsApiResponse>
-   */
-  public async getHubAssets(config?: RequestOverrideConfig): Promise<GetHubAssetsApiResponse> {
-    return this.makeRequest<GetHubAssetsApiResponse>('/config/hub/assets', { ...config, method: 'GET' });
-  }
-
-  /**
-   * Get supported hub assets (assets representing spoke token deposit) for a specific spoke chain
-   * @param chainId - Spoke chain id
-   * @returns Promise<GetHubAssetsByChainIdApiResponse>
-   */
-  public async getHubAssetsByChainId(
-    chainId: SpokeChainId,
-    config?: RequestOverrideConfig,
-  ): Promise<GetHubAssetsByChainIdApiResponse> {
-    return this.makeRequest<GetHubAssetsByChainIdApiResponse>(`/config/hub/${chainId}/assets`, {
       ...config,
       method: 'GET',
     });

@@ -1,23 +1,16 @@
 import invariant from 'tiny-invariant';
 import {
-  type SpokeProvider,
-  type SpokeProviderType,
   type Result,
   type TxReturnType,
   SpokeService,
   type RelayErrorCode,
   Erc20Service,
-  type GetSpokeDepositParamsType,
   SonicSpokeService,
-  type EvmHubProvider,
+  type HubProvider,
   relayTxAndWaitPacket,
-  SolanaSpokeProvider,
-  BitcoinSpokeProvider,
   DEFAULT_RELAY_TX_TIMEOUT,
   type HubTxHash,
   type SpokeTxHash,
-  WalletAbstractionService,
-  type HubAssetInfo,
   type EvmContractCall,
   EvmVaultTokenService,
   EvmAssetManagerService,
@@ -32,28 +25,25 @@ import {
   type GetAddressType,
   type BridgeServiceConfig,
   wrappedSonicAbi,
-  type StellarSpokeProviderType,
-  type EvmSpokeProviderType,
-  type SonicSpokeProviderType,
   type VaultReserves,
 } from '../index.js';
-import { isEvmSpokeProviderType, isSonicSpokeProviderType, isStellarSpokeProviderType } from '../shared/guards.js';
-import type { SpokeChainId, XToken, Hex, HttpUrl, BridgeLimit } from '@sodax/types';
+import type { SpokeChainKey, XToken, Hex, HttpUrl, BridgeLimit } from '@sodax/types';
 import { encodeFunctionData, isAddress } from 'viem';
 import { StellarSpokeService } from '../shared/services/spoke/StellarSpokeService.js';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 import BigNumber from 'bignumber.js';
 
-export type CreateBridgeIntentParams = {
-  srcChainId: SpokeChainId;
+export type CreateBridgeIntentParams<SrcChainKey extends SpokeChainKey = SpokeChainKey> = {
+  srcAddress: string;
+  srcChainId: SpokeChainKey;
   srcAsset: string;
   amount: bigint;
-  dstChainId: SpokeChainId;
+  dstChainId: SpokeChainKey;
   dstAsset: string;
   recipient: string; // non-encoded recipient address
 };
 
-export type BridgeParams<S extends SpokeProviderType> = Prettify<
+export type BridgeParams<S extends SpokeChainKey> = Prettify<
   {
     params: CreateBridgeIntentParams;
     spokeProvider: S;
@@ -77,7 +67,7 @@ export type BridgeExtraData = { address: Hex; payload: Hex };
 export type BridgeOptionalExtraData = { data?: BridgeExtraData };
 
 export type BridgeServiceConstructorParams = {
-  hubProvider: EvmHubProvider;
+  hubProvider: HubProvider;
   relayerApiEndpoint: HttpUrl;
   config: BridgeServiceConfig | undefined;
   configService: ConfigService;
@@ -91,7 +81,7 @@ export type BridgeServiceConstructorParams = {
  * @param relayerApiEndpoint - The relayer API endpoint
  */
 export class BridgeService {
-  public readonly hubProvider: EvmHubProvider;
+  public readonly hubProvider: HubProvider;
   public readonly relayerApiEndpoint: HttpUrl;
   public readonly config: BridgeServiceConfig;
   public readonly configService: ConfigService;
@@ -126,7 +116,7 @@ export class BridgeService {
    * @param spokeProvider - The spoke provider
    * @returns {Promise<Result<boolean, BridgeError<'ALLOWANCE_CHECK_FAILED'>>>}
    */
-  public async isAllowanceValid<S extends SpokeProviderType>({
+  public async isAllowanceValid<S extends SpokeChainKey>({
     params,
     spokeProvider,
   }: BridgeParams<S>): Promise<Result<boolean, BridgeError<'ALLOWANCE_CHECK_FAILED'>>> {
@@ -189,9 +179,9 @@ export class BridgeService {
       if (isSonicSpokeProviderType(spokeProvider)) {
         invariant(isAddress(params.srcAsset), 'Invalid source asset address for Sonic chain');
 
-        const userRouter = await SonicSpokeService.getUserRouter(
+        const userRouter = await this.hubProvider.service.getUserRouter(
           walletAddress as GetAddressType<SonicSpokeProviderType>,
-          spokeProvider,
+          params.srcChainId,
         );
 
         const allowanceResult = await Erc20Service.isAllowanceValid(
@@ -521,18 +511,18 @@ export class BridgeService {
    */
   buildBridgeData(
     params: CreateBridgeIntentParams,
-    srcAssetInfo: HubAssetInfo,
-    dstAssetInfo: HubAssetInfo,
+    srcAssetInfo: XToken,
+    dstAssetInfo: XToken,
     partnerFee: PartnerFee | undefined,
   ): Hex {
     const calls: EvmContractCall[] = [];
     let translatedAmount = params.amount;
     let srcVault = params.srcAsset as `0x${string}`;
     // if src asset is not a vault token, we need to approve and deposit into the vault
-    if (!this.configService.isValidVault(srcAssetInfo.asset)) {
-      calls.push(Erc20Service.encodeApprove(srcAssetInfo.asset, srcAssetInfo.vault, params.amount));
-      calls.push(EvmVaultTokenService.encodeDeposit(srcAssetInfo.vault, srcAssetInfo.asset, params.amount));
-      translatedAmount = EvmVaultTokenService.translateIncomingDecimals(srcAssetInfo.decimal, params.amount);
+    if (!this.configService.isValidVault(srcAssetInfo.hubAsset)) {
+      calls.push(Erc20Service.encodeApprove(srcAssetInfo.hubAsset, srcAssetInfo.vault, params.amount));
+      calls.push(EvmVaultTokenService.encodeDeposit(srcAssetInfo.vault, srcAssetInfo.hubAsset, params.amount));
+      translatedAmount = EvmVaultTokenService.translateIncomingDecimals(srcAssetInfo.decimals, params.amount);
       srcVault = srcAssetInfo.vault;
     }
     const feeAmount = calculateFeeAmount(translatedAmount, partnerFee);
@@ -545,9 +535,9 @@ export class BridgeService {
     let translatedWithdrawAmount = withdrawAmount;
 
     // if dst asset is not a vault token, we need to withdraw from the vault
-    if (!this.configService.isValidVault(dstAssetInfo.asset)) {
-      calls.push(EvmVaultTokenService.encodeWithdraw(dstAssetInfo.vault, dstAssetInfo.asset, withdrawAmount));
-      translatedWithdrawAmount = EvmVaultTokenService.translateOutgoingDecimals(dstAssetInfo.decimal, withdrawAmount);
+    if (!this.configService.isValidVault(dstAssetInfo.hubAsset)) {
+      calls.push(EvmVaultTokenService.encodeWithdraw(dstAssetInfo.vault, dstAssetInfo.hubAsset, withdrawAmount));
+      translatedWithdrawAmount = EvmVaultTokenService.translateOutgoingDecimals(dstAssetInfo.decimals, withdrawAmount);
     }
 
     const encodedRecipientAddress = encodeAddress(params.dstChainId, params.recipient);
@@ -556,7 +546,7 @@ export class BridgeService {
       // If destination token is S, then unwrap and send S to the recipient
       if (params.dstAsset.toLowerCase() === this.hubProvider.chainConfig.nativeToken.toLowerCase()) {
         calls.push({
-          address: dstAssetInfo.asset,
+          address: dstAssetInfo.hubAsset,
           value: 0n,
           data: encodeFunctionData({
             abi: wrappedSonicAbi,
@@ -565,13 +555,15 @@ export class BridgeService {
           }),
         });
       } else {
-        calls.push(Erc20Service.encodeTransfer(dstAssetInfo.asset, encodedRecipientAddress, translatedWithdrawAmount));
+        calls.push(
+          Erc20Service.encodeTransfer(dstAssetInfo.hubAsset, encodedRecipientAddress, translatedWithdrawAmount),
+        );
       }
     } else {
       invariant(dstAssetInfo, `Unsupported hub chain (${params.dstChainId}) token: ${params.dstAsset}`);
       calls.push(
         EvmAssetManagerService.encodeTransfer(
-          dstAssetInfo.asset,
+          dstAssetInfo.hubAsset,
           encodedRecipientAddress,
           translatedWithdrawAmount,
           this.hubProvider.chainConfig.addresses.assetManager,
@@ -602,7 +594,7 @@ export class BridgeService {
       const [tokenInfos, reserves] = await Promise.all([
         EvmVaultTokenService.getTokenInfos(
           fromHubAsset.vault,
-          [fromHubAsset.asset, toHubAsset.asset],
+          [fromHubAsset.hubAsset, toHubAsset.hubAsset],
           this.hubProvider.publicClient,
         ),
         EvmVaultTokenService.getVaultReserves(toHubAsset.vault, this.hubProvider.publicClient),
@@ -700,8 +692,8 @@ export class BridgeService {
   }): boolean {
     try {
       if (!unchecked) {
-        invariant(this.configService.isValidSpokeChainId(from.xChainId), `Invalid spoke chain (${from.xChainId})`);
-        invariant(this.configService.isValidSpokeChainId(to.xChainId), `Invalid spoke chain (${to.xChainId})`);
+        invariant(this.configService.isValidSpokeChainKey(from.xChainId), `Invalid spoke chain (${from.xChainId})`);
+        invariant(this.configService.isValidSpokeChainKey(to.xChainId), `Invalid spoke chain (${to.xChainId})`);
       }
 
       // Get hub asset info for both source and destination assets
@@ -729,7 +721,7 @@ export class BridgeService {
    * @param token - The source token address
    * @returns XToken[] - Array of bridgeable tokens on the destination chain
    */
-  public getBridgeableTokens(from: SpokeChainId, to: SpokeChainId, token: string): Result<XToken[]> {
+  public getBridgeableTokens(from: SpokeChainKey, to: SpokeChainKey, token: string): Result<XToken[]> {
     try {
       const srcAssetInfo = this.configService.getHubAssetInfo(from, token);
       invariant(srcAssetInfo, `Hub asset not found for token ${token} on chain ${from}`);
@@ -752,8 +744,8 @@ export class BridgeService {
 
   public filterTokensWithSameVault(
     tokens: Record<string, XToken>,
-    to: SpokeChainId,
-    srcAssetInfo: HubAssetInfo | undefined,
+    to: SpokeChainKey,
+    srcAssetInfo: XToken | undefined,
   ): XToken[] {
     // Filter tokens that share the same vault as the source asset
     const bridgeableTokens: XToken[] = [];
@@ -775,8 +767,11 @@ export class BridgeService {
   public findTokenBalanceInReserves(reserves: VaultReserves, token: XToken): bigint {
     const hubAsset = this.configService.getHubAssetInfo(token.xChainId, token.address);
     invariant(hubAsset, `Hub asset not found for token ${token.address} on chain ${token.xChainId}`);
-    const tokenIndex = reserves.tokens.findIndex(t => t.toLowerCase() === hubAsset.asset.toLowerCase());
-    invariant(tokenIndex !== -1, `Token ${hubAsset.asset} not found in the vault reserves for chain ${token.xChainId}`);
+    const tokenIndex = reserves.tokens.findIndex(t => t.toLowerCase() === hubAsset.hubAsset.toLowerCase());
+    invariant(
+      tokenIndex !== -1,
+      `Token ${hubAsset.hubAsset} not found in the vault reserves for chain ${token.xChainId}`,
+    );
     return reserves.balances[tokenIndex] ?? 0n;
   }
 }

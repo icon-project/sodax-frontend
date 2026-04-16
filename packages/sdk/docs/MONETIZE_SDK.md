@@ -67,8 +67,8 @@ import {
 const result = await sodax.swaps.getQuote({
   token_src: '0x...', // The address of the source token on the spoke chain
   token_dst: '0x...', // The address of the destination token on the spoke chain
-  token_src_blockchain_id: BSC_MAINNET_CHAIN_ID,  // Source chain ID (e.g. Binance Smart Chain)
-  token_dst_blockchain_id: ARBITRUM_MAINNET_CHAIN_ID, // Destination chain ID (e.g. Arbitrum)
+  token_src_blockchain_id: ChainKeys.BSC_MAINNET,  // Source chain ID (e.g. Binance Smart Chain)
+  token_dst_blockchain_id: ChainKeys.ARBITRUM_MAINNET, // Destination chain ID (e.g. Arbitrum)
   amount: 1000000000000000n, // token amount in scaled token decimal precision (e.g. 1 ETH = 1e18)
   quote_type: 'exact_input', // type of quote
   fee: fee, // optional, uses global partner fee if not provided
@@ -94,8 +94,8 @@ const swapResult = await sodax.swaps.swap({
     minOutputAmount: 900_000n, // Minimum output tokens expected
     deadline: 0n, // Optional: timestamp after which intent expires (0 = no deadline)
     allowPartialFill: false, // Whether intent can be partially filled
-    srcChain: BSC_MAINNET_CHAIN_ID, // Source chain ID
-    dstChain: ARBITRUM_MAINNET_CHAIN_ID, // Destination chain ID
+    srcChain: ChainKeys.BSC_MAINNET, // Source chain ID
+    dstChain: ChainKeys.ARBITRUM_MAINNET, // Destination chain ID
     srcAddress: '0x...', // Originating address on source chain
     dstAddress: '0x...', // Destination address on destination chain
     solver: '0x0000000000000000000000000000000000000000', // Optional: specific solver, address(0) means any solver

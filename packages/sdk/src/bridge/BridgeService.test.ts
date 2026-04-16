@@ -1,11 +1,5 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
-import {
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-  type XToken,
-  spokeChainConfig,
-} from '@sodax/types';
+import { type XToken, spokeChainConfig, ChainKeys } from '@sodax/types';
 import { Sodax } from '../index.js';
 import BigNumber from 'bignumber.js';
 import { EvmVaultTokenService } from '../shared/services/hub/EvmVaultTokenService.js';
@@ -16,13 +10,13 @@ describe('BridgeService', () => {
   describe('isBridgeable', () => {
     it('should return true for ETH on Arbitrum and ETH on Base (same vault)', async () => {
       const fromToken: XToken = {
-        ...spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
-        xChainId: ARBITRUM_MAINNET_CHAIN_ID,
+        ...spokeChainConfig[ChainKeys.ARBITRUM_MAINNET].supportedTokens.ETH,
+        xChainId: ChainKeys.ARBITRUM_MAINNET,
       };
 
       const toToken: XToken = {
-        ...spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.ETH,
-        xChainId: BASE_MAINNET_CHAIN_ID,
+        ...spokeChainConfig[ChainKeys.BASE_MAINNET].supportedTokens.ETH,
+        xChainId: ChainKeys.BASE_MAINNET,
       };
 
       const result = sodax.bridge.isBridgeable({
@@ -35,13 +29,13 @@ describe('BridgeService', () => {
 
     it('should return false for ETH on Arbitrum and USDC on Base (different vaults)', () => {
       const fromToken: XToken = {
-        ...spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
-        xChainId: ARBITRUM_MAINNET_CHAIN_ID,
+        ...spokeChainConfig[ChainKeys.ARBITRUM_MAINNET].supportedTokens.ETH,
+        xChainId: ChainKeys.ARBITRUM_MAINNET,
       };
 
       const toToken: XToken = {
-        ...spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.USDC,
-        xChainId: BASE_MAINNET_CHAIN_ID,
+        ...spokeChainConfig[ChainKeys.BASE_MAINNET].supportedTokens.USDC,
+        xChainId: ChainKeys.BASE_MAINNET,
       };
 
       const result = sodax.bridge.isBridgeable({
@@ -58,12 +52,12 @@ describe('BridgeService', () => {
         name: 'Unknown Token',
         decimals: 18,
         address: '0x9999999999999999999999999999999999999999',
-        xChainId: ARBITRUM_MAINNET_CHAIN_ID,
+        xChainId: ChainKeys.ARBITRUM_MAINNET,
       };
 
       const toToken: XToken = {
-        ...spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.ETH,
-        xChainId: BASE_MAINNET_CHAIN_ID,
+        ...spokeChainConfig[ChainKeys.BASE_MAINNET].supportedTokens.ETH,
+        xChainId: ChainKeys.BASE_MAINNET,
       };
 
       const result = sodax.bridge.isBridgeable({
@@ -85,12 +79,12 @@ describe('BridgeService', () => {
         symbol: 'USDC',
         name: 'USD Coin',
         decimals: 6,
-        address: spokeChainConfig[BASE_MAINNET_CHAIN_ID].supportedTokens.USDC.address,
-        xChainId: BASE_MAINNET_CHAIN_ID,
+        address: spokeChainConfig[ChainKeys.BASE_MAINNET].supportedTokens.USDC.address,
+        xChainId: ChainKeys.BASE_MAINNET,
       };
 
       // Destination chain and tokens
-      const toChainId = ARBITRUM_MAINNET_CHAIN_ID;
+      const toChainId = ChainKeys.ARBITRUM_MAINNET;
 
       // Find a token on the destination chain that shares the same vault as the source token
       // (Assume testnet config or mock config is set up so that USDC on Arbitrum shares the same vault)
@@ -119,10 +113,10 @@ describe('BridgeService', () => {
         name: 'Unknown Token',
         decimals: 18,
         address: '0x9999999999999999999999999999999999999999',
-        xChainId: BASE_MAINNET_CHAIN_ID,
+        xChainId: ChainKeys.BASE_MAINNET,
       };
 
-      const toChainId = ARBITRUM_MAINNET_CHAIN_ID;
+      const toChainId = ChainKeys.ARBITRUM_MAINNET;
 
       const bridgeableTokensResult = await sodax.bridge.getBridgeableTokens(
         fromToken.xChainId,
@@ -164,7 +158,7 @@ describe('BridgeService', () => {
     ];
 
     const mockReserves = {
-      tokens: [fromHubAsset.asset, toHubAsset.asset],
+      tokens: [fromHubAsset.hubAsset, toHubAsset.hubAsset],
       balances: [500n * 10n ** 18n, 200n * 10n ** 18n],
     };
 
@@ -174,13 +168,13 @@ describe('BridgeService', () => {
 
     it('should not return 0 for hub-chain tokens where isSupported is false', async () => {
       const fromToken: XToken = {
-        ...spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.S,
-        xChainId: SONIC_MAINNET_CHAIN_ID,
+        ...spokeChainConfig[ChainKeys.SONIC_MAINNET].supportedTokens.S,
+        xChainId: ChainKeys.SONIC_MAINNET,
       };
 
       const toToken: XToken = {
-        ...spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
-        xChainId: ARBITRUM_MAINNET_CHAIN_ID,
+        ...spokeChainConfig[ChainKeys.ARBITRUM_MAINNET].supportedTokens.ETH,
+        xChainId: ChainKeys.ARBITRUM_MAINNET,
       };
 
       vi.spyOn(sodax.config, 'getHubAssetInfo')
@@ -202,13 +196,13 @@ describe('BridgeService', () => {
 
     it('should return 0 for spoke-chain tokens where isSupported is false', async () => {
       const fromToken: XToken = {
-        ...spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.ETH,
-        xChainId: ARBITRUM_MAINNET_CHAIN_ID,
+        ...spokeChainConfig[ChainKeys.ARBITRUM_MAINNET].supportedTokens.ETH,
+        xChainId: ChainKeys.ARBITRUM_MAINNET,
       };
 
       const toToken: XToken = {
-        ...spokeChainConfig[SONIC_MAINNET_CHAIN_ID].supportedTokens.S,
-        xChainId: SONIC_MAINNET_CHAIN_ID,
+        ...spokeChainConfig[ChainKeys.SONIC_MAINNET].supportedTokens.S,
+        xChainId: ChainKeys.SONIC_MAINNET,
       };
 
       vi.spyOn(sodax.config, 'getHubAssetInfo')

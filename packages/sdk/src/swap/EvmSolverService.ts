@@ -11,7 +11,7 @@ import {
   parseEventLogs,
 } from 'viem';
 import { Erc20Service } from '../shared/services/erc-20/Erc20Service.js';
-import type { EvmContractCall, PartnerFee } from '../shared/types.js';
+import type { EvmContractCall, PartnerFee } from '../shared/types/types.js';
 import { FEE_PERCENTAGE_SCALE } from '../shared/constants.js';
 import { calculatePercentageFeeAmount, encodeAddress, randomUint256 } from '../shared/utils/shared-utils.js';
 import { encodeContractCalls } from '../shared/utils/evm-utils.js';
@@ -24,7 +24,7 @@ import {
   type IntentState,
   IntentDataType,
 } from './index.js';
-import { SONIC_MAINNET_CHAIN_ID, getIntentRelayChainId, type Hash, type Hex, type SolverConfig } from '@sodax/types';
+import { ChainKeys, getIntentRelayChainId, type Hash, type Hex, type SolverConfig } from '@sodax/types';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 import type { EvmHubProvider } from '../shared/entities/Providers.js';
 import { CLPositionManagerAbi } from '@pancakeswap/infinity-sdk';
@@ -54,13 +54,13 @@ export class EvmSolverService {
     fee: PartnerFee | undefined,
   ): [Hex, Intent, bigint] {
     const inputToken =
-      createIntentParams.srcChain !== SONIC_MAINNET_CHAIN_ID
-        ? configService.getHubAssetInfo(createIntentParams.srcChain, createIntentParams.inputToken)?.asset
+      createIntentParams.srcChain !== ChainKeys.SONIC_MAINNET
+        ? configService.getHubAssetInfo(createIntentParams.srcChain, createIntentParams.inputToken)?.hubAsset
         : (createIntentParams.inputToken as `0x${string}`);
 
     const outputToken =
-      createIntentParams.dstChain !== SONIC_MAINNET_CHAIN_ID
-        ? configService.getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.asset
+      createIntentParams.dstChain !== ChainKeys.SONIC_MAINNET
+        ? configService.getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.hubAsset
         : (createIntentParams.outputToken as `0x${string}`);
 
     invariant(

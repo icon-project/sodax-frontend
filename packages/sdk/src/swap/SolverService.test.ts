@@ -1,4 +1,3 @@
-import { WalletAbstractionService } from '../shared/services/hub/WalletAbstractionService.js';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   type CreateIntentParams,
@@ -27,24 +26,13 @@ import {
   DEFAULT_DEADLINE_OFFSET,
 } from '../index.js';
 import * as IntentRelayApiService from '../shared/services/intentRelay/IntentRelayApiService.js';
-import { EvmWalletAbstraction } from '../shared/services/hub/EvmWalletAbstraction.js';
 import { EvmSolverService } from './EvmSolverService.js';
 import { Erc20Service } from '../shared/services/erc-20/Erc20Service.js';
 import { Sodax } from '../shared/entities/Sodax.js';
 import { EvmSpokeProvider } from '../shared/entities/Providers.js';
 import { EvmHubProvider } from '../shared/entities/Providers.js';
-import {
-  isSwapSupportedToken,
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  type Address,
-  type IEvmWalletProvider,
-  getIntentRelayChainId,
-  spokeChainConfig,
-  type SolverConfig,
-  type Token,
-  type SpokeChainId,
-} from '@sodax/types';
+import type { Address, IEvmWalletProvider, SolverConfig, Token, SpokeChainKey } from '@sodax/types';
+import { isSwapSupportedToken, ChainKeys, getIntentRelayChainId, spokeChainConfig } from '@sodax/types';
 import type { GetBlockReturnType } from 'viem';
 
 // Define a type for Intent with fee amount
@@ -71,8 +59,8 @@ describe('SwapService', async () => {
   const mockQuoteRequest = {
     token_src: bscEthToken,
     token_dst: arbWbtcToken,
-    token_src_blockchain_id: BSC_MAINNET_CHAIN_ID,
-    token_dst_blockchain_id: ARBITRUM_MAINNET_CHAIN_ID,
+    token_src_blockchain_id: ChainKeys.BSC_MAINNET,
+    token_dst_blockchain_id: ChainKeys.ARBITRUM_MAINNET,
     amount: 1000n,
     quote_type: 'exact_input',
   } satisfies SolverIntentQuoteRequest;
@@ -127,16 +115,16 @@ describe('SwapService', async () => {
     amount: feeAmount,
   } satisfies PartnerFee;
 
-  const mockBscSpokeProvider = new EvmSpokeProvider(mockEvmWalletProvider, spokeChainConfig[BSC_MAINNET_CHAIN_ID]);
+  const mockBscSpokeProvider = new EvmSpokeProvider(mockEvmWalletProvider, spokeChainConfig[ChainKeys.BSC_MAINNET]);
 
   const mockCreatorHubWalletAddress = '0x1234567890123456789012345678901234567890' as `0x${string}`;
 
   const mockPacketData = {
-    src_chain_id: Number(getIntentRelayChainId(BSC_MAINNET_CHAIN_ID)), // BSC chain ID
+    src_chain_id: Number(getIntentRelayChainId(ChainKeys.BSC_MAINNET)), // BSC chain ID
     src_tx_hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
     src_address: '0x1234567890123456789012345678901234567890',
     status: 'executed' satisfies RelayTxStatus,
-    dst_chain_id: Number(getIntentRelayChainId(ARBITRUM_MAINNET_CHAIN_ID)), // Arbitrum chain ID
+    dst_chain_id: Number(getIntentRelayChainId(ChainKeys.ARBITRUM_MAINNET)), // Arbitrum chain ID
     conn_sn: 1,
     dst_address: '0x1234567890123456789012345678901234567890',
     dst_tx_hash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
@@ -155,8 +143,8 @@ describe('SwapService', async () => {
       minOutputAmount: BigInt(900000),
       deadline: BigInt(0),
       allowPartialFill: false,
-      srcChain: BSC_MAINNET_CHAIN_ID,
-      dstChain: ARBITRUM_MAINNET_CHAIN_ID,
+      srcChain: ChainKeys.BSC_MAINNET,
+      dstChain: ChainKeys.ARBITRUM_MAINNET,
       srcAddress,
       dstAddress,
       solver: '0x0000000000000000000000000000000000000000',
@@ -173,8 +161,8 @@ describe('SwapService', async () => {
     return {
       intentId: BigInt(1),
       creator: creator,
-      inputToken: sodax.config.getHubAssetInfo(params.srcChain, params.inputToken)?.asset ?? '0x',
-      outputToken: sodax.config.getHubAssetInfo(params.dstChain, params.outputToken)?.asset ?? '0x',
+      inputToken: sodax.config.getHubAssetInfo(params.srcChain, params.inputToken)?.hubAsset ?? '0x',
+      outputToken: sodax.config.getHubAssetInfo(params.dstChain, params.outputToken)?.hubAsset ?? '0x',
       inputAmount: params.inputAmount,
       minOutputAmount: params.minOutputAmount,
       deadline: params.deadline,
@@ -202,23 +190,23 @@ describe('SwapService', async () => {
 
     it('should return the correct supported swap tokens for a given spoke chain ID', () => {
       const supportedSwapTokensForChainId: readonly Token[] =
-        sodax.swaps.getSupportedSwapTokensByChainId(ARBITRUM_MAINNET_CHAIN_ID);
+        sodax.swaps.getSupportedSwapTokensByChainId(ChainKeys.ARBITRUM_MAINNET);
       expect(Array.isArray(supportedSwapTokensForChainId)).toBe(true);
       expect(supportedSwapTokensForChainId.length).toBeGreaterThan(0);
     });
 
     it('should return the correct supported swap tokens for a given spoke chain ID', () => {
-      const supportedSwapTokensPerChain: Record<SpokeChainId, readonly Token[]> = sodax.swaps.getSupportedSwapTokens();
+      const supportedSwapTokensPerChain: Record<SpokeChainKey, readonly Token[]> = sodax.swaps.getSupportedSwapTokens();
       expect(supportedSwapTokensPerChain).toBeDefined();
       expect(Object.keys(supportedSwapTokensPerChain).length).toBeGreaterThan(0);
-      expect(supportedSwapTokensPerChain[ARBITRUM_MAINNET_CHAIN_ID].length).toBeGreaterThan(0);
+      expect(supportedSwapTokensPerChain[ChainKeys.ARBITRUM_MAINNET].length).toBeGreaterThan(0);
     });
 
     it('should check if token is swap supported', () => {
       const supportedSwapTokensForChainId: readonly Token[] =
-        sodax.swaps.getSupportedSwapTokensByChainId(ARBITRUM_MAINNET_CHAIN_ID);
+        sodax.swaps.getSupportedSwapTokensByChainId(ChainKeys.ARBITRUM_MAINNET);
       const token = supportedSwapTokensForChainId[0];
-      expect(token && isSwapSupportedToken(ARBITRUM_MAINNET_CHAIN_ID, token.address)).toBe(true);
+      expect(token && isSwapSupportedToken(ChainKeys.ARBITRUM_MAINNET, token.address)).toBe(true);
     });
   });
 

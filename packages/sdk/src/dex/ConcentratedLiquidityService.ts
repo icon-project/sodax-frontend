@@ -5,7 +5,6 @@ import {
   type RelayError,
   type Result,
   type TxReturnType,
-  type SpokeProvider,
   SpokeService,
   encodeContractCalls,
   relayTxAndWaitPacket,
@@ -19,20 +18,19 @@ import {
   type HubTxHash,
   getConcentratedLiquidityConfig,
   type ConfigService,
-  isSolanaSpokeProviderType,
-  isHubSpokeProvider,
+  isHubChainId,
   HubService,
   type MintPositionEventLog,
+  type HubProvider,
 } from '../index.js';
 import type { Address, Hash, HttpUrl, OriginalAssetAddress, XToken } from '@sodax/types';
-import type { EvmHubProvider, SpokeProviderType } from '../shared/entities/Providers.js';
 import type {
   Prettify,
   OptionalTimeout,
   OptionalSkipSimulation,
   ClServiceConfig,
   RelayOptionalExtraData,
-} from '../shared/types.js';
+} from '../shared/types/types.js';
 import { erc20Abi, maxUint160, maxUint48, parseEventLogs } from 'viem';
 import { Price, Token } from '@pancakeswap/swap-sdk-core';
 
@@ -55,6 +53,8 @@ import {
   TickMath,
   tickToPrice,
 } from '@pancakeswap/v3-sdk';
+
+export type ClServiceConfig = Prettify<ConcentratedLiquidityConfig & RelayerApiConfig>;
 
 export type ClMintPositionEventLog = {
   tokenId: bigint;
@@ -362,7 +362,7 @@ export type ConcentratedLiquidityExtraData = { address: Hex; payload: Hex };
 export type ConcentratedLiquidityOptionalExtraData = { data?: ConcentratedLiquidityExtraData };
 
 export type ClServiceConstructorParams = {
-  hubProvider: EvmHubProvider;
+  hubProvider: HubProvider;
   relayerApiEndpoint?: HttpUrl;
   configService: ConfigService;
 };
@@ -370,11 +370,12 @@ export type ClServiceConstructorParams = {
 /**
  * Concetration Liquidity Service provides a high-level interface for concentrated liquidity operations
  * including supply liquidity, increase liquidity, decrease liquidit position.
+ * @namespace SodaxFeatures
  */
 export class ClService {
   public readonly config: ClServiceConfig;
   private readonly relayerApiEndpoint: HttpUrl;
-  private readonly hubProvider: EvmHubProvider;
+  private readonly hubProvider: HubProvider;
   private readonly configService: ConfigService;
 
   constructor({ hubProvider, relayerApiEndpoint, configService }: ClServiceConstructorParams) {
@@ -711,7 +712,7 @@ export class ClService {
       }
 
       let intentTxHash: string | null = null;
-      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
+      if (!isHubChainId(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
@@ -776,7 +777,7 @@ export class ClService {
       }
 
       let intentTxHash: string | null = null;
-      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
+      if (!isHubChainId(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
@@ -840,7 +841,7 @@ export class ClService {
       }
 
       let intentTxHash: string | null = null;
-      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
+      if (!isHubChainId(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
@@ -1052,7 +1053,7 @@ export class ClService {
       }
 
       let intentTxHash: string | null = null;
-      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
+      if (!isHubChainId(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,

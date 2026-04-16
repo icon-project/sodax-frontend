@@ -10,12 +10,8 @@ import {
   EvmSpokeService,
   Sodax,
 } from '../../../index.js';
-import {
-  AVALANCHE_MAINNET_CHAIN_ID,
-  getIntentRelayChainId,
-  spokeChainConfig,
-  type IEvmWalletProvider,
-} from '@sodax/types';
+import type { IEvmWalletProvider } from '@sodax/types';
+import { ChainKeys, getIntentRelayChainId, spokeChainConfig } from '@sodax/types';
 
 // Hoisted mocks must be before any other code
 vi.mock('../../../utils/evm-utils.js', () => ({
@@ -76,7 +72,7 @@ describe('EvmSpokeService', () => {
   const mockToken = '0x1234567890123456789012345678901234567890' as Address;
   const mockUser = '0x4444444444444444444444444444444444444444' as Address;
   const mockAmount = 1000000000000000000n; // 1 token with 18 decimals
-  const mockChainId = AVALANCHE_MAINNET_CHAIN_ID; // Avalanche
+  const mockChainId = ChainKeys.AVALANCHE_MAINNET; // Avalanche
   const mockTxHash = '0x123...' as Hash;
   const mockPayload = '0xabcd';
 

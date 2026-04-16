@@ -1,41 +1,54 @@
-import { type Address, decodeAbiParameters, encodeFunctionData, erc20Abi } from 'viem';
-import { sonicWalletFactoryAbi } from '../../abis/sonicWalletFactory.abi.js';
-import { variableDebtTokenAbi } from '../../abis/variableDebtToken.abi.js';
-import { wrappedSonicAbi } from '../../abis/wrappedSonic.abi.js';
-import type { EvmHubProvider } from '../../entities/index.js';
-import type {
-  EvmContractCall,
-  EvmReturnType,
-  GetAddressType,
-  MoneyMarketServiceConfig,
-  PartnerFee,
-  Result,
-  SonicSpokeProviderType,
-  TxReturnType,
-} from '../../types.js';
-import { EvmSolverService, type CreateIntentParams, type Intent } from '../../../swap/index.js';
-import type { MoneyMarketService } from '../../../moneyMarket/MoneyMarketService.js';
-import { encodeContractCalls } from '../../utils/evm-utils.js';
 import {
-  SONIC_MAINNET_CHAIN_ID,
-  type EvmRawTransaction,
+  type Address,
+  createPublicClient,
+  decodeAbiParameters,
+  encodeFunctionData,
+  erc20Abi,
+  http,
+  type HttpTransport,
+  type PublicClient,
+} from 'viem';
+import {
   type Hex,
   type HubAddress,
-  type SpokeChainId,
+  type Result,
   type SolverConfig,
   getIntentRelayChainId,
+  type SonicChainKey,
+  spokeChainConfig,
+  type EvmRawTransactionReceipt,
+  ChainKeys,
+  type SharedChainConfig,
+  type PartnerFee,
+  type TxReturnType,
+  type EvmContractCall,
 } from '@sodax/types';
-import type { MoneyMarketDataService } from '../../../moneyMarket/MoneyMarketDataService.js';
 import invariant from 'tiny-invariant';
-import { encodeAddress, randomUint256 } from '../../utils/shared-utils.js';
-import { Erc20Service } from '../erc-20/Erc20Service.js';
-import type { ConfigService } from '../../config/ConfigService.js';
-import { isSonicRawSpokeProvider, isSonicSpokeProviderType } from '../../guards.js';
-import { EvmVaultTokenService } from '../hub/EvmVaultTokenService.js';
+import {
+  encodeAddress,
+  randomUint256,
+  Erc20Service,
+  getEvmViemChain,
+  wrappedSonicAbi,
+  sonicWalletFactoryAbi,
+  EvmSolverService,
+  isSonicChainKeyType,
+  type WaitForTxReceiptParams,
+  type WaitForTxReceiptReturnType,
+  type CreateIntentParams,
+  type Intent,
+  type EstimateGasParams,
+  type FromParams,
+  type WalletActionParams,
+  type EvmHubProvider,
+  type GetDepositParams,
+  type SendMessageParams,
+} from '../../../index.js';
 
-export type SonicSpokeDepositParams = {
-  from: Address; // The address of the user on the spoke chain
-  to?: HubAddress; // The address of the user on the hub chain (wallet abstraction address)
+export type SonicSpokeDepositParams<Raw extends boolean> = WalletActionParams<Raw, SonicChainKey> & SonicDepositParams;
+
+export type SonicDepositParams = FromParams<SonicChainKey> & {
+  to: HubAddress; // The address of the user on the hub chain (wallet abstraction address)
   token: Address; // The address of the token to deposit
   amount: bigint; // The amount of tokens to deposit
   data: Hex; // The data to send with the deposit (encoded calls array)
@@ -53,23 +66,98 @@ export type BorrowInfo = {
   amount: bigint;
 };
 
+export type GetUserRouterParams = {
+  address: Address;
+  chainId: SonicChainKey;
+};
+
+export type CreateSonicSwapIntentParams<Raw extends boolean> = {
+  createIntentParams: CreateIntentParams<SonicChainKey>;
+  creatorHubWalletAddress: Address;
+  solverConfig: SolverConfig;
+  fee: PartnerFee | undefined;
+  hubProvider: EvmHubProvider;
+} & WalletActionParams<Raw, SonicChainKey>;
+
+export type ApproveSonicWithdrawParams<Raw extends boolean> = FromParams<SonicChainKey> & {
+  from: Address;
+  fromChainId: SonicChainKey;
+  withdrawInfo: WithdrawInfo;
+  publicClient: PublicClient;
+} & WalletActionParams<Raw, SonicChainKey>;
+
 export class SonicSpokeService {
-  private constructor() {}
+  // since sonic is sole hub chain we only need one public client
+  public readonly publicClient: PublicClient<HttpTransport>;
+  private readonly pollingIntervalMs: number;
+  private readonly maxTimeoutMs: number;
+
+  public constructor(config: SharedChainConfig) {
+    const chainConfig = config[ChainKeys.SONIC_MAINNET];
+    this.publicClient = createPublicClient({
+      transport: http(chainConfig.rpcUrl),
+      chain: getEvmViemChain(ChainKeys.SONIC_MAINNET),
+    });
+    this.pollingIntervalMs = chainConfig.pollingIntervalMs;
+    this.maxTimeoutMs = chainConfig.maxTimeoutMs;
+  }
+
+  public async waitForTransactionReceipt(
+    params: WaitForTxReceiptParams<SonicChainKey>,
+  ): Promise<Result<WaitForTxReceiptReturnType<SonicChainKey>>> {
+    try {
+      const receipt = await this.publicClient.waitForTransactionReceipt({
+        hash: params.txHash as `0x${string}`,
+        pollingInterval: params.pollingIntervalMs ?? this.pollingIntervalMs,
+        timeout: params.maxTimeoutMs ?? this.maxTimeoutMs,
+      });
+
+      if (receipt.status === 'reverted') {
+        return { ok: true, value: { status: 'failure', error: new Error('Transaction reverted') } };
+      }
+
+      const response = {
+        ...receipt,
+        transactionIndex: receipt.transactionIndex.toString(),
+        blockNumber: receipt.blockNumber.toString(),
+        cumulativeGasUsed: receipt.cumulativeGasUsed.toString(),
+        gasUsed: receipt.gasUsed.toString(),
+        contractAddress: receipt.contractAddress?.toString() ?? null,
+        logs: receipt.logs.map(log => ({
+          ...log,
+          blockNumber: log.blockNumber.toString() as `0x${string}`,
+          logIndex: log.logIndex.toString() as `0x${string}`,
+          transactionIndex: log.transactionIndex.toString() as `0x${string}`,
+        })),
+        effectiveGasPrice: receipt.effectiveGasPrice?.toString(),
+      };
+
+      return { ok: true, value: { status: 'success', receipt: response satisfies EvmRawTransactionReceipt } };
+    } catch (error) {
+      const isTimeout = error instanceof Error && error.message.includes('timed out');
+      return {
+        ok: true,
+        value: {
+          status: isTimeout ? 'timeout' : 'failure',
+          error: error instanceof Error ? error : new Error(String(error)),
+        },
+      };
+    }
+  }
 
   /**
-   /**
+
     * Estimates the gas necessary to complete a transaction without submitting it to the network.
     *
     * - Docs: https://viem.sh/docs/actions/public/estimateGas
     * - JSON-RPC Methods: [`eth_estimateGas`](https://ethereum.org/en/developers/docs/apis/json-rpc/#eth_estimategas)
     *
-    * @param {EvmRawTransaction} rawTx - The raw transaction to estimate the gas for.
-    * @param {SonicSpokeProviderType} spokeProvider - The Sonic spoke provider.
+    * @param {EstimateGasParams<SonicChainKey>} params - The parameters for the gas estimation, including the from, to, value, and data.
     * @returns {Promise<bigint>} Estimated gas for the transaction.
     *
     * @example
     *
-    * const rawTx: EvmRawTransaction = {
+    * const params: EstimateGasParams<SonicChainKey> = {
     *   from: '0x1234...abcd', // sender address
     *   to: '0xabcd...1234',   // recipient address
     *   value: 1000000000000000000n, // 1 ETH in wei
@@ -80,45 +168,39 @@ export class SonicSpokeService {
     * const estimatedGas = await EvmSpokeService.estimateGas(rawTx, spokeProvider);
     * console.log(`Estimated gas: ${estimatedGas}`);
     */
-  public static async estimateGas(rawTx: EvmRawTransaction, spokeProvider: SonicSpokeProviderType): Promise<bigint> {
+  public async estimateGas(params: EstimateGasParams<SonicChainKey>): Promise<bigint> {
     // Use viem's estimateGas with explicit parameter types
-    return spokeProvider.publicClient.estimateGas({
-      account: rawTx.from,
-      to: rawTx.to,
-      value: rawTx.value,
-      data: rawTx.data,
+    return this.publicClient.estimateGas({
+      account: params.tx.from,
+      to: params.tx.to,
+      value: params.tx.value,
+      data: params.tx.data,
     });
   }
 
   /**
    * Get the derived address of a contract deployed with CREATE3.
-   * @param address - User's address on the specified chain as hex
-   * @param provider - Sonic Spoke provider
+   * @param {GetUserRouterParams} params - The parameters for the get user router
    * @returns {HubAddress} The computed contract address as a EVM address (hex) string
    */
-  public static async getUserRouter(address: Address, provider: SonicSpokeProviderType): Promise<HubAddress> {
-    return provider.publicClient.readContract({
-      address: provider.chainConfig.addresses.walletRouter,
+  public async getUserRouter(params: GetUserRouterParams): Promise<HubAddress> {
+    return this.publicClient.readContract({
+      address: spokeChainConfig[params.chainId].addresses.walletRouter,
       abi: sonicWalletFactoryAbi,
       functionName: 'getDeployedAddress',
-      args: [address],
+      args: [params.address],
     });
   }
 
   /**
    * Deposit tokens to the spoke chain using the Sonic wallet abstraction.
-   * @param {SonicSpokeDepositParams} params - The parameters for the deposit
-   * @param {SonicSpokeProviderType} spokeProvider - The provider for the spoke chain
-   * @returns {Promise<TxReturnType<S, R>>} A promise that resolves to the transaction hash
+   * @param {SonicSpokeDepositParams<Raw>} params - The parameters for the deposit
+   * @returns {Promise<TxReturnType<SonicChainKey, Raw>>} A promise that resolves to the transaction hash
    */
-  public static async deposit<S extends SonicSpokeProviderType, R extends boolean = false>(
-    params: SonicSpokeDepositParams,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
-    invariant(isSonicSpokeProviderType(spokeProvider), '[SonicSpokeService] invalid spoke provider');
-
-    const userHubAddress = params.to ?? (await SonicSpokeService.getUserRouter(params.from, spokeProvider));
+  public static async deposit<Raw extends boolean>(
+    params: SonicSpokeDepositParams<Raw>,
+  ): Promise<TxReturnType<SonicChainKey, Raw>> {
+    invariant(isSonicChainKeyType(params.srcChainKey), '[SonicSpokeService] invalid spoke provider');
 
     // Decode the data field which contains the encoded calls array
     const calls = Array.from(
@@ -138,10 +220,10 @@ export class SonicSpokeService {
       )[0] satisfies readonly EvmContractCall[],
     );
 
-    if (params.token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()) {
+    if (params.token.toLowerCase() === spokeChainConfig[params.srcChainKey].nativeToken.toLowerCase()) {
       // Add a call to wrap the native token
       const wrapCall = {
-        address: spokeProvider.chainConfig.addresses.wrappedSonic,
+        address: spokeChainConfig[params.srcChainKey].addresses.wrappedSonic,
         value: params.amount,
         data: encodeFunctionData({
           abi: wrappedSonicAbi,
@@ -152,8 +234,8 @@ export class SonicSpokeService {
     } else {
       const transferFromCall = Erc20Service.encodeTransferFrom(
         params.token,
-        params.from,
-        userHubAddress,
+        params.srcAddress,
+        params.to,
         params.amount,
       );
       calls.unshift(transferFromCall);
@@ -171,38 +253,35 @@ export class SonicSpokeService {
       ],
     });
 
-    const rawTx = {
-      from: params.from,
-      to: spokeProvider.chainConfig.addresses.walletRouter,
+    const rawTx: TxReturnType<SonicChainKey, true> = {
+      from: params.srcAddress,
+      to: spokeChainConfig[params.srcChainKey].addresses.walletRouter,
       data: txData,
-      value: params.token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase() ? params.amount : 0n,
-    } satisfies TxReturnType<SonicSpokeProviderType, true>;
+      value:
+        params.token.toLowerCase() === spokeChainConfig[params.srcChainKey].nativeToken.toLowerCase()
+          ? params.amount
+          : 0n,
+    };
 
-    if (raw || isSonicRawSpokeProvider(spokeProvider)) {
-      return Promise.resolve(rawTx) satisfies Promise<TxReturnType<SonicSpokeProviderType, true>> as Promise<
-        TxReturnType<S, R>
-      >;
+    if (params.raw === true) {
+      return rawTx satisfies TxReturnType<SonicChainKey, true> as TxReturnType<SonicChainKey, Raw>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(rawTx) satisfies Promise<
-      TxReturnType<SonicSpokeProviderType, false>
-    > as Promise<TxReturnType<S, R>>;
+    return params.walletProvider.sendTransaction(rawTx) satisfies Promise<
+      TxReturnType<SonicChainKey, false>
+    > as Promise<TxReturnType<SonicChainKey, Raw>>;
   }
 
-  public static async createSwapIntent<S extends SonicSpokeProviderType, R extends boolean = false>(
-    createIntentParams: CreateIntentParams,
-    creatorHubWalletAddress: Address,
-    solverConfig: SolverConfig,
-    fee: PartnerFee | undefined,
-    spokeProvider: S,
-    hubProvider: EvmHubProvider,
-    raw?: R,
-  ): Promise<[TxReturnType<S, R>, Intent, bigint, Hex]> {
-    const inputToken = createIntentParams.inputToken as `0x${string}`;
+  public static async createSwapIntent<Raw extends boolean = false>(
+    params: CreateSonicSwapIntentParams<Raw>,
+  ): Promise<[TxReturnType<SonicChainKey, Raw>, Intent, bigint, Hex]> {
+    const { createIntentParams, creatorHubWalletAddress, solverConfig, fee, hubProvider } = params;
+    const inputToken = createIntentParams.inputToken;
 
     const outputToken =
-      createIntentParams.dstChain !== SONIC_MAINNET_CHAIN_ID
-        ? hubProvider.configService.getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.asset
+      createIntentParams.dstChain !== ChainKeys.SONIC_MAINNET
+        ? hubProvider.configService.getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)
+            ?.hubAsset
         : (createIntentParams.outputToken as `0x${string}`);
 
     invariant(
@@ -234,18 +313,18 @@ export class SonicSpokeService {
     const txData = EvmSolverService.encodeCreateIntent(intent, intentsContract);
 
     const rawTx = {
-      from: (await spokeProvider.walletProvider.getWalletAddress()) as GetAddressType<SonicSpokeProviderType>,
+      from: createIntentParams.srcAddress,
       to: txData.address,
       data: txData.data,
       value:
         createIntentParams.inputToken.toLowerCase() === hubProvider.chainConfig.nativeToken.toLowerCase()
           ? createIntentParams.inputAmount
           : 0n,
-    } satisfies EvmReturnType<true>;
+    } satisfies TxReturnType<SonicChainKey, true>;
 
-    if (raw || isSonicRawSpokeProvider(spokeProvider)) {
+    if (params.raw === true) {
       return [
-        rawTx satisfies TxReturnType<SonicSpokeProviderType, true> as TxReturnType<S, R>,
+        rawTx satisfies TxReturnType<SonicChainKey, true> as TxReturnType<SonicChainKey, Raw>,
         intent,
         feeAmount,
         txData.data,
@@ -253,28 +332,26 @@ export class SonicSpokeService {
     }
 
     return [
-      (await spokeProvider.walletProvider.sendTransaction(rawTx)) satisfies TxReturnType<
-        SonicSpokeProviderType,
-        false
-      > as TxReturnType<S, R>,
+      (await params.walletProvider.sendTransaction(rawTx)) satisfies TxReturnType<SonicChainKey, false> as TxReturnType<
+        SonicChainKey,
+        Raw
+      >,
       intent,
       feeAmount,
       txData.data,
     ];
   }
-
   /**
-   * Get the balance of the token in the spoke chain.
-   * @param {Address} token - The address of the token to get the balance of.
-   * @param {SonicSpokeProviderType} spokeProvider - The spoke provider.
+   * Get the balance of the token in the hub (sonic) chain.
+   * @param {GetDepositParams<SonicChainKey>} params - The parameters for the deposit, including the token and chain id.
    * @returns {Promise<bigint>} The balance of the token.
    */
-  public static async getDeposit(token: Address, spokeProvider: SonicSpokeProviderType): Promise<bigint> {
-    return spokeProvider.publicClient.readContract({
-      address: token,
+  public async getDeposit(params: GetDepositParams<SonicChainKey>): Promise<bigint> {
+    return this.publicClient.readContract({
+      address: params.token,
       abi: erc20Abi,
       functionName: 'balanceOf',
-      args: [token],
+      args: [params.token],
     });
   }
 
@@ -284,12 +361,10 @@ export class SonicSpokeService {
    * @param {SonicSpokeProviderType} spokeProvider - The provider for the spoke chain
    * @returns {Promise<TxReturnType<S, R>>} A promise that resolves to the transaction hash
    */
-  public static async callWallet<S extends SonicSpokeProviderType, R extends boolean>(
-    payload: Hex,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
-    invariant(isSonicSpokeProviderType(spokeProvider), '[SonicSpokeService] invalid spoke provider');
+  public async sendMessage<Raw extends boolean>(
+    params: SendMessageParams<SonicChainKey, Raw>,
+  ): Promise<TxReturnType<SonicChainKey, Raw>> {
+    invariant(isSonicChainKeyType(params.srcChainKey), '[SonicSpokeService.callWallet] invalid chain id');
 
     // Decode the payload which contains the encoded calls array
     const calls = decodeAbiParameters(
@@ -304,7 +379,7 @@ export class SonicSpokeService {
           ],
         },
       ],
-      payload,
+      params.payload,
     )[0] satisfies readonly EvmContractCall[];
 
     const txData = encodeFunctionData({
@@ -319,283 +394,20 @@ export class SonicSpokeService {
       ],
     });
 
-    const rawTx = {
-      from: (await spokeProvider.walletProvider.getWalletAddress()) as GetAddressType<SonicSpokeProviderType>,
-      to: spokeProvider.chainConfig.addresses.walletRouter,
+    const rawTx: TxReturnType<SonicChainKey, true> = {
+      from: params.srcAddress,
+      to: spokeChainConfig[params.srcChainKey].addresses.walletRouter,
       data: txData,
       value: 0n,
-    } satisfies TxReturnType<SonicSpokeProviderType, true>;
+    };
 
-    if (raw || isSonicRawSpokeProvider(spokeProvider)) {
-      return rawTx satisfies TxReturnType<SonicSpokeProviderType, true> as TxReturnType<S, R>;
+    if (params.raw === true) {
+      return rawTx satisfies TxReturnType<SonicChainKey, true> as TxReturnType<SonicChainKey, Raw>;
     }
 
-    return (await spokeProvider.walletProvider.sendTransaction(rawTx)) satisfies TxReturnType<
-      SonicSpokeProviderType,
+    return (await params.walletProvider.sendTransaction(rawTx)) satisfies TxReturnType<
+      SonicChainKey,
       false
-    > as TxReturnType<S, R>;
-  }
-
-  /**
-   * Get withdraw information for a given token
-   * @param token - The address of the underlying token
-   * @param amount - The amount to withdraw
-   * @param chainId - The chain ID of the underlying token
-   * @param moneyMarketService - The money market service
-   * @param configService - The config service
-   * @returns {WithdrawInfo} WithdrawInfo containing aToken address, amount and vault address
-   */
-  public static async getWithdrawInfo(
-    token: Address,
-    amount: bigint,
-    chainId: SpokeChainId,
-    dataService: MoneyMarketDataService,
-    configService: ConfigService,
-  ): Promise<WithdrawInfo> {
-    const assetConfig = configService.getHubAssetInfo(chainId, token);
-
-    if (!assetConfig) {
-      throw new Error('[SonicSpokeService.getWithdrawInfo] Hub asset not found');
-    }
-
-    const vaultAddress = assetConfig.vault;
-
-    const aTokenAddress = (await dataService.getReserveData(vaultAddress)).aTokenAddress;
-
-    return {
-      aTokenAddress,
-      aTokenAmount: EvmVaultTokenService.translateIncomingDecimals(assetConfig.decimal, amount),
-      token,
-    };
-  }
-
-  /**
-   * Get borrow information for a given token
-   * @param token - The address of the underlying token
-   * @param amount - The amount to borrow
-   * @param chainId - The chain ID
-   * @param moneyMarketService - The money market service
-   * @param configService - The config service
-   * @returns BorrowInfo containing variable debt token address and vault address
-   */
-  public static async getBorrowInfo(
-    token: Address,
-    amount: bigint,
-    chainId: SpokeChainId,
-    dataService: MoneyMarketDataService,
-    configService: ConfigService,
-    moneyMarketConfig: MoneyMarketServiceConfig,
-  ): Promise<BorrowInfo> {
-    const assetConfig = configService.getHubAssetInfo(chainId, token);
-
-    if (!assetConfig) {
-      throw new Error('[SonicSpokeService.getBorrowInfo] Hub asset not found');
-    }
-
-    let vaultAddress = assetConfig.vault;
-
-    if (moneyMarketConfig.bnUSDVault.toLowerCase() === vaultAddress.toLowerCase()) {
-      // when borrowing bnUSD using vault token, bnUSD debt token gets borrowed
-      vaultAddress = moneyMarketConfig.bnUSD;
-    }
-
-    const reserveData = await dataService.getReserveData(vaultAddress);
-    const variableDebtTokenAddress = reserveData.variableDebtTokenAddress;
-
-    return {
-      variableDebtTokenAddress,
-      vaultAddress,
-      amount,
-    };
-  }
-
-  /**
-   * Check if the user has approved the withdrawal of tokens from the spoke chain using the Sonic wallet abstraction.
-   * @param from - The address of the user on the spoke chain
-   * @param withdrawInfo - The information about the withdrawal
-   * @param spokeProvider - The spoke provider
-   * @param spender - The address of the spender
-   * @returns {Promise<Result<boolean>>} A promise that resolves to the result of the approval check
-   */
-  public static async isWithdrawApproved(
-    from: Address,
-    withdrawInfo: WithdrawInfo,
-    spokeProvider: SonicSpokeProviderType,
-    spender?: HubAddress,
-  ): Promise<Result<boolean>> {
-    try {
-      const spenderAddress = spender ?? (await SonicSpokeService.getUserRouter(from, spokeProvider));
-
-      return Erc20Service.isAllowanceValid(
-        withdrawInfo.aTokenAddress,
-        withdrawInfo.aTokenAmount,
-        from,
-        spenderAddress,
-        spokeProvider,
-      );
-    } catch (error) {
-      return {
-        ok: false,
-        error,
-      };
-    }
-  }
-
-  /**
-   * Approve the withdrawal of tokens from the spoke chain using the Sonic wallet abstraction.
-   * @param from - The address of the user on the spoke chain
-   * @param withdrawInfo - The information about the withdrawal
-   * @param spokeProvider - The spoke provider
-   * @param raw - Whether to return the raw transaction data
-   * @returns {PromiseEvmTxReturnType<SonicSpokeProviderType, R>} A promise that resolves to the transaction hash
-   */
-  public static async approveWithdraw<S extends SonicSpokeProviderType, R extends boolean = false>(
-    from: Address,
-    withdrawInfo: WithdrawInfo,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
-    const [userRouter, walletAddress] = await Promise.all([
-      SonicSpokeService.getUserRouter(from, spokeProvider),
-      spokeProvider.walletProvider.getWalletAddress(),
-    ]);
-
-    const txData = encodeFunctionData({
-      abi: erc20Abi,
-      functionName: 'approve',
-      args: [userRouter, withdrawInfo.aTokenAmount],
-    });
-
-    const rawTx = {
-      from: walletAddress as GetAddressType<SonicSpokeProviderType>,
-      to: withdrawInfo.aTokenAddress,
-      data: txData,
-      value: 0n,
-    } satisfies TxReturnType<SonicSpokeProviderType, true>;
-
-    if (raw || isSonicRawSpokeProvider(spokeProvider)) {
-      return rawTx satisfies TxReturnType<SonicSpokeProviderType, true> as TxReturnType<S, R>;
-    }
-
-    return spokeProvider.walletProvider.sendTransaction(rawTx) satisfies Promise<
-      TxReturnType<SonicSpokeProviderType, false>
-    > as Promise<TxReturnType<S, R>>;
-  }
-
-  /**
-   * Check if the user has approved the borrowing of tokens from the spoke chain using the Sonic wallet abstraction.
-   * @param from - The address of the user on the spoke chain
-   * @param borrowInfo - The information about the borrowing
-   * @param spokeProvider - The spoke provider
-   * @param spender - The address of the spender
-   * @returns {Promise<Result<boolean>>} A promise that resolves to the result of the approval check
-   */
-  public static async isBorrowApproved(
-    from: Address,
-    borrowInfo: BorrowInfo,
-    spokeProvider: SonicSpokeProviderType,
-    spender?: HubAddress,
-  ): Promise<Result<boolean>> {
-    try {
-      const spenderAddress = spender ?? (await SonicSpokeService.getUserRouter(from, spokeProvider));
-
-      const allowance: bigint = await spokeProvider.publicClient.readContract({
-        address: borrowInfo.variableDebtTokenAddress,
-        abi: variableDebtTokenAbi,
-        functionName: 'borrowAllowance',
-        args: [from, spenderAddress],
-      });
-
-      return {
-        ok: true,
-        value: allowance >= borrowInfo.amount,
-      };
-    } catch (error) {
-      return {
-        ok: false,
-        error,
-      };
-    }
-  }
-
-  public static async approveBorrow<S extends SonicSpokeProviderType, R extends boolean = false>(
-    from: Address,
-    borrowInfo: BorrowInfo,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
-    const [userRouter, walletAddress] = await Promise.all([
-      SonicSpokeService.getUserRouter(from, spokeProvider),
-      spokeProvider.walletProvider.getWalletAddress(),
-    ]);
-
-    const txData = encodeFunctionData({
-      abi: variableDebtTokenAbi,
-      functionName: 'approveDelegation',
-      args: [userRouter, borrowInfo.amount],
-    });
-
-    const rawTx = {
-      from: walletAddress as GetAddressType<SonicSpokeProviderType>,
-      to: borrowInfo.variableDebtTokenAddress,
-      data: txData,
-      value: 0n,
-    } satisfies TxReturnType<SonicSpokeProviderType, true>;
-
-    if (raw || isSonicRawSpokeProvider(spokeProvider)) {
-      return rawTx satisfies TxReturnType<SonicSpokeProviderType, true> as TxReturnType<S, R>;
-    }
-
-    return spokeProvider.walletProvider.sendTransaction(rawTx) satisfies Promise<
-      TxReturnType<SonicSpokeProviderType, false>
-    > as Promise<TxReturnType<S, R>>;
-  }
-
-  public static async buildWithdrawData(
-    from: Address,
-    withdrawInfo: WithdrawInfo,
-    amount: bigint,
-    toAddress: Address,
-    toChainId: SpokeChainId,
-    spokeProvider: SonicSpokeProviderType,
-    moneyMarketService: MoneyMarketService,
-  ): Promise<Hex> {
-    const userRouter = await SonicSpokeService.getUserRouter(from, spokeProvider);
-
-    // Add withdraw call
-    const withdrawCall = moneyMarketService.buildWithdrawData(
-      userRouter,
-      toAddress,
-      withdrawInfo.token,
-      amount,
-      toChainId,
-    );
-
-    const _calls = decodeAbiParameters(
-      [
-        {
-          name: 'calls',
-          type: 'tuple[]',
-          components: [
-            { name: 'address', type: 'address' },
-            { name: 'value', type: 'uint256' },
-            { name: 'data', type: 'bytes' },
-          ],
-        },
-      ],
-      withdrawCall,
-    )[0];
-
-    // move aTokens from user wallet address to user router address
-    const transferFromCall = Erc20Service.encodeTransferFrom(
-      withdrawInfo.aTokenAddress,
-      from,
-      userRouter,
-      withdrawInfo.aTokenAmount,
-    );
-
-    const calls = [transferFromCall, ..._calls];
-
-    return encodeContractCalls(calls);
+    > as TxReturnType<SonicChainKey, Raw>;
   }
 }

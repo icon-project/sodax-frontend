@@ -1,10 +1,10 @@
 import { type Address, type Hex, encodeFunctionData } from 'viem';
 import { erc20Abi } from '../shared/abis/index.js';
-import type { EvmContractCall, IcxTokenType } from '../shared/types.js';
-import { encodeContractCalls, Erc20Service, EvmAssetManagerService, type EvmHubProvider } from '../index.js';
+import type { EvmContractCall, IcxTokenType } from '../shared/types/types.js';
+import { encodeContractCalls, Erc20Service, EvmAssetManagerService, type HubProvider } from '../index.js';
 import { icxSwapAbi } from '../shared/abis/icxSwap.abi.js';
 import invariant from 'tiny-invariant';
-import { ICON_MAINNET_CHAIN_ID, type IconEoaAddress, type IconAddress } from '@sodax/types';
+import { ChainKeys, type IconEoaAddress, type IconAddress } from '@sodax/types';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 
 export type IcxMigrateParams = {
@@ -26,7 +26,7 @@ export type IcxRevertMigrationParams = {
 };
 
 export type IcxMigrationServiceConstructorParams = {
-  hubProvider: EvmHubProvider;
+  hubProvider: HubProvider;
   configService: ConfigService;
 };
 
@@ -35,7 +35,7 @@ export type IcxMigrationServiceConstructorParams = {
  * Provides functionality to migrate wICX tokens from ICON to the hub chain.
  */
 export class IcxMigrationService {
-  private readonly hubProvider: EvmHubProvider;
+  private readonly hubProvider: HubProvider;
   private readonly configService: ConfigService;
 
   constructor({ hubProvider, configService }: IcxMigrationServiceConstructorParams) {
@@ -72,11 +72,15 @@ export class IcxMigrationService {
    */
   public migrateData(params: IcxMigrateParams): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = this.configService.getHubAssetInfo(ICON_MAINNET_CHAIN_ID, params.address);
+    const assetConfig = this.configService.getHubAssetInfo(ChainKeys.ICON_MAINNET, params.address);
     invariant(assetConfig, `hub asset not found for spoke chain token (token): ${params.address}`);
 
     calls.push(
-      Erc20Service.encodeApprove(assetConfig.asset, this.hubProvider.chainConfig.addresses.icxMigration, params.amount),
+      Erc20Service.encodeApprove(
+        assetConfig.hubAsset,
+        this.hubProvider.chainConfig.addresses.icxMigration,
+        params.amount,
+      ),
     );
     calls.push(this.encodeMigrate(params.amount, params.to));
     return encodeContractCalls(calls);
@@ -90,7 +94,7 @@ export class IcxMigrationService {
    */
   public revertMigration(params: IcxRevertMigrationParams): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = this.configService.getHubAssetInfo(ICON_MAINNET_CHAIN_ID, params.wICX);
+    const assetConfig = this.configService.getHubAssetInfo(ChainKeys.ICON_MAINNET, params.wICX);
     invariant(assetConfig, `hub asset not found for spoke chain token (token): ${params.wICX}`);
 
     calls.push(
@@ -103,7 +107,7 @@ export class IcxMigrationService {
     calls.push(this.encodeRevertMigration(params.amount, params.userWallet));
     calls.push(
       EvmAssetManagerService.encodeTransfer(
-        assetConfig.asset,
+        assetConfig.hubAsset,
         params.to,
         params.amount,
         this.hubProvider.chainConfig.addresses.assetManager,

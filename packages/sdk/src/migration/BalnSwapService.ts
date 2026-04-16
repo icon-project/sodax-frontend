@@ -1,4 +1,4 @@
-import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
+import { ChainKeys } from '@sodax/types';
 // packages/sdk/src/services/hub/BalnSwapService.ts
 import { type Address, type Hex, type HttpTransport, type PublicClient, encodeFunctionData } from 'viem';
 import { balnSwapAbi } from '../shared/abis/balnSwap.abi.js';
@@ -6,11 +6,10 @@ import type {
   EvmContractCall,
   GetAddressType,
   IconContractAddress,
-  SonicSpokeProviderType,
   TxReturnType,
-} from '../shared/types.js';
-import { encodeContractCalls, Erc20Service, isSonicRawSpokeProvider } from '../index.js';
-import type { EvmHubProvider } from '../shared/entities/index.js';
+  HubProvider,
+} from '../shared/types/types.js';
+import { encodeContractCalls, Erc20Service } from '../index.js';
 import invariant from 'tiny-invariant';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 
@@ -91,7 +90,7 @@ export type BalnLockParams = {
 };
 
 export type BalnSwapServiceConstructorParams = {
-  hubProvider: EvmHubProvider;
+  hubProvider: HubProvider;
 };
 
 /**
@@ -99,7 +98,7 @@ export type BalnSwapServiceConstructorParams = {
  * Provides functionality to interact directly with the BALN swap contract.
  */
 export class BalnSwapService {
-  private readonly hubProvider: EvmHubProvider;
+  private readonly hubProvider: HubProvider;
 
   constructor({ hubProvider }: BalnSwapServiceConstructorParams) {
     this.hubProvider = hubProvider;
@@ -153,14 +152,14 @@ export class BalnSwapService {
    * @returns Encoded transaction data for the BALN swap operation
    */
   swapData(balnToken: IconContractAddress, params: BalnMigrateParams, configService: ConfigService): Hex {
-    const assetConfig = configService.getHubAssetInfo(ICON_MAINNET_CHAIN_ID, balnToken);
+    const assetConfig = configService.getHubAssetInfo(ChainKeys.ICON_MAINNET, balnToken);
     invariant(assetConfig, `hub asset not found for baln token: ${balnToken}`);
 
     const calls: EvmContractCall[] = [];
 
     // Approve BALN tokens for the swap contract
     calls.push(
-      Erc20Service.encodeApprove(assetConfig.asset, this.hubProvider.chainConfig.addresses.balnSwap, params.amount),
+      Erc20Service.encodeApprove(assetConfig.hubAsset, this.hubProvider.chainConfig.addresses.balnSwap, params.amount),
     );
     calls.push(this.encodeSwap(params.amount, params.lockupPeriod, params.to, params.stake));
 

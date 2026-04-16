@@ -1,7 +1,6 @@
 import { isLegacybnUSDChainId, isLegacybnUSDToken, isNewbnUSDChainId, isNewbnUSDToken } from '../shared/constants.js';
 import invariant from 'tiny-invariant';
 import {
-  type EvmHubProvider,
   type IconSpokeProvider,
   IcxMigrationService,
   SpokeService,
@@ -10,17 +9,13 @@ import {
   type TxReturnType,
   relayTxAndWaitPacket,
   DEFAULT_RELAY_TX_TIMEOUT,
-  type SonicSpokeProvider,
   SonicSpokeService,
   type IcxCreateRevertMigrationParams,
-  type SpokeProvider,
-  type SpokeProviderType,
   Erc20Service,
   encodeAddress,
   type RelayError,
   isIconAddress,
   BnUSDMigrationService,
-  type GetSpokeDepositParamsType,
   BalnSwapService,
   type BalnMigrateParams,
   type UnifiedBnUSDMigrateParams,
@@ -30,30 +25,12 @@ import {
   isIcxCreateRevertMigrationParams,
   type RelayExtraData,
   SolanaSpokeProvider,
-  deriveUserWalletAddress,
   waitUntilIntentExecuted,
   type IconContractAddress,
-  type EvmSpokeProviderType,
-  type SonicSpokeProviderType,
-  type StellarSpokeProviderType,
-  type IconSpokeProviderType,
   type GetAddressType,
+  type HubProvider,
 } from '../index.js';
-import {
-  isEvmSpokeProviderType,
-  isSonicSpokeProviderType,
-  isStellarSpokeProviderType,
-  isIconSpokeProviderType,
-} from '../shared/guards.js';
-import {
-  ICON_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-  type Address,
-  getIntentRelayChainId,
-  type Hex,
-  type HttpUrl,
-  type IconAddress,
-} from '@sodax/types';
+import { ChainKeys, type Address, getIntentRelayChainId, type Hex, type HttpUrl, type IconAddress } from '@sodax/types';
 import { isAddress } from 'viem';
 import { StellarSpokeService } from '../shared/services/spoke/StellarSpokeService.js';
 import type { ConfigService } from '../shared/config/ConfigService.js';
@@ -103,16 +80,20 @@ export const SupportedMigrationTokens = ['ICX', 'bnUSD', 'BALN'] as const;
 export type MigrationTokens = (typeof SupportedMigrationTokens)[number];
 
 export type MigrationServiceConstructorParams = {
-  hubProvider: EvmHubProvider;
+  hubProvider: HubProvider;
   configService: ConfigService;
   relayerApiEndpoint: HttpUrl;
 };
 
+/**
+ * MigrationService is a service that provides functionalities for migrating tokens between spoke chains.
+ * @namespace SodaxFeatures
+ */
 export class MigrationService {
   readonly icxMigration: IcxMigrationService;
   readonly bnUSDMigrationService: BnUSDMigrationService;
   readonly balnSwapService: BalnSwapService;
-  readonly hubProvider: EvmHubProvider;
+  readonly hubProvider: HubProvider;
   readonly relayerApiEndpoint: HttpUrl;
   readonly configService: ConfigService;
 
@@ -484,9 +465,9 @@ export class MigrationService {
         return packetResult;
       }
 
-      if (!(params.srcChainId === SONIC_MAINNET_CHAIN_ID || params.dstChainId === SONIC_MAINNET_CHAIN_ID)) {
+      if (!(params.srcChainId === ChainKeys.SONIC_MAINNET || params.dstChainId === ChainKeys.SONIC_MAINNET)) {
         await waitUntilIntentExecuted({
-          intentRelayChainId: getIntentRelayChainId(SONIC_MAINNET_CHAIN_ID).toString(),
+          intentRelayChainId: getIntentRelayChainId(ChainKeys.SONIC_MAINNET).toString(),
           spokeTxHash: packetResult.value.dst_tx_hash,
           timeout: timeout,
           apiUrl: this.relayerApiEndpoint,
@@ -769,7 +750,7 @@ export class MigrationService {
     raw?: R,
   ): Promise<Result<TxReturnType<S, R>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
     try {
-      const balnToken = this.configService.spokeChainConfig[ICON_MAINNET_CHAIN_ID]?.supportedTokens.BALN?.address;
+      const balnToken = this.configService.spokeChainConfig[ChainKeys.ICON_MAINNET]?.supportedTokens.BALN?.address;
       invariant(balnToken, 'BALN token not found');
 
       const migrationData = this.balnSwapService.swapData(balnToken as IconContractAddress, params, this.configService);
@@ -1085,18 +1066,18 @@ export class MigrationService {
         wallet as GetAddressType<SonicSpokeProviderType>,
         spokeProvider,
       );
-      const wICX = this.configService.spokeChainConfig[ICON_MAINNET_CHAIN_ID]?.addresses.wICX;
+      const wICX = this.configService.spokeChainConfig[ChainKeys.ICON_MAINNET]?.addresses.wICX;
       invariant(wICX, 'wICX token not found');
       const data = this.icxMigration.revertMigration({
         wICX: wICX as IconAddress,
         amount: params.amount,
-        to: encodeAddress(ICON_MAINNET_CHAIN_ID, params.to),
+        to: encodeAddress(ChainKeys.ICON_MAINNET, params.to),
         userWallet: userRouter,
       });
 
       const txResult = await SonicSpokeService.deposit(
         {
-          from: wallet as GetAddressType<SonicSpokeProviderType>,
+          srcAddress: wallet as GetAddressType<SonicSpokeProviderType>,
           token: this.hubProvider.chainConfig.addresses.sodaToken,
           amount: params.amount,
           data,

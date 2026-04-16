@@ -1,4 +1,4 @@
-import type { ConfigService, EvmHubProvider } from '../shared/index.js';
+import type { ConfigService, HubProvider } from '../shared/index.js';
 import { PartnerFeeClaimService, type PartnerFeeClaimServiceConfig } from './PartnerFeeClaimService.js';
 
 export type PartnerServiceConfig = {
@@ -8,12 +8,13 @@ export type PartnerServiceConfig = {
 export type PartnerServiceConstructorParams = {
   feeClaim?: PartnerFeeClaimServiceConfig;
   configService: ConfigService;
-  hubProvider: EvmHubProvider;
+  hubProvider: HubProvider;
 };
 
 /**
  * PartnerService is a service that allows you to interact with the partner fee claim and other partner operations
  * @param {PartnerServiceConstructorParams} params - The constructor parameters
+ * @namespace SodaxFeatures
  */
 export class PartnerService {
   public readonly feeClaim: PartnerFeeClaimService; // Partner Fee Claim service for partner fee operations

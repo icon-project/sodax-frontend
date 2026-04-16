@@ -2,10 +2,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StellarSpokeService } from './StellarSpokeService.js';
 import type { StellarSpokeProvider } from '../../entities/stellar/StellarSpokeProvider.js';
-import { STELLAR_MAINNET_CHAIN_ID, spokeChainConfig } from '@sodax/types';
+import { ChainKeys, spokeChainConfig } from '@sodax/types';
 import { STELLAR_DEFAULT_TX_TIMEOUT_SECONDS } from '../../constants.js';
 import { parseToStroops } from '../../utils/shared-utils.js';
-import type { Horizon, rpc as StellarRpc } from '@stellar/stellar-sdk';
+import type { Horizon } from '@stellar/stellar-sdk';
 
 // Mock the Stellar SDK
 vi.mock('@stellar/stellar-sdk', () => ({
@@ -74,8 +74,8 @@ describe('StellarSpokeService', () => {
   const mockWalletAddress = 'GABC1234567890123456789012345678901234567890';
   const mockToken = 'CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75'; // USDC
   const mockAmount = 10000000n; // 1 USDC in stroops
-  const mockNativeToken = spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].nativeToken;
-  const mockLegacyBnUSD = spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD.address;
+  const mockNativeToken = spokeChainConfig[ChainKeys.STELLAR_MAINNET].nativeToken;
+  const mockLegacyBnUSD = spokeChainConfig[ChainKeys.STELLAR_MAINNET].supportedTokens.legacybnUSD.address;
 
   // Mock StellarSpokeProvider
   const mockAccountCall = vi.fn();
@@ -89,7 +89,7 @@ describe('StellarSpokeService', () => {
       getWalletAddress: vi.fn().mockResolvedValue(mockWalletAddress),
     },
     chainConfig: {
-      ...spokeChainConfig[STELLAR_MAINNET_CHAIN_ID],
+      ...spokeChainConfig[ChainKeys.STELLAR_MAINNET],
       nativeToken: mockNativeToken,
     },
     server: {
@@ -433,119 +433,99 @@ describe('StellarSpokeService', () => {
       expect(transactionBuilderInstance.setTimeout).toHaveBeenCalledWith(STELLAR_DEFAULT_TX_TIMEOUT_SECONDS); // STELLAR_DEFAULT_TX_TIMEOUT_SECONDS
     });
 
-    // Unit tests for StellarSpokeService.waitForTransaction (covers border cases)
-    describe('waitForTransaction', () => {
+    // Unit tests for StellarSpokeService.waitForTransactionReceipt (covers border cases)
+    describe('waitForTransactionReceipt', () => {
       const mockTxHash = 'TRANSACTION_HASH';
-      const spokeProvider = {
-        sorobanServer: {
-          getTransaction: vi.fn().mockResolvedValue({
-            status: 'SUCCESS',
-          }),
-        },
-      } as unknown as StellarSpokeProvider;
+      const mockGetTransaction = vi.fn();
+
+      // Create a mock StellarSpokeService instance with a mocked sorobanServer
+      const service = Object.create(StellarSpokeService.prototype) as StellarSpokeService;
+      Object.defineProperty(service, 'sorobanServer', {
+        value: { getTransaction: mockGetTransaction },
+      });
+
+      beforeEach(() => {
+        mockGetTransaction.mockReset();
+      });
+
+      const makeParams = (pollingIntervalMs: number, maxTimeoutMs: number) => ({
+        txHash: mockTxHash,
+        chainKey: ChainKeys.STELLAR_MAINNET,
+        pollingIntervalMs,
+        maxTimeoutMs,
+      });
 
       it('should resolve when transaction is confirmed with SUCCESS status', async () => {
-        vi.spyOn(spokeProvider.sorobanServer, 'getTransaction').mockResolvedValueOnce({
-          status: 'SUCCESS',
-        } as unknown as StellarRpc.Api.GetSuccessfulTransactionResponse);
+        mockGetTransaction.mockResolvedValueOnce({ status: 'SUCCESS' });
 
-        await expect(StellarSpokeService.waitForTransaction(spokeProvider, mockTxHash, 1, 1)).resolves.toEqual({
-          ok: true,
-          value: true,
-        });
-        expect(spokeProvider.sorobanServer.getTransaction).toHaveBeenCalledWith(mockTxHash);
+        const result = await service.waitForTransactionReceipt(makeParams(1, 1000));
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.value.status).toBe('success');
+        }
+        expect(mockGetTransaction).toHaveBeenCalledWith(mockTxHash);
       });
 
-      it('should throw if transaction is failed (FAILED status)', async () => {
-        vi.spyOn(spokeProvider.sorobanServer, 'getTransaction').mockResolvedValueOnce({
-          status: 'FAILED',
-        } as unknown as StellarRpc.Api.GetSuccessfulTransactionResponse);
+      it('should return failure if transaction has FAILED status', async () => {
+        mockGetTransaction.mockResolvedValueOnce({ status: 'FAILED' });
 
-        await expect(StellarSpokeService.waitForTransaction(spokeProvider, mockTxHash, 1, 1)).resolves.toEqual({
-          ok: false,
-          error: new Error('Transaction failed: {"status":"FAILED"}'),
-        });
+        const result = await service.waitForTransactionReceipt(makeParams(1, 1000));
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.value.status).toBe('failure');
+        }
       });
 
-      it('should poll repeatedly if transaction is NOT_FOUND, then resolves if eventually SUCCESS', async () => {
-        vi.spyOn(spokeProvider.sorobanServer, 'getTransaction')
-          .mockResolvedValueOnce({ status: 'NOT_FOUND' } as unknown as StellarRpc.Api.GetSuccessfulTransactionResponse) // 1
-          .mockResolvedValueOnce({ status: 'NOT_FOUND' } as unknown as StellarRpc.Api.GetSuccessfulTransactionResponse) // 2
-          .mockResolvedValueOnce({ status: 'SUCCESS' } as unknown as StellarRpc.Api.GetSuccessfulTransactionResponse); // 3
+      it('should poll repeatedly if transaction is NOT_FOUND, then resolve if eventually SUCCESS', async () => {
+        mockGetTransaction
+          .mockResolvedValueOnce({ status: 'NOT_FOUND' })
+          .mockResolvedValueOnce({ status: 'NOT_FOUND' })
+          .mockResolvedValueOnce({ status: 'SUCCESS' });
 
-        // maxAttempts=4, only 3 attempts needed here
-        await expect(StellarSpokeService.waitForTransaction(spokeProvider, mockTxHash, 1, 4)).resolves.toEqual({
-          ok: true,
-          value: true,
-        });
-        expect(spokeProvider.sorobanServer.getTransaction).toHaveBeenCalledTimes(3);
+        const result = await service.waitForTransactionReceipt(makeParams(1, 5000));
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.value.status).toBe('success');
+        }
+        expect(mockGetTransaction).toHaveBeenCalledTimes(3);
       });
 
-      it('should throw if NOT_FOUND for all attempts', async () => {
-        vi.spyOn(spokeProvider.sorobanServer, 'getTransaction').mockResolvedValue({
-          status: 'NOT_FOUND',
-        } as unknown as StellarRpc.Api.GetSuccessfulTransactionResponse);
+      it('should timeout if NOT_FOUND for all attempts', async () => {
+        mockGetTransaction.mockResolvedValue({ status: 'NOT_FOUND' });
 
-        await expect(StellarSpokeService.waitForTransaction(spokeProvider, mockTxHash, 1, 3)).resolves.toEqual({
-          ok: false,
-          error: new Error('Transaction was not confirmed within the max attempts'),
-        });
-
-        expect(spokeProvider.sorobanServer.getTransaction).toHaveBeenCalledTimes(3);
-      });
-
-      it('should treat unknown status as retryable and eventually throw after max attempts', async () => {
-        vi.spyOn(spokeProvider.sorobanServer, 'getTransaction').mockResolvedValue({
-          status: 'UNRECOGNIZED_STATUS',
-        } as unknown as StellarRpc.Api.GetSuccessfulTransactionResponse);
-
-        await expect(StellarSpokeService.waitForTransaction(spokeProvider, mockTxHash, 1, 2)).resolves.toEqual({
-          ok: false,
-          error: new Error('Transaction was not confirmed within the max attempts'),
-        });
-        expect(spokeProvider.sorobanServer.getTransaction).toHaveBeenCalledTimes(2);
+        // pollingIntervalMs=1, maxTimeoutMs=3 → ~3 attempts
+        const result = await service.waitForTransactionReceipt(makeParams(1, 3));
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.value.status).toBe('timeout');
+        }
       });
 
       it('should retry when getTransaction throws a network error for some attempts', async () => {
-        vi.spyOn(spokeProvider.sorobanServer, 'getTransaction')
+        mockGetTransaction
           .mockRejectedValueOnce(new Error('Network hiccup'))
           .mockRejectedValueOnce(new Error('Transient'))
-          .mockResolvedValueOnce({ status: 'SUCCESS' } as unknown as StellarRpc.Api.GetSuccessfulTransactionResponse);
+          .mockResolvedValueOnce({ status: 'SUCCESS' });
 
-        await expect(StellarSpokeService.waitForTransaction(spokeProvider, mockTxHash, 1, 5)).resolves.toEqual({
-          ok: true,
-          value: true,
-        });
-        expect(spokeProvider.sorobanServer.getTransaction).toHaveBeenCalledTimes(3); // 2 throw, 1 resolve
+        const result = await service.waitForTransactionReceipt(makeParams(1, 5000));
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.value.status).toBe('success');
+        }
+        expect(mockGetTransaction).toHaveBeenCalledTimes(3);
       });
 
-      it('should preserve thrown errors if FAILED encountered after NOT_FOUNDs', async () => {
-        vi.spyOn(spokeProvider.sorobanServer, 'getTransaction')
-          .mockResolvedValueOnce({ status: 'NOT_FOUND' } as unknown as StellarRpc.Api.GetSuccessfulTransactionResponse)
-          .mockResolvedValueOnce({
-            status: 'FAILED',
-            failReason: 'bad',
-          } as unknown as StellarRpc.Api.GetSuccessfulTransactionResponse);
+      it('should return failure if FAILED encountered after NOT_FOUNDs', async () => {
+        mockGetTransaction
+          .mockResolvedValueOnce({ status: 'NOT_FOUND' })
+          .mockResolvedValueOnce({ status: 'FAILED', failReason: 'bad' });
 
-        await expect(StellarSpokeService.waitForTransaction(spokeProvider, mockTxHash, 1, 5)).resolves.toEqual({
-          ok: false,
-          error: new Error('Transaction failed: {"status":"FAILED","failReason":"bad"}'),
-        });
-
-        expect(spokeProvider.sorobanServer.getTransaction).toHaveBeenCalledTimes(2);
-      });
-
-      it('should only use up given maxAttempts times even if error is thrown each time', async () => {
-        vi.spyOn(spokeProvider.sorobanServer, 'getTransaction').mockImplementation(() => {
-          throw new Error('Always fails');
-        });
-
-        await expect(StellarSpokeService.waitForTransaction(spokeProvider, mockTxHash, 1, 3)).resolves.toEqual({
-          ok: false,
-          error: new Error('Transaction was not confirmed within the max attempts'),
-        });
-
-        expect(spokeProvider.sorobanServer.getTransaction).toHaveBeenCalledTimes(3);
+        const result = await service.waitForTransactionReceipt(makeParams(1, 5000));
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+          expect(result.value.status).toBe('failure');
+        }
+        expect(mockGetTransaction).toHaveBeenCalledTimes(2);
       });
     });
   });

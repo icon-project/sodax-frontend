@@ -1,18 +1,1 @@
-import type { ClarityValue, PostCondition, PostConditionMode } from '@stacks/transactions';
-import type { WalletAddressProvider } from '../common/index.js';
-
-export type StacksTransactionParams = {
-  contractAddress: string;
-  contractName: string;
-  functionName: string;
-  functionArgs: ClarityValue[];
-  postConditionMode?: PostConditionMode;
-  postConditions?: PostCondition[];
-};
-
-export interface IStacksWalletProvider extends WalletAddressProvider {
-  getWalletAddress: () => Promise<string>;
-  getBalance: (address: string) => Promise<bigint>;
-  sendTransaction: (txParams: StacksTransactionParams) => Promise<string>;
-  readContract: (txParams: StacksTransactionParams) => Promise<ClarityValue>;
-}
+export * from './stacks.js';

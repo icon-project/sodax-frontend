@@ -1,5 +1,5 @@
 import { encodeAbiParameters, parseAbiParameters } from 'viem';
-import type { EvmContractCall } from '../types.js';
+import type { EvmContractCall } from '../types/types.js';
 import type { IEvmWalletProvider, EvmRawTransactionReceipt, Hex } from '@sodax/types';
 
 /**

@@ -7,7 +7,8 @@ import {
   Sodax,
 } from '../index.js';
 import { SolverApiService } from './SolverApiService.js';
-import { ARBITRUM_MAINNET_CHAIN_ID, BSC_MAINNET_CHAIN_ID, type Hex, type SolverConfig } from '@sodax/types';
+import type { Hex, SolverConfig } from '@sodax/types';
+import { ChainKeys } from '@sodax/types';
 
 // Mock fetch
 const mockFetch = vi.fn();
@@ -22,12 +23,12 @@ describe('SolverApiService', async () => {
   const sodax = new Sodax();
 
   const bscEthToken = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8';
-  const bscEthHubTokenAsset = sodax.config.getHubAssetInfo(BSC_MAINNET_CHAIN_ID, bscEthToken)?.asset;
+  const bscEthHubTokenAsset = sodax.config.getHubAssetInfo(ChainKeys.BSC_MAINNET, bscEthToken)?.hubAsset;
   if (!bscEthHubTokenAsset) {
     throw new Error('BSC ETH token asset not found');
   }
   const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f';
-  const arbWbtcHubTokenAsset = sodax.config.getHubAssetInfo(ARBITRUM_MAINNET_CHAIN_ID, arbWbtcToken)?.asset;
+  const arbWbtcHubTokenAsset = sodax.config.getHubAssetInfo(ChainKeys.ARBITRUM_MAINNET, arbWbtcToken)?.hubAsset;
   if (!arbWbtcHubTokenAsset) {
     throw new Error('BSC WBTC token asset not found');
   }
@@ -39,9 +40,9 @@ describe('SolverApiService', async () => {
   describe('getQuote', () => {
     const payload = {
       token_src: bscEthToken,
-      token_src_blockchain_id: BSC_MAINNET_CHAIN_ID,
+      token_src_blockchain_id: ChainKeys.BSC_MAINNET,
       token_dst: arbWbtcToken,
-      token_dst_blockchain_id: ARBITRUM_MAINNET_CHAIN_ID,
+      token_dst_blockchain_id: ChainKeys.ARBITRUM_MAINNET,
       amount: 1000000000000000000n,
       quote_type: 'exact_input' as QuoteType,
     } satisfies SolverIntentQuoteRequest;
@@ -71,8 +72,8 @@ describe('SolverApiService', async () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            token_src: sodax.config.getHubAssetInfo(payload.token_src_blockchain_id, payload.token_src)?.asset ?? '',
-            token_dst: sodax.config.getHubAssetInfo(payload.token_dst_blockchain_id, payload.token_dst)?.asset ?? '',
+            token_src: sodax.config.getHubAssetInfo(payload.token_src_blockchain_id, payload.token_src)?.hubAsset ?? '',
+            token_dst: sodax.config.getHubAssetInfo(payload.token_dst_blockchain_id, payload.token_dst)?.hubAsset ?? '',
             amount: payload.amount.toString(),
             quote_type: payload.quote_type,
           }),

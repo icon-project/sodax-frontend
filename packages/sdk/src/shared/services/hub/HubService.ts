@@ -1,8 +1,9 @@
 import { sonicWalletFactoryAbi } from '../../abis/sonicWalletFactory.abi.js';
-import type { Address, ChainId, HubAddress } from '@sodax/types';
+import { type Address, type ChainId, type HubAddress, getIntentRelayChainId } from '@sodax/types';
 import type { EvmHubProvider } from '../../entities/index.js';
 import { encodeAddress } from '../../utils/shared-utils.js';
-import { EvmWalletAbstraction } from './EvmWalletAbstraction.js';
+import { walletFactoryAbi } from '../../abis/index.js';
+
 /**
  * HubService is a main class that provides functionalities for dealing with hub chains.
  */
@@ -43,10 +44,11 @@ export class HubService {
       return HubService.getUserRouter(encodedAddress, hubProvider);
     }
 
-    return EvmWalletAbstraction.getUserHubWalletAddress(
-      chainId,
-      encodedAddress,
-      hubProvider,
-    );
+    return hubProvider.publicClient.readContract({
+      address: hubProvider.chainConfig.addresses.hubWallet,
+      abi: walletFactoryAbi,
+      functionName: 'getDeployedAddress',
+      args: [BigInt(getIntentRelayChainId(chainId)), encodedAddress],
+    });
   }
 }

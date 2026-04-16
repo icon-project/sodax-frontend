@@ -3,92 +3,93 @@ import {
   DEFAULT_DEADLINE_OFFSET,
   DEFAULT_RELAYER_API_ENDPOINT,
   DEFAULT_RELAY_TX_TIMEOUT,
-} from '../shared/constants.js';
-import { Erc20Service } from '../shared/services/erc-20/Erc20Service.js';
-import type { EvmHubProvider, SpokeProvider, SpokeProviderType } from '../shared/entities/Providers.js';
-import type {
-  GetRelayResponse,
-  IntentDeliveryInfo,
-  IntentRelayRequest,
-  PacketData,
-  RelayErrorCode,
-  SubmitTxExtraData,
-  WaitUntilIntentExecutedPayload,
-} from '../shared/services/intentRelay/IntentRelayApiService.js';
-import { submitTransaction, waitUntilIntentExecuted } from '../shared/services/intentRelay/IntentRelayApiService.js';
-import { SonicSpokeService } from '../shared/services/spoke/SonicSpokeService.js';
-import { SpokeService } from '../shared/services/spoke/SpokeService.js';
-import {
+  submitTransaction,
+  waitUntilIntentExecuted,
+  SonicSpokeService,
+  SpokeService,
   adjustAmountByFee,
   calculateFeeAmount,
   calculatePercentageFeeAmount,
-  deriveUserWalletAddress,
-} from '../shared/utils/shared-utils.js';
-import { encodeContractCalls } from '../shared/utils/evm-utils.js';
-import {
-  isBitcoinSpokeProvider,
+  encodeContractCalls,
+  StellarSpokeService,
+  SolverApiService,
+  EvmSolverService,
   isConfiguredSolverConfig,
-  isEvmSpokeProviderType,
-  isSonicRawSpokeProvider,
-  isSonicSpokeProviderType,
-  isStellarSpokeProviderType,
-} from '../shared/guards.js';
-import type {
-  EvmContractCall,
-  FeeAmount,
-  GetSpokeDepositParamsType,
-  SolverErrorResponse,
-  SolverExecutionRequest,
-  SolverExecutionResponse,
-  SolverIntentQuoteRequest,
-  SolverIntentQuoteResponse,
-  SolverIntentStatusRequest,
-  SolverIntentStatusResponse,
-  Result,
-  SolverConfigParams,
-  SwapServiceConfig,
-  TxReturnType,
-  GetEstimateGasReturnType,
-  GetAddressType,
-  OptionalRaw,
-  Prettify,
-  OptionalTimeout,
-  OptionalFee,
-  EvmSpokeProviderType,
-  SonicSpokeProviderType,
-  StellarSpokeProviderType,
-} from '../shared/types.js';
-import { EvmSolverService } from './EvmSolverService.js';
-import { SolverApiService } from './SolverApiService.js';
+  isEvmChainKeyType,
+  isSonicChainKeyType,
+  isStellarChainKeyType,
+  Erc20Service,
+  type EstimateGasParams,
+  type ConfigService,
+  type OptionalTimeout,
+  type HubProvider,
+  type OptionalSkipSimulation,
+  type WalletActionParams,
+  type DepositParams,
+  type GetRelayResponse,
+  type IntentDeliveryInfo,
+  type IntentRelayRequest,
+  type PacketData,
+  type RelayErrorCode,
+  type SubmitTxExtraData,
+  type WaitUntilIntentExecutedPayload,
+  isBitcoinChainKeyType,
+  HubService,
+  isHubChainKeyType,
+  type OptionalWalletActionParamType,
+  type OptionalRaw,
+} from '../index.js';
 import {
-  SONIC_MAINNET_CHAIN_ID,
-  type SpokeChainId,
+  ChainKeys,
+  type SpokeChainKey,
   type Address,
   type Hex,
   type Hash,
   type HttpUrl,
-  SOLANA_MAINNET_CHAIN_ID,
   type IntentRelayChainId,
   getIntentRelayChainId,
   getSolverConfig,
-  type Token,
-  BITCOIN_MAINNET_CHAIN_ID,
+  type OptionalFee,
+  type GetTokenAddressType,
+  isBitcoinChainKey,
+  type SonicChainKey,
+  type EvmContractCall,
+  type FeeAmount,
+  type SolverErrorResponse,
+  type SolverExecutionRequest,
+  type SolverExecutionResponse,
+  type SolverIntentQuoteRequest,
+  type SolverIntentQuoteResponse,
+  type SolverIntentStatusRequest,
+  type SolverIntentStatusResponse,
+  type Result,
+  type SolverConfigParams,
+  type TxReturnType,
+  type GetEstimateGasReturnType,
+  type GetAddressType,
+  type Prettify,
+  type SolverConfig,
+  type PartnerFeeConfig,
+  type RelayerApiConfig,
+  type IBitcoinWalletProvider,
+  type XToken,
+  getChainKeyFromRelayChainId,
 } from '@sodax/types';
-import { StellarSpokeService } from '../shared/services/spoke/StellarSpokeService.js';
-import type { ConfigService } from '../shared/config/ConfigService.js';
-import { SonicSpokeProvider } from '../shared/entities/Providers.js';
 
-export type CreateIntentParams = {
-  inputToken: string; // The address of the input token on spoke chain
-  outputToken: string; // The address of the output token on spoke chain
+export type CreateIntentParams<
+  SrcChain extends SpokeChainKey = SpokeChainKey,
+  DstChain extends SpokeChainKey = SpokeChainKey,
+> = {
+  inputToken: GetTokenAddressType<SrcChain>; // The address of the input token on spoke chain
+  outputToken: GetTokenAddressType<DstChain>; // The address of the output token on spoke chain
   inputAmount: bigint; // The amount of input tokens
   minOutputAmount: bigint; // The minimum amount of output tokens to accept
   deadline: bigint; // Optional timestamp after which intent expires (0 = no deadline)
   allowPartialFill: boolean; // Whether the intent can be partially filled
-  srcChain: SpokeChainId; // Chain ID where input tokens originate
-  dstChain: SpokeChainId; // Chain ID where output tokens should be delivered
-  srcAddress: string; // Source address (original address on spoke chain)
-  dstAddress: string; // Destination address (original address on spoke chain)
+  srcChain: SrcChain; // Chain ID where input tokens originate
+  dstChain: DstChain; // Chain ID where output tokens should be delivered
+  srcAddress: GetAddressType<SrcChain>; // Source address (original address on spoke chain)
+  dstAddress: GetAddressType<DstChain>; // Destination address (original address on spoke chain)
   solver: Address; // Optional specific solver address (address(0) = any solver)
   data: Hex; // Additional arbitrary data
 };
@@ -109,8 +110,6 @@ export type CreateIntentParams = {
  * @property solver - Optional specific solver address (use address(0) for any solver).
  * @property data - Additional arbitrary data (opaque, for advanced integrations/fees etc).
  */
-export type CreateLimitOrderParams = Omit<CreateIntentParams, 'deadline'>;
-
 export type Intent = {
   intentId: bigint; // Unique identifier for the intent
   creator: Address; // Address that created the intent (Wallet abstraction address on hub chain)
@@ -185,16 +184,16 @@ export type IntentErrorCode =
 export type IntentErrorData<T extends IntentErrorCode> = T extends 'RELAY_TIMEOUT'
   ? IntentWaitUntilIntentExecutedFailedErrorData
   : T extends 'CREATION_FAILED'
-  ? IntentCreationFailedErrorData
-  : T extends 'SUBMIT_TX_FAILED'
-  ? IntentSubmitTxFailedErrorData
-  : T extends 'POST_EXECUTION_FAILED'
-  ? IntentPostExecutionFailedErrorData
-  : T extends 'UNKNOWN'
-  ? IntentCreationFailedErrorData
-  : T extends 'CANCEL_FAILED'
-  ? IntentCancelFailedErrorData
-  : never;
+    ? IntentCreationFailedErrorData
+    : T extends 'SUBMIT_TX_FAILED'
+      ? IntentSubmitTxFailedErrorData
+      : T extends 'POST_EXECUTION_FAILED'
+        ? IntentPostExecutionFailedErrorData
+        : T extends 'UNKNOWN'
+          ? IntentCreationFailedErrorData
+          : T extends 'CANCEL_FAILED'
+            ? IntentCancelFailedErrorData
+            : never;
 
 export type IntentError<T extends IntentErrorCode = IntentErrorCode> = {
   code: T;
@@ -203,38 +202,63 @@ export type IntentError<T extends IntentErrorCode = IntentErrorCode> = {
 
 export type GetIntentSubmitTxExtraDataParams = { txHash: Hash } | { intent: Intent };
 
-export type SwapParams<S extends SpokeProviderType> = Prettify<
-  {
-    intentParams: CreateIntentParams;
-    spokeProvider: S;
-    skipSimulation?: boolean;
-  } & OptionalFee
->;
+// Distributive conditional (C extends C) ensures that when C = SpokeChainKey (union of all chains),
+// each chain key gets its own union member pairing srcChain with the matching walletProvider type.
+// This enables TypeScript to narrow walletProvider when srcChain is narrowed via type guards.
+export type SwapParams<C extends SpokeChainKey = SpokeChainKey, Raw extends boolean = boolean> = C extends C
+  ? Prettify<
+      {
+        params: CreateIntentParams<C>;
+      } & OptionalRaw<Raw> &
+        OptionalSkipSimulation &
+        OptionalFee &
+        OptionalTimeout &
+        OptionalWalletActionParamType<C, Raw>
+    >
+  : never;
 
-export type LimitOrderParams<S extends SpokeProviderType> = Prettify<
-  {
-    intentParams: CreateLimitOrderParams;
-    spokeProvider: S;
-    skipSimulation?: boolean;
-  } & OptionalFee
->;
+export type CreateLimitOrderParams<C extends SpokeChainKey = SpokeChainKey> = Omit<CreateIntentParams<C>, 'deadline'>;
+export type LimitOrderParams<Raw extends boolean = boolean, C extends SpokeChainKey = SpokeChainKey> = C extends C
+  ? Prettify<
+      {
+        params: CreateLimitOrderParams<C>;
+      } & OptionalSkipSimulation &
+        OptionalFee &
+        OptionalTimeout &
+        OptionalWalletActionParamType<C, Raw>
+    >
+  : never;
 
 export type SwapServiceConstructorParams = {
   config: SolverConfigParams | undefined;
   configService: ConfigService;
-  hubProvider: EvmHubProvider;
+  spokeService: SpokeService;
+  hubProvider: HubProvider;
   relayerApiEndpoint?: HttpUrl;
 };
 
+export type SwapServiceConfig = Prettify<SolverConfig & PartnerFeeConfig & RelayerApiConfig>;
+
+/**
+ * SwapService is a main class that provides functionalities for swapping tokens between spoke chains.
+ * @namespace SodaxFeatures
+ */
 export class SwapService {
   readonly config: SwapServiceConfig;
-  readonly hubProvider: EvmHubProvider;
+  readonly hubProvider: HubProvider;
   readonly configService: ConfigService;
+  readonly spokeService: SpokeService;
 
-  public constructor({ config, configService, hubProvider, relayerApiEndpoint }: SwapServiceConstructorParams) {
+  public constructor({
+    config,
+    configService,
+    hubProvider,
+    spokeService,
+    relayerApiEndpoint,
+  }: SwapServiceConstructorParams) {
     if (!config) {
       this.config = {
-        ...getSolverConfig(SONIC_MAINNET_CHAIN_ID), // default to mainnet config
+        ...getSolverConfig(), // default to mainnet config
         partnerFee: undefined,
         relayerApiEndpoint: relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT,
       };
@@ -246,13 +270,14 @@ export class SwapService {
       };
     } else {
       this.config = {
-        ...getSolverConfig(hubProvider.chainConfig.chain.id), // default to mainnet config
+        ...getSolverConfig(), // default to mainnet config
         partnerFee: config.partnerFee,
         relayerApiEndpoint: relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT,
       };
     }
     this.configService = configService;
     this.hubProvider = hubProvider;
+    this.spokeService = spokeService;
   }
 
   /**
@@ -261,11 +286,10 @@ export class SwapService {
    * @param {SpokeProvider} spokeProvider - The provider for the spoke chain.
    * @returns {Promise<GetEstimateGasReturnType<T>>} A promise that resolves to the gas.
    */
-  public static async estimateGas<T extends SpokeProvider = SpokeProvider>(
-    params: TxReturnType<T, true>,
-    spokeProvider: T,
-  ): Promise<GetEstimateGasReturnType<T>> {
-    return SpokeService.estimateGas(params, spokeProvider) as Promise<GetEstimateGasReturnType<T>>;
+  public async estimateGas<C extends SpokeChainKey>(
+    params: EstimateGasParams<C>,
+  ): Promise<GetEstimateGasReturnType<C>> {
+    return this.spokeService.estimateGas(params) as Promise<GetEstimateGasReturnType<C>>;
   }
 
   /**
@@ -447,67 +471,6 @@ export class SwapService {
   }
 
   /**
-   * Syntactic sugar for createAndSubmitIntent: creates an intent and submits it to the Solver API and Relayer API.
-   *
-   * @param {Prettify<SwapParams<S> & OptionalTimeout>} params - Object containing:
-   *   - intentParams: The parameters for creating the intent.
-   *   - spokeProvider: The spoke provider instance.
-   *   - fee: (Optional) Partner fee configuration.
-   *   - timeout: (Optional) Timeout in milliseconds for the transaction (default: 60 seconds).
-   *   - skipSimulation: (Optional) Whether to skip transaction simulation (default: false).
-   * @returns {Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>>}
-   *   A promise resolving to a Result containing a tuple of SolverExecutionResponse, Intent, and intent delivery info,
-   *   or an IntentError if the operation fails.
-   *
-   * @example
-   * const swapResult = await swapService.swap({
-   *   intentParams: {
-   *     inputToken: "0x2170Ed0880ac9A755fd29B2688956BD959F933F8",
-   *     outputToken: "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
-   *     inputAmount: 1000000000000000n,
-   *     minOutputAmount: 900000000000000n,
-   *     deadline: 0n,
-   *     allowPartialFill: false,
-   *     srcChain: "0x38.bsc",
-   *     dstChain: "0xa4b1.arbitrum",
-   *     srcAddress: "0x..",
-   *     dstAddress: "0x...",
-   *     solver: "0x..",
-   *     data: "0x..",
-   *   },
-   *   spokeProvider,
-   *   fee, // optional
-   *   timeout, // optional
-   * });
-   *
-   * if (swapResult.ok) {
-   *   const [solverExecutionResponse, intent, intentDeliveryInfo] = swapResult.value;
-   *   console.log('Intent execution response:', solverExecutionResponse);
-   *   console.log('Intent:', intent);
-   *   console.log('Intent delivery info:', intentDeliveryInfo);
-   * } else {
-   *   // handle error
-   * }
-   */
-  public async swap<S extends SpokeProvider>({
-    intentParams: params,
-    spokeProvider,
-    fee = this.config.partnerFee,
-    timeout = DEFAULT_RELAY_TX_TIMEOUT,
-    skipSimulation = false,
-  }: Prettify<SwapParams<S> & OptionalTimeout>): Promise<
-    Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>
-  > {
-    return this.createAndSubmitIntent({
-      intentParams: params,
-      spokeProvider,
-      fee,
-      timeout,
-      skipSimulation,
-    });
-  }
-
-  /**
    * Creates an intent and submits it to the Solver API and Relayer API
    * @param {Prettify<SwapParams<S> & OptionalTimeout>} params - Object containing:
    *   - intentParams: The parameters for creating the intent.
@@ -550,23 +513,17 @@ export class SwapService {
    *   // handle error
    * }
    */
-  public async createAndSubmitIntent<S extends SpokeProvider>({
-    intentParams: params,
-    spokeProvider,
-    fee = this.config.partnerFee,
-    timeout = DEFAULT_RELAY_TX_TIMEOUT,
-    skipSimulation = false,
-  }: Prettify<SwapParams<S> & OptionalTimeout>): Promise<
-    Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>
-  > {
+  public async swap<C extends SpokeChainKey>(
+    _params: Prettify<SwapParams<C, false>>,
+  ): Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>> {
     try {
+      // default values in case they are not provided
+      const { params } = _params;
+
       // first create the deposit with intent data on spoke chain
       const createIntentResult = await this.createIntent({
-        intentParams: params,
-        spokeProvider,
-        fee,
+        ..._params,
         raw: false,
-        skipSimulation,
       });
 
       if (!createIntentResult.ok) {
@@ -576,7 +533,10 @@ export class SwapService {
       const [spokeTxHash, intent, data] = createIntentResult.value;
 
       // then verify the spoke tx hash exists on chain
-      const verifyTxHashResult = await SpokeService.verifyTxHash(spokeTxHash, spokeProvider);
+      const verifyTxHashResult = await this.spokeService.verifyTxHash({
+        txHash: spokeTxHash,
+        chainKey: params.srcChain,
+      });
 
       if (!verifyTxHashResult.ok) {
         return {
@@ -594,28 +554,28 @@ export class SwapService {
       // then submit the deposit tx hash of spoke chain to the intent relay
       let dstIntentTxHash: string;
 
-      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
+      if (params.srcChain !== this.hubProvider.chainConfig.chain.id) {
         const intentRelayChainId = getIntentRelayChainId(params.srcChain).toString();
         const submitPayload: IntentRelayRequest<'submit'> =
-          ((params.srcChain === SOLANA_MAINNET_CHAIN_ID) || (params.srcChain === BITCOIN_MAINNET_CHAIN_ID)) && data
+          (params.srcChain === ChainKeys.SOLANA_MAINNET || params.srcChain === ChainKeys.BITCOIN_MAINNET) && data
             ? {
-              action: 'submit',
-              params: {
-                chain_id: intentRelayChainId,
-                tx_hash: spokeTxHash,
-                data: {
-                  address: intent.creator,
-                  payload: data,
-                } satisfies SubmitTxExtraData,
-              },
-            }
+                action: 'submit',
+                params: {
+                  chain_id: intentRelayChainId,
+                  tx_hash: spokeTxHash,
+                  data: {
+                    address: intent.creator,
+                    payload: data,
+                  } satisfies SubmitTxExtraData,
+                },
+              }
             : {
-              action: 'submit',
-              params: {
-                chain_id: intentRelayChainId,
-                tx_hash: spokeTxHash,
-              },
-            };
+                action: 'submit',
+                params: {
+                  chain_id: intentRelayChainId,
+                  tx_hash: spokeTxHash,
+                },
+              };
 
         const submitResult = await this.submitIntent(submitPayload);
 
@@ -689,7 +649,7 @@ export class SwapService {
         error: {
           code: 'UNKNOWN',
           data: {
-            payload: params,
+            payload: _params.params,
             error: error,
           },
         } satisfies IntentError<'UNKNOWN'>,
@@ -712,8 +672,8 @@ export class SwapService {
    *   minOutputAmount: 900000000000000n, // min amount you are expecting to receive
    *   deadline: 0n, // Optional timestamp after which intent expires (0 = no deadline)
    *   allowPartialFill: false, // Whether the intent can be partially filled
-   *   srcChain: BSC_MAINNET_CHAIN_ID, // Chain ID where input tokens originate
-   *   dstChain: ARBITRUM_MAINNET_CHAIN_ID, // Chain ID where output tokens should be delivered
+   *   srcChain: ChainKeys.BSC_MAINNET, // Chain ID where input tokens originate
+   *   dstChain: ChainKeys.ARBITRUM_MAINNET, // Chain ID where output tokens should be delivered
    *   srcAddress: '0x..', // Source address (original address on spoke chain)
    *   dstAddress: '0x...', // Destination address (original address on spoke chain)
    *   solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address
@@ -733,35 +693,21 @@ export class SwapService {
    *   console.log('Approval required');
    * }
    */
-  public async isAllowanceValid<S extends SpokeProviderType>({
-    intentParams: params,
-    spokeProvider,
-  }: SwapParams<S> | LimitOrderParams<S>): Promise<Result<boolean>> {
+  public async isAllowanceValid({
+    params,
+  }: SwapParams<false, C> | LimitOrderParams<false, C>): Promise<Result<boolean>> {
     // apply fee to input amount without changing original params
     try {
-      if (isEvmSpokeProviderType(spokeProvider)) {
-        const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      if (isEvmChainKeyType(params.srcChain)) {
         return await Erc20Service.isAllowanceValid(
-          params.inputToken as GetAddressType<EvmSpokeProviderType>,
+          params.inputToken as GetAddressType<typeof params.srcChain>,
           params.inputAmount,
-          walletAddress as GetAddressType<EvmSpokeProviderType>,
-          spokeProvider.chainConfig.addresses.assetManager,
-          spokeProvider,
+          params.srcAddress as GetAddressType<typeof params.srcChain>,
+          this.configService.spokeChainConfig[params.srcChain].addresses.assetManager,
         );
       }
 
-      if (isSonicSpokeProviderType(spokeProvider)) {
-        const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-        return await Erc20Service.isAllowanceValid(
-          params.inputToken as GetAddressType<SonicSpokeProviderType>,
-          params.inputAmount,
-          walletAddress as GetAddressType<SonicSpokeProviderType>,
-          getSolverConfig(SONIC_MAINNET_CHAIN_ID).intentsContract,
-          spokeProvider,
-        );
-      }
-
-      if (isStellarSpokeProviderType(spokeProvider)) {
+      if (isStellarChainKeyType(params.srcChain)) {
         return {
           ok: true,
           value: await StellarSpokeService.hasSufficientTrustline(params.inputToken, params.inputAmount, spokeProvider),
@@ -796,8 +742,8 @@ export class SwapService {
    *   minOutputAmount: 900000000000000n, // min amount you are expecting to receive
    *   deadline: 0n, // Optional timestamp after which intent expires (0 = no deadline)
    *   allowPartialFill: false, // Whether the intent can be partially filled
-   *   srcChain: BSC_MAINNET_CHAIN_ID, // Chain ID where input tokens originate
-   *   dstChain: ARBITRUM_MAINNET_CHAIN_ID, // Chain ID where output tokens should be delivered
+   *   srcChain: ChainKeys.BSC_MAINNET, // Chain ID where input tokens originate
+   *   dstChain: ChainKeys.ARBITRUM_MAINNET, // Chain ID where output tokens should be delivered
    *   srcAddress: '0x..', // Source address (original address on spoke chain)
    *   dstAddress: '0x...', // Destination address (original address on spoke chain)
    *   solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address
@@ -843,7 +789,7 @@ export class SwapService {
         const result = await Erc20Service.approve(
           params.inputToken as GetAddressType<SonicSpokeProviderType>,
           params.inputAmount,
-          getSolverConfig(SONIC_MAINNET_CHAIN_ID).intentsContract,
+          getSolverConfig(ChainKeys.SONIC_MAINNET).intentsContract,
           spokeProvider,
           raw,
         );
@@ -922,15 +868,15 @@ export class SwapService {
    *   // handle error
    * }
    */
-  public async createIntent<S extends SpokeProviderType, R extends boolean = false>({
-    intentParams: params,
-    spokeProvider,
-    fee = this.config.partnerFee,
-    raw,
-    skipSimulation = false,
-  }: Prettify<SwapParams<S> & OptionalRaw<R>>): Promise<
-    Result<[TxReturnType<S, R>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>
-  > {
+
+  public async createRawIntent<C extends SpokeChainKey>(
+    _params: SwapParams<C, true>,
+  ): Promise<Result<[TxReturnType<C, true>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>> {
+    const { params } = _params;
+    // default values
+    const fee = _params.fee ?? this.config.partnerFee;
+    const skipSimulation = _params.skipSimulation ?? false;
+
     invariant(
       this.configService.isValidOriginalAssetAddress(params.srcChain, params.inputToken),
       `Unsupported spoke chain token (params.srcChain): ${params.srcChain}, params.inputToken): ${params.inputToken}`,
@@ -940,15 +886,15 @@ export class SwapService {
       `Unsupported spoke chain token (params.dstChain): ${params.dstChain}, params.outputToken): ${params.outputToken}`,
     );
     invariant(
-      this.configService.isValidSpokeChainId(params.srcChain),
+      this.configService.isValidSpokeChainKey(params.srcChain),
       `Invalid spoke chain (params.srcChain): ${params.srcChain}`,
     );
     invariant(
-      this.configService.isValidSpokeChainId(params.dstChain),
+      this.configService.isValidSpokeChainKey(params.dstChain),
       `Invalid spoke chain (params.dstChain): ${params.dstChain}`,
     );
     //if dstChain is Bitcoin and token is BTC, check minOutputToken should be higher than 546 sats
-    if (params.dstChain === BITCOIN_MAINNET_CHAIN_ID && params.outputToken === "BTC") {
+    if (isBitcoinChainKey(params.dstChain) && params.outputToken === 'BTC') {
       invariant(
         params.minOutputAmount >= 546n,
         `Invalid minOutputAmount (params.minOutputAmount): ${params.minOutputAmount}`,
@@ -956,50 +902,39 @@ export class SwapService {
     }
 
     try {
-      const personalAddress = await spokeProvider.walletProvider.getWalletAddress();
-      invariant(
-        params.srcAddress.toLowerCase() === personalAddress.toLowerCase(),
-        'srcAddress must be the same as wallet address',
-      );
-
-      // Bitcoin TRADING mode: use trading wallet for hub wallet derivation (see getEffectiveWalletAddress)
-      const walletAddress = isBitcoinSpokeProvider(spokeProvider)
-        ? await spokeProvider.getEffectiveWalletAddress()
-        : personalAddress;
-
-      if (isBitcoinSpokeProvider(spokeProvider)) {
-        await spokeProvider.ensureRadfiAccessToken();
-      }
-
       // derive users hub wallet address
-      const creatorHubWalletAddress = await deriveUserWalletAddress(
+      const creatorHubWalletAddress = await HubService.getUserHubWalletAddress(
+        params.srcAddress,
+        params.srcChain,
         this.hubProvider,
-        spokeProvider.chainConfig.chain.id,
-        walletAddress,
       );
-      if (
-        spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id &&
-        isSonicSpokeProviderType(spokeProvider)
-      ) {
-        // on hub chain create intent directly
 
-        const [txResult, intent, feeAmount, data] = await SonicSpokeService.createSwapIntent(
-          params,
-          creatorHubWalletAddress,
-          this.config,
-          fee,
-          spokeProvider,
-          this.hubProvider,
-          raw,
-        );
+      if (isHubChainKeyType(params.srcChain) && isSonicChainKeyType(params.srcChain)) {
+        // on hub chain create intent directly
+        const sonicParams =
+          _params.raw === true
+            ? {
+                createIntentParams: params as CreateIntentParams<SonicChainKey>,
+                creatorHubWalletAddress,
+                solverConfig: this.config,
+                fee,
+                hubProvider: this.hubProvider,
+                raw: true as const,
+              }
+            : {
+                createIntentParams: params as CreateIntentParams<SonicChainKey>,
+                creatorHubWalletAddress,
+                solverConfig: this.config,
+                fee,
+                hubProvider: this.hubProvider,
+                walletProvider: _params.walletProvider,
+              };
+
+        const [txResult, intent, feeAmount, data] = await SonicSpokeService.createSwapIntent(sonicParams);
 
         return {
           ok: true,
-          value: [
-            txResult satisfies TxReturnType<SonicSpokeProviderType, R> as TxReturnType<S, R>,
-            { ...intent, feeAmount } as Intent & FeeAmount,
-            data,
-          ],
+          value: [txResult as TxReturnType<C, Raw>, { ...intent, feeAmount } as Intent & FeeAmount, data],
         };
       }
 
@@ -1015,22 +950,163 @@ export class SwapService {
           this.configService,
           fee,
         );
-        const txResult = (await SpokeService.deposit(
-          {
-            from: walletAddress,
-            to: creatorHubWalletAddress,
-            token: params.inputToken,
-            amount: params.inputAmount,
-            data: data,
-          } as GetSpokeDepositParamsType<S>,
-          spokeProvider satisfies S,
-          this.hubProvider,
-          raw,
+
+        const depositBase = {
+          fromChainId: params.srcChain,
+          from: walletAddress,
+          to: creatorHubWalletAddress,
+          token: params.inputToken,
+          amount: params.inputAmount,
+          data: data,
           skipSimulation,
-        )) satisfies TxReturnType<S, R>;
+        };
+
+        const txResult =
+          _params.raw === true
+            ? await this.spokeService.deposit({ ...depositBase, raw: true as const } as DepositParams<C, true>)
+            : await this.spokeService.deposit({
+                ...depositBase,
+                walletProvider: _params.walletProvider,
+              } as DepositParams<C, false>);
+
         return {
           ok: true,
-          value: [txResult as TxReturnType<S, R>, { ...intent, feeAmount } as Intent & FeeAmount, data],
+          value: [txResult as TxReturnType<C, boolean>, { ...intent, feeAmount } as Intent & FeeAmount, data],
+        };
+      }
+    } catch (error) {
+      console.error('[SwapService.createIntent] FAILED', error);
+      return {
+        ok: false,
+        error: {
+          code: 'CREATION_FAILED',
+          data: {
+            payload: params,
+            error: error,
+          },
+        },
+      };
+    }
+  }
+
+  public async createIntent<C extends SpokeChainKey, Raw extends boolean>(
+    _params: SwapParams<C, Raw>,
+  ): Promise<Result<[TxReturnType<C, Raw>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>> {
+    const { params } = _params;
+    // default values
+    const raw = _params.raw ?? false;
+    const fee = _params.fee ?? this.config.partnerFee;
+    const skipSimulation = _params.skipSimulation ?? false;
+
+    invariant(
+      this.configService.isValidOriginalAssetAddress(params.srcChain, params.inputToken),
+      `Unsupported spoke chain token (params.srcChain): ${params.srcChain}, params.inputToken): ${params.inputToken}`,
+    );
+    invariant(
+      this.configService.isValidOriginalAssetAddress(params.dstChain, params.outputToken),
+      `Unsupported spoke chain token (params.dstChain): ${params.dstChain}, params.outputToken): ${params.outputToken}`,
+    );
+    invariant(
+      this.configService.isValidSpokeChainKey(params.srcChain),
+      `Invalid spoke chain (params.srcChain): ${params.srcChain}`,
+    );
+    invariant(
+      this.configService.isValidSpokeChainKey(params.dstChain),
+      `Invalid spoke chain (params.dstChain): ${params.dstChain}`,
+    );
+    //if dstChain is Bitcoin and token is BTC, check minOutputToken should be higher than 546 sats
+    if (isBitcoinChainKey(params.dstChain) && params.outputToken === 'BTC') {
+      invariant(
+        params.minOutputAmount >= 546n,
+        `Invalid minOutputAmount (params.minOutputAmount): ${params.minOutputAmount}`,
+      );
+    }
+
+    try {
+      const personalAddress = params.srcAddress;
+
+      // Bitcoin TRADING mode: use trading wallet for hub wallet derivation (see getEffectiveWalletAddress)
+      const walletAddress = isBitcoinChainKey(params.srcChain)
+        ? await this.spokeService.bitcoinSpokeService.getEffectiveWalletAddress(personalAddress)
+        : personalAddress;
+
+      // TypeScript cannot narrow generic C via runtime guards, so chain-specific walletProvider cast is needed
+      if (isBitcoinChainKeyType(params.srcChain) && raw !== true) {
+        await this.spokeService.bitcoinSpokeService.radfi.ensureRadfiAccessToken(
+          _params.walletProvider as IBitcoinWalletProvider,
+        );
+      }
+
+      // derive users hub wallet address
+      const creatorHubWalletAddress = await HubService.getUserHubWalletAddress(
+        walletAddress,
+        params.srcChain,
+        this.hubProvider,
+      );
+
+      if (isHubChainKeyType(params.srcChain) && isSonicChainKeyType(params.srcChain)) {
+        // on hub chain create intent directly
+        const sonicParams =
+          _params.raw === true
+            ? {
+                createIntentParams: params as CreateIntentParams<SonicChainKey>,
+                creatorHubWalletAddress,
+                solverConfig: this.config,
+                fee,
+                hubProvider: this.hubProvider,
+                raw: true as const,
+              }
+            : {
+                createIntentParams: params as CreateIntentParams<SonicChainKey>,
+                creatorHubWalletAddress,
+                solverConfig: this.config,
+                fee,
+                hubProvider: this.hubProvider,
+                walletProvider: _params.walletProvider,
+              };
+
+        const [txResult, intent, feeAmount, data] = await SonicSpokeService.createSwapIntent(sonicParams);
+
+        return {
+          ok: true,
+          value: [txResult as TxReturnType<C, Raw>, { ...intent, feeAmount } as Intent & FeeAmount, data],
+        };
+      }
+
+      {
+        // construct the intent data
+        const [data, intent, feeAmount] = EvmSolverService.constructCreateIntentData(
+          {
+            ...params,
+            srcAddress: walletAddress,
+          },
+          creatorHubWalletAddress,
+          this.config,
+          this.configService,
+          fee,
+        );
+
+        const depositBase = {
+          fromChainId: params.srcChain,
+          from: walletAddress,
+          to: creatorHubWalletAddress,
+          token: params.inputToken,
+          amount: params.inputAmount,
+          data: data,
+          skipSimulation,
+        };
+
+        const txResult =
+          _params.raw === true
+            ? await this.spokeService.deposit({ ...depositBase, raw: true as const } as DepositParams<C, true>)
+            : await this.spokeService.deposit({
+                ...depositBase,
+                walletProvider: _params.walletProvider,
+              } as DepositParams<C, false>);
+
+        return {
+          ok: true,
+          value: [txResult as TxReturnType<C, boolean>, { ...intent, feeAmount } as Intent & FeeAmount, data],
         };
       }
     } catch (error) {
@@ -1094,24 +1170,20 @@ export class SwapService {
    *   // handle error
    * }
    */
-  public async createLimitOrder<S extends SpokeProvider>({
-    intentParams: params,
-    spokeProvider,
-    fee = this.config.partnerFee,
-    timeout = DEFAULT_RELAY_TX_TIMEOUT,
-    skipSimulation = false,
-  }: Prettify<LimitOrderParams<S> & OptionalTimeout>): Promise<
-    Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>
-  > {
+  public async createLimitOrder<C extends SpokeChainKey>(
+    _params: Prettify<LimitOrderParams<false, C>>,
+  ): Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>> {
+    // default values in case they are not provided
+    const { fee = this.config.partnerFee, timeout = DEFAULT_RELAY_TX_TIMEOUT, skipSimulation = false } = _params;
     // Force deadline to 0n (no deadline) for limit orders
-    const limitOrderParams: CreateIntentParams = {
-      ...params,
+    const params: CreateIntentParams<C> = {
+      ..._params.params,
       deadline: 0n,
     };
 
-    return this.createAndSubmitIntent({
-      intentParams: limitOrderParams,
-      spokeProvider,
+    return this.swap({
+      params,
+      raw: false,
       fee,
       timeout,
       skipSimulation,
@@ -1164,15 +1236,13 @@ export class SwapService {
    *   // handle error
    * }
    */
-  public async createLimitOrderIntent<S extends SpokeProviderType, R extends boolean = false>({
-    intentParams: params,
-    spokeProvider,
-    fee = this.config.partnerFee,
-    raw,
-    skipSimulation = false,
-  }: Prettify<LimitOrderParams<S> & OptionalRaw<R>>): Promise<
-    Result<[TxReturnType<S, R>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>
-  > {
+  public async createLimitOrderIntent<C extends SpokeChainKey>(
+    _params: LimitOrderParams<boolean, C>,
+  ): Promise<Result<[TxReturnType<C, boolean>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>> {
+    const { params } = _params;
+    const fee = _params.fee ?? this.config.partnerFee;
+    const skipSimulation = _params.skipSimulation ?? false;
+
     // Force deadline to 0n (no deadline) for limit orders
     const limitOrderParams: CreateIntentParams = {
       ...params,
@@ -1180,12 +1250,11 @@ export class SwapService {
     };
 
     return this.createIntent({
-      intentParams: limitOrderParams,
-      spokeProvider,
+      params: limitOrderParams,
       fee,
-      raw,
       skipSimulation,
-    });
+      ...(_params.raw === true ? { raw: true as const } : { walletProvider: _params.walletProvider }),
+    } as SwapParams<boolean, C>);
   }
 
   /**
@@ -1243,9 +1312,8 @@ export class SwapService {
    * @param {boolean} raw - Whether to return the raw transaction
    * @returns {Promise<TxReturnType<S, R>>} The encoded contract call
    */
-  public async cancelIntent<S extends SpokeProviderType, R extends boolean = false>(
+  public async cancelIntent<R extends boolean = false>(
     intent: Intent,
-    spokeProvider: S,
     raw?: R,
   ): Promise<Result<TxReturnType<S, R>, IntentError<'CANCEL_FAILED'>>> {
     try {
@@ -1303,24 +1371,22 @@ export class SwapService {
    *
    * @param params - The parameters for canceling and submitting the intent.
    * @param params.intent - The intent to be canceled.
-   * @param params.spokeProvider - The provider for the spoke chain.
    * @param params.timeout - Optional timeout in milliseconds (default: 60 seconds).
    * @returns
    *   A Result containing the SolverExecutionResponse (cancel tx), intent, and relay info,
    *   or an IntentError on failure.
    */
-  public async cancelAndSubmitIntent<S extends SpokeProvider>({
+  public async cancelAndSubmitIntent({
     intent,
-    spokeProvider,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
   }: {
     intent: Intent;
-    spokeProvider: S;
     timeout?: number;
   }): Promise<Result<[string, string], IntentError<IntentErrorCode>>> {
     try {
+      const srcChainKey = getChainKeyFromRelayChainId(intent.srcChain);
       // 1. Cancel the intent on the spoke chain
-      const cancelResult = await this.cancelIntent(intent, spokeProvider, false);
+      const cancelResult = await this.cancelIntent(intent, false);
 
       if (!cancelResult.ok) {
         return cancelResult;
@@ -1329,7 +1395,10 @@ export class SwapService {
       const cancelTxHash = cancelResult.value;
 
       // 2. Verify the cancel tx hash exists on chain
-      const verifyTxHashResult = await SpokeService.verifyTxHash(cancelTxHash, spokeProvider);
+      const verifyTxHashResult = await this.spokeService.verifyTxHash({
+        txHash: cancelTxHash,
+        chainKey: srcChainKey,
+      });
 
       if (!verifyTxHashResult.ok) {
         return {
@@ -1446,7 +1515,7 @@ export class SwapService {
   /**
    * Get the intent delivery info about solved intent from the Relayer API.
    * Packet data contains info about the intent execution on the destination chain.
-   * @param {SpokeChainId} chainId - The destination spoke chain ID
+   * @param {SpokeChainKey} chainId - The destination spoke chain ID
    * @param {string} fillTxHash - The fill transaction hash (received from getStatus when status is 3 - SOLVED)
    * @param {number} timeout - The timeout in milliseconds (default: 120 seconds)
    * @returns {Promise<Result<PacketData, IntentError<'RELAY_TIMEOUT'>>>} A Result containing either the packet data or an IntentError with code 'RELAY_TIMEOUT'
@@ -1455,7 +1524,7 @@ export class SwapService {
     chainId,
     fillTxHash,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  }: { chainId: SpokeChainId; fillTxHash: string; timeout?: number }): Promise<
+  }: { chainId: SpokeChainKey; fillTxHash: string; timeout?: number }): Promise<
     Result<PacketData, IntentError<'RELAY_TIMEOUT'>>
   > {
     return waitUntilIntentExecuted({
@@ -1492,18 +1561,18 @@ export class SwapService {
 
   /**
    * Get the list of all supported swap tokens for a given spoke chain ID
-   * @param {SpokeChainId} chainId - The chain ID
+   * @param {SpokeChainKey} chainId - The chain ID
    * @returns {readonly Token[]} - Array of supported tokens
    */
-  public getSupportedSwapTokensByChainId(chainId: SpokeChainId): readonly Token[] {
+  public getSupportedSwapTokensByChainId(chainId: SpokeChainKey): readonly XToken[] {
     return this.configService.getSupportedSwapTokensByChainId(chainId);
   }
 
   /**
    * Get the list of all supported swap tokens
-   * @returns {Record<SpokeChainId, readonly Token[]>} - Object containing all supported swap tokens
+   * @returns {Record<SpokeChainKey, readonly Token[]>} - Object containing all supported swap tokens
    */
-  public getSupportedSwapTokens(): Record<SpokeChainId, readonly Token[]> {
+  public getSupportedSwapTokens(): Record<SpokeChainKey, readonly XToken[]> {
     return this.configService.getSupportedSwapTokens();
   }
 }

@@ -14,7 +14,7 @@ import type {
   StellarSpokeProviderType,
   EvmSpokeProviderType,
   SonicSpokeProviderType,
-} from '../shared/types.js';
+} from '../shared/types/types.js';
 import {
   encodeContractCalls,
   Erc20Service,
@@ -30,11 +30,11 @@ import {
   StellarSpokeService,
   type RelayError,
   HubService,
-  isHubSpokeProvider,
+  isHubChainId,
 } from '../index.js';
 import { isEvmSpokeProviderType, isSonicSpokeProviderType, isStellarSpokeProviderType } from '../shared/guards.js';
 import { DEFAULT_RELAY_TX_TIMEOUT } from '../shared/constants.js';
-import { type HttpUrl, type XToken, type SpokeChainId, getIntentRelayChainId, type HubAssetInfo } from '@sodax/types';
+import { type HttpUrl, type XToken, type SpokeChainKey, getIntentRelayChainId } from '@sodax/types';
 import { getHubChainConfig, type ConfigService } from '../shared/config/ConfigService.js';
 
 export type StakeParams = {
@@ -121,6 +121,7 @@ export type StakingServiceConstructorParams = {
  * StakingService provides a high-level interface for staking operations
  * including staking SODA tokens, unstaking, claiming rewards, and retrieving staking information.
  * All transaction methods return encoded contract calls that can be sent via a wallet provider.
+ * @namespace SodaxFeatures
  */
 export class StakingService {
   private readonly hubProvider: EvmHubProvider;
@@ -151,13 +152,13 @@ export class StakingService {
 
         const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
         const targetToken =
-          params.action === 'stake' || !isHubSpokeProvider(spokeProvider, this.hubProvider)
+          params.action === 'stake' || !isHubChainId(spokeProvider, this.hubProvider)
             ? spokeProvider.chainConfig.supportedTokens.SODA?.address
             : this.hubProvider.chainConfig.addresses.xSoda;
         invariant(targetToken, 'Target token not found');
 
         if (isEvmSpokeProviderType(spokeProvider) || isSonicSpokeProviderType(spokeProvider)) {
-          const spender = isHubSpokeProvider(spokeProvider, this.hubProvider)
+          const spender = isHubChainId(spokeProvider, this.hubProvider)
             ? await HubService.getUserRouter(
                 walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
                 this.hubProvider,
@@ -240,13 +241,13 @@ export class StakingService {
 
         const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
         const targetToken =
-          params.action === 'stake' || !isHubSpokeProvider(spokeProvider, this.hubProvider)
+          params.action === 'stake' || !isHubChainId(spokeProvider, this.hubProvider)
             ? spokeProvider.chainConfig.supportedTokens.SODA?.address
             : this.hubProvider.chainConfig.addresses.xSoda;
         invariant(targetToken, 'Target token not found');
 
         if (isEvmSpokeProviderType(spokeProvider) || isSonicSpokeProviderType(spokeProvider)) {
-          const spender = isHubSpokeProvider(spokeProvider, this.hubProvider)
+          const spender = isHubChainId(spokeProvider, this.hubProvider)
             ? await HubService.getUserRouter(
                 walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
                 this.hubProvider,
@@ -338,7 +339,7 @@ export class StakingService {
       }
 
       let hubTxHash: string | null = null;
-      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
+      if (!isHubChainId(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           spokeProvider instanceof SolanaSpokeProvider
@@ -450,15 +451,15 @@ export class StakingService {
    * @param params - The staking parameters
    * @returns The encoded contract call data
    */
-  public buildStakeData(sodaAsset: HubAssetInfo, to: Address, params: StakeParams): Hex {
+  public buildStakeData(sodaAsset: XToken, to: Address, params: StakeParams): Hex {
     const hubConfig = getHubChainConfig();
     const sodaVault = sodaAsset.vault;
     const stakingRouter = hubConfig.addresses.stakingRouter;
 
     const calls: EvmContractCall[] = [];
-    calls.push(Erc20Service.encodeApprove(sodaAsset.asset, sodaVault, params.amount));
-    calls.push(EvmVaultTokenService.encodeDeposit(sodaVault, sodaAsset.asset, params.amount));
-    const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(sodaAsset.decimal, params.amount);
+    calls.push(Erc20Service.encodeApprove(sodaAsset.hubAsset, sodaVault, params.amount));
+    calls.push(EvmVaultTokenService.encodeDeposit(sodaVault, sodaAsset.hubAsset, params.amount));
+    const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(sodaAsset.decimals, params.amount);
     calls.push(Erc20Service.encodeApprove(sodaVault, stakingRouter, translatedAmount));
     calls.push(StakingLogic.encodeStakingRouterStake(stakingRouter, translatedAmount, to, params.minReceive));
     return encodeContractCalls(calls);
@@ -490,7 +491,7 @@ export class StakingService {
       }
 
       let hubTxHash: string | null = null;
-      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
+      if (!isHubChainId(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           spokeProvider instanceof SolanaSpokeProvider
@@ -631,7 +632,7 @@ export class StakingService {
       }
 
       let hubTxHash: string | null = null;
-      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
+      if (!isHubChainId(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           spokeProvider instanceof SolanaSpokeProvider
@@ -737,8 +738,8 @@ export class StakingService {
    * @returns The encoded contract call data
    */
   public buildInstantUnstakeData(
-    sodaAsset: HubAssetInfo,
-    dstChainId: SpokeChainId,
+    sodaAsset: XToken,
+    dstChainId: SpokeChainKey,
     dstWallet: Hex,
     params: InstantUnstakeParams,
   ): Hex {
@@ -753,7 +754,7 @@ export class StakingService {
         stakingRouter,
         params.amount,
         params.minAmount,
-        sodaAsset.asset,
+        sodaAsset.hubAsset,
         getIntentRelayChainId(dstChainId),
         dstWallet,
       ),
@@ -788,7 +789,7 @@ export class StakingService {
       }
 
       let hubTxHash: string | null = null;
-      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
+      if (!isHubChainId(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           spokeProvider instanceof SolanaSpokeProvider
@@ -893,22 +894,22 @@ export class StakingService {
    * @param params - The claim parameters
    * @returns The encoded contract call data
    */
-  public buildClaimData(sodaAsset: HubAssetInfo, dstChainId: SpokeChainId, dstWallet: Hex, params: ClaimParams): Hex {
+  public buildClaimData(sodaAsset: XToken, dstChainId: SpokeChainKey, dstWallet: Hex, params: ClaimParams): Hex {
     const hubConfig = getHubChainConfig();
     const stakedSoda = hubConfig.addresses.stakedSoda;
     const sodaVault = sodaAsset.vault;
     const calls: EvmContractCall[] = [];
     calls.push(StakingLogic.encodeClaim(stakedSoda, params.requestId));
     // Transfer the claimable amount to the destination wallet
-    calls.push(EvmVaultTokenService.encodeWithdraw(sodaVault, sodaAsset.asset, params.amount));
-    const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(sodaAsset.decimal, params.amount);
+    calls.push(EvmVaultTokenService.encodeWithdraw(sodaVault, sodaAsset.hubAsset, params.amount));
+    const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(sodaAsset.decimals, params.amount);
 
     if (dstChainId === this.hubProvider.chainConfig.chain.id) {
-      calls.push(Erc20Service.encodeTransfer(sodaAsset.asset, dstWallet, translatedAmountOut));
+      calls.push(Erc20Service.encodeTransfer(sodaAsset.hubAsset, dstWallet, translatedAmountOut));
     } else {
       calls.push(
         EvmAssetManagerService.encodeTransfer(
-          sodaAsset.asset,
+          sodaAsset.hubAsset,
           dstWallet,
           translatedAmountOut,
           this.hubProvider.chainConfig.addresses.assetManager,
@@ -945,7 +946,7 @@ export class StakingService {
       }
 
       let hubTxHash: string | null = null;
-      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
+      if (!isHubChainId(spokeProvider, this.hubProvider)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
           spokeProvider instanceof SolanaSpokeProvider

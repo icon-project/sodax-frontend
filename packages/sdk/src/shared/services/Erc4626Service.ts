@@ -1,8 +1,7 @@
-import { encodeFunctionData, type Address } from 'viem';
+import { encodeFunctionData, type Address, type PublicClient } from 'viem';
 import { erc4626Abi } from '../abis/erc4626.abi.js';
-import type { EvmHubProvider, EvmSpokeProvider, SonicSpokeProvider } from '../entities/Providers.js';
-import type { EvmContractCall, EvmReturnType, Result, PromiseEvmTxReturnType } from '../types.js';
-
+import type { EvmContractCall, EvmReturnType, Result, TxReturnType } from '../types/types.js';
+import type { EvmChainKey, IEvmWalletProvider } from '@sodax/types';
 
 export class Erc4626Service {
   private constructor() {}
@@ -13,12 +12,9 @@ export class Erc4626Service {
    * @param spokeProvider - EVM Spoke provider
    * @returns The address of the underlying asset
    */
-  static async getAsset(
-    vault: Address,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider | EvmHubProvider,
-  ): Promise<Result<Address>> {
+  static async getAsset(vault: Address, publicClient: PublicClient): Promise<Result<Address>> {
     try {
-      const asset = await spokeProvider.publicClient.readContract({
+      const asset = await publicClient.readContract({
         address: vault,
         abi: erc4626Abi,
         functionName: 'asset',
@@ -42,12 +38,9 @@ export class Erc4626Service {
    * @param spokeProvider - EVM Spoke provider
    * @returns Total assets in the vault
    */
-  static async getTotalAssets(
-    vault: Address,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider | EvmHubProvider,
-  ): Promise<Result<bigint>> {
+  static async getTotalAssets(vault: Address, publicClient: PublicClient): Promise<Result<bigint>> {
     try {
-      const totalAssets = await spokeProvider.publicClient.readContract({
+      const totalAssets = await publicClient.readContract({
         address: vault,
         abi: erc4626Abi,
         functionName: 'totalAssets',
@@ -72,13 +65,9 @@ export class Erc4626Service {
    * @param spokeProvider - EVM Spoke provider
    * @returns Equivalent amount of shares
    */
-  static async convertToShares(
-    vault: Address,
-    assets: bigint,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider | EvmHubProvider,
-  ): Promise<Result<bigint>> {
+  static async convertToShares(vault: Address, assets: bigint, publicClient: PublicClient): Promise<Result<bigint>> {
     try {
-      const shares = await spokeProvider.publicClient.readContract({
+      const shares = await publicClient.readContract({
         address: vault,
         abi: erc4626Abi,
         functionName: 'convertToShares',
@@ -104,13 +93,9 @@ export class Erc4626Service {
    * @param spokeProvider - EVM Spoke provider
    * @returns Equivalent amount of assets
    */
-  static async convertToAssets(
-    vault: Address,
-    shares: bigint,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider | EvmHubProvider,
-  ): Promise<Result<bigint>> {
+  static async convertToAssets(vault: Address, shares: bigint, publicClient: PublicClient): Promise<Result<bigint>> {
     try {
-      const assets = await spokeProvider.publicClient.readContract({
+      const assets = await publicClient.readContract({
         address: vault,
         abi: erc4626Abi,
         functionName: 'convertToAssets',
@@ -136,13 +121,9 @@ export class Erc4626Service {
    * @param spokeProvider - EVM Spoke provider
    * @returns Maximum deposit amount
    */
-  static async getMaxDeposit(
-    vault: Address,
-    receiver: Address,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider | EvmHubProvider,
-  ): Promise<Result<bigint>> {
+  static async getMaxDeposit(vault: Address, receiver: Address, publicClient: PublicClient): Promise<Result<bigint>> {
     try {
-      const maxDeposit = await spokeProvider.publicClient.readContract({
+      const maxDeposit = await publicClient.readContract({
         address: vault,
         abi: erc4626Abi,
         functionName: 'maxDeposit',
@@ -168,13 +149,9 @@ export class Erc4626Service {
    * @param spokeProvider - EVM Spoke provider
    * @returns Expected shares to be minted
    */
-  static async previewDeposit(
-    vault: Address,
-    assets: bigint,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider | EvmHubProvider,
-  ): Promise<Result<bigint>> {
+  static async previewDeposit(vault: Address, assets: bigint, publicClient: PublicClient): Promise<Result<bigint>> {
     try {
-      const shares = await spokeProvider.publicClient.readContract({
+      const shares = await publicClient.readContract({
         address: vault,
         abi: erc4626Abi,
         functionName: 'previewDeposit',
@@ -205,10 +182,10 @@ export class Erc4626Service {
     vault: Address,
     assets: bigint,
     receiver: Address,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider,
+    walletProvider: IEvmWalletProvider,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+  ): Promise<TxReturnType<EvmChainKey, R>> {
+    const walletAddress = await walletProvider.getWalletAddress();
 
     const rawTx = {
       from: walletAddress,
@@ -225,7 +202,7 @@ export class Erc4626Service {
       return rawTx as EvmReturnType<R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
+    return walletProvider.sendTransaction(rawTx) as Promise<TxReturnType<EvmChainKey, R>>;
   }
 
   /**
@@ -235,13 +212,9 @@ export class Erc4626Service {
    * @param spokeProvider - EVM Spoke provider
    * @returns Maximum mint amount
    */
-  static async getMaxMint(
-    vault: Address,
-    receiver: Address,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider | EvmHubProvider,
-  ): Promise<Result<bigint>> {
+  static async getMaxMint(vault: Address, receiver: Address, publicClient: PublicClient): Promise<Result<bigint>> {
     try {
-      const maxMint = await spokeProvider.publicClient.readContract({
+      const maxMint = await publicClient.readContract({
         address: vault,
         abi: erc4626Abi,
         functionName: 'maxMint',
@@ -267,13 +240,9 @@ export class Erc4626Service {
    * @param spokeProvider - EVM Spoke provider
    * @returns Expected assets needed
    */
-  static async previewMint(
-    vault: Address,
-    shares: bigint,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider | EvmHubProvider,
-  ): Promise<Result<bigint>> {
+  static async previewMint(vault: Address, shares: bigint, publicClient: PublicClient): Promise<Result<bigint>> {
     try {
-      const assets = await spokeProvider.publicClient.readContract({
+      const assets = await publicClient.readContract({
         address: vault,
         abi: erc4626Abi,
         functionName: 'previewMint',
@@ -304,10 +273,10 @@ export class Erc4626Service {
     vault: Address,
     shares: bigint,
     receiver: Address,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider,
+    walletProvider: IEvmWalletProvider,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+  ): Promise<TxReturnType<EvmChainKey, R>> {
+    const walletAddress = await walletProvider.getWalletAddress();
 
     const rawTx = {
       from: walletAddress,
@@ -324,7 +293,7 @@ export class Erc4626Service {
       return rawTx as EvmReturnType<R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
+    return walletProvider.sendTransaction(rawTx) as Promise<TxReturnType<EvmChainKey, R>>;
   }
 
   /**
@@ -334,13 +303,9 @@ export class Erc4626Service {
    * @param spokeProvider - EVM Spoke provider
    * @returns Maximum withdrawal amount
    */
-  static async getMaxWithdraw(
-    vault: Address,
-    owner: Address,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider | EvmHubProvider,
-  ): Promise<Result<bigint>> {
+  static async getMaxWithdraw(vault: Address, owner: Address, publicClient: PublicClient): Promise<Result<bigint>> {
     try {
-      const maxWithdraw = await spokeProvider.publicClient.readContract({
+      const maxWithdraw = await publicClient.readContract({
         address: vault,
         abi: erc4626Abi,
         functionName: 'maxWithdraw',
@@ -366,13 +331,9 @@ export class Erc4626Service {
    * @param spokeProvider - EVM Spoke provider
    * @returns Expected shares to be burned
    */
-  static async previewWithdraw(
-    vault: Address,
-    assets: bigint,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider | EvmHubProvider,
-  ): Promise<Result<bigint>> {
+  static async previewWithdraw(vault: Address, assets: bigint, publicClient: PublicClient): Promise<Result<bigint>> {
     try {
-      const shares = await spokeProvider.publicClient.readContract({
+      const shares = await publicClient.readContract({
         address: vault,
         abi: erc4626Abi,
         functionName: 'previewWithdraw',
@@ -405,10 +366,10 @@ export class Erc4626Service {
     assets: bigint,
     receiver: Address,
     owner: Address,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider,
+    walletProvider: IEvmWalletProvider,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+  ): Promise<TxReturnType<EvmChainKey, R>> {
+    const walletAddress = await walletProvider.getWalletAddress();
 
     const rawTx = {
       from: walletAddress,
@@ -425,7 +386,7 @@ export class Erc4626Service {
       return rawTx as EvmReturnType<R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
+    return walletProvider.sendTransaction(rawTx) as Promise<TxReturnType<EvmChainKey, R>>;
   }
 
   /**
@@ -435,13 +396,9 @@ export class Erc4626Service {
    * @param spokeProvider - EVM Spoke provider
    * @returns Maximum redeem amount
    */
-  static async getMaxRedeem(
-    vault: Address,
-    owner: Address,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider | EvmHubProvider,
-  ): Promise<Result<bigint>> {
+  static async getMaxRedeem(vault: Address, owner: Address, publicClient: PublicClient): Promise<Result<bigint>> {
     try {
-      const maxRedeem = await spokeProvider.publicClient.readContract({
+      const maxRedeem = await publicClient.readContract({
         address: vault,
         abi: erc4626Abi,
         functionName: 'maxRedeem',
@@ -467,13 +424,9 @@ export class Erc4626Service {
    * @param spokeProvider - EVM Spoke provider
    * @returns Expected assets to be received
    */
-  static async previewRedeem(
-    vault: Address,
-    shares: bigint,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider | EvmHubProvider,
-  ): Promise<Result<bigint>> {
+  static async previewRedeem(vault: Address, shares: bigint, publicClient: PublicClient): Promise<Result<bigint>> {
     try {
-      const assets = await spokeProvider.publicClient.readContract({
+      const assets = await publicClient.readContract({
         address: vault,
         abi: erc4626Abi,
         functionName: 'previewRedeem',
@@ -506,10 +459,10 @@ export class Erc4626Service {
     shares: bigint,
     receiver: Address,
     owner: Address,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider,
+    walletProvider: IEvmWalletProvider,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+  ): Promise<TxReturnType<EvmChaiEvmChainKeynId, R>> {
+    const walletAddress = await walletProvider.getWalletAddress();
 
     const rawTx = {
       from: walletAddress,
@@ -526,7 +479,7 @@ export class Erc4626Service {
       return rawTx as EvmReturnType<R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
+    return walletProvider.sendTransaction(rawTx) as Promise<TxReturnType<EvmChainKey, R>>;
   }
 
   /**

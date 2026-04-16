@@ -1,31 +1,90 @@
-import { type Address, type Hex, toHex } from 'viem';
-import { InjectiveSpokeProvider } from '../../entities/injective/InjectiveSpokeProvider.js';
-import type { EvmHubProvider } from '../../entities/index.js';
-import {
-  type DepositSimulationParams,
-  type InjectiveGasEstimate,
-  type InjectiveSpokeProviderType,
-  type TxReturnType,
-  encodeAddress,
+import { fromHex } from 'viem';
+import type {
+  SendMessageParams,
+  InjectiveGasEstimate,
+  TxReturnType,
+  DepositParams,
+  EstimateGasParams,
+  GetDepositParams,
+  sleep,
 } from '../../../index.js';
-import { EvmWalletAbstraction } from '../hub/index.js';
-import { CosmosTxV1Beta1TxPb } from '@injectivelabs/sdk-ts';
-import { getIntentRelayChainId, type HubAddress, type InjectiveRawTransaction } from '@sodax/types';
+import {
+  toBase64,
+  ChainGrpcWasmApi,
+  TxGrpcApi,
+  fromBase64,
+  MsgExecuteContract,
+  createTransactionForAddressAndMsg,
+  CosmosTxV1Beta1TxPb,
+} from '@injectivelabs/sdk-ts';
+import type { CreateTransactionResult } from '@injectivelabs/sdk-ts';
+import { Network, getNetworkEndpoints, type NetworkEndpoints } from '@injectivelabs/networks';
+import {
+  getIntentRelayChainId,
+  ChainKeys,
+  type InjectiveChainKey,
+  type InjectiveRawTransaction,
+  type InjectiveRawTransactionReceipt,
+  type Result,
+  type SharedChainConfig,
+  spokeChainConfig,
+  type JsonObject,
+  type InjectiveExecuteResponse,
+  type IInjectiveWalletProvider,
+  type Hex,
+} from '@sodax/types';
 
-export type InjectiveSpokeDepositParams = {
-  from: string; // The address of the user on the spoke chain
-  to?: HubAddress; // The address of the user on the hub chain (wallet abstraction address)
-  token: string; // The address of the token to deposit
-  amount: bigint; // The amount of tokens to deposit
-  data: Hex; // The data to send with the deposit
-};
+export interface InstantiateMsg {
+  connection: string;
+  rate_limit: string;
+  hub_chain_id: string; // u128 as string
+  hub_asset_manager: Uint8Array;
+}
 
-export type InjectiveTransferToHubParams = {
-  token: string;
-  recipient: Address;
-  amount: string;
-  data: Hex;
-};
+export interface ConnMsg {
+  send_message?: {
+    dst_chain_id: number;
+    dst_address: Array<number>;
+    payload: Array<number>;
+  };
+}
+
+export interface ExecuteMsg {
+  transfer?: {
+    token: string;
+    to: Array<number>;
+    amount: string; // should be string for u128 , but in injective it fails in type conversion.
+    data: Array<number>;
+  };
+  recv_message?: {
+    src_chain_id: string; // u128 as string
+    src_address: Uint8Array;
+    conn_sn: string; // u128 as string
+    payload: Uint8Array;
+    signatures: Uint8Array[];
+  };
+  set_rate_limit?: {
+    rate_limit: string;
+  };
+  set_connection?: {
+    connection: string;
+  };
+  set_owner?: {
+    owner: string;
+  };
+}
+
+export interface QueryMsg {
+  get_state: {};
+}
+
+export interface State {
+  connection: string;
+  rate_limit: string;
+  hub_asset_manager: Uint8Array;
+  hub_chain_id: string; // u128 as string
+  owner: string;
+}
 
 /**
  * InjectiveSpokeService provides methods for interacting with the Injective spoke chain,
@@ -37,7 +96,20 @@ export type InjectiveTransferToHubParams = {
  */
 
 export class InjectiveSpokeService {
-  private constructor() {}
+  public readonly chainGrpcWasmApi: ChainGrpcWasmApi;
+  public readonly txClient: TxGrpcApi;
+  public readonly endpoints: NetworkEndpoints;
+  private readonly pollingIntervalMs: number;
+  private readonly maxTimeoutMs: number;
+
+  public constructor(sharedConfig: SharedChainConfig) {
+    const config = sharedConfig[ChainKeys.INJECTIVE_MAINNET];
+    this.endpoints = getNetworkEndpoints(Network.Mainnet);
+    this.chainGrpcWasmApi = new ChainGrpcWasmApi(this.endpoints.grpc);
+    this.txClient = new TxGrpcApi(this.endpoints.grpc);
+    this.pollingIntervalMs = config.pollingIntervalMs;
+    this.maxTimeoutMs = config.maxTimeoutMs;
+  }
 
   /**
    * Estimate the gas for a transaction.
@@ -45,17 +117,14 @@ export class InjectiveSpokeService {
    * @param {InjectiveSpokeProviderType} spokeProvider - The provider for the spoke chain.
    * @returns {Promise<InjectiveGasEstimate>} The estimated gas for the transaction.
    */
-  public static async estimateGas(
-    rawTx: InjectiveRawTransaction,
-    spokeProvider: InjectiveSpokeProviderType,
-  ): Promise<InjectiveGasEstimate> {
+  public async estimateGas({ tx }: EstimateGasParams<InjectiveChainKey>): Promise<InjectiveGasEstimate> {
     const txRaw = CosmosTxV1Beta1TxPb.TxRaw.fromPartial({
-      bodyBytes: rawTx.signedDoc.bodyBytes,
-      authInfoBytes: rawTx.signedDoc.authInfoBytes,
+      bodyBytes: tx.signedDoc.bodyBytes,
+      authInfoBytes: tx.signedDoc.authInfoBytes,
       signatures: [], // not required for simulation
     });
 
-    const { gasInfo } = await spokeProvider.txClient.simulate(txRaw);
+    const { gasInfo } = await this.txClient.simulate(txRaw);
 
     return {
       gasWanted: gasInfo.gasWanted,
@@ -71,64 +140,41 @@ export class InjectiveSpokeService {
    * @param {boolean} raw - The return type raw or just transaction hash
    * @returns {Promise<TxReturnType<InjectiveSpokeProviderType, R>>} A promise that resolves to the transaction hash.
    */
-  public static async deposit<R extends boolean = false>(
-    params: InjectiveSpokeDepositParams,
-    spokeProvider: InjectiveSpokeProviderType,
-    hubProvider: EvmHubProvider,
-    raw?: R,
-  ): Promise<TxReturnType<InjectiveSpokeProviderType, R>> {
-    const userWallet: Address =
-      params.to ??
-      (await EvmWalletAbstraction.getUserHubWalletAddress(
-        spokeProvider.chainConfig.chain.id,
-        toHex(Buffer.from(params.from, 'utf-8')),
-        hubProvider,
-      ));
+  public async deposit<R extends boolean = false>(
+    params: DepositParams<InjectiveChainKey, R>,
+  ): Promise<TxReturnType<InjectiveChainKey, R>> {
+    const { srcChainKey: fromChainId, srcAddress: from, token, to, amount, data = '0x' } = params;
 
-    return InjectiveSpokeService.transfer(
-      {
-        token: params.token,
-        recipient: userWallet,
-        amount: params.amount.toString(),
-        data: params.data,
+    const toBytes = fromHex(to, 'bytes');
+    const dataBytes = fromHex(data, 'bytes');
+
+    const msg: ExecuteMsg = {
+      transfer: {
+        token: token,
+        to: Array.from(toBytes),
+        amount: amount.toString(),
+        data: Array.from(dataBytes),
       },
-      spokeProvider,
-      raw,
-    );
-  }
-
-  /**
-   * Generate simulation parameters for deposit from InjectiveSpokeDepositParams.
-   * @param {InjectiveSpokeDepositParams} params - The deposit parameters.
-   * @param {InjectiveSpokeProviderType} spokeProvider - The provider for the spoke chain.
-   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
-   * @returns {Promise<DepositSimulationParams>} The simulation parameters.
-   */
-  public static async getSimulateDepositParams(
-    params: InjectiveSpokeDepositParams,
-    spokeProvider: InjectiveSpokeProviderType,
-    hubProvider: EvmHubProvider,
-  ): Promise<DepositSimulationParams> {
-    const to =
-      params.to ??
-      (await EvmWalletAbstraction.getUserHubWalletAddress(
-        spokeProvider.chainConfig.chain.id,
-        toHex(Buffer.from(params.from, 'utf-8')),
-        hubProvider,
-      ));
-
-    return {
-      spokeChainID: spokeProvider.chainConfig.chain.id,
-      token: encodeAddress(spokeProvider.chainConfig.chain.id, params.token),
-      from: encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
-      to,
-      amount: params.amount,
-      data: params.data,
-      srcAddress: encodeAddress(
-        spokeProvider.chainConfig.chain.id,
-        spokeProvider.chainConfig.addresses.assetManager as `0x${string}`,
-      ),
     };
+
+    const funds = [{ amount: amount.toString(), denom: token }];
+
+    if (params.raw === true) {
+      return (await this.getRawTransaction(
+        spokeChainConfig[fromChainId].networkId,
+        from,
+        spokeChainConfig[fromChainId].addresses.assetManager,
+        msg,
+      )) satisfies TxReturnType<InjectiveChainKey, true> as TxReturnType<InjectiveChainKey, R>;
+    }
+
+    const res = await params.walletProvider.execute(
+      from,
+      spokeChainConfig[fromChainId].addresses.assetManager,
+      msg,
+      funds,
+    );
+    return res.transactionHash satisfies TxReturnType<InjectiveChainKey, false> as TxReturnType<InjectiveChainKey, R>;
   }
 
   /**
@@ -137,66 +183,196 @@ export class InjectiveSpokeService {
    * @param {InjectiveSpokeProviderType} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The balance of the token.
    */
-  public static async getDeposit(token: string, spokeProvider: InjectiveSpokeProviderType): Promise<bigint> {
-    const bal = await spokeProvider.getBalance(token);
-    return BigInt(bal);
+  public async getDeposit(params: GetDepositParams<InjectiveChainKey>): Promise<bigint> {
+    const response = await this.chainGrpcWasmApi.fetchSmartContractState(
+      spokeChainConfig[params.chainKey].addresses.assetManager,
+      toBase64({
+        get_balance: { denom: params.token },
+      }),
+    );
+
+    // TODO: check if this is correct
+    return BigInt(fromBase64(response.data as unknown as string) as unknown as number);
   }
 
-  /**
-   * Calls a contract on the spoke chain using the user's wallet.
-   * @param {HubAddress} from - The address of the user on the hub chain.
-   * @param {Hex} payload - The payload to send to the contract.
-   * @param {InjectiveSpokeProviderType} spokeProvider - The provider for the spoke chain.
-   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
-   * @returns {Promise<TxReturnType<InjectiveSpokeProviderType, R>>} A promise that resolves to the transaction hash.
-   */
-  public static async callWallet<R extends boolean = false>(
-    from: HubAddress,
-    payload: Hex,
-    spokeProvider: InjectiveSpokeProviderType,
-    hubProvider: EvmHubProvider,
-    raw?: R,
-  ): Promise<TxReturnType<InjectiveSpokeProviderType, R>> {
-    const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
-    return InjectiveSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
+  public async getRawTransaction(
+    chainId: string,
+    senderAddress: string,
+    contractAddress: string,
+    msg: JsonObject,
+    memo?: string,
+  ): Promise<InjectiveRawTransaction> {
+    const msgExec = MsgExecuteContract.fromJSON({
+      contractAddress: contractAddress,
+      sender: senderAddress,
+      msg: msg as object,
+      funds: [],
+    });
+    const { txRaw }: CreateTransactionResult = await createTransactionForAddressAndMsg({
+      message: msgExec,
+      memo: memo || '',
+      address: senderAddress,
+      endpoint: this.endpoints.grpc,
+      chainId: chainId,
+    });
+
+    const rawTx = {
+      from: senderAddress as Hex,
+      to: contractAddress as Hex,
+      signedDoc: {
+        bodyBytes: txRaw.bodyBytes,
+        chainId: chainId,
+        accountNumber: BigInt(0),
+        authInfoBytes: txRaw.authInfoBytes,
+      },
+    };
+    return rawTx;
   }
 
-  /**
-   * Transfers tokens to the hub chain.
-   * @param {InjectiveTransferToHubParams} params - The parameters for the transfer, including:
-   *   - {string} token: The address of the token to transfer (use address(0) for native token).
-   *   - {Uint8Array} recipient: The recipient address on the hub chain.
-   *   - {string} amount: The amount to transfer.
-   *   - {Uint8Array} [data=new Uint8Array([])]: Additional data for the transfer.
-   * @param {InjectiveSpokeProviderType} spokeProvider - The provider for the spoke chain.
-   * @param {boolean} raw - The return type raw or just transaction hash
-   * @returns {Promise<TxReturnType<InjectiveSpokeProviderType, R>>} A promise that resolves to the transaction hash.
-   */
-  private static async transfer<R extends boolean = false>(
-    { token, recipient, amount, data = '0x' }: InjectiveTransferToHubParams,
-    spokeProvider: InjectiveSpokeProviderType,
-    raw?: R,
-  ): Promise<TxReturnType<InjectiveSpokeProviderType, R>> {
-    const sender = await spokeProvider.walletProvider.getWalletAddress();
-    return InjectiveSpokeProvider.deposit(sender, token, recipient, amount, data, spokeProvider, raw);
+  // Query Methods
+  async getState(chainId: InjectiveChainKey): Promise<State> {
+    return this.chainGrpcWasmApi.fetchSmartContractState(
+      spokeChainConfig[chainId].addresses.assetManager,
+      toBase64({
+        get_state: {},
+      }),
+    ) as unknown as Promise<State>;
   }
 
   /**
    * Sends a message to the hub chain.
-   * @param {bigint} dstChainId - The chain ID of the hub chain.
-   * @param {Address} dstAddress - The address on the hub chain.
-   * @param {Hex} payload - The payload to send.
-   * @param {InjectiveSpokeProviderType} spokeProvider - The provider for the spoke chain.
-   * @returns {Promise<TxReturnType<InjectiveSpokeProviderType, R>>} A promise that resolves to the transaction hash.
+   * @param {SendMessageParams<InjectiveChainKey, R>} params - The parameters for the call wallet, including:
+   *   - {FromParams<InjectiveChainKey>} fromParams: The parameters for the from chain.
+   *   - {HubChainKey} dstChainId: The chain ID of the hub chain.
+   *   - {HubAddress} dstAddress: The address on the hub chain.
+   *   - {Hex} payload: The payload to send.
+   *   - {boolean} raw: The return type raw or just transaction hash.
+   * @returns {Promise<TxReturnType<InjectiveChainKey, R>>} A promise that resolves to the transaction hash.
    */
-  private static async call<R extends boolean = false>(
-    dstChainId: bigint,
-    dstAddress: Hex,
-    payload: Hex,
-    spokeProvider: InjectiveSpokeProviderType,
-    raw?: R,
-  ): Promise<TxReturnType<InjectiveSpokeProviderType, R>> {
-    const sender = await spokeProvider.walletProvider.getWalletAddress();
-    return spokeProvider.send_message(sender, dstChainId.toString(), dstAddress, payload, spokeProvider, raw);
+  async sendMessage<R extends boolean = false>(
+    params: SendMessageParams<InjectiveChainKey, R>,
+  ): Promise<TxReturnType<InjectiveChainKey, R>> {
+    const { srcAddress: from, srcChainKey: fromChainId, dstChainId, dstAddress, payload } = params;
+    const relayId = getIntentRelayChainId(dstChainId);
+
+    const msg: ConnMsg = {
+      send_message: {
+        dst_chain_id: Number(relayId),
+        dst_address: Array.from(fromHex(dstAddress, 'bytes')),
+        payload: Array.from(fromHex(payload, 'bytes')),
+      },
+    };
+
+    if (params.raw === true) {
+      return (await this.getRawTransaction(
+        spokeChainConfig[fromChainId].networkId,
+        from,
+        spokeChainConfig[fromChainId].addresses.connection,
+        msg,
+      )) satisfies TxReturnType<InjectiveChainKey, true> as TxReturnType<InjectiveChainKey, R>;
+    }
+
+    const res = await params.walletProvider.execute(from, spokeChainConfig[fromChainId].addresses.connection, msg);
+    return res.transactionHash satisfies TxReturnType<InjectiveChainKey, false> as TxReturnType<InjectiveChainKey, R>;
+  }
+
+  async receiveMessage(
+    senderAddress: string,
+    srcChainId: InjectiveChainKey,
+    srcAddress: Uint8Array,
+    connSn: string,
+    payload: Uint8Array,
+    signatures: Uint8Array[],
+    walletProvider: IInjectiveWalletProvider,
+  ): Promise<InjectiveExecuteResponse> {
+    const msg: ExecuteMsg = {
+      recv_message: {
+        src_chain_id: srcChainId,
+        src_address: srcAddress,
+        conn_sn: connSn,
+        payload,
+        signatures,
+      },
+    };
+
+    return await walletProvider.execute(senderAddress, spokeChainConfig[srcChainId].addresses.assetManager, msg);
+  }
+
+  async setRateLimit(
+    chainId: InjectiveChainKey,
+    senderAddress: string,
+    rateLimit: string,
+    walletProvider: IInjectiveWalletProvider,
+  ): Promise<InjectiveExecuteResponse> {
+    const msg: ExecuteMsg = {
+      set_rate_limit: {
+        rate_limit: rateLimit,
+      },
+    };
+
+    return await walletProvider.execute(senderAddress, spokeChainConfig[chainId].addresses.assetManager, msg);
+  }
+
+  async setConnection(
+    chainId: InjectiveChainKey,
+    senderAddress: string,
+    connection: string,
+    walletProvider: IInjectiveWalletProvider,
+  ): Promise<InjectiveExecuteResponse> {
+    const msg: ExecuteMsg = {
+      set_connection: {
+        connection,
+      },
+    };
+
+    return await walletProvider.execute(senderAddress, spokeChainConfig[chainId].addresses.assetManager, msg);
+  }
+
+  async setOwner(
+    senderAddress: string,
+    owner: string,
+    chainId: InjectiveChainKey,
+    walletProvider: IInjectiveWalletProvider,
+  ): Promise<InjectiveExecuteResponse> {
+    const msg: ExecuteMsg = {
+      set_owner: {
+        owner,
+      },
+    };
+
+    return await walletProvider.execute(senderAddress, spokeChainConfig[chainId].addresses.assetManager, msg);
+  }
+
+  public async waitForTransactionReceipt(
+    params: WaitForTxReceiptParams,
+  ): Promise<Result<WaitForTxReceiptReturnType<InjectiveRawTransactionReceipt>>> {
+    const { txHash, pollingIntervalMs = this.pollingIntervalMs, maxTimeoutMs = this.maxTimeoutMs } = params;
+    const deadline = Date.now() + maxTimeoutMs;
+
+    while (Date.now() < deadline) {
+      try {
+        const tx = await this.txClient.fetchTx(txHash);
+        if (tx) {
+          if (tx.code === 0) {
+            return { ok: true, value: { status: 'success', receipt: tx } };
+          }
+          return {
+            ok: true,
+            value: { status: 'failure', error: new Error(`Transaction failed with code ${tx.code}: ${tx.rawLog}`) },
+          };
+        }
+      } catch {
+        // Transaction not yet indexed — retry
+      }
+      await sleep(pollingIntervalMs);
+    }
+
+    return {
+      ok: true,
+      value: {
+        status: 'timeout',
+        error: new Error(`Timed out after ${maxTimeoutMs}ms waiting for Injective transaction ${txHash}`),
+      },
+    };
   }
 }

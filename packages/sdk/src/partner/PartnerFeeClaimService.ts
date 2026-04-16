@@ -1,36 +1,28 @@
 // packages/sdk/src/partner/PartnerFeeClaimService.ts
 import invariant from 'tiny-invariant';
 import { erc20Abi, encodeFunctionData, type Address, isAddress } from 'viem';
-import type { EvmHubProvider, SonicSpokeProvider } from '../shared/entities/Providers.js';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 import type {
   SolverExecutionResponse,
   Result,
   TxReturnType,
   Prettify,
-  SonicSpokeProviderType,
   OptionalRaw,
   GetAddressType,
   SolverErrorResponse,
-  SonicAddressOrSpokeType,
-} from '../shared/types.js';
+  HubProvider,
+} from '../shared/types/types.js';
 import { Erc20Service } from '../shared/services/erc-20/Erc20Service.js';
 import { SolverApiService } from '../swap/SolverApiService.js';
-import {
-  isSonicSpokeProviderType,
-  isSonicRawSpokeProvider,
-  isConfiguredSolverConfig,
-  isSonicSpokeProvider,
-} from '../shared/guards.js';
+import { isConfiguredSolverConfig } from '../shared/guards.js';
 import { ProtocolIntentsAbi } from '../shared/abis/protocolIntents.abi.js';
 import {
-  SONIC_MAINNET_CHAIN_ID,
-  type SpokeChainId,
+  ChainKeys,
+  type SpokeChainKey,
   getSolverConfig,
   getIntentRelayChainId,
   type SolverConfig,
   type Hex,
-  type HubAsset,
   type OriginalAssetAddress,
   type XToken,
   type IntentRelayChainId,
@@ -41,7 +33,7 @@ export type PartnerFeeClaimAssetBalance = {
   symbol: string;
   name: string;
   address: Address; // The wrapped asset address on Sonic (hub chain)
-  originalChain: SpokeChainId; // The original chain where this token comes from
+  originalChain: SpokeChainKey; // The original chain where this token comes from
   originalAddress: Address; // The original token address on the spoke chain
   decimal: number;
   balance: bigint;
@@ -49,13 +41,13 @@ export type PartnerFeeClaimAssetBalance = {
 
 export type AutoSwapPreferences = {
   outputToken: Address;
-  dstChain: SpokeChainId | 'not configured';
+  dstChain: SpokeChainKey | 'not configured';
   dstAddress: Hex;
 };
 
 export type SetSwapPreferenceParams = {
   outputToken: Address;
-  dstChain: SpokeChainId;
+  dstChain: SpokeChainKey;
   dstAddress: string;
 };
 
@@ -66,7 +58,7 @@ export type FeeTokenApproveParams = {
 
 export type AssetEntry = {
   assetAddress: Address; // The wrapped asset address on Sonic
-  originalChain: SpokeChainId;
+  originalChain: SpokeChainKey;
   originalAddress: Address; // The original token address on the spoke chain
   hubAsset: { symbol: string; name: string; decimal: number };
 };
@@ -84,7 +76,7 @@ export type PartnerFeeClaimServiceConfig = Prettify<
 export type PartnerFeeClaimServiceConstructorParams = {
   config?: PartnerFeeClaimServiceConfig;
   configService: ConfigService;
-  hubProvider: EvmHubProvider;
+  hubProvider: HubProvider;
 };
 
 export type SetSwapPreferenceError = {
@@ -127,9 +119,13 @@ export type IntentAutoSwapResult = {
   intentTxHash: Hex; // The transaction hash of the intent on the hub chain (Sonic chain)
 };
 
+/**
+ * PartnerFeeClaimService is a service that allows you to claim partner fees for a given address or provider.
+ * @namespace SodaxFeatures
+ */
 export class PartnerFeeClaimService {
   readonly config: PartnerFeeClaimServiceConfig;
-  readonly hubProvider: EvmHubProvider;
+  readonly hubProvider: HubProvider;
   readonly configService: ConfigService;
 
   public constructor({ config, configService, hubProvider }: PartnerFeeClaimServiceConstructorParams) {
@@ -137,7 +133,7 @@ export class PartnerFeeClaimService {
       ? isConfiguredSolverConfig(config)
         ? config
         : getSolverConfig(hubProvider.chainConfig.chain.id)
-      : getSolverConfig(SONIC_MAINNET_CHAIN_ID);
+      : getSolverConfig(ChainKeys.SONIC_MAINNET);
 
     this.config = {
       ...solverConfig,
@@ -152,16 +148,12 @@ export class PartnerFeeClaimService {
    * Util methods for dealing with tokens and hub assets
    */
 
-  public getAllHubAssets(): Record<SpokeChainId, Record<string, HubAsset>> {
-    return this.configService.getHubAssets();
-  }
-
-  public getOriginalAssetAddress(chainId: SpokeChainId, hubAsset: Address): OriginalAssetAddress | undefined {
+  public getOriginalAssetAddress(chainId: SpokeChainKey, hubAsset: Address): OriginalAssetAddress | undefined {
     return this.configService.getOriginalAssetAddress(chainId, hubAsset);
   }
 
   public getSpokeTokenFromOriginalAssetAddress(
-    chainId: SpokeChainId,
+    chainId: SpokeChainKey,
     originalAssetAddress: OriginalAssetAddress,
   ): XToken | undefined {
     return this.configService.getSpokeTokenFromOriginalAssetAddress(chainId, originalAssetAddress);
@@ -195,18 +187,17 @@ export class PartnerFeeClaimService {
       // Collect all assets from all chains
       const allAssetEntries: Array<AssetEntry> = [];
 
-      // Iterate through all chains in hubAssets
-      for (const [chainId, chainAssets] of Object.entries(this.getAllHubAssets())) {
-        // Iterate through all tokens in this chain
-        for (const [originalTokenAddress, hubAsset] of Object.entries(chainAssets)) {
+      // Iterate through all chains' supported tokens
+      for (const [chainId, chainConfig] of Object.entries(this.configService.spokeChainConfig)) {
+        for (const token of Object.values(chainConfig.supportedTokens)) {
           allAssetEntries.push({
-            assetAddress: hubAsset.asset.toLowerCase() as Address, // Use the wrapped asset address on Sonic
-            originalChain: chainId as SpokeChainId,
-            originalAddress: originalTokenAddress.toLowerCase() as Address,
+            assetAddress: token.hubAsset.toLowerCase() as Address,
+            originalChain: chainId as SpokeChainKey,
+            originalAddress: token.address.toLowerCase() as Address,
             hubAsset: {
-              symbol: hubAsset.symbol,
-              name: hubAsset.name,
-              decimal: hubAsset.decimal,
+              symbol: token.symbol,
+              name: token.name,
+              decimal: token.decimals,
             },
           });
         }
@@ -315,7 +306,7 @@ export class PartnerFeeClaimService {
       const dstChain =
         autoSwapPreferences.dstChain === 0n
           ? ('not configured' as const)
-          : this.configService.getSpokeChainIdFromIntentRelayChainId(
+          : this.configService.getSpokeChainKeyFromIntentRelayChainId(
               autoSwapPreferences.dstChain as IntentRelayChainId,
             );
 
@@ -364,7 +355,7 @@ export class PartnerFeeClaimService {
 
       const outputToken =
         params.dstChain !== this.hubProvider.chainConfig.chain.id
-          ? this.hubProvider.configService.getHubAssetInfo(params.dstChain, params.outputToken)?.asset
+          ? this.hubProvider.configService.getHubAssetInfo(params.dstChain, params.outputToken)?.hubAsset
           : params.outputToken;
 
       invariant(

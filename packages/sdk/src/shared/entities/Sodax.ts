@@ -7,9 +7,12 @@ import {
   StakingService,
   DexService,
   type DexServiceConfig,
+  SpokeService,
+  EvmHubProvider,
+  type EvmHubProviderConfig,
 } from '../../index.js';
 import { MoneyMarketService } from '../../moneyMarket/MoneyMarketService.js';
-import type { HttpUrl, defaultSharedConfig } from '@sodax/types';
+import type { HttpUrl, PartialSharedConfig } from '@sodax/types';
 import type {
   SolverConfigParams,
   MoneyMarketConfigParams,
@@ -17,8 +20,8 @@ import type {
   BridgeServiceConfig,
   BackendApiConfig,
   Result,
-} from '../types.js';
-import { EvmHubProvider, type EvmHubProviderConfig } from './Providers.js';
+  HubProvider,
+} from '../types/types.js';
 import { ConfigService } from '../config/index.js';
 import { PartnerService, type PartnerServiceConfig } from '../../partner/PartnerService.js';
 
@@ -32,7 +35,7 @@ export type SodaxConfig = {
   relayerApiEndpoint?: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
   backendApiConfig?: BackendApiConfig; // backend API config used to interact with the backend API
   partners?: PartnerServiceConfig; // optional Partner fee claim service enabling partner fee claim operations
-  sharedConfig?: typeof defaultSharedConfig;
+  sharedConfig?: PartialSharedConfig;
 };
 
 /**
@@ -53,8 +56,9 @@ export class Sodax {
   public readonly dex: DexService; // Dex service enabling DEX operations
   public readonly config: ConfigService; // Config service enabling configuration data fetching from the backend API or fallbacking to default values
 
-  public readonly hubProvider: EvmHubProvider; // hub provider for the hub chain (e.g. Sonic mainnet)
+  public readonly hubProvider: HubProvider; // hub provider for the hub chain (e.g. Sonic mainnet)
   public readonly relayerApiEndpoint: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
+  public readonly spokeService: SpokeService; // spoke service enabling spoke chain operations
 
   constructor(config?: SodaxConfig) {
     this.instanceConfig = config;
@@ -69,6 +73,7 @@ export class Sodax {
       sharedConfig: config?.sharedConfig,
     });
     this.hubProvider = new EvmHubProvider({ config: config?.hubProviderConfig, configService: this.config }); // default to Sonic mainnet
+    this.spokeService = new SpokeService(this.config);
     this.swaps =
       config && config.swaps
         ? new SwapService({
