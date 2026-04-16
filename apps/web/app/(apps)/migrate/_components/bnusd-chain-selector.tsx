@@ -84,7 +84,7 @@ const BnUSDChainSelector: React.FC<BnUSDChainSelectorProps> = ({
       >
         <DialogTitle className="!pt-0 w-full mix-blend-multiply text-espresso font-['InterBold'] leading-snug text-(size:--body-super-comfortable) flex justify-between items-center w-full">
           <div className="flex justify-start items-center gap-2 w-full">
-            <Image src="/symbol_dark.png" alt="SODAX Symbol" width={16} height={16} className="mix-blend-multiply" />
+            <Image src="/soda-yellow-sm.png" alt="SODAX Symbol" width={16} height={16} className="mix-blend-multiply" />
             <span className="flex-1">{type === 'INPUT' ? 'Migrate from' : 'Migrate to'}</span>
             <DialogClose asChild>
               <XIcon className="w-4 h-4 cursor-pointer text-clay-light hover:text-clay" />

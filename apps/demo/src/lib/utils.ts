@@ -216,8 +216,7 @@ export function getReadableTxError(error: unknown): string {
     return 'Something went wrong. Please try again.';
   }
 
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  const message = (error as any)?.shortMessage || (error as any)?.message || '';
+  const message = (error as Record<string, string>)?.shortMessage || (error as Record<string, string>)?.message || '';
 
   if (message.includes('gas price below minimum')) {
     return 'Network gas fee is too low. Please try again in a moment.';

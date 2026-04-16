@@ -108,7 +108,7 @@ export default function PartnerCategoriesSection() {
 
         {/* Title */}
         <div className="flex gap-2 items-center px-4">
-          <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="shrink-0" />
+          <Image src="/soda-yellow-sm.png" alt="SODAX" width={32} height={32} className="shrink-0" />
           <h2 className="font-['InterBold'] text-[26px] sm:text-[32px] leading-[1.1] text-espresso">
             Built for builders
           </h2>
