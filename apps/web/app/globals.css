@@ -54,6 +54,7 @@
   --cherry-bright: #cc9e9a;
   --cherry-brighter: #e3bebb;
   --cherry-grey: #d7cdcb;
+  --cherry-on-cherry: #c26c64;
   --yellow-soda: #ffd92f;
   --yellow-dark: #ecc100;
   --orange-sonic: #ff9048;
@@ -66,6 +67,7 @@
   --clay: #8e7e7d;
   --clay-dark: #6b5c5b;
   --negative: #f37274;
+  --positive: #00a778;
   --body-comfortable-mobile: 12px;
   --body-comfortable-tablet: 13px;
   --body-comfortable-desktop: 14px;
@@ -162,6 +164,7 @@
   --cherry-bright: #cc9e9a;
   --cherry-brighter: #e3bebb;
   --cherry-grey: #d7cdcb;
+  --cherry-on-cherry: #c26c64;
   --yellow-soda: #ffd92f;
   --yellow-dark: #ecc100;
   --orange-sonic: #ff9048;
@@ -174,6 +177,7 @@
   --clay: #8e7e7d;
   --clay-dark: #6b5c5b;
   --negative: #f37274;
+  --positive: #00a778;
   --body-comfortable-mobile: 12px;
   --body-comfortable-tablet: 13px;
   --body-comfortable-desktop: 14px;
@@ -252,6 +256,7 @@
   --color-cherry-soda: var(--cherry-soda);
   --color-cherry-bright: var(--cherry-bright);
   --color-cherry-grey: var(--cherry-grey);
+  --color-cherry-on-cherry: var(--cherry-on-cherry);
   --color-yellow-soda: var(--yellow-soda);
   --color-yellow-dark: var(--yellow-dark);
   --color-orange-sonic: var(--orange-sonic);
@@ -265,6 +270,7 @@
   --color-clay-dark: var(--clay-dark);
   --color-cherry-brighter: var(--cherry-brighter);
   --color-negative: var(--negative);
+  --color-positive: var(--positive);
   --text-app-title: var(--app-title-mobile);
   --text-body-comfortable: var(--body-comfortable-mobile);
   --text-body-super-comfortable: var(--body-super-comfortable-mobile);

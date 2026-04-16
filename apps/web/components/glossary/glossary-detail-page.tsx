@@ -139,7 +139,7 @@ export default async function GlossaryDetailPage({
         publisher: {
           '@type': 'Organization',
           name: 'SODAX',
-          logo: { '@type': 'ImageObject', url: 'https://sodax.com/symbol.png' },
+          logo: { '@type': 'ImageObject', url: 'https://sodax.com/soda-yellow.png' },
         },
         keywords: tags.join(', '),
         articleSection: config.articleSection,

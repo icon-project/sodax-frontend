@@ -72,7 +72,7 @@ const HeroSection = (): React.ReactElement => {
               className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             >
-              <Image src="/symbol.png" alt="SODAX Symbol" width={32} height={32} />
+              <Image src="/soda-yellow.png" alt="SODAX Symbol" width={32} height={32} />
               <div className="hidden md:block md:ml-[11px]">
                 <SodaxIcon width={84} height={18} fill="white" />
               </div>

@@ -40,7 +40,7 @@ const AppSidebar = (): React.ReactElement => {
           </button>
 
           <SidebarGroupContent className="flex flex-col items-center text-center gap-6 mt-45 z-10">
-            <Image src="/symbol.png" alt="SODAX Symbol" width={32} height={32} />
+            <Image src="/soda-yellow.png" alt="SODAX Symbol" width={32} height={32} />
             <SidebarMenu className="gap-6">
               <SidebarMenuItem>
                 <Link href={SWAP_ROUTE} className="text-(length:--body-super-comfortable) text-white font-medium">

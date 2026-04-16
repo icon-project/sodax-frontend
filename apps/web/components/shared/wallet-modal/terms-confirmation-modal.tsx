@@ -111,7 +111,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
         <DialogTitle>
           <div className="flex flex-row justify-between items-center">
             <div className="inline-flex justify-start items-center gap-2">
-              <Image src="/symbol_dark.png" alt="SODAX Symbol" width={16} height={16} className="mix-blend-multiply" />
+              <Image src="/soda-yellow-sm.png" alt="SODAX Symbol" width={16} height={16} className="mix-blend-multiply" />
               <div className="mix-blend-multiply justify-end text-espresso font-['InterBold'] leading-snug text-(length:--subtitle)">
                 Confirm terms
               </div>
