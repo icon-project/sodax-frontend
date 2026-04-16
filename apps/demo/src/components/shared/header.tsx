@@ -13,6 +13,7 @@ const navLinks = [
   { to: '/staking', label: 'Staking' },
   { to: '/partner-fee-claim', label: 'Partner Fee Claim' },
   { to: '/dex', label: 'Dex' },
+  { to: '/recovery', label: 'Recovery' },
 ];
 
 const getNavLinkClass = (isActive: boolean) =>
