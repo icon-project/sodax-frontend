@@ -30,6 +30,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
+    },
+    "./stacks-internal": {
+      "types": "./dist/stacks-internal.d.ts",
+      "import": "./dist/stacks-internal.mjs",
+      "require": "./dist/stacks-internal.cjs"
     }
   },
   "engines": {

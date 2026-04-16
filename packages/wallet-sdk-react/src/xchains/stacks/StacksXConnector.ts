@@ -35,11 +35,13 @@ export class StacksXConnector extends XConnector {
       return undefined;
     }
 
-    const response = await request({ provider }, 'stx_getAddresses');
-    // @ts-ignore
+    const response = (await request({ provider }, 'stx_getAddresses')) as unknown as {
+      addresses: { address: string; purpose: string }[];
+    };
     const stxAddress = response.addresses.find(a => a.purpose === 'stacks');
 
     if (!stxAddress) {
+      console.warn('[StacksXConnector] wallet returned no stacks-purpose address');
       return undefined;
     }
 
