@@ -8,6 +8,7 @@
   - [ ] `@sodax/sdk`
   - [ ] `@sodax/dapp-kit`
   - [ ] `@sodax/types`
+  - [ ] `@sodax/libs`
   - [ ] `@sodax/wallet-sdk-core`
   - [ ] `@sodax/wallet-sdk-react`
   - [ ] Increase [CONFIG_VERSION](https://github.com/icon-project/sodax-frontend/blob/main/packages/types/src/constants/index.ts#L28C14-L28C28) in `@sodax/types`
