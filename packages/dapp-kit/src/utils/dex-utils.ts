@@ -4,7 +4,7 @@ import type {
   UseCreateSupplyLiquidityParamsProps,
   UseCreateSupplyLiquidityParamsResult,
   UseCreateWithdrawParamsProps,
-} from '@/hooks/dex';
+} from '@/hooks/dex/index.js';
 import {
   ClService,
   type CreateAssetWithdrawParams,

@@ -1,4 +1,4 @@
-import { SodaxContext, type SodaxContextType } from '@/contexts';
+import { SodaxContext, type SodaxContextType } from '@/contexts/index.js';
 import { useContext } from 'react';
 
 /**

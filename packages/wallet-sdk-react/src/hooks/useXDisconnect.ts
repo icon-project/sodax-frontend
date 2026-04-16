@@ -1,6 +1,6 @@
 import type { ChainType } from '@sodax/types';
 import { useCallback } from 'react';
-import { useXWalletStore } from '../useXWalletStore';
+import { useXWalletStore } from '../useXWalletStore.js';
 
 /**
  * Hook for disconnecting from a specific blockchain wallet.

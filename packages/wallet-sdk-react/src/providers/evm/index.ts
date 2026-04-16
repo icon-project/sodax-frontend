@@ -1,1 +1,1 @@
-export { EvmProvider } from './EvmProvider';
+export { EvmProvider } from './EvmProvider.js';

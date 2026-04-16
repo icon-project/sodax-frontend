@@ -1,7 +1,7 @@
 // packages/dapp-kit/src/hooks/backend/useAllMoneyMarketAssets.ts
 import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import type { MoneyMarketAsset } from '@sodax/sdk';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 
 export type UseBackendAllMoneyMarketAssetsParams = {
   queryOptions?: UseQueryOptions<MoneyMarketAsset[], Error>;

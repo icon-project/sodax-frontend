@@ -1,1 +1,1 @@
-export { SolanaProvider } from './SolanaProvider';
+export { SolanaProvider } from './SolanaProvider.js';

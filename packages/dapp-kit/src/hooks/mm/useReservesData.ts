@@ -1,5 +1,5 @@
 import { useQuery, type UseQueryResult, type UseQueryOptions } from '@tanstack/react-query';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 import type { AggregatedReserveData, BaseCurrencyInfo } from '@sodax/sdk';
 
 export type UseReservesDataParams = {

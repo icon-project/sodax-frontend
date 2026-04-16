@@ -4,8 +4,19 @@
   "files": {},
   "linter": {
     "rules": {
+      "style": {
+        "noUselessElse": "off",
+        "noNonNullAssertion": "off"
+      },
       "suspicious": {
-        "noExplicitAny": "off"
+        "noExplicitAny": "off",
+        "noFallthroughSwitchClause": "error"
+      },
+      "complexity": {
+        "noStaticOnlyClass": "off"
+      },
+      "correctness": {
+        "noUnusedFunctionParameters": "off"
       }
     },
     "ignore": ["tsup.config.ts"]

@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { SolanaWalletProvider } from '@sodax/wallet-sdk-core';
-import { SolanaXService } from '../../xchains/solana/SolanaXService';
-import { SolanaXConnector } from '../../xchains/solana';
-import { useXWalletStore } from '../../useXWalletStore';
+import { SolanaXService } from '../../xchains/solana/SolanaXService.js';
+import { SolanaXConnector } from '../../xchains/solana/index.js';
+import { useXWalletStore } from '../../useXWalletStore.js';
 
 /**
  * Hydrates Solana state from @solana/wallet-adapter-react hooks into SolanaXService singleton and store.

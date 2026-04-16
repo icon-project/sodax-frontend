@@ -1,6 +1,6 @@
 import type { ChainType } from '@sodax/types';
-import type { XAccount } from '../types';
-import type { IXConnector } from '../types/interfaces';
+import type { XAccount } from '../types/index.js';
+import type { IXConnector } from '../types/interfaces.js';
 
 /**
  * Base class for wallet provider connectors that handles connection management and wallet interactions

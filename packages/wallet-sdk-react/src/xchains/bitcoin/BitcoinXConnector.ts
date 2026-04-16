@@ -1,7 +1,7 @@
-import { XConnector } from '@/core';
-import type { XAccount } from '@/types';
+import { XConnector } from '@/core/index.js';
+import type { XAccount } from '@/types/index.js';
 import type { IBitcoinWalletProvider } from '@sodax/types';
-import { BitcoinXService } from './BitcoinXService';
+import { BitcoinXService } from './BitcoinXService.js';
 
 /**
  * Abstract base class for Bitcoin wallet connectors.
@@ -16,8 +16,8 @@ export abstract class BitcoinXConnector extends XConnector {
     return BitcoinXService.getInstance();
   }
 
-  abstract connect(): Promise<XAccount | undefined>;
-  abstract disconnect(): Promise<void>;
+  abstract override connect(): Promise<XAccount | undefined>;
+  abstract override disconnect(): Promise<void>;
 
   /**
    * Returns an IBitcoinWalletProvider instance after connecting.

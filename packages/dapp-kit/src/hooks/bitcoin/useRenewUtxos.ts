@@ -1,6 +1,6 @@
 import { normalizePsbtToBase64, type BitcoinSpokeProvider } from '@sodax/sdk';
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
-import { loadRadfiSession } from './useRadfiAuth';
+import { loadRadfiSession } from './useRadfiAuth.js';
 
 type RenewUtxosParams = {
   txIdVouts: string[];

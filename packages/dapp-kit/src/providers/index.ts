@@ -1,1 +1,1 @@
-export { SodaxProvider } from './SodaxProvider';
+export { SodaxProvider } from './SodaxProvider.js';

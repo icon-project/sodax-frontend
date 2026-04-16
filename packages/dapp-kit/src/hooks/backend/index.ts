@@ -8,22 +8,22 @@
  */
 
 // Intent hooks
-export { useBackendIntentByTxHash } from './useBackendIntentByTxHash';
-export { useBackendIntentByHash } from './useBackendIntentByHash';
-export { useBackendUserIntents } from './useBackendUserIntents';
+export { useBackendIntentByTxHash } from './useBackendIntentByTxHash.js';
+export { useBackendIntentByHash } from './useBackendIntentByHash.js';
+export { useBackendUserIntents } from './useBackendUserIntents.js';
 
 // Swap submit-tx hooks
-export { useBackendSubmitSwapTx } from './useBackendSubmitSwapTx';
-export { useBackendSubmitSwapTxStatus } from './useBackendSubmitSwapTxStatus';
+export { useBackendSubmitSwapTx } from './useBackendSubmitSwapTx.js';
+export { useBackendSubmitSwapTxStatus } from './useBackendSubmitSwapTxStatus.js';
 
 // Solver hooks
-export { useBackendOrderbook } from './useBackendOrderbook';
+export { useBackendOrderbook } from './useBackendOrderbook.js';
 
 // Money Market hooks
-export { useBackendMoneyMarketPosition } from './useBackendMoneyMarketPosition';
-export { useBackendAllMoneyMarketAssets } from './useBackendAllMoneyMarketAssets';
-export { useBackendMoneyMarketAsset } from './useBackendMoneyMarketAsset';
-export { useBackendMoneyMarketAssetBorrowers } from './useBackendMoneyMarketAssetBorrowers';
-export { useBackendMoneyMarketAssetSuppliers } from './useBackendMoneyMarketAssetSuppliers';
-export { useBackendAllMoneyMarketBorrowers } from './useBackendAllMoneyMarketBorrowers';
-export * from './types';
+export { useBackendMoneyMarketPosition } from './useBackendMoneyMarketPosition.js';
+export { useBackendAllMoneyMarketAssets } from './useBackendAllMoneyMarketAssets.js';
+export { useBackendMoneyMarketAsset } from './useBackendMoneyMarketAsset.js';
+export { useBackendMoneyMarketAssetBorrowers } from './useBackendMoneyMarketAssetBorrowers.js';
+export { useBackendMoneyMarketAssetSuppliers } from './useBackendMoneyMarketAssetSuppliers.js';
+export { useBackendAllMoneyMarketBorrowers } from './useBackendAllMoneyMarketBorrowers.js';
+export * from './types.js';

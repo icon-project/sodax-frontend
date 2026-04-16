@@ -1,8 +1,8 @@
-import type { XAccount } from '@/types';
-import { ICONexRequestEventType, ICONexResponseEventType, request } from './iconex';
+import type { XAccount } from '@/types/index.js';
+import { ICONexRequestEventType, ICONexResponseEventType, request } from './iconex/index.js';
 
-import { XConnector } from '@/core/XConnector';
-import { assert, hasBooleanProperty, isRecord } from '@/shared/guards';
+import { XConnector } from '@/core/XConnector.js';
+import { assert, hasBooleanProperty, isRecord } from '@/shared/guards.js';
 
 const isHanaWallet = (value: unknown): value is { isAvailable?: boolean } => {
   return isRecord(value) && (value.isAvailable === undefined || hasBooleanProperty(value, 'isAvailable'));

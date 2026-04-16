@@ -2,11 +2,11 @@ import type { ChainType, RpcConfig } from '@sodax/types';
 import { create } from 'zustand';
 import { createJSONStorage, persist, devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import type { XService, XConnector } from './core';
-import type { XConnection, WalletProvider } from './types';
-import type { ChainActions } from './types/chainActions';
-import type { ChainsConfig } from './types/config';
-import { chainRegistry, createChainServices } from './chainRegistry';
+import type { XService, XConnector } from './core/index.js';
+import type { XConnection, WalletProvider } from './types/index.js';
+import type { ChainActions } from './types/chainActions.js';
+import type { ChainsConfig } from './types/config.js';
+import { chainRegistry, createChainServices } from './chainRegistry.js';
 
 // ─── Store ───────────────────────────────────────────────────────────────────
 

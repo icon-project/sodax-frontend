@@ -1,4 +1,4 @@
-import type { StacksProviderConfig } from './StacksXConnector';
+import type { StacksProviderConfig } from './StacksXConnector.js';
 
 // Icons sourced from @stacks/connect DEFAULT_PROVIDERS
 // https://github.com/stx-labs/connect/blob/main/packages/connect/src/providers.ts

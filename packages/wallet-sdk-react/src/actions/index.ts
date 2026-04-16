@@ -1,2 +1,2 @@
-export { getXChainType } from './getXChainType';
-export { getXService } from './getXService';
+export { getXChainType } from './getXChainType.js';
+export { getXService } from './getXService.js';

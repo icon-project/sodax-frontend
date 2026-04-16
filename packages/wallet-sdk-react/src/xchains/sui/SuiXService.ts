@@ -1,8 +1,8 @@
-import { XService } from '@/core/XService';
+import { XService } from '@/core/XService.js';
 import type { XToken, ISuiWalletProvider } from '@sodax/types';
 import { SuiWalletProvider } from '@sodax/wallet-sdk-core';
-import { isNativeToken } from '@/utils';
-import { assertSuiProviderShape } from '@/shared/guards';
+import { isNativeToken } from '@/utils/index.js';
+import { assertSuiProviderShape } from '@/shared/guards.js';
 
 // These fields are hydrated by SuiHydrator from @mysten/dapp-kit hooks.
 // We use structural interfaces instead of importing nominal types from @mysten/wallet-standard
@@ -58,7 +58,7 @@ export class SuiXService extends XService {
 
   // getBalance is not used because getBalances uses getAllBalances which returns all balances
 
-  async getBalances(address: string | undefined, xTokens: readonly XToken[]): Promise<Record<string, bigint>> {
+  override async getBalances(address: string | undefined, xTokens: readonly XToken[]): Promise<Record<string, bigint>> {
     if (!address || !this.suiClient) return {};
     // Capture in local so the closure sees a narrowed (non-undefined) reference.
     const client = this.suiClient;

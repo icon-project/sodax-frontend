@@ -1,6 +1,6 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { XToken, SpokeChainId } from '@sodax/sdk';
-import { useSodaxContext } from '../shared';
+import { useSodaxContext } from '../shared/index.js';
 
 /**
 /**

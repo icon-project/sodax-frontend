@@ -1,6 +1,6 @@
-import type { XAccount } from '@/types';
+import type { XAccount } from '@/types/index.js';
 import { detectBitcoinAddressType, type IBitcoinWalletProvider, type AddressType } from '@sodax/types';
-import { BitcoinXConnector } from './BitcoinXConnector';
+import { BitcoinXConnector } from './BitcoinXConnector.js';
 
 // OKX Bitcoin wallet window API types
 interface OKXBitcoinWallet {
@@ -80,7 +80,7 @@ export class OKXXConnector extends BitcoinXConnector {
     return typeof window !== 'undefined' && !!window.okxwallet?.bitcoin;
   }
 
-  public get icon(): string {
+  public override get icon(): string {
     return 'https://static.okx.com/cdn/assets/imgs/247/58E63FEA47A2B7D7.png';
   }
 

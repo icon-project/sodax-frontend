@@ -1,8 +1,8 @@
-import { InjectiveXService } from '@/xchains/injective';
+import { InjectiveXService } from '@/xchains/injective/index.js';
 import { Wallet } from '@injectivelabs/wallet-base';
 import { useEffect, useState } from 'react';
-import { useXService } from './useXService';
-import { assert, hasFunctionProperty, isRecord } from '@/shared/guards';
+import { useXService } from './useXService.js';
+import { assert, hasFunctionProperty, isRecord } from '@/shared/guards.js';
 
 /**
  * React hook that returns the current Ethereum chain ID when using MetaMask wallet for Injective.

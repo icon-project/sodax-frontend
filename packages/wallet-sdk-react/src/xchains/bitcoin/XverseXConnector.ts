@@ -1,7 +1,7 @@
-import type { XAccount } from '@/types';
+import type { XAccount } from '@/types/index.js';
 import { detectBitcoinAddressType, type IBitcoinWalletProvider, type AddressType, type BtcWalletAddressType } from '@sodax/types';
 import { AddressPurpose, MessageSigningProtocols } from 'sats-connect';
-import { BitcoinXConnector } from './BitcoinXConnector';
+import { BitcoinXConnector } from './BitcoinXConnector.js';
 
 // sats-connect types
 interface SignPsbtResult {
@@ -180,7 +180,7 @@ export class XverseXConnector extends BitcoinXConnector {
     return typeof window !== 'undefined' && !!window.BitcoinProvider;
   }
 
-  public get icon(): string {
+  public override get icon(): string {
     return 'https://cdn.brandfetch.io/iddzGN5Rcv/w/400/h/400/theme/dark/icon.jpeg?c=1bxid64Mup7aczewSAYMX&t=1771902357797';
   }
 

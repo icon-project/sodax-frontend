@@ -1,4 +1,4 @@
-import { XService } from '@/core/XService';
+import { XService } from '@/core/XService.js';
 import type { XToken } from '@sodax/types';
 import { fetchCallReadOnlyFunction, Cl, type UIntCV, type ResponseOkCV } from '@stacks/transactions';
 import { networkFrom, type StacksNetwork } from '@stacks/network';
@@ -20,7 +20,7 @@ export class StacksXService extends XService {
     return StacksXService.instance;
   }
 
-  async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
+  override async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
     if (!address) return 0n;
 
     // native STX balance
@@ -40,7 +40,9 @@ export class StacksXService extends XService {
     }
 
     // SIP-010 fungible token balance via read-only contract call
-    const [contractAddress, contractName] = xToken.address.split('.');
+    const parts = xToken.address.split('.');
+    const contractAddress = parts[0] ?? '';
+    const contractName = parts[1] ?? '';
     try {
       const result = (await fetchCallReadOnlyFunction({
         contractAddress,

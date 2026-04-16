@@ -1,13 +1,32 @@
-import type { ChainType } from '@sodax/types';
+import type {
+  ChainType,
+  IEvmWalletProvider,
+  IInjectiveWalletProvider,
+  IStellarWalletProvider,
+  ISuiWalletProvider,
+  IIconWalletProvider,
+  IBitcoinWalletProvider,
+  ISolanaWalletProvider,
+  IStacksWalletProvider,
+  INearWalletProvider,
+} from '@sodax/types';
 
-export * from './interfaces';
-export * from './config';
-export * from './chainActions';
+export * from './interfaces.js';
+export * from './config.js';
+export * from './chainActions.js';
 
-// Re-export the canonical wallet provider union from @sodax/sdk so wallet-sdk-react
-// stays a single source of truth — keeping `WalletProvider` as a local alias for
-// historical call sites within this package.
-export type { IWalletProvider as WalletProvider } from '@sodax/sdk';
+// Wallet provider union — mirrors @sodax/sdk's IWalletProvider but sourced from @sodax/types
+// to avoid module resolution issues with moduleResolution: "NodeNext".
+export type WalletProvider =
+  | IEvmWalletProvider
+  | IInjectiveWalletProvider
+  | IStellarWalletProvider
+  | ISuiWalletProvider
+  | IIconWalletProvider
+  | IBitcoinWalletProvider
+  | ISolanaWalletProvider
+  | IStacksWalletProvider
+  | INearWalletProvider;
 
 export type XAccount = {
   address: string | undefined;

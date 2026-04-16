@@ -1,7 +1,7 @@
 import type { ChainId, ChainType } from '@sodax/types';
-import { getXChainType } from '../actions';
-import { useXWalletStore } from '../useXWalletStore';
-import type { WalletProvider } from '../types';
+import { getXChainType } from '../actions/index.js';
+import { useXWalletStore } from '../useXWalletStore.js';
+import type { WalletProvider } from '../types/index.js';
 
 const warnedChains = new Set<ChainType>();
 

@@ -1,5 +1,5 @@
 import type { ChainType, XToken } from '@sodax/types';
-import type { XAccount } from './index';
+import type { XAccount } from './index.js';
 
 /**
  * Public interface for chain service implementations.

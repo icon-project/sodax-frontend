@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
 import type { HubTxHash, SpokeTxHash, SpokeProvider } from '@sodax/sdk';
-import { useSodaxContext } from '../shared/useSodaxContext';
-import type { UseCreateSupplyLiquidityParamsResult } from './useCreateSupplyLiquidityParams';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
+import type { UseCreateSupplyLiquidityParamsResult } from './useCreateSupplyLiquidityParams.js';
 
 export type UseSupplyLiquidityProps = {
   params: UseCreateSupplyLiquidityParamsResult;

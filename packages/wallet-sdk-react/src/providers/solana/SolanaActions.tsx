@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { SolanaXService } from '../../xchains/solana/SolanaXService';
-import { useXWalletStore } from '../../useXWalletStore';
-import { SOLANA_METAMASK_CONNECT_TIMEOUT_MS } from '../../constants';
+import { SolanaXService } from '../../xchains/solana/SolanaXService.js';
+import { useXWalletStore } from '../../useXWalletStore.js';
+import { SOLANA_METAMASK_CONNECT_TIMEOUT_MS } from '../../constants.js';
 
 /**
  * Registers Solana ChainActions into the store.

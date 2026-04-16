@@ -1,6 +1,6 @@
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import type { ChainType } from '@sodax/types';
-import { useXWalletStore } from '../useXWalletStore';
+import { useXWalletStore } from '../useXWalletStore.js';
 
 type SignMessageReturnType = `0x${string}` | Uint8Array | string | undefined;
 

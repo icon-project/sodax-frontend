@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { ChainType } from '@sodax/types';
-import type { XAccount } from '../types';
-import { useXWalletStore } from '../useXWalletStore';
+import type { XAccount } from '../types/index.js';
+import { useXWalletStore } from '../useXWalletStore.js';
 
 /**
  * Hook to get all connected accounts across enabled chains.

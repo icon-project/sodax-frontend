@@ -11,7 +11,7 @@ import {
   scValToBigInt,
   xdr,
 } from '@stellar/stellar-sdk';
-import type CustomSorobanServer from './CustomSorobanServer';
+import type CustomSorobanServer from './CustomSorobanServer.js';
 
 export const STELLAR_RLP_MSG_TYPE = { type: 'symbol' };
 
@@ -52,5 +52,6 @@ export const getTokenBalance = async (
 
   const result = await simulateTx(tx, server);
 
-  return result.results ? scValToBigInt(xdr.ScVal.fromXDR(result.results[0].xdr, 'base64')) : 0n;
+  const firstResult = result.results?.[0];
+  return firstResult ? scValToBigInt(xdr.ScVal.fromXDR(firstResult.xdr, 'base64')) : 0n;
 };

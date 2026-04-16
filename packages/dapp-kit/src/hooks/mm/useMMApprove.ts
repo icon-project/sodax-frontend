@@ -1,4 +1,4 @@
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 import { useMutation, type UseMutationResult, useQueryClient } from '@tanstack/react-query';
 import type { MoneyMarketParams, SpokeProvider } from '@sodax/sdk';
 

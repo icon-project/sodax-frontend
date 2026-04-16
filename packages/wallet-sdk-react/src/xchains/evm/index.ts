@@ -1,3 +1,3 @@
-export { EvmXService } from './EvmXService';
-export { EvmXConnector } from './EvmXConnector';
-export { createWagmiConfig, createWagmiConfig as createWagmi } from './EvmXService';
+export { EvmXService } from './EvmXService.js';
+export { EvmXConnector } from './EvmXConnector.js';
+export { createWagmiConfig, createWagmiConfig as createWagmi } from './EvmXService.js';

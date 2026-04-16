@@ -1,5 +1,5 @@
 // packages/dapp-kit/src/hooks/staking/useInstantUnstake.ts
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 import type { SpokeProvider, InstantUnstakeParams } from '@sodax/sdk';
 

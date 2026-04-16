@@ -2,13 +2,13 @@
 
 import type { ReactNode } from 'react';
 
-import type { SodaxWalletConfig } from './types/config';
-import { WalletConfigProvider } from './context/WalletConfigContext';
-import { EvmProvider } from './providers/evm';
-import { SolanaProvider } from './providers/solana';
-import { SuiProvider } from './providers/sui';
-import { useInitChainServices } from './hooks/useInitChainServices';
-import { useStacksHydration } from './hooks/useStacksHydration';
+import type { SodaxWalletConfig } from './types/config.js';
+import { WalletConfigProvider } from './context/WalletConfigContext.js';
+import { EvmProvider } from './providers/evm/index.js';
+import { SolanaProvider } from './providers/solana/index.js';
+import { SuiProvider } from './providers/sui/index.js';
+import { useInitChainServices } from './hooks/useInitChainServices.js';
+import { useStacksHydration } from './hooks/useStacksHydration.js';
 
 export type SodaxWalletProviderProps = {
   children: ReactNode;
