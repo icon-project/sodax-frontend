@@ -40,6 +40,8 @@ pnpm clean                # Remove all node_modules, dist, .turbo, .next
 ```
 
 ## Common Pitfalls
+
+- **Only change code directly related to the task at hand.** Do not refactor, restyle, rename, or "improve" surrounding code that is not part of the requested changes. Unrelated modifications risk breaking existing behavior (e.g., removing hover effects, animations, or styles that were intentionally designed). If you notice something that could be improved but is outside the scope of the request, mention it to the user instead of changing it.
 - **Never use `bigint` in types that will be passed to `JSON.stringify`** — it throws `TypeError` at runtime. Use `string` for numeric fields in API request/response types. If `bigint` is needed in domain types, convert to string before serialization.
 - **Always use standard Tailwind utility classes instead of arbitrary pixel values** when an equivalent exists. Examples: `text-sm` not `text-[14px]`, `text-base` not `text-[16px]`, `h-4` not `h-[16px]`, `size-4` not `size-[16px]`. Only use arbitrary values (e.g. `min-w-[204px]`, `leading-[1.4]`) when no standard utility matches. Font families use arbitrary values (`font-[InterRegular]`, `font-[InterBold]`) — this is the project convention since fonts are registered as CSS custom properties in `globals.css`.
 - **Never instantiate SDK clients (Resend, etc.) at module level in API routes** — env vars aren't available during Next.js build-time static page collection. Always create instances inside the handler or a called function.
@@ -76,6 +78,35 @@ Key rules enforced:
 Formatting: 2-space indent, 120 char line width, single quotes, semicolons required, trailing commas, LF line endings.
 
 Pre-commit hooks (via Husky + lint-staged) auto-format and lint staged files. Commits must follow **conventional commits** format (enforced by commitlint).
+
+### Naming & Clean Code
+
+Write code that reads like well-written prose. Every name should tell the reader **what** it holds and **why** it exists — without needing a comment or surrounding context to understand it.
+
+**Names must reveal intent — no single-letter or vague variables:**
+- `const normalizedSymbol = symbol.toLowerCase()` not `const s = symbol.toLowerCase()`
+- `const openDelayId = setTimeout(...)` not `const t = setTimeout(...)`
+- `const referenceRect = reference.getBoundingClientRect()` not `const r = reference.getBoundingClientRect()`
+- `const priceAtCursor = yScale.invert(...)` not `const p = yScale.invert(...)`
+- `leadMagnetResponse` / `newsArticles` not `res` / `data` for fetch results — name what the data *is*, not that it's data
+
+**No magic values — extract to named constants:**
+- `const FEEDBACK_CLEAR_DELAY_MS = 3000` not a bare `3000` in `setTimeout`
+- `const PRICE_FETCH_TIMEOUT_MS = 30_000` not `setTimeout(() => controller.abort(), 30000)`
+- `const ONE_HOUR_MS = 60 * 60 * 1000` not inline `60 * 60 * 1000` in time calculations
+
+**One word, one concept — be consistent across the codebase:**
+- Data-fetching functions in `lib/`: prefix with `get` (`getAssetUsdPrice`, `getNewsArticles`)
+- React Query hook wrappers in `hooks/`: prefix with `use` (`useStakeVaultApy`, `useDexPositions`)
+- Event handlers in components: prefix with `handle` (`handleSubmit`, `handleConnect`)
+- Don't mix `fetch`/`get`/`retrieve`/`load` for the same pattern
+
+**Types = nouns, functions = verbs, hooks = `use` prefix:**
+- Types/interfaces: `SwapRoute`, `LendingPosition`, `StakeVaultApy`
+- Functions: `calculateFee`, `submitTransaction`, `normalizeSymbol`
+- Hooks: `useChainBalances`, `useTokenPrice`
+
+**Self-documenting over comments.** If a function needs a comment to explain what it does, rename the function. Add JSDoc only for non-obvious behavior: side effects, error semantics, expected units/formats. Never let comments drift from code (e.g., `// 10 second timeout` on a 30-second timeout).
 
 ## Architecture Notes
 

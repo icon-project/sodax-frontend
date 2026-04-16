@@ -52,6 +52,7 @@ export default function RecoveryPage() {
   );
 
   // Clear state when chain changes
+  // biome-ignore lint/correctness/useExhaustiveDependencies: selectedChainId is the intentional trigger to reset state
   useEffect(() => {
     setBalances(null);
     setBalanceError(null);

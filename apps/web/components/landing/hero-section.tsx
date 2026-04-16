@@ -1,6 +1,7 @@
 'use client';
 
 import type React from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -12,7 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { getNetworkDocsUrl } from '@/lib/docToUrl';
 import { LeadMagnetCTA } from './lead-magnet-cta';
 
-const HERO_NETWORKS = [
+const HERO_NETWORK_LOGOS = [
   'Stellar',
   'Near',
   'Avalanche',
@@ -27,29 +28,32 @@ const HERO_NETWORKS = [
   'BNB Chain',
   'HyperEVM',
   'Arbitrum',
-  'ICON',
   'Kaia',
   'LightLink',
 ];
 
 const HeroSection = (): React.ReactElement => {
   const router = useRouter();
+  const [activeTouchIndex, setActiveTouchIndex] = useState<number | null>(null);
+  const touchBoundaryRef = useRef<HTMLDivElement>(null);
+  const touchTriggeredRef = useRef(false);
+
+  // On mobile dismiss tooltip when tapping outside the marquee
+  useEffect(() => {
+    if (activeTouchIndex === null) return;
+    const onTouchOutside = (e: TouchEvent) => {
+      if (!touchBoundaryRef.current?.contains(e.target as Node)) {
+        setActiveTouchIndex(null);
+      }
+    };
+    document.addEventListener('touchstart', onTouchOutside);
+    return () => document.removeEventListener('touchstart', onTouchOutside);
+  }, [activeTouchIndex]);
 
   return (
     <div className="hero-section">
       <div className="min-h-dvh flex flex-col items-center bg-cherry-soda relative overflow-hidden">
-        {/*
-          Background decorative images (the "staircase" shapes on each side).
-          - Hidden below lg (1024px) to avoid layout issues on smaller screens.
-          - Positioned with calc(-816px + 31.25vw): on normal screens the images overflow
-            past the viewport edges; on ultra-wide they shift inward and are fully visible.
-          - mask-image creates a 360px fade on BOTH edges of each 1080px image, so the
-            image always blends smoothly into the cherry-soda background — even on ultra-wide
-            where the image edges are fully inside the viewport.
-            Gradient: transparent → black 360px → black calc(100%-360px) → transparent
-            (black = visible, transparent = hidden)
-          - mix-blend-lighten + opacity-60 give the images their subtle, warm appearance.
-        */}
+        {/* Background staircase shapes — hidden below lg, fade-masked on both edges, blend into cherry-soda */}
         <div className="absolute hidden lg:block left-[calc(-816px+31.25vw)] top-0 w-[1080px] h-full mix-blend-lighten opacity-60 pointer-events-none mask-[linear-gradient(to_right,transparent,black_360px,black_calc(100%-360px),transparent)]">
           <Image src="/landing/hero-bg-left.png" alt="" fill className="object-cover" />
         </div>
@@ -58,13 +62,11 @@ const HeroSection = (): React.ReactElement => {
             <Image src="/landing/hero-bg-right.png" alt="" fill className="object-cover" />
           </div>
         </div>
-        {/* Viewport-edge gradient overlays — 360px cherry-soda fade anchored to viewport
-            left/right edges. These add a subtle vignette over the entire scene (including
-            content). Separate from the mask-image above which only affects the images. */}
+        {/* Edge fade overlays */}
         <div className="absolute left-0 top-0 hidden lg:block w-[360px] h-full bg-linear-to-r from-cherry-soda to-transparent pointer-events-none z-10" />
         <div className="absolute right-0 top-0 hidden lg:block w-[360px] h-full bg-linear-to-l from-cherry-soda to-transparent pointer-events-none z-10" />
 
-        {/* Menu Bar */}
+        {/* Navigation */}
         <div className="w-full flex justify-between items-center pt-10 z-20 md:px-16 px-8 lg:px-8 lg:max-w-[1264px]">
           <div className="flex items-center">
             <SidebarTrigger className="outline-none size-8 p-0 lg:hidden" />
@@ -107,27 +109,20 @@ const HeroSection = (): React.ReactElement => {
           </div>
         </div>
 
-        {/* Center Content — 3 sections with 56px gap, matching Figma Container */}
+        {/* Hero content */}
         <div className="flex flex-1 flex-col items-center justify-center w-full px-4 gap-[56px]">
-          {/* 1. Title section */}
+          {/* Title */}
           <div className="flex flex-col items-center text-center whitespace-nowrap z-20">
             <div className="flex flex-col items-center text-[42px] leading-[1.1]">
               <span className="mix-blend-hard-light text-white font-[InterBlack]">Infrastructure for</span>
-              <span className="mix-blend-hard-light text-yellow-soda font-[Shrikhand] italic">modern money</span>
+              <span className="mix-blend-hard-light text-yellow-soda font-[Shrikhand]">modern money</span>
             </div>
           </div>
 
-          {/* 2. CTA section */}
+          {/* CTA */}
           <div className="flex flex-col items-center gap-[16px] z-20">
             <div className="flex items-center justify-center gap-[24px]">
-              {/* Left brace */}
-              <Image
-                src="/landing/brace-left.svg"
-                alt=""
-                width={32}
-                height={120}
-                className="-scale-x-100"
-              />
+              <Image src="/landing/brace-left.svg" alt="" width={32} height={120} className="-scale-x-100" />
               <div className="text-white font-[InterBold] text-(length:--app-title) leading-[1.1] text-center whitespace-nowrap">
                 One SDK.
                 <br />
@@ -135,30 +130,42 @@ const HeroSection = (): React.ReactElement => {
                 <br />
                 across networks.
               </div>
-              {/* Right brace — horizontally flipped */}
               <Image src="/landing/brace-right.svg" alt="" width={32} height={120} />
             </div>
             <LeadMagnetCTA />
           </div>
 
-          {/* 3. Network icons — infinite marquee */}
-          <div className="max-w-[480px] overflow-x-clip group/marquee opacity-60 relative">
+          {/* Network logos marquee */}
+          <div ref={touchBoundaryRef} className="max-w-[480px] overflow-x-clip group/marquee opacity-60 relative">
             <div className="pointer-events-none absolute inset-y-0 left-0 w-[20%] z-10 bg-linear-to-r from-cherry-soda to-transparent" />
             <div className="pointer-events-none absolute inset-y-0 right-0 w-[20%] z-10 bg-linear-to-l from-cherry-soda to-transparent" />
-            <div className="flex w-max animate-marquee">
-              {[...HERO_NETWORKS, ...HERO_NETWORKS].map((name, i) => {
+            <div
+              className="flex w-max animate-marquee"
+              style={activeTouchIndex !== null ? { animationPlayState: 'paused' } : undefined}
+            >
+              {[...HERO_NETWORK_LOGOS, ...HERO_NETWORK_LOGOS].map((name, i) => {
                 const Icon = NETWORK_ICON_MAP[name];
                 if (!Icon) return null;
                 return (
-                  <Tooltip key={`${name}-${i}`}>
+                  <Tooltip key={`${name}-${i}`} open={activeTouchIndex === i ? true : undefined}>
                     <TooltipTrigger asChild>
                       <a
-                        key={`${name}-${i}`}
                         href={getNetworkDocsUrl(name)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="mx-3 shrink-0 text-white opacity-40 hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                         aria-label={`View ${name} documentation`}
+                        onTouchStart={e => {
+                          touchTriggeredRef.current = true;
+                          e.preventDefault();
+                          setActiveTouchIndex(prev => (prev === i ? null : i));
+                        }}
+                        onClick={e => {
+                          if (touchTriggeredRef.current) {
+                            e.preventDefault();
+                            touchTriggeredRef.current = false;
+                          }
+                        }}
                       >
                         <Icon width={24} height={24} aria-hidden="true" focusable="false" />
                       </a>
@@ -169,7 +176,14 @@ const HeroSection = (): React.ReactElement => {
                       sideOffset={16}
                       className="h-[54px] items-center gap-2 px-8 py-4 text-(length:--body-comfortable)"
                     >
-                      {name}
+                      <a
+                        href={getNetworkDocsUrl(name)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center"
+                      >
+                        {name}
+                      </a>
                     </TooltipContent>
                   </Tooltip>
                 );
