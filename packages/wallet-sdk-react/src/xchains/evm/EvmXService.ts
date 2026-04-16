@@ -1,4 +1,4 @@
-import { XService } from '@/core/XService';
+import { XService } from '@/core/XService.js';
 import {
   ARBITRUM_MAINNET_CHAIN_ID,
   AVALANCHE_MAINNET_CHAIN_ID,
@@ -15,7 +15,7 @@ import {
   type RpcConfig,
   type XToken,
 } from '@sodax/types';
-import { getWagmiChainId, isNativeToken } from '@/utils';
+import { getWagmiChainId, isNativeToken } from '@/utils/index.js';
 
 import { type Address, type Chain, defineChain, erc20Abi } from 'viem';
 import { getPublicClient } from 'wagmi/actions';
@@ -116,7 +116,7 @@ export class EvmXService extends XService {
     super('EVM');
   }
 
-  getXConnectors() {
+  override getXConnectors() {
     return [];
   }
 
@@ -148,7 +148,7 @@ export class EvmXService extends XService {
     return balance || 0n;
   }
 
-  async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
+  override async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
     if (!address) return 0n;
     if (!this.wagmiConfig) return 0n;
 
@@ -161,7 +161,7 @@ export class EvmXService extends XService {
     throw new Error(`Unsupported token: ${xToken.symbol}`);
   }
 
-  async getBalances(address: string | undefined, xTokens: XToken[]) {
+  override async getBalances(address: string | undefined, xTokens: XToken[]) {
     if (!address) return {};
     if (!this.wagmiConfig) return {};
 
@@ -173,13 +173,18 @@ export class EvmXService extends XService {
       });
 
     const nativeTokenBalances = await Promise.all(nativeTokenBalancePromises);
-    const tokenMap = nativeTokenBalances.reduce((map, { address, balance }) => {
-      if (balance) map[address] = balance;
-      return map;
-    }, {});
+    const tokenMap: Record<string, bigint> = nativeTokenBalances.reduce<Record<string, bigint>>(
+      (map, { address, balance }) => {
+        if (balance) map[address] = balance;
+        return map;
+      },
+      {},
+    );
 
     const nonNativeXTokens = xTokens.filter(xToken => !isNativeToken(xToken));
-    const xChainId = xTokens[0].xChainId;
+    const firstToken = xTokens[0];
+    if (!firstToken) return tokenMap;
+    const xChainId = firstToken.xChainId;
     const viemChain: Chain = this.wagmiConfig.chains.find(chain => chain.id === getWagmiChainId(xChainId)) as Chain;
     const chainId = getWagmiChainId(xChainId);
 
@@ -198,7 +203,8 @@ export class EvmXService extends XService {
       });
 
       return nonNativeXTokens.reduce((acc, token, index) => {
-        acc[token.address] = result?.[index]?.result?.toString() || '0';
+        const resultValue = result?.[index]?.result;
+        acc[token.address] = resultValue !== undefined && resultValue !== null ? BigInt(resultValue) : 0n;
         return acc;
       }, tokenMap);
     }
@@ -208,7 +214,7 @@ export class EvmXService extends XService {
     );
 
     return nonNativeXTokens.reduce((acc, token, idx) => {
-      acc[token.address] = nonNativeTokenBalances[idx] || '0';
+      acc[token.address] = nonNativeTokenBalances[idx] ?? 0n;
       return acc;
     }, tokenMap);
   }

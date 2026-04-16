@@ -1,7 +1,7 @@
-import type { XAccount } from '@/types';
+import type { XAccount } from '@/types/index.js';
 
-import { XConnector } from '@/core';
-import { StellarXService } from './StellarXService';
+import { XConnector } from '@/core/index.js';
+import { StellarXService } from './StellarXService.js';
 
 export type StellarWalletType = {
   icon: string;

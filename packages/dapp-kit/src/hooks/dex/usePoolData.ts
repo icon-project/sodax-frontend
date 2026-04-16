@@ -1,6 +1,6 @@
 import { type QueryObserverOptions, useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { PoolData, PoolKey } from '@sodax/sdk';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 
 export type UsePoolDataProps = {
   poolKey: PoolKey | null;

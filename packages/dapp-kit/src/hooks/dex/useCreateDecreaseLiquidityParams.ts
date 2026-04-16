@@ -1,4 +1,4 @@
-import { createDecreaseLiquidityParamsProps } from '@/utils/dex-utils';
+import { createDecreaseLiquidityParamsProps } from '@/utils/dex-utils.js';
 import type { ClPositionInfo, ConcentratedLiquidityDecreaseLiquidityParams, PoolKey } from '@sodax/sdk';
 import { useMemo } from 'react';
 

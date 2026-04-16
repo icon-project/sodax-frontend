@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createChainServices, type StoreAccessor } from './chainRegistry';
-import type { XConnector } from './core';
-import type { IXConnector } from './types/interfaces';
+import { createChainServices, type StoreAccessor } from './chainRegistry.js';
+import type { XConnector } from './core/index.js';
+import type { IXConnector } from './types/interfaces.js';
 
 const makeStore = (): StoreAccessor =>
   vi.fn(() => ({

@@ -1,6 +1,6 @@
 import type { Hex, SolverErrorResponse, SolverIntentStatusResponse, Result } from '@sodax/sdk';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 
 /**
  * Hook for monitoring the status of an intent-based swap.

@@ -1,6 +1,6 @@
 import type { CreateAssetWithdrawParams, DestinationParamsType, PoolData, PoolSpokeAssets } from '@sodax/sdk';
 import { useMemo } from 'react';
-import { createWithdrawParamsProps } from '@/utils/dex-utils';
+import { createWithdrawParamsProps } from '@/utils/dex-utils.js';
 
 export type UseCreateWithdrawParamsProps = {
   tokenIndex: 0 | 1;

@@ -1,2 +1,2 @@
-export { XService } from './XService';
-export { XConnector } from './XConnector';
+export { XService } from './XService.js';
+export { XConnector } from './XConnector.js';

@@ -1,6 +1,6 @@
 import type { ChainType } from '@sodax/types';
-import type { XConnection } from '../types';
-import { useXWalletStore } from '../useXWalletStore';
+import type { XConnection } from '../types/index.js';
+import { useXWalletStore } from '../useXWalletStore.js';
 
 /**
  * Hook for accessing connection details for a specific blockchain.

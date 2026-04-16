@@ -1,6 +1,6 @@
 import type { ReservesDataHumanized } from '@sodax/sdk';
 import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 
 export type UseReservesHumanizedParams = {
   queryOptions?: UseQueryOptions<ReservesDataHumanized, Error>;

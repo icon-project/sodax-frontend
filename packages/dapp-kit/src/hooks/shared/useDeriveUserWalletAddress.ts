@@ -1,6 +1,6 @@
 import { deriveUserWalletAddress, type SpokeProvider, type SpokeChainId } from '@sodax/sdk';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import { useSodaxContext } from './useSodaxContext';
+import { useSodaxContext } from './useSodaxContext.js';
 import type { Address } from 'viem';
 
 /**

@@ -1,7 +1,7 @@
 import { useMutation, type UseMutationOptions, type UseMutationResult } from '@tanstack/react-query';
 import type { SubmitSwapTxRequest, SubmitSwapTxResponse } from '@sodax/types';
 import type { RequestOverrideConfig } from '@sodax/sdk';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 
 export type UseBackendSubmitSwapTxParams = {
   apiConfig?: RequestOverrideConfig;

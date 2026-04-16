@@ -1,5 +1,5 @@
-import { useXWalletStore } from '@/useXWalletStore';
-import { StellarXService } from './StellarXService';
+import { useXWalletStore } from '@/useXWalletStore.js';
+import { StellarXService } from './StellarXService.js';
 
 export const reconnectStellar = async () => {
   const stellarConnection = useXWalletStore.getState().xConnections.STELLAR;

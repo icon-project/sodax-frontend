@@ -1,5 +1,5 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 import type { CreateIntentParams, CreateLimitOrderParams, SpokeProvider } from '@sodax/sdk';
 
 /**

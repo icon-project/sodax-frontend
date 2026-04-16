@@ -1,8 +1,8 @@
 // packages/dapp-kit/src/hooks/backend/useMoneyMarketAssetSuppliers.ts
 import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import type { MoneyMarketAssetSuppliers } from '@sodax/sdk';
-import { useSodaxContext } from '../shared/useSodaxContext';
-import type { BackendPaginationParams } from './types';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
+import type { BackendPaginationParams } from './types.js';
 
 export type UseBackendMoneyMarketAssetSuppliersParams = {
   params: {

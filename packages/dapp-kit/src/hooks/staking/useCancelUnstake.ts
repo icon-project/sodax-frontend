@@ -1,6 +1,6 @@
 // packages/dapp-kit/src/hooks/staking/useCancelUnstake.ts
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 import type { CancelUnstakeParams, SpokeProvider, SpokeTxHash, HubTxHash } from '@sodax/sdk';
 
 /**

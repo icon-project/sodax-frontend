@@ -1,8 +1,8 @@
 import type { UserIntentsResponse, Address } from '@sodax/sdk';
 // packages/dapp-kit/src/hooks/backend/useBackendUserIntents.ts
 import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
-import { useSodaxContext } from '../shared/useSodaxContext';
-import type { BackendPaginationParams } from './types';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
+import type { BackendPaginationParams } from './types.js';
 
 export type GetUserIntentsParams = {
   userAddress: Address;

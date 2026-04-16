@@ -1,2 +1,2 @@
-export { SolanaXService } from './SolanaXService';
-export { SolanaXConnector } from './SolanaXConnector';
+export { SolanaXService } from './SolanaXService.js';
+export { SolanaXConnector } from './SolanaXConnector.js';

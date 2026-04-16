@@ -1,8 +1,8 @@
 // packages/dapp-kit/src/hooks/backend/useAllMoneyMarketBorrowers.ts
 import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import type { MoneyMarketBorrowers } from '@sodax/sdk';
-import { useSodaxContext } from '../shared/useSodaxContext';
-import type { BackendPaginationParams } from './types';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
+import type { BackendPaginationParams } from './types.js';
 
 export type UseBackendAllMoneyMarketBorrowersParams = {
   pagination: BackendPaginationParams;

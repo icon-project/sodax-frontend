@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useCurrentAccount, useCurrentWallet, useSuiClient, useWallets } from '@mysten/dapp-kit';
 import { SuiWalletProvider } from '@sodax/wallet-sdk-core';
-import { SuiXService, SuiXConnector } from '../../xchains/sui';
-import { useXWalletStore } from '../../useXWalletStore';
-import { assertSuiProviderShape } from '@/shared/guards';
+import { SuiXService, SuiXConnector } from '../../xchains/sui/index.js';
+import { useXWalletStore } from '../../useXWalletStore.js';
+import { assertSuiProviderShape } from '@/shared/guards.js';
 
 /**
  * Hydrates SUI state from @mysten/dapp-kit hooks into SuiXService singleton and store.

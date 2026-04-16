@@ -1,5 +1,5 @@
-import { useXWalletStore } from '@/useXWalletStore';
-import { InjectiveXService } from './InjectiveXService';
+import { useXWalletStore } from '@/useXWalletStore.js';
+import { InjectiveXService } from './InjectiveXService.js';
 import { isEvmBrowserWallet } from '@injectivelabs/wallet-base';
 import { getInjectiveAddress } from '@injectivelabs/sdk-ts';
 import type { Wallet } from '@injectivelabs/wallet-base';
@@ -13,9 +13,12 @@ export const reconnectInjective = async () => {
   await walletStrategy.setWallet(recentXConnectorId as Wallet);
   const addresses = await walletStrategy.getAddresses();
 
+  const firstAddress = addresses?.[0];
+  if (!firstAddress) return;
+
   const address = isEvmBrowserWallet(recentXConnectorId as Wallet)
-    ? getInjectiveAddress(addresses?.[0])
-    : addresses?.[0];
+    ? getInjectiveAddress(firstAddress)
+    : firstAddress;
 
   useXWalletStore.getState().setXConnection('INJECTIVE', {
     xAccount: {

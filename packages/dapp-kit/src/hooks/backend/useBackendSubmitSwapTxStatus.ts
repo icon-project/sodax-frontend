@@ -1,7 +1,7 @@
 import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import type { SubmitSwapTxStatusResponse } from '@sodax/types';
 import type { RequestOverrideConfig } from '@sodax/sdk';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 
 export type UseBackendSubmitSwapTxStatusParams = {
   params: {

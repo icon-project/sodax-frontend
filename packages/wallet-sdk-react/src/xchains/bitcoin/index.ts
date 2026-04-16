@@ -1,7 +1,7 @@
-export { BitcoinXService } from './BitcoinXService';
-export { BitcoinXConnector } from './BitcoinXConnector';
-export { UnisatXConnector } from './UnisatXConnector';
-export { XverseXConnector } from './XverseXConnector';
+export { BitcoinXService } from './BitcoinXService.js';
+export { BitcoinXConnector } from './BitcoinXConnector.js';
+export { UnisatXConnector } from './UnisatXConnector.js';
+export { XverseXConnector } from './XverseXConnector.js';
 export type { BtcWalletAddressType } from '@sodax/types';
-export { OKXXConnector } from './OKXXConnector';
-export { useBitcoinXConnectors } from './useBitcoinXConnectors';
+export { OKXXConnector } from './OKXXConnector.js';
+export { useBitcoinXConnectors } from './useBitcoinXConnectors.js';

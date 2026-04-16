@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useConfig, useConnectors, useConnections, useAccount, usePublicClient, useWalletClient } from 'wagmi';
 import { EvmWalletProvider } from '@sodax/wallet-sdk-core';
-import { EvmXService } from '../../xchains/evm/EvmXService';
-import { EvmXConnector } from '../../xchains/evm';
-import { useXWalletStore } from '../../useXWalletStore';
+import { EvmXService } from '../../xchains/evm/EvmXService.js';
+import { EvmXConnector } from '../../xchains/evm/index.js';
+import { useXWalletStore } from '../../useXWalletStore.js';
 
 /**
  * Hydrates EVM state from wagmi hooks into EvmXService singleton and store.

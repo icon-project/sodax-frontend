@@ -1,4 +1,4 @@
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 import type {
   CreateIntentParams,
   SolverExecutionResponse,

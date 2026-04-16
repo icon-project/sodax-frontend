@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import type { RpcConfig } from '@sodax/types';
-import type { ChainsConfig } from '../types/config';
-import { useXWalletStore } from '../useXWalletStore';
-import { reconnectIcon } from '../xchains/icon/actions';
-import { reconnectInjective } from '../xchains/injective/actions';
-import { reconnectStellar } from '../xchains/stellar/actions';
+import type { ChainsConfig } from '../types/config.js';
+import { useXWalletStore } from '../useXWalletStore.js';
+import { reconnectIcon } from '../xchains/icon/actions.js';
+import { reconnectInjective } from '../xchains/injective/actions.js';
+import { reconnectStellar } from '../xchains/stellar/actions.js';
 
 /**
  * Initializes chain services based on config. Runs once on mount.

@@ -1,2 +1,2 @@
-export { InjectiveXService } from './InjectiveXService';
-export { InjectiveXConnector } from './InjectiveXConnector';
+export { InjectiveXService } from './InjectiveXService.js';
+export { InjectiveXConnector } from './InjectiveXConnector.js';

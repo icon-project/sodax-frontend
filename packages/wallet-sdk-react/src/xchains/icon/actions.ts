@@ -1,5 +1,5 @@
-import { useXWalletStore } from '@/useXWalletStore';
-import { ICONexRequestEventType, ICONexResponseEventType, request } from './iconex';
+import { useXWalletStore } from '@/useXWalletStore.js';
+import { ICONexRequestEventType, ICONexResponseEventType, request } from './iconex/index.js';
 
 export const reconnectIcon = async () => {
   const iconConnection = useXWalletStore.getState().xConnections.ICON;

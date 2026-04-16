@@ -8,9 +8,9 @@ import {
   type SpokeProvider,
 } from '@sodax/sdk';
 import { type ChainId, ICON_MAINNET_CHAIN_ID } from '@sodax/types';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
-import { MIGRATION_MODE_BNUSD, MIGRATION_MODE_ICX_SODA, type MigrationIntentParams } from './types';
+import { MIGRATION_MODE_BNUSD, MIGRATION_MODE_ICX_SODA, type MigrationIntentParams } from './types.js';
 
 /**
  * Hook for executing migration operations between chains.

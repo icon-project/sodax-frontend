@@ -3,6 +3,7 @@
   "license": "MIT",
   "version": "0.0.1-rc.4",
   "description": "dapp-kit of New World",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "dist/index.mjs",

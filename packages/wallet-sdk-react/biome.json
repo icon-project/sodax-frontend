@@ -3,7 +3,22 @@
   "extends": ["../../biome.json"],
   "files": {},
   "linter": {
-    "rules": {},
+    "rules": {
+      "style": {
+        "noUselessElse": "off",
+        "noNonNullAssertion": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noFallthroughSwitchClause": "error"
+      },
+      "complexity": {
+        "noStaticOnlyClass": "off"
+      },
+      "correctness": {
+        "noUnusedFunctionParameters": "off"
+      }
+    },
     "ignore": ["tsup.config.ts"]
   }
 }

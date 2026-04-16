@@ -1,8 +1,8 @@
-import type { XAccount } from '@/types';
+import type { XAccount } from '@/types/index.js';
 
-import { XConnector } from '@/core';
+import { XConnector } from '@/core/index.js';
 import type { NearWalletBase } from '@hot-labs/near-connect';
-import { NearXService } from './NearXService';
+import { NearXService } from './NearXService.js';
 
 export class NearXConnector extends XConnector {
   _wallet: NearWalletBase;

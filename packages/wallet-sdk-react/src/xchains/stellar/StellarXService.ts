@@ -1,10 +1,10 @@
-import { XService } from '@/core/XService';
+import { XService } from '@/core/XService.js';
 import { StellarWalletsKit, WalletNetwork, allowAllModules } from '@creit.tech/stellar-wallets-kit';
 import * as StellarSdk from '@stellar/stellar-sdk';
-import CustomSorobanServer from './CustomSorobanServer';
-import { getTokenBalance } from './utils';
+import CustomSorobanServer from './CustomSorobanServer.js';
+import { getTokenBalance } from './utils.js';
 import type { XToken } from '@sodax/types';
-import { STELLAR_DEFAULT_HORIZON_RPC_URL, STELLAR_DEFAULT_SOROBAN_RPC_URL } from '@/constants';
+import { STELLAR_DEFAULT_HORIZON_RPC_URL, STELLAR_DEFAULT_SOROBAN_RPC_URL } from '@/constants.js';
 
 /** Base reserve in stroops (0.5 XLM). Each subentry (trustline, signer, data entry, offer) adds one base reserve. */
 const STELLAR_BASE_RESERVE_STROOPS = 5_000_000;
@@ -57,7 +57,7 @@ export class StellarXService extends XService {
     return StellarXService.instance;
   }
 
-  async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
+  override async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
     if (!address) return BigInt(0);
 
     const stellarAccount = await this.server.loadAccount(address);

@@ -1,4 +1,4 @@
-import { createSupplyLiquidityParamsProps } from '@/utils/dex-utils';
+import { createSupplyLiquidityParamsProps } from '@/utils/dex-utils.js';
 import type {
   ConcentratedLiquiditySupplyParams,
   ConcentratedLiquidityIncreaseLiquidityParams,

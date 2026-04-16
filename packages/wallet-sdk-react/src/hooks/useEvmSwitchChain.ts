@@ -1,17 +1,17 @@
 import { useCallback, useMemo } from 'react';
 import { useAccount, useSwitchChain } from 'wagmi';
 import { baseChainInfo, type ChainId } from '@sodax/types';
-import { getXChainType } from '@/actions';
-import { InjectiveXService } from '@/xchains/injective';
-import { useXService } from '@/hooks/useXService';
-import { useIsChainEnabled } from '@/context/WalletConfigContext';
-import useEthereumChainId from './useEthereumChainId';
+import { getXChainType } from '@/actions/index.js';
+import { InjectiveXService } from '@/xchains/injective/index.js';
+import { useXService } from '@/hooks/useXService.js';
+import { useIsChainEnabled } from '@/context/WalletConfigContext.js';
+import useEthereumChainId from './useEthereumChainId.js';
 import { mainnet } from 'viem/chains';
 // EIP1193Provider is the standard interface for injected ethereum providers (MetaMask, etc).
 // It types .request() for JSON-RPC calls and .on()/.removeListener() for events.
 import type { EIP1193Provider } from 'viem';
 import { Wallet } from '@injectivelabs/wallet-base';
-import { assert, hasFunctionProperty, isRecord } from '@/shared/guards';
+import { assert, hasFunctionProperty, isRecord } from '@/shared/guards.js';
 
 interface UseEvmSwitchChainReturn {
   isWrongChain: boolean;

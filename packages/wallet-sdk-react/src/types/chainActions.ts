@@ -1,6 +1,6 @@
 import type { ChainType } from '@sodax/types';
-import type { XAccount, XConnection } from '../types';
-import type { IXConnector } from '../types/interfaces';
+import type { XAccount, XConnection } from '../types/index.js';
+import type { IXConnector } from '../types/interfaces.js';
 
 export type ChainActions = {
   connect: (xConnectorId: string) => Promise<XAccount | undefined>;

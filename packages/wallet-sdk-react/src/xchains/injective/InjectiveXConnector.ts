@@ -1,9 +1,9 @@
-import type { XAccount } from '@/types';
-import { XConnector } from '@/core';
+import type { XAccount } from '@/types/index.js';
+import { XConnector } from '@/core/index.js';
 import { getInjectiveAddress } from '@injectivelabs/sdk-ts';
 import { type Wallet, isEvmBrowserWallet, isCosmosBrowserWallet } from '@injectivelabs/wallet-base';
 import { isCosmosWalletInstalled } from '@injectivelabs/wallet-cosmos';
-import { InjectiveXService } from './InjectiveXService';
+import { InjectiveXService } from './InjectiveXService.js';
 
 const WALLET_ICONS: Partial<Record<Wallet, string>> = {
   metamask: 'https://raw.githubusercontent.com/balancednetwork/icons/master/wallets/metamask.svg',
@@ -42,7 +42,12 @@ export class InjectiveXConnector extends XConnector {
       return undefined;
     }
 
-    const address = isEvmBrowserWallet(this.wallet) ? getInjectiveAddress(addresses[0]) : addresses[0];
+    const firstAddress = addresses[0];
+    if (!firstAddress) {
+      console.warn(`[InjectiveXConnector] connect: ${this.wallet} returned empty addresses array`);
+      return undefined;
+    }
+    const address = isEvmBrowserWallet(this.wallet) ? getInjectiveAddress(firstAddress) : firstAddress;
 
     return {
       address,
@@ -58,7 +63,7 @@ export class InjectiveXConnector extends XConnector {
     }
   }
 
-  public get icon(): string | undefined {
+  public override get icon(): string | undefined {
     return WALLET_ICONS[this.wallet];
   }
 }

@@ -1,4 +1,4 @@
-import { loadRadfiSession } from './useRadfiAuth';
+import { loadRadfiSession } from './useRadfiAuth.js';
 
 type UseTradingWalletReturn = {
   tradingAddress: string | undefined;

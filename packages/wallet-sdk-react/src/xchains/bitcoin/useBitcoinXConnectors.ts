@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import type { BitcoinXConnector } from './BitcoinXConnector';
-import { useXService } from '../../hooks';
+import type { BitcoinXConnector } from './BitcoinXConnector.js';
+import { useXService } from '../../hooks/index.js';
 
 /**
  * Hook to return available Bitcoin wallet connectors from the globally registered xService.

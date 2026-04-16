@@ -1,8 +1,8 @@
-import type { XAccount } from '@/types';
+import type { XAccount } from '@/types/index.js';
 
-import { XConnector } from '@/core';
-import { SuiXService } from './SuiXService';
-import { assert, hasOptionalStringProperty, hasStringProperty, isRecord } from '@/shared/guards';
+import { XConnector } from '@/core/index.js';
+import { SuiXService } from './SuiXService.js';
+import { assert, hasOptionalStringProperty, hasStringProperty, isRecord } from '@/shared/guards.js';
 
 // Structural interface for what we actually use from a Sui wallet.
 // We don't import the nominal type from @mysten/wallet-standard because

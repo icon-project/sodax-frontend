@@ -16,27 +16,28 @@ import {
 import { Wallet } from '@injectivelabs/wallet-base';
 import { getEthereumAddress } from '@injectivelabs/sdk-ts';
 
-import type { XService, XConnector } from './core';
-import type { XConnection, WalletProvider } from './types';
-import type { IXConnector } from './types/interfaces';
-import type { ChainsConfig } from './types/config';
-import type { ChainActions, ChainActionsRegistry } from './types/chainActions';
+import type { XService, XConnector } from './core/index.js';
+import type { XConnection, WalletProvider } from './types/index.js';
+import type { IXConnector } from './types/interfaces.js';
+import type { ChainsConfig } from './types/config.js';
+import type { ChainActions, ChainActionsRegistry } from './types/chainActions.js';
 
-import { EvmXService } from './xchains/evm';
-import { SolanaXService } from './xchains/solana/SolanaXService';
-import { SuiXService } from './xchains/sui';
-import { StellarXService, StellarWalletsKitXConnector } from './xchains/stellar';
-import { IconXService, CHAIN_INFO, SupportedChainId } from './xchains/icon';
-import { IconHanaXConnector } from './xchains/icon/IconHanaXConnector';
-import { InjectiveXConnector, InjectiveXService } from './xchains/injective';
-import { BitcoinXService } from './xchains/bitcoin';
-import { UnisatXConnector } from './xchains/bitcoin/UnisatXConnector';
-import { XverseXConnector } from './xchains/bitcoin/XverseXConnector';
-import { OKXXConnector } from './xchains/bitcoin/OKXXConnector';
-import type { BitcoinXConnector } from './xchains/bitcoin/BitcoinXConnector';
-import { NearXService } from './xchains/near/NearXService';
-import { NearXConnector } from './xchains/near/NearXConnector';
-import { StacksXService, StacksXConnector, STACKS_PROVIDERS } from './xchains/stacks';
+import { EvmXService } from './xchains/evm/index.js';
+import { SolanaXService } from './xchains/solana/SolanaXService.js';
+import { SuiXService } from './xchains/sui/index.js';
+import { StellarXService, StellarWalletsKitXConnector } from './xchains/stellar/index.js';
+import type { StellarWalletType } from './xchains/stellar/StellarWalletsKitXConnector.js';
+import { IconXService, CHAIN_INFO, SupportedChainId } from './xchains/icon/index.js';
+import { IconHanaXConnector } from './xchains/icon/IconHanaXConnector.js';
+import { InjectiveXConnector, InjectiveXService } from './xchains/injective/index.js';
+import { BitcoinXService } from './xchains/bitcoin/index.js';
+import { UnisatXConnector } from './xchains/bitcoin/UnisatXConnector.js';
+import { XverseXConnector } from './xchains/bitcoin/XverseXConnector.js';
+import { OKXXConnector } from './xchains/bitcoin/OKXXConnector.js';
+import type { BitcoinXConnector } from './xchains/bitcoin/BitcoinXConnector.js';
+import { NearXService } from './xchains/near/NearXService.js';
+import { NearXConnector } from './xchains/near/NearXConnector.js';
+import { StacksXService, StacksXConnector, STACKS_PROVIDERS } from './xchains/stacks/index.js';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -216,7 +217,9 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
     providerManaged: false,
     discoverConnectors: async (service, getStore) => {
       const wallets = await service.walletsKit.getSupportedWallets();
-      const connectors = wallets.filter(w => w.isAvailable).map(w => new StellarWalletsKitXConnector(w));
+      const connectors = wallets
+        .filter((w: StellarWalletType) => w.isAvailable)
+        .map((w: StellarWalletType) => new StellarWalletsKitXConnector(w));
       service.setXConnectors(connectors);
       getStore().setXConnectors('STELLAR', connectors);
     },
@@ -245,9 +248,11 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
     createWalletProvider: (_service, getStore) => {
       const address = getStore().xConnections.ICON?.xAccount.address;
       if (!address) return undefined;
+      const chainInfo = CHAIN_INFO[SupportedChainId.MAINNET];
+      if (!chainInfo) throw new Error('ICON mainnet chain info not found');
       return new IconWalletProvider({
         walletAddress: address as `hx${string}`,
-        rpcUrl: CHAIN_INFO[SupportedChainId.MAINNET].APIEndpoint as `http${string}`,
+        rpcUrl: chainInfo.APIEndpoint as `http${string}`,
       });
     },
   }),

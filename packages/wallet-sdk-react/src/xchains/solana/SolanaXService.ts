@@ -1,5 +1,5 @@
-import { XService } from '@/core/XService';
-import { isNativeToken } from '@/utils';
+import { XService } from '@/core/XService.js';
+import { isNativeToken } from '@/utils/index.js';
 import type { XToken } from '@sodax/types';
 import { type Connection, PublicKey } from '@solana/web3.js';
 import { getAccount, getAssociatedTokenAddressSync } from '@solana/spl-token';
@@ -22,7 +22,7 @@ export class SolanaXService extends XService {
     return SolanaXService.instance;
   }
 
-  async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
+  override async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
     if (!address) return BigInt(0);
 
     const connection = this.connection;

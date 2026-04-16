@@ -1,6 +1,6 @@
 import { type QueryObserverOptions, useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { SpokeProvider, CreateAssetDepositParams } from '@sodax/sdk';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 
 export type UseDexAllowanceProps = {
   params: CreateAssetDepositParams | undefined;

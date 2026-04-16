@@ -1,6 +1,6 @@
 import type { RpcConfig } from '@sodax/types';
 import type { WalletConnectParameters } from 'wagmi/connectors';
-import type { IXConnector } from './interfaces';
+import type { IXConnector } from './interfaces.js';
 
 /** Base chain configuration shared by all chain types */
 export type BaseChainConfig = {

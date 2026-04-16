@@ -1,2 +1,2 @@
-export * from './WalletConfigContext';
-export type * from '../types/chainActions';
+export * from './WalletConfigContext.js';
+export type * from '../types/chainActions.js';

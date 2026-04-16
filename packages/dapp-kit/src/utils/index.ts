@@ -1,1 +1,1 @@
-export * from './dex-utils';
+export * from './dex-utils.js';

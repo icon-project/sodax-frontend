@@ -6,7 +6,7 @@ import type {
   SpokeTxHash,
   HubTxHash,
 } from '@sodax/sdk';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 import { useMutation, type UseMutationResult, useQueryClient } from '@tanstack/react-query';
 
 export type UseClaimRewardsParams = {

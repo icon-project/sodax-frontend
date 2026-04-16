@@ -1,5 +1,5 @@
-import type { XAccount } from '@/types';
-import { XConnector } from '@/core';
+import type { XAccount } from '@/types/index.js';
+import { XConnector } from '@/core/index.js';
 import type { StacksProvider } from '@stacks/connect';
 import { request, disconnect } from '@stacks/connect';
 
@@ -58,7 +58,7 @@ export class StacksXConnector extends XConnector {
     disconnect();
   }
 
-  public get icon(): string {
+  public override get icon(): string {
     return this.config.icon;
   }
 
