@@ -1622,6 +1622,70 @@ export class ClService {
   }
 
   /**
+   * Calculate amount0Max and amount1Max for a given liquidity and slippage tolerance.
+   * For concentrated liquidity, a price drop increases the amount0 needed and a price rise increases the amount1 needed.
+   * This calculates the worst-case amounts for each token independently.
+   */
+  public static calculateMaxAmountsForSlippage(
+    liquidity: bigint,
+    tickLower: bigint,
+    tickUpper: bigint,
+    currentTick: bigint,
+    sqrtPriceX96: bigint,
+    slippagePercent: number,
+  ): { amount0Max: bigint; amount1Max: bigint } {
+    // Calculate amounts at the current price
+    const amount0AtCurrent = PositionMath.getToken0Amount(
+      Number(currentTick),
+      Number(tickLower),
+      Number(tickUpper),
+      sqrtPriceX96,
+      liquidity,
+    );
+    const amount1AtCurrent = PositionMath.getToken1Amount(
+      Number(currentTick),
+      Number(tickLower),
+      Number(tickUpper),
+      sqrtPriceX96,
+      liquidity,
+    );
+
+    // Simulate price dropping by slippage% — this increases the token0 needed
+    const slippageFraction = slippagePercent / 100;
+    const sqrtSlippageDown = Math.sqrt(1 - slippageFraction);
+    const sqrtPriceNum = Number(sqrtPriceX96);
+    const sqrtPriceX96Down = BigInt(Math.floor(sqrtPriceNum * sqrtSlippageDown));
+    const tickDown = TickMath.getTickAtSqrtRatio(sqrtPriceX96Down);
+
+    const amount0AtPriceDrop = PositionMath.getToken0Amount(
+      tickDown,
+      Number(tickLower),
+      Number(tickUpper),
+      sqrtPriceX96Down,
+      liquidity,
+    );
+
+    // Simulate price rising by slippage% — this increases the token1 needed
+    const sqrtSlippageUp = Math.sqrt(1 + slippageFraction);
+    const sqrtPriceX96Up = BigInt(Math.floor(sqrtPriceNum * sqrtSlippageUp));
+    const tickUp = TickMath.getTickAtSqrtRatio(sqrtPriceX96Up);
+
+    const amount1AtPriceRise = PositionMath.getToken1Amount(
+      tickUp,
+      Number(tickLower),
+      Number(tickUpper),
+      sqrtPriceX96Up,
+      liquidity,
+    );
+
+    // Take the worst case for each token
+    const amount0Max = amount0AtPriceDrop > amount0AtCurrent ? amount0AtPriceDrop : amount0AtCurrent;
+    const amount1Max = amount1AtPriceRise > amount1AtCurrent ? amount1AtPriceRise : amount1AtCurrent;
+
+    return { amount0Max, amount1Max };
+  }
+
+  /**
    * Helper: Convert price to nearest valid tick
    * @param price - The price as a number
    * @param token0 - The base token
