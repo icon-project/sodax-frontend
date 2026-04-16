@@ -83,6 +83,8 @@ export default defineConfig(() => ({
   sourcemap: true,
   dts: true,
   clean: true,
+  // target = JS syntax level only (ES2022). Module resolution is 'browser' via
+  // esbuildOptions below — the two settings are orthogonal despite looking mismatched.
   target: 'node18',
   treeshake: true,
   external: [
