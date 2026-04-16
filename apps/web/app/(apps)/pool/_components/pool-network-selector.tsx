@@ -14,7 +14,7 @@ import { INJECTIVE_MAINNET_CHAIN_ID, REDBELLY_MAINNET_CHAIN_ID, NEAR_MAINNET_CHA
 import { useXAccount } from '@sodax/wallet-sdk-react';
 import { usePoolState } from '../_stores/pool-store-provider';
 
-const sodaToken: XToken = {
+export const sodaToken: XToken = {
   name: 'SODA',
   symbol: 'SODA',
   address: '0x0',
@@ -22,7 +22,7 @@ const sodaToken: XToken = {
   xChainId: 'sonic',
 };
 
-const xSodaToken: XToken = {
+export const xSodaToken: XToken = {
   name: 'xSODA',
   symbol: 'xSODA',
   address: '0x1',
@@ -158,7 +158,7 @@ export function PoolNetworkSelector({
   });
 
   return (
-    <div className="absolute top-8 left-(--layout-space-big) z-30">
+    <div className="absolute top-16 left-(--layout-space-big) z-30">
       <div
         className="relative flex justify-start items-center gap-4 cursor-pointer"
         onClick={() => onNetworkPickerOpenChange(!isNetworkPickerOpened)}

@@ -18,7 +18,7 @@ export function PartnerPageHeader({ backLink = PARTNERS_ROUTE, backText = '← p
       <div className="w-full flex justify-between items-center h-full z-20 md:px-16 px-8 lg:px-8 lg:max-w-[1264px]">
         <div className="flex items-center gap-8">
           <Link href={HOME_ROUTE} className="flex items-center cursor-pointer hover:opacity-80 transition-opacity">
-            <Image src="/symbol.png" alt="SODAX Symbol" width={32} height={32} />
+            <Image src="/soda-yellow.png" alt="SODAX Symbol" width={32} height={32} />
             <div className="hidden md:block md:ml-[11px]">
               <SodaxIcon width={84} height={18} fill="white" />
             </div>

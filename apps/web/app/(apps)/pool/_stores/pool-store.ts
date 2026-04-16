@@ -112,7 +112,11 @@ export const createPoolStore = (initState: PoolState = defaultPoolState) => {
           })),
       }),
       {
-        name: 'sodax-pool-store',
+        name: 'pool-store',
+        partialize: (state): Pick<PoolState, 'minPrice' | 'maxPrice'> => ({
+          minPrice: state.minPrice,
+          maxPrice: state.maxPrice,
+        }),
       },
     ),
   );

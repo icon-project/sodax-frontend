@@ -54,6 +54,7 @@
   --cherry-bright: #cc9e9a;
   --cherry-brighter: #e3bebb;
   --cherry-grey: #d7cdcb;
+  --cherry-on-cherry: #c26c64;
   --yellow-soda: #ffd92f;
   --yellow-dark: #ecc100;
   --orange-sonic: #ff9048;
@@ -66,6 +67,7 @@
   --clay: #8e7e7d;
   --clay-dark: #6b5c5b;
   --negative: #f37274;
+  --positive: #00a778;
   --body-comfortable-mobile: 12px;
   --body-comfortable-tablet: 13px;
   --body-comfortable-desktop: 14px;
@@ -162,6 +164,7 @@
   --cherry-bright: #cc9e9a;
   --cherry-brighter: #e3bebb;
   --cherry-grey: #d7cdcb;
+  --cherry-on-cherry: #c26c64;
   --yellow-soda: #ffd92f;
   --yellow-dark: #ecc100;
   --orange-sonic: #ff9048;
@@ -174,6 +177,7 @@
   --clay: #8e7e7d;
   --clay-dark: #6b5c5b;
   --negative: #f37274;
+  --positive: #00a778;
   --body-comfortable-mobile: 12px;
   --body-comfortable-tablet: 13px;
   --body-comfortable-desktop: 14px;
@@ -252,6 +256,7 @@
   --color-cherry-soda: var(--cherry-soda);
   --color-cherry-bright: var(--cherry-bright);
   --color-cherry-grey: var(--cherry-grey);
+  --color-cherry-on-cherry: var(--cherry-on-cherry);
   --color-yellow-soda: var(--yellow-soda);
   --color-yellow-dark: var(--yellow-dark);
   --color-orange-sonic: var(--orange-sonic);
@@ -265,6 +270,7 @@
   --color-clay-dark: var(--clay-dark);
   --color-cherry-brighter: var(--cherry-brighter);
   --color-negative: var(--negative);
+  --color-positive: var(--positive);
   --text-app-title: var(--app-title-mobile);
   --text-body-comfortable: var(--body-comfortable-mobile);
   --text-body-super-comfortable: var(--body-super-comfortable-mobile);
@@ -468,6 +474,35 @@
   animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 600ms ease-out;
+}
+
+/* Hard on/off cursor blink — used in lead-magnet-cta.tsx typewriter placeholder */
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -560,9 +595,17 @@ textarea[readonly] {
 
 /* Push Intercom chat bubble above the mobile bottom nav bar (96px nav + 8px spacing) */
 @media (max-width: 767px) {
+  :root {
+    --intercom-mobile-bottom-offset: 114px;
+  }
+
+  /* Intercom may re-apply inline styles after boot; keep this rule more specific. */
+  #intercom-container .intercom-launcher-frame,
+  #intercom-container .intercom-lightweight-app-launcher,
+  #intercom-container .intercom-messenger-frame,
   .intercom-launcher-frame,
   .intercom-lightweight-app-launcher,
   .intercom-messenger-frame {
-    bottom: 104px !important;
+    bottom: calc(var(--intercom-mobile-bottom-offset) + env(safe-area-inset-bottom, 0px)) !important;
   }
 }

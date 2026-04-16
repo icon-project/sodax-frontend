@@ -54,7 +54,7 @@ export default function FeaturedCaseStudiesSection() {
       <div className="flex flex-col gap-6 items-center max-w-236 mx-auto w-full">
         {/* Title */}
         <div className="flex gap-2 items-center px-4">
-          <Image src="/symbol_dark.png" alt="SODAX" width={32} height={32} className="shrink-0" />
+          <Image src="/soda-yellow-sm.png" alt="SODAX" width={32} height={32} className="shrink-0" />
           <h2 className="font-['InterBold'] text-[26px] sm:text-[32px] leading-[1.1] text-espresso">Proven success</h2>
         </div>
 

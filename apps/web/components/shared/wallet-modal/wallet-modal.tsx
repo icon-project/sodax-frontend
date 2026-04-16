@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogClose } from '@/components/ui/dialog';
 import Image from 'next/image';
 import { useModalOpen, useModalStore } from '@/stores/modal-store-provider';
@@ -94,6 +94,12 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
   const { connectRest, isPending: isConnectingRest } = useConnectRestWithHana();
   const { disconnectAll, isPending: isDisconnectingAll } = useDisconnectAllWithHana();
 
+  const xAccountsRef = useRef(xAccounts);
+
+  useEffect((): void => {
+    xAccountsRef.current = xAccounts;
+  }, [xAccounts]);
+
   const connectedCount = useMemo(() => {
     return Object.values(xAccounts).filter(a => !!a?.address).length;
   }, [xAccounts]);
@@ -107,9 +113,49 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
   // Show "Disconnect All with Hana" when Hana is installed and all chains are connected
   const showDisconnectAll = isAnyTwoChainsConnected;
 
+  const sleep = (ms: number): Promise<void> => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  };
+
+  const waitForConnectedAddresses = async (chainTypes: ChainType[], timeoutMs = 4000): Promise<void> => {
+    const startedAt = Date.now();
+
+    while (Date.now() - startedAt < timeoutMs) {
+      const allPresent = chainTypes.every(chainType => Boolean(xAccountsRef.current[chainType]?.address));
+      if (allPresent) {
+        return;
+      }
+      await sleep(100);
+    }
+  };
+
+  const getUnregisteredChainTypes = async (chainTypes: ChainType[]): Promise<ChainType[]> => {
+    const checks = await Promise.all(
+      chainTypes.map(async (chainType): Promise<ChainType | null> => {
+        const address = xAccountsRef.current[chainType]?.address;
+        if (!address) {
+          return null;
+        }
+
+        const isRegistered = await isRegisteredUser({ address, chainType });
+        return isRegistered ? null : chainType;
+      }),
+    );
+
+    return checks.filter((chainType): chainType is ChainType => chainType !== null);
+  };
+
   const handleConnectAllWithHana = async (): Promise<void> => {
     const result = await connectAll();
     if (result.successful.length > 0) {
+      await waitForConnectedAddresses(result.successful);
+      const unregistered = await getUnregisteredChainTypes(result.successful);
+      if (unregistered.length > 0) {
+        handleClose();
+        openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainTypes: unregistered });
+        return;
+      }
+
       handleClose();
     }
   };
@@ -117,6 +163,14 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
   const handleConnectRestWithHana = async (): Promise<void> => {
     const result = await connectRest();
     if (result.successful.length > 0) {
+      await waitForConnectedAddresses(result.successful);
+      const unregistered = await getUnregisteredChainTypes(result.successful);
+      if (unregistered.length > 0) {
+        handleClose();
+        openModal(MODAL_ID.TERMS_CONFIRMATION_MODAL, { chainTypes: unregistered });
+        return;
+      }
+
       handleClose();
     }
   };
@@ -168,13 +222,13 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
         className={cn(
-          'max-w-full w-full md:max-w-[480px] p-0 w-[90%] shadow-none bg-vibrant-white overflow-hidden',
+          'max-w-full md:max-w-[480px] p-0 w-[90%] shadow-none bg-vibrant-white overflow-hidden',
           !isHanaInstalled && 'min-h-131',
           isHanaInstalled && 'min-h-126',
         )}
         hideCloseButton={true}
       >
-        <div className="flex flex-col h-full h-full pt-12 px-12 pb-8 space-y-4">
+        <div className="flex flex-col h-full pt-12 px-12 pb-8 space-y-4">
           {activeXChainType ? (
             <>
               <DialogTitle>
@@ -235,7 +289,7 @@ export const WalletModal = ({ modalId = MODAL_ID.WALLET_MODAL }: WalletModalProp
               <DialogTitle className="flex w-full justify-between items-center h-6">
                 <div className="inline-flex justify-center items-center gap-2">
                   <Image
-                    src="/symbol_dark.png"
+                    src="/soda-yellow-sm.png"
                     alt="SODAX Symbol"
                     width={16}
                     height={16}

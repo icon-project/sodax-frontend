@@ -32,7 +32,7 @@ const FooterLink: React.FC<FooterLinkProps> = ({
         target="_blank"
         rel="noopener noreferrer"
         className={cn(
-          'group inline-flex items-center gap-2 text-black text-[13px] font-medium font-["InterMedium"] leading-[16px] hover:text-cherry-bright hover:font-bold transition-colors',
+          'group inline-flex items-center gap-2 text-black text-xs leading-[1.4] hover:text-cherry-bright transition-colors',
           className,
         )}
         onClick={onClick}
@@ -61,7 +61,7 @@ const FooterLink: React.FC<FooterLinkProps> = ({
   return (
     <Link
       className={cn(
-        'group inline-flex items-center gap-2 text-black text-[13px] font-medium font-["InterMedium"] leading-[16px] hover:text-cherry-bright hover:font-bold transition-colors',
+        'group inline-flex items-center gap-2 text-black text-xs leading-[1.4] hover:text-cherry-bright transition-colors',
         className,
       )}
       onClick={onClick}

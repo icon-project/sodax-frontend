@@ -43,7 +43,7 @@ export function Header(): React.JSX.Element {
             ) : (
               // App branding (unchanged)
               <>
-                <Image src="/symbol.png" alt="SODAX Symbol" width={32} height={32} />
+                <Image src="/soda-yellow.png" alt="SODAX Symbol" width={32} height={32} />
                 <div className="hidden md:block md:ml-2.75">
                   <SodaxIcon width={84} height={18} fill="white" />
                 </div>

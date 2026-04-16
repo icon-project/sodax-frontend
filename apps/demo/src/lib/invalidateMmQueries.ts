@@ -3,6 +3,7 @@
 
 import type { QueryClient } from '@tanstack/react-query';
 import type { ChainId } from '@sodax/types';
+import { POST_TX_REFETCH_DELAY, POST_TX_REFETCH_DELAY_LONG } from '@/components/mm/constants';
 
 export type InvalidateMmQueriesParams = {
   mmChainIds: readonly ChainId[];
@@ -39,36 +40,30 @@ export function invalidateMmQueries(
   // aToken balances are shown in Markets table (supplied amounts) - invalidate all since it's a Map query.
   queryClient.invalidateQueries({ queryKey: ['mm', 'aTokensBalances'] });
 
-  // Balance queries: use prefix matching to invalidate all balance queries for a chain.
+  // Balance queries: use predicate for reliable matching since query keys contain nested arrays.
   // Query key format: ['xBalances', chainId, tokenSymbols[], address]
-  // Using prefix ['xBalances', chainId] matches all queries for that chain regardless of token list.
-  if (balanceChainIds && balanceChainIds.length > 0) {
-    for (const chainId of balanceChainIds) {
-      queryClient.invalidateQueries({
-        queryKey: ['xBalances', chainId],
-        exact: false, // Match all queries starting with ['xBalances', chainId]
-      });
-    }
+  // Prefix matching with nested arrays can be unreliable, so we match explicitly.
+  const balanceChainIdSet = new Set(balanceChainIds ?? []);
+  const balancePredicate =
+    balanceChainIdSet.size > 0
+      ? (query: { queryKey: readonly unknown[] }) =>
+          query.queryKey[0] === 'xBalances' && balanceChainIdSet.has(query.queryKey[1] as ChainId)
+      : undefined;
+
+  if (balancePredicate) {
+    queryClient.invalidateQueries({ predicate: balancePredicate });
   }
 
-  // Add a small delay before refetching to allow transaction confirmation.
-  // This ensures balances are refetched after the transaction is included in a block.
-  // Note: React Query will automatically refetch invalidated queries when components remount or
-  // when refetchInterval triggers, but we explicitly refetch here to ensure immediate update.
-  setTimeout(() => {
-    // Trigger refetch for invalidated balance queries (only active/mounted components)
-    if (balanceChainIds && balanceChainIds.length > 0) {
-      for (const chainId of balanceChainIds) {
-        queryClient.refetchQueries({
-          queryKey: ['xBalances', chainId],
-          type: 'active',
-        });
-      }
+  // Refetch immediately + with delays to account for transaction confirmation time.
+  // Some chains need a few seconds before the new balance is available on-chain.
+  const refetchAll = () => {
+    if (balancePredicate) {
+      queryClient.refetchQueries({ predicate: balancePredicate, type: 'active' });
     }
-    // Refetch MM data queries
-    queryClient.refetchQueries({
-      queryKey: ['mm'],
-      type: 'active',
-    });
-  }, 2000); // 2 second delay to allow transaction confirmation
+    queryClient.refetchQueries({ queryKey: ['mm'], type: 'active' });
+  };
+
+  refetchAll();
+  setTimeout(refetchAll, POST_TX_REFETCH_DELAY);
+  setTimeout(refetchAll, POST_TX_REFETCH_DELAY_LONG);
 }

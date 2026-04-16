@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 
 import { useEvmSwitchChain, useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { parseUnits } from 'viem';
-import { useMMAllowance, useMMApprove, useSpokeProvider, useWithdraw } from '@sodax/dapp-kit';
+import { useMMApprove, useSpokeProvider, useWithdraw } from '@sodax/dapp-kit';
 import type { ChainId, XToken } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 import type { MoneyMarketWithdrawParams } from '@sodax/sdk';
@@ -24,14 +24,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import { invalidateMmQueries } from '@/lib/invalidateMmQueries';
 import { extractTxHash } from '@/lib/extractTxHash';
 import { ActionSuccessContent, type ActionSuccessData } from './ActionSuccessContent';
-import { Loader2 } from 'lucide-react';
+import { Info, Loader2 } from 'lucide-react';
 
 interface WithdrawModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  token: XToken; // token the user wants to RECEIVE (e.g. USDC on Avalanche)
-  //If true, shows success screen inline instead of closing and calling onSuccess.
-  inlineSuccess?: boolean; //Called on success. Only used when inlineSuccess is false.
+  token: XToken;
+  inlineSuccess?: boolean;
   onSuccess?: (data: {
     amount: string;
     token: XToken;
@@ -40,6 +39,8 @@ interface WithdrawModalProps {
     txHash?: `0x${string}`;
   }) => void;
   maxWithdraw: string;
+  /** True when max withdrawal is reduced due to health factor constraints. */
+  isHfLimited?: boolean;
 }
 
 export function WithdrawModal({
@@ -48,12 +49,11 @@ export function WithdrawModal({
   token,
   onSuccess,
   maxWithdraw,
+  isHfLimited,
   inlineSuccess,
 }: WithdrawModalProps) {
   const [amount, setAmount] = useState('');
-  // UI state: tracks whether to show form or success screen within the same dialog
   const [step, setStep] = useState<'form' | 'success'>('form');
-  // Stores success data (amount, token, txHash) when transaction completes, for displaying success screen
   const [successData, setSuccessData] = useState<ActionSuccessData | null>(null);
   const { selectedChainId } = useAppStore();
   const queryClient = useQueryClient();
@@ -71,19 +71,15 @@ export function WithdrawModal({
     const normalizedAmount = amount.replace(',', '.');
     const parsedAmount = parseUnits(normalizedAmount, token.decimals);
 
-    const withdrawParams = {
+    return {
       token: token.address,
       amount: parsedAmount,
       action: 'withdraw' as const,
       toChainId: token.xChainId,
       ...(toAddress ? { toAddress } : {}),
     };
-
-    return withdrawParams;
   }, [token.address, token.decimals, token.xChainId, amount, destAddress, sourceAddress]);
 
-  // Check if the chain is EVM - approval is only needed for EVM chains
-  // Note: Withdraw actions don't require approval even on EVM chains (per SDK implementation)
   const isEvmChain = sourceSpokeProvider?.chainConfig?.chain?.type === 'EVM';
 
   const {
@@ -95,19 +91,12 @@ export function WithdrawModal({
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
 
-  // Button state machine: prioritize pending states to prevent flickering
-  // When a transaction is pending, show that state regardless of allowance checks
   const isBusy = isApproving || isPending;
-
-  // Withdraw actions don't require approval (per SDK implementation)
-  // So we never need approval for withdraw, regardless of chain type
   const needsApproval = false;
-  const hasAllowance = true; // Always true for withdraw actions
+  const hasAllowance = true;
 
   const handleApprove = async (): Promise<void> => {
     if (!sourceSpokeProvider || !params) return;
-    // Withdraw actions don't require approval (per SDK implementation)
-    // This should never be called for withdraw, but adding safeguard
     if (params.action === 'withdraw') {
       logger.warn('Approve should not be called for withdraw actions');
       return;
@@ -163,7 +152,8 @@ export function WithdrawModal({
       logger.error('Withdraw failed', err);
     }
   };
-  const handleMaxclick = (): void => {
+
+  const handleMaxClick = (): void => {
     setAmount(getSafeMaxAmountForInput(maxWithdraw));
   };
 
@@ -178,7 +168,6 @@ export function WithdrawModal({
     }
   };
 
-  // Show success screen instead of form when transaction completes and inlineSuccess is enabled
   if (inlineSuccess && step === 'success' && successData) {
     return (
       <Dialog open={open} onOpenChange={handleOpenChangeInternal}>
@@ -191,14 +180,13 @@ export function WithdrawModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChangeInternal}>
-      <DialogContent className="sm:max-w-md border-cherry-grey/20">
+      <DialogContent className="min-w-0 max-w-[calc(100vw-2rem)] overflow-x-hidden sm:max-w-md border-cherry-grey/20">
         <DialogHeader>
           <DialogTitle className="text-center text-cherry-dark">Withdraw {token.symbol}</DialogTitle>
           <DialogDescription className="text-center">Choose amount to withdraw.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {/* Amount Input */}
+        <div className="min-w-0 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="amount">Amount</Label>
             <div className="flex items-center gap-2">
@@ -214,7 +202,7 @@ export function WithdrawModal({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={handleMaxclick}
+                onClick={handleMaxClick}
                 disabled={isBusy || !maxWithdraw || maxWithdraw === '0'}
               >
                 Max
@@ -224,10 +212,16 @@ export function WithdrawModal({
             <div className="space-y-1">
               {maxWithdraw && maxWithdraw !== '0' && (
                 <p className="text-xs text-muted-foreground">
-                  Max withdraw: {formatDecimalForDisplay(maxWithdraw, 4)} {token.symbol}
+                  Max withdraw{isHfLimited ? ' (limited by health factor)' : ' (supplied)'}:{' '}
+                  {formatDecimalForDisplay(maxWithdraw, 4)} {token.symbol}
                 </p>
               )}
-              {/* Show validation messages only when user enters an amount */}
+              {isHfLimited && (
+                <p className="flex items-center gap-1 text-xs text-cherry-soda">
+                  <Info className="w-3 h-3 shrink-0" />
+                  Note: Repay debt to unlock more collateral for withdrawal.
+                </p>
+              )}
               {amount &&
                 (() => {
                   const amountNum = Number.parseFloat(amount.replace(',', '.'));
@@ -248,28 +242,33 @@ export function WithdrawModal({
           </div>
         </div>
 
-        {error && <ErrorAlert text={getMmErrorText(error)} />}
-        {approveError && <ErrorAlert text={getMmErrorText(approveError)} />}
+        {error && (
+          <div className="min-w-0 w-full">
+            <ErrorAlert text={getMmErrorText(error)} />
+          </div>
+        )}
+        {approveError && (
+          <div className="min-w-0 w-full">
+            <ErrorAlert text={getMmErrorText(approveError)} />
+          </div>
+        )}
 
-        <DialogFooter className="sm:justify-start flex-col gap-2">
+        <DialogFooter className="w-full min-w-0 flex-col gap-2 sm:justify-start">
           {isWrongChain ? (
             <Button className="w-full" variant="cherry" onClick={handleSwitchChain} disabled={isBusy}>
               Switch Chain
             </Button>
           ) : isPending ? (
-            // Always show "Withdrawing..." when withdraw transaction is pending (prevents flickering)
             <Button className="w-full" disabled>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               Withdrawing...
             </Button>
           ) : isApproving ? (
-            // Show "Approving..." when approval transaction is pending
             <Button className="w-full" disabled>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               Approving...
             </Button>
           ) : needsApproval ? (
-            // Only show "Approve" button for EVM chains that need approval
             <Button
               className="w-full"
               type="button"
@@ -280,9 +279,6 @@ export function WithdrawModal({
               Approve
             </Button>
           ) : hasAllowance || !isEvmChain ? (
-            // Show "Withdraw" button when:
-            // 1. EVM chain has allowance, OR
-            // 2. Non-EVM chain (no approval needed)
             <Button
               className="w-full"
               type="button"

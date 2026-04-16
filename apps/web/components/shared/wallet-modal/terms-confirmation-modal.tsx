@@ -8,7 +8,7 @@ import { ArrowRight } from 'lucide-react';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalOpen } from '@/stores/modal-store-provider';
 import { useModalStore } from '@/stores/modal-store-provider';
-import { useXAccount, useXDisconnect, useXSignMessage } from '@sodax/wallet-sdk-react';
+import { useXAccounts, useXDisconnect, useXSignMessage } from '@sodax/wallet-sdk-react';
 import type { ChainType } from '@sodax/types';
 import { TermsContent } from './terms-content';
 import { Loader2 } from 'lucide-react';
@@ -19,6 +19,10 @@ interface TermsConfirmationModalProps {
   modalId?: MODAL_ID;
 }
 
+type TermsModalData = { chainType: ChainType } | { chainTypes: ChainType[] };
+
+const SIGN_SUPPORTED_CHAINS: ChainType[] = ['EVM', 'SUI', 'STELLAR', 'SOLANA'];
+
 const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
   modalId = MODAL_ID.TERMS_CONFIRMATION_MODAL,
 }) => {
@@ -26,35 +30,58 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
   const open = useModalOpen(modalId);
   const closeModal = useModalStore(state => state.closeModal);
   // const openModal = useModalStore(state => state.openModal);
-  const modalData = useModalStore(state => state.modals[modalId]?.modalData) as { chainType: ChainType } | undefined;
+  const modalData = useModalStore(state => state.modals[modalId]?.modalData) as TermsModalData | undefined;
   const xDisconnect = useXDisconnect();
-
-  const xAccount = useXAccount(modalData?.chainType);
+  const xAccounts = useXAccounts();
 
   const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
   const [isTermsExpanded, setIsTermsExpanded] = useState<boolean>(false);
 
   const { mutateAsync: signMessage } = useXSignMessage();
 
+  const chainTypes: ChainType[] = (() => {
+    if (!modalData) {
+      return [];
+    }
+    if ('chainTypes' in modalData) {
+      return modalData.chainTypes;
+    }
+    return [modalData.chainType];
+  })();
+
   const handleAccept = async (): Promise<void> => {
-    if (acceptedTerms && modalData?.chainType) {
+    if (acceptedTerms && chainTypes.length > 0) {
       // openModal(MODAL_ID.WALLET_MODAL);
       // if (typeof window !== 'undefined') localStorage.setItem('acceptedTerms', 'accepted');
 
       try {
-        const message = `By signing this I confirm that I have read and I agree to the terms of service and legal disclaimer provided by Sodax on ${new Date()}`;
         setIsPending(true);
-        const signature = await signMessage({
-          xChainType: modalData?.chainType,
-          message,
-        });
+        const message = `By signing this I confirm that I have read and I agree to the terms of service and legal disclaimer provided by Sodax on ${new Date().toISOString()}`;
 
-        await registerUser({
-          address: xAccount?.address as string,
-          signature: signature as string,
-          chainType: modalData?.chainType,
-          message,
-        });
+        for (const chainType of chainTypes) {
+          const address = xAccounts[chainType]?.address;
+          if (!address) {
+            continue;
+          }
+
+          let signature: string | Uint8Array = '';
+
+          if (SIGN_SUPPORTED_CHAINS.includes(chainType)) {
+            const signed = await signMessage({ xChainType: chainType, message });
+            if (!signed) {
+              throw new Error(`Signature not found for ${chainType}`);
+            }
+            signature = signed;
+          }
+
+          await registerUser({
+            address,
+            signature,
+            chainType,
+            message,
+          });
+        }
+
         setIsPending(false);
         closeModal(modalId);
         setAcceptedTerms(false);
@@ -67,15 +94,15 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
 
   const disconnectWallet = async (): Promise<void> => {
     closeModal(modalId);
-    if (modalData?.chainType) {
-      xDisconnect(modalData.chainType);
+    for (const chainType of chainTypes) {
+      xDisconnect(chainType);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={() => closeModal(modalId)}>
       <DialogContent
-        className="gap-0 max-w-full h-[calc(100vh-205px)] sm:h-fit md:max-w-[480px] shadow-none bg-vibrant-white py-22 md:py-10 px-12 fixed bottom-0 left-0 right-0 top-auto translate-y-0 translate-x-0 sm:top-[50%] sm:left-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] rounded-t-[32px] rounded-b-[0px] sm:rounded-[32px] flex flex-col"
+        className="gap-0 max-w-full h-[calc(100vh-205px)] sm:h-fit md:max-w-[480px] shadow-none bg-vibrant-white py-22 md:py-10 px-12 fixed bottom-0 left-0 right-0 top-auto translate-y-0 translate-x-0 sm:top-[50%] sm:left-[50%] sm:translate-x-[-50%] sm:translate-y-[-50%] rounded-t-[32px] rounded-b-none sm:rounded-[32px] flex flex-col"
         hideCloseButton
         onInteractOutside={e => {
           e.preventDefault();
@@ -84,7 +111,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
         <DialogTitle>
           <div className="flex flex-row justify-between items-center">
             <div className="inline-flex justify-start items-center gap-2">
-              <Image src="/symbol_dark.png" alt="SODAX Symbol" width={16} height={16} className="mix-blend-multiply" />
+              <Image src="/soda-yellow-sm.png" alt="SODAX Symbol" width={16} height={16} className="mix-blend-multiply" />
               <div className="mix-blend-multiply justify-end text-espresso font-['InterBold'] leading-snug text-(length:--subtitle)">
                 Confirm terms
               </div>
@@ -131,7 +158,7 @@ const TermsConfirmationModal: React.FC<TermsConfirmationModalProps> = ({
               <ScrollBar className="w-2" />
             </ScrollAreaPrimitive.Viewport>
           </ScrollAreaPrimitive.Root>
-          <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-vibrant-white to-transparent pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-8 bg-linear-to-t from-vibrant-white to-transparent pointer-events-none"></div>
         </div>
 
         <div className="flex gap-2 z-60">
