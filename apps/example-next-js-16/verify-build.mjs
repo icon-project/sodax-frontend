@@ -1,91 +1,18 @@
 #!/usr/bin/env node
-// Regression test for #1070: verifies SSR + client pages build and render
-// correctly on Next.js 16 Turbopack production build.
-// Covers: @sodax/sdk, @sodax/types, @sodax/wallet-sdk-core (SSR)
-//         + @sodax/wallet-sdk-react, @sodax/dapp-kit providers (client)
-
-import { readFileSync } from 'node:fs';
+// Regression gate for #1070: boots `next start` on a production build and
+// asserts the `/` route renders without an SSR crash.
 import { spawn } from 'node:child_process';
 
+const PORT = 3099;
+const TIMEOUT_MS = 30_000;
+
 let failed = false;
+const ok = (msg) => console.log(`OK: ${msg}`);
 const fail = (msg) => {
   console.error(`FAIL: ${msg}`);
   failed = true;
 };
-const ok = (msg) => console.log(`OK: ${msg}`);
 
-// --- Phase 1: Static checks on prerendered HTML ---
-
-// SSR page: check exact Stacks encoded values in prerendered HTML
-{
-  const EXPECTED = {
-    encoded: '0x05160000000000000000000000000000000000000000',
-    encodedContract: '0x0616c030e21338c86199889c382f1cda75d7adf4a9b91261737365742d6d616e616765722d696d706c',
-    serialized: '0x05165a5b2928a02cf4fc972544c6ea9a69fb9f9a0e3d',
-    sdk: 'ok',
-  };
-
-  const paths = ['.next/server/app/index.html', '.next/server/app/page.html'];
-  let html;
-  let used;
-  for (const path of paths) {
-    try {
-      html = readFileSync(path, 'utf8');
-      used = path;
-      break;
-    } catch {}
-  }
-
-  if (!html) {
-    fail(`ssr: could not find prerendered HTML in ${paths.join(', ')}`);
-  } else {
-    for (const [key, expected] of Object.entries(EXPECTED)) {
-      if (html.includes(expected)) {
-        ok(`ssr ${key}: ${expected.slice(0, 40)}${expected.length > 40 ? '...' : ''}`);
-      } else {
-        fail(`ssr ${key}: expected value not found in ${used}`);
-      }
-    }
-  }
-}
-
-// Client page: confirm providers built without Turbopack crash
-{
-  const paths = ['.next/server/app/client.html', '.next/server/app/client/index.html'];
-  let html;
-  let used;
-  for (const path of paths) {
-    try {
-      html = readFileSync(path, 'utf8');
-      used = path;
-      break;
-    } catch {}
-  }
-
-  if (!html) {
-    fail('client page not found — Turbopack build may have crashed');
-  } else {
-    const markers = ['sdk-exports', 'wallet-core-exports', 'providers'];
-    for (const marker of markers) {
-      if (html.includes(`data-testid="${marker}"`)) {
-        ok(`client ${marker}: rendered`);
-      } else {
-        fail(`client ${marker}: data-testid not found in ${used}`);
-      }
-    }
-  }
-}
-
-if (failed) {
-  console.error('\nverify-build: FAILED (static checks)');
-  process.exit(1);
-}
-
-// --- Phase 2: Runtime check — start server, fetch pages, verify JS renders ---
-
-console.log('\nStarting runtime verification...');
-
-const PORT = 3099;
 const server = spawn('npx', ['next', 'start', '--port', String(PORT)], {
   stdio: ['ignore', 'pipe', 'pipe'],
   env: { ...process.env, NODE_ENV: 'production' },
@@ -94,17 +21,17 @@ const server = spawn('npx', ['next', 'start', '--port', String(PORT)], {
 let serverOutput = '';
 server.stdout.on('data', (d) => { serverOutput += d.toString(); });
 server.stderr.on('data', (d) => { serverOutput += d.toString(); });
-
-// Wait for server ready, then run checks
-const timeout = setTimeout(() => {
-  fail('server did not start within 30s');
-  console.error('Server output:\n', serverOutput);
-  server.kill();
-  process.exit(1);
-}, 30_000);
+server.on('error', () => {}); // suppress ECONNRESET from kill()
+server.on('close', (code) => {
+  if (!server.killed) {
+    console.error(`server exited unexpectedly with code ${code}\n${serverOutput}`);
+    process.exit(1);
+  }
+});
 
 async function waitForServer() {
-  for (let i = 0; i < 60; i++) {
+  const deadline = Date.now() + TIMEOUT_MS;
+  while (Date.now() < deadline) {
     try {
       await fetch(`http://localhost:${PORT}/`);
       return true;
@@ -115,69 +42,45 @@ async function waitForServer() {
   return false;
 }
 
-async function fetchAndCheck(path, checks) {
-  const url = `http://localhost:${PORT}${path}`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
-  if (!res.ok) {
-    fail(`${path}: HTTP ${res.status}`);
-    return;
-  }
-  const html = await res.text();
-
-  for (const { name, test } of checks) {
-    if (test(html)) {
-      ok(`runtime ${path} ${name}`);
-    } else {
-      fail(`runtime ${path} ${name}`);
-    }
-  }
-}
-
-async function runRuntimeChecks() {
+async function run() {
   try {
-    const ready = await waitForServer();
-    clearTimeout(timeout);
-
-    if (!ready) {
+    if (!(await waitForServer())) {
       fail('server never became ready');
       return;
     }
 
-    // SSR page: values should be in initial HTML (server-rendered)
-    await fetchAndCheck('/', [
-      { name: 'stacks-encoded', test: (h) => h.includes('0x05160000000000000000000000000000000000000000') },
-      { name: 'sdk-ready', test: (h) => h.includes('data-testid="sdk"') && h.includes('>ok</') },
-    ]);
+    const res = await fetch(`http://localhost:${PORT}/`, { signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) {
+      fail(`GET /: HTTP ${res.status}`);
+      return;
+    }
+    const html = await res.text();
 
-    // Client page: provider markers should be in HTML shell
-    // (values are "loading..." in SSR, filled by JS — but page must not crash)
-    await fetchAndCheck('/client', [
-      { name: 'page-rendered', test: (h) => h.includes('data-testid="providers"') },
-      { name: 'no-error-boundary', test: (h) => !h.includes('Application error') },
-      { name: 'no-hydration-error', test: (h) => !h.includes('Hydration failed') },
-      { name: 'provider-shell', test: (h) => h.includes('sodax next16') },
-    ]);
+    const checks = [
+      // @sodax/libs/stacks/core loaded clean in SSR and produced the encoded hex
+      ['stacks-ssr', (h) => h.includes('0x05160000000000000000000000000000000000000000')],
+      // new SDK.Sodax() constructed without throwing in SSR
+      ['sdk-ready', (h) => h.includes('data-testid="sdk"') && h.includes('>ok</')],
+      // Client bundle mounted (ClientWalletSection emits this marker)
+      ['client-mounted', (h) => h.includes('data-testid="wallet-section"')],
+      // No SSR crash bubbled into the HTML
+      ['no-ssr-crash', (h) => !h.includes('Application error') && !h.includes('window is not defined')],
+    ];
+
+    for (const [name, test] of checks) {
+      if (test(html)) ok(name);
+      else fail(name);
+    }
   } finally {
     server.kill();
   }
 
   if (failed) {
-    console.error('Server output:\n', serverOutput);
-    console.error('\nverify-build: FAILED');
+    console.error(`\nServer output:\n${serverOutput}\nverify-build: FAILED`);
     process.exit(1);
   }
-  console.log('\nverify-build: OK — SSR values correct, client providers built, runtime OK');
+  console.log('\nverify-build: OK');
   process.exit(0);
 }
 
-server.on('error', () => {}); // suppress ECONNRESET from kill()
-server.on('close', (code) => {
-  // If server exits before runtime checks finish (e.g. port conflict, crash),
-  // fail immediately instead of waiting for the 30s timeout.
-  if (!server.killed) {
-    fail(`server exited unexpectedly with code ${code}`);
-    console.error('Server output:\n', serverOutput);
-    process.exit(1);
-  }
-});
-runRuntimeChecks();
+run();

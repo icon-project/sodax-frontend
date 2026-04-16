@@ -6,6 +6,7 @@ import { SodaxWalletProvider } from '@sodax/wallet-sdk-react';
 import { SodaxProvider } from '@sodax/dapp-kit';
 import * as SDK from '@sodax/sdk';
 import * as Types from '@sodax/types';
+import type { State as WagmiState } from 'wagmi';
 
 const queryClient = new QueryClient();
 
@@ -27,11 +28,21 @@ const rpcConfig: Types.RpcConfig = {
   solana: 'https://solana-rpc.publicnode.com',
 };
 
-export default function Providers({ children }: { children: ReactNode }) {
+export default function Providers({
+  children,
+  initialState,
+}: {
+  children: ReactNode;
+  initialState?: WagmiState;
+}) {
   return (
     <SodaxProvider testnet={false} config={sodaxConfig} rpcConfig={rpcConfig}>
       <QueryClientProvider client={queryClient}>
-        <SodaxWalletProvider rpcConfig={rpcConfig} options={{ wagmi: { ssr: true } }}>
+        <SodaxWalletProvider
+          rpcConfig={rpcConfig}
+          options={{ wagmi: { ssr: true, reconnectOnMount: true } }}
+          initialState={initialState}
+        >
           {children}
         </SodaxWalletProvider>
       </QueryClientProvider>
