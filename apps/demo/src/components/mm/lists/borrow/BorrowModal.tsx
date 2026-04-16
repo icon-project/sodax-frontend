@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { ChainSelector } from '@/components/shared/ChainSelector';
 import { useEvmSwitchChain, useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { parseUnits } from 'viem';
+import { parseUnits, formatUnits } from 'viem';
 import type { MoneyMarketBorrowParams } from '@sodax/sdk';
 import { useBorrow, useSpokeProvider, useReservesUsdFormat, useAToken, useUserReservesData } from '@sodax/dapp-kit';
 import type { ChainId, XToken } from '@sodax/types';
@@ -25,11 +25,11 @@ import {
   getNativeTokenSymbol,
   formatDecimalForDisplay,
   getSafeMaxAmountForInput,
+  truncateToDecimals,
 } from '@/lib/utils';
 import { logger } from '@/lib/logger';
-import { formatUnits } from 'viem';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
-import { MIN_BORROW_USD, MAX_BORROW_SAFETY_MARGIN, ZERO_ADDRESS } from '../../constants';
+import { MIN_BORROW_USD, MAX_BORROW_SAFETY_MARGIN, ZERO_ADDRESS, AMOUNT_DISPLAY_DECIMALS } from '../../constants';
 import type { FormatUserSummaryResponse } from '@sodax/sdk';
 import { isUserReserveDataArray, isValidEvmAddress } from '../../typeGuards';
 import { isAddress } from 'viem';
@@ -180,18 +180,18 @@ export function BorrowModal({
     if (destinationMetrics.formattedReserve && aToken) {
       let availableLiquidity: string | undefined;
       if (destinationMetrics.formattedReserve.borrowCap === '0') {
-        availableLiquidity = formatUnits(
+        availableLiquidity = truncateToDecimals(Number(formatUnits(
           BigInt(destinationMetrics.formattedReserve.availableLiquidity),
           aToken.decimals,
-        );
+        )), AMOUNT_DISPLAY_DECIMALS);
       } else {
-        availableLiquidity = Math.min(
+        availableLiquidity = truncateToDecimals(Math.min(
           Number.parseFloat(
             formatUnits(BigInt(destinationMetrics.formattedReserve.availableLiquidity), aToken.decimals),
           ),
-          Number.parseInt(destinationMetrics.formattedReserve.borrowCap) -
-            Number.parseFloat(destinationMetrics.formattedReserve.totalScaledVariableDebt),
-        ).toFixed(6);
+          Number.parseFloat(destinationMetrics.formattedReserve.borrowCap) -
+            Number.parseFloat(destinationMetrics.formattedReserve.totalVariableDebt),
+        ), AMOUNT_DISPLAY_DECIMALS);
       }
 
       if (availableLiquidity && Number(availableLiquidity) > 0) {
@@ -203,7 +203,7 @@ export function BorrowModal({
 
     // Apply safety margin and format
     const afterSafetyMargin = calculatedMaxBorrow * MAX_BORROW_SAFETY_MARGIN;
-    const finalMaxBorrow = afterSafetyMargin.toFixed(6);
+    const finalMaxBorrow = truncateToDecimals(afterSafetyMargin, AMOUNT_DISPLAY_DECIMALS);
 
     return {
       maxBorrow: finalMaxBorrow !== '0' ? finalMaxBorrow : '0',
@@ -216,7 +216,7 @@ export function BorrowModal({
   const minBorrowAmount = useMemo(() => {
     if (!destinationToken || priceUSD <= 0) return '0';
     const minTokens = MIN_BORROW_USD / priceUSD;
-    return minTokens.toFixed(6);
+    return truncateToDecimals(minTokens, AMOUNT_DISPLAY_DECIMALS);
   }, [destinationToken, priceUSD]);
 
   const sourceWalletProvider = useWalletProvider(sourceChainId);

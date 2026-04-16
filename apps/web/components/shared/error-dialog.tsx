@@ -24,7 +24,7 @@ export function ErrorDialog({
         <DialogHeader>
           <div className="flex flex-row justify-between items-center w-full">
             <div className="inline-flex justify-start items-center gap-2 w-full">
-              <Image src="/symbol_dark.png" alt="SODAX Symbol" width={16} height={16} className="mix-blend-multiply" />
+              <Image src="/soda-yellow-sm.png" alt="SODAX Symbol" width={16} height={16} className="mix-blend-multiply" />
               <DialogTitle className="mix-blend-multiply text-espresso font-['InterBold'] leading-snug text-(size:--body-super-comfortable) flex justify-between items-center w-full">
                 {title}
                 <DialogClose asChild>

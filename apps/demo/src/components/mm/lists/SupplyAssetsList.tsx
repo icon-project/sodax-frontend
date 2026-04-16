@@ -36,6 +36,7 @@ export function SupplyAssetsList(): ReactElement {
   const [withdrawData, setWithdrawData] = useState<{
     token: XToken;
     maxWithdraw: string;
+    isHfLimited: boolean;
   } | null>(null);
   const [supplyData, setSupplyData] = useState<{
     token: XToken;
@@ -69,7 +70,10 @@ export function SupplyAssetsList(): ReactElement {
     isLoading: isFormattedReservesLoading,
     refetch: refetchFormattedReserves,
   } = useReservesUsdFormat();
-  const { data: userSummary, refetch: refetchSummary } = useUserFormattedSummary({ spokeChainId: selectedChainId, userAddress: address });
+  const { data: userSummary, refetch: refetchSummary } = useUserFormattedSummary({
+    spokeChainId: selectedChainId,
+    userAddress: address,
+  });
   const healthFactorRaw = userSummary?.healthFactor ? Number(userSummary.healthFactor) : undefined;
 
   const healthFactorDisplay =
@@ -306,9 +310,19 @@ export function SupplyAssetsList(): ReactElement {
                           formattedReserves={formattedReserves}
                           userReserves={userReserves}
                           aTokenBalancesMap={aTokenBalancesMap}
+                          mmPortfolio={
+                            userSummary
+                              ? {
+                                  healthFactor: userSummary.healthFactor,
+                                  totalBorrowsUSD: userSummary.totalBorrowsUSD,
+                                  totalCollateralUSD: userSummary.totalCollateralUSD,
+                                  currentLiquidationThreshold: userSummary.currentLiquidationThreshold,
+                                }
+                              : undefined
+                          }
                           onRefreshReserves={handleRefresh}
-                          onWithdrawClick={(token, maxWithdraw) => {
-                            setWithdrawData({ token, maxWithdraw });
+                          onWithdrawClick={(token, maxWithdraw, isHfLimited) => {
+                            setWithdrawData({ token, maxWithdraw, isHfLimited });
                           }}
                           onSupplyClick={(token, maxSupply) => {
                             setSupplyData({ token, maxSupply });
@@ -339,6 +353,7 @@ export function SupplyAssetsList(): ReactElement {
           open={true}
           token={withdrawData.token}
           maxWithdraw={withdrawData.maxWithdraw}
+          isHfLimited={withdrawData.isHfLimited}
           inlineSuccess={true}
           onOpenChange={open => {
             if (!open) setWithdrawData(null);

@@ -94,7 +94,7 @@ export default function PartnersPage() {
       '@type': 'Organization',
       name: 'SODAX',
       url: 'https://sodax.com',
-      logo: 'https://sodax.com/symbol2.png',
+      logo: 'https://sodax.com/soda-cherry.png',
       sameAs: [X_ROUTE, GITHUB_ROUTE, DISCORD_ROUTE],
     },
   };
