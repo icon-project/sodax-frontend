@@ -1,7 +1,7 @@
 {
   "name": "@sodax/wallet-sdk-react",
   "license": "MIT",
-  "version": "1.5.5-beta",
+  "version": "1.5.6-beta",
   "description": "Wallet SDK of Sodax",
   "type": "module",
   "main": "./dist/index.cjs",
