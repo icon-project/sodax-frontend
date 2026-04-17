@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { SodaxIcon } from '@/components/icons/sodax-icon';
+import { NavbarSpotlight, NavbarSpotlightStatic } from '@/components/shared/navbar-spotlight';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { HOME_ROUTE, NEWS_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
 
@@ -23,6 +24,7 @@ export function Navbar() {
             <SodaxIcon width={84} height={18} fill="white" />
           </div>
         </Link>
+        <NavbarSpotlight className="hidden md:flex ml-8" />
       </div>
       <div className="flex items-center gap-8">
         <ul className="hidden lg:flex gap-6 z-10">
@@ -37,9 +39,10 @@ export function Navbar() {
             </li>
           ))}
         </ul>
+        <NavbarSpotlightStatic className="md:hidden" />
         <Link
           href={PARTNERS_ROUTE}
-          className="bg-yellow-dark hover:bg-yellow-soda transition-all hover:scale-[102%] h-10 px-6 font-[InterBold] rounded-full text-[14px] cursor-pointer text-cherry-dark flex items-center"
+          className="bg-yellow-dark hover:bg-yellow-soda transition-all hover:scale-[102%] h-10 px-6 font-[InterBold] rounded-full text-[14px] cursor-pointer text-cherry-dark hidden md:flex items-center"
         >
           Discover SODAX
         </Link>
