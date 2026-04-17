@@ -3,9 +3,6 @@ import { createStore } from 'zustand/vanilla';
 import { persist } from 'zustand/middleware';
 import type { XToken } from '@sodax/types';
 
-export const INITIAL_PRICE = 1;
-export const INITIAL_MIN_PRICE = +(INITIAL_PRICE * 0.85).toFixed(2);
-export const INITIAL_MAX_PRICE = +(INITIAL_PRICE * 1.15).toFixed(2);
 const APY_POOL_ID = '0x1fbed2bab018dd01756162d135964186addbab00158eda8013de8a15948995cd';
 
 type PoolApyApiResponse = {
@@ -23,8 +20,8 @@ function getValidatedApy(value: number | null | undefined): number | null {
 
 export type PoolState = {
   selectedToken: XToken | null;
-  minPrice: number;
-  maxPrice: number;
+  minPrice: number | null;
+  maxPrice: number | null;
   sodaAmount: string;
   xSodaAmount: string;
   isNetworkPickerOpened: boolean;
@@ -47,8 +44,8 @@ export type PoolStore = PoolState & PoolActions;
 
 export const defaultPoolState: PoolState = {
   selectedToken: null,
-  minPrice: INITIAL_MIN_PRICE,
-  maxPrice: INITIAL_MAX_PRICE,
+  minPrice: null,
+  maxPrice: null,
   sodaAmount: '',
   xSodaAmount: '',
   isNetworkPickerOpened: false,
@@ -117,6 +114,7 @@ export const createPoolStore = (initState: PoolState = defaultPoolState) => {
           minPrice: state.minPrice,
           maxPrice: state.maxPrice,
         }),
+        version: 2,
       },
     ),
   );
