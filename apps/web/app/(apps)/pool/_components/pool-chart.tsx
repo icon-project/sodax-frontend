@@ -430,8 +430,8 @@ export function PoolChart({
           setAllData(mockData);
           setCurrentPrice(last);
           setTickData([]);
-          setMinPrice(initialBand.min);
-          setMaxPrice(initialBand.max);
+          setInternalMinPrice(initialBand.min);
+          setInternalMaxPrice(initialBand.max);
           return;
         }
 
@@ -469,8 +469,8 @@ export function PoolChart({
         setAllData(data);
         setCurrentPrice(last);
         setTickData(ticks);
-        setMinPrice(initialBand.min);
-        setMaxPrice(initialBand.max);
+        setInternalMinPrice(initialBand.min);
+        setInternalMaxPrice(initialBand.max);
       } catch {
         if (ignore) {
           return;
@@ -483,8 +483,8 @@ export function PoolChart({
         setAllData(fb);
         setCurrentPrice(last);
         setTickData([]);
-        setMinPrice(initialBand.min);
-        setMaxPrice(initialBand.max);
+        setInternalMinPrice(initialBand.min);
+        setInternalMaxPrice(initialBand.max);
       } finally {
         if (!ignore) {
           setLoading(false);
@@ -496,7 +496,7 @@ export function PoolChart({
     return () => {
       ignore = true;
     };
-  }, [activeRange, poolId, setMinPrice, setMaxPrice]);
+  }, [activeRange, poolId]);
 
   useEffect(() => {
     const obs = new ResizeObserver(entries => {
