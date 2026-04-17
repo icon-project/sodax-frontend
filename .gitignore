@@ -22,3 +22,5 @@ public/dist
 # Agent skills (local to VSCode)
 .agents/
 .github/skills/
+
+scripts/find_malicious_npm_packages.sh
