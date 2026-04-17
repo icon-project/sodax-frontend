@@ -148,10 +148,12 @@ const ExchangeHeroSection = (): React.ReactElement => {
               </div>
               <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
               <div className="flex flex-col w-42 pl-4 pr-10 justify-center">
-                <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2]">
-                  Migrate ICX to SODA
+                <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2] whitespace-nowrap">
+                  Migrate
+                  <br />
+                  ICX to SODA
                 </div>
-                <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
+                <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter whitespace-nowrap">
                   Claim your tokens
                 </div>
               </div>
@@ -206,6 +208,7 @@ const ExchangeHeroSection = (): React.ReactElement => {
             </div>
             <div className="inline-flex justify-center items-start relative">
               <MainCtaButton
+                hideBubbles
                 onClick={() => {
                   router.push(SWAP_ROUTE);
                   setShouldTriggerAnimation(true);
