@@ -4,17 +4,22 @@ import type React from 'react';
 
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import type { CarouselApi } from '@/components/ui/carousel';
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Label } from '@/components/ui/label';
 import Autoplay from 'embla-carousel-autoplay';
 import { MainCtaButton } from './main-cta-button';
-import { SodaxIcon } from '../icons/sodax-icon';
 import { Separator } from '@radix-ui/react-separator';
 import { useRouter } from 'next/navigation';
-import { NEWS_ROUTE, PARTNERS_ROUTE, SWAP_ROUTE } from '@/constants/routes';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import { SWAP_ROUTE } from '@/constants/routes';
 import { useAppStore } from '@/stores/app-store-provider';
+import { Navbar } from '@/components/shared/navbar';
+
+const heroStats: { title: string; subtitle: string; widthClass: string }[] = [
+  { title: 'Swap your assets', subtitle: 'At leading rates', widthClass: 'w-40 pr-10' },
+  { title: 'Build your savings', subtitle: 'Across networks', widthClass: 'w-42 pr-10' },
+  { title: 'Borrow stables or assets', subtitle: 'Without a bank', widthClass: 'w-39' },
+];
 
 const carouselItems = [
   { id: 1, src: '/coin/base.png', alt: 'BASE' },
@@ -64,58 +69,7 @@ const ExchangeHeroSection = (): React.ReactElement => {
           unoptimized
         />
         {/* Menu Bar */}
-        <div className="w-full flex justify-between items-center pt-10 z-20 md:px-16 px-8 lg:px-8 lg:max-w-[1264px]">
-          <div className="flex items-center">
-            <SidebarTrigger className="outline-none size-8 p-0 lg:hidden" />
-            <div
-              className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            >
-              <Image src="/soda-yellow.png" alt="SODAX Symbol" width={32} height={32} />
-              <div className="hidden md:block md:ml-[11px]">
-                <SodaxIcon width={84} height={18} fill="white" />
-              </div>
-              <div className="mix-blend-screen justify-center text-[#edc1bc] text-[9px] font-bold font-['InterRegular'] leading-[1.4] ml-2">
-                BETA
-              </div>
-            </div>
-            <div className="justify-center text-cream hidden lg:flex ml-8 gap-1">
-              <span className="text-xs font-bold font-[InterRegular] leading-none">Infrastructure for</span>
-              <span className="text-xs font-normal font-[Shrikhand] leading-none mt-[1px]">modern money</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-8">
-            {/* Navigation Menu and Button */}
-            <ul className="hidden lg:flex gap-4 z-10">
-              <li>
-                <a
-                  className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
-                  href={NEWS_ROUTE}
-                >
-                  News
-                </a>
-              </li>
-              <li>
-                <a
-                  className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
-                  href={PARTNERS_ROUTE}
-                >
-                  Partners
-                </a>
-              </li>
-            </ul>
-            <div className="inline-flex justify-center items-start relative">
-              <MainCtaButton
-                onClick={() => {
-                  router.push(SWAP_ROUTE);
-                  setShouldTriggerAnimation(true);
-                }}
-              >
-                launch apps
-              </MainCtaButton>
-            </div>
-          </div>
-        </div>
+        <Navbar />
         <Image
           className="mix-blend-color-dodge absolute max-w-none w-[357px] h-[357px] sm:w-[701px] sm:h-[680px] top-[30px] left-[-135px] sm:top-[-50px] lg:left-[9.5%] md:left-[-30%]"
           src="/circle1.png"
@@ -148,33 +102,19 @@ const ExchangeHeroSection = (): React.ReactElement => {
               </div>
             </div>
             <div className="hidden md:flex ">
-              <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
-              <div className="flex flex-col w-40 pl-4 pr-10 justify-center">
-                <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2]">
-                  Swap your assets
-                </div>
-                <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
-                  At leading rates
-                </div>
-              </div>
-              <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
-              <div className="flex flex-col w-42 pl-4 pr-10 justify-center">
-                <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2]">
-                  Build your savings
-                </div>
-                <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
-                  Across networks
-                </div>
-              </div>
-              <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
-              <div className="flex flex-col w-39 pl-4 justify-center">
-                <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2]">
-                  Borrow stables or assets
-                </div>
-                <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
-                  Without a bank
-                </div>
-              </div>
+              {heroStats.map(({ title, subtitle, widthClass }) => (
+                <Fragment key={title}>
+                  <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
+                  <div className={`flex flex-col pl-4 justify-center ${widthClass}`}>
+                    <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2]">
+                      {title}
+                    </div>
+                    <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
+                      {subtitle}
+                    </div>
+                  </div>
+                </Fragment>
+              ))}
             </div>
           </div>
           <div className="flex items-center w-full flex-wrap gap-4 md:mt-10 mt-4">

@@ -15,7 +15,7 @@ import {
   YOUTUBE_ROUTE,
 } from '@/constants/routes';
 import { getDb } from '@/lib/db';
-import { Navbar } from '@/components/shared/navbar';
+import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
 import { BookOpenIcon, RssSimpleIcon } from '@phosphor-icons/react/dist/ssr';
 import { DecorativeDivider } from '@/components/ui/decorative-divider';
@@ -197,6 +197,14 @@ export default async function NewsPage(props: {
     );
   }
 
+  const categoryTabs: { label: string; href: string; slug: string | undefined }[] = [
+    { label: 'All news', href: NEWS_ROUTE, slug: undefined },
+    { label: 'Product updates', href: PRODUCT_UPDATES_ROUTE, slug: 'product' },
+    { label: 'Partnerships', href: PARTNERSHIPS_ROUTE, slug: 'partnerships' },
+    { label: 'Community', href: COMMUNITY_NEWS_ROUTE, slug: 'community' },
+    { label: 'Technical', href: TECHNICAL_UPDATES_ROUTE, slug: 'technical' },
+  ];
+
   const [featured, ...restArticles] = filteredArticles;
   const secondary = restArticles.slice(0, 2);
   const grid = restArticles.slice(2);
@@ -207,8 +215,8 @@ export default async function NewsPage(props: {
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
         <div className="relative min-h-screen w-full bg-almost-white">
-          <Navbar />
-          <div className="max-w-7xl mx-auto px-4 py-16 pt-35">
+          <MarketingHeader />
+          <div className="max-w-7xl mx-auto px-4 py-16">
             <div className="bg-white rounded-lg p-8 text-center border-2 border-clay-light">
               <h2 className="text-2xl font-bold text-espresso mb-2">
                 {category ? `No articles in "${category}" category` : 'No news articles available'}
@@ -237,61 +245,27 @@ export default async function NewsPage(props: {
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <div className="relative min-h-screen w-full bg-almost-white">
-        <Navbar />
+        <MarketingHeader />
 
         {/* Category Filter Tabs */}
-        <div className="max-w-7xl mx-auto px-4 pt-35 pb-8 md:pb-12">
+        <div className="max-w-7xl mx-auto px-4 pt-12 pb-8 md:pb-12">
           <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 md:justify-center md:flex-wrap scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
-            <Link
-              href={NEWS_ROUTE}
-              className={`h-10 px-6 py-2 text-xs font-bold rounded-[240px] transition-all duration-200 flex items-center justify-center whitespace-nowrap ${
-                !category
-                  ? 'bg-[#ede6e6] text-[#483534]'
-                  : 'border-[3px] border-[#ede6e6] text-[#8e7e7d] font-normal hover:bg-[#ede6e6]/50'
-              }`}
-            >
-              All news
-            </Link>
-            <Link
-              href={PRODUCT_UPDATES_ROUTE}
-              className={`h-10 px-6 py-2 text-xs rounded-[240px] transition-all duration-200 flex items-center justify-center whitespace-nowrap ${
-                category === 'product'
-                  ? 'bg-[#ede6e6] text-[#483534] font-bold'
-                  : 'border-[3px] border-[#ede6e6] text-[#8e7e7d] font-normal hover:bg-[#ede6e6]/50'
-              }`}
-            >
-              Product updates
-            </Link>
-            <Link
-              href={PARTNERSHIPS_ROUTE}
-              className={`h-10 px-6 py-2 text-xs rounded-[240px] transition-all duration-200 flex items-center justify-center whitespace-nowrap ${
-                category === 'partnerships'
-                  ? 'bg-[#ede6e6] text-[#483534] font-bold'
-                  : 'border-[3px] border-[#ede6e6] text-[#8e7e7d] font-normal hover:bg-[#ede6e6]/50'
-              }`}
-            >
-              Partnerships
-            </Link>
-            <Link
-              href={COMMUNITY_NEWS_ROUTE}
-              className={`h-10 px-6 py-2 text-xs rounded-[240px] transition-all duration-200 flex items-center justify-center whitespace-nowrap ${
-                category === 'community'
-                  ? 'bg-[#ede6e6] text-[#483534] font-bold'
-                  : 'border-[3px] border-[#ede6e6] text-[#8e7e7d] font-normal hover:bg-[#ede6e6]/50'
-              }`}
-            >
-              Community
-            </Link>
-            <Link
-              href={TECHNICAL_UPDATES_ROUTE}
-              className={`h-10 px-6 py-2 text-xs rounded-[240px] transition-all duration-200 flex items-center justify-center whitespace-nowrap ${
-                category === 'technical'
-                  ? 'bg-[#ede6e6] text-[#483534] font-bold'
-                  : 'border-[3px] border-[#ede6e6] text-[#8e7e7d] font-normal hover:bg-[#ede6e6]/50'
-              }`}
-            >
-              Technical
-            </Link>
+            {categoryTabs.map(({ label, href, slug }) => {
+              const isActive = slug ? category === slug : !category;
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`h-10 px-6 py-2 text-xs rounded-[240px] transition-all duration-200 flex items-center justify-center whitespace-nowrap ${
+                    isActive
+                      ? 'bg-[#ede6e6] text-[#483534] font-bold'
+                      : 'border-[3px] border-[#ede6e6] text-[#8e7e7d] font-normal hover:bg-[#ede6e6]/50'
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
           </div>
         </div>
 

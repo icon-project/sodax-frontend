@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import type { Metadata } from 'next';
 import { ArrowRight, ExternalLink } from 'lucide-react';
-import { Navbar } from '@/components/shared/navbar';
+import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
 import { PageActions } from '@/components/partners/page-actions';
 import { AnimatedSection, AnimatedScrollSection } from '@/components/partners/animated-section';
@@ -148,9 +148,9 @@ function TeamMember({
 export default function SodaxSDKPage() {
   return (
     <div className="relative bg-white flex flex-col min-h-screen w-full">
-      <Navbar />
+      <MarketingHeader />
 
-      <div className="flex flex-col items-center w-full pt-30">
+      <div className="flex flex-col items-center w-full">
         <div className="flex flex-col gap-8 items-start pt-14 pb-14 w-full max-w-5xl px-4 md:px-8">
           {/* ============================================ */}
           {/* FRAME 1: SODAX SDK Overview */}

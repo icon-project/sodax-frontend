@@ -1,6 +1,6 @@
 import { getNotionPages } from '@/lib/notion';
 import type { Metadata } from 'next';
-import { Navbar } from '@/components/shared/navbar';
+import { MarketingHeader } from '@/components/shared/marketing-header';
 import Footer from '@/components/landing/footer';
 import Image from 'next/image';
 import { GlossaryContent } from './glossary-content';
@@ -115,9 +115,9 @@ export default async function GlossaryPage() {
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <div className="min-h-screen bg-white flex flex-col w-full">
-        <Navbar />
+        <MarketingHeader />
 
-        <div className="bg-cream-white flex-1 flex flex-col items-start overflow-clip px-8 pt-40 pb-30 w-full -mb-4">
+        <div className="bg-cream-white flex-1 flex flex-col items-start overflow-clip px-8 pt-10 pb-30 w-full -mb-4">
           <div className="flex flex-col gap-6 items-center w-full max-w-236 mx-auto">
             {/* Header Section */}
             <div className="flex gap-2 items-center mb-8">

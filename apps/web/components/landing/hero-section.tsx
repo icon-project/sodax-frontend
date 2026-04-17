@@ -63,7 +63,7 @@ const HeroSection = (): React.ReactElement => {
         <div className="absolute right-0 top-0 hidden lg:block w-[360px] h-full bg-linear-to-l from-cherry-soda to-transparent pointer-events-none z-10" />
 
         {/* Navigation */}
-        <Navbar variant="inline" />
+        <Navbar />
 
         {/* Hero content */}
         <div className="flex flex-1 flex-col items-center justify-center w-full px-4 gap-[56px]">
