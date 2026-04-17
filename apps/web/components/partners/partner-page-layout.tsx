@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { MarketingHeader } from '@/components/shared/marketing-header';
+import { Navbar } from '@/components/shared/navbar';
 import Footer from '@/components/landing/footer';
 
 export interface PartnerMetadata {
@@ -17,8 +17,6 @@ export interface PartnerMetadata {
 interface PartnerPageLayoutProps {
   metadata: PartnerMetadata;
   children: React.ReactNode;
-  backLink?: string;
-  backText?: string;
 }
 
 export function generatePartnerMetadata(metadata: PartnerMetadata): Metadata {
@@ -44,12 +42,12 @@ export function generatePartnerMetadata(metadata: PartnerMetadata): Metadata {
   };
 }
 
-export function PartnerPageLayout({ metadata, children, backLink, backText }: PartnerPageLayoutProps) {
+export function PartnerPageLayout({ metadata, children }: PartnerPageLayoutProps) {
   const { partnerName, tagline, description, logoUrl } = metadata;
 
   return (
     <div className="relative bg-white flex flex-col min-h-screen w-full">
-      <MarketingHeader backLink={backLink} backText={backText} />
+      <Navbar />
 
       {/* Content */}
       <div className="flex flex-col items-center w-full pt-30">

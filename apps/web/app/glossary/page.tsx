@@ -1,10 +1,9 @@
 import { getNotionPages } from '@/lib/notion';
 import type { Metadata } from 'next';
-import { MarketingHeader } from '@/components/shared/marketing-header';
+import { Navbar } from '@/components/shared/navbar';
 import Footer from '@/components/landing/footer';
 import Image from 'next/image';
 import { GlossaryContent } from './glossary-content';
-import { HOME_ROUTE } from '@/constants/routes';
 // ISR: Revalidate every hour
 export const revalidate = 3600;
 
@@ -116,7 +115,7 @@ export default async function GlossaryPage() {
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <div className="min-h-screen bg-white flex flex-col w-full">
-        <MarketingHeader backLink={HOME_ROUTE} backText="← home" />
+        <Navbar />
 
         <div className="bg-cream-white flex-1 flex flex-col items-start overflow-clip px-8 pt-40 pb-30 w-full -mb-4">
           <div className="flex flex-col gap-6 items-center w-full max-w-236 mx-auto">

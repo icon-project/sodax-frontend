@@ -7,7 +7,7 @@ import { getDb } from '@/lib/db';
 import { requirePermission } from '@/lib/auth-utils';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { CMS_LOGIN_ROUTE, CMS_NEWS_ROUTE, NEWS_ROUTE } from '@/constants/routes';
-import { MarketingHeader } from '@/components/shared/marketing-header';
+import { Navbar } from '@/components/shared/navbar';
 import Footer from '@/components/landing/footer';
 
 interface NewsArticle {
@@ -108,7 +108,7 @@ export default async function NewsPreviewPage({ params }: PageProps) {
         </div>
       </div>
 
-      <MarketingHeader backLink={NEWS_ROUTE} backText="← news" />
+      <Navbar />
       <div className="max-w-7xl mx-auto">
         {/* Article */}
         <article className="py-8">

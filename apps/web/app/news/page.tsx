@@ -5,7 +5,6 @@ import Link from 'next/link';
 import {
   COMMUNITY_NEWS_ROUTE,
   DOCUMENTATION_ROUTE,
-  HOME_ROUTE,
   NEWS_ROUTE,
   PARTNERSHIPS_ROUTE,
   PRODUCT_UPDATES_ROUTE,
@@ -16,7 +15,7 @@ import {
   YOUTUBE_ROUTE,
 } from '@/constants/routes';
 import { getDb } from '@/lib/db';
-import { MarketingHeader } from '@/components/shared/marketing-header';
+import { Navbar } from '@/components/shared/navbar';
 import Footer from '@/components/landing/footer';
 import { BookOpenIcon, RssSimpleIcon } from '@phosphor-icons/react/dist/ssr';
 import { DecorativeDivider } from '@/components/ui/decorative-divider';
@@ -208,7 +207,7 @@ export default async function NewsPage(props: {
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
         <div className="relative min-h-screen w-full bg-almost-white">
-          <MarketingHeader backLink={HOME_ROUTE} backText="← home" />
+          <Navbar />
           <div className="max-w-7xl mx-auto px-4 py-16 pt-35">
             <div className="bg-white rounded-lg p-8 text-center border-2 border-clay-light">
               <h2 className="text-2xl font-bold text-espresso mb-2">
@@ -238,7 +237,7 @@ export default async function NewsPage(props: {
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <div className="relative min-h-screen w-full bg-almost-white">
-        <MarketingHeader backLink={HOME_ROUTE} backText="← home" />
+        <Navbar />
 
         {/* Category Filter Tabs */}
         <div className="max-w-7xl mx-auto px-4 pt-35 pb-8 md:pb-12">

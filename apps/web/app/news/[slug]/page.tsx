@@ -7,7 +7,7 @@ import { NEWS_ROUTE } from '@/constants/routes';
 import { getDb } from '@/lib/db';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { getGlossaryTerms, injectGlossaryLinks } from '@/lib/glossary-linker';
-import { MarketingHeader } from '@/components/shared/marketing-header';
+import { Navbar } from '@/components/shared/navbar';
 import Footer from '@/components/landing/footer';
 import { ShareButton } from '@/components/news/share-button';
 
@@ -250,7 +250,7 @@ export default async function NewsArticlePage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbStructuredData) }}
       />
       <div className="relative min-h-screen w-full bg-almost-white">
-        <MarketingHeader backLink={NEWS_ROUTE} backText="← news" />
+        <Navbar />
         <div className="max-w-7xl mx-auto pt-30">
           {/* Article */}
           <article className="py-8" itemScope itemType="https://schema.org/NewsArticle">

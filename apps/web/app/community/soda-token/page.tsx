@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Footer from '@/components/landing/footer';
-import { MarketingHeader } from '@/components/shared/marketing-header';
+import { Navbar } from '@/components/shared/navbar';
 import { DOCUMENTATION_ROUTE, SODAX_SCAN_TOKEN_ROUTE, SWAP_ROUTE } from '@/constants/routes';
 
 // API fetcher with proper error handling
@@ -215,7 +215,7 @@ export default function SodaTokenPage() {
   return (
     <div className="relative min-h-screen bg-almost-white w-full">
       {/* Header */}
-      <MarketingHeader />
+      <Navbar />
 
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-[132px] pb-8 sm:pb-12 lg:pb-16">

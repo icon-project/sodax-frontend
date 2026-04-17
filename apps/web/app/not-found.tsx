@@ -3,13 +3,13 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import Footer from '@/components/landing/footer';
-import { MarketingHeader } from '@/components/shared/marketing-header';
+import { Navbar } from '@/components/shared/navbar';
 import { HOME_ROUTE } from '@/constants/routes';
 
 export default function NotFound() {
   return (
     <div className="relative flex min-h-screen w-full flex-col pt-30">
-      <MarketingHeader />
+      <Navbar />
       <div className="flex flex-1 py-32 flex-col items-center justify-center px-4">
         <div className="flex flex-col items-center gap-6 text-center">
           {/* 404 Number */}

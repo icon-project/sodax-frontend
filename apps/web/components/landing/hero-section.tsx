@@ -4,10 +4,7 @@ import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { SodaxIcon } from '../icons/sodax-icon';
-import { NEWS_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Navbar } from '@/components/shared/navbar';
 import { NETWORK_ICON_MAP } from '../network-icons';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getNetworkDocsUrl } from '@/lib/docToUrl';
@@ -33,7 +30,6 @@ const HERO_NETWORK_LOGOS = [
 ];
 
 const HeroSection = (): React.ReactElement => {
-  const router = useRouter();
   const [activeTouchIndex, setActiveTouchIndex] = useState<number | null>(null);
   const touchBoundaryRef = useRef<HTMLDivElement>(null);
   const touchTriggeredRef = useRef(false);
@@ -67,47 +63,7 @@ const HeroSection = (): React.ReactElement => {
         <div className="absolute right-0 top-0 hidden lg:block w-[360px] h-full bg-linear-to-l from-cherry-soda to-transparent pointer-events-none z-10" />
 
         {/* Navigation */}
-        <div className="w-full flex justify-between items-center pt-10 z-20 md:px-16 px-8 lg:px-8 lg:max-w-[1264px]">
-          <div className="flex items-center">
-            <SidebarTrigger className="outline-none size-8 p-0 lg:hidden" />
-            <div
-              className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            >
-              <Image src="/soda-yellow.png" alt="SODAX Symbol" width={32} height={32} />
-              <div className="hidden md:block md:ml-[11px]">
-                <SodaxIcon width={84} height={18} fill="white" />
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-8">
-            <ul className="hidden lg:flex gap-6 z-10">
-              <li>
-                <a
-                  className="text-cream font-[InterRegular] text-[14px] transition-all hover:opacity-80 cursor-pointer"
-                  href={NEWS_ROUTE}
-                >
-                  News
-                </a>
-              </li>
-              <li>
-                <a
-                  className="text-cream font-[InterRegular] text-[14px] transition-all hover:opacity-80 cursor-pointer"
-                  href={PARTNERS_ROUTE}
-                >
-                  Partners
-                </a>
-              </li>
-            </ul>
-            <button
-              type="button"
-              onClick={() => router.push(PARTNERS_ROUTE)}
-              className="bg-yellow-dark hover:bg-yellow-soda transition-all hover:scale-[102%] h-10 px-6 font-[InterBold] rounded-full text-[14px] cursor-pointer text-cherry-dark"
-            >
-              Discover SODAX
-            </button>
-          </div>
-        </div>
+        <Navbar variant="inline" />
 
         {/* Hero content */}
         <div className="flex flex-1 flex-col items-center justify-center w-full px-4 gap-[56px]">
