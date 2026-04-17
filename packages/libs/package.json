@@ -1,0 +1,66 @@
+{
+  "name": "@sodax/libs",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "0.0.1-rc.0",
+  "license": "MIT",
+  "description": "Sodax shared bundled libraries (internal dependency isolation)",
+  "keywords": [
+    "sodax",
+    "libs",
+    "internal"
+  ],
+  "homepage": "https://github.com/icon-project/sodax-frontend/tree/main/packages/libs",
+  "bugs": {
+    "url": "https://github.com/icon-project/sodax-frontend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/icon-project/sodax-frontend"
+  },
+  "type": "module",
+  "exports": {
+    "./stacks/core": {
+      "types": "./dist/stacks/core/index.d.ts",
+      "import": "./dist/stacks/core/index.mjs",
+      "require": "./dist/stacks/core/index.cjs"
+    },
+    "./stacks/connect": {
+      "types": "./dist/stacks/connect/index.d.ts",
+      "import": "./dist/stacks/connect/index.mjs",
+      "require": "./dist/stacks/connect/index.cjs"
+    },
+    "./injective/wallet-strategy": {
+      "types": "./dist/injective/wallet-strategy/index.d.ts",
+      "import": "./dist/injective/wallet-strategy/index.mjs",
+      "require": "./dist/injective/wallet-strategy/index.cjs"
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node scripts/verify-stacks-connect-ui-stub.mjs && tsup",
+    "dev": "tsup --watch",
+    "checkTs": "tsc --noEmit",
+    "pretty": "biome format . --write",
+    "lint": "biome lint . --write",
+    "clean": "rm -rf node_modules && rm -rf dist && rm -rf .turbo"
+  },
+  "dependencies": {
+    "@injectivelabs/wallet-strategy": "catalog:",
+    "@stacks/connect": "catalog:",
+    "@stacks/network": "catalog:",
+    "@stacks/transactions": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
+  }
+}

@@ -23,7 +23,7 @@ import { toHex } from 'viem';
 import { bcs } from '@mysten/sui/bcs';
 import { PublicKey } from '@solana/web3.js';
 import { Address as StellarAddress } from '@stellar/stellar-sdk';
-import { Cl, serializeCV } from '@stacks/transactions';
+import { Cl, serializeCV } from '@sodax/libs/stacks/core';
 import { EvmWalletAbstraction } from '../services/index.js';
 import {
   StellarRawSpokeProvider,

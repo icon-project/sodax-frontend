@@ -14,6 +14,7 @@ Turborepo + pnpm workspace. Package manager: **pnpm 9.8.0**.
 - `apps/demo` — Vite + React demo app for SDK showcase
 - `apps/node` — Node.js scripts for E2E testing various chain operations
 - `packages/types` — Shared TypeScript type definitions (chain IDs, common types, backend types)
+- `packages/libs` — Internal dependency isolation; bundles and re-exports selected third-party libs via stable subpaths
 - `packages/sdk` — Core SDK: swap, bridge, moneyMarket, staking, migration, partner modules
 - `packages/wallet-sdk-core` — Low-level multi-chain wallet operations (signing, broadcasting)
 - `packages/wallet-sdk-react` — React hooks/providers wrapping wallet-sdk-core (Zustand state, EIP-6963)
@@ -22,7 +23,13 @@ Turborepo + pnpm workspace. Package manager: **pnpm 9.8.0**.
 
 ### Package dependency chain
 
-`types` → `sdk` → `wallet-sdk-core` → `wallet-sdk-react` → `dapp-kit` → `apps/web`
+`types` and `libs` are leaf packages (no `@sodax/*` deps). Downstream:
+
+- `sdk` → `types`, `libs`
+- `wallet-sdk-core` → `types`, `libs`
+- `wallet-sdk-react` → `types`, `libs`, `wallet-sdk-core`
+- `dapp-kit` → `types`, `sdk`
+- `apps/*` consume any subset of the above
 
 ## Common Commands
 
@@ -137,10 +144,12 @@ GitHub Actions runs on push to `main`/`development` and all PRs:
 1. `pnpm install --frozen-lockfile`
 2. `pnpm lint`
 3. `pnpm build:packages`
-4. `pnpm checkTs`
-5. `pnpm build`
+4. `apps/node-cjs` CJS compatibility check
+5. `pnpm checkTs`
+6. `pnpm build`
+7. `pnpm --filter example-next-js-16 verify` — Next.js 16 Turbopack regression probe
 
-Tested against Node.js 18.x, 20.x, 22.x.
+Tested against Node.js 20.x, 22.x, 24.x.
 
 ## Git Flow
 
