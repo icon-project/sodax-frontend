@@ -16,14 +16,20 @@ export async function GET(_request: Request, { params }: { params: Promise<{ slu
   const entry = await getConnectEntryBySlug(slug);
 
   if (!entry?.avatarUrl) {
-    return new NextResponse('Not found', { status: 404 });
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  const upstream = await fetch(entry.avatarUrl);
+  let upstream: Response;
+  try {
+    upstream = await fetch(entry.avatarUrl);
+  } catch (err) {
+    console.error(`[connect/avatar] Upstream fetch threw for slug=${slug}:`, err);
+    return NextResponse.json({ error: 'Upstream fetch failed' }, { status: 502 });
+  }
 
   if (!upstream.ok || !upstream.body) {
     console.error(`[connect/avatar] Upstream fetch failed for slug=${slug}: ${upstream.status}`);
-    return new NextResponse('Upstream fetch failed', { status: 502 });
+    return NextResponse.json({ error: 'Upstream fetch failed' }, { status: 502 });
   }
 
   const contentType = upstream.headers.get('content-type') ?? 'image/jpeg';

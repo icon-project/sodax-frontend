@@ -28,7 +28,8 @@ export async function generateMetadata({
   }
 
   const path = connectRoute(entry.slug);
-  const url = `https://sodax.com${path}`;
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sodax.com';
+  const url = `${baseUrl}${path}`;
   const title = entry.role ? `${entry.name}, ${entry.role} — SODAX` : `${entry.name} — SODAX`;
   const description = entry.role
     ? `Connect with ${entry.name}, ${entry.role} at SODAX — the cross-network execution layer for modern money.`

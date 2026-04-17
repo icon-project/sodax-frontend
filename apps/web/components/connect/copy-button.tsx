@@ -11,8 +11,8 @@ interface CopyButtonProps {
 }
 
 /**
- * Small copy-to-clipboard button for connect card rows. Sits inside a parent
- * <Link>, so we stop propagation to prevent the outer tap from also navigating.
+ * Small copy-to-clipboard button for connect card rows. Sits next to a sibling
+ * <Link>; we stop propagation to prevent bubbling through the row.
  *
  * Intended for use at conferences where wifi is spotty and opening a link may
  * fail — the copied value always works offline.

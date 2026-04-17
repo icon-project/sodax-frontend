@@ -1,3 +1,5 @@
+import { cache } from 'react';
+
 /**
  * Connect CRM — Notion-backed data layer for `/connect/[slug]` pages.
  *
@@ -77,10 +79,13 @@ function parseEntry(page: NotionConnectPage): ConnectEntry | null {
   const slug = richText(page.properties.slug).trim().toLowerCase();
   if (!slug || !SLUG_PATTERN.test(slug)) return null;
 
+  const name = titleText(page.properties.Name).trim();
+  if (!name) return null;
+
   return {
     id: page.id,
     slug,
-    name: titleText(page.properties.Name).trim(),
+    name,
     role: richText(page.properties.Role).trim() || null,
     email: page.properties.Email?.email ?? null,
     telegram: page.properties.Telegram?.url ?? null,
@@ -139,8 +144,11 @@ async function notionQuery(body: Record<string, unknown>): Promise<NotionConnect
 /**
  * Fetch a single published Connect entry by slug. Returns null if the slug
  * doesn't exist OR if the row's `Live on website` checkbox is unchecked.
+ *
+ * Wrapped with `React.cache()` so that `generateMetadata` and the page
+ * component share a single Notion request per render pass.
  */
-export async function getConnectEntryBySlug(slug: string): Promise<ConnectEntry | null> {
+export const getConnectEntryBySlug = cache(async (slug: string): Promise<ConnectEntry | null> => {
   const normalized = slug.trim().toLowerCase();
   if (!normalized) return null;
 
@@ -156,12 +164,15 @@ export async function getConnectEntryBySlug(slug: string): Promise<ConnectEntry 
 
   const entry = pages[0] ? parseEntry(pages[0]) : null;
   return entry && entry.slug === normalized ? entry : null;
-}
+});
 
 /**
  * List all published slugs. Used by `generateStaticParams` to pre-render
  * known pages at build time; new slugs added after build still work
  * on-demand via Next.js dynamic params.
+ *
+ * NOTE: Returns at most 100 entries. Pagination not implemented; add cursor
+ * loop if the DB grows beyond 100 live rows.
  */
 export async function getAllConnectSlugs(): Promise<string[]> {
   const pages = await notionQuery({
@@ -169,5 +180,7 @@ export async function getAllConnectSlugs(): Promise<string[]> {
     page_size: 100,
   });
 
-  return pages.map(p => richText(p.properties.slug).trim().toLowerCase()).filter((s): s is string => Boolean(s));
+  return pages
+    .map(p => richText(p.properties.slug).trim().toLowerCase())
+    .filter((s): s is string => Boolean(s) && SLUG_PATTERN.test(s));
 }
