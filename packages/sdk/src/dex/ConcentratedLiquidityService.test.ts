@@ -239,11 +239,12 @@ describe('ClService.calculateMaxAmountsForSlippage', () => {
 
   it('matches direct PositionMath call within the worst-case bound', () => {
     const slippagePercent = 2;
-    const slippageFraction = slippagePercent / 100;
+    const SLIPPAGE_SCALE = 1_000_000_000n;
+    const slippageScaled = BigInt(Math.round((slippagePercent * Number(SLIPPAGE_SCALE)) / 100));
+    const sqrtPriceSquared = sqrtPriceX96 * sqrtPriceX96;
 
-    const sqrtPriceNum = Number(sqrtPriceX96);
-    const sqrtPriceX96Down = BigInt(Math.floor(sqrtPriceNum * Math.sqrt(1 - slippageFraction)));
-    const sqrtPriceX96Up = BigInt(Math.floor(sqrtPriceNum * Math.sqrt(1 + slippageFraction)));
+    const sqrtPriceX96Down = bigIntSqrt((sqrtPriceSquared * (SLIPPAGE_SCALE - slippageScaled)) / SLIPPAGE_SCALE);
+    const sqrtPriceX96Up = bigIntSqrt((sqrtPriceSquared * (SLIPPAGE_SCALE + slippageScaled)) / SLIPPAGE_SCALE);
     const tickDown = TickMath.getTickAtSqrtRatio(sqrtPriceX96Down);
     const tickUp = TickMath.getTickAtSqrtRatio(sqrtPriceX96Up);
 
@@ -276,4 +277,34 @@ describe('ClService.calculateMaxAmountsForSlippage', () => {
     expect(result.amount0Max).toBe(expectedAmount0AtDrop > current0 ? expectedAmount0AtDrop : current0);
     expect(result.amount1Max).toBe(expectedAmount1AtRise > current1 ? expectedAmount1AtRise : current1);
   });
+
+  it('preserves precision for large sqrtPriceX96 values that overflow JS Number', () => {
+    // sqrtPriceX96 at a high tick is far beyond Number.MAX_SAFE_INTEGER (~2^53).
+    const highTick = 200000n;
+    const largeSqrtPrice = sqrtPriceAtTick(Number(highTick));
+    expect(largeSqrtPrice).toBeGreaterThan(BigInt(Number.MAX_SAFE_INTEGER));
+
+    const result = ClService.calculateMaxAmountsForSlippage(
+      liquidity,
+      highTick - 100n,
+      highTick + 100n,
+      highTick,
+      largeSqrtPrice,
+      0.5,
+    );
+
+    expect(result.amount0Max).toBeGreaterThan(0n);
+    expect(result.amount1Max).toBeGreaterThan(0n);
+  });
 });
+
+function bigIntSqrt(n: bigint): bigint {
+  if (n < 0n) throw new Error('bigIntSqrt: negative');
+  if (n < 2n) return n;
+  let x = 1n << ((BigInt(n.toString(2).length) + 1n) / 2n);
+  while (true) {
+    const next = (x + n / x) / 2n;
+    if (next >= x) return x;
+    x = next;
+  }
+}

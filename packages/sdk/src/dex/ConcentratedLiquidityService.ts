@@ -1650,12 +1650,20 @@ export class ClService {
       liquidity,
     );
 
-    // Simulate price dropping by slippage% — this increases the token0 needed
-    const slippageFraction = slippagePercent / 100;
-    const sqrtSlippageDown = Math.sqrt(1 - slippageFraction);
-    const sqrtPriceNum = Number(sqrtPriceX96);
-    const sqrtPriceX96Down = BigInt(Math.floor(sqrtPriceNum * sqrtSlippageDown));
+    // Apply slippage using integer math so we keep all ~160 bits of sqrtPriceX96.
+    // Identity: sqrtPriceX96 * sqrt(1 ± s) = sqrt(sqrtPriceX96² * (SCALE ± scaled) / SCALE)
+    const SLIPPAGE_SCALE = 1_000_000_000n;
+    const slippageScaled = BigInt(Math.round((slippagePercent * Number(SLIPPAGE_SCALE)) / 100));
+    const sqrtPriceX96Squared = sqrtPriceX96 * sqrtPriceX96;
+
+    const sqrtPriceX96Down = ClService.sqrtBigInt(
+      (sqrtPriceX96Squared * (SLIPPAGE_SCALE - slippageScaled)) / SLIPPAGE_SCALE,
+    );
+    const sqrtPriceX96Up = ClService.sqrtBigInt(
+      (sqrtPriceX96Squared * (SLIPPAGE_SCALE + slippageScaled)) / SLIPPAGE_SCALE,
+    );
     const tickDown = TickMath.getTickAtSqrtRatio(sqrtPriceX96Down);
+    const tickUp = TickMath.getTickAtSqrtRatio(sqrtPriceX96Up);
 
     const amount0AtPriceDrop = PositionMath.getToken0Amount(
       tickDown,
@@ -1664,11 +1672,6 @@ export class ClService {
       sqrtPriceX96Down,
       liquidity,
     );
-
-    // Simulate price rising by slippage% — this increases the token1 needed
-    const sqrtSlippageUp = Math.sqrt(1 + slippageFraction);
-    const sqrtPriceX96Up = BigInt(Math.floor(sqrtPriceNum * sqrtSlippageUp));
-    const tickUp = TickMath.getTickAtSqrtRatio(sqrtPriceX96Up);
 
     const amount1AtPriceRise = PositionMath.getToken1Amount(
       tickUp,
@@ -1683,6 +1686,20 @@ export class ClService {
     const amount1Max = amount1AtPriceRise > amount1AtCurrent ? amount1AtPriceRise : amount1AtCurrent;
 
     return { amount0Max, amount1Max };
+  }
+
+  /**
+   * Integer square root via Newton's method. Returns floor(sqrt(n)).
+   */
+  private static sqrtBigInt(n: bigint): bigint {
+    if (n < 0n) throw new Error('sqrtBigInt: negative input');
+    if (n < 2n) return n;
+    let x = 1n << ((BigInt(n.toString(2).length) + 1n) / 2n);
+    while (true) {
+      const next = (x + n / x) / 2n;
+      if (next >= x) return x;
+      x = next;
+    }
   }
 
   /**
