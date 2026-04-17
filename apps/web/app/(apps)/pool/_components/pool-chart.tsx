@@ -534,21 +534,24 @@ export function PoolChart({
   const xScale = useMemo(() => zoomTransform.rescaleX(xScaleBase), [zoomTransform, xScaleBase]);
 
   const [yDomainMin, yDomainMax] = useMemo((): [number, number] => {
-    const allPrices = visibleData.map(point => point.price);
-    allPrices.push(minPrice, maxPrice, currentPrice);
-
-    const finitePrices = allPrices.filter(price => Number.isFinite(price) && price > 0);
     const defaultMin = MOCK_CHART_MIN_PRICE;
     const defaultMax = MOCK_CHART_MAX_PRICE;
-    if (!finitePrices.length) {
+    if (!Number.isFinite(currentPrice) || currentPrice <= 0) {
       return [defaultMin, defaultMax];
     }
 
-    const minValue = Math.min(...finitePrices);
-    const maxValue = Math.max(...finitePrices);
-    const span = Math.max(maxValue - minValue, maxValue * 0.002, 0.000001);
-    const paddedMin = Math.max(minValue - span * 0.15, 0);
-    const paddedMax = maxValue + span * 0.15;
+    const referencePrices = visibleData.map(point => point.price);
+    referencePrices.push(minPrice, maxPrice);
+    const finiteReferences = referencePrices.filter(price => Number.isFinite(price) && price > 0);
+
+    const maxDeviation = finiteReferences.reduce(
+      (acc, price) => Math.max(acc, Math.abs(price - currentPrice)),
+      0,
+    );
+    const minHalfSpan = Math.max(currentPrice * 0.002, 0.000001);
+    const halfSpan = Math.max(maxDeviation * 1.15, minHalfSpan);
+    const paddedMin = currentPrice - halfSpan;
+    const paddedMax = currentPrice + halfSpan;
     if (!Number.isFinite(paddedMin) || !Number.isFinite(paddedMax) || paddedMax <= paddedMin) {
       return [defaultMin, defaultMax];
     }
