@@ -644,21 +644,21 @@ export function ManagePositionDialog({
                 className="text-clay hover:text-espresso shadow-none! data-[state=active]:text-espresso! cursor-pointer p-0 text-(length:--body-small) gap-1"
               >
                 <CircleEllipsisIcon className={activeTab === 'claim' ? 'text-espresso' : 'text-clay-light'} size={14} />{' '}
-                Fee
+                Fees
               </TabsTrigger>
               <TabsTrigger
                 value="add"
                 className="text-clay hover:text-espresso shadow-none! data-[state=active]:text-espresso! cursor-pointer p-0 text-(length:--body-small) gap-1"
               >
                 <PlusCircleIcon className={activeTab === 'add' ? 'text-espresso' : 'text-clay-light'} size={14} /> Add
-                Liquidity
+                liquidity
               </TabsTrigger>
               <TabsTrigger
                 value="withdraw"
                 className="text-clay hover:text-espresso shadow-none! data-[state=active]:text-espresso! cursor-pointer p-0 text-(length:--body-small) gap-1"
               >
                 <MinusCircleIcon className={activeTab === 'withdraw' ? 'text-espresso' : 'text-clay-light'} size={14} />{' '}
-                Withdraw
+                Withdraw{' '}
               </TabsTrigger>
             </TabsList>
             <XIcon
