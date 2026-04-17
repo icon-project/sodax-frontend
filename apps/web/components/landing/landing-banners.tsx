@@ -121,7 +121,7 @@ export default function LandingBanners(): ReactElement {
         buttonClassName="px-6 font-['InterMedium'] cursor-pointer text-(length:--body-comfortable)"
       />
 
-      {/* Builders + SODA Token */}
+      {/* Builders + Partners */}
       <SmallBannerRow
         left={{
           theme: 'dark',
@@ -141,45 +141,6 @@ export default function LandingBanners(): ReactElement {
             'w-full lg:w-1/2 flex flex-col items-center pt-14 md:pt-18 bg-cherry-soda h-[440px] sm:h-[480px] md:h-[480px] mt-4 relative overflow-hidden',
           imageClassName:
             'mix-blend-screen absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[561px] sm:w-[561px] max-w-[561px]',
-        }}
-        right={{
-          theme: 'dark',
-          title: (
-            <span className="text-yellow-soda text-(length:--app-title) font-bold font-['InterRegular'] leading-[1.1]">
-              {tokenBanner.title}
-            </span>
-          ),
-          subtitle: tokenBanner.subtitle,
-          buttonLabel: tokenBanner.buttonLabel,
-          href: tokenBanner.href,
-          imageSrc: tokenBanner.imageSrc,
-          containerClassName:
-            'w-full lg:w-1/2 flex flex-col items-center pt-14 md:pt-18 bg-cherry-soda h-[440px] sm:h-[480px] md:h-[480px] mt-4 lg:ml-4 relative overflow-hidden',
-          imageClassName:
-            'mix-blend-screen absolute -bottom-22 left-1/2 transform -translate-x-1/2 w-[793px] max-w-[793px]',
-        }}
-      />
-
-      {/* Migrate + Partners (same tile styling as before; only column positions swapped) */}
-      <SmallBannerRow
-        left={{
-          theme: 'light',
-          title: (
-            <div className="flex items-center gap-4">
-              <Image src="/soda-yellow-sm.png" alt="SODAX Symbol" width={32} height={32} className="md:w-8 md:h-8 w-6 h-6" />
-              <div className="text-(length:--app-title) font-['InterRegular'] font-bold text-black leading-[1.1]">
-                {migrateBanner.title}
-              </div>
-            </div>
-          ),
-          subtitle: migrateBanner.subtitle,
-          buttonLabel: migrateBanner.buttonLabel,
-          href: migrateBanner.href,
-          imageSrc: migrateBanner.imageSrc,
-          containerClassName:
-            'w-full lg:w-1/2 flex flex-col items-center pt-14 md:pt-18 bg-almost-white h-[440px] sm:h-[480px] md:h-[480px] mt-4 relative z-1',
-          imageClassName:
-            'mix-blend-multiply absolute bottom-0 md:bottom-0 left-1/2 transform -translate-x-1/2 w-150 z-0 max-w-150',
         }}
         right={{
           theme: 'dark',
@@ -205,6 +166,45 @@ export default function LandingBanners(): ReactElement {
             'w-full lg:w-1/2 flex flex-col items-center pt-14 md:pt-18 h-[440px] sm:h-[480px] md:h-[480px] mt-4 lg:ml-4 bg-cherry-soda relative z-1 overflow-hidden',
           imageClassName:
             'mix-blend-screen absolute bottom-[-56px] left-1/2 transform -translate-x-1/2 w-[848px] max-w-[848px] z-3',
+        }}
+      />
+
+      {/* Migrate + SODA Token */}
+      <SmallBannerRow
+        left={{
+          theme: 'light',
+          title: (
+            <div className="flex items-center gap-4">
+              <Image src="/soda-yellow-sm.png" alt="SODAX Symbol" width={32} height={32} className="md:w-8 md:h-8 w-6 h-6" />
+              <div className="text-(length:--app-title) font-['InterRegular'] font-bold text-black leading-[1.1]">
+                {migrateBanner.title}
+              </div>
+            </div>
+          ),
+          subtitle: migrateBanner.subtitle,
+          buttonLabel: migrateBanner.buttonLabel,
+          href: migrateBanner.href,
+          imageSrc: migrateBanner.imageSrc,
+          containerClassName:
+            'w-full lg:w-1/2 flex flex-col items-center pt-14 md:pt-18 bg-almost-white h-[440px] sm:h-[480px] md:h-[480px] mt-4 relative z-1',
+          imageClassName:
+            'mix-blend-multiply absolute bottom-0 md:bottom-0 left-1/2 transform -translate-x-1/2 w-150 z-0 max-w-150',
+        }}
+        right={{
+          theme: 'dark',
+          title: (
+            <span className="text-yellow-soda text-(length:--app-title) font-bold font-['InterRegular'] leading-[1.1]">
+              {tokenBanner.title}
+            </span>
+          ),
+          subtitle: tokenBanner.subtitle,
+          buttonLabel: tokenBanner.buttonLabel,
+          href: tokenBanner.href,
+          imageSrc: tokenBanner.imageSrc,
+          containerClassName:
+            'w-full lg:w-1/2 flex flex-col items-center pt-14 md:pt-18 bg-cherry-soda h-[440px] sm:h-[480px] md:h-[480px] mt-4 lg:ml-4 relative overflow-hidden',
+          imageClassName:
+            'mix-blend-screen absolute -bottom-22 left-1/2 transform -translate-x-1/2 w-[793px] max-w-[793px]',
         }}
       />
     </>

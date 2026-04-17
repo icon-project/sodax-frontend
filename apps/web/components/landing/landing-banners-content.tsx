@@ -68,10 +68,10 @@ export const LANDING_SMALL_BANNERS = [
     imageSrc: '/homepage_banner.png',
   },
   {
-    title: 'Migrate to SODA',
-    subtitle: '1:1 exchange for ICX holders.',
-    buttonLabel: 'Migrate',
-    href: 'https://www.sodax.com/migrate',
+    title: 'Explore the SODA Exchange',
+    subtitle: 'Migrate to SODA & earn from staking and liquidity. Swap across 18 networks.',
+    buttonLabel: 'SODA Exchange',
+    href: 'https://www.sodax.com/exchange',
     imageSrc: '/test.png',
   },
   {
