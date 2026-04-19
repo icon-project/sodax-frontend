@@ -5,7 +5,7 @@ import type { IconService } from 'icon-sdk-js';
 import * as rlp from 'rlp';
 import {
   type SendMessageParams,
-  type FromParams,
+  type SrcParams,
   type IconGasEstimate,
   type WalletActionParams,
   type TxReturnType,
@@ -55,7 +55,7 @@ export type IconCallParams<Raw extends boolean> = WalletActionParams<Raw, IconCh
   dstChainId: HubChainKey;
   dstAddress: HubAddress;
   payload: Hex;
-} & FromParams<IconChainKey>;
+} & SrcParams<IconChainKey>;
 
 export class IconSpokeService {
   public readonly iconService: IconService;
@@ -154,7 +154,7 @@ export class IconSpokeService {
   public async sendMessage<Raw extends boolean = false>(
     params: SendMessageParams<IconChainKey, Raw>,
   ): Promise<TxReturnType<IconChainKey, Raw>> {
-    const { srcAddress: from, srcChainKey: fromChainId, dstChainId, dstAddress, payload } = params;
+    const { srcAddress: from, srcChainKey: fromChainId, dstChainKey: dstChainId, dstAddress, payload } = params;
     const relayId = getIntentRelayChainId(dstChainId);
 
     const txParams = {

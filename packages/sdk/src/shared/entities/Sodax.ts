@@ -1,4 +1,3 @@
-import { DEFAULT_RELAYER_API_ENDPOINT } from '../constants.js';
 import {
   SwapService,
   MigrationService,
@@ -6,37 +5,14 @@ import {
   BridgeService,
   StakingService,
   DexService,
-  type DexServiceConfig,
   SpokeService,
   EvmHubProvider,
-  type EvmHubProviderConfig,
 } from '../../index.js';
 import { MoneyMarketService } from '../../moneyMarket/MoneyMarketService.js';
-import type { HttpUrl, PartialSharedConfig } from '@sodax/types';
-import type {
-  SolverConfigParams,
-  MoneyMarketConfigParams,
-  MigrationServiceConfig,
-  BridgeServiceConfig,
-  BackendApiConfig,
-  Result,
-  HubProvider,
-} from '../types/types.js';
+import { sodaxConfig, type HttpUrl, type SodaxConfig } from '@sodax/types';
+import type { HubProvider } from '../types/types.js';
 import { ConfigService } from '../config/index.js';
-import { PartnerService, type PartnerServiceConfig } from '../../partner/PartnerService.js';
-
-export type SodaxConfig = {
-  swaps?: SolverConfigParams; // optional Solver service enabling intent based swaps
-  moneyMarket?: MoneyMarketConfigParams; // optional Money Market service enabling cross-chain lending and borrowing
-  migration?: MigrationServiceConfig; // optional Migration service enabling ICX migration to SODA
-  bridge?: BridgeServiceConfig; // optional Bridge service enabling cross-chain transfers
-  dex?: DexServiceConfig; // optional Dex service enabling DEX operations
-  hubProviderConfig?: EvmHubProviderConfig; // hub provider for the hub chain (e.g. Sonic mainnet)
-  relayerApiEndpoint?: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
-  backendApiConfig?: BackendApiConfig; // backend API config used to interact with the backend API
-  partners?: PartnerServiceConfig; // optional Partner fee claim service enabling partner fee claim operations
-  sharedConfig?: PartialSharedConfig;
-};
+import { PartnerService } from '../../partner/PartnerService.js';
 
 /**
  * Sodax class is used to interact with the Sodax.
@@ -57,37 +33,21 @@ export class Sodax {
   public readonly config: ConfigService; // Config service enabling configuration data fetching from the backend API or fallbacking to default values
 
   public readonly hubProvider: HubProvider; // hub provider for the hub chain (e.g. Sonic mainnet)
-  public readonly relayerApiEndpoint: HttpUrl; // relayer API endpoint used to relay intents/user actions to the hub and vice versa
   public readonly spokeService: SpokeService; // spoke service enabling spoke chain operations
 
   constructor(config?: SodaxConfig) {
-    this.instanceConfig = config;
-    this.relayerApiEndpoint = config?.relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT;
-    this.backendApi = new BackendApiService(config?.backendApiConfig);
-    this.config = new ConfigService({
-      backendApiService: this.backendApi,
-      config: {
-        backendApiUrl: config?.backendApiConfig?.baseURL,
-        timeout: config?.backendApiConfig?.timeout,
-      },
-      sharedConfig: config?.sharedConfig,
+    this.instanceConfig = config ?? sodaxConfig;
+    this.backendApi = new BackendApiService(this.instanceConfig.api);
+    this.config = new ConfigService({ api: this.backendApi, config: this.instanceConfig });
+
+    this.hubProvider = new EvmHubProvider({ config: this.instanceConfig.hub, configService: this.config }); // default to Sonic mainnet
+    this.spokeService = new SpokeService({ config: this.config, hubProvider: this.hubProvider });
+    this.swaps = new SwapService({
+      config: this.instanceConfig.swaps,
+      configService: this.config,
+      hubProvider: this.hubProvider,
+      spokeService: this.spokeService,
     });
-    this.hubProvider = new EvmHubProvider({ config: config?.hubProviderConfig, configService: this.config }); // default to Sonic mainnet
-    this.spokeService = new SpokeService(this.config);
-    this.swaps =
-      config && config.swaps
-        ? new SwapService({
-            config: config.swaps,
-            configService: this.config,
-            hubProvider: this.hubProvider,
-            relayerApiEndpoint: this.relayerApiEndpoint,
-          })
-        : new SwapService({
-            config: undefined,
-            configService: this.config,
-            hubProvider: this.hubProvider,
-            relayerApiEndpoint: this.relayerApiEndpoint,
-          }); // default to mainnet config
 
     this.moneyMarket =
       config && config.moneyMarket

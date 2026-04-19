@@ -45,7 +45,7 @@ export type Authenticator =
   {
     SingleOwner: string;
   };
-export interface Balance {
+export interface SuiBalance {
   coinObjectCount: number;
   coinType: string;
   lockedBalance: {

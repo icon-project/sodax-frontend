@@ -3,90 +3,64 @@ import {
   type GetChainsApiResponse,
   type GetMoneyMarketReserveAssetsApiResponse,
   type GetRelayChainIdMapApiResponse,
-  type GetSpokeChainConfigApiResponse,
-  type HttpUrl,
   type HubChainKey,
   type IntentRelayChainId,
   type OriginalAssetAddress,
   type SpokeChainKey,
-  type Token,
   type XToken,
-  type EvmHubChainConfig,
-  type GetAllConfigApiResponse,
-  defaultSodaxConfig,
-  hubChainConfig,
+  hubConfig,
   type GetMoneyMarketTokensApiResponse,
   type GetSwapTokensByChainIdApiResponse,
   type GetSwapTokensApiResponse,
-  CONFIG_VERSION,
-  defaultSharedConfig,
-  type EvmChainKey,
-  type SonicChainKey,
-  type SharedConfig,
-  type PartialSharedConfig,
-  type SharedChainConfigFor,
   type SpokeChainConfig,
+  type MoneyMarketConfig,
+  type SodaxConfig,
+  type HubConfig,
+  type RelayConfig,
+  type SolverConfig,
+  type DexConfig,
+  type PoolKey,
+  type Result,
+  CONFIG_VERSION,
+  type SwapsConfig,
+  type BridgeConfig,
 } from '@sodax/types';
-import type { BackendApiService } from '../../backendApi/BackendApiService.js';
-import {
-  DEFAULT_BACKEND_API_ENDPOINT,
-  DEFAULT_BACKEND_API_TIMEOUT,
-  dexPools,
-  StatATokenAddresses,
-} from '../constants.js';
-import type { Result } from '../types/types.js';
-import type { PoolKey } from '../../dex/types.js';
-import { createPublicClient, http, type PublicClient } from 'viem';
-import { getEvmViemChain } from '../constants.js';
-
-export type ConfigServiceConfig = {
-  backendApiUrl: HttpUrl | undefined;
-  timeout: number | undefined; // in milliseconds
-};
+import type { BackendApiService } from '../../index.js';
 
 export type ConfigServiceConstructorParams = {
-  backendApiService: BackendApiService;
-  config?: ConfigServiceConfig;
-  sharedConfig?: PartialSharedConfig;
+  api: BackendApiService;
+  config: SodaxConfig;
 };
 
 /**
  * ConfigApiService - Service for fetching configuration data from the backend API or fallbacking to default values
  */
 export class ConfigService {
-  readonly serviceConfig: ConfigServiceConfig;
-  readonly backendApiService: BackendApiService;
-  readonly sharedConfig: SharedConfig;
+  private sodax: SodaxConfig;
+  private readonly api: BackendApiService;
+
   private initialized = false;
 
-  private sodaxConfig: GetAllConfigApiResponse;
-
   // data structures for quick lookup
-  private originalAssetToTokenMap!: Map<SpokeChainKey, Map<OriginalAssetAddress, XToken>>;
-  private hubAssetToOriginalAssetMap!: Map<SpokeChainKey, Map<Address, OriginalAssetAddress>>;
-  private chainIdToHubAssetsMap!: Map<SpokeChainKey, Map<Address, XToken>>;
   private supportedHubAssetsSet!: Set<Address>;
   private supportedSodaVaultAssetsSet!: Set<Address>;
   private intentRelayChainIdToSpokeChainKeyMap!: Map<IntentRelayChainId, SpokeChainKey>;
   private supportedTokensPerChain!: Map<SpokeChainKey, readonly XToken[]>;
   private moneyMarketReserveAssetsSet!: Set<Address>;
-  private spokeChainIdsSet!: Set<SpokeChainKey>;
+  private spokeChainKeysSet!: Set<SpokeChainKey>;
   private stakedATokenAddressesSet!: Set<Address>;
+  private chainToSupportedTokenAddressMap!: Map<SpokeChainKey, Set<string>>;
+  private hubAssetToXTokenMap!: Map<Address, XToken>;
 
-  constructor({ backendApiService, config, sharedConfig }: ConfigServiceConstructorParams) {
-    this.serviceConfig = {
-      backendApiUrl: config?.backendApiUrl ?? DEFAULT_BACKEND_API_ENDPOINT,
-      timeout: config?.timeout ?? DEFAULT_BACKEND_API_TIMEOUT,
-    } satisfies ConfigServiceConfig;
-    this.backendApiService = backendApiService;
-    this.sodaxConfig = defaultSodaxConfig;
-    this.loadSodaxConfigDataStructures(this.sodaxConfig);
-    this.sharedConfig = mergeSharedConfig(defaultSharedConfig, sharedConfig);
+  constructor({ api, config }: ConfigServiceConstructorParams) {
+    this.api = api;
+    this.sodax = config;
+    this.loadSodaxConfigDataStructures(config);
   }
 
   public async initialize(): Promise<Result<void>> {
     try {
-      const response = await this.backendApiService.getAllConfig();
+      const response = await this.api.getAllConfig();
 
       // if the config version is not set or is less than the current version, log a warning and fall back to default config
       if (!response.version || response.version < CONFIG_VERSION) {
@@ -94,8 +68,8 @@ export class ConfigService {
           `Dynamic config version is less than the current version, resorting to the default one. Current version: ${CONFIG_VERSION}, response version: ${response.version}`,
         );
       } else {
-        this.sodaxConfig = response;
-        this.loadSodaxConfigDataStructures(this.sodaxConfig);
+        this.sodax = response.config;
+        this.loadSodaxConfigDataStructures(this.sodax);
         this.initialized = true;
       }
 
@@ -112,45 +86,39 @@ export class ConfigService {
   }
 
   public getChains(): GetChainsApiResponse {
-    return this.sodaxConfig.supportedChains;
+    return Object.keys(this.sodax.chains) as SpokeChainKey[];
   }
 
   public getSwapTokens(): GetSwapTokensApiResponse {
-    return this.sodaxConfig.supportedSwapTokens;
+    return this.sodax.swaps.supportedTokens;
   }
 
   public getSwapTokensByChainId(chainId: SpokeChainKey): GetSwapTokensByChainIdApiResponse {
-    return this.sodaxConfig.supportedSwapTokens[chainId];
+    return this.sodax.swaps.supportedTokens[chainId];
   }
 
   public getRelayChainIdMap(): GetRelayChainIdMapApiResponse {
-    return this.sodaxConfig.relayChainIdMap;
+    return this.sodax.relay.relayChainIdMap;
   }
 
   public getMoneyMarketTokens(): GetMoneyMarketTokensApiResponse {
-    return this.sodaxConfig.supportedMoneyMarketTokens;
+    return this.sodax.moneyMarket.supportedTokens;
   }
 
-  public getMoneyMarketToken(chainId: SpokeChainKey, token: string): Token | undefined {
-    return this.sodaxConfig.supportedMoneyMarketTokens[chainId].find(
-      t => t.address.toLowerCase() === token.toLowerCase(),
-    );
+  public getMoneyMarketToken(chainId: SpokeChainKey, token: string): XToken | undefined {
+    return this.sodax.moneyMarket.supportedTokens[chainId].find(t => t.address.toLowerCase() === token.toLowerCase());
   }
 
   public getMoneyMarketReserveAssets(): GetMoneyMarketReserveAssetsApiResponse {
-    return this.sodaxConfig.supportedMoneyMarketReserveAssets;
-  }
-
-  public getHubAssetInfo(chainId: SpokeChainKey, asset: OriginalAssetAddress): XToken | undefined {
-    return this.originalAssetToTokenMap.get(chainId)?.get(asset.toLowerCase());
+    return this.sodax.moneyMarket.supportedReserveAssets;
   }
 
   public isValidOriginalAssetAddress(chainId: SpokeChainKey, asset: OriginalAssetAddress): boolean {
-    return this.originalAssetTohubAssetMap.get(chainId)?.has(asset.toLowerCase()) ?? false;
+    return this.chainToSupportedTokenAddressMap.get(chainId)?.has(asset.toLowerCase()) ?? false;
   }
 
   public getOriginalAssetAddress(chainId: SpokeChainKey, hubAsset: Address): OriginalAssetAddress | undefined {
-    return this.hubAssetToOriginalAssetMap.get(chainId)?.get(hubAsset.toLowerCase() as Address);
+    return this.hubAssetToXTokenMap.get(hubAsset.toLowerCase() as Address)?.address;
   }
 
   public getSpokeTokenFromOriginalAssetAddress(
@@ -170,7 +138,7 @@ export class ConfigService {
     return this.supportedSodaVaultAssetsSet.has(vault.toLowerCase() as Address);
   }
 
-  public isValidVault(vault: string | Token): boolean {
+  public isValidVault(vault: string | XToken): boolean {
     if (typeof vault === 'string') {
       return this.isValidSodaVaultAsset(vault);
     }
@@ -179,27 +147,27 @@ export class ConfigService {
   }
 
   public isValidChainHubAsset(chainId: SpokeChainKey, hubAsset: Address): boolean {
-    return this.chainIdToHubAssetsMap.get(chainId)?.has(hubAsset.toLowerCase() as Address) ?? false;
+    return this.chainToSupportedTokenAddressMap.get(chainId)?.has(hubAsset.toLowerCase() as Address) ?? false;
   }
 
   public isValidSpokeChainKey(chainId: SpokeChainKey): boolean {
-    return this.spokeChainIdsSet.has(chainId);
+    return this.spokeChainKeysSet.has(chainId);
   }
 
-  public isValidIntentRelayChainId(chainId: bigint): boolean {
-    return Object.values(this.sodaxConfig.relayChainIdMap).some(id => id === chainId);
+  public isValidIntentRelayChainId(chainId: bigint): chainId is IntentRelayChainId {
+    return typeof chainId === 'bigint' && Object.values(this.sodax.relay.relayChainIdMap).some(id => id === chainId);
   }
 
   public getSupportedHubChains(): HubChainKey[] {
-    return Object.keys(hubChainConfig) as HubChainKey[];
+    return Object.keys(hubConfig) as HubChainKey[];
   }
 
-  public getHubChainConfig(): EvmHubChainConfig {
-    return hubChainConfig;
+  public getHubChainConfig(): HubConfig {
+    return hubConfig;
   }
 
   public getSupportedSpokeChains(): SpokeChainKey[] {
-    return Object.keys(this.sodaxConfig.spokeChainConfig) as SpokeChainKey[];
+    return Object.keys(this.sodax.chains) as SpokeChainKey[];
   }
 
   public getSpokeChainKeyFromIntentRelayChainId(intentRelayChainId: IntentRelayChainId): SpokeChainKey {
@@ -216,24 +184,24 @@ export class ConfigService {
     return this.supportedTokensPerChain;
   }
 
-  public getSupportedMoneyMarketTokensByChainId(chainId: SpokeChainKey): readonly Token[] {
-    return this.sodaxConfig.supportedMoneyMarketTokens[chainId];
+  public getSupportedMoneyMarketTokensByChainId(chainId: SpokeChainKey): readonly XToken[] {
+    return this.sodax.moneyMarket.supportedTokens[chainId];
   }
 
   public getSupportedMoneyMarketTokens(): GetMoneyMarketTokensApiResponse {
-    return this.sodaxConfig.supportedMoneyMarketTokens;
+    return this.sodax.moneyMarket.supportedTokens;
   }
 
-  public getSupportedSwapTokensByChainId(chainId: SpokeChainKey): readonly Token[] {
-    return this.sodaxConfig.supportedSwapTokens[chainId];
+  public getSupportedSwapTokensByChainId(chainId: SpokeChainKey): readonly XToken[] {
+    return this.sodax.swaps.supportedTokens[chainId];
   }
 
   public getSupportedSwapTokens(): GetSwapTokensApiResponse {
-    return this.sodaxConfig.supportedSwapTokens;
+    return this.sodax.swaps.supportedTokens;
   }
 
   public findSupportedTokenBySymbol(chainId: SpokeChainKey, symbol: string): XToken | undefined {
-    const supportedTokens = Object.values(this.sodaxConfig.spokeChainConfig[chainId].supportedTokens);
+    const supportedTokens = Object.values(this.sodax.chains[chainId].supportedTokens);
     return supportedTokens.find(token => token.symbol.toLowerCase() === symbol.toLowerCase());
   }
 
@@ -242,7 +210,7 @@ export class ConfigService {
   }
 
   public getOriginalAssetsFromVault(chainId: SpokeChainKey, vault: Address): OriginalAssetAddress[] {
-    const chainConfig = this.sodaxConfig.spokeChainConfig[chainId];
+    const chainConfig = this.sodax.chains[chainId];
     if (!chainConfig) {
       return [];
     }
@@ -257,7 +225,7 @@ export class ConfigService {
   }
 
   public getSodaTokenAddress(chainId: SpokeChainKey): string | undefined {
-    return this.sodaxConfig.spokeChainConfig[chainId].supportedTokens.SODA?.address;
+    return this.sodax.chains[chainId].supportedTokens.SODA?.address;
   }
 
   public getOriginalAssetAddressFromStakedATokenAddress = (
@@ -274,8 +242,8 @@ export class ConfigService {
       return sodaTokenAddress;
     }
 
-    const normalizedAddress = address.toLowerCase() as keyof typeof StatATokenAddresses;
-    const sodaToken = StatATokenAddresses[normalizedAddress] ?? address;
+    const normalizedAddress = address.toLowerCase() as keyof typeof this.dex.statATokenAddresses;
+    const sodaToken = this.dex.statATokenAddresses[normalizedAddress] ?? address;
 
     const originalAssetAddresses = this.getOriginalAssetsFromVault(chainId, sodaToken);
 
@@ -295,117 +263,96 @@ export class ConfigService {
 
   public getDexPools(): PoolKey[] {
     // TODO make those dynamic in future
-    return Object.values(dexPools);
+    return Object.values(this.dex.dexPools);
   }
 
   public isMoneyMarketSupportedToken(chainId: SpokeChainKey, token: string): boolean {
-    return this.sodaxConfig.supportedMoneyMarketTokens[chainId].some(
-      t => t.address.toLowerCase() === token.toLowerCase(),
-    );
+    return this.sodax.moneyMarket.supportedTokens[chainId].some(t => t.address.toLowerCase() === token.toLowerCase());
   }
 
   public isMoneyMarketReserveAsset(asset: Address): boolean {
-    return this.sodaxConfig.supportedMoneyMarketReserveAssets.map(a => a.toLowerCase()).includes(asset.toLowerCase());
+    return this.sodax.moneyMarket.supportedReserveAssets.map(a => a.toLowerCase()).includes(asset.toLowerCase());
   }
 
   public isMoneyMarketReserveHubAsset(hubAsset: Address): boolean {
     return this.moneyMarketReserveAssetsSet.has(hubAsset.toLowerCase() as Address);
   }
 
-  private loadSodaxConfigDataStructures(sodaxConfig: GetAllConfigApiResponse): void {
-    this.loadHubAssetDataStructures(sodaxConfig.spokeChainConfig);
-    this.loadSpokeChainDataStructures(sodaxConfig.supportedChains);
-    this.loadRelayChainIdMapDataStructures(sodaxConfig.relayChainIdMap);
-    this.loadSpokeChainConfigDataStructures(sodaxConfig.spokeChainConfig);
-    this.loadMoneyMarketReserveAssetsDataStructures(sodaxConfig.supportedMoneyMarketReserveAssets);
-    this.stakedATokenAddressesSet = new Set(
-      Object.keys(StatATokenAddresses).map(address => address.toLowerCase() as Address),
+  private loadSodaxConfigDataStructures(sodaxConfig: SodaxConfig): void {
+    // Maps each hub asset address to its original XToken with the matching hubAsset property
+    this.hubAssetToXTokenMap = new Map<`0x${string}`, XToken>(
+      Object.values(sodaxConfig.chains)
+        .flatMap(chainConfig => Object.values(chainConfig.supportedTokens))
+        .filter(token => token.hubAsset)
+        .map(token => [token.hubAsset.toLowerCase() as Address, token]),
     );
-  }
-
-  private loadHubAssetDataStructures(spokeChainConfig: GetSpokeChainConfigApiResponse): void {
-    const originalAssetToToken = new Map<SpokeChainKey, Map<OriginalAssetAddress, XToken>>();
-    const hubAssetToOriginalAsset = new Map<SpokeChainKey, Map<Address, OriginalAssetAddress>>();
-    const chainIdToHubAssets = new Map<SpokeChainKey, Map<Address, XToken>>();
-    const hubAssetsSet = new Set<Address>();
-    const vaultAssetsSet = new Set<Address>();
-
-    for (const [chainId, config] of Object.entries(spokeChainConfig)) {
-      const originalMap = new Map<OriginalAssetAddress, XToken>();
-      const reverseMap = new Map<Address, OriginalAssetAddress>();
-      const hubMap = new Map<Address, XToken>();
-
-      for (const token of Object.values(config.supportedTokens)) {
-        originalMap.set(token.address.toLowerCase() as OriginalAssetAddress, token);
-        reverseMap.set(token.hubAsset.toLowerCase() as Address, token.address);
-        hubMap.set(token.hubAsset.toLowerCase() as Address, token);
-        hubAssetsSet.add(token.hubAsset.toLowerCase() as Address);
-        vaultAssetsSet.add(token.vault.toLowerCase() as Address);
-      }
-
-      originalAssetToToken.set(chainId as SpokeChainKey, originalMap);
-      hubAssetToOriginalAsset.set(chainId as SpokeChainKey, reverseMap);
-      chainIdToHubAssets.set(chainId as SpokeChainKey, hubMap);
-    }
-
-    this.originalAssetToTokenMap = originalAssetToToken;
-    this.hubAssetToOriginalAssetMap = hubAssetToOriginalAsset;
-    this.chainIdToHubAssetsMap = chainIdToHubAssets;
-    this.supportedHubAssetsSet = hubAssetsSet;
-    this.supportedSodaVaultAssetsSet = vaultAssetsSet;
-  }
-
-  private loadSpokeChainDataStructures(chains: GetChainsApiResponse): void {
-    this.spokeChainIdsSet = new Set(chains);
-  }
-
-  private loadRelayChainIdMapDataStructures(relayChainIdMap: GetRelayChainIdMapApiResponse): void {
+    this.chainToSupportedTokenAddressMap = new Map(
+      Object.entries(sodaxConfig.chains).map(([chainId, config]) => [
+        chainId as SpokeChainKey,
+        new Set(Object.values(config.supportedTokens).map(token => token.address.toLowerCase() as Address)),
+      ]),
+    );
+    this.supportedSodaVaultAssetsSet = new Set(
+      Object.values(sodaxConfig.chains).flatMap(config =>
+        Object.values(config.supportedTokens).map(token => token.vault.toLowerCase() as Address),
+      ),
+    );
+    this.loadSpokeChainDataStructures(sodaxConfig);
     this.intentRelayChainIdToSpokeChainKeyMap = new Map(
-      Object.entries(relayChainIdMap).map(([chainId, intentRelayChainId]) => [
+      Object.entries(sodaxConfig.relay.relayChainIdMap).map(([chainId, intentRelayChainId]) => [
         intentRelayChainId as IntentRelayChainId,
         chainId as SpokeChainKey,
       ]),
     );
+    this.loadSpokeChainConfigDataStructures(sodaxConfig);
+    this.moneyMarketReserveAssetsSet = new Set(this.moneyMarket.supportedReserveAssets);
+    this.stakedATokenAddressesSet = new Set(
+      Object.keys(this.dex.statATokenAddresses).map(address => address.toLowerCase() as Address),
+    );
   }
 
-  private loadSpokeChainConfigDataStructures(spokeChainConfig: GetSpokeChainConfigApiResponse): void {
+  private loadSpokeChainDataStructures(sodaxConfig: SodaxConfig): void {
+    this.spokeChainKeysSet = new Set(Object.keys(sodaxConfig.chains) as SpokeChainKey[]);
+  }
+
+  private loadSpokeChainConfigDataStructures(sodaxConfig: SodaxConfig): void {
     this.supportedTokensPerChain = new Map(
-      Object.entries(spokeChainConfig).map(([chainId, config]) => [
+      Object.entries(sodaxConfig.chains).map(([chainId, config]) => [
         chainId as SpokeChainKey,
         Object.values(config.supportedTokens),
       ]),
     );
   }
 
-  private loadMoneyMarketReserveAssetsDataStructures(
-    moneyMarketReserveAssets: GetMoneyMarketReserveAssetsApiResponse,
-  ): void {
-    this.moneyMarketReserveAssetsSet = new Set(moneyMarketReserveAssets);
-  }
-
   public isInitialized(): boolean {
-    return this.sodaxConfig !== undefined && this.initialized;
+    return this.sodax !== undefined && this.initialized;
   }
 
-  get spokeChainConfig(): SpokeChainConfig {
-    return this.sodaxConfig.spokeChainConfig;
+  get spokeChainConfig(): Record<SpokeChainKey, SpokeChainConfig> {
+    return this.sodax.chains;
   }
 
-  public getSharedChainConfig<C extends SpokeChainKey>(chainId: C): SharedChainConfigFor<C> {
-    return this.sharedConfig[chainId] as SharedChainConfigFor<C>;
+  get relay(): RelayConfig {
+    return this.sodax.relay;
   }
 
-  public getPublicClient(chainId: EvmChainKey | SonicChainKey): PublicClient {
-    const rpcUrl = this.sharedConfig[chainId].rpcUrl;
-    const chain = getEvmViemChain(chainId);
-    return createPublicClient({
-      transport: http(rpcUrl || chain.rpcUrls.default.http[0]),
-      chain,
-    });
+  get solver(): SolverConfig {
+    return this.sodax.solver;
+  }
+  get swaps(): SwapsConfig {
+    return this.sodax.swaps;
   }
 
-  public getEvmRpcUrl(chainId: EvmChainKey): HttpUrl {
-    return this.sharedConfig[chainId].rpcUrl;
+  get bridge(): BridgeConfig {
+    return this.sodax.bridge;
+  }
+
+  get moneyMarket(): MoneyMarketConfig {
+    return this.sodax.moneyMarket;
+  }
+
+  get dex(): DexConfig {
+    return this.sodax.dex;
   }
 }
 
@@ -429,25 +376,4 @@ function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial
     }
   }
   return result;
-}
-
-function mergeSharedConfig(defaults: SharedConfig, overrides?: PartialSharedConfig): SharedConfig {
-  if (!overrides) return { ...defaults };
-
-  const result = { ...defaults } as Record<SpokeChainKey, Record<string, unknown>>;
-  for (const key of Object.keys(overrides) as SpokeChainKey[]) {
-    const override = overrides[key];
-    if (override) {
-      result[key] = deepMerge(result[key], override as Record<string, unknown>);
-    }
-  }
-  return result as SharedConfig;
-}
-
-/**
- * static configs that should never change
- */
-
-export function getHubChainConfig(): EvmHubChainConfig {
-  return hubChainConfig;
 }

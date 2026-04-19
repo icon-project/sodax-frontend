@@ -1,4 +1,4 @@
-import type { Address } from '../index.js';
+import { StatATokenAddresses, type Address } from '../index.js';
 import type { PoolKey } from './pancakeswap-infinity.js';
 
 // Re-export imported types for external usage with explicit type definitions for clarity.
@@ -148,3 +148,15 @@ export const dexPools = {
     },
   },
 } as const satisfies Record<string, PoolKey>;
+
+export type DexConfig = {
+  concentratedLiquidityConfig: ConcentratedLiquidityConfig;
+  dexPools: Record<string, PoolKey>;
+  statATokenAddresses: Record<Address, Address>;
+};
+
+export const dexConfig = {
+  concentratedLiquidityConfig: concentratedLiquidityConfig,
+  dexPools: dexPools,
+  statATokenAddresses: StatATokenAddresses,
+} as const satisfies DexConfig;

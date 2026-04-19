@@ -27,19 +27,8 @@ import type {
   StellarReturnType,
   SuiRawTransaction,
   SuiReturnType,
+  XToken,
 } from '../index.js';
-
-export type MigrationServiceConfig = Prettify<RelayerApiConfig>;
-export type BridgeServiceConfig = Optional<PartnerFeeConfig, 'partnerFee'>;
-export type BackendApiConfig = {
-  baseURL?: HttpUrl;
-  timeout?: number;
-  headers?: Record<string, string>;
-};
-
-export type MoneyMarketConfigParams =
-  | Prettify<MoneyMarketConfig & Optional<PartnerFeeConfig, 'partnerFee'>>
-  | Optional<PartnerFeeConfig, 'partnerFee'>;
 
 export type Default = {
   default: boolean;
@@ -140,7 +129,6 @@ export type SolverIntentQuoteRequest = {
   token_dst_blockchain_id: SpokeChainKey; // Destination chain id
   amount: bigint; // Amount to swap
   quote_type: QuoteType; // Quote type
-  fee?: PartnerFee; // Optional partner fee configuration
 };
 
 export type SolverIntentQuoteResponseRaw = {
@@ -377,12 +365,15 @@ export type AssetInfo = {
 };
 
 export type MoneyMarketConfig = {
+  supportedTokens: Record<SpokeChainKey, readonly XToken[]>;
+  supportedReserveAssets: readonly Address[];
   uiPoolDataProvider: Address;
   lendingPool: Address;
   poolAddressesProvider: Address;
   bnUSD: Address;
   bnUSDVault: Address;
   bnUSDAToken: Address;
+  partnerFee: PartnerFee | undefined; // enables override of global partner fee
 };
 
 export type TokenInfo = {

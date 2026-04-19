@@ -1,16 +1,18 @@
 import { encodeFunctionData, erc20Abi, type Address, type PublicClient } from 'viem';
-import type {
-  EvmContractCall,
-  EvmReturnType,
-  WalletActionParams,
-  Result,
-  TxReturnType,
-} from '../../types/types.js';
-import { spokeChainConfig, type Erc20Token, type EvmChainKey, type SonicChainKey } from '@sodax/types';
+import {
+  spokeChainConfig,
+  type EvmChainKey,
+  type SonicChainKey,
+  type EvmContractCall,
+  type EvmReturnType,
+  type Result,
+  type TxReturnType,
+} from '@sodax/types';
+import type { OptionalWalletActionParamType } from '../../types/types.js';
 
-export type Erc20ApproveParams<Raw extends boolean> = WalletActionParams<
-  Raw,
-  EvmChainKey | SonicChainKey
+export type Erc20ApproveParams<Raw extends boolean> = OptionalWalletActionParamType<
+  EvmChainKey,
+  Raw
 > & {
   token: Address;
   amount: bigint;
@@ -18,13 +20,20 @@ export type Erc20ApproveParams<Raw extends boolean> = WalletActionParams<
   spender: Address;
 };
 
-export type Erc20IsAllowanceValidParams = {
+export type Erc20IsAllowanceParams<ChainKey extends EvmChainKey> = {
   token: Address;
   amount: bigint;
   owner: Address;
   spender: Address;
-  chainId: EvmChainKey | SonicChainKey;
+  chainKey: ChainKey;
   publicClient: PublicClient;
+};
+
+export type Erc20Token = {
+  name: string;
+  symbol: string;
+  decimals: number;
+  address: Address;
 };
 
 export class Erc20Service {
@@ -62,18 +71,15 @@ export class Erc20Service {
   }
 
   /**
-   * Check if spender has enough ERC20 allowance for given amount
-   * @param token - ERC20 token address
-   * @param amount - Amount to check allowance for
-   * @param owner - User wallet address
-   * @param spender - Spender address
-   * @param chainId - Chain ID
-   * @param configService - Config service
-   * @return - True if spender is allowed to spend amount on behalf of owner
+   * Check if spender has enough ERC20 allowance for given amount.
+   * @param params - Token, amount, owner, spender, chainKey, and publicClient for the chain.
+   * @returns Whether allowance is sufficient for the amount.
    */
-  static async isAllowanceValid(params: Erc20IsAllowanceValidParams): Promise<Result<boolean>> {
+  static async isAllowanceValid<ChainKey extends EvmChainKey>(
+    params: Erc20IsAllowanceParams<ChainKey>,
+  ): Promise<Result<boolean>> {
     try {
-      if (params.token.toLowerCase() === spokeChainConfig[params.chainId].nativeToken.toLowerCase()) {
+      if (params.token.toLowerCase() === spokeChainConfig[params.chainKey].nativeToken.toLowerCase()) {
         return {
           ok: true,
           value: true,
@@ -106,9 +112,9 @@ export class Erc20Service {
    * @param spender - Spender address
    * @param provider - EVM Provider
    */
-  static async approve<R extends boolean = false>(
-    params: Erc20ApproveParams<R>,
-  ): Promise<TxReturnType<isHubChainId | SonicChainKey, R>> {
+  static async approve<Raw extends boolean>(
+    params: Erc20ApproveParams<Raw>,
+  ): Promise<TxReturnType<EvmChainKey | SonicChainKey, Raw>> {
     const rawTx = {
       from: params.from,
       to: params.token,
@@ -120,17 +126,19 @@ export class Erc20Service {
       }),
     } satisfies EvmReturnType<true>;
 
-    if (params.raw === true) {
-      return rawTx satisfies TxReturnType<isHubChainId | SonicChainKey, true> as TxReturnType<
-        isHubChainId | SonicChainKey,
-        R
+    if ('raw' in params && params.raw === true) {
+      return rawTx satisfies TxReturnType<EvmChainKey | SonicChainKey, true> as TxReturnType<
+        EvmChainKey | SonicChainKey,
+        Raw
       >;
     }
 
-    return (await params.walletProvider.sendTransaction(rawTx)) satisfies TxReturnType<
-      isHubChainId | SonicChainKey,
-      false
-    > as TxReturnType<isHubChainId | SonicChainKey, R>;
+    return (await (
+      params as OptionalWalletActionParamType<EvmChainKey | SonicChainKey, false>
+    ).walletProvider.sendTransaction(rawTx)) satisfies TxReturnType<EvmChainKey | SonicChainKey, false> as TxReturnType<
+      EvmChainKey | SonicChainKey,
+      Raw
+    >;
   }
 
   /**

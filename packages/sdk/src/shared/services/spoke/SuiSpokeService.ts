@@ -200,7 +200,7 @@ export class SuiSpokeService {
   public async sendMessage<Raw extends boolean>(
     params: SendMessageParams<SuiChainKey, Raw>,
   ): Promise<TxReturnType<SuiChainKey, Raw>> {
-    const { srcAddress: from, srcChainKey: fromChainId, dstChainId, dstAddress, payload } = params;
+    const { srcAddress: from, srcChainKey: fromChainId, dstChainKey: dstChainId, dstAddress, payload } = params;
 
     const txb = new Transaction();
     const connection = this.splitAddress(spokeChainConfig[fromChainId].addresses.connection);

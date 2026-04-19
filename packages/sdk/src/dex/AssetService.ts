@@ -1,17 +1,11 @@
 import type {
   DestinationParamsType,
-  EvmSpokeProviderType,
   OptionalRaw,
   OptionalTimeout,
-  Prettify,
   RelayOptionalExtraData,
-  SonicSpokeProviderType,
-  SpokeTxHash,
-  StellarSpokeProviderType,
 } from '../shared/types/types.js';
 import type { Address, Hex } from 'viem';
 import {
-  DEFAULT_RELAYER_API_ENDPOINT,
   type RelayErrorCode,
   type RelayError,
   EvmAssetManagerService,
@@ -24,19 +18,12 @@ import {
   EvmVaultTokenService,
   encodeContractCalls,
   relayTxAndWaitPacket,
-  DEFAULT_RELAY_TX_TIMEOUT,
   type EvmContractCall,
   type ConfigService,
   StellarSpokeService,
-  isStellarSpokeProviderType,
-  isEvmSpokeProviderType,
-  isSonicSpokeProviderType,
   HubService,
-  isHubChainId,
-  isSpokeProviderObjectType,
   isRawDestinationParams,
   wrappedSonicAbi,
-  isSolanaSpokeProviderType,
   type HubProvider,
 } from '../index.js';
 import {
@@ -48,16 +35,12 @@ import {
 } from '@sodax/types';
 import { encodeFunctionData, erc20Abi, isAddress } from 'viem';
 import invariant from 'tiny-invariant';
-import { getConcentratedLiquidityConfig } from '../shared/constants.js';
 import { stataTokenFactoryAbi } from '../shared/abis/stataTokenFactory.abi.js';
-import type { GetAddressType, GetSpokeDepositParamsType, HubTxHash } from '../shared/types/types.js';
 
-// Local type definitions
+
 export type AssetServiceConfig = {
   concentratedLiquidityConfig: ConcentratedLiquidityConfig;
 };
-
-type AssetServiceConfigParams = AssetServiceConfig;
 
 export type CreateAssetWithdrawParams = {
   poolToken: Address;
@@ -151,7 +134,7 @@ export type AssetServiceError<T extends AssetServiceErrorCode> = {
 };
 
 export type AssetServiceConstructorParams = {
-  config?: AssetServiceConfigParams;
+  config?: AssetServiceConfig;
   hubProvider: HubProvider;
   relayerApiEndpoint?: HttpUrl;
   configService: ConfigService;

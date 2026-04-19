@@ -59,7 +59,7 @@ describe('calculatePercentageAmount', () => {
 
   const mockHubConfig = {
     hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: getHubChainConfig(),
+    chainConfig: sodax.config.getHubChainConfig(),
   } satisfies EvmHubProviderConfig;
 
   const mockHubProvider = new EvmHubProvider({ config: mockHubConfig, configService: sodax.config });

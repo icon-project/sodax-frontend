@@ -22,13 +22,9 @@ import type {
   SubmitSwapTxResponse,
   GetSubmitSwapTxStatusParams,
   SubmitSwapTxStatusResponse,
-  BackendApiConfig
+  ApiConfig,
 } from '@sodax/types';
-import {
-  DEFAULT_BACKEND_API_ENDPOINT,
-  DEFAULT_BACKEND_API_HEADERS,
-  DEFAULT_BACKEND_API_TIMEOUT,
-} from '../shared/constants.js';
+
 import { isSubmitSwapTxResponse, isSubmitSwapTxStatusResponse } from '../shared/guards.js';
 
 // Base types for API responses
@@ -175,15 +171,8 @@ export interface MoneyMarketBorrowers {
  * Provides methods for all Solver and Money Market endpoints
  */
 export class BackendApiService implements IConfigApi {
-  private readonly baseURL: string;
-  private readonly defaultHeaders: Record<string, string>;
-  private readonly timeout: number;
 
-  constructor(config?: BackendApiConfig) {
-    this.baseURL = config?.baseURL ?? DEFAULT_BACKEND_API_ENDPOINT;
-    this.timeout = config?.timeout ?? DEFAULT_BACKEND_API_TIMEOUT;
-    this.defaultHeaders = config?.headers ?? DEFAULT_BACKEND_API_HEADERS;
-  }
+  constructor(private readonly config: ApiConfig) {}
 
   /**
    * Make HTTP request using fetch API
@@ -192,12 +181,12 @@ export class BackendApiService implements IConfigApi {
    * @returns Promise<T>
    */
   private async makeRequest<T>(endpoint: string, config: RequestConfig): Promise<T> {
-    const url = config.baseURL ? `${config.baseURL}${endpoint}` : `${this.baseURL}${endpoint}`;
-    const headers = { ...this.defaultHeaders, ...config.headers };
+    const url = config.baseURL ? `${config.baseURL}${endpoint}` : `${this.config.baseURL}${endpoint}`;
+    const headers = { ...this.config.headers, ...config.headers };
 
     // Create AbortController for timeout
     const controller = new AbortController();
-    const timeout = config.timeout ?? this.timeout;
+    const timeout = config.timeout ?? this.config.timeout;
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
@@ -550,7 +539,7 @@ export class BackendApiService implements IConfigApi {
    */
   public setHeaders(headers: Record<string, string>): void {
     Object.entries(headers).forEach(([key, value]) => {
-      this.defaultHeaders[key] = value;
+      this.config.headers[key] = value;
     });
   }
 
@@ -559,6 +548,6 @@ export class BackendApiService implements IConfigApi {
    * @returns string
    */
   public getBaseURL(): string {
-    return this.baseURL;
+    return this.config.baseURL;
   }
 }

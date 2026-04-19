@@ -18,11 +18,11 @@ import type {
   HubChainKey,
   SolverConfigParams,
   Prettify,
-  MoneyMarketConfigParams,
   Optional,
   PartnerFeeConfig,
   PartnerFeeAmount,
   PartnerFeePercentage,
+  EvmSpokeOnlyChainKey,
 } from '@sodax/types';
 import type { IntentError } from '../swap/SwapService.js';
 import type { MoneyMarketError, MoneyMarketUnknownError } from '../moneyMarket/MoneyMarketService.js';
@@ -35,8 +35,6 @@ import {
   type SolverConfig,
   type MoneyMarketConfig,
   type IconAddress,
-  type IntentRelayChainId,
-  ChainIdToIntentRelayChainId,
   type SubmitSwapTxResponse,
   type SubmitSwapTxStatusResponse,
   isSonicChainKey,
@@ -49,8 +47,20 @@ import {
   isSuiChainKey,
   isStacksChainKey,
   isHubChainKey,
+  isEvmChainKey,
+  isEvmSpokeOnlyChainKey,
 } from '@sodax/types';
-import type { OptionalRaw, OptionalWalletActionParamType, RawDestinationParams } from './types/types.js';
+import type { RawDestinationParams } from './types/types.js';
+import type {
+  SpokeApproveParams,
+  SpokeApproveParamsEvmSpoke,
+  SpokeApproveParamsHub,
+  SpokeApproveParamsStellar,
+  SpokeIsAllowanceValidParams,
+  SpokeIsAllowanceValidParamsEvmSpoke,
+  SpokeIsAllowanceValidParamsHub,
+  SpokeIsAllowanceValidParamsStellar,
+} from './types/spoke-types.js';
 
 export function isEvmSpokeChainConfig(value: SpokeChainConfig): value is EvmSpokeChainConfig {
   return typeof value === 'object' && value.chain.type === 'EVM';
@@ -92,14 +102,6 @@ export function isJsonRpcPayloadResponse(value: unknown): value is JsonRpcPayloa
   );
 }
 
-export function isIntentRelayChainId(value: bigint): value is IntentRelayChainId {
-  return (
-    typeof value === 'bigint' &&
-    value >= 0n &&
-    Object.values(ChainIdToIntentRelayChainId).includes(value as IntentRelayChainId)
-  );
-}
-
 export function isPartnerFeeAmount(value: unknown): value is PartnerFeeAmount {
   return typeof value === 'object' && value !== null && 'address' in value && 'amount' in value;
 }
@@ -109,7 +111,11 @@ export function isPartnerFeePercentage(value: unknown): value is PartnerFeePerce
 }
 
 export function isEvmChainKeyType(value: SpokeChainKey): value is EvmChainKey {
-  return isEvmChainKeyType(value);
+  return isEvmChainKey(value);
+}
+
+export function isEvmSpokeOnlyChainKeyType(value: SpokeChainKey): value is EvmSpokeOnlyChainKey {
+  return isEvmSpokeOnlyChainKey(value);
 }
 
 export function isSonicChainKeyType(value: SpokeChainKey): value is SonicChainKey {
@@ -152,6 +158,48 @@ export function isStacksChainKeyType(value: SpokeChainKey): value is StacksChain
   return isStacksChainKey(value);
 }
 
+/** Same runtime check as `isHubChainKeyType(params.srcChainKey)`; narrows the full `params` object. */
+export function isSpokeIsAllowanceValidParamsHub(
+  params: SpokeIsAllowanceValidParams,
+): params is SpokeIsAllowanceValidParamsHub {
+  return isHubChainKeyType(params.srcChainKey);
+}
+
+/** Same runtime check as `isEvmSpokeOnlyChainKeyType(params.srcChainKey)`; narrows the full `params` object. */
+export function isSpokeIsAllowanceValidParamsEvmSpoke(
+  params: SpokeIsAllowanceValidParams,
+): params is SpokeIsAllowanceValidParamsEvmSpoke {
+  return isEvmSpokeOnlyChainKeyType(params.srcChainKey);
+}
+
+/** Same runtime check as `isStellarChainKeyType(params.srcChainKey)`; narrows the full `params` object. */
+export function isSpokeIsAllowanceValidParamsStellar(
+  params: SpokeIsAllowanceValidParams,
+): params is SpokeIsAllowanceValidParamsStellar {
+  return isStellarChainKeyType(params.srcChainKey);
+}
+
+/** Same runtime check as `isHubChainKeyType(params.srcChainKey)`; narrows the full `params` object. */
+export function isSpokeApproveParamsHub<R extends boolean>(
+  params: SpokeApproveParams<R>,
+): params is SpokeApproveParamsHub<R> {
+  return isHubChainKeyType(params.srcChainKey);
+}
+
+/** Same runtime check as `isEvmSpokeOnlyChainKeyType(params.srcChainKey)`; narrows the full `params` object. */
+export function isSpokeApproveParamsEvmSpoke<R extends boolean>(
+  params: SpokeApproveParams<R>,
+): params is SpokeApproveParamsEvmSpoke<R> {
+  return isEvmSpokeOnlyChainKeyType(params.srcChainKey);
+}
+
+/** Same runtime check as `isStellarChainKeyType(params.srcChainKey)`; narrows the full `params` object. */
+export function isSpokeApproveParamsStellar<R extends boolean>(
+  params: SpokeApproveParams<R>,
+): params is SpokeApproveParamsStellar<R> {
+  return isStellarChainKeyType(params.srcChainKey);
+}
+
 export function isConfiguredSolverConfig(
   value: SolverConfigParams,
 ): value is Prettify<SolverConfig & Optional<PartnerFeeConfig, 'partnerFee'>> {
@@ -159,7 +207,7 @@ export function isConfiguredSolverConfig(
 }
 
 export function isConfiguredMoneyMarketConfig(
-  value: MoneyMarketConfigParams,
+  value: MoneyMarketConfig,
 ): value is Prettify<MoneyMarketConfig & Optional<PartnerFeeConfig, 'partnerFee'>> {
   return (
     typeof value === 'object' &&

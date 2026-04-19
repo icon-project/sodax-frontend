@@ -1,18 +1,14 @@
-import type { HttpUrl } from '@sodax/types';
+import type { HttpUrl, DexConfig } from '@sodax/types';
 import type { ConfigService } from './../shared/config/ConfigService.js';
 import { AssetService, type AssetServiceConfig } from './AssetService.js';
 import { ClService } from './ConcentratedLiquidityService.js';
 import type { HubProvider } from '../shared/types/types.js';
 
-export type DexServiceConfig = {
-  assetServiceConfig?: AssetServiceConfig;
-};
-
 export type DexServiceConstructorParams = {
   configService: ConfigService;
   hubProvider: HubProvider;
   relayerApiEndpoint?: HttpUrl;
-  config?: DexServiceConfig;
+  config?: DexConfig;
 };
 
 /**

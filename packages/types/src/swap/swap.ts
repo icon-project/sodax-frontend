@@ -1,5 +1,5 @@
 // currently supported spoke chain tokens for solver
-import { type SpokeChainKey, type XToken, SodaTokens } from '../index.js';
+import { type PartnerFee, type SpokeChainKey, type XToken, SodaTokens } from '../index.js';
 import { spokeChainConfig, ChainKeys } from '../chains/chains.js';
 
 export const swapSupportedTokens = {
@@ -176,6 +176,16 @@ export const swapSupportedTokens = {
     spokeChainConfig[ChainKeys.STACKS_MAINNET].supportedTokens.USDC,
   ] as const satisfies XToken[],
 } as const satisfies Record<SpokeChainKey, readonly XToken[]>;
+
+export type SwapsConfig = {
+  partnerFee: PartnerFee | undefined; // enables override of global partner fee
+  supportedTokens: Record<SpokeChainKey, readonly XToken[]>;
+};
+
+export const swapsConfig = {
+  partnerFee: undefined,
+  supportedTokens: swapSupportedTokens,
+} satisfies SwapsConfig;
 
 // get supported spoke chain tokens for solver
 export const getSupportedSolverTokens = (chainId: SpokeChainKey): readonly XToken[] => swapSupportedTokens[chainId];

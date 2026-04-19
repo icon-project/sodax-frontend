@@ -1,36 +1,34 @@
 import {
   type HttpUrl,
   type SpokeChainKey,
-  type BitcoinChainKey,
-  type SuiChainKey,
-  type SolanaChainKey,
-  type IconChainKey,
-  type InjectiveChainKey,
-  type NearChainKey,
-  type StacksChainKey,
-  type EvmChainKey,
-  type StellarChainKey,
-  type GetAllConfigApiResponse,
-  swapSupportedTokens,
-  moneyMarketSupportedTokens,
-  moneyMarketReserveAssets,
-  ChainIdToIntentRelayChainId,
-  CHAIN_KEYS,
+  moneyMarketConfig,
+  type PartnerFee,
+  type ApiConfig,
+  apiConfig,
+  solverConfig,
+  relayConfig,
+  type SolverConfig,
+  type RelayConfig,
+  dexConfig,
+  type DexConfig,
+  type MoneyMarketConfig,
+  swapsConfig,
+  type SwapsConfig,
 } from '../index.js';
-import { spokeChainConfig, ChainKeys } from '../chains/chains.js';
+import { spokeChainConfig, type HubConfig, hubConfig, type SpokeChainConfig } from '../chains/chains.js';
 
 // -- Per-chain shared config types (user-overridable runtime config) --
 
-export type TxReceiptConfig = {
+export type TxPollingConfig = {
   pollingIntervalMs: number;
   maxTimeoutMs: number;
 };
 
-export type EvmSharedChainConfig = TxReceiptConfig & {
+export type EvmSharedChainConfig = TxPollingConfig & {
   rpcUrl: HttpUrl;
 };
 
-export type StellarSharedChainConfig = TxReceiptConfig & {
+export type StellarSharedChainConfig = TxPollingConfig & {
   horizonRpcUrl: HttpUrl;
   sorobanRpcUrl: HttpUrl;
 };
@@ -43,184 +41,69 @@ export type RadfiConfig = {
   refreshToken: string;
 };
 
-export type BitcoinSharedChainConfig = TxReceiptConfig & {
+export type BitcoinSharedChainConfig = TxPollingConfig & {
   rpcUrl: string;
   network: string;
   radfi: RadfiConfig;
   walletMode?: 'USER' | 'TRADING';
 };
 
-export type SuiSharedChainConfig = TxReceiptConfig & {
+export type SuiSharedChainConfig = TxPollingConfig & {
   rpcUrl: HttpUrl;
 };
 
-export type SolanaSharedChainConfig = TxReceiptConfig & {
+export type SolanaSharedChainConfig = TxPollingConfig & {
   rpcUrl: HttpUrl;
 };
 
-export type IconSharedChainConfig = TxReceiptConfig & {
+export type IconSharedChainConfig = TxPollingConfig & {
   rpcUrl: HttpUrl;
   debugRpcUrl: HttpUrl;
 };
 
-export type InjectiveSharedChainConfig = TxReceiptConfig & {
+export type InjectiveSharedChainConfig = TxPollingConfig & {
   rpcUrl: HttpUrl;
 };
 
-export type NearSharedChainConfig = TxReceiptConfig & {
+export type NearSharedChainConfig = TxPollingConfig & {
   rpcUrl: HttpUrl;
 };
 
-export type StacksSharedChainConfig = TxReceiptConfig & {
+export type StacksSharedChainConfig = TxPollingConfig & {
   rpcUrl: HttpUrl;
 };
 
-export type SharedChainConfig = {
-  [C in SpokeChainKey]: SharedChainConfigFor<C>;
+export type BridgeConfig = {
+  partnerFee: PartnerFee | undefined; // enables override of global partner fee
 };
 
-type DeepPartial<T> = {
-  [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
+export const bridgeConfig = {
+  partnerFee: undefined,
+} satisfies BridgeConfig;
+
+export type SodaxConfig = {
+  fee: PartnerFee | undefined; // global partner fee which can be overridden by feature specific fee config (e.g. swap, money market, bridge, etc.)
+  chains: Record<SpokeChainKey, SpokeChainConfig>;
+  swaps: SwapsConfig; // swaps config for supported swap tokens per chain
+  moneyMarket: MoneyMarketConfig; // Optional Money Market service enabling cross-chain lending and borrowing
+  bridge: BridgeConfig; // Optional Bridge config for partner fee
+  dex: DexConfig; // Optional Dex service enabling DEX operations
+  hub: HubConfig; // Hub provider for the hub chain (e.g. Sonic mainnet)
+  api: ApiConfig; // API config used to interact with the Backend API
+  solver: SolverConfig;
+  relay: RelayConfig; // Relayer config to relay intents/user actions to the hub and vice versa
 };
 
-export type PartialSharedConfig = {
-  [C in SpokeChainKey]?: DeepPartial<SharedChainConfigFor<C>>;
-};
-
-// Maps a chain ID to its shared config shape
-export type SharedChainConfigFor<C extends SpokeChainKey> = C extends StellarChainKey
-  ? StellarSharedChainConfig
-  : C extends BitcoinChainKey
-    ? BitcoinSharedChainConfig
-    : C extends SuiChainKey
-      ? SuiSharedChainConfig
-      : C extends SolanaChainKey
-        ? SolanaSharedChainConfig
-        : C extends IconChainKey
-          ? IconSharedChainConfig
-          : C extends InjectiveChainKey
-            ? InjectiveSharedChainConfig
-            : C extends NearChainKey
-              ? NearSharedChainConfig
-              : C extends StacksChainKey
-                ? StacksSharedChainConfig
-                : C extends EvmChainKey
-                  ? EvmSharedChainConfig
-                  : never;
-
-const DEFAULT_EVM_TX_RECEIPT_CONFIG: TxReceiptConfig = {
-  pollingIntervalMs: 750,
-  maxTimeoutMs: 30_000,
-};
-
-export const defaultSharedChainConfig: SharedChainConfig = {
-  // EVM chains (including Sonic)
-  [ChainKeys.SONIC_MAINNET]: {
-    ...DEFAULT_EVM_TX_RECEIPT_CONFIG,
-    rpcUrl: spokeChainConfig[ChainKeys.SONIC_MAINNET].rpcUrl,
-  },
-  [ChainKeys.ETHEREUM_MAINNET]: {
-    ...DEFAULT_EVM_TX_RECEIPT_CONFIG,
-    rpcUrl: spokeChainConfig[ChainKeys.ETHEREUM_MAINNET].rpcUrl,
-  },
-  [ChainKeys.AVALANCHE_MAINNET]: {
-    ...DEFAULT_EVM_TX_RECEIPT_CONFIG,
-    rpcUrl: spokeChainConfig[ChainKeys.AVALANCHE_MAINNET].rpcUrl,
-  },
-  [ChainKeys.ARBITRUM_MAINNET]: {
-    ...DEFAULT_EVM_TX_RECEIPT_CONFIG,
-    rpcUrl: spokeChainConfig[ChainKeys.ARBITRUM_MAINNET].rpcUrl,
-  },
-  [ChainKeys.BASE_MAINNET]: {
-    ...DEFAULT_EVM_TX_RECEIPT_CONFIG,
-    rpcUrl: spokeChainConfig[ChainKeys.BASE_MAINNET].rpcUrl,
-  },
-  [ChainKeys.OPTIMISM_MAINNET]: {
-    ...DEFAULT_EVM_TX_RECEIPT_CONFIG,
-    rpcUrl: spokeChainConfig[ChainKeys.OPTIMISM_MAINNET].rpcUrl,
-  },
-  [ChainKeys.POLYGON_MAINNET]: {
-    ...DEFAULT_EVM_TX_RECEIPT_CONFIG,
-    rpcUrl: spokeChainConfig[ChainKeys.POLYGON_MAINNET].rpcUrl,
-  },
-  [ChainKeys.BSC_MAINNET]: {
-    ...DEFAULT_EVM_TX_RECEIPT_CONFIG,
-    rpcUrl: spokeChainConfig[ChainKeys.BSC_MAINNET].rpcUrl,
-  },
-  [ChainKeys.HYPEREVM_MAINNET]: {
-    ...DEFAULT_EVM_TX_RECEIPT_CONFIG,
-    rpcUrl: spokeChainConfig[ChainKeys.HYPEREVM_MAINNET].rpcUrl,
-  },
-  [ChainKeys.LIGHTLINK_MAINNET]: {
-    ...DEFAULT_EVM_TX_RECEIPT_CONFIG,
-    rpcUrl: spokeChainConfig[ChainKeys.LIGHTLINK_MAINNET].rpcUrl,
-  },
-  [ChainKeys.REDBELLY_MAINNET]: {
-    ...DEFAULT_EVM_TX_RECEIPT_CONFIG,
-    rpcUrl: spokeChainConfig[ChainKeys.REDBELLY_MAINNET].rpcUrl,
-  },
-  [ChainKeys.KAIA_MAINNET]: {
-    ...DEFAULT_EVM_TX_RECEIPT_CONFIG,
-    rpcUrl: spokeChainConfig[ChainKeys.KAIA_MAINNET].rpcUrl,
-  },
-  // Non-EVM chains
-  [ChainKeys.STELLAR_MAINNET]: {
-    pollingIntervalMs: 750,
-    maxTimeoutMs: 30_000,
-    horizonRpcUrl: spokeChainConfig[ChainKeys.STELLAR_MAINNET].horizonRpcUrl,
-    sorobanRpcUrl: spokeChainConfig[ChainKeys.STELLAR_MAINNET].sorobanRpcUrl,
-  },
-  [ChainKeys.BITCOIN_MAINNET]: {
-    pollingIntervalMs: 5_000,
-    maxTimeoutMs: 300_000,
-    network: spokeChainConfig[ChainKeys.BITCOIN_MAINNET].network,
-    rpcUrl: spokeChainConfig[ChainKeys.BITCOIN_MAINNET].rpcUrl,
-    radfi: {
-      apiUrl: spokeChainConfig[ChainKeys.BITCOIN_MAINNET].radfiApiUrl,
-      umsUrl: spokeChainConfig[ChainKeys.BITCOIN_MAINNET].radfiUmsUrl,
-      apiKey: spokeChainConfig[ChainKeys.BITCOIN_MAINNET].radfiApiKey,
-      accessToken: '',
-      refreshToken: '',
-    },
-  },
-  [ChainKeys.SOLANA_MAINNET]: {
-    pollingIntervalMs: 750,
-    maxTimeoutMs: 60_000,
-    rpcUrl: spokeChainConfig[ChainKeys.SOLANA_MAINNET].rpcUrl,
-  },
-  [ChainKeys.SUI_MAINNET]: {
-    pollingIntervalMs: 750,
-    maxTimeoutMs: 30_000,
-    rpcUrl: spokeChainConfig[ChainKeys.SUI_MAINNET].rpc_url,
-  },
-  [ChainKeys.ICON_MAINNET]: {
-    pollingIntervalMs: 750,
-    maxTimeoutMs: 30_000,
-    rpcUrl: spokeChainConfig[ChainKeys.ICON_MAINNET].rpcUrl,
-    debugRpcUrl: spokeChainConfig[ChainKeys.ICON_MAINNET].debugRpcUrl,
-  },
-  [ChainKeys.INJECTIVE_MAINNET]: {
-    pollingIntervalMs: 750,
-    maxTimeoutMs: 30_000,
-    rpcUrl: spokeChainConfig[ChainKeys.INJECTIVE_MAINNET].rpcUrl,
-  },
-  [ChainKeys.NEAR_MAINNET]: {
-    pollingIntervalMs: 750,
-    maxTimeoutMs: 30_000,
-    rpcUrl: spokeChainConfig[ChainKeys.NEAR_MAINNET].rpcUrl,
-  },
-  [ChainKeys.STACKS_MAINNET]: {
-    pollingIntervalMs: 2_000,
-    maxTimeoutMs: 120_000,
-    rpcUrl: spokeChainConfig[ChainKeys.STACKS_MAINNET].rpcUrl,
-  },
-};
-
-export const defaultSodaxConfig = {
-  supportedChains: CHAIN_KEYS,
-  supportedSwapTokens: swapSupportedTokens,
-  supportedMoneyMarketTokens: moneyMarketSupportedTokens,
-  supportedMoneyMarketReserveAssets: moneyMarketReserveAssets,
-  relayChainIdMap: ChainIdToIntentRelayChainId,
-  spokeChainConfig: spokeChainConfig,
-} satisfies GetAllConfigApiResponse;
+// default sodax config object which can always be overriden through Sodax instance (i.e. new Sodax(...config))
+export const sodaxConfig = {
+  fee: undefined,
+  chains: spokeChainConfig,
+  swaps: swapsConfig,
+  moneyMarket: moneyMarketConfig,
+  bridge: bridgeConfig,
+  dex: dexConfig,
+  hub: hubConfig,
+  api: apiConfig,
+  solver: solverConfig,
+  relay: relayConfig,
+} satisfies SodaxConfig;

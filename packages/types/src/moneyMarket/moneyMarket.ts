@@ -6,16 +6,8 @@ import {
   SodaTokens,
   type SpokeChainKey,
   type Address,
+  hubConfig,
 } from '../index.js';
-
-export const moneyMarketConfig = {
-  lendingPool: '0x553434896D39F867761859D0FE7189d2Af70514E',
-  uiPoolDataProvider: '0xC04d746C38f1E51C8b3A3E2730250bbAC2F271bf',
-  poolAddressesProvider: '0x036aDe0aBAA4c82445Cb7597f2d6d6130C118c7b',
-  bnUSD: '0x94dC79ce9C515ba4AE4D195da8E6AB86c69BFc38', // debt token
-  bnUSDAToken: '0xa2cDA49735e42f0905496E40a66B3C5475Ed69dF',
-  bnUSDVault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
-} as const satisfies MoneyMarketConfig;
 
 // currently supported spoke chain tokens for money market
 export const moneyMarketSupportedTokens = {
@@ -189,14 +181,26 @@ export const moneyMarketSupportedTokens = {
   ] as const satisfies XToken[],
 } as const satisfies Record<SpokeChainKey, readonly XToken[]>;
 
+export const moneyMarketReserveAssets = [
+  ...Object.values(SodaTokens).map(vault => vault.address),
+  hubConfig.bnUSD,
+] as const satisfies Address[];
+
+export const moneyMarketConfig = {
+  partnerFee: undefined,
+  lendingPool: '0x553434896D39F867761859D0FE7189d2Af70514E',
+  uiPoolDataProvider: '0xC04d746C38f1E51C8b3A3E2730250bbAC2F271bf',
+  poolAddressesProvider: '0x036aDe0aBAA4c82445Cb7597f2d6d6130C118c7b',
+  bnUSD: '0x94dC79ce9C515ba4AE4D195da8E6AB86c69BFc38', // debt token
+  bnUSDAToken: '0xa2cDA49735e42f0905496E40a66B3C5475Ed69dF',
+  bnUSDVault: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
+  supportedTokens: moneyMarketSupportedTokens,
+  supportedReserveAssets: moneyMarketReserveAssets,
+} as const satisfies MoneyMarketConfig;
+
 // export const isMoneyMarketSupportedToken = (chainId: SpokeChainKey, token: string): boolean =>
 //   moneyMarketSupportedTokens[chainId].some(t => t.address.toLowerCase() === token.toLowerCase());
 
 // get supported spoke chain tokens for money market
 // export const getSupportedMoneyMarketTokens = (chainId: SpokeChainKey): readonly Token[] =>
 //   moneyMarketSupportedTokens[chainId];
-
-export const moneyMarketReserveAssets = [
-  ...Object.values(SodaTokens).map(vault => vault.address),
-  moneyMarketConfig.bnUSDVault,
-] as const satisfies Address[];

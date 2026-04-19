@@ -263,19 +263,19 @@ export async function waitUntilIntentExecuted(
  * @param data - The additional data to submit when relaying the transaction on Solana. Due to Solana's 1232 byte transaction
  *               size limit, Solana transactions are split: the on-chain tx contains only a verification hash, while the full
  *               data is submitted off-chain via the relayer. Contains the to address on Hub chain and instruction data.
- * @param chainId - The chain ID of the transaction.
+ * @param chainkey - The chain ID of the transaction.
  * @param timeout - The timeout in milliseconds for the transaction. Default is 20 seconds.
  * @returns The transaction hash.
  */
 export async function relayTxAndWaitPacket(
   spokeTxHash: string,
   data: { address: Hex; payload: Hex } | undefined,
-  chainId: SpokeChainKey,
+  chainkey: SpokeChainKey,
   relayerApiEndpoint: HttpUrl,
   timeout = DEFAULT_RELAY_TX_TIMEOUT,
 ): Promise<Result<PacketData, RelayError>> {
   try {
-    const intentRelayChainId = getIntentRelayChainId(chainId).toString();
+    const intentRelayChainId = getIntentRelayChainId(chainkey).toString();
 
     const submitPayload: IntentRelayRequest<'submit'> = {
       action: 'submit',

@@ -6,7 +6,15 @@
     "rules": {
       "style": {
         "noUselessElse": "off",
-        "noNonNullAssertion": "off"
+        "noNonNullAssertion": "off",
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "@sodax/sdk": "Import from '@sodax/types' (or local modules) inside the SDK; do not import the package entry '@sodax/sdk'."
+            }
+          }
+        }
       },
       "suspicious": {
         "noExplicitAny": "off",

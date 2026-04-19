@@ -252,7 +252,7 @@ export class InjectiveSpokeService {
   async sendMessage<R extends boolean = false>(
     params: SendMessageParams<InjectiveChainKey, R>,
   ): Promise<TxReturnType<InjectiveChainKey, R>> {
-    const { srcAddress: from, srcChainKey: fromChainId, dstChainId, dstAddress, payload } = params;
+    const { srcAddress: from, srcChainKey: fromChainId, dstChainKey: dstChainId, dstAddress, payload } = params;
     const relayId = getIntentRelayChainId(dstChainId);
 
     const msg: ConnMsg = {

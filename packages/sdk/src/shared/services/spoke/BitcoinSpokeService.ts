@@ -3,6 +3,7 @@ import type {
   BitcoinChainKey,
   BitcoinRawTransactionReceipt,
   BtcAddressType,
+  GetAddressType,
   Hex,
   HubAddress,
   IBitcoinWalletProvider,
@@ -15,7 +16,6 @@ import { keccak256 } from 'viem';
 import type {
   DepositParams,
   EstimateGasParams,
-  FromParams,
   GetDepositParams,
   SendMessageParams,
   TxReturnType,
@@ -32,7 +32,9 @@ import {
 
 bitcoin.initEccLib(ecc);
 
-export type BitcoinSpokeDepositParams = FromParams<BitcoinChainKey> & {
+export type BitcoinSpokeDepositParams = {
+  srcChainKey: BitcoinChainKey; // The chain key of the spoke (origin) chain
+  srcAddress: GetAddressType<BitcoinChainKey>; // The address of the user on the spoke (origin) chain
   to: HubAddress; // The address of the user on the hub chain (wallet abstraction address)
   token: string; // Token identifier
   amount: bigint; // Amount in satoshis
@@ -40,7 +42,9 @@ export type BitcoinSpokeDepositParams = FromParams<BitcoinChainKey> & {
   accessToken?: string; // Access token to use trading wallet
 };
 
-export type BitcoinTransferToHubParams = FromParams<BitcoinChainKey> & {
+export type BitcoinTransferToHubParams = {
+  srcChainKey: BitcoinChainKey; // The chain key of the spoke (origin) chain
+  srcAddress: GetAddressType<BitcoinChainKey>; // The address of the user on the spoke (origin) chain
   token: string;
   amount: bigint;
   data?: Hex;
@@ -530,10 +534,16 @@ export class BitcoinSpokeService {
     return await response.text();
   }
 
-  public async encodeWithdrawalData<R extends boolean = false>(
-    params: SendMessageParams<BitcoinChainKey, R> & { walletMode?: WalletMode },
+  public async encodeWithdrawalData<Raw extends boolean = boolean>(
+    params: SendMessageParams<BitcoinChainKey, Raw> & { walletMode?: WalletMode },
   ): Promise<string> {
-    const { srcAddress: from, srcChainKey: fromChainId, dstChainId, payload: data, walletMode = 'TRADING' } = params;
+    const {
+      srcAddress: from,
+      srcChainKey: fromChainId,
+      dstChainKey: dstChainId,
+      payload: data,
+      walletMode = 'TRADING',
+    } = params;
     let srcAddress = from;
     const addressType = detectBitcoinAddressType(from);
 
@@ -563,7 +573,9 @@ export class BitcoinSpokeService {
       return JSON.stringify(onDemandWithdraw);
     }
 
-    const signature = await params.walletProvider.signEcdsaMessage(orderedPayload);
+    const signature = await (
+      params as SendMessageParams<BitcoinChainKey, true> & { walletProvider: IBitcoinWalletProvider }
+    ).walletProvider.signEcdsaMessage(orderedPayload);
 
     onDemandWithdraw.signature = signature;
     return JSON.stringify(onDemandWithdraw);

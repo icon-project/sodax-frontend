@@ -4,7 +4,17 @@
   "files": {},
   "linter": {
     "rules": {
-      "suspicious": {}
+      "suspicious": {},
+      "style": {
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "@sodax/sdk": "@sodax/types must not depend on @sodax/sdk; the SDK depends on this package."
+            }
+          }
+        }
+      }
     },
     "ignore": []
   }

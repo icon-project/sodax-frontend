@@ -126,12 +126,12 @@ export type StakingServiceConstructorParams = {
 export class StakingService {
   private readonly hubProvider: EvmHubProvider;
   private readonly relayerApiEndpoint: HttpUrl;
-  private readonly configService: ConfigService;
+  private readonly config: ConfigService;
 
   constructor({ hubProvider, relayerApiEndpoint, configService }: StakingServiceConstructorParams) {
     this.hubProvider = hubProvider;
     this.relayerApiEndpoint = relayerApiEndpoint;
-    this.configService = configService;
+    this.config = configService;
   }
 
   /**
@@ -400,7 +400,7 @@ export class StakingService {
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
       const sodaToken = spokeProvider.chainConfig.supportedTokens.SODA as XToken;
       invariant(sodaToken, 'SODA token not found');
-      const sodaAsset = this.configService.getHubAssetInfo(spokeProvider.chainConfig.chain.id, sodaToken.address);
+      const sodaAsset = this.config.getHubAssetInfo(spokeProvider.chainConfig.chain.id, sodaToken.address);
       invariant(sodaAsset, 'SODA asset not found');
 
       const hubWallet = await HubService.getUserHubWalletAddress(
@@ -452,7 +452,7 @@ export class StakingService {
    * @returns The encoded contract call data
    */
   public buildStakeData(sodaAsset: XToken, to: Address, params: StakeParams): Hex {
-    const hubConfig = getHubChainConfig();
+    const hubConfig = this.config.getHubChainConfig();
     const sodaVault = sodaAsset.vault;
     const stakingRouter = hubConfig.addresses.stakingRouter;
 
@@ -598,7 +598,7 @@ export class StakingService {
     xSoda: Address,
     underlyingSodaAmount: bigint,
   ): Hex {
-    const hubConfig = getHubChainConfig();
+    const hubConfig = this.config.getHubChainConfig();
     const stakedSoda = hubConfig.addresses.stakedSoda;
     const calls: EvmContractCall[] = [];
     calls.push(StakingLogic.encodeXSodaRedeem(xSoda, params.amount, hubWallet, hubWallet));
@@ -697,7 +697,7 @@ export class StakingService {
 
       const sodaToken = spokeProvider.chainConfig.supportedTokens.SODA;
       invariant(sodaToken, 'SODA token not found');
-      const sodaAsset = this.configService.getHubAssetInfo(spokeProvider.chainConfig.chain.id, sodaToken.address);
+      const sodaAsset = this.config.getHubAssetInfo(spokeProvider.chainConfig.chain.id, sodaToken.address);
       invariant(sodaAsset, 'SODA asset not found');
 
       const data = this.buildInstantUnstakeData(
@@ -743,7 +743,7 @@ export class StakingService {
     dstWallet: Hex,
     params: InstantUnstakeParams,
   ): Hex {
-    const hubConfig = getHubChainConfig();
+    const hubConfig = this.config.getHubChainConfig();
     const stakingRouter = hubConfig.addresses.stakingRouter;
     const xSoda = hubConfig.addresses.xSoda;
 
@@ -854,7 +854,7 @@ export class StakingService {
 
       const sodaToken = spokeProvider.chainConfig.supportedTokens.SODA as XToken;
       invariant(sodaToken, 'SODA token not found');
-      const sodaAsset = this.configService.getHubAssetInfo(spokeProvider.chainConfig.chain.id, sodaToken.address);
+      const sodaAsset = this.config.getHubAssetInfo(spokeProvider.chainConfig.chain.id, sodaToken.address);
       invariant(sodaAsset, 'SODA asset not found');
 
       const data: Hex = this.buildClaimData(
@@ -895,7 +895,7 @@ export class StakingService {
    * @returns The encoded contract call data
    */
   public buildClaimData(sodaAsset: XToken, dstChainId: SpokeChainKey, dstWallet: Hex, params: ClaimParams): Hex {
-    const hubConfig = getHubChainConfig();
+    const hubConfig = this.config.getHubChainConfig();
     const stakedSoda = hubConfig.addresses.stakedSoda;
     const sodaVault = sodaAsset.vault;
     const calls: EvmContractCall[] = [];
@@ -1039,7 +1039,7 @@ export class StakingService {
    * @returns Promise<Hex> - The encoded contract call data
    */
   public async buildCancelUnstakeData(params: CancelUnstakeParams, hubWallet: Address): Promise<Hex> {
-    const hubConfig = getHubChainConfig();
+    const hubConfig = this.config.getHubChainConfig();
     const stakedSoda = hubConfig.addresses.stakedSoda;
     const xSoda = hubConfig.addresses.xSoda;
 
@@ -1101,7 +1101,7 @@ export class StakingService {
     try {
       invariant(userAddress, 'User address is required');
 
-      const hubConfig = getHubChainConfig();
+      const hubConfig = this.config.getHubChainConfig();
       const xSoda = hubConfig.addresses.xSoda;
 
       const [totalUnderlying, userXSodaShares] = await Promise.all([
@@ -1158,7 +1158,7 @@ export class StakingService {
         );
       }
 
-      const hubConfig = getHubChainConfig();
+      const hubConfig = this.config.getHubChainConfig();
       const stakedSoda = hubConfig.addresses.stakedSoda;
 
       // Get user's unstake requests
@@ -1195,7 +1195,7 @@ export class StakingService {
    */
   public async getStakingConfig(): Promise<Result<StakingConfig, StakingError<'INFO_FETCH_FAILED'>>> {
     try {
-      const hubConfig = getHubChainConfig();
+      const hubConfig = this.config.getHubChainConfig();
       const stakedSoda = hubConfig.addresses.stakedSoda;
 
       // Read all configuration values in a single contract call
@@ -1347,7 +1347,7 @@ export class StakingService {
    */
   public async getInstantUnstakeRatio(amount: bigint): Promise<Result<bigint, StakingError<'INFO_FETCH_FAILED'>>> {
     try {
-      const hubConfig = getHubChainConfig();
+      const hubConfig = this.config.getHubChainConfig();
       const stakingRouter = hubConfig.addresses.stakingRouter;
 
       const ratio = await StakingLogic.estimateInstantUnstake(stakingRouter, amount, this.hubProvider.publicClient);
@@ -1374,7 +1374,7 @@ export class StakingService {
    */
   public async getConvertedAssets(amount: bigint): Promise<Result<bigint, StakingError<'INFO_FETCH_FAILED'>>> {
     try {
-      const hubConfig = getHubChainConfig();
+      const hubConfig = this.config.getHubChainConfig();
       const xSoda = hubConfig.addresses.xSoda;
 
       const convertedAmount = await StakingLogic.convertXSodaSharesToSoda(xSoda, amount, this.hubProvider.publicClient);
@@ -1401,7 +1401,7 @@ export class StakingService {
    */
   public async getStakeRatio(amount: bigint): Promise<Result<[bigint, bigint], StakingError<'INFO_FETCH_FAILED'>>> {
     try {
-      const hubConfig = getHubChainConfig();
+      const hubConfig = this.config.getHubChainConfig();
       const stakingRouter = hubConfig.addresses.stakingRouter;
 
       const [xSodaAmount, previewDepositAmount] = await StakingLogic.estimateXSodaAmount(

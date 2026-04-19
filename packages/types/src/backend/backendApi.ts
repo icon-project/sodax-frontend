@@ -1,4 +1,4 @@
-import type { SpokeChainKey, XToken, IntentRelayChainIdMap, SpokeChainConfigMap, Address } from '../index.js';
+import type { SpokeChainKey, XToken, IntentRelayChainIdMap, SpokeChainConfigMap, Address, SodaxConfig } from '../index.js';
 
 export type GetChainsApiResponse = readonly SpokeChainKey[];
 export type GetSwapTokensApiResponse = Record<SpokeChainKey, readonly XToken[]>;
@@ -8,14 +8,10 @@ export type GetMoneyMarketTokensByChainIdApiResponse = readonly XToken[];
 export type GetRelayChainIdMapApiResponse = IntentRelayChainIdMap;
 export type GetSpokeChainConfigApiResponse = SpokeChainConfigMap;
 export type GetMoneyMarketReserveAssetsApiResponse = readonly Address[];
+
 export type GetAllConfigApiResponse = {
   version?: number;
-  supportedChains: GetChainsApiResponse;
-  supportedSwapTokens: GetSwapTokensApiResponse;
-  supportedMoneyMarketTokens: GetMoneyMarketTokensApiResponse;
-  supportedMoneyMarketReserveAssets: GetMoneyMarketReserveAssetsApiResponse;
-  relayChainIdMap: GetRelayChainIdMapApiResponse;
-  spokeChainConfig: GetSpokeChainConfigApiResponse;
+  config: SodaxConfig;
 };
 
 export interface IConfigApi {

@@ -62,7 +62,7 @@ describe('MoneyMarketService', () => {
   // Hub provider configuration
   const hubConfig = {
     hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: getHubChainConfig(),
+    chainConfig: sodax.config.getHubChainConfig(),
   } satisfies EvmHubProviderConfig;
 
   const hubProvider = new EvmHubProvider({ config: hubConfig, configService: sodax.config });

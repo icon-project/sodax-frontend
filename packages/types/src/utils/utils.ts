@@ -38,10 +38,12 @@ import {
   type STACKS_CHAIN_KEYS,
   baseChainInfo,
   type ChainType,
-  ChainIdToIntentRelayChainId,
+  RelayChainIdMap,
   type IntentRelayChainId,
   type ChainKey,
   IntentRelayChainIdToChainKey,
+  EVM_SPOKE_ONLY_CHAIN_KEYS_SET,
+  EVM_SPOKE_ONLY_CHAIN_KEYS,
 } from '../index.js';
 
 export function isHubChainKey(chainId: SpokeChainKey): boolean {
@@ -55,6 +57,10 @@ export function isSpokeChainKey(chainId: SpokeChainKey): boolean {
 // NOTE: this function includes sonic (hub chain)
 export function isEvmChainKey(chainId: SpokeChainKey): boolean {
   return EVM_CHAIN_KEYS_SET.has(chainId as (typeof EVM_CHAIN_KEYS)[number]);
+}
+
+export function isEvmSpokeOnlyChainKey(chainId: SpokeChainKey): boolean {
+  return EVM_SPOKE_ONLY_CHAIN_KEYS_SET.has(chainId as (typeof EVM_SPOKE_ONLY_CHAIN_KEYS)[number]);
 }
 
 export function isBitcoinChainKey(chainId: SpokeChainKey): boolean {
@@ -175,7 +181,7 @@ export function getMoneyMarketConfig(): MoneyMarketConfig {
 }
 
 export function getIntentRelayChainId(chainKey: SpokeChainKey): IntentRelayChainId {
-  return ChainIdToIntentRelayChainId[chainKey];
+  return RelayChainIdMap[chainKey];
 }
 
 export function getChainKeyFromRelayChainId(chainId: IntentRelayChainId): ChainKey {

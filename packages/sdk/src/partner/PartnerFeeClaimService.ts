@@ -69,12 +69,7 @@ export type PartnerFeeClaimSwapParams = {
   timeout?: number;
 };
 
-export type PartnerFeeClaimServiceConfig = Prettify<
-  SolverConfig & { relayerApiEndpoint?: string; protocolIntentsContract?: Address }
->;
-
 export type PartnerFeeClaimServiceConstructorParams = {
-  config?: PartnerFeeClaimServiceConfig;
   configService: ConfigService;
   hubProvider: HubProvider;
 };
@@ -124,7 +119,6 @@ export type IntentAutoSwapResult = {
  * @namespace SodaxFeatures
  */
 export class PartnerFeeClaimService {
-  readonly config: PartnerFeeClaimServiceConfig;
   readonly hubProvider: HubProvider;
   readonly configService: ConfigService;
 

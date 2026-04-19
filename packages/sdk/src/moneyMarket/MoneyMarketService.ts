@@ -15,6 +15,7 @@ import type {
   EvmContractCall,
   GetAddressType,
   GetEstimateGasReturnType,
+  HubProvider,
   HubTxHash,
   MoneyMarketConfigParams,
   MoneyMarketServiceConfig,
@@ -34,6 +35,7 @@ import {
   type HttpUrl,
   getMoneyMarketConfig,
   type GetMoneyMarketTokensApiResponse,
+  type MoneyMarketConfig,
 } from '@sodax/types';
 import { wrappedSonicAbi } from '../shared/abis/wrappedSonic.abi.js';
 import { MoneyMarketDataService } from './MoneyMarketDataService.js';
@@ -242,17 +244,16 @@ export type MoneyMarketError<T extends MoneyMarketErrorCode> = {
 export type MoneyMarketExtraData = { address: Hex; payload: Hex };
 export type MoneyMarketOptionalExtraData = { data?: MoneyMarketExtraData };
 
-export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & PartnerFeeConfig & RelayerApiConfig>;
+export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & RelayerApiConfig>;
 
 export type MoneyMarketServiceConstructorParams = {
-  config: MoneyMarketConfigParams | undefined;
+  config: MoneyMarketConfig;
   hubProvider: HubProvider;
-  relayerApiEndpoint?: HttpUrl;
   configService: ConfigService;
 };
 
 export class MoneyMarketService {
-  public readonly config: MoneyMarketServiceConfig;
+  public readonly config: MoneyMarketConfig;
   private readonly hubProvider: HubProvider;
   public readonly data: MoneyMarketDataService;
   public readonly configService: ConfigService;
@@ -287,7 +288,7 @@ export class MoneyMarketService {
    * @param {TxReturnType<T, true>} params - The parameters for the raw transaction.
    * @param {SpokeProvider} spokeProvider - The provider for the spoke chain.
    * @returns {Promise<GetEstimateGasReturnType<T>>} A promise that resolves to the gas.
-   * 
+   *
    * @namespace SodaxFeatures
    */
   public static async estimateGas<T extends SpokeProviderType = SpokeProviderType>(

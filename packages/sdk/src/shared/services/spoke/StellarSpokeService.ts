@@ -14,7 +14,7 @@ import {
   type SendMessageParams,
   type WalletActionParams,
   type OptionalSkipSimulation,
-  type FromParams,
+  type SrcParams,
   type WaitForTxReceiptParams,
   type WaitForTxReceiptReturnType,
 } from '../../../index.js';
@@ -41,7 +41,6 @@ import {
   ChainKeys,
   getIntentRelayChainId,
   spokeChainConfig,
-  type HttpUrl,
   type HubAddress,
   type IStellarWalletProvider,
   type SharedChainConfig,
@@ -112,7 +111,7 @@ export type StellarTransferToHubParams = {
 
 export type RequestTrustlineParams<S extends StellarChainKey, R extends boolean> = WalletActionParams<R, S> &
   OptionalSkipSimulation &
-  FromParams<S> & {
+  SrcParams<S> & {
     token: string;
     amount: bigint;
   };
@@ -223,7 +222,7 @@ export class StellarSpokeService {
     return connection.call(
       'send_message',
       nativeToScVal(Address.fromString(params.srcAddress), { type: 'address' }),
-      nativeToScVal(BigInt(getIntentRelayChainId(params.dstChainId)), { type: 'u128' }),
+      nativeToScVal(BigInt(getIntentRelayChainId(params.dstChainKey)), { type: 'u128' }),
       nativeToScVal(Buffer.from(fromHex(params.dstAddress, 'bytes')), { type: 'bytes' }),
       nativeToScVal(Buffer.from(fromHex(params.payload, 'bytes')), { type: 'bytes' }),
     );
@@ -453,18 +452,13 @@ export class StellarSpokeService {
   }
 
   /**
-   * Check if the user has sufficent trustline established for the token.
+   * Check if the user has sufficient trustline established for the token.
    * @param token - The token address to check the trustline for.
    * @param amount - The amount of tokens to check the trustline for.
-   * @param spokeProvider - The Stellar spoke provider.
-   * @returns True if the user has sufficent trustline established for the token, false otherwise.
+   * @param walletAddress - The Stellar wallet address.
+   * @returns True if the user has sufficient trustline established for the token, false otherwise.
    */
-  public static async hasSufficientTrustline(
-    token: string,
-    amount: bigint,
-    walletAddress: string,
-    horizonRpcUrl: HttpUrl,
-  ): Promise<boolean> {
+  public async hasSufficientTrustline(token: string, amount: bigint, walletAddress: string): Promise<boolean> {
     const stellarChainConfig = spokeChainConfig[ChainKeys.STELLAR_MAINNET];
     // native token and legacy bnUSD do not require trustline
     if (
@@ -482,8 +476,7 @@ export class StellarSpokeService {
       throw new Error(`Trustline config not found for token: ${token}`);
     }
 
-    const server = new Horizon.Server(horizonRpcUrl, { allowHttp: true });
-    const { balances } = await server.accounts().accountId(walletAddress).call();
+    const { balances } = await this.server.accounts().accountId(walletAddress).call();
 
     const tokenBalance = balances.find(
       balance =>

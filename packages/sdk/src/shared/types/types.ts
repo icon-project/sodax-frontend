@@ -27,6 +27,7 @@ import type {
   StellarChainKey,
   StacksChainKey,
   SuiChainKey,
+  IWalletProvider,
 } from '@sodax/types';
 
 /**
@@ -79,13 +80,6 @@ export type RateLimitConfig = {
 /**
  * Structural types
  */
-
-// FromParams is used in actions which require a from address and chain ID
-export type FromParams<C extends SpokeChainKey> = {
-  srcAddress: GetAddressType<C>; // The address of the user on the spoke (origin) chain
-  srcChainKey: C; // The chain key of the spoke (origin) chain
-};
-
 export type OptionalRaw<R extends boolean> = { raw?: R };
 export type OptionalSkipSimulation = { skipSimulation?: boolean };
 export type OptionalTimeout = { timeout?: number };
@@ -98,20 +92,17 @@ export type RawDestinationParams = {
 };
 export type DestinationParamsType = RawDestinationParams;
 
-// OptionalWalletActionParamType is used in feature functions which has raw option not requiring a wallet provider
-export type OptionalWalletActionParamType<C extends SpokeChainKey | ChainType, Raw extends boolean> = Raw extends true
-  ? {}
-  : Raw extends false
-    ? {
-        walletProvider: GetWalletProviderType<C>;
-      }
-    : never;
+export type WalletProviderSlot<K extends SpokeChainKey, R extends boolean> = R extends true
+  ? { walletProvider?: never }
+  : R extends false
+    ? { walletProvider: GetWalletProviderType<K> }
+    : { walletProvider: GetWalletProviderType<K> };
 
 // WalletActionParams replaces the combination of OptionalRaw<R> + OptionalWalletActionParamType<R, C>
 // with a single discriminated conditional type that enables TypeScript narrowing on `raw`.
 // When Raw = true:    { raw: true }                         (raw required as discriminant, no walletProvider)
 // When Raw = false:   { raw?: false; walletProvider: ... }  (walletProvider required, raw optional)
 // When Raw = boolean: distributes to union of both branches (discriminated union, narrowable)
-export type WalletActionParams<Raw extends boolean, C extends SpokeChainKey | ChainType> = Raw extends true
-  ? { raw: true }
-  : { raw: false; walletProvider: GetWalletProviderType<C> };
+// export type WalletActionParams<Raw extends boolean, C extends SpokeChainKey | ChainType> = Raw extends true
+//   ? { raw: true }
+//   : { raw: false; walletProvider: GetWalletProviderType<C> };

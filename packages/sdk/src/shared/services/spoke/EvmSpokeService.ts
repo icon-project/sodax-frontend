@@ -17,6 +17,8 @@ import {
   type EstimateGasParams,
   type WaitForTxReceiptParams,
   type WaitForTxReceiptReturnType,
+  type Erc20IsAllowanceValidParams,
+  Erc20Service,
 } from '../../../index.js';
 import {
   type EvmSpokeOnlyChainKey,
@@ -94,6 +96,29 @@ export class EvmSpokeService {
   }
 
   /**
+   * Check if spender has enough ERC20 allowance for given amount
+   * @param token - ERC20 token address
+   * @param amount - Amount to check allowance for
+   * @param owner - User wallet address
+   * @param spender - Spender address
+   * @param chainId - Chain ID
+   * @param configService - Config service
+   * @return - True if spender is allowed to spend amount on behalf of owner
+   */
+  public async isAllowanceValid(
+    params: Omit<Erc20IsAllowanceValidParams<EvmSpokeOnlyChainKey>, 'publicClient'>,
+  ): Promise<Result<boolean>> {
+    try {
+      return await Erc20Service.isAllowanceValid({ ...params, publicClient: this.getPublicClient(params.chainKey) });
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
+    }
+  }
+
+  /**
    * Transfers tokens to the hub chain by depositing into spoke chain asset maanger.
    * @param {DepositParams<EvmSpokeOnlyChainKey, Raw>} params - The parameters for the transfer, including:
    *   - {FromParams<EvmSpokeOnlyChainKey>} fromParams: The parameters for the from chain.
@@ -154,7 +179,7 @@ export class EvmSpokeService {
   public async sendMessage<Raw extends boolean>(
     params: SendMessageParams<EvmSpokeOnlyChainKey, Raw>,
   ): Promise<TxReturnType<EvmSpokeOnlyChainKey, Raw>> {
-    const { srcAddress: from, srcChainKey: fromChainId, dstChainId, dstAddress, payload } = params;
+    const { srcAddress: from, srcChainKey: fromChainId, dstChainKey: dstChainId, dstAddress, payload } = params;
     const relayId = getIntentRelayChainId(dstChainId);
     const rawTx: EvmReturnType<true> = {
       from: from,

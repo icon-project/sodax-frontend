@@ -1,20 +1,4 @@
-export const DEFAULT_MAX_RETRY = 3;
-export const DEFAULT_RELAY_TX_TIMEOUT = 120000; // 120 seconds
-export const DEFAULT_RETRY_DELAY_MS = 2000;
-export const ICON_TX_RESULT_WAIT_MAX_RETRY = 10;
-export const MAX_UINT256 = (1n << 256n) - 1n;
-export const FEE_PERCENTAGE_SCALE = 10000n; // 100% = 10000
-export const STELLAR_PRIORITY_FEE = '10000';
-export const STELLAR_DEFAULT_TX_TIMEOUT_SECONDS = 100;
-export const DEFAULT_DEADLINE_OFFSET = 300n; // 5 minutes in seconds
-export const DEFAULT_BACKEND_API_ENDPOINT = 'https://api.sodax.com/v1/be';
-export const DEFAULT_BACKEND_API_TIMEOUT = 30000; // 30 seconds
-export const DEFAULT_BACKEND_API_HEADERS = {
-  'Content-Type': 'application/json',
-  Accept: 'application/json',
-};
-export const DEFAULT_RELAYER_API_ENDPOINT = 'https://xcall-relay.nw.iconblockchain.xyz';
-export const VAULT_TOKEN_DECIMALS = 18;
+
 
 
 // export const isMoneyMarketReserveHubAsset = (hubAsset: Address): boolean =>

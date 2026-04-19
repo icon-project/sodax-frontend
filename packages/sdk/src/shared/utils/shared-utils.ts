@@ -1,13 +1,12 @@
 import invariant from 'tiny-invariant';
 import { DEFAULT_MAX_RETRY, DEFAULT_RETRY_DELAY_MS, FEE_PERCENTAGE_SCALE } from '../constants.js';
 import { isPartnerFeeAmount, isPartnerFeePercentage } from '../guards.js';
-import type { PartnerFee, QuoteType } from '../types/types.js';
 import { type SpokeChainKey, type Hex, getChainType } from '@sodax/types';
-import { toHex } from 'viem';
+import { hexToBytes, toHex } from 'viem';
 import { bcs } from '@mysten/sui/bcs';
 import { PublicKey } from '@solana/web3.js';
-import { Address as StellarAddress } from '@stellar/stellar-sdk';
-import { Cl, serializeCV } from '@stacks/transactions';
+import { Address as StellarAddress, xdr } from '@stellar/stellar-sdk';
+import { Cl, cvToString, deserializeCV, serializeCV } from '@stacks/transactions';
 
 export async function retry<T>(
   action: (retryCount: number) => Promise<T>,
@@ -136,6 +135,56 @@ export function encodeAddress(spokeChainId: SpokeChainKey, address: string): Hex
     case 'NEAR':
     case 'INJECTIVE':
       return toHex(Buffer.from(address, 'utf-8'));
+    default: {
+      const exhaustiveCheck: never = chainType;
+      throw new Error(`Invalid spoke chain id: ${exhaustiveCheck}`);
+    }
+  }
+}
+
+/**
+ * Decode a hub-style hex address produced by {@link encodeAddress} back to the chain-native string form.
+ */
+export function reverseEncodeAddress(spokeChainId: SpokeChainKey, encoded: Hex): string {
+  const chainType = getChainType(spokeChainId);
+  switch (chainType) {
+    case 'EVM':
+      return encoded;
+    case 'ICON': {
+      const raw = encoded.startsWith('0x') ? encoded.slice(2) : encoded;
+      if (raw.length !== 42) {
+        throw new Error(
+          `Invalid ICON encoded address length: expected 21 bytes (42 hex chars), got ${raw.length / 2} bytes`,
+        );
+      }
+      const version = raw.slice(0, 2);
+      const body = raw.slice(2);
+      if (version === '00') {
+        return `hx${body}`;
+      }
+      if (version === '01') {
+        return `cx${body}`;
+      }
+      throw new Error(`Invalid ICON address version byte: 0x${version}`);
+    }
+    case 'SUI':
+      return bcs.Address.parse(hexToBytes(encoded));
+    case 'SOLANA':
+      return new PublicKey(hexToBytes(encoded)).toBase58();
+    case 'STELLAR': {
+      const rawHex = encoded.startsWith('0x') ? encoded.slice(2) : encoded;
+      const scVal = xdr.ScVal.fromXDR(rawHex, 'hex');
+      return StellarAddress.fromScVal(scVal).toString();
+    }
+    case 'STACKS': {
+      const rawHex = encoded.startsWith('0x') ? encoded.slice(2) : encoded;
+      const cv = deserializeCV(hexToBytes(`0x${rawHex}`));
+      return cvToString(cv);
+    }
+    case 'BITCOIN':
+    case 'NEAR':
+    case 'INJECTIVE':
+      return Buffer.from(hexToBytes(encoded)).toString('utf8');
     default: {
       const exhaustiveCheck: never = chainType;
       throw new Error(`Invalid spoke chain id: ${exhaustiveCheck}`);

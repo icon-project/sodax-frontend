@@ -83,7 +83,7 @@ const mockSonicWalletProvider = {
 
 const mockHubConfig: EvmHubProviderConfig = {
   hubRpcUrl: 'https://rpc.soniclabs.com',
-  chainConfig: getHubChainConfig(),
+  chainConfig: sodax.config.getHubChainConfig(),
 } satisfies EvmHubProviderConfig;
 
 const mockIconSpokeProvider = new IconSpokeProvider(mockIconWalletProvider, spokeChainConfig[ChainKeys.ICON_MAINNET]);

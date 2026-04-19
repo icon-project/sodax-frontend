@@ -1,6 +1,6 @@
 /**
  * Chain types
- * Forbidden to import types from other packages in this file!
+ * Forbidden to import types from other packages in this file (exception for shared types)!
  */
 
 import type { Address, Hex, HttpUrl } from '../shared/shared.js';
@@ -27,69 +27,13 @@ import {
   stacksSupportedTokens,
 } from './tokens.js';
 
-export const ChainTypeArr = [
-  'ICON',
-  'EVM',
-  'INJECTIVE',
-  'SUI',
-  'STELLAR',
-  'SOLANA',
-  'STACKS',
-  'NEAR',
-  'BITCOIN',
-] as const;
-
-export const ChainKeys = {
-  AVALANCHE_MAINNET: '0xa86a.avax',
-  ARBITRUM_MAINNET: '0xa4b1.arbitrum',
-  BASE_MAINNET: '0x2105.base',
-  BSC_MAINNET: '0x38.bsc',
-  INJECTIVE_MAINNET: 'injective-1',
-  SONIC_MAINNET: 'sonic',
-  ICON_MAINNET: '0x1.icon',
-  SUI_MAINNET: 'sui',
-  OPTIMISM_MAINNET: '0xa.optimism',
-  POLYGON_MAINNET: '0x89.polygon',
-  SOLANA_MAINNET: 'solana',
-  STELLAR_MAINNET: 'stellar',
-  HYPEREVM_MAINNET: 'hyper',
-  LIGHTLINK_MAINNET: 'lightlink',
-  NEAR_MAINNET: 'near',
-  ETHEREUM_MAINNET: 'ethereum',
-  BITCOIN_MAINNET: 'bitcoin',
-  REDBELLY_MAINNET: 'redbelly',
-  KAIA_MAINNET: '0x2019.kaia',
-  STACKS_MAINNET: 'stacks',
-} as const;
-
-export type ChainKey = (typeof ChainKeys)[keyof typeof ChainKeys];
-
-export const CHAIN_KEYS = Object.values(ChainKeys);
-export const spokeChainKeysSet = new Set(CHAIN_KEYS);
-
-// export type EvmChainKey = (typeof EVM_CHAIN_KEYS)[number];
-// export type SonicChainKey = (typeof SONIC_CHAIN_KEYS)[number];
-// export type SolanaChainKey = (typeof SOLANA_CHAIN_KEYS)[number];
-// export type StellarChainKey = (typeof STELLAR_CHAIN_KEYS)[number];
-// export type InjectiveChainKey = (typeof INJECTIVE_CHAIN_KEYS)[number];
-// export type IconChainKey = (typeof ICON_CHAIN_KEYS)[number];
-// export type SuiChainKey = (typeof SUI_CHAIN_KEYS)[number];
-// export type StacksChainKey = (typeof STACKS_CHAIN_KEYS)[number];
-// export type NearChainKey = (typeof NEAR_CHAIN_KEYS)[number];
-// export type BitcoinChainKey = (typeof BITCOIN_CHAIN_KEYS)[number];
-
-export type XToken = {
-  name: string;
-  symbol: string;
-  chainKey: ChainKey;
-  decimals: number;
-  address: string;
-  hubAsset: Address;
-  vault: Address;
-};
+import { ChainKeys, CHAIN_KEYS, type ChainKey, type ChainType } from './chain-keys.js';
+import type { XToken } from './tokens.js';
+import type { TxPollingConfig } from '../index.js';
+export * from './chain-keys.js';
 
 // NOTE: This is not the same as the actual chain ids (wormhole based ids), only used for intent relay
-export const ChainIdToIntentRelayChainId = {
+export const RelayChainIdMap = {
   [ChainKeys.AVALANCHE_MAINNET]: 6n,
   [ChainKeys.ARBITRUM_MAINNET]: 23n,
   [ChainKeys.BASE_MAINNET]: 30n,
@@ -112,29 +56,12 @@ export const ChainIdToIntentRelayChainId = {
   [ChainKeys.STACKS_MAINNET]: 60n,
 } as const satisfies Record<ChainKey, bigint>;
 
-export const IntentRelayChainIdToChainKey: Map<IntentRelayChainId, ChainKey> = Object.fromEntries(
-  Object.entries(ChainIdToIntentRelayChainId).map(([chainKey, chainId]) => [chainId, chainKey]),
-);
+export type IntentChainId = (typeof RelayChainIdMap)[keyof typeof RelayChainIdMap];
+export const INTENT_CHAIN_IDS = Object.values(RelayChainIdMap);
 
-export type HubChainConfig = {
-  chain: BaseChainInfo<'EVM'>;
-  supportedTokens: XToken[];
-  addresses: {
-    assetManager: Address;
-    hubWallet: Address;
-    xTokenManager: Address;
-    icxMigration: Address;
-    balnSwap: Address;
-    sodaToken: Address;
-    sodaVault: Address;
-    stakedSoda: Address;
-    xSoda: Address;
-    stakingRouter: Address;
-    walletRouter: Address;
-  };
-  nativeToken: Address;
-  wrappedNativeToken: Address;
-};
+export const IntentRelayChainIdToChainKey: Map<IntentRelayChainId, ChainKey> = Object.fromEntries(
+  Object.entries(RelayChainIdMap).map(([chainKey, chainId]) => [chainId, chainKey]),
+);
 
 export const baseChainInfo = {
   [ChainKeys.SONIC_MAINNET]: {
@@ -288,7 +215,7 @@ type ChainKeysByType<T extends ChainType> = {
  * Purpose: To use for types where Sonic (the hub) should not be included with spoke EVM chain lists.
  * Intersected with keyof spokeChainConfig so it can safely index the config object.
  */
-export type EvmSpokeOnlyChainKey = Exclude<EvmChainKey, SonicChainKey> & keyof typeof spokeChainConfig;
+export type EvmSpokeOnlyChainKey = Exclude<EvmChainKey, HubChainKey> & keyof typeof spokeChainConfig;
 export type EvmChainKey = ChainKeysByType<'EVM'>;
 export type SonicChainKey = typeof ChainKeys.SONIC_MAINNET; // Sonic is EVM — narrowed via HUB_CHAIN_KEY where needed
 export type SolanaChainKey = ChainKeysByType<'SOLANA'>;
@@ -303,8 +230,13 @@ export type BitcoinChainKey = ChainKeysByType<'BITCOIN'>;
 const filterChainKeysByType = <T extends ChainType>(type: T) =>
   CHAIN_KEYS.filter((key): key is ChainKeysByType<T> => baseChainInfo[key].type === type);
 
+export const HUB_CHAIN_KEY = ChainKeys.SONIC_MAINNET;
 export const EVM_CHAIN_KEYS = filterChainKeysByType('EVM');
 export const EVM_CHAIN_KEYS_SET = new Set(EVM_CHAIN_KEYS);
+export const EVM_SPOKE_ONLY_CHAIN_KEYS = EVM_CHAIN_KEYS.filter(
+  (key): key is EvmSpokeOnlyChainKey => key !== HUB_CHAIN_KEY,
+);
+export const EVM_SPOKE_ONLY_CHAIN_KEYS_SET = new Set(EVM_SPOKE_ONLY_CHAIN_KEYS);
 export const SONIC_CHAIN_KEYS = [ChainKeys.SONIC_MAINNET] as const;
 export const SONIC_CHAIN_KEYS_SET = new Set(SONIC_CHAIN_KEYS);
 export const SOLANA_CHAIN_KEYS = filterChainKeysByType('SOLANA');
@@ -323,12 +255,9 @@ export const NEAR_CHAIN_KEYS = filterChainKeysByType('NEAR');
 export const NEAR_CHAIN_KEYS_SET = new Set(NEAR_CHAIN_KEYS);
 export const BITCOIN_CHAIN_KEYS = filterChainKeysByType('BITCOIN');
 export const BITCOIN_CHAIN_KEYS_SET = new Set(BITCOIN_CHAIN_KEYS);
-
-export const HUB_CHAIN_KEY = ChainKeys.SONIC_MAINNET;
 export type HubChainKey = typeof HUB_CHAIN_KEY;
 export type HubChainType = 'EVM';
 export type SpokeChainKey = (typeof CHAIN_KEYS)[number];
-export type ChainType = (typeof ChainTypeArr)[number];
 
 export type BaseSpokeChainConfig<T extends ChainType> = {
   chain: BaseChainInfo<T>;
@@ -336,6 +265,7 @@ export type BaseSpokeChainConfig<T extends ChainType> = {
   supportedTokens: Record<string, XToken>;
   nativeToken: string;
   bnUSD: string;
+  pollingConfig: TxPollingConfig;
 };
 
 export type BaseChainInfo<T extends ChainType> = {
@@ -345,6 +275,25 @@ export type BaseChainInfo<T extends ChainType> = {
   type: T;
   mainnet: boolean;
 };
+
+export type HubConfig = {
+  chain: BaseChainInfo<'EVM'>;
+  addresses: {
+    assetManager: Address;
+    hubWallet: Address;
+    xTokenManager: Address;
+    icxMigration: Address;
+    balnSwap: Address;
+    sodaToken: Address;
+    sodaVault: Address;
+    stakedSoda: Address;
+    xSoda: Address;
+    stakingRouter: Address;
+    walletRouter: Address;
+  };
+  nativeToken: Address;
+  wrappedNativeToken: Address;
+} & BaseSpokeChainConfig<'EVM'>;
 
 export type EvmSpokeChainConfig = BaseSpokeChainConfig<'EVM'> & {
   addresses: {
@@ -401,9 +350,13 @@ export type BitcoinSpokeChainConfig = BaseSpokeChainConfig<'BITCOIN'> & {
   };
   rpcUrl: string;
   network: string;
-  radfiApiUrl: string;
-  radfiApiKey: string;
-  radfiUmsUrl: string;
+  radfi: {
+    apiUrl: string;
+    umsUrl: string;
+    apiKey: string;
+    accessToken: string;
+    refreshToken: string;
+  };
 };
 
 export type InjectiveNetworkEnv = 'TestNet' | 'DevNet' | 'Mainnet';
@@ -506,6 +459,10 @@ export const spokeChainConfig = {
     nativeToken: '0x0000000000000000000000000000000000000000',
     bnUSD: '0xE801CA34E19aBCbFeA12025378D19c4FBE250131',
     supportedTokens: sonicSupportedTokens,
+    pollingConfig: {
+      pollingIntervalMs: 500,
+      maxTimeoutMs: 30_000,
+    },
   } as const satisfies SonicSpokeChainConfig,
   [ChainKeys.REDBELLY_MAINNET]: {
     chain: baseChainInfo[ChainKeys.REDBELLY_MAINNET] satisfies BaseChainInfo<'EVM'>,
@@ -517,6 +474,10 @@ export const spokeChainConfig = {
     nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0xF4f7dC27c17470a26d0de9039Cf0EA5045F100E8',
     supportedTokens: redbellySupportedTokens,
+    pollingConfig: {
+      pollingIntervalMs: 1000,
+      maxTimeoutMs: 60_000,
+    },
   } as const satisfies EvmSpokeChainConfig,
   [ChainKeys.SOLANA_MAINNET]: {
     addresses: {
@@ -532,6 +493,10 @@ export const spokeChainConfig = {
     gasPrice: '500000',
     rpcUrl: 'https://api.mainnet-beta.solana.com',
     walletAddress: '',
+    pollingConfig: {
+      pollingIntervalMs: 750,
+      maxTimeoutMs: 60_000, // aligns with blockhash expiry timeout.
+    },
   } as const satisfies SolanaChainConfig,
   [ChainKeys.AVALANCHE_MAINNET]: {
     chain: baseChainInfo[ChainKeys.AVALANCHE_MAINNET] satisfies BaseChainInfo<'EVM'>,
@@ -543,6 +508,10 @@ export const spokeChainConfig = {
     nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0x6958a4CBFe11406E2a1c1d3a71A1971aD8B3b92F',
     supportedTokens: avalancheSupportedTokens,
+    pollingConfig: {
+      pollingIntervalMs: 500,
+      maxTimeoutMs: 30_000,
+    },
   } as const satisfies EvmSpokeChainConfig,
   [ChainKeys.ARBITRUM_MAINNET]: {
     chain: baseChainInfo[ChainKeys.ARBITRUM_MAINNET] satisfies BaseChainInfo<'EVM'>,
@@ -554,6 +523,10 @@ export const spokeChainConfig = {
     nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0xA256dd181C3f6E5eC68C6869f5D50a712d47212e',
     supportedTokens: arbitrumSupportedTokens,
+    pollingConfig: {
+      pollingIntervalMs: 1000,
+      maxTimeoutMs: 60_000,
+    },
   } as const satisfies EvmSpokeChainConfig,
   [ChainKeys.BASE_MAINNET]: {
     chain: baseChainInfo[ChainKeys.BASE_MAINNET] satisfies BaseChainInfo<'EVM'>,
@@ -565,6 +538,10 @@ export const spokeChainConfig = {
     nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0xAcfab3F31C0a18559D78556BBf297EC29c6cf8aa',
     supportedTokens: baseSupportedTokens,
+    pollingConfig: {
+      pollingIntervalMs: 1000,
+      maxTimeoutMs: 60_000,
+    },
   } as const satisfies EvmSpokeChainConfig,
   [ChainKeys.OPTIMISM_MAINNET]: {
     chain: baseChainInfo[ChainKeys.OPTIMISM_MAINNET] satisfies BaseChainInfo<'EVM'>,
@@ -576,6 +553,10 @@ export const spokeChainConfig = {
     nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0xF4f7dC27c17470a26d0de9039Cf0EA5045F100E8',
     supportedTokens: optimismSupportedTokens,
+    pollingConfig: {
+      pollingIntervalMs: 12_000,
+      maxTimeoutMs: 60_000,
+    },
   } as const satisfies EvmSpokeChainConfig,
   [ChainKeys.BSC_MAINNET]: {
     chain: baseChainInfo[ChainKeys.BSC_MAINNET] satisfies BaseChainInfo<'EVM'>,
@@ -587,6 +568,10 @@ export const spokeChainConfig = {
     nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0x8428FedC020737a5A2291F46cB1B80613eD71638',
     supportedTokens: bscSupportedTokens,
+    pollingConfig: {
+      pollingIntervalMs: 1000,
+      maxTimeoutMs: 60_000,
+    },
   } as const satisfies EvmSpokeChainConfig,
   [ChainKeys.POLYGON_MAINNET]: {
     chain: baseChainInfo[ChainKeys.POLYGON_MAINNET] satisfies BaseChainInfo<'EVM'>,
@@ -598,6 +583,10 @@ export const spokeChainConfig = {
     nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0x39E77f86C1B1f3fbAb362A82b49D2E86C09659B4',
     supportedTokens: polygonSupportedTokens,
+    pollingConfig: {
+      pollingIntervalMs: 2000,
+      maxTimeoutMs: 60_000,
+    },
   } as const satisfies EvmSpokeChainConfig,
   [ChainKeys.HYPEREVM_MAINNET]: {
     chain: baseChainInfo[ChainKeys.HYPEREVM_MAINNET] satisfies BaseChainInfo<'EVM'>,
@@ -609,6 +598,10 @@ export const spokeChainConfig = {
     nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0x506Ba7C8d91dAdf7a91eE677a205D9687b751579',
     supportedTokens: hyperevmSupportedTokens,
+    pollingConfig: {
+      pollingIntervalMs: 500,
+      maxTimeoutMs: 30_000,
+    },
   } as const satisfies EvmSpokeChainConfig,
   [ChainKeys.LIGHTLINK_MAINNET]: {
     chain: baseChainInfo[ChainKeys.LIGHTLINK_MAINNET] satisfies BaseChainInfo<'EVM'>,
@@ -620,6 +613,10 @@ export const spokeChainConfig = {
     nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0x36134A03dcD03Bbe858B8F7ED28a71AAC608F9E7',
     supportedTokens: lightlinkSupportedTokens,
+    pollingConfig: {
+      pollingIntervalMs: 1000,
+      maxTimeoutMs: 60_000,
+    },
   } as const satisfies EvmSpokeChainConfig,
   [ChainKeys.INJECTIVE_MAINNET]: {
     addresses: {
@@ -639,6 +636,10 @@ export const spokeChainConfig = {
     isBrowser: false,
     rpcUrl: 'https://injective-rpc.publicnode.com:443',
     walletAddress: '',
+    pollingConfig: {
+      pollingIntervalMs: 750,
+      maxTimeoutMs: 45_000,
+    },
   } as const satisfies InjectiveSpokeChainConfig,
   [ChainKeys.BITCOIN_MAINNET]: {
     addresses: {
@@ -648,11 +649,19 @@ export const spokeChainConfig = {
     bnUSD: 'no',
     nativeToken: 'BTC' as const,
     supportedTokens: bitcoinSupportedTokens,
-    radfiApiUrl: 'https://api.radfi.co/api',
-    radfiApiKey: '',
-    radfiUmsUrl: 'https://ums.radfi.co/api',
+    radfi: {
+      apiUrl: 'https://api.radfi.co/api',
+      apiKey: '',
+      umsUrl: 'https://ums.radfi.co/api',
+      accessToken: '',
+      refreshToken: '',
+    },
     network: 'MAINNET',
     rpcUrl: 'https://mempool.space/api',
+    pollingConfig: {
+      pollingIntervalMs: 60_000,
+      maxTimeoutMs: 3_600_000,
+    },
   } as const satisfies BitcoinSpokeChainConfig,
   [ChainKeys.STELLAR_MAINNET]: {
     addresses: {
@@ -684,6 +693,10 @@ export const spokeChainConfig = {
     horizonRpcUrl: 'https://horizon.stellar.org',
     sorobanRpcUrl: 'https://rpc.ankr.com/stellar_soroban',
     chain: baseChainInfo[ChainKeys.STELLAR_MAINNET] satisfies BaseChainInfo<'STELLAR'>,
+    pollingConfig: {
+      pollingIntervalMs: 500,
+      maxTimeoutMs: 30_000,
+    },
   } as const satisfies StellarSpokeChainConfig,
   [ChainKeys.SUI_MAINNET]: {
     addresses: {
@@ -700,6 +713,10 @@ export const spokeChainConfig = {
     bnUSD: '0xff4de2b2b57dd7611d2812d231a467d007b702a101fd5c7ad3b278257cddb507::bnusd::BNUSD',
     rpc_url: 'https://fullnode.mainnet.sui.io:443',
     chain: baseChainInfo[ChainKeys.SUI_MAINNET] satisfies BaseChainInfo<'SUI'>,
+    pollingConfig: {
+      pollingIntervalMs: 500,
+      maxTimeoutMs: 15_000,
+    },
   } as const satisfies SuiSpokeChainConfig,
   [ChainKeys.ICON_MAINNET]: {
     rpcUrl: 'https://ctz.solidwallet.io/api/v3',
@@ -715,6 +732,10 @@ export const spokeChainConfig = {
     nativeToken: 'cx0000000000000000000000000000000000000000' as const,
     bnUSD: 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb',
     nid: '0x1',
+    pollingConfig: {
+      pollingIntervalMs: 2000,
+      maxTimeoutMs: 90_000,
+    },
   } as const satisfies IconSpokeChainConfig,
   [ChainKeys.NEAR_MAINNET]: {
     rpcUrl: 'https://1rpc.io/near',
@@ -728,6 +749,10 @@ export const spokeChainConfig = {
     },
     supportedTokens: nearSupportedTokens,
     bnUSD: 'bnusd.sodax.near',
+    pollingConfig: {
+      pollingIntervalMs: 1000,
+      maxTimeoutMs: 45_000,
+    },
   } as const satisfies NearSpokeChainConfig,
   [ChainKeys.ETHEREUM_MAINNET]: {
     chain: baseChainInfo[ChainKeys.ETHEREUM_MAINNET] satisfies BaseChainInfo<'EVM'>,
@@ -739,6 +764,10 @@ export const spokeChainConfig = {
     nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0x1f22279C89B213944b7Ea41daCB0a868DdCDFd13',
     supportedTokens: ethereumSupportedTokens,
+    pollingConfig: {
+      pollingIntervalMs: 12_000,
+      maxTimeoutMs: 300_000,
+    },
   } as const satisfies EvmSpokeChainConfig,
   [ChainKeys.KAIA_MAINNET]: {
     chain: baseChainInfo[ChainKeys.KAIA_MAINNET] satisfies BaseChainInfo<'EVM'>,
@@ -750,6 +779,10 @@ export const spokeChainConfig = {
     nativeToken: '0x0000000000000000000000000000000000000000' as const,
     bnUSD: '0xF8D13cAcb8E2B6BA8396DbA35a7365EF6b603cd6',
     supportedTokens: kaiaSupportedTokens,
+    pollingConfig: {
+      pollingIntervalMs: 1000,
+      maxTimeoutMs: 60_000,
+    },
   } as const satisfies EvmSpokeChainConfig,
 
   [ChainKeys.STACKS_MAINNET]: {
@@ -764,6 +797,10 @@ export const spokeChainConfig = {
     bnUSD: 'SP3031RGK734636C8KGW2Y76TEQBTVX59Q472EQH0.bnusd',
     supportedTokens: stacksSupportedTokens,
     rpcUrl: 'https://api.mainnet.hiro.so',
+    pollingConfig: {
+      pollingIntervalMs: 10_000,
+      maxTimeoutMs: 120_000,
+    },
   } as const satisfies StacksSpokeChainConfig,
 } as const satisfies Record<SpokeChainKey, SpokeChainConfig>;
 
@@ -795,7 +832,7 @@ export type LegacybnUSDTokenAddress = (typeof bnUSDLegacyTokens)[number]['addres
 export type LegacybnUSDToken = (typeof bnUSDLegacyTokens)[number];
 export type NewbnUSDChainId = (typeof newbnUSDSpokeChainIds)[number];
 
-export const hubChainConfig = {
+export const hubConfig = {
   chain: baseChainInfo[ChainKeys.SONIC_MAINNET] satisfies BaseChainInfo<'EVM'>,
   addresses: {
     assetManager: '0x60c5681bD1DB4e50735c4cA3386005A4BA4937C0',
@@ -812,20 +849,13 @@ export const hubChainConfig = {
   },
   nativeToken: '0x0000000000000000000000000000000000000000',
   wrappedNativeToken: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
-  supportedTokens: [],
-} as const satisfies HubChainConfig;
+  supportedTokens: sonicSupportedTokens,
+  bnUSD: sonicSupportedTokens.bnUSD.address,
+  pollingConfig: {
+    pollingIntervalMs: 500,
+    maxTimeoutMs: 30_000,
+  },
+} as const satisfies HubConfig;
 
-export type SolverConfig = {
-  intentsContract: Address; // Intents Contract (Hub)
-  solverApiEndpoint: HttpUrl;
-  protocolIntentsContract?: Address; // Protocol Intents Contract for partner fee claims
-};
-
-export const solverConfig = {
-  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
-  solverApiEndpoint: 'https://api.sodax.com/v1/intent',
-  protocolIntentsContract: '0xaFf2EDb3057ed6f9C1dA6c930b8ddDf2beE573A5',
-} as const satisfies SolverConfig;
-
-export type IntentRelayChainId = (typeof ChainIdToIntentRelayChainId)[keyof typeof ChainIdToIntentRelayChainId];
+export type IntentRelayChainId = (typeof RelayChainIdMap)[keyof typeof RelayChainIdMap];
 export type IntentRelayChainIdMap = Record<ChainKey, IntentRelayChainId>;

@@ -11,7 +11,6 @@ import {
   parseEventLogs,
 } from 'viem';
 import { Erc20Service } from '../shared/services/erc-20/Erc20Service.js';
-import type { EvmContractCall, PartnerFee } from '../shared/types/types.js';
 import { FEE_PERCENTAGE_SCALE } from '../shared/constants.js';
 import { calculatePercentageFeeAmount, encodeAddress, randomUint256 } from '../shared/utils/shared-utils.js';
 import { encodeContractCalls } from '../shared/utils/evm-utils.js';
@@ -24,10 +23,18 @@ import {
   type IntentState,
   IntentDataType,
 } from './index.js';
-import { ChainKeys, getIntentRelayChainId, type Hash, type Hex, type SolverConfig } from '@sodax/types';
+import {
+  getIntentRelayChainId,
+  isHubChainKey,
+  type Hash,
+  type Hex,
+  type SolverConfig,
+  type EvmContractCall,
+  type PartnerFee,
+} from '@sodax/types';
 import type { ConfigService } from '../shared/config/ConfigService.js';
-import type { EvmHubProvider } from '../shared/entities/Providers.js';
 import { CLPositionManagerAbi } from '@pancakeswap/infinity-sdk';
+import type { EvmHubProvider } from '../index.js';
 export const IntentCreatedEventAbi = getAbiItem({ abi: IntentsAbi, name: 'IntentCreated' });
 export type IntentCreatedEventLog = GetLogsReturnType<typeof IntentCreatedEventAbi>[number];
 export const IntentFilledEventAbi = getAbiItem({ abi: IntentsAbi, name: 'IntentFilled' });
@@ -49,19 +56,18 @@ export class EvmSolverService {
   public static constructCreateIntentData(
     createIntentParams: CreateIntentParams,
     creatorHubWalletAddress: Address,
-    solverConfig: SolverConfig,
-    configService: ConfigService,
+    config: ConfigService,
     fee: PartnerFee | undefined,
   ): [Hex, Intent, bigint] {
-    const inputToken =
-      createIntentParams.srcChain !== ChainKeys.SONIC_MAINNET
-        ? configService.getHubAssetInfo(createIntentParams.srcChain, createIntentParams.inputToken)?.hubAsset
-        : (createIntentParams.inputToken as `0x${string}`);
+    const inputToken = !isHubChainKey(createIntentParams.srcChain)
+      ? config.getSpokeTokenFromOriginalAssetAddress(createIntentParams.srcChain, createIntentParams.inputToken)
+          ?.hubAsset
+      : (createIntentParams.inputToken as `0x${string}`);
 
-    const outputToken =
-      createIntentParams.dstChain !== ChainKeys.SONIC_MAINNET
-        ? configService.getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.hubAsset
-        : (createIntentParams.outputToken as `0x${string}`);
+    const outputToken = !isHubChainKey(createIntentParams.dstChain)
+      ? config.getSpokeTokenFromOriginalAssetAddress(createIntentParams.dstChain, createIntentParams.outputToken)
+          ?.hubAsset
+      : (createIntentParams.outputToken as `0x${string}`);
 
     invariant(
       inputToken,
@@ -75,7 +81,7 @@ export class EvmSolverService {
     const [feeData, feeAmount] = EvmSolverService.createIntentFeeData(fee, createIntentParams.inputAmount);
 
     const calls: EvmContractCall[] = [];
-    const intentsContract = solverConfig.intentsContract;
+    const intentsContract = config.solver.intentsContract;
     const intent = {
       ...createIntentParams,
       inputToken,
@@ -153,11 +159,7 @@ export class EvmSolverService {
    * @param {EvmHubProvider} hubProvider - The EVM hub provider
    * @returns {Promise<Intent>} The intent
    */
-  public static async getIntent(
-    txHash: Hash,
-    solverConfig: SolverConfig,
-    hubProvider: EvmHubProvider,
-  ): Promise<Intent> {
+  public static async getIntent(txHash: Hash, config: ConfigService, hubProvider: EvmHubProvider): Promise<Intent> {
     const receipt = await hubProvider.publicClient.waitForTransactionReceipt({ hash: txHash });
     const logs: IntentCreatedEventLog[] = parseEventLogs({
       abi: IntentsAbi,
@@ -167,12 +169,15 @@ export class EvmSolverService {
     });
 
     for (const log of logs) {
-      if (log.address.toLowerCase() === solverConfig.intentsContract.toLowerCase()) {
+      if (log.address.toLowerCase() === config.solver.intentsContract.toLowerCase()) {
         if (!log.args.intent) {
           continue;
         }
 
-        if (!isIntentRelayChainId(log.args.intent.srcChain) || !isIntentRelayChainId(log.args.intent.dstChain)) {
+        if (
+          !config.isValidIntentRelayChainId(log.args.intent.srcChain) ||
+          !config.isValidIntentRelayChainId(log.args.intent.dstChain)
+        ) {
           throw new Error(`Invalid intent relay chain id: ${log.args.intent.srcChain} or ${log.args.intent.dstChain}`);
         }
 

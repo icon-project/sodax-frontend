@@ -22,12 +22,14 @@ import {
   type PartnerFee,
   type TxReturnType,
   type EvmContractCall,
+  isSonicChainKey,
 } from '@sodax/types';
 import invariant from 'tiny-invariant';
 import {
   encodeAddress,
   randomUint256,
   Erc20Service,
+  type Erc20IsAllowanceValidParams,
   getEvmViemChain,
   wrappedSonicAbi,
   sonicWalletFactoryAbi,
@@ -38,16 +40,18 @@ import {
   type CreateIntentParams,
   type Intent,
   type EstimateGasParams,
-  type FromParams,
+  type SrcParams,
   type WalletActionParams,
   type EvmHubProvider,
   type GetDepositParams,
   type SendMessageParams,
+  type OptionalWalletActionParamType,
+  type OptionalRaw,
 } from '../../../index.js';
 
 export type SonicSpokeDepositParams<Raw extends boolean> = WalletActionParams<Raw, SonicChainKey> & SonicDepositParams;
 
-export type SonicDepositParams = FromParams<SonicChainKey> & {
+export type SonicDepositParams = SrcParams<SonicChainKey> & {
   to: HubAddress; // The address of the user on the hub chain (wallet abstraction address)
   token: Address; // The address of the token to deposit
   amount: bigint; // The amount of tokens to deposit
@@ -72,19 +76,20 @@ export type GetUserRouterParams = {
 };
 
 export type CreateSonicSwapIntentParams<Raw extends boolean> = {
-  createIntentParams: CreateIntentParams<SonicChainKey>;
+  createIntentParams: CreateIntentParams;
   creatorHubWalletAddress: Address;
   solverConfig: SolverConfig;
   fee: PartnerFee | undefined;
   hubProvider: EvmHubProvider;
-} & WalletActionParams<Raw, SonicChainKey>;
+} & OptionalRaw<Raw> &
+  OptionalWalletActionParamType<SonicChainKey, Raw>;
 
-export type ApproveSonicWithdrawParams<Raw extends boolean> = FromParams<SonicChainKey> & {
+export type ApproveSonicWithdrawParams<Raw extends boolean> = SrcParams<SonicChainKey> & {
   from: Address;
   fromChainId: SonicChainKey;
   withdrawInfo: WithdrawInfo;
   publicClient: PublicClient;
-} & WalletActionParams<Raw, SonicChainKey>;
+} & OptionalWalletActionParamType<SonicChainKey, Raw>;
 
 export class SonicSpokeService {
   // since sonic is sole hub chain we only need one public client
@@ -100,6 +105,22 @@ export class SonicSpokeService {
     });
     this.pollingIntervalMs = chainConfig.pollingIntervalMs;
     this.maxTimeoutMs = chainConfig.maxTimeoutMs;
+  }
+
+  /**
+   * Check ERC-20 allowance on Sonic (hub) for a given spender (e.g. intents contract).
+   */
+  public async isAllowanceValid(
+    params: Omit<Erc20IsAllowanceValidParams<SonicChainKey>, 'publicClient'>,
+  ): Promise<Result<boolean>> {
+    try {
+      return await Erc20Service.isAllowanceValid({ ...params, publicClient: this.publicClient });
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
+    }
   }
 
   public async waitForTransactionReceipt(
@@ -272,17 +293,17 @@ export class SonicSpokeService {
     > as Promise<TxReturnType<SonicChainKey, Raw>>;
   }
 
-  public static async createSwapIntent<Raw extends boolean = false>(
-    params: CreateSonicSwapIntentParams<Raw>,
-  ): Promise<[TxReturnType<SonicChainKey, Raw>, Intent, bigint, Hex]> {
+  public static async createRawSwapIntent(
+    params: CreateSonicSwapIntentParams<true>,
+  ): Promise<[TxReturnType<SonicChainKey, true>, Intent, bigint, Hex]> {
     const { createIntentParams, creatorHubWalletAddress, solverConfig, fee, hubProvider } = params;
-    const inputToken = createIntentParams.inputToken;
+    // On Sonic spoke, token/address fields are always EVM-shaped 0x addresses.
+    const inputToken = createIntentParams.inputToken as Address;
+    const srcAddress = createIntentParams.srcAddress as Address;
 
-    const outputToken =
-      createIntentParams.dstChain !== ChainKeys.SONIC_MAINNET
-        ? hubProvider.configService.getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)
-            ?.hubAsset
-        : (createIntentParams.outputToken as `0x${string}`);
+    const outputToken = isSonicChainKey(createIntentParams.dstChain)
+      ? hubProvider.configService.getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.hubAsset
+      : (createIntentParams.outputToken as `0x${string}`);
 
     invariant(
       inputToken,
@@ -313,29 +334,75 @@ export class SonicSpokeService {
     const txData = EvmSolverService.encodeCreateIntent(intent, intentsContract);
 
     const rawTx = {
-      from: createIntentParams.srcAddress,
+      from: srcAddress,
       to: txData.address,
       data: txData.data,
       value:
-        createIntentParams.inputToken.toLowerCase() === hubProvider.chainConfig.nativeToken.toLowerCase()
+        inputToken.toLowerCase() === hubProvider.chainConfig.nativeToken.toLowerCase()
           ? createIntentParams.inputAmount
           : 0n,
     } satisfies TxReturnType<SonicChainKey, true>;
 
-    if (params.raw === true) {
-      return [
-        rawTx satisfies TxReturnType<SonicChainKey, true> as TxReturnType<SonicChainKey, Raw>,
-        intent,
-        feeAmount,
-        txData.data,
-      ];
-    }
+    return [
+      rawTx satisfies TxReturnType<SonicChainKey, true> as TxReturnType<SonicChainKey, true>,
+      intent,
+      feeAmount,
+      txData.data,
+    ];
+  }
+
+  public static async createAndExecuteSwapIntent(
+    params: CreateSonicSwapIntentParams<false>,
+  ): Promise<[TxReturnType<SonicChainKey, false>, Intent, bigint, Hex]> {
+    const { createIntentParams, creatorHubWalletAddress, solverConfig, fee, hubProvider, walletProvider } = params;
+    // On Sonic spoke, token/address fields are always EVM-shaped 0x addresses.
+    const inputToken = createIntentParams.inputToken as Address;
+    const srcAddress = createIntentParams.srcAddress as Address;
+
+    const outputToken = isSonicChainKey(createIntentParams.dstChain)
+      ? hubProvider.configService.getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.hubAsset
+      : (createIntentParams.outputToken as `0x${string}`);
+
+    invariant(
+      inputToken,
+      `hub asset not found for spoke chain token (intent.inputToken): ${createIntentParams.inputToken}`,
+    );
+    invariant(
+      outputToken,
+      `hub asset not found for spoke chain token (intent.outputToken): ${createIntentParams.outputToken}`,
+    );
+
+    const [feeData, feeAmount] = EvmSolverService.createIntentFeeData(fee, createIntentParams.inputAmount);
+
+    const intentsContract = solverConfig.intentsContract;
+    const intent = {
+      ...createIntentParams,
+      inputToken,
+      outputToken,
+      inputAmount: createIntentParams.inputAmount - feeAmount,
+      srcChain: getIntentRelayChainId(createIntentParams.srcChain),
+      dstChain: getIntentRelayChainId(createIntentParams.dstChain),
+      srcAddress: encodeAddress(createIntentParams.srcChain, createIntentParams.srcAddress),
+      dstAddress: encodeAddress(createIntentParams.dstChain, createIntentParams.dstAddress),
+      intentId: randomUint256(),
+      creator: creatorHubWalletAddress,
+      data: feeData, // fee amount will be deducted from the input amount
+    } satisfies Intent;
+
+    const txData = EvmSolverService.encodeCreateIntent(intent, intentsContract);
+
+    const rawTx = {
+      from: srcAddress,
+      to: txData.address,
+      data: txData.data,
+      value:
+        inputToken.toLowerCase() === hubProvider.chainConfig.nativeToken.toLowerCase()
+          ? createIntentParams.inputAmount
+          : 0n,
+    } satisfies TxReturnType<SonicChainKey, true>;
 
     return [
-      (await params.walletProvider.sendTransaction(rawTx)) satisfies TxReturnType<SonicChainKey, false> as TxReturnType<
-        SonicChainKey,
-        Raw
-      >,
+      (await walletProvider.sendTransaction(rawTx)) satisfies TxReturnType<SonicChainKey, false>,
       intent,
       feeAmount,
       txData.data,

@@ -225,7 +225,7 @@ export class SolanaSpokeService {
   public async sendMessage<R extends boolean = false>(
     params: SendMessageParams<SolanaChainKey, R>,
   ): Promise<TxReturnType<SolanaChainKey, R>> {
-    const dstChainId = getIntentRelayChainId(params.dstChainId);
+    const dstChainId = getIntentRelayChainId(params.dstChainKey);
     const payload = keccak256(params.payload);
     const chainConfig = spokeChainConfig[params.srcChainKey];
     const { rpcUrl, addresses } = chainConfig;

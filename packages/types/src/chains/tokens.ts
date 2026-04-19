@@ -1,5 +1,21 @@
 import type { Address } from '../index.js';
-import { ChainKeys, type ChainKey, type XToken } from './chains.js';
+// Import ChainKeys directly from chain-keys.js (not chains.js) to break an ESM circular-init
+// cycle: chains.ts imports from tokens.ts, and tokens.ts imports ChainKeys — if we source it
+// from chains.js the value is still undefined when tokens.ts initializes.
+import { ChainKeys, type ChainKey } from './chain-keys.js';
+
+/**
+ * Cross-chain token descriptor used by swap / money market / bridge configs.
+ */
+export type XToken = {
+  readonly symbol: string;
+  readonly name: string;
+  readonly decimals: number;
+  readonly address: string;
+  readonly chainKey: ChainKey;
+  readonly hubAsset: Address;
+  readonly vault: Address;
+};
 
 export const StatATokenAddresses = {
   '0xac8540fee419c7ceb985889eaba1e84b42a53e8a': '0x21685E341DE7844135329914Be6Bd8D16982d834',

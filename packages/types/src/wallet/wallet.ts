@@ -44,4 +44,4 @@ export type GetWalletProviderType<C extends SpokeChainKey | ChainType> = GetChai
                 ? INearWalletProvider
                 : GetChainType<C> extends 'BITCOIN'
                   ? IBitcoinWalletProvider
-                  : never;
+                  : IWalletProvider;

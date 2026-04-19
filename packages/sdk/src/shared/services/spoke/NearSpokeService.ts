@@ -3,7 +3,7 @@ import { fromHex } from 'viem';
 import {
   type DepositParams,
   type EstimateGasParams,
-  type FromParams,
+  type SrcParams,
   type GetDepositParams,
   type RateLimitConfig,
   type SendMessageParams,
@@ -83,7 +83,7 @@ export class NearSpokeService {
   }
 
   async fillIntent(
-    fromInfo: FromParams<NearChainKey>,
+    fromInfo: SrcParams<NearChainKey>,
     fillData: FillData,
     deposit: bigint = BigInt('0'),
     gas: bigint = BigInt('300000000000000'),
@@ -211,7 +211,7 @@ export class NearSpokeService {
   public async sendMessage<R extends boolean = false>(
     params: SendMessageParams<NearChainKey, R>,
   ): Promise<TxReturnType<NearChainKey, R>> {
-    const dstChainId = getIntentRelayChainId(params.dstChainId);
+    const dstChainId = getIntentRelayChainId(params.dstChainKey);
 
     const tx: NearRawTransaction = {
       signerId: params.srcAddress,

@@ -46,7 +46,7 @@ describe('Sodax', () => {
 
   const hubConfig = {
     hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: getHubChainConfig(),
+    chainConfig: sodax.config.getHubChainConfig(),
   } satisfies EvmHubProviderConfig;
 
   // main instance to be used for all features
