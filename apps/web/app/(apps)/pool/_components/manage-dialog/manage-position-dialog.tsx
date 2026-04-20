@@ -30,7 +30,7 @@ import { ClaimTabContent } from '@/app/(apps)/pool/_components/manage-dialog/cla
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WithdrawTabContent } from '@/app/(apps)/pool/_components/manage-dialog/withdraw-tab-content';
-import { formatUnits, parseUnits } from 'viem';
+import { formatUnits, parseUnits, type Hex } from 'viem';
 import type { CreateAssetDepositParams } from '@sodax/sdk';
 import { createDexTokenIdsStorageKey, dispatchDexPositionsUpdatedEvent, formatTokenAmount } from '@/lib/utils';
 import { trackAddLiquidityCompleted, trackWithdrawLiquidityCompleted, trackClaimFeesCompleted } from '@/lib/analytics';
@@ -594,6 +594,11 @@ export function ManagePositionDialog({
           // and the real amount that landed in the hub vault. Compute the delta
           // from pre/post decrease hub balance so we (1) match exactly what this
           // decrease deposited and (2) don't sweep balance from other positions.
+          // Wait for the hub tx receipt on our own RPC first — the relayer may
+          // report the tx as executed before our node has indexed its state.
+          await sodax.hubProvider.publicClient.waitForTransactionReceipt({
+            hash: withdrawHubTxHash as Hex,
+          });
           const postDecreaseToken0HubBalance = await sodax.dex.assetService.getDeposit(
             poolData.token0.address,
             spokeProvider,
