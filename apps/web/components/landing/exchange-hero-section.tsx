@@ -9,11 +9,10 @@ import Image from 'next/image';
 import { Label } from '@/components/ui/label';
 import Autoplay from 'embla-carousel-autoplay';
 import { MainCtaButton } from './main-cta-button';
-import { SodaxIcon } from '../icons/sodax-icon';
 import { Separator } from '@radix-ui/react-separator';
 import { useRouter } from 'next/navigation';
-import { NEWS_ROUTE, PARTNERS_ROUTE, SWAP_ROUTE } from '@/constants/routes';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import { SWAP_ROUTE } from '@/constants/routes';
+import { Navbar } from '@/components/shared/navbar';
 import { useAppStore } from '@/stores/app-store-provider';
 
 const carouselItems = [
@@ -63,59 +62,7 @@ const ExchangeHeroSection = (): React.ReactElement => {
           height={811}
           unoptimized
         />
-        {/* Menu Bar */}
-        <div className="w-full flex justify-between items-center pt-10 z-20 md:px-16 px-8 lg:px-8 lg:max-w-[1264px]">
-          <div className="flex items-center">
-            <SidebarTrigger className="outline-none size-8 p-0 lg:hidden" />
-            <div
-              className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            >
-              <Image src="/soda-yellow.png" alt="SODAX Symbol" width={32} height={32} />
-              <div className="hidden md:block md:ml-[11px]">
-                <SodaxIcon width={84} height={18} fill="white" />
-              </div>
-              <div className="mix-blend-screen justify-center text-[#edc1bc] text-[9px] font-bold font-['InterRegular'] leading-[1.4] ml-2">
-                BETA
-              </div>
-            </div>
-            <div className="justify-center text-cream hidden lg:flex ml-8 gap-1">
-              <span className="text-xs font-bold font-[InterRegular] leading-none">Infrastructure for</span>
-              <span className="text-xs font-normal font-[Shrikhand] leading-none mt-[1px]">modern money</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-8">
-            {/* Navigation Menu and Button */}
-            <ul className="hidden lg:flex gap-4 z-10">
-              <li>
-                <a
-                  className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
-                  href={NEWS_ROUTE}
-                >
-                  News
-                </a>
-              </li>
-              <li>
-                <a
-                  className="text-white font-[InterRegular] text-[14px] transition-all hover:font-bold cursor-pointer"
-                  href={PARTNERS_ROUTE}
-                >
-                  Partners
-                </a>
-              </li>
-            </ul>
-            <div className="inline-flex justify-center items-start relative">
-              <MainCtaButton
-                onClick={() => {
-                  router.push(SWAP_ROUTE);
-                  setShouldTriggerAnimation(true);
-                }}
-              >
-                launch apps
-              </MainCtaButton>
-            </div>
-          </div>
-        </div>
+        <Navbar />
         <Image
           className="mix-blend-color-dodge absolute max-w-none w-[357px] h-[357px] sm:w-[701px] sm:h-[680px] top-[30px] left-[-135px] sm:top-[-50px] lg:left-[9.5%] md:left-[-30%]"
           src="/circle1.png"

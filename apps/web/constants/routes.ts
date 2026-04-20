@@ -17,6 +17,7 @@ export const POOL_ROUTE = '/exchange/pool';
 export const MIGRATE_ROUTE = '/exchange/migrate';
 export const GLOSSARY_ROUTE = '/glossary';
 export const PARTNERS_ROUTE = '/partners';
+export const HOLDERS_ROUTE = '/holders';
 export const NEWS_ROUTE = '/news';
 export const COMMUNITY_ROUTE = '/community';
 export const PARTNER_DASHBOARD_ROUTE = '/partner-dashboard';
