@@ -583,15 +583,23 @@ export function ManagePositionDialog({
         spokeProvider,
       });
       if (poolData.token0IsStatAToken && poolSpokeAssets) {
-        const percentageBasisPoints = parsedPercentage === 100 ? 10000n : BigInt(Math.floor(parsedPercentage * 100));
-        const decreasedToken0Amount =
-          percentageBasisPoints >= 10000n
-            ? positionInfo.amount0
-            : (positionInfo.amount0 * percentageBasisPoints) / 10000n;
-
-        const withdrawSlippageMultiplier = BigInt(Math.floor((100 - WITHDRAW_LIQUIDITY_SLIPPAGE_PERCENT) * 100));
-        const token0WithdrawAmount =
-          decreasedToken0Amount === 0n ? 0n : (decreasedToken0Amount * withdrawSlippageMultiplier) / 10000n;
+        let token0WithdrawAmount: bigint;
+        if (parsedPercentage === 100) {
+          // At 100% the position is fully burned, so there's no remaining liquidity
+          // to absorb the gap between `positionInfo.amount0` (a cached prediction)
+          // and the real amount that landed in the hub vault. Read the actual hub
+          // balance so the withdraw tx cannot ask for more than what arrived.
+          token0WithdrawAmount = await sodax.dex.assetService.getDeposit(
+            poolData.token0.address,
+            spokeProvider,
+          );
+        } else {
+          const percentageBasisPoints = BigInt(Math.floor(parsedPercentage * 100));
+          const decreasedToken0Amount = (positionInfo.amount0 * percentageBasisPoints) / 10000n;
+          const withdrawSlippageMultiplier = BigInt(Math.floor((100 - WITHDRAW_LIQUIDITY_SLIPPAGE_PERCENT) * 100));
+          token0WithdrawAmount =
+            decreasedToken0Amount === 0n ? 0n : (decreasedToken0Amount * withdrawSlippageMultiplier) / 10000n;
+        }
 
         if (token0WithdrawAmount > 0n) {
           await withdrawMutation.mutateAsync({
