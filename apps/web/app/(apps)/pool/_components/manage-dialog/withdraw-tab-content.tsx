@@ -90,11 +90,8 @@ export function WithdrawTabContent({
   const withdrawPercentageText = getDisplayPercentage(normalizedWithdrawPercentage);
   const withdrawToken0FromLiquidity = calculateProportionalAmount(positionInfo.amount0, withdrawBasisPoints);
   const withdrawToken1FromLiquidity = calculateProportionalAmount(positionInfo.amount1, withdrawBasisPoints);
-  // Any withdraw operation also claims all currently accrued fees.
-  const withdrawToken0Total = withdrawToken0FromLiquidity + positionInfo.unclaimedFees0;
-  const withdrawToken1Total = withdrawToken1FromLiquidity + positionInfo.unclaimedFees1;
-  const withdrawToken0Text = formatTokenAmount(withdrawToken0Total, poolData.token0.decimals, 2);
-  const withdrawToken1Text = formatTokenAmount(withdrawToken1Total, poolData.token1.decimals, 2);
+  const withdrawToken0Text = formatTokenAmount(withdrawToken0FromLiquidity, poolData.token0.decimals, 2);
+  const withdrawToken1Text = formatTokenAmount(withdrawToken1FromLiquidity, poolData.token1.decimals, 2);
   const earnedToken0Text = formatTokenAmount(positionInfo.unclaimedFees0, poolData.token0.decimals, 4);
   const earnedToken1Text = formatTokenAmount(positionInfo.unclaimedFees1, poolData.token1.decimals, 4);
 
