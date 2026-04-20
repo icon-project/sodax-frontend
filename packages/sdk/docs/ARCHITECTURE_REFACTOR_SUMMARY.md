@@ -20,12 +20,12 @@ These examples are short and focused on integration shape.
 ### Example B: Signed tx vs raw tx (wallet provider rules)
 **Old approach**: use an optional `raw?: boolean` flag to switch between “build raw tx” and “execute signed tx”. This shape makes it difficult for TypeScript to enforce when a `walletProvider` is required or forbidden.
 
-**New approach**: use an explicit `raw: true` or `raw: false` call shape with strict wallet-provider rules:
+**New approach (V2 direction)**: remove the `raw` flag entirely and let `walletProvider` presence select the mode:
 
-- `raw: false` → you **must** pass a chain-correct `walletProvider`
-- `raw: true` → you **must not** pass a `walletProvider` (you’re asking the SDK to build unsigned tx data)
+- **Signed execution**: include `walletProvider` (chain-correct) → SDK signs/executes
+- **Raw transaction**: omit `walletProvider` → SDK returns an unsigned transaction payload
 
-This is enforced by types via `WalletProviderSlot<K, R>` and is driven by the source chain key (`srcChain` / `srcChainKey`).
+Type safety is still enforced, but the discriminant becomes “walletProvider present vs absent” (still driven by `srcChain` / `srcChainKey` for chain-specific provider typing).
 
 ### Example C: Chain constants
 **Old approach**: import and use individual chain ID constants (`SONIC_MAINNET_CHAIN_ID`, `ARBITRUM_MAINNET_CHAIN_ID`, …).
@@ -124,37 +124,26 @@ Part of this refactor is removing older “static tables” (for example, the ol
 
 ## Concept 3: Raw Transaction Handling
 ### What changed
-The old API style used an optional `raw?: boolean` flag in many places, which made it hard to model “raw vs signed” as distinct call shapes. This refactor re-encodes the distinction so that TypeScript can reliably enforce:
+The old API style used an optional `raw?: boolean` flag in many places, which made it hard to model “raw vs signed” as distinct call shapes.
 
-- **raw mode**: return unsigned/raw transaction data, and do not accept a wallet provider
-- **signed mode**: execute/sign as needed, and require a chain-correct wallet provider
+The V2 direction is to **eliminate the `raw` flag** and make the mode selection implicit:
+- **If `walletProvider` is present** → signed execution
+- **If `walletProvider` is absent** → raw/unsigned transaction payload
 
-### Why did the old approach of using an optional raw property make it nearly impossible to cleanly narrow down whether a wallet provider was required?
-If `raw` is optional, TypeScript often ends up treating it as “maybe true, maybe false”. When that happens, it can’t confidently enforce rules like “wallet provider required only when raw is false”, because it can’t tell which mode you meant.
+This keeps the API surface smaller and removes a redundant parameter.
 
-The practical symptom is either runtime checks like `if (!('walletProvider' in params)) throw ...`, or callers reaching for casts/`any`.
+### Why did the old approach make it difficult to enforce wallet-provider requirements?
+When the mode is controlled by an optional boolean, TypeScript can end up with an ambiguous “maybe raw, maybe signed” call shape. That ambiguity makes it harder to enforce “walletProvider required vs forbidden” without runtime checks or casts.
 
-### How it works now (cleaner methodology)
-The SDK ties raw/signed behavior to the method call shape:
+### How it works in V2 (cleaner methodology)
+The SDK ties signed vs raw behavior to **whether `walletProvider` exists** on the params object.
 
-- `K extends SpokeChainKey` (source chain key)
-- `R extends boolean` (raw mode)
+The source chain key (`srcChain` / `srcChainKey`) still drives the chain-specific wallet typing:
+- if a caller uses a literal chain key (for example `ChainKeys.ETHEREUM_MAINNET`), the `walletProvider` type narrows to the matching chain provider interface
 
-Then a shared helper type (`WalletProviderSlot<K, R>`) encodes the rule:
-
-- when `R` is `true`, `walletProvider` is forbidden (`walletProvider?: never`)
-- when `R` is `false`, `walletProvider` is required and chain-specific (`GetWalletProviderType<K>`)
-
-In `SwapService.createIntent`, this shows up as:
-
-- `params.srcChain: K` drives chain-family and wallet typing
-- `raw: R` drives whether a wallet provider exists at all
-- the method returns `TxReturnType<K, R>` so raw vs signed has different return shapes
-
-Operationally, the implementation itself does split the work into distinct “raw vs signed” code paths (for example, hub-chain swap intent creation uses separate raw vs execute helpers), while the public API stays ergonomic and strongly typed. In other words:
-
-- **Internally**: distinct raw vs execute methods are used where appropriate.
-- **Externally**: callers select the branch by providing a literal `raw: true` or `raw: false`, and TypeScript enforces the correct wallet-provider requirement.
+To keep the “required vs forbidden” behavior strict, the intended typing model is a union of two call shapes:
+- a “signed” shape that requires `walletProvider`
+- a “raw” shape that forbids `walletProvider`
 
 ---
 

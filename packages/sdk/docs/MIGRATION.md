@@ -23,11 +23,35 @@ const iconChainId: SpokeChainId = ChainKeys.ICON_MAINNET;
 const migrationTokens = ['ICX', 'bnUSD', 'BALN'] as const;
 ```
 
-For chain keys and chain/token definitions, use `ChainKeys` and the `@sodax/types` `chains` module. For a mapping from old `*_CHAIN_ID` constants to `ChainKeys.*`, see [`../../CHAIN_ID_MIGRATION.md`](../CHAIN_ID_MIGRATION.md).
+Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/types/src/constants/index.ts) for more.
+
+Additional references:
+- For a mapping from old `*_CHAIN_ID` constants to `ChainKeys.*`, see [`../CHAIN_ID_MIGRATION.md`](../CHAIN_ID_MIGRATION.md).
+- For chain keys and chain/token definitions, use `ChainKeys` and the `@sodax/types` `chains` module.
 
 ### Initialising Providers
 
-Refer to [Initialising Spoke Provider](https://docs.sodax.com/developers/how-to/how_to_create_a_spoke_provider) section to see how IconSpokeProvider and SonicSpokeProvider can be created.
+V2 direction: prefer wiring a chain-correct `walletProvider` once (per connected wallet) and pass it only when signed execution is required. Do not construct or pass chain-specific “spoke provider” objects.
+
+Legacy note: some examples below still use `iconSpokeProvider` / `sonicSpokeProvider` naming from earlier SDK iterations. As the Migration APIs are aligned with the V2 model, these become `walletProvider` + chain key driven flows.
+
+### Recommended SDK setup (config initialization)
+When using SDK configuration and token/chain lists, prefer initializing `Sodax` once at startup:
+
+```typescript
+const sodax = new Sodax();
+await sodax.initialize();
+```
+
+`initialize()` attempts to load dynamic configuration from the backend and falls back to packaged defaults if initialization fails.
+
+### Raw vs signed transactions (high-level rule)
+Some migration flows support building raw transaction payloads (for backends) as well as signed execution (for frontends).
+
+- **Signed execution**: include a chain-correct `walletProvider` (direct signing/broadcasting).
+- **Raw mode**: omit `walletProvider` (SDK returns an unsigned transaction payload to sign/broadcast externally).
+
+Mode selection is driven by `walletProvider` presence (no `raw` flag).
 
 ## Migration Types
 
@@ -114,7 +138,7 @@ const approveResult = await sodax.migration.approve(
   revertParams,
   'revert',
   sonicSpokeProvider,
-  false // Optional raw flag
+  // V2 direction: signed vs raw is selected by `walletProvider` presence (no `raw` flag).
 );
 
 if (approveResult.ok) {
