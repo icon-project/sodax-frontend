@@ -115,6 +115,7 @@ export function ManagePositionDialog({
   const [isShaking, setIsShaking] = useState<boolean>(false);
   const [withdrawError, setWithdrawError] = useState<string>('');
   const [isWithdrawSuccess, setIsWithdrawSuccess] = useState<boolean>(false);
+  const [isWithdrawInProgress, setIsWithdrawInProgress] = useState<boolean>(false);
   const [claimError, setClaimError] = useState<string>('');
   const [isClaimActionPending, setIsClaimActionPending] = useState<boolean>(false);
   const [isClaimSuccess, setIsClaimSuccess] = useState<boolean>(false);
@@ -270,14 +271,16 @@ export function ManagePositionDialog({
 
   const isAddLiquidityActionPending =
     approveMutation.isPending || depositMutation.isPending || supplyLiquidityMutation.isPending;
-  const isWithdrawActionPending = decreaseLiquidityMutation.isPending || withdrawMutation.isPending;
+  const isWithdrawActionPending =
+    isWithdrawInProgress || decreaseLiquidityMutation.isPending || withdrawMutation.isPending;
   const isPending =
     isClaimActionPending ||
     approveMutation.isPending ||
     depositMutation.isPending ||
     withdrawMutation.isPending ||
     supplyLiquidityMutation.isPending ||
-    decreaseLiquidityMutation.isPending;
+    decreaseLiquidityMutation.isPending ||
+    isWithdrawInProgress;
   const claimErrorMessage =
     claimError || (claimRewardsMutation.error instanceof Error ? claimRewardsMutation.error.message : '');
 
@@ -571,6 +574,7 @@ export function ManagePositionDialog({
       return;
     }
 
+    setIsWithdrawInProgress(true);
     try {
       const preDecreaseToken0HubBalance =
         poolData.token0IsStatAToken && poolSpokeAssets && parsedPercentage === 100
@@ -614,7 +618,6 @@ export function ManagePositionDialog({
           token0WithdrawAmount =
             decreasedToken0Amount === 0n ? 0n : (decreasedToken0Amount * withdrawSlippageMultiplier) / 10000n;
         }
-        console.log('token0WithdrawAmount', token0WithdrawAmount);
 
         if (token0WithdrawAmount > 0n) {
           await withdrawMutation.mutateAsync({
@@ -648,6 +651,8 @@ export function ManagePositionDialog({
       const message = withdrawErr instanceof Error ? withdrawErr.message : 'Withdraw liquidity failed.';
       setWithdrawError(message);
       setIsWithdrawSuccess(false);
+    } finally {
+      setIsWithdrawInProgress(false);
     }
   };
 
@@ -740,7 +745,7 @@ export function ManagePositionDialog({
             positionXSodaBalanceText={positionXSodaBalanceText}
             withdrawPercentage={withdrawPercentage}
             isPending={isPending}
-            isWithdrawPending={decreaseLiquidityMutation.isPending || withdrawMutation.isPending}
+            isWithdrawPending={isWithdrawActionPending}
             isSuccess={isWithdrawSuccess}
             error={withdrawError}
             onWithdrawPercentageChange={(value: string) => {
