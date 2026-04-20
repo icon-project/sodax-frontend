@@ -125,17 +125,20 @@ const ExchangeHeroSection = (): React.ReactElement => {
             </div>
           </div>
           <div className="flex h-[66px] mt-96 sm:mt-24 md:mt-10">
+            {/* Mobile: single subtitle block (shown below md breakpoint) */}
             <div className="flex md:hidden">
               <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
-              <div className="flex flex-col w-40 pl-4 pr-10 justify-center">
-                <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2]">
-                  Cross-network DeFi
+              <div className="flex flex-col pl-4 pr-10 justify-center">
+                <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2] whitespace-nowrap">
+                  <span className="block">Manage</span>
+                  <span className="block">SODA and more</span>
                 </div>
-                <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
-                  All in one place
+                <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter whitespace-nowrap">
+                  Swap, stake and earn
                 </div>
               </div>
             </div>
+            {/* Desktop: four-column feature list (shown from md breakpoint up) */}
             <div className="hidden md:flex ">
               <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
               <div className="flex flex-col w-40 pl-4 pr-10 justify-center">
