@@ -109,7 +109,13 @@ export function useLiquidityAmounts(
       try {
         const amount0BigInt = BigInt(Math.floor(amount0 * 10 ** poolData.token0.decimals));
 
-        const amount1BigInt = ClService.calculateAmount1FromAmount0(amount0BigInt, tickLower, tickUpper, currentTick);
+        const amount1BigInt = ClService.calculateAmount1FromAmount0(
+          amount0BigInt,
+          tickLower,
+          tickUpper,
+          currentTick,
+          poolData.sqrtPriceX96,
+        );
 
         const amount1 = Number(amount1BigInt) / 10 ** poolData.token1.decimals;
         setLiquidityToken1Amount(amount1.toFixed(6));
@@ -140,7 +146,13 @@ export function useLiquidityAmounts(
       try {
         const amount1BigInt = BigInt(Math.floor(amount1 * 10 ** poolData.token1.decimals));
 
-        const amount0BigInt = ClService.calculateAmount0FromAmount1(amount1BigInt, tickLower, tickUpper, currentTick);
+        const amount0BigInt = ClService.calculateAmount0FromAmount1(
+          amount1BigInt,
+          tickLower,
+          tickUpper,
+          currentTick,
+          poolData.sqrtPriceX96,
+        );
 
         const amount0 = Number(amount0BigInt) / 10 ** poolData.token0.decimals;
         setLiquidityToken0Amount(amount0.toFixed(6));

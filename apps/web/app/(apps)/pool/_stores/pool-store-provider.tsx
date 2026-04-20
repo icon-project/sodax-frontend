@@ -1,10 +1,14 @@
 // apps/web/app/(apps)/pool/_stores/pool-store-provider.tsx
 'use client';
 
-import { type ReactNode, createContext, useContext, useRef } from 'react';
+import { type ReactNode, createContext, useContext, useMemo, useRef } from 'react';
 import { useStore } from 'zustand';
 import { createPoolStore, type PoolStore } from './pool-store';
 import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
+import { usePoolData } from '@sodax/dapp-kit';
+import { dexPools } from '@sodax/sdk';
+
+const PRICE_FALLBACK = 1;
 
 export type PoolStoreApi = ReturnType<typeof createPoolStore>;
 
@@ -36,12 +40,24 @@ export const usePoolStore = <T,>(selector: (store: PoolStore) => T): T => {
 
 export const usePoolState = () => {
   const selectedToken = usePoolStore(state => state.selectedToken);
-  const minPrice = usePoolStore(state => state.minPrice);
-  const maxPrice = usePoolStore(state => state.maxPrice);
+  const rawMinPrice = usePoolStore(state => state.minPrice);
+  const rawMaxPrice = usePoolStore(state => state.maxPrice);
   const sodaAmount = usePoolStore(state => state.sodaAmount);
   const xSodaAmount = usePoolStore(state => state.xSodaAmount);
   const isNetworkPickerOpened = usePoolStore(state => state.isNetworkPickerOpened);
   const selectedChainId = (selectedToken?.xChainId as SpokeChainId | undefined) ?? SONIC_MAINNET_CHAIN_ID;
+
+  const { data: poolData } = usePoolData({ poolKey: dexPools.ASODA_XSODA });
+  const currentPairPrice = useMemo((): number | null => {
+    if (!poolData) {
+      return null;
+    }
+    const parsed = Number(poolData.price.toSignificant(6));
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }, [poolData]);
+
+  const minPrice = rawMinPrice ?? currentPairPrice ?? PRICE_FALLBACK;
+  const maxPrice = rawMaxPrice ?? currentPairPrice ?? PRICE_FALLBACK;
 
   return {
     selectedChainId,

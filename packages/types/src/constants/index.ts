@@ -266,6 +266,7 @@ export const HubVaultSymbols = [
   'sodaKAIA',
   'sodaSTX',
   'sodaUSDS',
+  'sodaUSDat',
 ] as const;
 
 export const SodaTokens = {
@@ -435,6 +436,13 @@ export const SodaTokens = {
     name: 'Soda USDS',
     decimals: 18,
     address: '0x243b0c26c8b38793908d7C64e8510f21B19B4613',
+    xChainId: SONIC_MAINNET_CHAIN_ID,
+  },
+  sodaUSDat: {
+    symbol: 'sodaUSDat',
+    name: 'Soda USDat',
+    decimals: 18,
+    address: '0x67f45e9815c17ec690950d0fd7f6a7cdcceb46d0',
     xChainId: SONIC_MAINNET_CHAIN_ID,
   },
 } as const satisfies Record<HubVaultSymbol, XToken>;
@@ -1581,6 +1589,13 @@ export const spokeChainConfig = {
         address: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
         xChainId: ETHEREUM_MAINNET_CHAIN_ID,
       },
+      sUSDat: {
+        symbol: 'sUSDat',
+        name: 'Staked USDat',
+        decimals: 18,
+        address: '0xD166337499E176bbC38a1FBd113Ab144e5bd2Df7',
+        xChainId: ETHEREUM_MAINNET_CHAIN_ID,
+      },
     } as const,
   } as const satisfies EvmSpokeChainConfig,
   [KAIA_MAINNET_CHAIN_ID]: {
@@ -2662,6 +2677,13 @@ export const hubAssets: Record<SpokeChainId, Record<string, HubAsset>> = {
       name: 'Wrapped Bitcoin',
       vault: SodaTokens.sodaBTC.address,
     },
+    [spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.sUSDat.address]: {
+      asset: '0x67f45e9815c17ec690950d0fd7f6a7cdcceb46d0',
+      decimal: 18,
+      symbol: 'sUSDat',
+      name: 'Staked USDat',
+      vault: SodaTokens.sodaUSDat.address,
+    },
   },
   [KAIA_MAINNET_CHAIN_ID]: {
     [spokeChainConfig[KAIA_MAINNET_CHAIN_ID].nativeToken]: {
@@ -3008,6 +3030,7 @@ export const swapSupportedTokens = {
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.USDT,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.SODA,
     spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.LL,
+    spokeChainConfig[ETHEREUM_MAINNET_CHAIN_ID].supportedTokens.sUSDat,
   ] as const,
   [REDBELLY_MAINNET_CHAIN_ID]: [
     spokeChainConfig[REDBELLY_MAINNET_CHAIN_ID].supportedTokens.RBNT,
