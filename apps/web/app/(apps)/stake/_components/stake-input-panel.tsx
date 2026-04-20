@@ -6,6 +6,7 @@ import { useModalStore } from '@/stores/modal-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import { cn, formatTokenAmount, validateChainAddress } from '@/lib/utils';
 import { CustomSlider } from '@/components/ui/customer-slider';
+import { UnstakeModeToggle } from './unstake-mode-toggle';
 import StakeDialog from './stake-dialog/stake-dialog';
 import UnstakeDialog from './unstake-dialog/unstake-dialog';
 import { getChainName } from '@/constants/chains';
@@ -30,7 +31,7 @@ export function StakeInputPanel(): React.JSX.Element {
 
   const { selectedToken, stakeValue, stakeTypedValue, stakeMode, userXSodaBalance, isLoadingStakingInfo } =
     useStakeState();
-  const { setStakeTypedValue } = useStakeActions();
+  const { setStakeTypedValue, setStakeMode } = useStakeActions();
 
   const openModal = useModalStore(state => state.openModal);
 
@@ -306,6 +307,14 @@ export function StakeInputPanel(): React.JSX.Element {
               </motion.div>
             </AnimatePresence>
           </div>
+        </div>
+        <div className="w-full flex justify-end items-center">
+          <UnstakeModeToggle
+            enabled={stakeMode === STAKE_MODE.UNSTAKING}
+            onToggle={() =>
+              setStakeMode(stakeMode === STAKE_MODE.UNSTAKING ? STAKE_MODE.STAKING : STAKE_MODE.UNSTAKING)
+            }
+          />
         </div>
       </div>
       <StakeDialog open={isStakeDialogOpen} onOpenChange={setIsStakeDialogOpen} selectedToken={selectedToken} />
