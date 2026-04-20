@@ -20,8 +20,9 @@ import type {
   GetAddressType,
   EvmSpokeOnlyChainKey,
   StellarChainKey,
+  GetWalletProviderType,
 } from '@sodax/types';
-import type { OptionalSkipSimulation, OptionalRaw, WalletProviderSlot } from './types.js';
+import type { OptionalSkipSimulation, WalletProviderSlot } from './types.js';
 
 /*
  * Deposit parameters type for depositing tokens into spoke chain asset manager.
@@ -66,8 +67,7 @@ export type SendMessageParams<ChainKey extends SpokeChainKey = SpokeChainKey, Ra
   dstChainKey: HubChainKey; // hub chain key to which the message is sent
   dstAddress: HubAddress; // The wallet abstraction address on the hub chain.
   payload: Hex; // encoded contract call data
-} & OptionalRaw<Raw> &
-  OptionalSkipSimulation &
+} & OptionalSkipSimulation &
   WalletProviderSlot<ChainKey, Raw>;
 
 export type WalletSimulationParams = {
@@ -173,49 +173,45 @@ export type SpokeIsAllowanceValidParams<K extends SpokeChainKey = SpokeChainKey>
         ? SpokeIsAllowanceValidParamsOther<K>
         : never;
 
-/**
- * Unified params for spoke-level approval: ERC-20 approve on hub / EVM spoke or Stellar trustline request.
- * Feature services map action payloads here; {@link SpokeService.approve} routes by `srcChainKey`.
- *
- * Mirrors the {@link SpokeIsAllowanceValidParams} pattern — each variant is generic over its
- * `srcChainKey` range so narrowing `K` (via {@link isHubChainKeyType}, {@link isEvmSpokeOnlyChainKeyType},
- * {@link isStellarChainKeyType}) selects the matching variant without casts.
- */
-type SpokeApproveParamsCommon = {
-  token: string;
+export type ApproveChainKeys = HubChainKey | EvmSpokeOnlyChainKey | StellarChainKey;
+
+type SpokeApproveParamsCommon<K extends SpokeChainKey, Raw extends boolean> = {
+  token: GetTokenAddressType<K>;
   amount: bigint;
-  owner: string;
+  owner: GetAddressType<K>;
+} & WalletProviderSlot<K, Raw>;
+
+export type SpokeApproveParamsHub<Raw extends boolean = boolean> = SpokeApproveParamsCommon<HubChainKey, Raw> & {
+  srcChainKey: HubChainKey;
+  spender: Address;
 };
 
-export type SpokeApproveParamsHub<R extends boolean, K extends HubChainKey = HubChainKey> = SpokeApproveParamsCommon & {
-  srcChainKey: K;
+export type SpokeApproveParamsEvmSpoke<Raw extends boolean = boolean> = SpokeApproveParamsCommon<
+  EvmSpokeOnlyChainKey,
+  Raw
+> & {
+  srcChainKey: EvmSpokeOnlyChainKey;
   spender: Address;
-} & OptionalRaw<R> &
-  WalletProviderSlot<K, R>;
+};
 
-export type SpokeApproveParamsEvmSpoke<
-  R extends boolean,
-  K extends EvmSpokeOnlyChainKey = EvmSpokeOnlyChainKey,
-> = SpokeApproveParamsCommon & {
-  srcChainKey: K;
-  spender: Address;
-} & OptionalRaw<R> &
-  WalletProviderSlot<K, R>;
-
-export type SpokeApproveParamsStellar<
-  R extends boolean,
-  K extends StellarChainKey = StellarChainKey,
-> = SpokeApproveParamsCommon & {
-  srcChainKey: K;
-} & OptionalRaw<R> &
-  WalletProviderSlot<K, R> &
-  OptionalSkipSimulation;
+export type SpokeApproveParamsStellar<Raw extends boolean = boolean> = SpokeApproveParamsCommon<
+  StellarChainKey,
+  Raw
+> & {
+  srcChainKey: StellarChainKey;
+};
 
 /**
  * Plain union of approve-capable variants. Callers who want narrow-`K` typing should instantiate
  * the specific variant (e.g. `SpokeApproveParamsHub<R>`) directly.
  */
-export type SpokeApproveParams<R extends boolean> =
-  | SpokeApproveParamsHub<R>
-  | SpokeApproveParamsEvmSpoke<R>
-  | SpokeApproveParamsStellar<R>;
+export type SpokeApproveParams<
+  K extends ApproveChainKeys = ApproveChainKeys,
+  Raw extends boolean = boolean,
+> = K extends HubChainKey
+  ? SpokeApproveParamsHub<Raw>
+  : K extends EvmSpokeOnlyChainKey
+    ? SpokeApproveParamsEvmSpoke<Raw>
+    : K extends StellarChainKey
+      ? SpokeApproveParamsStellar<Raw>
+      : never;

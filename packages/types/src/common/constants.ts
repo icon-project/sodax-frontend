@@ -7,8 +7,6 @@ export const DEFAULT_RETRY_DELAY_MS = 2000;
 export const ICON_TX_RESULT_WAIT_MAX_RETRY = 10;
 export const MAX_UINT256 = (1n << 256n) - 1n;
 export const FEE_PERCENTAGE_SCALE = 10000n; // 100% = 10000
-export const STELLAR_PRIORITY_FEE = '10000';
-export const STELLAR_DEFAULT_TX_TIMEOUT_SECONDS = 100;
 export const DEFAULT_DEADLINE_OFFSET = 300n; // 5 minutes in seconds
 export const DEFAULT_BACKEND_API_ENDPOINT = 'https://api.sodax.com/v1/be';
 export const DEFAULT_BACKEND_API_TIMEOUT = 30000; // 30 seconds

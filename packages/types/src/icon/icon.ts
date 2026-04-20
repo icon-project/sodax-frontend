@@ -9,7 +9,11 @@ export type IconEoaAddress = `hx${string}`;
 export type IconRawTransaction = {
   [key: string]: string | object;
 };
-export type IconReturnType<Raw extends boolean> = Raw extends true ? IconRawTransaction : Hex;
+export type IconReturnType<Raw extends boolean> = Raw extends true
+  ? IconRawTransaction
+  : Raw extends false
+    ? Hex
+    : IconRawTransaction | Hex;
 
 export type IcxRawTransaction = {
   to: string;

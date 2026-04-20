@@ -16,10 +16,13 @@ import {
 import type {
   Address,
   ConcentratedLiquidityConfig,
+  EvmContractCall,
   Hash,
   HttpUrl,
   OriginalAssetAddress,
   PoolKey,
+  Prettify,
+  SpokeChainKey,
   SpokeTxHash,
   XToken,
 } from '@sodax/types';
@@ -121,24 +124,24 @@ export type ConcentratedLiquidityParams =
   | ConcentratedLiquidityClaimRewardsParams;
 
 // Parameter types for refactored functions following SwapService pattern
-export type SupplyLiquidityParams<S extends SpokeProviderType> = Prettify<{
+export type SupplyLiquidityParams<K extends SpokeChainKey> = Prettify<{
   params: ConcentratedLiquiditySupplyParams;
-  spokeProvider: S;
+  srcChainKey: K;
 }>;
 
-export type IncreaseLiquidityParams<S extends SpokeProviderType> = Prettify<{
+export type IncreaseLiquidityParams<K extends SpokeChainKey> = Prettify<{
   params: ConcentratedLiquidityIncreaseLiquidityParams;
-  spokeProvider: S;
+  srcChainKey: K;
 }>;
 
-export type DecreaseLiquidityParams<S extends SpokeProviderType> = Prettify<{
+export type DecreaseLiquidityParams<K extends SpokeChainKey> = Prettify<{
   params: ConcentratedLiquidityDecreaseLiquidityParams;
-  spokeProvider: S;
+  srcChainKey: K;
 }>;
 
-export type ClaimRewardsParams<S extends SpokeProviderType> = Prettify<{
+export type ClaimRewardsParams<K extends SpokeChainKey> = Prettify<{
   params: ConcentratedLiquidityClaimRewardsParams;
-  spokeProvider: S;
+  srcChainKey: K;
 }>;
 
 export type ClPositionInfo = {
@@ -377,17 +380,17 @@ export class ClService {
     this.clConfig = config.dex.concentratedLiquidityConfig;
   }
 
-  public getAssetsForPool(spokeProvider: SpokeProviderType, poolKey: PoolKey): PoolSpokeAssets {
+  public getAssetsForPool(srcChainKey: SpokeChainKey, poolKey: PoolKey): PoolSpokeAssets {
     const token0SpokeAddress = this.config.getOriginalAssetAddressFromStakedATokenAddress(
-      spokeProvider.chainConfig.chain.id,
+      srcChainKey,
       poolKey.currency0,
     );
     const token1SpokeAddress = this.config.getOriginalAssetAddressFromStakedATokenAddress(
-      spokeProvider.chainConfig.chain.id,
+      srcChainKey,
       poolKey.currency1,
     );
-    const token0 = this.config.findTokenByOriginalAddress(token0SpokeAddress, spokeProvider.chainConfig.chain.id);
-    const token1 = this.config.findTokenByOriginalAddress(token1SpokeAddress, spokeProvider.chainConfig.chain.id);
+    const token0 = this.config.findTokenByOriginalAddress(token0SpokeAddress, srcChainKey);
+    const token1 = this.config.findTokenByOriginalAddress(token1SpokeAddress, srcChainKey);
 
     if (!token0) {
       throw new Error(`[getAssetsForPool] Token0 ${token0SpokeAddress} not found`);

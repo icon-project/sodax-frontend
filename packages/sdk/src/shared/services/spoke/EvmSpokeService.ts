@@ -17,7 +17,7 @@ import {
   type EstimateGasParams,
   type WaitForTxReceiptParams,
   type WaitForTxReceiptReturnType,
-  type Erc20IsAllowanceValidParams,
+  type Erc20IsAllowanceParams,
   Erc20Service,
 } from '../../../index.js';
 import {
@@ -106,7 +106,7 @@ export class EvmSpokeService {
    * @return - True if spender is allowed to spend amount on behalf of owner
    */
   public async isAllowanceValid(
-    params: Omit<Erc20IsAllowanceValidParams<EvmSpokeOnlyChainKey>, 'publicClient'>,
+    params: Omit<Erc20IsAllowanceParams<EvmSpokeOnlyChainKey>, 'publicClient'>,
   ): Promise<Result<boolean>> {
     try {
       return await Erc20Service.isAllowanceValid({ ...params, publicClient: this.getPublicClient(params.chainKey) });

@@ -34,9 +34,6 @@ import {
   isHubChainKeyType,
   isNearChainKeyType,
   isSolanaChainKeyType,
-  isSpokeApproveParamsEvmSpoke,
-  isSpokeApproveParamsHub,
-  isSpokeApproveParamsStellar,
   isSpokeIsAllowanceValidParamsEvmSpoke,
   isSpokeIsAllowanceValidParamsHub,
   isSpokeIsAllowanceValidParamsStellar,
@@ -63,9 +60,14 @@ import {
   type SpokeIsAllowanceValidParams,
   type SpokeApproveParams,
   Erc20Service,
-  type Erc20ApproveParams,
   type RequestTrustlineParams,
+  type ApproveChainKeys,
+  isValidWalletProviderForChainKey,
+  isSpokeApproveParamsHub,
+  isSpokeApproveParamsEvmSpoke,
+  isSpokeApproveParamsStellar,
 } from '../../../index.js';
+import invariant from 'tiny-invariant';
 
 export type SpokeServiceConstructorParams = {
   config: ConfigService;
@@ -199,115 +201,56 @@ export class SpokeService {
    * Approve ERC-20 spending on hub / EVM spoke or request a Stellar trustline using unified params.
    * Feature services map their action payloads into {@link SpokeApproveParams}.
    */
-  public async approve<R extends boolean>(
-    params: SpokeApproveParams<R>,
-  ): Promise<Result<TxReturnType<HubChainKey | EvmSpokeOnlyChainKey | StellarChainKey, R>>> {
+  public async approve<K extends ApproveChainKeys, R extends boolean>(
+    params: SpokeApproveParams<K, R>,
+  ): Promise<Result<TxReturnType<K, R>>> {
     try {
+      invariant(
+        isValidWalletProviderForChainKey(params.srcChainKey, params.walletProvider),
+        `Invalid wallet provider for chain key: ${params.srcChainKey}, walletProvider.chainType: ${params.walletProvider?.chainType}`,
+      );
+
       if (isSpokeApproveParamsHub(params)) {
-        const { token, amount, owner, spender } = params;
-        if (params.raw === true) {
-          const result = await Erc20Service.approve({
-            token: token as Address,
-            amount,
-            from: owner as Address,
-            spender,
-            raw: true,
-          } as unknown as Erc20ApproveParams<R>);
-          return {
-            ok: true,
-            value: result as TxReturnType<HubChainKey, R>,
-          };
-        }
-        if (!('walletProvider' in params)) {
-          return {
-            ok: false,
-            error: new Error('[SpokeService.approve] `walletProvider` is required when raw is false'),
-          };
-        }
         const result = await Erc20Service.approve({
-          token: token as Address,
-          amount,
-          from: owner as Address,
-          spender,
-          raw: false,
+          token: params.token,
+          amount: params.amount,
+          from: params.owner,
+          spender: params.spender,
           walletProvider: params.walletProvider,
-        } as unknown as Erc20ApproveParams<R>);
+        });
+
         return {
           ok: true,
-          value: result as TxReturnType<HubChainKey, R>,
+          value: result satisfies TxReturnType<HubChainKey, boolean> as TxReturnType<K, R>,
         };
       }
 
       if (isSpokeApproveParamsEvmSpoke(params)) {
-        const { srcChainKey, token, amount, owner } = params;
-        const spender = params.spender ?? spokeChainConfig[srcChainKey].addresses.assetManager;
-        if (params.raw === true) {
-          const result = await Erc20Service.approve({
-            token: token as Address,
-            amount,
-            from: owner as Address,
-            spender,
-            raw: true,
-          } as unknown as Erc20ApproveParams<R>);
-          return {
-            ok: true,
-            value: result as TxReturnType<EvmSpokeOnlyChainKey, R>,
-          };
-        }
-        if (!('walletProvider' in params)) {
-          return {
-            ok: false,
-            error: new Error('[SpokeService.approve] `walletProvider` is required when raw is false'),
-          };
-        }
         const result = await Erc20Service.approve({
-          token: token as Address,
-          amount,
-          from: owner as Address,
-          spender,
-          raw: false,
+          token: params.token,
+          amount: params.amount,
+          from: params.owner,
+          spender: params.spender,
           walletProvider: params.walletProvider,
-        } as unknown as Erc20ApproveParams<R>);
+        });
         return {
           ok: true,
-          value: result as TxReturnType<EvmSpokeOnlyChainKey, R>,
+          value: result satisfies TxReturnType<EvmChainKey, boolean> as TxReturnType<K, R>,
         };
       }
 
       if (isSpokeApproveParamsStellar(params)) {
-        const { srcChainKey, token, amount, owner } = params;
-        if (params.raw === true) {
-          const result = await this.stellarSpokeService.requestTrustline({
-            srcAddress: owner,
-            srcChainKey,
-            token,
-            amount,
-            raw: true,
-            ...(params.skipSimulation !== undefined ? { skipSimulation: params.skipSimulation } : {}),
-          } as RequestTrustlineParams<StellarChainKey, R>);
-          return {
-            ok: true,
-            value: result as TxReturnType<StellarChainKey, R>,
-          };
-        }
-        if (!('walletProvider' in params)) {
-          return {
-            ok: false,
-            error: new Error('[SpokeService.approve] `walletProvider` is required when raw is false'),
-          };
-        }
         const result = await this.stellarSpokeService.requestTrustline({
-          srcAddress: owner,
-          srcChainKey,
-          token,
-          amount,
+          srcAddress: params.owner,
+          srcChainKey: params.srcChainKey,
+          token: params.token,
+          amount: params.amount,
           raw: false,
           walletProvider: params.walletProvider,
-          ...(params.skipSimulation !== undefined ? { skipSimulation: params.skipSimulation } : {}),
-        } as RequestTrustlineParams<StellarChainKey, R>);
+        });
         return {
           ok: true,
-          value: result as TxReturnType<StellarChainKey, R>,
+          value: result satisfies TxReturnType<StellarChainKey, boolean> as TxReturnType<K, R>,
         };
       }
 
@@ -837,8 +780,8 @@ export class SpokeService {
     params: WaitForTxReceiptParams<C>,
   ): Promise<Result<WaitForTxReceiptReturnType<C>>> {
     const effectiveParams: WaitForTxReceiptParams<C> = {
-      pollingIntervalMs: this.config.sharedConfig[params.chainKey].pollingIntervalMs,
-      maxTimeoutMs: this.config.sharedConfig[params.chainKey].maxTimeoutMs,
+      pollingIntervalMs: this.config.sodaxConfig.chains[params.chainKey].pollingConfig.pollingIntervalMs,
+      maxTimeoutMs: this.config.sodaxConfig.chains[params.chainKey].pollingConfig.maxTimeoutMs,
       ...params,
     };
 

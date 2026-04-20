@@ -82,7 +82,11 @@ export type NearRawTransaction = {
   params: CallContractParams;
 };
 
-export type NearReturnType<Raw extends boolean> = Raw extends true ? NearRawTransaction : string;
+export type NearReturnType<Raw extends boolean> = Raw extends true
+  ? NearRawTransaction
+  : Raw extends false
+    ? string
+    : NearRawTransaction | string;
 
 export type NearRawTransactionReceipt = RpcTransactionResponse;
 

@@ -94,7 +94,11 @@ export type StellarRawTransaction = {
   data: string;
 };
 
-export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarRawTransaction : string;
+export type StellarReturnType<Raw extends boolean> = Raw extends true
+  ? StellarRawTransaction
+  : Raw extends false
+    ? string
+    : StellarRawTransaction | string;
 
 export interface IStellarWalletProvider extends ICoreWallet {
   readonly chainType: 'STELLAR';

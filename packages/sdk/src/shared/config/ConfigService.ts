@@ -354,4 +354,8 @@ export class ConfigService {
   get dex(): DexConfig {
     return this.sodax.dex;
   }
+
+  get sodaxConfig(): SodaxConfig {
+    return this.sodax;
+  }
 }

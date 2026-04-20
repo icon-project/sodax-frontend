@@ -42,6 +42,7 @@ import {
   IntentRelayChainIdToChainKey,
   EVM_SPOKE_ONLY_CHAIN_KEYS_SET,
   EVM_SPOKE_ONLY_CHAIN_KEYS,
+  type IWalletProvider,
 } from '../index.js';
 
 export function isHubChainKey(chainId: SpokeChainKey): boolean {
@@ -184,4 +185,8 @@ export function getChainKeyFromRelayChainId(chainId: IntentRelayChainId): ChainK
     throw new Error(`Invalid intent relay chain id: ${chainId}`);
   }
   return chainKey;
+}
+
+export function isValidWalletProviderForChainKey(chainKey: SpokeChainKey, walletProvider: IWalletProvider): boolean {
+  return getChainType(chainKey) === walletProvider.chainType;
 }

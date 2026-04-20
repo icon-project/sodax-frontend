@@ -1,9 +1,13 @@
-import { type HttpUrl, type SpokeChainKey, getIntentRelayChainId } from '@sodax/types';
-import type { Result } from '../../types/types.js';
+import {
+  DEFAULT_RELAY_TX_TIMEOUT,
+  type HttpUrl,
+  type Result,
+  type SpokeChainKey,
+  getIntentRelayChainId,
+} from '@sodax/types';
 import invariant from 'tiny-invariant';
 import { retry } from '../../utils/shared-utils.js';
 import type { IntentError } from '../../../swap/SwapService.js';
-import { DEFAULT_RELAY_TX_TIMEOUT } from '../../constants.js';
 import type { Hex } from 'viem';
 
 /**

@@ -99,9 +99,10 @@ import {
   type CreateIntentParams,
   type Intent,
   type SwapActionParams,
+  type SwapActionParamsRaw,
   type SwapAllowanceParams,
-  type WalletProviderSlot,
 } from './SwapService.js';
+import type { WalletProviderSlot } from '../shared/types/types.js';
 
 // --- minimal mocks --------------------------------------------------------
 
@@ -315,31 +316,55 @@ function makeIntent(srcChainKey: Parameters<typeof getIntentRelayChainId>[0] = C
 // that the compiler narrows walletProvider on srcChainKey + raw.
 // =========================================================================
 
-describe('SwapService types — WalletProviderSlot narrowing', () => {
-  it('forbids walletProvider when raw is true', () => {
-    expectTypeOf<WalletProviderSlot<'0x38.bsc', true>>().toEqualTypeOf<{ walletProvider?: never }>();
+describe('SwapService types — walletProvider narrowing', () => {
+  // WalletProviderSlot is the spoke-layer helper still used by DepositParams / SendMessageParams.
+  // Keep its type-level tests here as a regression safety net.
+  it('WalletProviderSlot forbids walletProvider when raw is true', () => {
+    expectTypeOf<WalletProviderSlot<'0x38.bsc', true>>().toEqualTypeOf<{ raw: true; walletProvider?: never }>();
   });
 
-  it('requires narrowed EVM walletProvider when chain is EVM and raw is false', () => {
-    expectTypeOf<WalletProviderSlot<'0x38.bsc', false>>().toEqualTypeOf<{ walletProvider: IEvmWalletProvider }>();
-    expectTypeOf<WalletProviderSlot<'ethereum', false>>().toEqualTypeOf<{ walletProvider: IEvmWalletProvider }>();
-    expectTypeOf<WalletProviderSlot<'sonic', false>>().toEqualTypeOf<{ walletProvider: IEvmWalletProvider }>();
+  it('WalletProviderSlot requires narrowed EVM walletProvider when raw is false', () => {
+    expectTypeOf<WalletProviderSlot<'0x38.bsc', false>>().toEqualTypeOf<{
+      raw: false;
+      walletProvider: IEvmWalletProvider;
+    }>();
+    expectTypeOf<WalletProviderSlot<'ethereum', false>>().toEqualTypeOf<{
+      raw: false;
+      walletProvider: IEvmWalletProvider;
+    }>();
+    expectTypeOf<WalletProviderSlot<'sonic', false>>().toEqualTypeOf<{
+      raw: false;
+      walletProvider: IEvmWalletProvider;
+    }>();
   });
 
-  it('narrows walletProvider to Solana / Stellar / Bitcoin for their respective chain keys', () => {
-    expectTypeOf<WalletProviderSlot<'solana', false>>().toEqualTypeOf<{ walletProvider: ISolanaWalletProvider }>();
-    expectTypeOf<WalletProviderSlot<'stellar', false>>().toEqualTypeOf<{ walletProvider: IStellarWalletProvider }>();
-    expectTypeOf<WalletProviderSlot<'bitcoin', false>>().toEqualTypeOf<{ walletProvider: IBitcoinWalletProvider }>();
+  it('WalletProviderSlot narrows walletProvider to Solana / Stellar / Bitcoin for their respective chain keys', () => {
+    expectTypeOf<WalletProviderSlot<'solana', false>>().toEqualTypeOf<{
+      raw: false;
+      walletProvider: ISolanaWalletProvider;
+    }>();
+    expectTypeOf<WalletProviderSlot<'stellar', false>>().toEqualTypeOf<{
+      raw: false;
+      walletProvider: IStellarWalletProvider;
+    }>();
+    expectTypeOf<WalletProviderSlot<'bitcoin', false>>().toEqualTypeOf<{
+      raw: false;
+      walletProvider: IBitcoinWalletProvider;
+    }>();
   });
 
-  it('SwapActionParams exposes params (carrying srcChain) and forbids walletProvider when raw=true', () => {
-    type EvmRaw = SwapActionParams<'0x38.bsc', true>;
-    type EvmExec = SwapActionParams<'0x38.bsc', false>;
-    expectTypeOf<EvmRaw>().toHaveProperty('params');
-    // raw=true narrows walletProvider to never (forbidden).
-    expectTypeOf<EvmRaw['walletProvider']>().toEqualTypeOf<undefined>();
-    // raw=false narrows walletProvider to the chain-specific provider.
-    expectTypeOf<EvmExec>().toHaveProperty('walletProvider').toEqualTypeOf<IEvmWalletProvider>();
+  it('SwapActionParams (exec) narrows walletProvider via K inferred from params.srcChain', () => {
+    expectTypeOf<SwapActionParams<'0x38.bsc'>['walletProvider']>().toEqualTypeOf<IEvmWalletProvider>();
+    expectTypeOf<SwapActionParams<'ethereum'>['walletProvider']>().toEqualTypeOf<IEvmWalletProvider>();
+    expectTypeOf<SwapActionParams<'sonic'>['walletProvider']>().toEqualTypeOf<IEvmWalletProvider>();
+    expectTypeOf<SwapActionParams<'solana'>['walletProvider']>().toEqualTypeOf<ISolanaWalletProvider>();
+    expectTypeOf<SwapActionParams<'stellar'>['walletProvider']>().toEqualTypeOf<IStellarWalletProvider>();
+    expectTypeOf<SwapActionParams<'bitcoin'>['walletProvider']>().toEqualTypeOf<IBitcoinWalletProvider>();
+  });
+
+  it('SwapActionParamsRaw has no walletProvider property', () => {
+    expectTypeOf<SwapActionParamsRaw<'0x38.bsc'>>().not.toHaveProperty('walletProvider');
+    expectTypeOf<SwapActionParamsRaw<'bitcoin'>>().not.toHaveProperty('walletProvider');
   });
 
   it('SwapAllowanceParams narrows walletProvider via the K inferred from params.srcChain', () => {
@@ -358,14 +383,13 @@ describe('SwapService types — WalletProviderSlot narrowing', () => {
       .toEqualTypeOf<ISolanaWalletProvider>();
   });
 
-  it('CreateIntentParams now carries srcChain (the K generic anchor)', () => {
+  it('CreateIntentParams carries srcChain (the K generic anchor)', () => {
     expectTypeOf<CreateIntentParams>().toHaveProperty('srcChain');
     expectTypeOf<CreateIntentParams<'0x38.bsc'>['srcChain']>().toEqualTypeOf<'0x38.bsc'>();
   });
 
-  it('uses IWalletProvider for walletProvider when K is the unconstrained SpokeChainKey', () => {
-    expectTypeOf<SwapActionParams<SpokeChainKey, false>['walletProvider']>().toEqualTypeOf<IWalletProvider>();
-    expectTypeOf<SwapActionParams<SpokeChainKey, true>['walletProvider']>().toEqualTypeOf<undefined>();
+  it('SwapActionParams with unconstrained K falls back to IWalletProvider', () => {
+    expectTypeOf<SwapActionParams<SpokeChainKey>['walletProvider']>().toEqualTypeOf<IWalletProvider>();
   });
 });
 
@@ -387,23 +411,22 @@ describe('SwapService types — method signatures reject mismatched walletProvid
     }
   });
 
-  it('rejects walletProvider when raw is true (createIntent)', () => {
+  it('requires walletProvider on createIntent (no raw field in new API)', () => {
     const svc = makeSwapService();
     if (false as boolean) {
-      void svc.createIntent({
-        params: intentInput(ChainKeys.BSC_MAINNET),
-        raw: true,
-        // @ts-expect-error — walletProvider is forbidden when raw: true (K narrowed).
-        walletProvider: mockEvmProvider,
-      });
+      // @ts-expect-error — walletProvider is required by SwapActionParams.
+      void svc.createIntent({ params: intentInput(ChainKeys.BSC_MAINNET) });
     }
   });
 
-  it('requires walletProvider when raw is false (createIntent)', () => {
+  it('createIntentRaw rejects walletProvider — the raw twin has no such field', () => {
     const svc = makeSwapService();
     if (false as boolean) {
-      // @ts-expect-error — walletProvider is required when raw is false / absent.
-      void svc.createIntent({ params: intentInput(ChainKeys.BSC_MAINNET), raw: false });
+      void svc.createIntentRaw({
+        params: intentInput(ChainKeys.BSC_MAINNET),
+        // @ts-expect-error — walletProvider is not a property of SwapActionParamsRaw.
+        walletProvider: mockEvmProvider,
+      });
     }
   });
 
@@ -419,18 +442,6 @@ describe('SwapService types — method signatures reject mismatched walletProvid
       });
     }
   });
-
-  it('rejects walletProvider on approve when raw is true', () => {
-    const svc = makeSwapService();
-    if (false as boolean) {
-      void svc.approve({
-        params: intentInput(ChainKeys.BSC_MAINNET),
-        raw: true,
-        // @ts-expect-error — walletProvider forbidden with raw=true (K narrowed).
-        walletProvider: mockEvmProvider,
-      });
-    }
-  });
 });
 
 // =========================================================================
@@ -442,133 +453,112 @@ describe('SwapService types — method signatures reject mismatched walletProvid
 // at compile time) and counts the test as passing if the file type-checks.
 // =========================================================================
 
-describe('SwapService.createIntent — narrows walletProvider from params.srcChain + raw', () => {
+describe('SwapService.createIntent — narrows walletProvider from params.srcChain', () => {
   const svc = makeSwapService();
 
-  it('EVM literal (ethereum) + raw=false → walletProvider must be IEvmWalletProvider', () => {
+  it('EVM literal (ethereum) → walletProvider must be IEvmWalletProvider', () => {
     if (false as boolean) {
-      // POSITIVE: EVM provider compiles
       void svc.createIntent({
         params: intentInput(ChainKeys.ETHEREUM_MAINNET),
-        raw: false,
         walletProvider: mockEvmProvider,
       });
-      // NEGATIVE: Solana provider rejected
       void svc.createIntent({
         params: intentInput(ChainKeys.ETHEREUM_MAINNET),
-        raw: false,
         // @ts-expect-error — IEvmWalletProvider required, not ISolanaWalletProvider.
         walletProvider: mockSolanaProvider,
       });
-      // NEGATIVE: Stellar provider rejected
       void svc.createIntent({
         params: intentInput(ChainKeys.ETHEREUM_MAINNET),
-        raw: false,
         // @ts-expect-error — IEvmWalletProvider required, not IStellarWalletProvider.
         walletProvider: mockStellarProvider,
       });
     }
   });
 
-  it('Solana literal + raw=false → walletProvider must be ISolanaWalletProvider', () => {
+  it('Solana literal → walletProvider must be ISolanaWalletProvider', () => {
     if (false as boolean) {
       void svc.createIntent({
         params: intentInput(ChainKeys.SOLANA_MAINNET),
-        raw: false,
         walletProvider: mockSolanaProvider,
       });
       void svc.createIntent({
         params: intentInput(ChainKeys.SOLANA_MAINNET),
-        raw: false,
         // @ts-expect-error — ISolanaWalletProvider required, not IEvmWalletProvider.
         walletProvider: mockEvmProvider,
       });
     }
   });
 
-  it('Stellar literal + raw=false → walletProvider must be IStellarWalletProvider', () => {
+  it('Stellar literal → walletProvider must be IStellarWalletProvider', () => {
     if (false as boolean) {
       void svc.createIntent({
         params: intentInput(ChainKeys.STELLAR_MAINNET),
-        raw: false,
         walletProvider: mockStellarProvider,
       });
       void svc.createIntent({
         params: intentInput(ChainKeys.STELLAR_MAINNET),
-        raw: false,
         // @ts-expect-error — IStellarWalletProvider required, not IEvmWalletProvider.
         walletProvider: mockEvmProvider,
       });
     }
   });
 
-  it('Bitcoin literal + raw=false → walletProvider must be IBitcoinWalletProvider', () => {
+  it('Bitcoin literal → walletProvider must be IBitcoinWalletProvider', () => {
     if (false as boolean) {
       void svc.createIntent({
         params: intentInput(ChainKeys.BITCOIN_MAINNET),
-        raw: false,
         walletProvider: mockBitcoinProvider,
       });
       void svc.createIntent({
         params: intentInput(ChainKeys.BITCOIN_MAINNET),
-        raw: false,
         // @ts-expect-error — IBitcoinWalletProvider required, not IEvmWalletProvider.
         walletProvider: mockEvmProvider,
       });
     }
   });
 
-  it('any literal + raw=true → walletProvider forbidden, omittable', () => {
+  it('createIntentRaw accepts any chain without walletProvider', () => {
     if (false as boolean) {
-      // POSITIVE: omitting walletProvider compiles for every chain
-      void svc.createIntent({ params: intentInput(ChainKeys.BSC_MAINNET), raw: true });
-      void svc.createIntent({ params: intentInput(ChainKeys.SOLANA_MAINNET), raw: true });
-      void svc.createIntent({ params: intentInput(ChainKeys.STELLAR_MAINNET), raw: true });
-      // NEGATIVE: passing any walletProvider with raw=true is rejected
-      void svc.createIntent({
-        params: intentInput(ChainKeys.BSC_MAINNET),
-        raw: true,
-        // @ts-expect-error — walletProvider forbidden when raw: true.
-        walletProvider: mockEvmProvider,
-      });
+      void svc.createIntentRaw({ params: intentInput(ChainKeys.BSC_MAINNET) });
+      void svc.createIntentRaw({ params: intentInput(ChainKeys.SOLANA_MAINNET) });
+      void svc.createIntentRaw({ params: intentInput(ChainKeys.STELLAR_MAINNET) });
     }
   });
 
-  it('raw=false: omitting walletProvider is rejected', () => {
+  it('omitting walletProvider on createIntent is rejected', () => {
     if (false as boolean) {
-      // @ts-expect-error — walletProvider is required when raw: false.
-      void svc.createIntent({ params: intentInput(ChainKeys.BSC_MAINNET), raw: false });
+      // @ts-expect-error — walletProvider is required by SwapActionParams.
+      void svc.createIntent({ params: intentInput(ChainKeys.BSC_MAINNET) });
     }
   });
 
-  it('explicit <SpokeChainKey> generic still requires walletProvider when raw=false', () => {
+  it('explicit <SpokeChainKey> generic still requires walletProvider (exec) and rejects on raw twin', () => {
     if (false as boolean) {
       const params: CreateIntentParams<SpokeChainKey> = intentInput(ChainKeys.BSC_MAINNET);
 
-      // @ts-expect-error — walletProvider required when raw=false even with broad K.
-      void svc.createIntent<SpokeChainKey, false>({ params, raw: false });
-      void svc.createIntent<SpokeChainKey, true>({ params, raw: true });
+      // @ts-expect-error — walletProvider required on exec even with broad K.
+      void svc.createIntent<SpokeChainKey>({ params });
+      void svc.createIntentRaw<SpokeChainKey>({ params });
 
-      void svc.createIntent<SpokeChainKey, false>({ params, raw: false, walletProvider: mockEvmProvider });
-      void svc.createIntent<SpokeChainKey, false>({ params, raw: false, walletProvider: mockSolanaProvider });
-      void svc.createIntent<SpokeChainKey, false>({ params, raw: false, walletProvider: mockStellarProvider });
+      // Broad K falls back to IWalletProvider union; all chain providers are accepted.
+      void svc.createIntent<SpokeChainKey>({ params, walletProvider: mockEvmProvider });
+      void svc.createIntent<SpokeChainKey>({ params, walletProvider: mockSolanaProvider });
+      void svc.createIntent<SpokeChainKey>({ params, walletProvider: mockStellarProvider });
     }
   });
 });
 
-describe('SwapService.swap — narrows walletProvider (raw is always false here)', () => {
+describe('SwapService.swap — narrows walletProvider (always exec)', () => {
   const svc = makeSwapService();
 
   it('EVM literal → walletProvider must be IEvmWalletProvider', () => {
     if (false as boolean) {
       void svc.swap({
         params: intentInput(ChainKeys.BSC_MAINNET),
-        raw: false,
         walletProvider: mockEvmProvider,
       });
       void svc.swap({
         params: intentInput(ChainKeys.BSC_MAINNET),
-        raw: false,
         // @ts-expect-error — Solana provider mismatched.
         walletProvider: mockSolanaProvider,
       });
@@ -579,68 +569,61 @@ describe('SwapService.swap — narrows walletProvider (raw is always false here)
     if (false as boolean) {
       void svc.swap({
         params: intentInput(ChainKeys.SOLANA_MAINNET),
-        raw: false,
         walletProvider: mockSolanaProvider,
       });
       void svc.swap({
         params: intentInput(ChainKeys.SOLANA_MAINNET),
-        raw: false,
         // @ts-expect-error — EVM provider mismatched.
         walletProvider: mockEvmProvider,
       });
     }
   });
 
-  it('walletProvider is mandatory (no raw=true escape hatch on swap)', () => {
+  it('walletProvider is mandatory on swap', () => {
     if (false as boolean) {
-      // @ts-expect-error — swap always executes; walletProvider and raw are required.
-      void svc.swap({ params: intentInput(ChainKeys.BSC_MAINNET), raw: false });
+      // @ts-expect-error — swap always executes; walletProvider is required.
+      void svc.swap({ params: intentInput(ChainKeys.BSC_MAINNET) });
     }
   });
 });
 
-describe('SwapService.approve — narrows walletProvider from params.srcChain + raw', () => {
+describe('SwapService.approve — narrows walletProvider from params.srcChain', () => {
   const svc = makeSwapService();
 
-  it('EVM literal + raw=false → walletProvider must be IEvmWalletProvider', () => {
+  it('EVM literal → walletProvider must be IEvmWalletProvider', () => {
     if (false as boolean) {
       void svc.approve({
         params: intentInput(ChainKeys.BSC_MAINNET),
-        raw: false,
         walletProvider: mockEvmProvider,
       });
       void svc.approve({
         params: intentInput(ChainKeys.BSC_MAINNET),
-        raw: false,
         // @ts-expect-error — Stellar provider mismatched.
         walletProvider: mockStellarProvider,
       });
     }
   });
 
-  it('Stellar literal + raw=false → walletProvider must be IStellarWalletProvider', () => {
+  it('Stellar literal → walletProvider must be IStellarWalletProvider', () => {
     if (false as boolean) {
       void svc.approve({
         params: intentInput(ChainKeys.STELLAR_MAINNET),
-        raw: false,
         walletProvider: mockStellarProvider,
       });
       void svc.approve({
         params: intentInput(ChainKeys.STELLAR_MAINNET),
-        raw: false,
         // @ts-expect-error — EVM provider mismatched.
         walletProvider: mockEvmProvider,
       });
     }
   });
 
-  it('raw=true → walletProvider forbidden', () => {
+  it('approveRaw takes no walletProvider', () => {
     if (false as boolean) {
-      void svc.approve({ params: intentInput(ChainKeys.BSC_MAINNET), raw: true });
-      void svc.approve({
+      void svc.approveRaw({ params: intentInput(ChainKeys.BSC_MAINNET) });
+      void svc.approveRaw({
         params: intentInput(ChainKeys.BSC_MAINNET),
-        raw: true,
-        // @ts-expect-error — walletProvider forbidden when raw: true.
+        // @ts-expect-error — walletProvider is not a property of SwapActionParamsRaw.
         walletProvider: mockEvmProvider,
       });
     }
@@ -654,12 +637,10 @@ describe('SwapService.isAllowanceValid — narrows walletProvider from params.sr
     if (false as boolean) {
       void svc.isAllowanceValid({
         params: intentInput(ChainKeys.BSC_MAINNET),
-        raw: false,
         walletProvider: mockEvmProvider,
       });
       void svc.isAllowanceValid({
         params: intentInput(ChainKeys.BSC_MAINNET),
-        raw: false,
         // @ts-expect-error — Solana provider mismatched.
         walletProvider: mockSolanaProvider,
       });
@@ -670,22 +651,20 @@ describe('SwapService.isAllowanceValid — narrows walletProvider from params.sr
     if (false as boolean) {
       void svc.isAllowanceValid({
         params: intentInput(ChainKeys.BITCOIN_MAINNET),
-        raw: false,
         walletProvider: mockBitcoinProvider,
       });
       void svc.isAllowanceValid({
         params: intentInput(ChainKeys.BITCOIN_MAINNET),
-        raw: false,
         // @ts-expect-error — Stellar provider mismatched.
         walletProvider: mockStellarProvider,
       });
     }
   });
 
-  it('walletProvider is always required (raw must be false)', () => {
+  it('walletProvider is always required', () => {
     if (false as boolean) {
       // @ts-expect-error — walletProvider is required.
-      void svc.isAllowanceValid({ params: intentInput(ChainKeys.BSC_MAINNET), raw: false });
+      void svc.isAllowanceValid({ params: intentInput(ChainKeys.BSC_MAINNET) });
     }
   });
 });
@@ -693,45 +672,40 @@ describe('SwapService.isAllowanceValid — narrows walletProvider from params.sr
 describe('SwapService.createLimitOrder / createLimitOrderIntent — same narrowing as createIntent', () => {
   const svc = makeSwapService();
 
-  it('createLimitOrder: EVM literal + raw=false → walletProvider must be IEvmWalletProvider', () => {
+  it('createLimitOrder: EVM literal → walletProvider must be IEvmWalletProvider', () => {
     if (false as boolean) {
       void svc.createLimitOrder({
         params: intentInput(ChainKeys.BSC_MAINNET),
-        raw: false,
         walletProvider: mockEvmProvider,
       });
       void svc.createLimitOrder({
         params: intentInput(ChainKeys.BSC_MAINNET),
-        raw: false,
         // @ts-expect-error — Solana provider mismatched.
         walletProvider: mockSolanaProvider,
       });
     }
   });
 
-  it('createLimitOrderIntent: Solana literal + raw=false → walletProvider must be ISolanaWalletProvider', () => {
+  it('createLimitOrderIntent: Solana literal → walletProvider must be ISolanaWalletProvider', () => {
     if (false as boolean) {
       void svc.createLimitOrderIntent({
         params: intentInput(ChainKeys.SOLANA_MAINNET),
-        raw: false,
         walletProvider: mockSolanaProvider,
       });
       void svc.createLimitOrderIntent({
         params: intentInput(ChainKeys.SOLANA_MAINNET),
-        raw: false,
         // @ts-expect-error — EVM provider mismatched.
         walletProvider: mockEvmProvider,
       });
     }
   });
 
-  it('createLimitOrderIntent: raw=true → walletProvider forbidden', () => {
+  it('createLimitOrderIntentRaw takes no walletProvider', () => {
     if (false as boolean) {
-      void svc.createLimitOrderIntent({ params: intentInput(ChainKeys.BSC_MAINNET), raw: true });
-      void svc.createLimitOrderIntent({
+      void svc.createLimitOrderIntentRaw({ params: intentInput(ChainKeys.BSC_MAINNET) });
+      void svc.createLimitOrderIntentRaw({
         params: intentInput(ChainKeys.BSC_MAINNET),
-        raw: true,
-        // @ts-expect-error — walletProvider forbidden when raw: true.
+        // @ts-expect-error — walletProvider is not a property of LimitOrderActionParamsRaw.
         walletProvider: mockEvmProvider,
       });
     }
@@ -742,54 +716,33 @@ describe('SwapService.cancelIntent — narrows walletProvider from explicit srcC
   const svc = makeSwapService();
   const intent = makeIntent();
 
-  it('EVM srcChainKey + raw=false → walletProvider must be IEvmWalletProvider', () => {
+  it('EVM srcChainKey → walletProvider must be IEvmWalletProvider', () => {
     if (false as boolean) {
       void svc.cancelIntent({
         srcChainKey: ChainKeys.BSC_MAINNET,
         intent,
-        raw: false,
         walletProvider: mockEvmProvider,
       });
       void svc.cancelIntent({
         srcChainKey: ChainKeys.BSC_MAINNET,
         intent,
-        raw: false,
         // @ts-expect-error — Stellar provider mismatched.
         walletProvider: mockStellarProvider,
       });
     }
   });
 
-  it('Solana srcChainKey + raw=false → walletProvider must be ISolanaWalletProvider', () => {
+  it('Solana srcChainKey → walletProvider must be ISolanaWalletProvider', () => {
     if (false as boolean) {
       void svc.cancelIntent({
         srcChainKey: ChainKeys.SOLANA_MAINNET,
         intent,
-        raw: false,
         walletProvider: mockSolanaProvider,
       });
       void svc.cancelIntent({
         srcChainKey: ChainKeys.SOLANA_MAINNET,
         intent,
-        raw: false,
         // @ts-expect-error — EVM provider mismatched.
-        walletProvider: mockEvmProvider,
-      });
-    }
-  });
-
-  it('raw=true → walletProvider forbidden', () => {
-    if (false as boolean) {
-      void svc.cancelIntent({
-        srcChainKey: ChainKeys.BSC_MAINNET,
-        intent,
-        raw: true,
-      });
-      void svc.cancelIntent({
-        srcChainKey: ChainKeys.BSC_MAINNET,
-        intent,
-        raw: true,
-        // @ts-expect-error — walletProvider forbidden when raw: true.
         walletProvider: mockEvmProvider,
       });
     }
@@ -807,7 +760,6 @@ describe('SwapService.isAllowanceValid', () => {
 
     const result = await svc.isAllowanceValid({
       params: intentInput(ChainKeys.SONIC_MAINNET),
-      raw: false,
       walletProvider: mockEvmProvider,
     });
 
@@ -823,7 +775,6 @@ describe('SwapService.isAllowanceValid', () => {
 
     const result = await svc.isAllowanceValid({
       params: intentInput(ChainKeys.BSC_MAINNET),
-      raw: false,
       walletProvider: mockEvmProvider,
     });
 
@@ -838,7 +789,6 @@ describe('SwapService.isAllowanceValid', () => {
     const stellarParams = intentInput(ChainKeys.STELLAR_MAINNET);
     const result = await svc.isAllowanceValid({
       params: stellarParams,
-      raw: false,
       walletProvider: mockStellarProvider,
     });
     expect(result).toEqual({ ok: true, value: true });
@@ -853,7 +803,6 @@ describe('SwapService.isAllowanceValid', () => {
     const svc = makeSwapService();
     const result = await svc.isAllowanceValid({
       params: intentInput(ChainKeys.SOLANA_MAINNET),
-      raw: false,
       walletProvider: mockSolanaProvider,
     });
     expect(result).toEqual({ ok: true, value: true });
@@ -867,7 +816,6 @@ describe('SwapService.approve', () => {
 
     const result = (await svc.approve({
       params: intentInput(ChainKeys.SONIC_MAINNET),
-      raw: false,
       walletProvider: mockEvmProvider,
     })) as Result<`0x${string}`>;
 
@@ -882,9 +830,8 @@ describe('SwapService.approve', () => {
     const rawTx = { from: '0x1', to: '0x2', data: '0x', value: 0n };
     const spy = vi.spyOn(Erc20Service, 'approve').mockResolvedValueOnce(rawTx as never);
 
-    const result = await svc.approve({
+    const result = await svc.approveRaw({
       params: intentInput(ChainKeys.BSC_MAINNET),
-      raw: true,
     });
 
     expect(result.ok).toBe(true);
@@ -898,7 +845,6 @@ describe('SwapService.approve', () => {
     const svc = makeSwapService();
     const result = await svc.approve({
       params: intentInput(ChainKeys.STELLAR_MAINNET),
-      raw: false,
       walletProvider: mockStellarProvider,
     });
     expect(result.ok).toBe(true);
@@ -918,9 +864,8 @@ describe('SwapService.createIntent', () => {
       '0xdata',
     ]);
 
-    const result = await svc.createIntent({
+    const result = await svc.createIntentRaw({
       params: intentInput(ChainKeys.SONIC_MAINNET),
-      raw: true,
     });
 
     expect(result.ok).toBe(true);
@@ -936,7 +881,6 @@ describe('SwapService.createIntent', () => {
 
     const result = await svc.createIntent({
       params: intentInput(ChainKeys.SONIC_MAINNET),
-      raw: false,
       walletProvider: mockEvmProvider,
     });
 
@@ -954,7 +898,6 @@ describe('SwapService.createIntent', () => {
 
     const result = await svc.createIntent({
       params: intentInput(ChainKeys.BSC_MAINNET),
-      raw: false,
       walletProvider: mockEvmProvider,
     });
 
@@ -973,14 +916,12 @@ describe('SwapService.createIntent', () => {
     const rawDepositTx = { from: '0x1', to: '0x2', data: '0x', value: 0n };
     (svc.spokeService.deposit as ReturnType<typeof vi.fn>).mockResolvedValueOnce(rawDepositTx);
 
-    const result = await svc.createIntent({
+    const result = await svc.createIntentRaw({
       params: intentInput(ChainKeys.BSC_MAINNET),
-      raw: true,
     });
 
     expect(result.ok).toBe(true);
     const depositCall = (svc.spokeService.deposit as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
-    expect(depositCall.raw).toBe(true);
     expect(depositCall).not.toHaveProperty('walletProvider');
   });
 
@@ -992,7 +933,6 @@ describe('SwapService.createIntent', () => {
 
     await svc.createIntent({
       params: { ...intentInput(ChainKeys.BITCOIN_MAINNET), srcAddress: 'bc1qusersource' },
-      raw: false,
       walletProvider: mockBitcoinProvider,
     });
 
@@ -1025,7 +965,6 @@ describe('SwapService.createLimitOrder and createLimitOrderIntent', () => {
     // Pass a non-zero deadline — the method must override it to 0n.
     await svc.createLimitOrder({
       params: { ...baseInput, deadline: 42n },
-      raw: false,
       walletProvider: mockEvmProvider,
     });
 
@@ -1045,15 +984,20 @@ describe('SwapService.createLimitOrder and createLimitOrderIntent', () => {
       value: ['0xtx' as never, { ...fakeIntent, feeAmount: 0n }, '0x'],
     });
 
-    await svc.createLimitOrderIntent({
+    // createLimitOrderIntentRaw delegates to createIntentRaw; spy on that instead.
+    const createIntentRawSpy = vi.spyOn(svc, 'createIntentRaw').mockResolvedValueOnce({
+      ok: true,
+      value: [{ from: '0x1', to: '0x2', data: '0x', value: 0n } as never, { ...fakeIntent, feeAmount: 0n }, '0x'],
+    });
+    createIntentSpy.mockRestore();
+
+    await svc.createLimitOrderIntentRaw({
       params: { ...baseInput, deadline: 9999n },
-      raw: true,
     });
 
-    expect(createIntentSpy).toHaveBeenCalledTimes(1);
-    const forwarded = createIntentSpy.mock.calls[0]?.[0];
+    expect(createIntentRawSpy).toHaveBeenCalledTimes(1);
+    const forwarded = createIntentRawSpy.mock.calls[0]?.[0];
     expect((forwarded?.params as CreateIntentParams).deadline).toBe(0n);
-    expect(forwarded?.raw).toBe(true);
     expect(forwarded?.params.srcChain).toBe(ChainKeys.BSC_MAINNET);
   });
 });
@@ -1067,7 +1011,6 @@ describe('SwapService.cancelIntent', () => {
     const result = await svc.cancelIntent({
       srcChainKey: ChainKeys.BSC_MAINNET,
       intent,
-      raw: false,
       walletProvider: mockEvmProvider,
     });
 
@@ -1079,22 +1022,8 @@ describe('SwapService.cancelIntent', () => {
     expect(sendCall.raw).toBe(false);
   });
 
-  it('omits walletProvider from the downstream sendMessage call when raw=true', async () => {
-    const svc = makeSwapService();
-    const intent = makeIntent(ChainKeys.BSC_MAINNET);
-    (svc.spokeService.sendMessage as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ from: '0x1' });
-
-    const result = await svc.cancelIntent({
-      srcChainKey: ChainKeys.BSC_MAINNET,
-      intent,
-      raw: true,
-    });
-
-    expect(result.ok).toBe(true);
-    const sendCall = (svc.spokeService.sendMessage as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
-    expect(sendCall.raw).toBe(true);
-    expect(sendCall).not.toHaveProperty('walletProvider');
-  });
+  // Note: SwapService.cancelIntent is exec-only by design — the raw twin lives at
+  // createCancelIntent<K, true>. Runtime coverage for the raw path belongs there.
 
   it('returns CANCEL_FAILED when srcChainKey disagrees with intent.srcChain', async () => {
     const svc = makeSwapService();
@@ -1104,7 +1033,6 @@ describe('SwapService.cancelIntent', () => {
     const result = await svc.cancelIntent({
       srcChainKey: ChainKeys.ARBITRUM_MAINNET,
       intent,
-      raw: false,
       walletProvider: mockEvmProvider,
     });
 

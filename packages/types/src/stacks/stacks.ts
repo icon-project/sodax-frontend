@@ -5,7 +5,11 @@ export type StacksRawTransaction = {
   estimatedLength?: number; // optional estimated byte length
 };
 
-export type StacksReturnType<Raw extends boolean> = Raw extends true ? StacksRawTransaction : string;
+export type StacksReturnType<Raw extends boolean> = Raw extends true
+  ? StacksRawTransaction
+  : Raw extends false
+    ? string
+    : StacksRawTransaction | string;
 
 export declare enum PostConditionMode {
   Allow = 1,

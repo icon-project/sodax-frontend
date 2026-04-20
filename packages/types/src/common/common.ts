@@ -6,6 +6,7 @@ import type {
   EvmRawTransaction,
   EvmReturnType,
   GetChainType,
+  GetWalletProviderType,
   Hex,
   HttpUrl,
   IconAddress,
@@ -391,3 +392,15 @@ export type BridgeLimit = {
 };
 
 export type SpokeChainConfigMap = Record<SpokeChainKey, SpokeChainConfig>;
+
+export type WalletProviderSlot<K extends SpokeChainKey | ChainType, Raw extends boolean> = Raw extends false
+  ? {
+      raw: Raw;
+      walletProvider: GetWalletProviderType<K>;
+    }
+  : Raw extends true
+    ? {
+        raw: Raw;
+        walletProvider?: never;
+      }
+    : never;

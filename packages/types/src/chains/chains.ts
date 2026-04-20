@@ -342,6 +342,8 @@ export type StellarSpokeChainConfig = BaseSpokeChainConfig<'STELLAR'> & {
   horizonRpcUrl: HttpUrl;
   sorobanRpcUrl: HttpUrl;
   trustlineConfigs: StellarAssetTrustline[];
+  priorityFee: string;
+  baseFee: string;
 };
 
 export type BitcoinSpokeChainConfig = BaseSpokeChainConfig<'BITCOIN'> & {
@@ -398,19 +400,39 @@ export type NearSpokeChainConfig = BaseSpokeChainConfig<'NEAR'> & {
   rpcUrl: string;
 };
 
-export type GetChainConfigType<T extends ChainType> = T extends 'EVM'
-  ? EvmSpokeChainConfig
-  : T extends 'SOLANA'
-    ? SolanaChainConfig
-    : T extends 'STELLAR'
-      ? StellarSpokeChainConfig
-      : T extends 'ICON'
-        ? IconSpokeChainConfig
-        : T extends 'SUI'
-          ? SuiSpokeChainConfig
-          : T extends 'INJECTIVE'
-            ? InjectiveSpokeChainConfig
-            : BaseSpokeChainConfig<T>;
+export type SpokeChainConfig =
+  | EvmSpokeChainConfig
+  | SonicSpokeChainConfig
+  | InjectiveSpokeChainConfig
+  | IconSpokeChainConfig
+  | SuiSpokeChainConfig
+  | StellarSpokeChainConfig
+  | BitcoinSpokeChainConfig
+  | SolanaChainConfig
+  | StacksSpokeChainConfig
+  | NearSpokeChainConfig;
+
+export type GetSpokeChainConfigType<T extends SpokeChainKey> = T extends SonicChainKey
+  ? SonicSpokeChainConfig
+  : GetChainType<T> extends 'EVM'
+    ? EvmSpokeChainConfig
+    : GetChainType<T> extends 'SOLANA'
+      ? SolanaChainConfig
+      : GetChainType<T> extends 'STELLAR'
+        ? StellarSpokeChainConfig
+        : GetChainType<T> extends 'ICON'
+          ? IconSpokeChainConfig
+          : GetChainType<T> extends 'SUI'
+            ? SuiSpokeChainConfig
+            : GetChainType<T> extends 'INJECTIVE'
+              ? InjectiveSpokeChainConfig
+              : GetChainType<T> extends 'NEAR'
+                ? NearSpokeChainConfig
+                : GetChainType<T> extends 'STACKS'
+                  ? StacksSpokeChainConfig
+                  : GetChainType<T> extends 'BITCOIN'
+                    ? BitcoinSpokeChainConfig
+                    : SpokeChainConfig;
 
 export type IconAddress = `hx${string}` | `cx${string}`;
 export type IconSpokeChainConfig = BaseSpokeChainConfig<'ICON'> & {
@@ -435,18 +457,6 @@ export type StacksSpokeChainConfig = BaseSpokeChainConfig<'STACKS'> & {
   rpcUrl: string;
   nativeToken: string;
 };
-
-export type SpokeChainConfig =
-  | EvmSpokeChainConfig
-  | SonicSpokeChainConfig
-  | InjectiveSpokeChainConfig
-  | IconSpokeChainConfig
-  | SuiSpokeChainConfig
-  | StellarSpokeChainConfig
-  | BitcoinSpokeChainConfig
-  | SolanaChainConfig
-  | StacksSpokeChainConfig
-  | NearSpokeChainConfig;
 
 export const spokeChainConfig = {
   [ChainKeys.SONIC_MAINNET]: {
@@ -697,6 +707,8 @@ export const spokeChainConfig = {
       pollingIntervalMs: 500,
       maxTimeoutMs: 30_000,
     },
+    priorityFee: '10000',
+    baseFee: '100',
   } as const satisfies StellarSpokeChainConfig,
   [ChainKeys.SUI_MAINNET]: {
     addresses: {

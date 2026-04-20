@@ -1,5 +1,5 @@
 import { sonicWalletFactoryAbi } from '../../abis/sonicWalletFactory.abi.js';
-import { type Address, type ChainId, type HubAddress, getIntentRelayChainId } from '@sodax/types';
+import { type Address, type SpokeChainKey, type HubAddress, getIntentRelayChainId } from '@sodax/types';
 import type { EvmHubProvider } from '../../entities/index.js';
 import { encodeAddress } from '../../utils/shared-utils.js';
 import { walletFactoryAbi } from '../../abis/index.js';
@@ -28,19 +28,19 @@ export class HubService {
   /**
    * Gets the hub wallet address for a user based on their spoke chain address.
    * @param address - The user's address on the spoke chain
-   * @param chainId - spoke chain id
+   * @param chainKey - spoke chain id
    * @param hubProvider - The provider for interacting with the hub chain
    * @returns The user's hub wallet address
    */
   public static async getUserHubWalletAddress(
     address: string,
-    chainId: ChainId,
+    chainKey: SpokeChainKey,
     hubProvider: EvmHubProvider,
   ): Promise<Address> {
-    const encodedAddress = encodeAddress(chainId, address);
+    const encodedAddress = encodeAddress(chainKey, address);
 
     // for hub chain, use the user router instead of CREATE3
-    if (chainId === hubProvider.chainConfig.chain.id) {
+    if (chainKey === hubProvider.chainConfig.chain.id) {
       return HubService.getUserRouter(encodedAddress, hubProvider);
     }
 
@@ -48,7 +48,7 @@ export class HubService {
       address: hubProvider.chainConfig.addresses.hubWallet,
       abi: walletFactoryAbi,
       functionName: 'getDeployedAddress',
-      args: [BigInt(getIntentRelayChainId(chainId)), encodedAddress],
+      args: [BigInt(getIntentRelayChainId(chainKey)), encodedAddress],
     });
   }
 }

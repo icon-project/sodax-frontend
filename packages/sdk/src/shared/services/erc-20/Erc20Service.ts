@@ -2,22 +2,19 @@ import { encodeFunctionData, erc20Abi, type Address, type PublicClient } from 'v
 import {
   spokeChainConfig,
   type EvmChainKey,
-  type SonicChainKey,
   type EvmContractCall,
   type EvmReturnType,
   type Result,
   type TxReturnType,
+  type GetWalletProviderType,
 } from '@sodax/types';
-import type { OptionalWalletActionParamType } from '../../types/types.js';
 
-export type Erc20ApproveParams<Raw extends boolean> = OptionalWalletActionParamType<
-  EvmChainKey,
-  Raw
-> & {
+export type Erc20ApproveParams<Raw extends boolean> = {
   token: Address;
   amount: bigint;
   from: Address;
   spender: Address;
+  walletProvider: GetWalletProviderType<EvmChainKey> | undefined;
 };
 
 export type Erc20IsAllowanceParams<ChainKey extends EvmChainKey> = {
@@ -112,9 +109,7 @@ export class Erc20Service {
    * @param spender - Spender address
    * @param provider - EVM Provider
    */
-  static async approve<Raw extends boolean>(
-    params: Erc20ApproveParams<Raw>,
-  ): Promise<TxReturnType<EvmChainKey | SonicChainKey, Raw>> {
+  static async approve<Raw extends boolean>(params: Erc20ApproveParams<Raw>): Promise<TxReturnType<EvmChainKey, Raw>> {
     const rawTx = {
       from: params.from,
       to: params.token,
@@ -126,19 +121,14 @@ export class Erc20Service {
       }),
     } satisfies EvmReturnType<true>;
 
-    if ('raw' in params && params.raw === true) {
-      return rawTx satisfies TxReturnType<EvmChainKey | SonicChainKey, true> as TxReturnType<
-        EvmChainKey | SonicChainKey,
-        Raw
-      >;
+    if (!params.walletProvider) {
+      return rawTx satisfies TxReturnType<EvmChainKey, true> as TxReturnType<EvmChainKey, Raw>;
     }
 
-    return (await (
-      params as OptionalWalletActionParamType<EvmChainKey | SonicChainKey, false>
-    ).walletProvider.sendTransaction(rawTx)) satisfies TxReturnType<EvmChainKey | SonicChainKey, false> as TxReturnType<
-      EvmChainKey | SonicChainKey,
-      Raw
-    >;
+    return (await params.walletProvider.sendTransaction(rawTx)) satisfies TxReturnType<
+      EvmChainKey,
+      false
+    > as TxReturnType<EvmChainKey, Raw>;
   }
 
   /**

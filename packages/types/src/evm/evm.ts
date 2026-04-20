@@ -1,8 +1,12 @@
 import type { Address, Hex, Hash } from '../shared/shared.js';
 import type { ICoreWallet } from '../wallet/wallet.js';
 
-export type EvmTxReturnType<T extends boolean> = T extends true ? EvmRawTransaction : Hex;
-export type EvmReturnType<Raw extends boolean> = Raw extends true ? EvmRawTransaction : Hex;
+export type EvmReturnType<Raw extends boolean> =
+  Raw extends true
+    ? EvmRawTransaction
+    : Raw extends false
+      ? Hex
+      : Hex | EvmRawTransaction;
 
 export type EvmRawTransaction = {
   from: Address;

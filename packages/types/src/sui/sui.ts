@@ -1,6 +1,10 @@
 import type { Base64String, Hex, ICoreWallet } from '../index.js';
 
-export type SuiReturnType<Raw extends boolean> = Raw extends true ? SuiRawTransaction : string;
+export type SuiReturnType<Raw extends boolean> = Raw extends true
+  ? SuiRawTransaction
+  : Raw extends false
+    ? string
+    : SuiRawTransaction | string;
 
 export type SuiRawTransaction = {
   from: Hex;

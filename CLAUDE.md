@@ -86,6 +86,7 @@ Key rules enforced:
 - Use `import type` for type-only imports (`useImportType: warn`)
 - Use `node:` prefix for Node.js builtins (`useNodejsImportProtocol: error`)
 - No inferrable types (`noInferrableTypes: error`)
+- **No `as unknown as <Type>` double-casts in non-test source files.** This pattern strips the type system entirely and hides real issues (bad generic inference, wrong param shapes, unmodeled union). If you feel the need for one, stop and fix the underlying type — add a proper generic/conditional, a narrowing guard, or an overload. Allowed only inside `*.test.ts` / `*.test.tsx` where mocks intentionally defeat types.
 
 Formatting: 2-space indent, 120 char line width, single quotes, semicolons required, trailing commas, LF line endings.
 

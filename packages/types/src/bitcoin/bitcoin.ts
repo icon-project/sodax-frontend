@@ -92,7 +92,11 @@ export type BitcoinRawTransaction = {
   data: string;
 };
 
-export type BitcoinReturnType<Raw extends boolean> = Raw extends true ? BitcoinRawTransaction : string;
+export type BitcoinReturnType<Raw extends boolean> = Raw extends true
+  ? BitcoinRawTransaction
+  : Raw extends false
+    ? string
+    : BitcoinRawTransaction | string;
 
 export interface IBitcoinWalletProvider extends ICoreWallet {
   readonly chainType: 'BITCOIN';

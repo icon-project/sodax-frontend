@@ -56,7 +56,11 @@ export interface InjectiveTxResponse {
   events?: unknown[];
 }
 
-export type InjectiveReturnType<Raw extends boolean> = Raw extends true ? InjectiveRawTransaction : string;
+export type InjectiveReturnType<Raw extends boolean> = Raw extends true
+  ? InjectiveRawTransaction
+  : Raw extends false
+    ? string
+    : InjectiveRawTransaction | string;
 
 export type InjectiveRawTransaction = {
   from: `0x${string}`;

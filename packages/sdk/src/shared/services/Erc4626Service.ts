@@ -1,7 +1,13 @@
 import { encodeFunctionData, type Address, type PublicClient } from 'viem';
 import { erc4626Abi } from '../abis/erc4626.abi.js';
-import type { EvmContractCall, EvmReturnType, Result, TxReturnType } from '../types/types.js';
-import type { EvmChainKey, IEvmWalletProvider } from '@sodax/types';
+import type {
+  EvmChainKey,
+  EvmContractCall,
+  EvmReturnType,
+  IEvmWalletProvider,
+  Result,
+  TxReturnType,
+} from '@sodax/types';
 
 export class Erc4626Service {
   private constructor() {}
@@ -461,7 +467,7 @@ export class Erc4626Service {
     owner: Address,
     walletProvider: IEvmWalletProvider,
     raw?: R,
-  ): Promise<TxReturnType<EvmChaiEvmChainKeynId, R>> {
+  ): Promise<TxReturnType<EvmChainKey, R>> {
     const walletAddress = await walletProvider.getWalletAddress();
 
     const rawTx = {

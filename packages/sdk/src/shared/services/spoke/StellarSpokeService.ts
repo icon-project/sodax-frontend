@@ -1,28 +1,20 @@
 import { fromHex, toHex, type Hex } from 'viem';
 import {
   type EstimateGasParams,
-  type Result,
-  STELLAR_DEFAULT_TX_TIMEOUT_SECONDS,
   CustomSorobanServer,
-  type StellarGasEstimate,
-  type TxReturnType,
   parseToStroops,
   sleep,
   type GetDepositParams,
-  STELLAR_PRIORITY_FEE,
   type DepositParams,
   type SendMessageParams,
-  type WalletActionParams,
-  type OptionalSkipSimulation,
-  type SrcParams,
   type WaitForTxReceiptParams,
   type WaitForTxReceiptReturnType,
+  type ConfigService,
 } from '../../../index.js';
 import {
   rpc,
   Asset,
   Contract,
-  BASE_FEE,
   Address,
   FeeBumpTransaction,
   rpc as StellarRpc,
@@ -43,9 +35,13 @@ import {
   spokeChainConfig,
   type HubAddress,
   type IStellarWalletProvider,
-  type SharedChainConfig,
+  type Result,
   type StellarChainKey,
+  type StellarGasEstimate,
   type StellarSorobanTransactionReceipt,
+  type StellarSpokeChainConfig,
+  type TxReturnType,
+  type WalletProviderSlot,
 } from '@sodax/types';
 
 export class CustomStellarAccount {
@@ -109,26 +105,36 @@ export type StellarTransferToHubParams = {
   data: Hex;
 };
 
-export type RequestTrustlineParams<S extends StellarChainKey, R extends boolean> = WalletActionParams<R, S> &
-  OptionalSkipSimulation &
-  SrcParams<S> & {
-    token: string;
-    amount: bigint;
-  };
+export type RequestTrustlineParams<S extends StellarChainKey, R extends boolean> = {
+  srcAddress: string;
+  srcChainKey: S;
+  token: string;
+  amount: bigint;
+} & WalletProviderSlot<S, R>;
 
 export class StellarSpokeService {
+  private readonly config: ConfigService;
+  private readonly chainConfig: StellarSpokeChainConfig;
   public readonly server: Horizon.Server;
   public readonly sorobanServer: CustomSorobanServer;
   private readonly pollingIntervalMs: number;
   private readonly maxTimeoutMs: number;
+  private readonly priorityFee: string;
+  private readonly baseFee: string;
 
-  constructor(sharedConfig: SharedChainConfig) {
+  constructor(config: ConfigService) {
+    this.config = config;
+    this.chainConfig = config.sodaxConfig.chains[ChainKeys.STELLAR_MAINNET];
+
     // since we only support mainnet for now, we can hardcode the single stellar chain config
-    const chainConfig = sharedConfig[ChainKeys.STELLAR_MAINNET];
-    this.server = new Horizon.Server(chainConfig.horizonRpcUrl, { allowHttp: true });
-    this.sorobanServer = new CustomSorobanServer(chainConfig.sorobanRpcUrl, {});
-    this.pollingIntervalMs = chainConfig.pollingIntervalMs;
-    this.maxTimeoutMs = chainConfig.maxTimeoutMs;
+    this.server = new Horizon.Server(this.chainConfig.horizonRpcUrl, {
+      allowHttp: true,
+    });
+    this.sorobanServer = new CustomSorobanServer(this.chainConfig.sorobanRpcUrl, {});
+    this.pollingIntervalMs = this.chainConfig.pollingConfig.pollingIntervalMs;
+    this.maxTimeoutMs = this.chainConfig.pollingConfig.maxTimeoutMs;
+    this.priorityFee = this.chainConfig.priorityFee;
+    this.baseFee = this.chainConfig.baseFee;
   }
 
   public async getBalance(params: GetDepositParams<StellarChainKey>): Promise<number> {
@@ -139,7 +145,7 @@ export class StellarSpokeService {
     ]);
 
     const tx = new TransactionBuilder(sourceAccount, {
-      fee: BASE_FEE,
+      fee: this.baseFee,
       networkPassphrase: network.passphrase,
     })
       .addOperation(contract.call('get_token_balance', nativeToScVal(params.srcAddress, { type: 'address' })))
@@ -168,11 +174,11 @@ export class StellarSpokeService {
   ): Promise<[Transaction, StellarRpc.Api.SimulateTransactionResponse]> {
     const simulationForFee = await this.sorobanServer.simulateTransaction(
       new TransactionBuilder(account.getAccountClone(), {
-        fee: BASE_FEE,
+        fee: this.baseFee,
         networkPassphrase: network.passphrase,
       })
         .addOperation(operation)
-        .setTimeout(STELLAR_DEFAULT_TX_TIMEOUT_SECONDS)
+        .setTimeout(this.maxTimeoutMs)
         .build(),
     );
 
@@ -182,15 +188,11 @@ export class StellarSpokeService {
 
     // note new account info must be loaded because local account sequence increments for every created tx
     const priorityTransaction = new TransactionBuilder(account.getAccountClone(), {
-      fee: (
-        BigInt(simulationForFee.minResourceFee) +
-        BigInt(STELLAR_PRIORITY_FEE) +
-        BigInt(BASE_FEE.toString())
-      ).toString(),
+      fee: (BigInt(simulationForFee.minResourceFee) + BigInt(this.priorityFee) + BigInt(this.baseFee)).toString(),
       networkPassphrase: network.passphrase,
     })
       .addOperation(operation)
-      .setTimeout(STELLAR_DEFAULT_TX_TIMEOUT_SECONDS)
+      .setTimeout(this.maxTimeoutMs)
       .build();
 
     const simulation = await this.sorobanServer.simulateTransaction(priorityTransaction);
@@ -217,7 +219,7 @@ export class StellarSpokeService {
   public buildSendMessageCall<R extends boolean>(
     params: SendMessageParams<StellarChainKey, R>,
   ): xdr.Operation<Operation.InvokeHostFunction> {
-    const connection = new Contract(spokeChainConfig[params.srcChainKey].addresses.connection);
+    const connection = new Contract(this.chainConfig.addresses.connection);
 
     return connection.call(
       'send_message',
@@ -249,7 +251,7 @@ export class StellarSpokeService {
 
       const assembledPriorityTx = SorobanRpc.assembleTransaction(rawPriorityTx, simulation).build();
 
-      if (params.raw === true) {
+      if (params.raw) {
         const transactionXdr = rawPriorityTx.toXDR();
 
         return {
@@ -360,11 +362,11 @@ export class StellarSpokeService {
     return await this.signAndSendTransaction(
       walletProvider,
       new TransactionBuilder(newAccount, {
-        fee: BASE_FEE,
+        fee: this.baseFee,
         networkPassphrase: network.passphrase,
       })
         .addOperation(operation)
-        .setTimeout(STELLAR_DEFAULT_TX_TIMEOUT_SECONDS)
+        .setTimeout(this.maxTimeoutMs)
         .build(),
     );
   }
@@ -377,7 +379,7 @@ export class StellarSpokeService {
     network: StellarRpc.Api.GetNetworkResponse,
   ): Promise<string> {
     // Build the restoration operation using the RPC server's hints.
-    const totalFee = (BigInt(BASE_FEE) + BigInt(STELLAR_PRIORITY_FEE) + BigInt(minResourceFee)).toString();
+    const totalFee = (BigInt(this.baseFee) + BigInt(this.priorityFee) + BigInt(minResourceFee)).toString();
 
     return this.signAndSendTransaction(
       walletProvider,
@@ -385,7 +387,7 @@ export class StellarSpokeService {
         .setNetworkPassphrase(network.passphrase)
         .setSorobanData(transactionData)
         .addOperation(Operation.restoreFootprint({}))
-        .setTimeout(STELLAR_DEFAULT_TX_TIMEOUT_SECONDS)
+        .setTimeout(this.maxTimeoutMs)
         .build(),
     );
   }
@@ -423,7 +425,7 @@ export class StellarSpokeService {
 
       const assembledPriorityTx = SorobanRpc.assembleTransaction(rawPriorityTx, simulation).build();
 
-      if (params.raw === true) {
+      if (params.raw) {
         const transactionXdr = rawPriorityTx.toXDR();
 
         return {
@@ -508,7 +510,7 @@ export class StellarSpokeService {
    * @param raw - Whether to return the raw transaction data.
    * @returns The transaction result.
    */
-  public async requestTrustline<S extends StellarChainKey, R extends boolean = false>(
+  public async requestTrustline<R extends boolean>(
     params: RequestTrustlineParams<StellarChainKey, R>,
   ): Promise<TxReturnType<StellarChainKey, R>> {
     try {
@@ -529,7 +531,7 @@ export class StellarSpokeService {
       const stellarAccount = new CustomStellarAccount(accountResponse);
 
       const transaction = new TransactionBuilder(stellarAccount.getAccountClone(), {
-        fee: BASE_FEE,
+        fee: this.baseFee,
         networkPassphrase: network.passphrase,
       })
         .addOperation(
@@ -537,10 +539,10 @@ export class StellarSpokeService {
             asset: new Asset(asset?.assetCode, asset?.assetIssuer),
           }),
         )
-        .setTimeout(STELLAR_DEFAULT_TX_TIMEOUT_SECONDS)
+        .setTimeout(this.maxTimeoutMs)
         .build();
 
-      if (params.raw === true) {
+      if (params.raw) {
         const transactionXdr = transaction.toXDR();
 
         return {

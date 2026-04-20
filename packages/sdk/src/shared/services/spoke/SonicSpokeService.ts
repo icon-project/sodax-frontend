@@ -18,18 +18,17 @@ import {
   spokeChainConfig,
   type EvmRawTransactionReceipt,
   ChainKeys,
-  type SharedChainConfig,
   type PartnerFee,
   type TxReturnType,
   type EvmContractCall,
   isSonicChainKey,
+  type WalletProviderSlot,
 } from '@sodax/types';
 import invariant from 'tiny-invariant';
 import {
   encodeAddress,
   randomUint256,
   Erc20Service,
-  type Erc20IsAllowanceValidParams,
   getEvmViemChain,
   wrappedSonicAbi,
   sonicWalletFactoryAbi,
@@ -40,18 +39,25 @@ import {
   type CreateIntentParams,
   type Intent,
   type EstimateGasParams,
-  type SrcParams,
-  type WalletActionParams,
   type EvmHubProvider,
   type GetDepositParams,
   type SendMessageParams,
-  type OptionalWalletActionParamType,
-  type OptionalRaw,
+  ConfigService,
+  type Erc20IsAllowanceParams,
 } from '../../../index.js';
 
-export type SonicSpokeDepositParams<Raw extends boolean> = WalletActionParams<Raw, SonicChainKey> & SonicDepositParams;
+export type SonicSpokeDepositParams<Raw extends boolean> = {
+  srcAddress: Address;
+  srcChainKey: SonicChainKey;
+  to: HubAddress; // The address of the user on the hub chain (wallet abstraction address)
+  token: Address; // The address of the token to deposit
+  amount: bigint; // The amount of tokens to deposit
+  data: Hex; // The data to send with the deposit (encoded calls array)
+} & WalletProviderSlot<SonicChainKey, Raw>;
 
-export type SonicDepositParams = SrcParams<SonicChainKey> & {
+export type SonicDepositParams = {
+  srcAddress: Address;
+  srcChainKey: SonicChainKey;
   to: HubAddress; // The address of the user on the hub chain (wallet abstraction address)
   token: Address; // The address of the token to deposit
   amount: bigint; // The amount of tokens to deposit
@@ -81,15 +87,15 @@ export type CreateSonicSwapIntentParams<Raw extends boolean> = {
   solverConfig: SolverConfig;
   fee: PartnerFee | undefined;
   hubProvider: EvmHubProvider;
-} & OptionalRaw<Raw> &
-  OptionalWalletActionParamType<SonicChainKey, Raw>;
+} & WalletProviderSlot<SonicChainKey, Raw>;
 
-export type ApproveSonicWithdrawParams<Raw extends boolean> = SrcParams<SonicChainKey> & {
+export type ApproveSonicWithdrawParams<Raw extends boolean> = {
+  srcAddress: Address;
+  srcChainKey: SonicChainKey;
   from: Address;
   fromChainId: SonicChainKey;
   withdrawInfo: WithdrawInfo;
-  publicClient: PublicClient;
-} & OptionalWalletActionParamType<SonicChainKey, Raw>;
+} & WalletProviderSlot<SonicChainKey, Raw>;
 
 export class SonicSpokeService {
   // since sonic is sole hub chain we only need one public client
@@ -97,21 +103,21 @@ export class SonicSpokeService {
   private readonly pollingIntervalMs: number;
   private readonly maxTimeoutMs: number;
 
-  public constructor(config: SharedChainConfig) {
-    const chainConfig = config[ChainKeys.SONIC_MAINNET];
+  public constructor(config: ConfigService) {
+    const chainConfig = config.sodaxConfig.chains[ChainKeys.SONIC_MAINNET];
     this.publicClient = createPublicClient({
       transport: http(chainConfig.rpcUrl),
       chain: getEvmViemChain(ChainKeys.SONIC_MAINNET),
     });
-    this.pollingIntervalMs = chainConfig.pollingIntervalMs;
-    this.maxTimeoutMs = chainConfig.maxTimeoutMs;
+    this.pollingIntervalMs = chainConfig.pollingConfig.pollingIntervalMs;
+    this.maxTimeoutMs = chainConfig.pollingConfig.maxTimeoutMs;
   }
 
   /**
    * Check ERC-20 allowance on Sonic (hub) for a given spender (e.g. intents contract).
    */
   public async isAllowanceValid(
-    params: Omit<Erc20IsAllowanceValidParams<SonicChainKey>, 'publicClient'>,
+    params: Omit<Erc20IsAllowanceParams<SonicChainKey>, 'publicClient'>,
   ): Promise<Result<boolean>> {
     try {
       return await Erc20Service.isAllowanceValid({ ...params, publicClient: this.publicClient });
@@ -302,7 +308,10 @@ export class SonicSpokeService {
     const srcAddress = createIntentParams.srcAddress as Address;
 
     const outputToken = isSonicChainKey(createIntentParams.dstChain)
-      ? hubProvider.configService.getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.hubAsset
+      ? hubProvider.configService.getSpokeTokenFromOriginalAssetAddress(
+          createIntentParams.dstChain,
+          createIntentParams.outputToken,
+        )?.hubAsset
       : (createIntentParams.outputToken as `0x${string}`);
 
     invariant(
@@ -360,7 +369,10 @@ export class SonicSpokeService {
     const srcAddress = createIntentParams.srcAddress as Address;
 
     const outputToken = isSonicChainKey(createIntentParams.dstChain)
-      ? hubProvider.configService.getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.hubAsset
+      ? hubProvider.configService.getSpokeTokenFromOriginalAssetAddress(
+          createIntentParams.dstChain,
+          createIntentParams.outputToken,
+        )?.hubAsset
       : (createIntentParams.outputToken as `0x${string}`);
 
     invariant(

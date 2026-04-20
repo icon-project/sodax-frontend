@@ -280,6 +280,7 @@ export class BackendApiService implements IConfigApi {
     const endpoint = `/swaps/submit-tx/status?${queryString}`;
 
     const data = await this.makeRequest<unknown>(endpoint, { ...config, method: 'GET' });
+
     if (!isSubmitSwapTxStatusResponse(data)) {
       throw new Error('Invalid submitSwapTxStatus response: unexpected response shape');
     }

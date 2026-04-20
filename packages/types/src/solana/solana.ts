@@ -13,7 +13,11 @@ export type SolanaRawTransaction = {
   data: Base64String;
 };
 
-export type SolanaReturnType<Raw extends boolean> = Raw extends true ? SolanaRawTransaction : string;
+export type SolanaReturnType<Raw extends boolean> = Raw extends true
+  ? SolanaRawTransaction
+  : Raw extends false
+    ? string
+    : SolanaRawTransaction | string;
 
 type Context = {
   slot: number;

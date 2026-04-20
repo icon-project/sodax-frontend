@@ -1,7 +1,6 @@
-import { encodeFunctionData, type Address } from 'viem';
+import { encodeFunctionData, type Address, type PublicClient } from 'viem';
 import { permit2Abi } from '../abis/permit2.abi.js';
-import type { EvmSpokeProvider, SonicSpokeProvider, EvmHubProvider } from '../entities/Providers.js';
-import type { PromiseEvmTxReturnType, EvmContractCall, EvmReturnType, Result } from '../types/types.js';
+import type { EvmChainKey, EvmContractCall, IEvmWalletProvider, Result, TxReturnType } from '@sodax/types';
 
 export interface PermitDetails {
   token: Address;
@@ -57,10 +56,10 @@ export class Permit2Service {
     user: Address,
     token: Address,
     spender: Address,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider | EvmHubProvider,
+    publicClient: PublicClient,
   ): Promise<Result<AllowanceInfo>> {
     try {
-      const result = await spokeProvider.publicClient.readContract({
+      const result = await publicClient.readContract({
         address: permit2,
         abi: permit2Abi,
         functionName: 'allowance',
@@ -99,10 +98,10 @@ export class Permit2Service {
     token: Address,
     spender: Address,
     amount: bigint,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider | EvmHubProvider,
+    publicClient: PublicClient,
   ): Promise<Result<boolean>> {
     try {
-      const allowanceResult = await Permit2Service.getAllowance(permit2, user, token, spender, spokeProvider);
+      const allowanceResult = await Permit2Service.getAllowance(permit2, user, token, spender, publicClient);
 
       if (!allowanceResult.ok) {
         return allowanceResult;
@@ -134,18 +133,17 @@ export class Permit2Service {
    * @param raw - Whether to return raw transaction data
    */
   static async approve<R extends boolean = false>(
+    srcAddress: Address,
     permit2: Address,
     token: Address,
     spender: Address,
     amount: bigint,
     expiration: number,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider,
+    walletProvider: IEvmWalletProvider,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-
+  ): Promise<TxReturnType<EvmChainKey, R>> {
     const rawTx = {
-      from: walletAddress,
+      from: srcAddress,
       to: permit2,
       value: 0n,
       data: encodeFunctionData({
@@ -153,13 +151,13 @@ export class Permit2Service {
         functionName: 'approve',
         args: [token, spender, amount, expiration],
       }),
-    } satisfies EvmReturnType<true>;
+    } satisfies TxReturnType<EvmChainKey, true>;
 
     if (raw) {
-      return rawTx as EvmReturnType<R>;
+      return rawTx as TxReturnType<EvmChainKey, R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
+    return walletProvider.sendTransaction(rawTx) as Promise<TxReturnType<EvmChainKey, R>>;
   }
 
   /**
@@ -172,17 +170,16 @@ export class Permit2Service {
    * @param raw - Whether to return raw transaction data
    */
   static async permit<R extends boolean = false>(
+    srcAddress: Address,
     permit2: Address,
     owner: Address,
     permitSingle: PermitSingle,
     signature: `0x${string}`,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider,
+    walletProvider: IEvmWalletProvider,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-
+  ): Promise<TxReturnType<EvmChainKey, R>> {
     const rawTx = {
-      from: walletAddress,
+      from: srcAddress,
       to: permit2,
       value: 0n,
       data: encodeFunctionData({
@@ -190,13 +187,13 @@ export class Permit2Service {
         functionName: 'permit',
         args: [owner, permitSingle, signature],
       }),
-    } satisfies EvmReturnType<true>;
+    } satisfies TxReturnType<EvmChainKey, true>;
 
     if (raw) {
-      return rawTx as EvmReturnType<R>;
+      return rawTx as TxReturnType<EvmChainKey, R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
+    return walletProvider.sendTransaction(rawTx) as Promise<TxReturnType<EvmChainKey, R>>;
   }
 
   /**
@@ -209,17 +206,16 @@ export class Permit2Service {
    * @param raw - Whether to return raw transaction data
    */
   static async permitBatch<R extends boolean = false>(
+    srcAddress: Address,
     permit2: Address,
     owner: Address,
     permitBatch: PermitBatch,
     signature: `0x${string}`,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider,
+    walletProvider: IEvmWalletProvider,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-
+  ): Promise<TxReturnType<EvmChainKey, R>> {
     const rawTx = {
-      from: walletAddress,
+      from: srcAddress,
       to: permit2,
       value: 0n,
       data: encodeFunctionData({
@@ -227,13 +223,13 @@ export class Permit2Service {
         functionName: 'permitBatch',
         args: [owner, permitBatch, signature],
       }),
-    } satisfies EvmReturnType<true>;
+    } satisfies TxReturnType<EvmChainKey, true>;
 
     if (raw) {
-      return rawTx as EvmReturnType<R>;
+      return rawTx as TxReturnType<EvmChainKey, R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
+    return walletProvider.sendTransaction(rawTx) as Promise<TxReturnType<EvmChainKey, R>>;
   }
 
   /**
@@ -247,18 +243,17 @@ export class Permit2Service {
    * @param raw - Whether to return raw transaction data
    */
   static async transferFrom<R extends boolean = false>(
+    srcAddress: Address,
     permit2: Address,
     from: Address,
     to: Address,
     amount: bigint,
     token: Address,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider,
+    walletProvider: IEvmWalletProvider,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-
+  ): Promise<TxReturnType<EvmChainKey, R>> {
     const rawTx = {
-      from: walletAddress,
+      from: srcAddress,
       to: permit2,
       value: 0n,
       data: encodeFunctionData({
@@ -266,13 +261,13 @@ export class Permit2Service {
         functionName: 'transferFrom',
         args: [from, to, amount, token],
       }),
-    } satisfies EvmReturnType<true>;
+    } satisfies TxReturnType<EvmChainKey, true>;
 
     if (raw) {
-      return rawTx as EvmReturnType<R>;
+      return rawTx as TxReturnType<EvmChainKey, R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
+    return walletProvider.sendTransaction(rawTx) as Promise<TxReturnType<EvmChainKey, R>>;
   }
 
   /**
@@ -283,15 +278,14 @@ export class Permit2Service {
    * @param raw - Whether to return raw transaction data
    */
   static async transferFromBatch<R extends boolean = false>(
+    srcAddress: Address,
     permit2: Address,
     transferDetails: AllowanceTransferDetails[],
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider,
+    walletProvider: IEvmWalletProvider,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-
+  ): Promise<TxReturnType<EvmChainKey, R>> {
     const rawTx = {
-      from: walletAddress,
+      from: srcAddress,
       to: permit2,
       value: 0n,
       data: encodeFunctionData({
@@ -299,13 +293,13 @@ export class Permit2Service {
         functionName: 'transferFromBatch',
         args: [transferDetails],
       }),
-    } satisfies EvmReturnType<true>;
+    } satisfies TxReturnType<EvmChainKey, true>;
 
     if (raw) {
-      return rawTx as EvmReturnType<R>;
+      return rawTx as TxReturnType<EvmChainKey, R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
+    return walletProvider.sendTransaction(rawTx) as Promise<TxReturnType<EvmChainKey, R>>;
   }
 
   /**
@@ -316,15 +310,14 @@ export class Permit2Service {
    * @param raw - Whether to return raw transaction data
    */
   static async lockdown<R extends boolean = false>(
+    srcAddress: Address,
     permit2: Address,
     approvals: TokenSpenderPair[],
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider,
+    walletProvider: IEvmWalletProvider,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-
+  ): Promise<TxReturnType<EvmChainKey, R>> {
     const rawTx = {
-      from: walletAddress,
+      from: srcAddress,
       to: permit2,
       value: 0n,
       data: encodeFunctionData({
@@ -332,13 +325,13 @@ export class Permit2Service {
         functionName: 'lockdown',
         args: [approvals],
       }),
-    } satisfies EvmReturnType<true>;
+    } satisfies TxReturnType<EvmChainKey, true>;
 
     if (raw) {
-      return rawTx as EvmReturnType<R>;
+      return rawTx as TxReturnType<EvmChainKey, R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
+    return walletProvider.sendTransaction(rawTx) as Promise<TxReturnType<EvmChainKey, R>>;
   }
 
   /**
@@ -351,17 +344,16 @@ export class Permit2Service {
    * @param raw - Whether to return raw transaction data
    */
   static async invalidateNonces<R extends boolean = false>(
+    srcAddress: Address,
     permit2: Address,
     token: Address,
     spender: Address,
     newNonce: number,
-    spokeProvider: EvmSpokeProvider | SonicSpokeProvider,
+    walletProvider: IEvmWalletProvider,
     raw?: R,
-  ): PromiseEvmTxReturnType<R> {
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-
+  ): Promise<TxReturnType<EvmChainKey, R>> {
     const rawTx = {
-      from: walletAddress,
+      from: srcAddress,
       to: permit2,
       value: 0n,
       data: encodeFunctionData({
@@ -369,13 +361,13 @@ export class Permit2Service {
         functionName: 'invalidateNonces',
         args: [token, spender, newNonce],
       }),
-    } satisfies EvmReturnType<true>;
+    } satisfies TxReturnType<EvmChainKey, true>;
 
     if (raw) {
-      return rawTx as EvmReturnType<R>;
+      return rawTx as TxReturnType<EvmChainKey, R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(rawTx) as PromiseEvmTxReturnType<R>;
+    return walletProvider.sendTransaction(rawTx) as Promise<TxReturnType<EvmChainKey, R>>;
   }
 
   /**

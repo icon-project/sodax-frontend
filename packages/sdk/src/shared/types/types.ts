@@ -12,9 +12,7 @@ import type {
 import type { EvmHubProvider } from '../entities/EvmHubProvider.js';
 import type { NearSpokeService } from '../services/spoke/NearSpokeService.js';
 import type {
-  ChainType,
   EvmSpokeOnlyChainKey,
-  GetAddressType,
   GetWalletProviderType,
   Hex,
   BitcoinChainKey,
@@ -27,7 +25,6 @@ import type {
   StellarChainKey,
   StacksChainKey,
   SuiChainKey,
-  IWalletProvider,
 } from '@sodax/types';
 
 /**
@@ -93,16 +90,5 @@ export type RawDestinationParams = {
 export type DestinationParamsType = RawDestinationParams;
 
 export type WalletProviderSlot<K extends SpokeChainKey, R extends boolean> = R extends true
-  ? { walletProvider?: never }
-  : R extends false
-    ? { walletProvider: GetWalletProviderType<K> }
-    : { walletProvider: GetWalletProviderType<K> };
-
-// WalletActionParams replaces the combination of OptionalRaw<R> + OptionalWalletActionParamType<R, C>
-// with a single discriminated conditional type that enables TypeScript narrowing on `raw`.
-// When Raw = true:    { raw: true }                         (raw required as discriminant, no walletProvider)
-// When Raw = false:   { raw?: false; walletProvider: ... }  (walletProvider required, raw optional)
-// When Raw = boolean: distributes to union of both branches (discriminated union, narrowable)
-// export type WalletActionParams<Raw extends boolean, C extends SpokeChainKey | ChainType> = Raw extends true
-//   ? { raw: true }
-//   : { raw: false; walletProvider: GetWalletProviderType<C> };
+  ? { raw: R; walletProvider?: never }
+  : { raw: R; walletProvider: GetWalletProviderType<K> };

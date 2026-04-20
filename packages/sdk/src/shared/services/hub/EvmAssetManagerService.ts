@@ -1,15 +1,14 @@
 import { type Address, type Hex, type PublicClient, encodeFunctionData } from 'viem';
 import { assetManagerAbi } from '../../abis/index.js';
-import type { EvmContractCall } from '../../types/types.js';
 import { encodeContractCalls } from '../../utils/evm-utils.js';
 import { EvmVaultTokenService } from './EvmVaultTokenService.js';
-import type { SpokeChainKey, AssetInfo } from '@sodax/types';
+import type { SpokeChainKey, AssetInfo, EvmContractCall } from '@sodax/types';
 import type { ConfigService } from '../../config/ConfigService.js';
 import { Erc20Service } from '../erc-20/index.js';
 import type { EvmHubProvider } from '../../entities/EvmHubProvider.js';
 
 export type EvmDepositToDataParams = {
-  token: Hex | string;
+  token: Address;
   to: Address;
   amount: bigint;
 };
@@ -77,10 +76,10 @@ export class EvmAssetManagerService {
     configService: ConfigService,
   ): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = configService.getHubAssetInfo(spokeChainId, params.token);
+    const assetConfig = configService.getSpokeTokenFromOriginalAssetAddress(spokeChainId, params.token);
 
     if (!assetConfig) {
-      throw new Error('[depositToData] Hub asset not found');
+      throw new Error(`[depositToData] Hub asset not found for token: ${params.token}`);
     }
 
     const assetAddress = assetConfig.hubAsset;
@@ -108,10 +107,10 @@ export class EvmAssetManagerService {
     spokeChainId: SpokeChainKey,
   ): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = hubProvider.configService.getHubAssetInfo(spokeChainId, params.token);
+    const assetConfig = hubProvider.configService.getSpokeTokenFromOriginalAssetAddress(spokeChainId, params.token);
 
     if (!assetConfig) {
-      throw new Error('[withdrawAssetData] Hub asset not found');
+      throw new Error(`[withdrawAssetData] Hub asset not found for token: ${params.token}`);
     }
 
     const assetAddress = assetConfig.hubAsset;
