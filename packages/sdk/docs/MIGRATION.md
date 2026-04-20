@@ -2,6 +2,8 @@
 
 Migration part of the SDK provides abstractions to assist you with migrating tokens between ICON and the hub chain (Sonic). The service supports multiple migration types including ICX/wICX → SODA, bnUSD legacy → new bnUSD, BALN → SODA, and their reverse operations.
 
+For the broader SDK/types architectural changes (spoke providers removal, stateful services, raw tx typing, `ChainKeys` migration), see [`ARCHITECTURE_REFACTOR_SUMMARY.md`](./ARCHITECTURE_REFACTOR_SUMMARY.md).
+
 ## Using SDK Config and Constants
 
 SDK includes predefined configurations of supported chains, tokens and other relevant information for the client to consume.
@@ -21,7 +23,7 @@ const iconChainId: SpokeChainId = ChainKeys.ICON_MAINNET;
 const migrationTokens = ['ICX', 'bnUSD', 'BALN'] as const;
 ```
 
-Please refer to [SDK constants.ts](https://github.com/icon-project/sodax-frontend/blob/main/packages/types/src/constants/index.ts) for more.
+For chain keys and chain/token definitions, use `ChainKeys` and the `@sodax/types` `chains` module. For a mapping from old `*_CHAIN_ID` constants to `ChainKeys.*`, see [`../../CHAIN_ID_MIGRATION.md`](../CHAIN_ID_MIGRATION.md).
 
 ### Initialising Providers
 
