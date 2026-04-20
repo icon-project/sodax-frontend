@@ -572,6 +572,10 @@ export function ManagePositionDialog({
     }
 
     try {
+      const preDecreaseToken0HubBalance =
+        poolData.token0IsStatAToken && poolSpokeAssets && parsedPercentage === 100
+          ? await sodax.dex.assetService.getDeposit(poolData.token0.address, spokeProvider)
+          : 0n;
       const [withdrawSpokeTxHash, withdrawHubTxHash] = await decreaseLiquidityMutation.mutateAsync({
         params: createDecreaseLiquidityParamsProps({
           poolKey,
@@ -587,12 +591,17 @@ export function ManagePositionDialog({
         if (parsedPercentage === 100) {
           // At 100% the position is fully burned, so there's no remaining liquidity
           // to absorb the gap between `positionInfo.amount0` (a cached prediction)
-          // and the real amount that landed in the hub vault. Read the actual hub
-          // balance so the withdraw tx cannot ask for more than what arrived.
-          token0WithdrawAmount = await sodax.dex.assetService.getDeposit(
+          // and the real amount that landed in the hub vault. Compute the delta
+          // from pre/post decrease hub balance so we (1) match exactly what this
+          // decrease deposited and (2) don't sweep balance from other positions.
+          const postDecreaseToken0HubBalance = await sodax.dex.assetService.getDeposit(
             poolData.token0.address,
             spokeProvider,
           );
+          token0WithdrawAmount =
+            postDecreaseToken0HubBalance > preDecreaseToken0HubBalance
+              ? postDecreaseToken0HubBalance - preDecreaseToken0HubBalance
+              : 0n;
         } else {
           const percentageBasisPoints = BigInt(Math.floor(parsedPercentage * 100));
           const decreasedToken0Amount = (positionInfo.amount0 * percentageBasisPoints) / 10000n;
@@ -600,6 +609,7 @@ export function ManagePositionDialog({
           token0WithdrawAmount =
             decreasedToken0Amount === 0n ? 0n : (decreasedToken0Amount * withdrawSlippageMultiplier) / 10000n;
         }
+        console.log('token0WithdrawAmount', token0WithdrawAmount);
 
         if (token0WithdrawAmount > 0n) {
           await withdrawMutation.mutateAsync({
