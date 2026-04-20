@@ -17,7 +17,7 @@ export function useExpiredUtxos(
         throw new Error('spokeProvider and tradingAddress are required');
       }
       const result = await spokeProvider.radfi.getExpiredUtxos(tradingAddress);
-      return result.data;
+      return result?.data ?? [];
     },
     enabled: !!spokeProvider && !!tradingAddress,
     refetchInterval: 60_000, // refetch every minute

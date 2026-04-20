@@ -128,7 +128,7 @@ export class RadfiProvider {
       throw new Error(err.message || 'Failed to create trading wallet');
     }
 
-    return res.json().then(r => r.data);
+    return this.parseResponseData<RadfiTradingWallet>(res, 'createTradingWallet');
   }
 
   public async getTradingWallet(
@@ -146,9 +146,7 @@ export class RadfiProvider {
       throw new Error('Trading wallet not found');
     }
 
-    const data = await res.json().then(r => r.data);
-    if (!data) throw new Error('Trading wallet not found');
-    return data;
+    return this.parseResponseData<RadfiTradingWallet>(res, 'getTradingWallet');
   }
 
   public async getBalance(address: string): Promise<RadfiWalletBalance> {
@@ -165,7 +163,11 @@ export class RadfiProvider {
       throw new Error('Failed to fetch wallet balance');
     }
 
-    const { data } = await res.json();
+    const json = await res.json();
+    const data = json?.data;
+    if (!data) {
+      throw new Error('Radfi API returned empty data for getBalance');
+    }
     return {
       btcSatoshi: BigInt(data.btcSatoshi ?? '0'),
       pendingSatoshi: BigInt(data.pendingSatoshi ?? '0'),
@@ -210,7 +212,7 @@ export class RadfiProvider {
       throw new Error(err.message || 'Radfi transaction request failed');
     }
 
-    return res.json().then(r => r.data);
+    return this.parseResponseData<RadfiDepositTxResponse>(res, 'createWithdrawTransaction');
   }
 
   public async requestRadfiSignature(params: {
@@ -234,7 +236,8 @@ export class RadfiProvider {
     }
 
 
-    return res.json().then(r => r.data.txId);
+    const data = await this.parseResponseData<{ txId: string }>(res, 'requestRadfiSignature');
+    return data.txId;
   }
 
   /**
@@ -290,7 +293,7 @@ export class RadfiProvider {
       throw new Error(err.message || 'Failed to build renew-utxo transaction');
     }
 
-    return res.json().then(r => r.data);
+    return this.parseResponseData<RadfiBuildTxResponse>(res, 'buildRenewUtxoTransaction');
   }
 
   /**
@@ -317,7 +320,8 @@ export class RadfiProvider {
       throw new Error(err.message || 'Failed to sign and broadcast renew-utxo transaction');
     }
 
-    return res.json().then(r => r.data.txId);
+    const data = await this.parseResponseData<{ txId: string }>(res, 'signAndBroadcastRenewUtxo');
+    return data.txId;
   }
 
   /**
@@ -346,7 +350,7 @@ export class RadfiProvider {
       throw new Error(err.message || 'Failed to build withdraw transaction');
     }
 
-    return res.json().then(r => r.data);
+    return this.parseResponseData<RadfiBuildTxResponse>(res, 'withdrawToUser');
   }
 
   /**
@@ -372,11 +376,10 @@ export class RadfiProvider {
       throw new Error(err.message || 'Failed to sign and broadcast withdraw transaction');
     }
 
-    return res.json().then(r => {
-      const txId = r.data?.txId;
-      // API may return nested response: { txId: { data: "actualTxId" } }
-      return typeof txId === 'object' && txId?.data ? txId.data : txId;
-    });
+    const json = await res.json();
+    const txId = json?.data?.txId;
+    // API may return nested response: { txId: { data: "actualTxId" } }
+    return typeof txId === 'object' && txId?.data ? txId.data : txId;
   }
 
   /**
@@ -404,7 +407,16 @@ export class RadfiProvider {
       throw new Error(err.message || 'Failed to get max withdrawable amount');
     }
 
-    return res.json().then(r => r.data);
+    return this.parseResponseData<RadfiMaxSpentResponse>(res, 'getMaxWithdrawable');
+  }
+
+  private async parseResponseData<T>(res: Response, context: string): Promise<NonNullable<T>> {
+    const json = await res.json();
+    const data = json?.data;
+    if (data == null) {
+      throw new Error(`Radfi API returned empty data for ${context}`);
+    }
+    return data as NonNullable<T>;
   }
 
   private async request(

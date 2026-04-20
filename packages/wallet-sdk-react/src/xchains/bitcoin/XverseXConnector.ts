@@ -90,7 +90,10 @@ class XverseWalletProvider implements IBitcoinWalletProvider {
       throw new Error(response.error?.message || 'Xverse PSBT signing failed');
     }
 
-    const result = response.result as SignPsbtResult;
+    const result = response.result as SignPsbtResult | undefined;
+    if (!result?.psbt) {
+      throw new Error('Xverse returned empty result for signPsbt');
+    }
 
     if (finalize) {
       // Return hex for broadcast
@@ -114,7 +117,11 @@ class XverseWalletProvider implements IBitcoinWalletProvider {
       throw new Error(response.error?.message || 'Xverse ECDSA signing failed');
     }
 
-    return (response.result as SignMessageResult).signature;
+    const result = response.result as SignMessageResult | undefined;
+    if (!result?.signature) {
+      throw new Error('Xverse returned empty result for signMessage (ECDSA)');
+    }
+    return result.signature;
   }
 
   async signBip322Message(message: string): Promise<string> {
@@ -130,7 +137,11 @@ class XverseWalletProvider implements IBitcoinWalletProvider {
       throw new Error(response.error?.message || 'Xverse BIP322 signing failed');
     }
 
-    return (response.result as SignMessageResult).signature;
+    const result = response.result as SignMessageResult | undefined;
+    if (!result?.signature) {
+      throw new Error('Xverse returned empty result for signMessage (BIP322)');
+    }
+    return result.signature;
   }
 
   async sendBitcoin(toAddress: string, satoshis: bigint): Promise<string> {
@@ -149,7 +160,11 @@ class XverseWalletProvider implements IBitcoinWalletProvider {
       throw new Error(response.error?.message || 'Xverse sendTransfer failed');
     }
 
-    return (response.result as { txid: string }).txid;
+    const result = response.result as { txid: string } | undefined;
+    if (!result?.txid) {
+      throw new Error('Xverse returned empty result for sendTransfer');
+    }
+    return result.txid;
   }
 }
 
@@ -200,7 +215,7 @@ export class XverseXConnector extends BitcoinXConnector {
       throw new Error(response.error?.message || 'Xverse connection failed');
     }
 
-    const accounts = response.result as GetAccountsResult[];
+    const accounts = (response.result ?? []) as GetAccountsResult[];
     const paymentAccount = accounts.find(a => a.purpose === this.addressPurpose) || accounts[0];
 
     if (!paymentAccount) return undefined;
