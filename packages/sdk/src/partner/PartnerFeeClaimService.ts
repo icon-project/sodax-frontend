@@ -2,32 +2,19 @@
 import invariant from 'tiny-invariant';
 import { erc20Abi, encodeFunctionData, type Address, isAddress } from 'viem';
 import type { ConfigService } from '../shared/config/ConfigService.js';
-import type {
-  SolverExecutionResponse,
-  Result,
-  TxReturnType,
-  Prettify,
-  OptionalRaw,
-  GetAddressType,
-  SolverErrorResponse,
-  HubProvider,
-} from '../shared/types/types.js';
+import type { OptionalRaw, HubProvider } from '../shared/types/types.js';
 import { Erc20Service } from '../shared/services/erc-20/Erc20Service.js';
 import { SolverApiService } from '../swap/SolverApiService.js';
-import { isConfiguredSolverConfig } from '../shared/guards.js';
 import { ProtocolIntentsAbi } from '../shared/abis/protocolIntents.abi.js';
 import {
-  ChainKeys,
   type SpokeChainKey,
-  getSolverConfig,
   getIntentRelayChainId,
-  type SolverConfig,
   type Hex,
   type OriginalAssetAddress,
   type XToken,
   type IntentRelayChainId,
 } from '@sodax/types';
-import { encodeAddress } from '../index.js';
+import { encodeAddress, SpokeService } from '../index.js';
 
 export type PartnerFeeClaimAssetBalance = {
   symbol: string;
@@ -53,7 +40,6 @@ export type SetSwapPreferenceParams = {
 
 export type FeeTokenApproveParams = {
   token: Address;
-  spokeProvider: SonicSpokeProviderType;
 };
 
 export type AssetEntry = {
@@ -70,8 +56,9 @@ export type PartnerFeeClaimSwapParams = {
 };
 
 export type PartnerFeeClaimServiceConstructorParams = {
-  configService: ConfigService;
+  config: ConfigService;
   hubProvider: HubProvider;
+  spoke: SpokeService;
 };
 
 export type SetSwapPreferenceError = {
@@ -119,23 +106,16 @@ export type IntentAutoSwapResult = {
  * @namespace SodaxFeatures
  */
 export class PartnerFeeClaimService {
-  readonly hubProvider: HubProvider;
-  readonly configService: ConfigService;
+  private readonly hubProvider: HubProvider;
+  private readonly config: ConfigService;
+  private readonly spoke: SpokeService;
+  private readonly protocolIntentsContract: Address;
 
-  public constructor({ config, configService, hubProvider }: PartnerFeeClaimServiceConstructorParams) {
-    const solverConfig = config
-      ? isConfiguredSolverConfig(config)
-        ? config
-        : getSolverConfig(hubProvider.chainConfig.chain.id)
-      : getSolverConfig(ChainKeys.SONIC_MAINNET);
-
-    this.config = {
-      ...solverConfig,
-      relayerApiEndpoint: undefined,
-      protocolIntentsContract: solverConfig.protocolIntentsContract,
-    };
-    this.configService = configService;
+  public constructor({ config, hubProvider, spoke }: PartnerFeeClaimServiceConstructorParams) {
+    this.config = config;
     this.hubProvider = hubProvider;
+    this.spoke = spoke;
+    this.protocolIntentsContract = config.solver.protocolIntentsContract;
   }
 
   /**
@@ -143,14 +123,14 @@ export class PartnerFeeClaimService {
    */
 
   public getOriginalAssetAddress(chainId: SpokeChainKey, hubAsset: Address): OriginalAssetAddress | undefined {
-    return this.configService.getOriginalAssetAddress(chainId, hubAsset);
+    return this.config.getOriginalAssetAddress(chainId, hubAsset);
   }
 
   public getSpokeTokenFromOriginalAssetAddress(
     chainId: SpokeChainKey,
     originalAssetAddress: OriginalAssetAddress,
   ): XToken | undefined {
-    return this.configService.getSpokeTokenFromOriginalAssetAddress(chainId, originalAssetAddress);
+    return this.config.getSpokeTokenFromOriginalAssetAddress(chainId, originalAssetAddress);
   }
 
   /**
@@ -182,7 +162,7 @@ export class PartnerFeeClaimService {
       const allAssetEntries: Array<AssetEntry> = [];
 
       // Iterate through all chains' supported tokens
-      for (const [chainId, chainConfig] of Object.entries(this.configService.spokeChainConfig)) {
+      for (const [chainId, chainConfig] of Object.entries(this.config.spokeChainConfig)) {
         for (const token of Object.values(chainConfig.supportedTokens)) {
           allAssetEntries.push({
             assetAddress: token.hubAsset.toLowerCase() as Address,
@@ -287,10 +267,10 @@ export class PartnerFeeClaimService {
         );
         queryAddress = await params.spokeProvider.walletProvider.getWalletAddress();
       }
-      invariant(this.config.protocolIntentsContract, 'protocolIntentsContract is not configured in solver config');
+      invariant(this.protocolIntentsContract, 'protocolIntentsContract is not configured in solver config');
 
       const autoSwapPreferences = await this.hubProvider.publicClient.readContract({
-        address: this.config.protocolIntentsContract,
+        address: this.protocolIntentsContract,
         abi: ProtocolIntentsAbi,
         functionName: 'getAutoSwapPreferences',
         args: [queryAddress as GetAddressType<SonicSpokeProviderType>],
@@ -300,9 +280,7 @@ export class PartnerFeeClaimService {
       const dstChain =
         autoSwapPreferences.dstChain === 0n
           ? ('not configured' as const)
-          : this.configService.getSpokeChainKeyFromIntentRelayChainId(
-              autoSwapPreferences.dstChain as IntentRelayChainId,
-            );
+          : this.config.getSpokeChainKeyFromIntentRelayChainId(autoSwapPreferences.dstChain as IntentRelayChainId);
 
       return {
         ok: true,
@@ -343,7 +321,7 @@ export class PartnerFeeClaimService {
   > {
     try {
       invariant(isSonicSpokeProviderType(spokeProvider), 'PartnerFeeClaimService only supports Sonic spoke provider');
-      invariant(this.config.protocolIntentsContract, 'protocolIntentsContract is not configured in solver config');
+      invariant(this.protocolIntentsContract, 'protocolIntentsContract is not configured in solver config');
 
       const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
 
@@ -359,7 +337,7 @@ export class PartnerFeeClaimService {
 
       const rawTx = {
         from: walletAddress as GetAddressType<SonicSpokeProviderType>,
-        to: this.config.protocolIntentsContract,
+        to: this.protocolIntentsContract,
         value: 0n,
         data: encodeFunctionData({
           abi: ProtocolIntentsAbi,
@@ -411,7 +389,7 @@ export class PartnerFeeClaimService {
   public async isTokenApproved({ token, spokeProvider }: FeeTokenApproveParams): Promise<Result<boolean, Error>> {
     try {
       invariant(isSonicSpokeProviderType(spokeProvider), 'PartnerFeeClaimService only supports Sonic spoke provider');
-      invariant(this.config.protocolIntentsContract, 'protocolIntentsContract is not configured in solver config');
+      invariant(this.protocolIntentsContract, 'protocolIntentsContract is not configured in solver config');
 
       const queryAddress = await spokeProvider.walletProvider.getWalletAddress();
 
@@ -426,7 +404,7 @@ export class PartnerFeeClaimService {
         address: token,
         abi: erc20Abi,
         functionName: 'allowance',
-        args: [queryAddress as Address, this.config.protocolIntentsContract],
+        args: [queryAddress as Address, this.protocolIntentsContract],
       });
 
       // Check if allowance is max (2^256 - 1) or a very large number (essentially max)

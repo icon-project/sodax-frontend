@@ -1,40 +1,32 @@
 import type { Hex, PublicClient, HttpTransport } from 'viem';
 import {
-  DEFAULT_RELAYER_API_ENDPOINT,
   type RelayErrorCode,
   type RelayError,
-  type Result,
-  type TxReturnType,
   SpokeService,
   encodeContractCalls,
   relayTxAndWaitPacket,
-  DEFAULT_RELAY_TX_TIMEOUT,
   Permit2Service,
   Erc20Service,
   Erc4626Service,
-  StatATokenAddresses,
-  type EvmContractCall,
-  type SpokeTxHash,
-  type HubTxHash,
-  getConcentratedLiquidityConfig,
   type ConfigService,
-  isHubChainId,
   HubService,
   type MintPositionEventLog,
   type HubProvider,
 } from '../index.js';
-import type { Address, Hash, HttpUrl, OriginalAssetAddress, XToken } from '@sodax/types';
 import type {
-  Prettify,
-  OptionalTimeout,
-  OptionalSkipSimulation,
-  ClServiceConfig,
-  RelayOptionalExtraData,
-} from '../shared/types/types.js';
+  Address,
+  ConcentratedLiquidityConfig,
+  Hash,
+  HttpUrl,
+  OriginalAssetAddress,
+  PoolKey,
+  SpokeTxHash,
+  XToken,
+} from '@sodax/types';
+import type { OptionalTimeout, OptionalSkipSimulation, RelayOptionalExtraData } from '../shared/types/types.js';
 import { erc20Abi, maxUint160, maxUint48, parseEventLogs } from 'viem';
 import { Price, Token } from '@pancakeswap/swap-sdk-core';
 
-import type { PoolKey, CLPositionConfig } from './types.js';
 import {
   CLPoolManagerAbi,
   CLPositionManagerAbi,
@@ -53,8 +45,6 @@ import {
   TickMath,
   tickToPrice,
 } from '@pancakeswap/v3-sdk';
-
-export type ClServiceConfig = Prettify<ConcentratedLiquidityConfig & RelayerApiConfig>;
 
 export type ClMintPositionEventLog = {
   tokenId: bigint;
@@ -363,8 +353,8 @@ export type ConcentratedLiquidityOptionalExtraData = { data?: ConcentratedLiquid
 
 export type ClServiceConstructorParams = {
   hubProvider: HubProvider;
-  relayerApiEndpoint?: HttpUrl;
-  configService: ConfigService;
+  config: ConfigService;
+  spoke: SpokeService;
 };
 
 /**
@@ -373,38 +363,31 @@ export type ClServiceConstructorParams = {
  * @namespace SodaxFeatures
  */
 export class ClService {
-  public readonly config: ClServiceConfig;
+  private readonly clConfig: ConcentratedLiquidityConfig;
   private readonly relayerApiEndpoint: HttpUrl;
   private readonly hubProvider: HubProvider;
-  private readonly configService: ConfigService;
+  private readonly config: ConfigService;
+  private readonly spoke: SpokeService;
 
-  constructor({ hubProvider, relayerApiEndpoint, configService }: ClServiceConstructorParams) {
-    this.configService = configService;
-    this.relayerApiEndpoint = relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT;
+  constructor({ hubProvider, config, spoke }: ClServiceConstructorParams) {
+    this.config = config;
+    this.spoke = spoke;
     this.hubProvider = hubProvider;
-    this.config = {
-      ...getConcentratedLiquidityConfig(), // default to mainnet config
-      relayerApiEndpoint: this.relayerApiEndpoint,
-    };
+    this.relayerApiEndpoint = config.relay.relayerApiEndpoint;
+    this.clConfig = config.dex.concentratedLiquidityConfig;
   }
 
   public getAssetsForPool(spokeProvider: SpokeProviderType, poolKey: PoolKey): PoolSpokeAssets {
-    const token0SpokeAddress = this.configService.getOriginalAssetAddressFromStakedATokenAddress(
+    const token0SpokeAddress = this.config.getOriginalAssetAddressFromStakedATokenAddress(
       spokeProvider.chainConfig.chain.id,
       poolKey.currency0,
     );
-    const token1SpokeAddress = this.configService.getOriginalAssetAddressFromStakedATokenAddress(
+    const token1SpokeAddress = this.config.getOriginalAssetAddressFromStakedATokenAddress(
       spokeProvider.chainConfig.chain.id,
       poolKey.currency1,
     );
-    const token0 = this.configService.findTokenByOriginalAddress(
-      token0SpokeAddress,
-      spokeProvider.chainConfig.chain.id,
-    );
-    const token1 = this.configService.findTokenByOriginalAddress(
-      token1SpokeAddress,
-      spokeProvider.chainConfig.chain.id,
-    );
+    const token0 = this.config.findTokenByOriginalAddress(token0SpokeAddress, spokeProvider.chainConfig.chain.id);
+    const token1 = this.config.findTokenByOriginalAddress(token1SpokeAddress, spokeProvider.chainConfig.chain.id);
 
     if (!token0) {
       throw new Error(`[getAssetsForPool] Token0 ${token0SpokeAddress} not found`);

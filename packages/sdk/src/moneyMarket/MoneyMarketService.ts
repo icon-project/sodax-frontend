@@ -244,43 +244,23 @@ export type MoneyMarketError<T extends MoneyMarketErrorCode> = {
 export type MoneyMarketExtraData = { address: Hex; payload: Hex };
 export type MoneyMarketOptionalExtraData = { data?: MoneyMarketExtraData };
 
-export type MoneyMarketServiceConfig = Prettify<MoneyMarketConfig & RelayerApiConfig>;
-
 export type MoneyMarketServiceConstructorParams = {
-  config: MoneyMarketConfig;
   hubProvider: HubProvider;
-  configService: ConfigService;
+  spoke: SpokeService;
+  config: ConfigService;
 };
 
 export class MoneyMarketService {
-  public readonly config: MoneyMarketConfig;
   private readonly hubProvider: HubProvider;
+  private readonly spoke: SpokeService;
   public readonly data: MoneyMarketDataService;
-  public readonly configService: ConfigService;
+  public readonly config: ConfigService;
 
-  constructor({ config, hubProvider, relayerApiEndpoint, configService }: MoneyMarketServiceConstructorParams) {
-    if (!config) {
-      this.config = {
-        ...getMoneyMarketConfig(ChainKeys.SONIC_MAINNET), // default to mainnet config
-        partnerFee: undefined,
-        relayerApiEndpoint: relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT,
-      };
-    } else if (isConfiguredMoneyMarketConfig(config)) {
-      this.config = {
-        ...config,
-        partnerFee: config.partnerFee,
-        relayerApiEndpoint: relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT,
-      };
-    } else {
-      this.config = {
-        ...getMoneyMarketConfig(hubProvider.chainConfig.chain.id), // default to mainnet config
-        partnerFee: config.partnerFee,
-        relayerApiEndpoint: relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT,
-      };
-    }
+  constructor({ config, hubProvider, spoke }: MoneyMarketServiceConstructorParams) {
     this.hubProvider = hubProvider;
-    this.data = new MoneyMarketDataService(hubProvider);
-    this.configService = configService;
+    this.data = new MoneyMarketDataService({ hubProvider, config });
+    this.config = config;
+    this.spoke = spoke;
   }
 
   /**
@@ -291,11 +271,11 @@ export class MoneyMarketService {
    *
    * @namespace SodaxFeatures
    */
-  public static async estimateGas<T extends SpokeProviderType = SpokeProviderType>(
+  public async estimateGas<T extends SpokeProviderType = SpokeProviderType>(
     params: TxReturnType<T, true>,
     spokeProvider: T,
   ): Promise<GetEstimateGasReturnType<T>> {
-    return SpokeService.estimateGas(params, spokeProvider) as Promise<GetEstimateGasReturnType<T>>;
+    return this.spoke.estimateGas(params) as Promise<GetEstimateGasReturnType<T>>;
   }
 
   /**

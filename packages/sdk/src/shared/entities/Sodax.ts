@@ -9,7 +9,7 @@ import {
   EvmHubProvider,
 } from '../../index.js';
 import { MoneyMarketService } from '../../moneyMarket/MoneyMarketService.js';
-import { sodaxConfig, type HttpUrl, type SodaxConfig } from '@sodax/types';
+import { sodaxConfig, type Result, type SodaxConfig } from '@sodax/types';
 import type { HubProvider } from '../types/types.js';
 import { ConfigService } from '../config/index.js';
 import { PartnerService } from '../../partner/PartnerService.js';
@@ -43,71 +43,31 @@ export class Sodax {
     this.hubProvider = new EvmHubProvider({ config: this.instanceConfig.hub, configService: this.config }); // default to Sonic mainnet
     this.spokeService = new SpokeService({ config: this.config, hubProvider: this.hubProvider });
     this.swaps = new SwapService({
-      config: this.instanceConfig.swaps,
       configService: this.config,
       hubProvider: this.hubProvider,
       spokeService: this.spokeService,
     });
 
-    this.moneyMarket =
-      config && config.moneyMarket
-        ? new MoneyMarketService({
-            config: config.moneyMarket,
-            hubProvider: this.hubProvider,
-            relayerApiEndpoint: this.relayerApiEndpoint,
-            configService: this.config,
-          })
-        : new MoneyMarketService({
-            config: undefined,
-            hubProvider: this.hubProvider,
-            relayerApiEndpoint: this.relayerApiEndpoint,
-            configService: this.config,
-          }); // default to mainnet config
-
-    this.migration =
-      config && config.migration
-        ? new MigrationService({
-            relayerApiEndpoint: this.relayerApiEndpoint,
-            hubProvider: this.hubProvider,
-            configService: this.config,
-          })
-        : new MigrationService({
-            relayerApiEndpoint: this.relayerApiEndpoint,
-            hubProvider: this.hubProvider,
-            configService: this.config,
-          });
-
-    this.bridge =
-      config && config.bridge
-        ? new BridgeService({
-            hubProvider: this.hubProvider,
-            relayerApiEndpoint: this.relayerApiEndpoint,
-            config: config.bridge,
-            configService: this.config,
-          })
-        : new BridgeService({
-            hubProvider: this.hubProvider,
-            relayerApiEndpoint: this.relayerApiEndpoint,
-            config: undefined,
-            configService: this.config,
-          });
-    this.staking = new StakingService({
+    this.moneyMarket = new MoneyMarketService({
+      config: this.config,
       hubProvider: this.hubProvider,
-      relayerApiEndpoint: this.relayerApiEndpoint,
-      configService: this.config,
+      spoke: this.spokeService,
     });
+
     this.dex = new DexService({
+      config: this.config,
       hubProvider: this.hubProvider,
-      relayerApiEndpoint: this.relayerApiEndpoint,
-      configService: this.config,
+      spoke: this.spokeService,
     });
-    this.partners = config?.partners
-      ? new PartnerService({
-          feeClaim: config.partners.feeClaim,
-          configService: this.config,
-          hubProvider: this.hubProvider,
-        })
-      : new PartnerService({ configService: this.config, hubProvider: this.hubProvider });
+
+    this.migration = new MigrationService({ hubProvider: this.hubProvider, config: this.config });
+    this.bridge = new BridgeService({ hubProvider: this.hubProvider, config: this.config, spoke: this.spokeService });
+    this.staking = new StakingService({ hubProvider: this.hubProvider, config: this.config, spoke: this.spokeService });
+    this.partners = new PartnerService({
+      hubProvider: this.hubProvider,
+      config: this.config,
+      spoke: this.spokeService,
+    });
   }
 
   /**

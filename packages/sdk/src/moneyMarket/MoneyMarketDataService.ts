@@ -23,19 +23,27 @@ import {
 } from './math-utils/index.js';
 import { UiPoolDataProviderService } from './UiPoolDataProviderService.js';
 import { LendingPoolService } from './LendingPoolService.js';
-import type { Address, Erc20Token, SpokeChainKey } from '@sodax/types';
-import { Erc20Service, HubService, type HubProvider } from '../shared/index.js';
+import type { Address, SpokeChainKey } from '@sodax/types';
+import { Erc20Service, HubService, type Erc20Token, type HubProvider } from '../shared/index.js';
+import type { ConfigService } from '../shared/config/ConfigService.js';
 import { erc20Abi } from 'viem';
+
+export type MoneyMarketDataServiceConstructorParams = {
+  hubProvider: HubProvider;
+  config: ConfigService;
+};
 
 export class MoneyMarketDataService {
   public readonly uiPoolDataProviderService: UiPoolDataProviderService;
   public readonly lendingPoolService: LendingPoolService;
   public readonly hubProvider: HubProvider;
+  public readonly config: ConfigService;
 
-  constructor(hubProvider: HubProvider) {
+  constructor({ hubProvider, config }: MoneyMarketDataServiceConstructorParams) {
+    this.config = config;
     this.hubProvider = hubProvider;
-    this.uiPoolDataProviderService = new UiPoolDataProviderService(hubProvider);
-    this.lendingPoolService = new LendingPoolService(hubProvider);
+    this.uiPoolDataProviderService = new UiPoolDataProviderService({ hubProvider, config });
+    this.lendingPoolService = new LendingPoolService({ hubProvider, config });
   }
 
   public async getATokenData(aToken: Address): Promise<Erc20Token> {
@@ -47,7 +55,7 @@ export class MoneyMarketDataService {
    * @param aTokens - Array of aToken addresses
    * @param userAddress - User's hub wallet address to fetch balances for
    * @returns Promise<Map<Address, bigint>> - Map of aToken address to balance
-   * 
+   *
    * @namespace SodaxPublicUtils
    */
   public async getATokensBalances(aTokens: readonly Address[], userAddress: Address): Promise<Map<Address, bigint>> {

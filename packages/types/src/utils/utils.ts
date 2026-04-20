@@ -11,9 +11,7 @@ import {
   solverConfig,
   concentratedLiquidityConfig,
   spokeChainConfig,
-  moneyMarketConfig,
   type LegacybnUSDToken,
-  type MoneyMarketConfig,
   spokeChainKeysSet,
   HUB_CHAIN_KEY,
   type EVM_CHAIN_KEYS,
@@ -174,10 +172,6 @@ export function isNativeToken(chainId: SpokeChainKey, token: XToken | string): b
   }
 
   return token.address.toLowerCase() === spokeChainConfig[chainId].nativeToken.toLowerCase();
-}
-
-export function getMoneyMarketConfig(): MoneyMarketConfig {
-  return moneyMarketConfig;
 }
 
 export function getIntentRelayChainId(chainKey: SpokeChainKey): IntentRelayChainId {

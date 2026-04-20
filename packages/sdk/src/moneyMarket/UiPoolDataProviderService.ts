@@ -1,4 +1,4 @@
-import { type Address, getMoneyMarketConfig } from '@sodax/types';
+import { type Address } from '@sodax/types';
 import { uiPoolDataAbi } from '../shared/abis/uiPoolData.abi.js';
 import type {
   AggregatedReserveData,
@@ -14,16 +14,24 @@ import type {
 } from './MoneyMarketTypes.js';
 import { erc20BnusdAbi } from '../shared/abis/erc20-bnusd.abi.js';
 import type { HubProvider } from '../shared/types/types.js';
+import type { ConfigService } from '../shared/index.js';
+
+export type UiPoolDataProviderServiceConstructorParams = {
+  hubProvider: HubProvider;
+  config: ConfigService;
+};
 
 export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
   private readonly hubProvider: HubProvider;
   private readonly uiPoolDataProvider: Address;
   private readonly poolAddressesProvider: Address;
+  private readonly config: ConfigService;
 
-  constructor(hubProvider: HubProvider) {
+  constructor({ hubProvider, config }: UiPoolDataProviderServiceConstructorParams) {
     this.hubProvider = hubProvider;
-    this.uiPoolDataProvider = getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).uiPoolDataProvider;
-    this.poolAddressesProvider = getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).poolAddressesProvider;
+    this.uiPoolDataProvider = config.moneyMarket.uiPoolDataProvider;
+    this.poolAddressesProvider = config.moneyMarket.poolAddressesProvider;
+    this.config = config;
   }
 
   public async getUserReservesHumanized(userAddress: Address): Promise<{
@@ -93,10 +101,7 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
     }
 
     // filter out bnUSD (debt) reserve by default
-    return reservesList.filter(
-      reserve =>
-        reserve.toLowerCase() !== getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSD.toLowerCase(),
-    );
+    return reservesList.filter(reserve => reserve.toLowerCase() !== this.config.moneyMarket.bnUSD.toLowerCase());
   }
 
   /**
@@ -105,10 +110,10 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
    */
   public async getBnusdFacilitatorBucket(): Promise<readonly [bigint, bigint]> {
     return this.hubProvider.publicClient.readContract({
-      address: getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSD,
+      address: this.config.moneyMarket.bnUSD,
       abi: erc20BnusdAbi,
       functionName: 'getFacilitatorBucket',
-      args: [getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSDAToken],
+      args: [this.config.moneyMarket.bnUSDAToken],
     });
   }
 
@@ -130,8 +135,8 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
     const [cap, currentBorrowed] = bnUSDFacilitatorBucket;
     const reserves = reserveData[0];
     const baseCurrencyInfo = reserveData[1];
-    const bnUSD = getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSD.toLowerCase();
-    const bnUSDVault = getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSDVault.toLowerCase();
+    const bnUSD = this.config.moneyMarket.bnUSD.toLowerCase();
+    const bnUSDVault = this.config.moneyMarket.bnUSDVault.toLowerCase();
 
     // merge bnUSD vault and bnUSD Debt (bnUSD) reserves into one bnUSD reserve (vault)
     const bnUSDReserve = reserves.find(r => bnUSD === r.underlyingAsset.toLowerCase());
@@ -185,8 +190,8 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
 
     const userReservesData = userReserves[0];
     const eModeCategoryId = userReserves[1];
-    const bnUSD = getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSD.toLowerCase();
-    const bnUSDVault = getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).bnUSDVault.toLowerCase();
+    const bnUSD = this.config.moneyMarket.bnUSD.toLowerCase();
+    const bnUSDVault = this.config.moneyMarket.bnUSDVault.toLowerCase();
 
     // merge bnUSD vault and bnUSD Debt (bnUSD) reserves into one bnUSD reserve (vault)
     const bnUSDReserve = userReservesData.find(r => bnUSD === r.underlyingAsset.toLowerCase());

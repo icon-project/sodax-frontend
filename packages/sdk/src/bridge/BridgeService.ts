@@ -90,7 +90,7 @@ export type BridgeOptionalExtraData = { data?: BridgeExtraData };
 export type BridgeServiceConstructorParams = {
   hubProvider: HubProvider;
   config: ConfigService;
-  spokeService: SpokeService;
+  spoke: SpokeService;
 };
 
 /**
@@ -103,12 +103,12 @@ export type BridgeServiceConstructorParams = {
 export class BridgeService {
   public readonly hubProvider: HubProvider;
   public readonly config: ConfigService;
-  public readonly spokeService: SpokeService;
+  public readonly spoke: SpokeService;
 
-  constructor({ hubProvider, config, spokeService }: BridgeServiceConstructorParams) {
+  constructor({ hubProvider, config, spoke }: BridgeServiceConstructorParams) {
     this.config = config;
     this.hubProvider = hubProvider;
-    this.spokeService = spokeService;
+    this.spoke = spoke;
   }
 
   /**
@@ -141,7 +141,7 @@ export class BridgeService {
       invariant(params.srcToken.length > 0, 'Source asset is required');
 
       if (isHubChainKeyType(params.srcChainKey)) {
-        return await this.spokeService.isAllowanceValid({
+        return await this.spoke.isAllowanceValid({
           srcChainKey: params.srcChainKey,
           token: params.srcToken,
           amount: params.amount,
@@ -154,7 +154,7 @@ export class BridgeService {
       }
 
       if (isEvmSpokeOnlyChainKeyType(params.srcChainKey)) {
-        return await this.spokeService.isAllowanceValid({
+        return await this.spoke.isAllowanceValid({
           srcChainKey: params.srcChainKey,
           token: params.srcToken,
           amount: params.amount,
@@ -163,7 +163,7 @@ export class BridgeService {
       }
 
       if (isStellarChainKeyType(params.srcChainKey)) {
-        return await this.spokeService.isAllowanceValid({
+        return await this.spoke.isAllowanceValid({
           srcChainKey: params.srcChainKey,
           token: params.srcToken,
           amount: params.amount,
@@ -212,7 +212,7 @@ export class BridgeService {
       }
 
       if (isStellarChainKeyType(params.srcChainId)) {
-        const result = await this.spokeService.isAllowanceValid(params.srcToken, params.amount, raw);
+        const result = await this.spoke.isAllowanceValid(params.srcToken, params.amount, raw);
         return {
           ok: true,
           value: result satisfies TxReturnType<StellarChainKey, R> as TxReturnType<K, R>,
@@ -286,7 +286,7 @@ export class BridgeService {
       }
 
       // verify the spoke tx hash exists on chain
-      const verifyTxHashResult = await this.spokeService.verifyTxHash({
+      const verifyTxHashResult = await this.spoke.verifyTxHash({
         txHash: txResult.value,
         chainKey: params.srcChainKey,
       });

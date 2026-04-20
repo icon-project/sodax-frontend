@@ -1,4 +1,4 @@
-import type { ConfigService, HubProvider } from '../shared/index.js';
+import type { ConfigService, HubProvider, SpokeService } from '../shared/index.js';
 import { PartnerFeeClaimService, type PartnerFeeClaimServiceConfig } from './PartnerFeeClaimService.js';
 
 export type PartnerServiceConfig = {
@@ -6,9 +6,9 @@ export type PartnerServiceConfig = {
 };
 
 export type PartnerServiceConstructorParams = {
-  feeClaim?: PartnerFeeClaimServiceConfig;
-  configService: ConfigService;
+  config: ConfigService;
   hubProvider: HubProvider;
+  spoke: SpokeService;
 };
 
 /**
@@ -18,12 +18,14 @@ export type PartnerServiceConstructorParams = {
  */
 export class PartnerService {
   public readonly feeClaim: PartnerFeeClaimService; // Partner Fee Claim service for partner fee operations
+  public readonly config: ConfigService;
 
-  constructor(config: PartnerServiceConstructorParams) {
+  constructor({ config, hubProvider, spoke }: PartnerServiceConstructorParams) {
+    this.config = config;
     this.feeClaim = new PartnerFeeClaimService({
-      config: config?.feeClaim,
-      configService: config.configService,
-      hubProvider: config.hubProvider,
+      config: config,
+      hubProvider: hubProvider,
+      spoke: spoke
     });
   }
 }

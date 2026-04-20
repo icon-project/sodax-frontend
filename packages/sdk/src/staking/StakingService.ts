@@ -3,39 +3,33 @@ import invariant from 'tiny-invariant';
 import { erc20Abi, type Address, type Hex } from 'viem';
 import { StakingLogic } from './StakingLogic.js';
 import { stakedSodaAbi } from '../shared/abis/index.js';
-import type {
-  UserUnstakeInfo,
-  EvmContractCall,
-  TxReturnType,
-  GetSpokeDepositParamsType,
-  Prettify,
-  GetAddressType,
-  Result,
-  StellarSpokeProviderType,
-  EvmSpokeProviderType,
-  SonicSpokeProviderType,
-} from '../shared/types/types.js';
+import type {} from '../shared/types/types.js';
 import {
   encodeContractCalls,
   Erc20Service,
   EvmVaultTokenService,
   relayTxAndWaitPacket,
-  SolanaSpokeProvider,
   SpokeService,
   type EvmHubProvider,
-  type SpokeProvider,
-  type SpokeProviderType,
   encodeAddress,
   EvmAssetManagerService,
   StellarSpokeService,
   type RelayError,
   HubService,
-  isHubChainId,
+  ConfigService,
 } from '../index.js';
-import { isEvmSpokeProviderType, isSonicSpokeProviderType, isStellarSpokeProviderType } from '../shared/guards.js';
-import { DEFAULT_RELAY_TX_TIMEOUT } from '../shared/constants.js';
-import { type HttpUrl, type XToken, type SpokeChainKey, getIntentRelayChainId } from '@sodax/types';
-import { getHubChainConfig, type ConfigService } from '../shared/config/ConfigService.js';
+import {
+  type HttpUrl,
+  type XToken,
+  type SpokeChainKey,
+  getIntentRelayChainId,
+  type UserUnstakeInfo,
+  type EvmContractCall,
+  type TxReturnType,
+  type Prettify,
+  type GetAddressType,
+  type Result,
+} from '@sodax/types';
 
 export type StakeParams = {
   amount: bigint; // amount to stake
@@ -113,8 +107,8 @@ export type StakingError<T extends StakingErrorCode> = {
 
 export type StakingServiceConstructorParams = {
   hubProvider: EvmHubProvider;
-  relayerApiEndpoint: HttpUrl;
-  configService: ConfigService;
+  config: ConfigService;
+  spoke: SpokeService;
 };
 
 /**
@@ -127,11 +121,13 @@ export class StakingService {
   private readonly hubProvider: EvmHubProvider;
   private readonly relayerApiEndpoint: HttpUrl;
   private readonly config: ConfigService;
+  private readonly spoke: SpokeService;
 
-  constructor({ hubProvider, relayerApiEndpoint, configService }: StakingServiceConstructorParams) {
+  constructor({ hubProvider, config, spoke }: StakingServiceConstructorParams) {
     this.hubProvider = hubProvider;
-    this.relayerApiEndpoint = relayerApiEndpoint;
-    this.config = configService;
+    this.relayerApiEndpoint = config.relay.relayerApiEndpoint;
+    this.config = config;
+    this.spoke = spoke;
   }
 
   /**

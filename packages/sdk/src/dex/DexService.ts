@@ -1,14 +1,13 @@
-import type { HttpUrl, DexConfig } from '@sodax/types';
 import type { ConfigService } from './../shared/config/ConfigService.js';
-import { AssetService, type AssetServiceConfig } from './AssetService.js';
+import { AssetService } from './AssetService.js';
 import { ClService } from './ConcentratedLiquidityService.js';
 import type { HubProvider } from '../shared/types/types.js';
+import type { SpokeService } from '../shared/index.js';
 
 export type DexServiceConstructorParams = {
-  configService: ConfigService;
+  config: ConfigService;
   hubProvider: HubProvider;
-  relayerApiEndpoint?: HttpUrl;
-  config?: DexConfig;
+  spoke: SpokeService;
 };
 
 /**
@@ -18,20 +17,17 @@ export type DexServiceConstructorParams = {
 export class DexService {
   public readonly assetService: AssetService;
   public readonly clService: ClService;
-  public readonly configService: ConfigService;
 
-  constructor(params: DexServiceConstructorParams) {
+  constructor({ config, hubProvider, spoke }: DexServiceConstructorParams) {
     this.assetService = new AssetService({
-      hubProvider: params.hubProvider,
-      relayerApiEndpoint: params.relayerApiEndpoint,
-      configService: params.configService,
-      config: params.config?.assetServiceConfig,
+      hubProvider: hubProvider,
+      config: config,
+      spoke: spoke,
     });
     this.clService = new ClService({
-      hubProvider: params.hubProvider,
-      relayerApiEndpoint: params.relayerApiEndpoint,
-      configService: params.configService,
+      hubProvider: hubProvider,
+      config: config,
+      spoke: spoke,
     });
-    this.configService = params.configService;
   }
 }

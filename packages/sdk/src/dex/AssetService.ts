@@ -37,11 +37,6 @@ import { encodeFunctionData, erc20Abi, isAddress } from 'viem';
 import invariant from 'tiny-invariant';
 import { stataTokenFactoryAbi } from '../shared/abis/stataTokenFactory.abi.js';
 
-
-export type AssetServiceConfig = {
-  concentratedLiquidityConfig: ConcentratedLiquidityConfig;
-};
-
 export type CreateAssetWithdrawParams = {
   poolToken: Address;
   asset: OriginalAssetAddress; // asset address
@@ -134,10 +129,9 @@ export type AssetServiceError<T extends AssetServiceErrorCode> = {
 };
 
 export type AssetServiceConstructorParams = {
-  config?: AssetServiceConfig;
   hubProvider: HubProvider;
-  relayerApiEndpoint?: HttpUrl;
-  configService: ConfigService;
+  spoke: SpokeService;
+  config: ConfigService;
 };
 
 /**
@@ -145,24 +139,18 @@ export type AssetServiceConstructorParams = {
  * @namespace SodaxFeatures
  */
 export class AssetService {
-  public readonly config: AssetServiceConfig;
-  private readonly relayerApiEndpoint: HttpUrl;
-  private readonly hubProvider: HubProvider;
-  private readonly configService: ConfigService;
+  public readonly relayerApiEndpoint: HttpUrl;
+  public readonly hubProvider: HubProvider;
+  public readonly spoke: SpokeService;
+  public readonly config: ConfigService;
+  public readonly concentratedLiquidityConfig: ConcentratedLiquidityConfig;
 
-  constructor({ config, hubProvider, relayerApiEndpoint, configService }: AssetServiceConstructorParams) {
-    this.configService = configService;
-    this.relayerApiEndpoint = relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT;
+  constructor({ config, hubProvider, spoke }: AssetServiceConstructorParams) {
+    this.config = config;
+    this.spoke = spoke;
+    this.relayerApiEndpoint = config.relay.relayerApiEndpoint
     this.hubProvider = hubProvider;
-    // Use default config if none provided
-    if (config) {
-      this.config = {
-        concentratedLiquidityConfig: config.concentratedLiquidityConfig,
-      };
-    } else {
-      this.config = {
-        concentratedLiquidityConfig: getConcentratedLiquidityConfig(),
-      };
+    this.concentratedLiquidityConfig = config.dex.concentratedLiquidityConfig;
     }
   }
 
@@ -515,7 +503,7 @@ export class AssetService {
     asset: OriginalAssetAddress;
     poolToken: Address;
   }): boolean {
-    const spokeToken = this.configService.getSpokeTokenFromOriginalAssetAddress(chainId, asset);
+    const spokeToken = this.config.getSpokeTokenFromOriginalAssetAddress(chainId, asset);
 
     if (!spokeToken) {
       throw new Error(`[isSodaDepositToXSoda] Spoke token not found for asset ${asset}`);
@@ -707,13 +695,13 @@ export class AssetService {
     poolToken: Address,
     recipient: Address,
   ): Promise<EvmContractCall[]> {
-    const assetConfig = this.configService.getHubAssetInfo(spokeChainId, address);
+    const assetConfig = this.config.getHubAssetInfo(spokeChainId, address);
     if (!assetConfig) {
       throw new Error('[withdrawData] Hub asset not found');
     }
 
     const calls: EvmContractCall[] = [];
-    if (!this.configService.isValidVault(assetConfig.hubAsset)) {
+    if (!this.config.isValidVault(assetConfig.hubAsset)) {
       calls.push(Erc20Service.encodeApprove(assetConfig.hubAsset, assetConfig.vault, amount));
       calls.push(EvmVaultTokenService.encodeDeposit(assetConfig.vault, assetConfig.hubAsset, amount));
     }
@@ -755,7 +743,7 @@ export class AssetService {
     userAddress: Address,
     recipient: Hex,
   ): Promise<EvmContractCall[]> {
-    const assetConfig = this.configService.getHubAssetInfo(dstChainId, address);
+    const assetConfig = this.config.getHubAssetInfo(dstChainId, address);
     if (!assetConfig) {
       throw new Error('[withdrawData] Hub asset not found');
     }
@@ -787,7 +775,7 @@ export class AssetService {
     if (dstChainId === this.hubProvider.chainConfig.chain.id) {
       if (
         assetConfig.hubAsset.toLowerCase() ===
-        this.configService.spokeChainConfig[dstChainId].addresses.wrappedSonic.toLowerCase()
+        this.config.spokeChainConfig[dstChainId].addresses.wrappedSonic.toLowerCase()
       ) {
         const withdrawToCall = {
           address: assetConfig.hubAsset,

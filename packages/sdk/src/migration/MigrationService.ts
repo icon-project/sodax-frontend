@@ -81,8 +81,7 @@ export type MigrationTokens = (typeof SupportedMigrationTokens)[number];
 
 export type MigrationServiceConstructorParams = {
   hubProvider: HubProvider;
-  configService: ConfigService;
-  relayerApiEndpoint: HttpUrl;
+  config: ConfigService;
 };
 
 /**
@@ -95,15 +94,15 @@ export class MigrationService {
   readonly balnSwapService: BalnSwapService;
   readonly hubProvider: HubProvider;
   readonly relayerApiEndpoint: HttpUrl;
-  readonly configService: ConfigService;
+  readonly config: ConfigService;
 
-  constructor({ relayerApiEndpoint, hubProvider, configService }: MigrationServiceConstructorParams) {
+  constructor({ hubProvider, config }: MigrationServiceConstructorParams) {
     this.hubProvider = hubProvider;
-    this.icxMigration = new IcxMigrationService({ hubProvider, configService });
-    this.bnUSDMigrationService = new BnUSDMigrationService({ hubProvider, configService });
+    this.icxMigration = new IcxMigrationService({ hubProvider, config });
+    this.bnUSDMigrationService = new BnUSDMigrationService({ hubProvider, config });
     this.balnSwapService = new BalnSwapService({ hubProvider });
-    this.relayerApiEndpoint = relayerApiEndpoint;
-    this.configService = configService;
+    this.relayerApiEndpoint = config.relay.relayerApiEndpoint;
+    this.config = config;
   }
 
   /**
@@ -750,10 +749,10 @@ export class MigrationService {
     raw?: R,
   ): Promise<Result<TxReturnType<S, R>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
     try {
-      const balnToken = this.configService.spokeChainConfig[ChainKeys.ICON_MAINNET]?.supportedTokens.BALN?.address;
+      const balnToken = this.config.spokeChainConfig[ChainKeys.ICON_MAINNET]?.supportedTokens.BALN?.address;
       invariant(balnToken, 'BALN token not found');
 
-      const migrationData = this.balnSwapService.swapData(balnToken as IconContractAddress, params, this.configService);
+      const migrationData = this.balnSwapService.swapData(balnToken as IconContractAddress, params, this.config);
 
       const txResult = await SpokeService.deposit(
         {
@@ -836,8 +835,8 @@ export class MigrationService {
   ): Promise<Result<[TxReturnType<S, R>, RelayExtraData], MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
     try {
       if (!unchecked) {
-        invariant(this.configService.isValidSpokeChainId(params.srcChainId), 'Invalid spoke source chain ID');
-        invariant(this.configService.isValidSpokeChainId(params.dstChainId), 'Invalid spoke destination chain ID');
+        invariant(this.config.isValidSpokeChainId(params.srcChainId), 'Invalid spoke source chain ID');
+        invariant(this.config.isValidSpokeChainId(params.dstChainId), 'Invalid spoke destination chain ID');
         invariant(params.srcbnUSD.length > 0, 'Legacy bnUSD token address is required');
         invariant(params.dstbnUSD.length > 0, 'New bnUSD token address is required');
         invariant(params.amount > 0, 'Amount must be greater than 0');
@@ -1066,7 +1065,7 @@ export class MigrationService {
         wallet as GetAddressType<SonicSpokeProviderType>,
         spokeProvider,
       );
-      const wICX = this.configService.spokeChainConfig[ChainKeys.ICON_MAINNET]?.addresses.wICX;
+      const wICX = this.config.spokeChainConfig[ChainKeys.ICON_MAINNET]?.addresses.wICX;
       invariant(wICX, 'wICX token not found');
       const data = this.icxMigration.revertMigration({
         wICX: wICX as IconAddress,

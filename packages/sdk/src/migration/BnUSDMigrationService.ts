@@ -1,5 +1,4 @@
-import type { Address, Hex } from 'viem';
-import type { EvmContractCall } from '../shared/types/types.js';
+import type { Hex } from 'viem';
 import {
   encodeContractCalls,
   Erc20Service,
@@ -8,7 +7,7 @@ import {
   EvmVaultTokenService,
 } from '../index.js';
 import invariant from 'tiny-invariant';
-import { ChainKeys, type SpokeChainKey, getMoneyMarketConfig } from '@sodax/types';
+import type { EvmContractCall, SpokeChainKey } from '@sodax/types';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 
 export type UnifiedBnUSDMigrateParams = {
@@ -40,7 +39,7 @@ export type BnUSDRevertMigrationParams = {
 
 export type BnUSDMigrationServiceConstructorParams = {
   hubProvider: HubProvider;
-  configService: ConfigService;
+  config: ConfigService;
 };
 
 /**
@@ -49,11 +48,11 @@ export type BnUSDMigrationServiceConstructorParams = {
  */
 export class BnUSDMigrationService {
   private readonly hubProvider: HubProvider;
-  private readonly configService: ConfigService;
+  private readonly config: ConfigService;
 
-  constructor({ hubProvider, configService }: BnUSDMigrationServiceConstructorParams) {
+  constructor({ hubProvider, config }: BnUSDMigrationServiceConstructorParams) {
     this.hubProvider = hubProvider;
-    this.configService = configService;
+    this.config = config;
   }
 
   /**
@@ -69,10 +68,10 @@ export class BnUSDMigrationService {
    */
   public migrateData(params: FormattedBnUSDMigrateParams): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = this.configService.getHubAssetInfo(params.srcChainId, params.legacybnUSD);
+    const assetConfig = this.config.getSpokeTokenFromOriginalAssetAddress(params.srcChainId, params.legacybnUSD);
     invariant(assetConfig, `hub asset not found for legacy bnUSD token: ${params.legacybnUSD}`);
 
-    const bnUSDVault = getMoneyMarketConfig(ChainKeys.SONIC_MAINNET).bnUSDVault as Address;
+    const bnUSDVault = this.config.moneyMarket.bnUSDVault;
 
     // Wrap legacy bnUSD into vault tokens
     calls.push(Erc20Service.encodeApprove(assetConfig.hubAsset, assetConfig.vault, params.amount));
@@ -90,17 +89,17 @@ export class BnUSDMigrationService {
     }
 
     // Withdraw to new bnUSD
-    const dstAssetConfig = this.configService.getHubAssetInfo(params.dstChainId, params.newbnUSD);
+    const dstAssetConfig = this.config.getSpokeTokenFromOriginalAssetAddress(params.dstChainId, params.newbnUSD);
     invariant(dstAssetConfig, `hub asset not found for new bnUSD token: ${params.newbnUSD}`);
 
-    calls.push(EvmVaultTokenService.encodeWithdraw(bnUSDVault, dstAssetConfig.asset, translatedAmount));
+    calls.push(EvmVaultTokenService.encodeWithdraw(bnUSDVault, dstAssetConfig.hubAsset, translatedAmount));
     const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(
-      dstAssetConfig.decimal,
+      dstAssetConfig.decimals,
       translatedAmount,
     );
     calls.push(
       EvmAssetManagerService.encodeTransfer(
-        dstAssetConfig.asset,
+        dstAssetConfig.hubAsset,
         params.to,
         translatedAmountOut,
         this.hubProvider.chainConfig.addresses.assetManager,
@@ -123,12 +122,12 @@ export class BnUSDMigrationService {
    */
   public revertMigrationData(params: BnUSDRevertMigrationParams): Hex {
     const calls: EvmContractCall[] = [];
-    const bnUSDVault = getMoneyMarketConfig(ChainKeys.SONIC_MAINNET).bnUSDVault as Address;
+    const bnUSDVault = this.config.moneyMarket.bnUSDVault;
 
     // Wrap new bnUSD into vault tokens
     let decimals = 18;
     if (params.newbnUSD.toLowerCase() !== bnUSDVault.toLowerCase()) {
-      const assetConfig = this.configService.getHubAssetInfo(params.srcChainId, params.newbnUSD);
+      const assetConfig = this.config.getSpokeTokenFromOriginalAssetAddress(params.srcChainId, params.newbnUSD);
       invariant(assetConfig, `hub asset not found for new bnUSD token: ${params.newbnUSD}`);
       decimals = assetConfig.decimals;
       calls.push(Erc20Service.encodeApprove(assetConfig.hubAsset, bnUSDVault, params.amount));
@@ -138,20 +137,20 @@ export class BnUSDMigrationService {
     const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(decimals, params.amount);
 
     // Migrate to legacy bnUSD vault'
-    const dstAssetConfig = this.configService.getHubAssetInfo(params.dstChainId, params.legacybnUSD);
+    const dstAssetConfig = this.config.getSpokeTokenFromOriginalAssetAddress(params.dstChainId, params.legacybnUSD);
     invariant(dstAssetConfig, `hub asset not found for new bnUSD token: ${params.legacybnUSD}`);
 
     calls.push(EvmVaultTokenService.encodeWithdraw(bnUSDVault, dstAssetConfig.vault, translatedAmount));
-    calls.push(EvmVaultTokenService.encodeWithdraw(dstAssetConfig.vault, dstAssetConfig.asset, translatedAmount));
+    calls.push(EvmVaultTokenService.encodeWithdraw(dstAssetConfig.vault, dstAssetConfig.hubAsset, translatedAmount));
 
     const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(
-      dstAssetConfig.decimal,
+      dstAssetConfig.decimals,
       translatedAmount,
     );
 
     calls.push(
       EvmAssetManagerService.encodeTransfer(
-        dstAssetConfig.asset,
+        dstAssetConfig.hubAsset,
         params.to,
         translatedAmountOut,
         this.hubProvider.chainConfig.addresses.assetManager,
