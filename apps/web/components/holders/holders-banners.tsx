@@ -4,17 +4,19 @@ import type { ReactElement, ReactNode } from 'react';
 
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import LandingFullBanner from '@/components/landing/landing-full-banner';
-import { ArrowRightIcon } from '@/components/icons/arrow-right-icon';
-import { DISCORD_ROUTE, MIGRATE_ROUTE, SODA_TOKEN_ROUTE, STAKE_ROUTE, X_ROUTE } from '@/constants/routes';
+import { DISCORD_ROUTE, X_ROUTE } from '@/constants/routes';
+import { HOLDERS_FULL_BANNER, HOLDERS_IMAGE_BANNERS, HOLDERS_SHORT_BANNERS } from './holders-banners-content';
+
+const [grantsBanner, burnsBanner] = HOLDERS_SHORT_BANNERS;
+const [icxBanner, stakeBanner] = HOLDERS_IMAGE_BANNERS;
 
 interface ImageBannerProps {
   theme: 'dark' | 'light';
   title: ReactNode;
-  subtitle: string;
-  buttonLabel: string;
-  href: string;
+  subtitle: ReactNode;
+  buttonLabel?: string;
+  href?: string;
   imageSrc: string;
   imageClassName: string;
   containerClassName: string;
@@ -23,24 +25,35 @@ interface ImageBannerProps {
 interface ShortBannerProps {
   theme: 'dark' | 'light';
   title: ReactNode;
-  subtitle: string;
-  buttonLabel: string;
-  href: string;
+  subtitle: ReactNode;
+  buttonLabel?: string;
+  href?: string;
   containerClassName: string;
 }
 
 const THEME_STYLES = {
   dark: {
-    subtitle: "text-(length:--body-super-comfortable) font-['InterRegular'] text-white leading-[1.4] mt-2 font-normal",
+    subtitle: "text-(length:--body-super-comfortable) font-['InterRegular'] text-white leading-[1.4] mt-2 text-center",
     buttonClassName: 'rounded-full cursor-pointer',
     buttonVariant: 'subtle' as const,
   },
   light: {
-    subtitle: "text-(length:--body-super-comfortable) font-['InterRegular'] text-black mt-2 leading-[1.2]",
+    subtitle: "text-(length:--body-super-comfortable) font-['InterRegular'] text-black mt-2 leading-[1.4] text-center",
     buttonClassName: "px-6 font-['InterMedium'] cursor-pointer",
     buttonVariant: 'outline' as const,
   },
 };
+
+const TITLE_CLASSNAME = "text-(length:--app-title) font-['InterBlack'] text-black leading-[1.1]";
+
+const SHORT_BANNER_CONTAINER =
+  'w-full lg:w-1/2 flex flex-col items-center justify-center px-8 bg-almost-white h-[240px] mt-4 relative';
+
+const IMAGE_BANNER_CONTAINER_BASE =
+  'w-full lg:w-1/2 flex flex-col items-center pt-14 md:pt-18 bg-almost-white h-[440px] sm:h-[480px] md:h-[480px] mt-4 relative z-1';
+
+const IMAGE_BANNER_IMAGE_CLASSNAME =
+  'mix-blend-multiply absolute bottom-0 left-1/2 transform -translate-x-1/2 w-150 z-0 max-w-150';
 
 function ImageBanner({
   theme,
@@ -57,18 +70,20 @@ function ImageBanner({
   return (
     <div className={containerClassName}>
       <Image className={imageClassName} src={imageSrc} alt="background" width={990} height={660} />
-      <div className="flex items-center">{title}</div>
-      <Label className={styles.subtitle}>{subtitle}</Label>
-      <div className="mt-6 z-10">
-        <Button
-          className={styles.buttonClassName}
-          variant={styles.buttonVariant}
-          size="lg"
-          onClick={() => window.open(href, '_blank')}
-        >
-          {buttonLabel}
-        </Button>
-      </div>
+      <div className={TITLE_CLASSNAME}>{title}</div>
+      <p className={styles.subtitle}>{subtitle}</p>
+      {buttonLabel && (
+        <div className="mt-6 z-10">
+          <Button
+            className={styles.buttonClassName}
+            variant={styles.buttonVariant}
+            size="lg"
+            onClick={() => href && window.open(href, '_blank')}
+          >
+            {buttonLabel}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -85,18 +100,20 @@ function ShortBanner({
 
   return (
     <div className={containerClassName}>
-      <div className="flex items-center">{title}</div>
-      <Label className={styles.subtitle}>{subtitle}</Label>
-      <div className="mt-4 z-10">
-        <Button
-          className={styles.buttonClassName}
-          variant={styles.buttonVariant}
-          size="lg"
-          onClick={() => window.open(href, '_blank')}
-        >
-          {buttonLabel}
-        </Button>
-      </div>
+      <div className={TITLE_CLASSNAME}>{title}</div>
+      <p className={styles.subtitle}>{subtitle}</p>
+      {buttonLabel && (
+        <div className="mt-4 z-10">
+          <Button
+            className={styles.buttonClassName}
+            variant={styles.buttonVariant}
+            size="lg"
+            onClick={() => href && window.open(href, '_blank')}
+          >
+            {buttonLabel}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -104,96 +121,47 @@ function ShortBanner({
 export default function HoldersBanners(): ReactElement {
   return (
     <>
-      {/* Full-width image banner (placeholder: same pattern as landing) */}
+      {/* Full-width image banner */}
       <LandingFullBanner
         containerClassName="h-[440px] sm:h-[480px] md:h-[560px] flex flex-col items-center bg-almost-white mt-4 pt-14 md:pt-18 relative overflow-hidden"
-        topDecorator={
-          <ArrowRightIcon className="absolute top-[-32px] left-1/2 -translate-x-1/2 rotate-270" fill="white" />
-        }
         image={{
-          src: '/sodax-mockup.png',
+          src: HOLDERS_FULL_BANNER.imageSrc,
           alt: 'background',
           width: 990,
           height: 660,
-          className:
-            'mix-blend-multiply absolute bottom-0 left-1/2 transform -translate-x-1/2 w-150 max-w-150 z-0',
+          className: 'mix-blend-multiply absolute bottom-0 left-1/2 transform -translate-x-1/2 w-150 max-w-150 z-0',
         }}
         title={
           <div className="flex items-center gap-4">
-            <Image
-              src="/soda-yellow-sm.png"
-              alt="SODAX Symbol"
-              width={32}
-              height={32}
-              className="md:w-8 md:h-8 w-6 h-6"
-            />
             <div className="text-(length:--main-title) font-['InterBlack'] text-black leading-[1.1]">
-              Supply capped at 1.5B.{' '}
+              {HOLDERS_FULL_BANNER.title}
             </div>
           </div>
         }
-        subtitle="No emissions, zero inflation guaranteed."
-        buttonLabel="Tokenomics"
-        href={SODA_TOKEN_ROUTE}
+        subtitle={HOLDERS_FULL_BANNER.subtitle}
+        buttonLabel={HOLDERS_FULL_BANNER.buttonLabel}
+        href={HOLDERS_FULL_BANNER.href}
       />
 
-      {/* Two short (~240px) panels without images */}
+      {/* Two short panels without buttons */}
       <div className="flex flex-col lg:flex-row">
-        <ShortBanner
-          theme="light"
-          title={
-            <div className="text-(length:--app-title) font-['InterBlack'] text-black leading-[1.1]">
-              ...and grows the protocol.{' '}
-            </div>
-          }
-          subtitle="A stronger DAO to govern ever growing liquidity. Diving trade and rewarding stakers."
-          buttonLabel="Read more"
-          href="#"
-          containerClassName="w-full lg:w-1/2 flex flex-col items-center justify-center px-8 bg-almost-white h-[240px] mt-4 relative"
-        />
-        <ShortBanner
-          theme="light"
-          title={
-            <div className="text-(length:--app-title) font-['InterBlack'] text-black leading-[1.1]">
-              Every swap burns SODA...{' '}
-            </div>
-          }
-          subtitle="Partners across 18 networks collect fees. Buying back SODA and reducing supply."
-          buttonLabel="Read more"
-          href="#"
-          containerClassName="w-full lg:w-1/2 flex flex-col items-center justify-center px-8 bg-almost-white h-[240px] mt-4 relative"
-        />
+        <ShortBanner theme="light" {...grantsBanner} containerClassName={SHORT_BANNER_CONTAINER} />
+        <ShortBanner theme="light" {...burnsBanner} containerClassName={SHORT_BANNER_CONTAINER} />
       </div>
 
       {/* Pair of light-theme image banners */}
       <div className="flex flex-col lg:flex-row">
         <ImageBanner
           theme="light"
-          title={
-            <div className="text-(length:--app-title) font-['InterBlack'] text-black leading-[1.1]">
-              Already an ICX holder?{' '}
-            </div>
-          }
-          subtitle="Migrate 1:1 from ICX to SODA.  Same community, fresh tokenomics."
-          buttonLabel="Migrate to SODA"
-          href={MIGRATE_ROUTE}
-          imageSrc="/sodax-mockup.png"
-          containerClassName="w-full lg:w-1/2 flex flex-col items-center pt-14 md:pt-18 bg-almost-white h-[440px] sm:h-[480px] md:h-[560px] mt-4 relative z-1"
-          imageClassName="mix-blend-multiply absolute bottom-0 left-1/2 transform -translate-x-1/2 w-150 z-0 max-w-150"
+          {...icxBanner}
+          imageClassName={IMAGE_BANNER_IMAGE_CLASSNAME}
+          containerClassName={IMAGE_BANNER_CONTAINER_BASE}
         />
         <ImageBanner
           theme="light"
-          title={
-            <div className="text-(length:--app-title) font-['InterBlack'] text-black leading-[1.1]">
-              Your share of fees.
-            </div>
-          }
-          subtitle="Stake SODA and earn from protocol growth. 20% of fees flow to holders."
-          buttonLabel="Stake SODA"
-          href={STAKE_ROUTE}
-          imageSrc="/sodax-mockup.png"
-          containerClassName="w-full lg:w-1/2 flex flex-col items-center pt-14 md:pt-18 bg-almost-white h-[440px] sm:h-[480px] md:h-[560px] mt-4 lg:ml-4 relative z-1"
-          imageClassName="mix-blend-multiply absolute bottom-0 left-1/2 transform -translate-x-1/2 w-150 z-0 max-w-150"
+          {...stakeBanner}
+          imageClassName={IMAGE_BANNER_IMAGE_CLASSNAME}
+          containerClassName={`${IMAGE_BANNER_CONTAINER_BASE} lg:ml-4`}
         />
       </div>
 

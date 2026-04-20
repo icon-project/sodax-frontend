@@ -70,8 +70,8 @@ const HoldersHeroSection = (): React.ReactElement => {
         <div className="flex flex-col items-center w-full px-4 gap-4 mt-16 md:mt-24">
           {/* Tagline */}
           <div className="flex gap-2 items-center justify-center z-20">
-            <Image src="/soda-yellow.png" alt="SODAX Symbol" width={24} height={24} />
-            <span className="text-cream font-[InterRegular] text-[14px] leading-[1.4] tracking-wider uppercase">
+            <Image src="/soda-yellow-on-cherry.svg" alt="SODAX Symbol" width={24} height={24} />
+            <span className="text-cream font-[InterRegular] text-(length:--body-comfortable) leading-[1.4] tracking-wider uppercase">
               The SODA Token
             </span>
           </div>

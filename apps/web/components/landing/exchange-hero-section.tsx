@@ -12,7 +12,7 @@ import { MainCtaButton } from './main-cta-button';
 import { Separator } from '@radix-ui/react-separator';
 import { useRouter } from 'next/navigation';
 import { SWAP_ROUTE } from '@/constants/routes';
-import { Navbar } from '@/components/shared/navbar';
+import { Navbar, NavbarCta } from '@/components/shared/navbar';
 import { useAppStore } from '@/stores/app-store-provider';
 
 const carouselItems = [
@@ -62,7 +62,17 @@ const ExchangeHeroSection = (): React.ReactElement => {
           height={811}
           unoptimized
         />
-        <Navbar />
+        <Navbar
+          cta={
+            <NavbarCta
+              label="launch apps"
+              onClick={() => {
+                router.push(SWAP_ROUTE);
+                setShouldTriggerAnimation(true);
+              }}
+            />
+          }
+        />
         <Image
           className="mix-blend-color-dodge absolute max-w-none w-[357px] h-[357px] sm:w-[701px] sm:h-[680px] top-[30px] left-[-135px] sm:top-[-50px] lg:left-[9.5%] md:left-[-30%]"
           src="/circle1.png"
