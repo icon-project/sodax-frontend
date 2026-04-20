@@ -1,19 +1,20 @@
 import type React from 'react';
 import { Switch } from '@/components/ui/switch';
 import { useStakeState } from '../_stores/stake-store-provider';
-import { cn } from '@/lib/utils';
 
 interface UnstakeModeToggleProps {
   enabled: boolean;
   onToggle: (enabled: boolean) => void;
 }
 
-export function UnstakeModeToggle({ enabled, onToggle }: UnstakeModeToggleProps): React.JSX.Element {
+export function UnstakeModeToggle({ enabled, onToggle }: UnstakeModeToggleProps): React.JSX.Element | null {
   const { userXSodaBalance } = useStakeState();
+  if (userXSodaBalance === 0n) {
+    return null;
+  }
   return (
-    <div className={cn('flex items-center gap-2', userXSodaBalance === 0n && 'opacity-60 pointer-events-none')}>
-      {/* <div className="justify-center text-clay text-xs font-normal font-['Inter'] leading-5">Unstake mode</div> */}
-      <div className="justify-center text-espresso text-(length:--body-comfortable) leading-5">Unstake mode</div>
+    <div className="flex items-center gap-2">
+      <div className="justify-center text-espresso text-(length:--body-comfortable) leading-5">Unstake</div>
       <div className="mix-blend-multiply">
         <Switch
           checked={enabled}
