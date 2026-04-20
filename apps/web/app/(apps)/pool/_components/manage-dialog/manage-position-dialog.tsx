@@ -639,6 +639,7 @@ export function ManagePositionDialog({
       }
       setWithdrawPercentage('0');
       setIsWithdrawSuccess(true);
+      setIsWithdrawInProgress(false);
       trackWithdrawLiquidityCompleted({
         position_id: tokenId,
         withdraw_percentage: parsedPercentage,
