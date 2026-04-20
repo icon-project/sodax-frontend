@@ -1,4 +1,4 @@
-import type { WalletAddressProvider } from '../index.js';
+import type { ICoreWallet } from '../index.js';
 
 export type XDR = string;
 
@@ -96,7 +96,8 @@ export type StellarRawTransaction = {
 
 export type StellarReturnType<Raw extends boolean> = Raw extends true ? StellarRawTransaction : string;
 
-export interface IStellarWalletProvider extends WalletAddressProvider {
+export interface IStellarWalletProvider extends ICoreWallet {
+  readonly chainType: 'STELLAR';
   signTransaction: (tx: XDR) => Promise<XDR>;
   waitForTransactionReceipt: (txHash: string) => Promise<StellarRawTransactionReceipt>;
 }

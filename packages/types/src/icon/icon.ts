@@ -1,4 +1,4 @@
-import type { Hex, Hash, WalletAddressProvider, spokeChainConfig, ChainKeys } from '../index.js';
+import type { Hex, Hash, ICoreWallet, spokeChainConfig, ChainKeys } from '../index.js';
 
 export type IcxTokenType =
   | (typeof spokeChainConfig)[typeof ChainKeys.ICON_MAINNET]['addresses']['wICX']
@@ -53,7 +53,8 @@ export type IconTransactionResult = {
   };
 };
 
-export interface IIconWalletProvider extends WalletAddressProvider {
+export interface IIconWalletProvider extends ICoreWallet {
+  readonly chainType: 'ICON';
   getWalletAddress: () => Promise<IconEoaAddress>;
   sendTransaction: (iconRawTx: IcxCallTransaction) => Promise<Hash>;
   waitForTransactionReceipt: (txHash: Hash) => Promise<IconTransactionResult>;

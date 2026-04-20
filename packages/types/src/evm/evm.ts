@@ -1,4 +1,5 @@
-import type { Address, Hex, Hash, WalletAddressProvider } from '../shared/shared.js';
+import type { Address, Hex, Hash } from '../shared/shared.js';
+import type { ICoreWallet } from '../wallet/wallet.js';
 
 export type EvmTxReturnType<T extends boolean> = T extends true ? EvmRawTransaction : Hex;
 export type EvmReturnType<Raw extends boolean> = Raw extends true ? EvmRawTransaction : Hex;
@@ -47,7 +48,8 @@ export type EvmRawTransactionReceipt = {
   effectiveGasPrice?: string; // hex string, only on EIP-1559 txs
 };
 
-export interface IEvmWalletProvider extends WalletAddressProvider {
+export interface IEvmWalletProvider extends ICoreWallet {
+  readonly chainType: 'EVM';
   getWalletAddress: () => Promise<Address>;
   sendTransaction: (evmRawTx: EvmRawTransaction) => Promise<Hash>;
   waitForTransactionReceipt: (txHash: Hash) => Promise<EvmRawTransactionReceipt>;

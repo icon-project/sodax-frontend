@@ -11,8 +11,3 @@ export type Address = `0x${string}`;
 export type HubAddress = Address;
 export type OriginalAssetAddress = string;
 export type HttpUrl = `http://${string}` | `https://${string}`;
-
-export interface WalletAddressProvider {
-  getWalletAddress(): Promise<string>; // The wallet address as a string
-  getPublicKey?: () => Promise<string>;
-}

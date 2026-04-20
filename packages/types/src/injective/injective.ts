@@ -1,4 +1,4 @@
-import type { WalletAddressProvider } from '../index.js';
+import type { ICoreWallet } from '../index.js';
 
 export interface SignDoc {
   /**
@@ -107,7 +107,8 @@ export type InjectiveRawTransactionReceipt = {
   timestamp: string;
 };
 
-export interface IInjectiveWalletProvider extends WalletAddressProvider {
+export interface IInjectiveWalletProvider extends ICoreWallet {
+  readonly chainType: 'INJECTIVE';
   getWalletAddress: () => Promise<InjectiveEoaAddress>;
   execute: (
     senderAddress: InjectiveEoaAddress,

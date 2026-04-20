@@ -1,21 +1,16 @@
+import type { HttpUrl } from '../shared/shared.js';
+import { apiConfig, solverConfig, relayConfig, type ApiConfig, type SolverConfig, type RelayConfig } from '../common/constants.js';
+import type { MoneyMarketConfig, PartnerFee } from '../common/common.js';
+import { moneyMarketConfig } from '../moneyMarket/moneyMarket.js';
+import { dexConfig, type DexConfig } from '../dex/dex.js';
+import { swapsConfig, type SwapsConfig } from '../swap/swap.js';
 import {
-  type HttpUrl,
+  spokeChainConfig,
+  type HubConfig,
+  hubConfig,
+  type SpokeChainConfig,
   type SpokeChainKey,
-  moneyMarketConfig,
-  type PartnerFee,
-  type ApiConfig,
-  apiConfig,
-  solverConfig,
-  relayConfig,
-  type SolverConfig,
-  type RelayConfig,
-  dexConfig,
-  type DexConfig,
-  type MoneyMarketConfig,
-  swapsConfig,
-  type SwapsConfig,
-} from '../index.js';
-import { spokeChainConfig, type HubConfig, hubConfig, type SpokeChainConfig } from '../chains/chains.js';
+} from '../chains/chains.js';
 
 // -- Per-chain shared config types (user-overridable runtime config) --
 

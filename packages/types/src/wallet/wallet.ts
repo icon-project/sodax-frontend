@@ -13,7 +13,18 @@ import type {
   ISuiWalletProvider,
 } from '../index.js';
 
-// union of all wallet provider interfaces
+export interface WalletAddressProvider {
+  getWalletAddress(): Promise<string>; // The wallet address as a string
+  getPublicKey?: () => Promise<string>;
+}
+
+export interface ICoreWallet extends WalletAddressProvider {}
+
+/**
+ * Union of all chain-specific wallet providers. Narrow by the discriminant field
+ * {@link IEvmWalletProvider.chainType} (and the same property on other variants), e.g.
+ * `if (w.chainType === 'EVM')` refines `w` to {@link IEvmWalletProvider}.
+ */
 export type IWalletProvider =
   | IEvmWalletProvider
   | IInjectiveWalletProvider

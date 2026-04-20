@@ -1,4 +1,4 @@
-import type { WalletAddressProvider } from '../index.js';
+import type { ICoreWallet } from '../index.js';
 
 /** Check whether an AddressType is supported for signing/spending. */
 export function isSupportedBitcoinAddressType(addressType: string): addressType is BtcAddressType {
@@ -94,7 +94,8 @@ export type BitcoinRawTransaction = {
 
 export type BitcoinReturnType<Raw extends boolean> = Raw extends true ? BitcoinRawTransaction : string;
 
-export interface IBitcoinWalletProvider extends WalletAddressProvider {
+export interface IBitcoinWalletProvider extends ICoreWallet {
+  readonly chainType: 'BITCOIN';
   /**
    * Get the wallet's Bitcoin address
    * @returns Promise resolving to the Bitcoin address

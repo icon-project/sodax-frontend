@@ -1,4 +1,4 @@
-import type { WalletAddressProvider } from '../index.js';
+import type { ICoreWallet } from '../index.js';
 
 export type StacksRawTransaction = {
   payload: string; // hex-encoded serialized transaction payload
@@ -224,7 +224,8 @@ export type StacksRawTransactionReceipt = {
   execution_cost_write_length?: number;
 };
 
-export interface IStacksWalletProvider extends WalletAddressProvider {
+export interface IStacksWalletProvider extends ICoreWallet {
+  readonly chainType: 'STACKS';
   getWalletAddress: () => Promise<string>;
   getPublicKey: () => Promise<string>;
   getBalance: (address: string) => Promise<bigint>;

@@ -9,10 +9,11 @@ import {
   EvmHubProvider,
 } from '../../index.js';
 import { MoneyMarketService } from '../../moneyMarket/MoneyMarketService.js';
-import { sodaxConfig, type Result, type SodaxConfig } from '@sodax/types';
+import { sodaxConfig, type DeepPartial, type Result, type SodaxConfig } from '@sodax/types';
 import type { HubProvider } from '../types/types.js';
 import { ConfigService } from '../config/index.js';
 import { PartnerService } from '../../partner/PartnerService.js';
+import { deepMerge } from '../utils/deepMerge.js';
 
 /**
  * Sodax class is used to interact with the Sodax.
@@ -20,7 +21,7 @@ import { PartnerService } from '../../partner/PartnerService.js';
  * @see https://docs.sodax.com
  */
 export class Sodax {
-  public readonly instanceConfig?: SodaxConfig;
+  public readonly instanceConfig: SodaxConfig;
 
   public readonly swaps: SwapService; // Solver service enabling intent based swaps
   public readonly moneyMarket: MoneyMarketService; // Money Market service enabling cross-chain lending and borrowing
@@ -35,8 +36,8 @@ export class Sodax {
   public readonly hubProvider: HubProvider; // hub provider for the hub chain (e.g. Sonic mainnet)
   public readonly spokeService: SpokeService; // spoke service enabling spoke chain operations
 
-  constructor(config?: SodaxConfig) {
-    this.instanceConfig = config ?? sodaxConfig;
+  constructor(config?: DeepPartial<SodaxConfig>) {
+    this.instanceConfig = config ? deepMerge<SodaxConfig>(sodaxConfig, config) : sodaxConfig;
     this.backendApi = new BackendApiService(this.instanceConfig.api);
     this.config = new ConfigService({ api: this.backendApi, config: this.instanceConfig });
 

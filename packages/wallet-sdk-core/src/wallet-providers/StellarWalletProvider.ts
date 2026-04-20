@@ -104,6 +104,7 @@ export function isValidStellarPrivateKey(privateKey: string): boolean {
 }
 
 export class StellarWalletProvider implements IStellarWalletProvider {
+  public readonly chainType = 'STELLAR' as const;
   private readonly wallet: StellarWallet;
   private readonly server: Horizon.Server;
   private readonly networkPassphrase: string;
@@ -201,4 +202,5 @@ export class StellarWalletProvider implements IStellarWalletProvider {
       'TX_RECEIPT_TIMEOUT',
     );
   }
+
 }

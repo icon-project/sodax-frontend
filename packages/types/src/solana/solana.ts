@@ -1,4 +1,4 @@
-import type { Base64String, WalletAddressProvider } from '../index.js';
+import type { Base64String, ICoreWallet } from '../index.js';
 import type { VersionedTransactionResponse } from './solana-web3.js';
 
 export type SolanaEoaAddress = string;
@@ -119,7 +119,8 @@ export type RawTransaction = {
 
 export type SolanaRawTransactionReceipt = VersionedTransactionResponse;
 
-export interface ISolanaWalletProvider extends WalletAddressProvider {
+export interface ISolanaWalletProvider extends ICoreWallet {
+  readonly chainType: 'SOLANA';
   getWalletAddress: () => Promise<string>;
   sendTransaction: (rawTransaction: Uint8Array | Array<number>) => Promise<TransactionSignature>;
   waitForConfirmation: (

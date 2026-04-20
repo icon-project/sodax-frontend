@@ -148,10 +148,9 @@ export class AssetService {
   constructor({ config, hubProvider, spoke }: AssetServiceConstructorParams) {
     this.config = config;
     this.spoke = spoke;
-    this.relayerApiEndpoint = config.relay.relayerApiEndpoint
+    this.relayerApiEndpoint = config.relay.relayerApiEndpoint;
     this.hubProvider = hubProvider;
     this.concentratedLiquidityConfig = config.dex.concentratedLiquidityConfig;
-    }
   }
 
   /**

@@ -19,6 +19,7 @@ describe('IconWalletProvider', () => {
       });
 
       expect(provider.iconService).toBeDefined();
+      expect(provider.chainType).toBe('ICON');
     });
 
     it('should initialize with browser extension wallet config', () => {
@@ -28,6 +29,7 @@ describe('IconWalletProvider', () => {
       });
 
       expect(provider.iconService).toBeDefined();
+      expect(provider.chainType).toBe('ICON');
     });
 
     it('should throw error for invalid wallet config', () => {

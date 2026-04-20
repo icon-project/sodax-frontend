@@ -5,6 +5,7 @@ const IconSdk = ('default' in IconSdkRaw.default ? IconSdkRaw.default : IconSdkR
 const { Converter, CallTransactionBuilder, Wallet } = IconSdk;
 
 export class IconWalletProvider implements IIconWalletProvider {
+  public readonly chainType = 'ICON' as const;
   private readonly wallet: IconWallet;
   public readonly iconService: IconService;
 
@@ -69,6 +70,7 @@ export class IconWalletProvider implements IIconWalletProvider {
     }
     return isIconPkWallet(this.wallet) ? (this.wallet.wallet.getAddress() as IconEoaAddress) : this.wallet.wallet;
   }
+
 }
 
 /**

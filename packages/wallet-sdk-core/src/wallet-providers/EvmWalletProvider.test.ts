@@ -2,14 +2,14 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { EvmWalletProvider, type BrowserExtensionEvmWalletConfig, type EvmWalletConfig } from './EvmWalletProvider.js';
-import { SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
+import { ChainKeys } from '@sodax/types';
 import { createWalletClient, createPublicClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { sonic } from 'viem/chains';
 
 describe('EvmWalletProvider', () => {
   // Use real chainId and chain config for Sonic Mainnet
-  const spokeChainId = SONIC_MAINNET_CHAIN_ID;
+  const spokeChainId = ChainKeys.SONIC_MAINNET;
   const privateKey = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef' as const; // mock private key
   const rpcUrl = sonic.rpcUrls.default.http[0];
 
@@ -32,6 +32,7 @@ describe('EvmWalletProvider', () => {
       // Assert
       expect(provider).toBeInstanceOf(EvmWalletProvider);
       expect(provider.publicClient).toBeDefined();
+      expect(provider.chainType).toBe('EVM');
     });
 
     it('should initialize with browser extension wallet config', () => {
@@ -57,6 +58,7 @@ describe('EvmWalletProvider', () => {
       // Assert
       expect(provider).toBeInstanceOf(EvmWalletProvider);
       expect(provider.publicClient).toBe(publicClient);
+      expect(provider.chainType).toBe('EVM');
     });
 
     it('should throw error for invalid wallet config', () => {

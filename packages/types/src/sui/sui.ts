@@ -1,4 +1,4 @@
-import type { Base64String, Hex, WalletAddressProvider } from '../index.js';
+import type { Base64String, Hex, ICoreWallet } from '../index.js';
 
 export type SuiReturnType<Raw extends boolean> = Raw extends true ? SuiRawTransaction : string;
 
@@ -271,7 +271,8 @@ export type SuiRawTransactionReceipt = {
   rawTransaction?: string;
 };
 
-export interface ISuiWalletProvider extends WalletAddressProvider {
+export interface ISuiWalletProvider extends ICoreWallet {
+  readonly chainType: 'SUI';
   getWalletAddress: () => Promise<string>;
   signAndExecuteTxn: (txn: SuiTransaction) => Promise<string>;
   viewContract(

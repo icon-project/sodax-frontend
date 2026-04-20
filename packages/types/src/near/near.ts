@@ -1,4 +1,4 @@
-import type { Hex, WalletAddressProvider } from '../index.js';
+import type { Hex, ICoreWallet } from '../index.js';
 import type { RpcTransactionResponse } from './near-api-js.js';
 
 export interface TransferArgs {
@@ -86,7 +86,8 @@ export type NearReturnType<Raw extends boolean> = Raw extends true ? NearRawTran
 
 export type NearRawTransactionReceipt = RpcTransactionResponse;
 
-export interface INearWalletProvider extends WalletAddressProvider {
+export interface INearWalletProvider extends ICoreWallet {
+  readonly chainType: 'NEAR';
   getWalletAddress: () => Promise<string>;
   getRawTransaction(params: CallContractParams): Promise<NearRawTransaction>;
   signAndSubmitTxn(tx: NearRawTransaction): Promise<string>;
