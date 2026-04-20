@@ -307,9 +307,16 @@ export default function SupplyDialogFooter({
         setIsSupplySubmitting(true);
         onError(null);
 
+        // Stale sqrtPriceX96 produces too-tight amount ceilings for narrow ranges, reverting the mint.
+        const freshPoolData = await sodax.dex.clService.getPoolData(
+          fixedPoolKey,
+          sodax.hubProvider.publicClient,
+        );
+        queryClient.setQueryData(['dex', 'poolData', fixedPoolKey], freshPoolData);
+
         const [, hubTxHash] = await supplyLiquidity({
           params: createSupplyLiquidityParamsProps({
-            poolData,
+            poolData: freshPoolData,
             poolKey: fixedPoolKey,
             minPrice: minPrice.toString(),
             maxPrice: maxPrice.toString(),
