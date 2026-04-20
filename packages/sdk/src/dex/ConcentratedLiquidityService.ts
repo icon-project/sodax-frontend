@@ -1550,16 +1550,16 @@ export class ClService {
     tickLower: bigint,
     tickUpper: bigint,
     currentTick: bigint,
+    sqrtPriceX96: bigint,
   ): bigint {
     if (amount0 === 0n) return 0n;
 
     const sqrtRatioX96Lower = TickMath.getSqrtRatioAtTick(Number(tickLower));
     const sqrtRatioX96Upper = TickMath.getSqrtRatioAtTick(Number(tickUpper));
-    const sqrtRatioX96Current = TickMath.getSqrtRatioAtTick(Number(currentTick));
 
     // Calculate liquidity using only amount0 (use a very large value for amount1 to not constrain)
     const liquidity = maxLiquidityForAmounts(
-      sqrtRatioX96Current,
+      sqrtPriceX96,
       sqrtRatioX96Lower,
       sqrtRatioX96Upper,
       amount0,
@@ -1572,7 +1572,7 @@ export class ClService {
       Number(currentTick),
       Number(tickLower),
       Number(tickUpper),
-      sqrtRatioX96Current,
+      sqrtPriceX96,
       liquidity,
     );
 
@@ -1592,16 +1592,16 @@ export class ClService {
     tickLower: bigint,
     tickUpper: bigint,
     currentTick: bigint,
+    sqrtPriceX96: bigint,
   ): bigint {
     if (amount1 === 0n) return 0n;
 
     const sqrtRatioX96Lower = TickMath.getSqrtRatioAtTick(Number(tickLower));
     const sqrtRatioX96Upper = TickMath.getSqrtRatioAtTick(Number(tickUpper));
-    const sqrtRatioX96Current = TickMath.getSqrtRatioAtTick(Number(currentTick));
 
     // Calculate liquidity using only amount1 (use a very large value for amount0 to not constrain)
     const liquidity = maxLiquidityForAmounts(
-      sqrtRatioX96Current,
+      sqrtPriceX96,
       sqrtRatioX96Lower,
       sqrtRatioX96Upper,
       BigInt('0xffffffffffffffffffffffffffffffff'), // max uint128
@@ -1614,7 +1614,7 @@ export class ClService {
       Number(currentTick),
       Number(tickLower),
       Number(tickUpper),
-      sqrtRatioX96Current,
+      sqrtPriceX96,
       liquidity,
     );
 
