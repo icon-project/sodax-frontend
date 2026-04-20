@@ -1,28 +1,19 @@
 import type React from 'react';
 import Image from 'next/image';
 import { Info } from 'lucide-react';
-import { useStakeState, useStakeActions } from '../_stores/stake-store-provider';
+import { useStakeState } from '../_stores/stake-store-provider';
 import { formatCompactNumber, formatTokenAmount } from '@/lib/utils';
 import { STAKING_APR } from './constants';
 import LoadingThreeDotsJumping from '@/components/shared/loading-three-dots-jumping';
 import { useStakingConfig } from '@sodax/dapp-kit';
-import { UnstakeModeToggle } from './unstake-mode-toggle';
-import { STAKE_MODE } from '../_stores/stake-store';
 import { Loader2 } from 'lucide-react';
 import { useStakeVaultApy } from '@/hooks/useStakeVaultApy';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function StakeStatsCard(): React.JSX.Element {
-  const {
-    totalUserXSodaBalance,
-    totalUserXSodaValue,
-    userXSodaBalance,
-    stakeMode,
-    isLoadingBalanceCalculation,
-    totalStaked,
-  } = useStakeState();
+  const { totalUserXSodaBalance, totalUserXSodaValue, userXSodaBalance, isLoadingBalanceCalculation, totalStaked } =
+    useStakeState();
 
-  const { setStakeMode } = useStakeActions();
   const { data: stakingConfig, isLoading: isLoadingStakingConfig } = useStakingConfig();
   const { data: liveApyPercent } = useStakeVaultApy();
   const displayedApy = liveApyPercent ?? STAKING_APR;
@@ -103,13 +94,6 @@ export function StakeStatsCard(): React.JSX.Element {
             {formatCompactNumber(formatTokenAmount(totalStaked, 18))} total staked
           </div>
         </div>
-      </div>
-
-      <div className="w-full flex justify-end items-center">
-        <UnstakeModeToggle
-          enabled={stakeMode === STAKE_MODE.UNSTAKING}
-          onToggle={() => setStakeMode(stakeMode === STAKE_MODE.UNSTAKING ? STAKE_MODE.STAKING : STAKE_MODE.UNSTAKING)}
-        />
       </div>
 
       <div className="w-full h-0.5 relative">
