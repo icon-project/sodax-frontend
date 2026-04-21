@@ -40,3 +40,9 @@ For a complete list of pages, see: https://sodax.com/sitemap.xml
 
 ## RSS Feed
 News updates available at: https://sodax.com/news/feed.xml
+
+## Agent Discovery (machine-readable)
+- API Catalog:        https://sodax.com/.well-known/api-catalog
+- MCP Server Card:    https://sodax.com/.well-known/mcp/server-card.json
+- Agent Skills Index: https://sodax.com/.well-known/agent-skills/index.json
+- Content-Signal policy (search, ai-input, ai-train) is declared in https://sodax.com/robots.txt

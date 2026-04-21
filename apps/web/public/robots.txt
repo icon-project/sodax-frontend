@@ -9,11 +9,18 @@ Disallow: /api/
 Disallow: /cms/
 Disallow: /*.json$
 # Explicit allows — agent-readiness discovery files end in .json but must
-# remain crawlable by AI agents. Exact paths win over the wildcard disallow
-# above under Google's longest-match rule.
+# remain crawlable. Only needed in this User-agent: * block, because the
+# wildcard Disallow: /*.json$ is scoped here (the named bot blocks below
+# don't disallow .json). Exact paths win over the wildcard under Google's
+# longest-match convention; strict alternative parsers may differ, so this
+# belt-and-suspenders listing errs on safety.
 Allow: /.well-known/mcp/server-card.json
 Allow: /.well-known/agent-skills/index.json
-# Content Signals (Cloudflare / OWASP least-privilege default):
+# Content Signals — Cloudflare-proposed robots.txt extension
+# (blog.cloudflare.com/content-signals). Not part of RFC 9309; most existing
+# parsers silently ignore unknown directives, so this is a forward-looking
+# declaration of intent. Cloudflare Bot Management honors it at the edge and
+# adoption may grow. OWASP least-privilege default (ai-train=no) applied.
 # search=yes      — search indexing allowed
 # ai-input=yes    — runtime agent input / RAG grounding allowed
 # ai-train=no     — training / fine-tuning NOT allowed

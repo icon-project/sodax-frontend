@@ -22,6 +22,9 @@ export const dynamic = 'force-static';
 // env-based SITE_URL without an explicit decision.
 const serverCard = {
   version: '0.1',
+  // KEEP IN SYNC: bump this date whenever any server entry, URL, or tool list
+  // below changes. It is the only freshness signal agents have — drift here
+  // silently turns this card into a Deceptive Tool Description (Agentic AI T12).
   updatedAt: '2026-04-21',
   servers: [
     {

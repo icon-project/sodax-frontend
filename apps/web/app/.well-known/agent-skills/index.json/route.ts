@@ -24,6 +24,8 @@ export const dynamic = 'force-static';
 // an explicit decision.
 const agentSkills = {
   version: '0.1',
+  // KEEP IN SYNC: bump this date whenever any skill entry, UI URL, SDK
+  // module reference, or docs URL below changes.
   updatedAt: '2026-04-21',
   skills: [
     {
@@ -71,9 +73,10 @@ const agentSkills = {
       id: 'bridge',
       name: 'Cross-chain bridge',
       description:
-        'Move assets across supported chains via SODAX bridging. Wrapped into Solver flows when a direct route is unavailable.',
+        'Move assets across supported chains via SODAX bridging. In the UI, bridge flows are initiated from the same Exchange > Swap screen as cross-chain swaps — when the input and output chains differ, the Solver executes it as a bridge transfer. No separate /exchange/bridge route exists; the SDK `bridge` module is the distinct surface.',
       capability: 'read+execute',
       ui: 'https://sodax.com/exchange/swap',
+      uiNote: 'Shared with the swap skill. Select different input and output chains to trigger a bridge flow.',
       sdk: {
         package: '@sodax/sdk',
         module: 'bridge',
