@@ -1,16 +1,14 @@
 'use client';
 
-import type React from 'react';
+import type { ReactElement } from 'react';
 import { useEffect, useRef, useState } from 'react';
 
 import Image from 'next/image';
-import { SWAP_ROUTE } from '@/constants/routes';
+import { KRAKEN_ROUTE, SWAP_ROUTE } from '@/constants/routes';
 import { Navbar } from '@/components/shared/navbar';
 import { NETWORK_ICON_MAP } from '@/components/network-icons';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getNetworkDocsUrl } from '@/lib/docToUrl';
-
-const KRAKEN_BUY_URL = 'https://www.kraken.com/';
 
 const HERO_NETWORK_LOGOS = [
   'Stellar',
@@ -31,7 +29,7 @@ const HERO_NETWORK_LOGOS = [
   'LightLink',
 ];
 
-const HoldersHeroSection = (): React.ReactElement => {
+const HoldersHeroSection = (): ReactElement => {
   const [activeTouchIndex, setActiveTouchIndex] = useState<number | null>(null);
   const touchBoundaryRef = useRef<HTMLDivElement>(null);
   const touchTriggeredRef = useRef(false);
@@ -66,9 +64,7 @@ const HoldersHeroSection = (): React.ReactElement => {
 
         <Navbar />
 
-        {/* Hero content */}
         <div className="flex flex-col items-center w-full px-4 gap-4 mt-16 md:mt-24">
-          {/* Tagline */}
           <div className="flex gap-2 items-center justify-center z-20">
             <Image src="/soda-yellow-on-cherry.svg" alt="SODAX Symbol" width={24} height={24} />
             <span className="text-cream font-[InterRegular] text-(length:--body-comfortable) leading-[1.4] tracking-wider uppercase">
@@ -76,7 +72,6 @@ const HoldersHeroSection = (): React.ReactElement => {
             </span>
           </div>
 
-          {/* Title with side braces */}
           <div className="flex items-center justify-center gap-6 z-20">
             <Image src="/landing/brace-left.svg" alt="" width={32} height={120} className="-scale-x-100" />
             <div className="mix-blend-hard-light text-white font-[InterBlack] text-(length:--main-title) leading-[1.1] text-center whitespace-nowrap">
@@ -87,15 +82,13 @@ const HoldersHeroSection = (): React.ReactElement => {
             <Image src="/landing/brace-right.svg" alt="" width={32} height={120} />
           </div>
 
-          {/* Subtitle */}
           <p className="text-white font-[InterRegular] text-(length:--body-super-comfortable) leading-[1.4] text-center z-20">
             Capped supply. Deflationary by design.
           </p>
 
-          {/* CTA buttons */}
           <div className="flex flex-col sm:flex-row gap-4 mt-4 z-20">
             <a
-              href={KRAKEN_BUY_URL}
+              href={KRAKEN_ROUTE}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-yellow-dark hover:bg-yellow-soda transition-all hover:scale-[102%] h-12 px-6 flex items-center justify-center font-[InterBold] rounded-full text-[14px] cursor-pointer text-cherry-dark"
@@ -104,7 +97,7 @@ const HoldersHeroSection = (): React.ReactElement => {
             </a>
             <a
               href={SWAP_ROUTE}
-              className="border-4 border-cherry-bright h-12 px-6 flex items-center justify-center font-[InterRegular] rounded-full text-[14px] cursor-pointer text-white hover:bg-cherry-bright/10 transition-colors"
+              className="border-4 border-cherry-bright hover:border-cherry-brighter h-12 px-6 flex items-center justify-center font-[InterRegular] rounded-full text-[14px] cursor-pointer text-white transition-all hover:scale-[102%]"
             >
               Swap on SODA Exchange
             </a>

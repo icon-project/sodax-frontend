@@ -73,6 +73,7 @@ export const LINKEDIN_ROUTE = 'https://www.linkedin.com/company/gosodax';
 export const BALANCED_DEFI_ROUTE = 'https://app.balanced.network/';
 export const HANA_WALLET_ROUTE = 'https://www.hanawallet.io/';
 export const HOUDINI_SWAP_ROUTE = 'https://app.houdiniswap.com/';
+export const KRAKEN_ROUTE = 'https://www.kraken.com/';
 
 // ── Resources & tools (external) ───────────────────────────────────────────
 /** Frontend repo (this app). */

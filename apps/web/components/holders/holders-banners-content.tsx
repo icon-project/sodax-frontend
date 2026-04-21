@@ -20,22 +20,22 @@ export const HOLDERS_FULL_BANNER = {
 
 export const HOLDERS_SHORT_BANNERS = [
   {
-    title: '...and grows the protocol.',
-    subtitle: (
-      <>
-        A stronger DAO to govern ever growing liquidity.
-        <br />
-        Diving trade and rewarding stakers.
-      </>
-    ),
-  },
-  {
     title: 'Every swap burns SODA...',
     subtitle: (
       <>
         Partners across 18 networks collect fees.
         <br />
         Buying back SODA and reducing supply.
+      </>
+    ),
+  },
+  {
+    title: '...and grows the protocol.',
+    subtitle: (
+      <>
+        A stronger DAO to govern ever growing liquidity.
+        <br />
+        Diving trade and rewarding stakers.
       </>
     ),
   },
