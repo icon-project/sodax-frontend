@@ -17,6 +17,18 @@ const cspHeader = Object.entries(cspDirectives)
   .map(([key, vals]) => `${key} ${vals.join(' ')}`)
   .join('; ');
 
+// --- Agent-readiness Link header (RFC 8288) ------------------------------------
+// Advertises our well-known discovery endpoints to AI crawlers and agent clients.
+// Static literal — no interpolation (ASVS V13: avoid header-injection surface).
+// NOTE: </llms-full.txt>; rel="llms-full-txt" lands with PR 3 (llms.txt rewrite);
+// intentionally omitted here so we don't advertise a 404.
+const agentDiscoveryLinkHeader = [
+  '</.well-known/api-catalog>; rel="service-desc"',
+  '</.well-known/mcp/server-card.json>; rel="mcp"',
+  '</.well-known/agent-skills/index.json>; rel="agent-skills"',
+  '</llms.txt>; rel="llms-txt"',
+].join(', ');
+
 const nextConfig = {
   async redirects() {
     return [
@@ -132,6 +144,18 @@ const nextConfig = {
           {
             key: 'Content-Security-Policy',
             value: cspHeader,
+          },
+        ],
+      },
+      {
+        // Agent-readiness: advertise discovery endpoints to crawlers/agents.
+        // Skip /api/* (not agent-relevant, avoids confusing upstream caches)
+        // and /_next/* (static asset chunks).
+        source: '/((?!api/|_next/).*)',
+        headers: [
+          {
+            key: 'Link',
+            value: agentDiscoveryLinkHeader,
           },
         ],
       },

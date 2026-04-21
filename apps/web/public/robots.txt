@@ -8,6 +8,16 @@ Disallow: /_next/
 Disallow: /api/
 Disallow: /cms/
 Disallow: /*.json$
+# Explicit allows — agent-readiness discovery files end in .json but must
+# remain crawlable by AI agents. Exact paths win over the wildcard disallow
+# above under Google's longest-match rule.
+Allow: /.well-known/mcp/server-card.json
+Allow: /.well-known/agent-skills/index.json
+# Content Signals (Cloudflare / OWASP least-privilege default):
+# search=yes      — search indexing allowed
+# ai-input=yes    — runtime agent input / RAG grounding allowed
+# ai-train=no     — training / fine-tuning NOT allowed
+Content-Signal: search=yes, ai-input=yes, ai-train=no
 
 # Google Search
 User-agent: Googlebot
@@ -34,6 +44,11 @@ Disallow: /cms/
 Disallow: /api/
 
 User-agent: Claude-Web
+Allow: /
+Disallow: /cms/
+Disallow: /api/
+
+User-agent: ClaudeBot
 Allow: /
 Disallow: /cms/
 Disallow: /api/
@@ -77,8 +92,15 @@ Allow: /
 Disallow: /cms/
 Disallow: /api/
 
+# ByteDance / Doubao
+User-agent: Bytespider
+Allow: /
+Disallow: /cms/
+Disallow: /api/
+
 # Reference to sitemap and llms.txt
 Sitemap: https://sodax.com/sitemap.xml
 
 # AI/LLM context file
 # llms.txt: https://sodax.com/llms.txt
+# (llms-full.txt will be added in a follow-up alongside the llms.txt rewrite)
