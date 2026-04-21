@@ -70,7 +70,6 @@ import {
   isHubChainKey,
   DEFAULT_RELAY_TX_TIMEOUT,
   DEFAULT_DEADLINE_OFFSET,
-  isSolanaChainKey,
   type GetAddressType,
   type GetTokenAddressType,
   type HubChainKey,
@@ -781,7 +780,7 @@ export class SwapService {
           spender: this.solver.intentsContract,
           raw: false,
           walletProvider: _params.walletProvider as GetWalletProviderType<HubChainKey>,
-        });
+        } satisfies SpokeApproveParams<HubChainKey, false> as SpokeApproveParams<HubChainKey, false>);
 
         if (!result.ok) {
           return result;
@@ -802,7 +801,7 @@ export class SwapService {
           spender: spokeChainConfig[params.srcChain].addresses.assetManager,
           raw: false,
           walletProvider: _params.walletProvider as GetWalletProviderType<EvmSpokeOnlyChainKey>,
-        });
+        } satisfies SpokeApproveParams<EvmSpokeOnlyChainKey, false> as SpokeApproveParams<EvmSpokeOnlyChainKey, false>);
 
         if (!result.ok) {
           return result;
@@ -1079,7 +1078,7 @@ export class SwapService {
         fee,
       );
 
-      const txResult = await this.spokeService.deposit<K, false>({
+      const txResult = await this.spokeService.deposit({
         srcChainKey,
         srcAddress: walletAddress as GetAddressType<K>,
         to: creatorHubWalletAddress,

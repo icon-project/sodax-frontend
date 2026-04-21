@@ -411,6 +411,122 @@ export class MigrationService {
     }
   }
 
+  public async approveRaw<K extends SpokeChainKey>(
+    _params: IcxRevertMigrationAction | UnifiedBnUSDMigrateAction<K>,
+    action: MigrationAction,
+  ): Promise<Result<TxReturnType<K, true>>> {
+    const { params, walletProvider } = _params;
+    try {
+      if (action === 'migrate') {
+        invariant(params.amount > 0n, 'Amount must be greater than 0');
+        invariant(params.dstAddress.length > 0, 'To address is required');
+        invariant(isUnifiedBnUSDMigrateParams(params), 'Invalid params');
+
+        if (isUnifiedBnUSDMigrateParams(params) && isEvmChainKeyType(params.srcChainKey)) {
+          return (await this.spokeService.approve({
+            srcChainKey: params.srcChainKey,
+            token: params.srcbnUSD as GetTokenAddressType<EvmChainKey>,
+            amount: params.amount,
+            owner: params.srcAddress as GetAddressType<EvmChainKey>,
+            spender: isHubChainKeyType(params.srcChainKey)
+              ? (this.config.sodaxConfig.chains[params.srcChainKey].supportedTokens.bnUSD.address as Address)
+              : this.config.sodaxConfig.chains[params.srcChainKey].addresses.assetManager,
+            raw: true,
+          } satisfies SpokeApproveParams<EvmChainKey, true> as SpokeApproveParams<EvmChainKey, true>)) satisfies Result<
+            TxReturnType<EvmChainKey, true>
+          > as Result<TxReturnType<K, true>>;
+        }
+
+        if (isUnifiedBnUSDMigrateParams(params) && isStellarChainKeyType(params.srcChainKey)) {
+          return (await this.spokeService.approve({
+            srcChainKey: params.srcChainKey,
+            token: params.srcbnUSD,
+            amount: params.amount,
+            owner: params.srcAddress as GetAddressType<StellarChainKey>,
+            raw: true,
+          } satisfies SpokeApproveParams<StellarChainKey, true> as SpokeApproveParams<
+            StellarChainKey,
+            true
+          >)) satisfies Result<TxReturnType<StellarChainKey, true>> as Result<TxReturnType<K, true>>;
+        }
+
+        return {
+          ok: false,
+          error: new Error('Invalid params for migrate action'),
+        };
+      }
+      if (action === 'revert') {
+        invariant(params.amount > 0n, 'Amount must be greater than 0');
+        invariant(params.dstAddress.length > 0, 'To address is required');
+        invariant(isIcxCreateRevertMigrationParams(params) || isUnifiedBnUSDMigrateParams(params), 'Invalid params');
+
+        if (isUnifiedBnUSDMigrateParams(params) && isEvmChainKeyType(params.srcChainKey)) {
+          const spender: Address = isHubChainKeyType(params.srcChainKey)
+            ? await HubService.getUserRouter(params.srcAddress as Address, this.hubProvider)
+            : this.config.sodaxConfig.chains[params.srcChainKey].addresses.assetManager;
+
+          return (await this.spokeService.approve({
+            srcChainKey: params.srcChainKey,
+            token: params.srcbnUSD as GetTokenAddressType<EvmChainKey>,
+            amount: params.amount,
+            owner: params.srcAddress as GetAddressType<EvmChainKey>,
+            spender,
+            raw: true,
+          } satisfies SpokeApproveParams<EvmChainKey, true> as SpokeApproveParams<EvmChainKey, true>)) satisfies Result<
+            TxReturnType<EvmChainKey, true>
+          > as Result<TxReturnType<K, true>>;
+        }
+
+        if (isUnifiedBnUSDMigrateParams(params) && isStellarChainKeyType(params.srcChainKey)) {
+          return (await this.spokeService.approve({
+            srcChainKey: params.srcChainKey,
+            token: params.srcbnUSD,
+            amount: params.amount,
+            owner: params.srcAddress as GetAddressType<StellarChainKey>,
+            raw: true,
+          } satisfies SpokeApproveParams<StellarChainKey, true> as SpokeApproveParams<
+            StellarChainKey,
+            true
+          >)) satisfies Result<TxReturnType<StellarChainKey, true>> as Result<TxReturnType<K, true>>;
+        }
+
+        if (isHubChainKeyType(params.srcChainKey) && isIcxCreateRevertMigrationParams(params)) {
+          const userRouter = await HubService.getUserHubWalletAddress(
+            params.srcAddress,
+            params.srcChainKey,
+            this.hubProvider,
+          );
+
+          return (await this.spokeService.approve({
+            srcChainKey: params.srcChainKey,
+            token: this.hubProvider.chainConfig.addresses.sodaToken,
+            amount: params.amount,
+            owner: params.srcAddress,
+            spender: userRouter,
+            raw: true,
+          } satisfies SpokeApproveParams<HubChainKey, true> as SpokeApproveParams<HubChainKey, true>)) satisfies Result<
+            TxReturnType<HubChainKey, true>
+          > as Result<TxReturnType<K, true>>;
+        }
+
+        return {
+          ok: false,
+          error: new Error('Invalid params or chain type for revert action'),
+        };
+      }
+
+      return {
+        ok: false,
+        error: new Error('Invalid action'),
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: error,
+      };
+    }
+  }
+
   /**
    * Migrates bnUSD tokens between legacy and new formats across supported spoke chains via the hub chain (sonic).
    * Handles both legacy-to-new and new-to-legacy bnUSD migrations, enforcing validation and relaying the transaction.
