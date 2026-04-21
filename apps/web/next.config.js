@@ -149,9 +149,11 @@ const nextConfig = {
       },
       {
         // Agent-readiness: advertise discovery endpoints to crawlers/agents.
-        // Skip /api/* (not agent-relevant, avoids confusing upstream caches)
-        // and /_next/* (static asset chunks).
-        source: '/((?!api/|_next/).*)',
+        // Skip /api (bare) + /api/* (not agent-relevant, avoids confusing
+        // upstream caches) and /_next/* (static asset chunks). The (?:/|$)
+        // alternation excludes both /api and /api/... — using api/ alone
+        // would leak the header onto a hypothetical future /api index.
+        source: '/((?!api(?:/|$)|_next/).*)',
         headers: [
           {
             key: 'Link',

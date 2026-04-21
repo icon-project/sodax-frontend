@@ -1,6 +1,6 @@
 # SODAX - llms.txt
 # https://sodax.com/llms.txt
-# Last updated: 2026-02-06
+# Last updated: 2026-04-21
 
 ## About SODAX
 SODAX is a DeFi execution layer that enables seamless swapping, lending, and borrowing across multiple blockchain networks. The platform provides coordinated liquidity, smart yield optimization, and a frictionless trading experience with minimal slippage.
