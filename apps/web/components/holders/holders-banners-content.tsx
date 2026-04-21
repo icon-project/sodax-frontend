@@ -2,21 +2,29 @@ import type { ReactNode } from 'react';
 
 import { MIGRATE_ROUTE, SODA_TOKEN_ROUTE, STAKE_ROUTE } from '@/constants/routes';
 
-export interface HoldersBannerContent {
-  title: ReactNode;
+interface BannerCta {
+  label: string;
+  href: string;
+}
+
+export interface HoldersShortBanner {
+  title: string;
   subtitle: ReactNode;
-  buttonLabel?: string;
-  href?: string;
-  imageSrc?: string;
+}
+
+export interface HoldersBannerWithButton {
+  title: string;
+  subtitle: ReactNode;
+  imageSrc: string;
+  cta: BannerCta;
 }
 
 export const HOLDERS_FULL_BANNER = {
   title: 'Supply capped at 1.5B.',
   subtitle: 'No emissions, zero inflation guaranteed.',
-  buttonLabel: 'Tokenomics',
-  href: SODA_TOKEN_ROUTE,
   imageSrc: '/sodax-mockup.png',
-} as const satisfies HoldersBannerContent;
+  cta: { label: 'Tokenomics', href: SODA_TOKEN_ROUTE },
+} as const satisfies HoldersBannerWithButton;
 
 export const HOLDERS_SHORT_BANNERS = [
   {
@@ -35,11 +43,11 @@ export const HOLDERS_SHORT_BANNERS = [
       <>
         A stronger DAO to govern ever growing liquidity.
         <br />
-        Diving trade and rewarding stakers.
+        Driving trade and rewarding stakers.
       </>
     ),
   },
-] as const satisfies readonly [HoldersBannerContent, HoldersBannerContent];
+] as const satisfies readonly [HoldersShortBanner, HoldersShortBanner];
 
 export const HOLDERS_IMAGE_BANNERS = [
   {
@@ -51,9 +59,8 @@ export const HOLDERS_IMAGE_BANNERS = [
         Same community, fresh tokenomics.
       </>
     ),
-    buttonLabel: 'Migrate to SODA',
-    href: MIGRATE_ROUTE,
     imageSrc: '/sodax-mockup.png',
+    cta: { label: 'Migrate to SODA', href: MIGRATE_ROUTE },
   },
   {
     title: 'Your share of fees.',
@@ -64,8 +71,7 @@ export const HOLDERS_IMAGE_BANNERS = [
         20% of fees flow to holders.
       </>
     ),
-    buttonLabel: 'Stake SODA',
-    href: STAKE_ROUTE,
     imageSrc: '/sodax-mockup.png',
+    cta: { label: 'Stake SODA', href: STAKE_ROUTE },
   },
-] as const satisfies readonly [HoldersBannerContent, HoldersBannerContent];
+] as const satisfies readonly [HoldersBannerWithButton, HoldersBannerWithButton];

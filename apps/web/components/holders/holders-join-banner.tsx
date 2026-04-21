@@ -1,5 +1,3 @@
-'use client';
-
 import type { ReactElement } from 'react';
 
 import Image from 'next/image';
@@ -19,7 +17,7 @@ export default function HoldersJoinBanner(): ReactElement {
       <Image
         className="mix-blend-screen absolute bottom-0 left-1/2 transform -translate-x-1/2 w-[880px] max-w-none pointer-events-none"
         src="/soda-burn-banner.png"
-        alt="background"
+        alt=""
         width={880}
         height={880}
       />

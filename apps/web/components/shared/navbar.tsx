@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -24,7 +24,7 @@ interface NavbarCtaProps {
   onClick?: () => void;
 }
 
-export function NavbarCta({ label, href, onClick }: NavbarCtaProps) {
+export function NavbarCta({ label, href, onClick }: NavbarCtaProps): ReactElement {
   if (href) {
     return (
       <Link href={href} className={NAVBAR_CTA_CLASSNAME}>
@@ -43,7 +43,7 @@ interface NavbarProps {
   cta?: ReactNode;
 }
 
-export function Navbar({ cta }: NavbarProps = {}) {
+export function Navbar({ cta }: NavbarProps = {}): ReactElement {
   return (
     <div className="w-full flex justify-between items-center pt-10 z-20 md:px-16 px-8 lg:px-8 lg:max-w-[1264px]">
       <div className="flex items-center">

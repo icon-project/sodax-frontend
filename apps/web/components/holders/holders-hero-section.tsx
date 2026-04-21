@@ -1,8 +1,7 @@
-'use client';
-
 import type { ReactElement } from 'react';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { KRAKEN_ROUTE, SWAP_ROUTE } from '@/constants/routes';
 import { Navbar } from '@/components/shared/navbar';
 import { NetworkLogosScroller } from '@/components/shared/network-logos-scroller';
@@ -53,16 +52,16 @@ const HoldersHeroSection = (): ReactElement => {
               href={KRAKEN_ROUTE}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-yellow-dark hover:bg-yellow-soda transition-all hover:scale-[102%] h-12 px-6 flex items-center justify-center font-[InterBold] rounded-full text-[14px] cursor-pointer text-cherry-dark"
+              className="bg-yellow-dark hover:bg-yellow-soda transition-all hover:scale-[102%] h-12 px-6 flex items-center justify-center font-[InterBold] rounded-full text-sm cursor-pointer text-cherry-dark"
             >
               Buy on Kraken
             </a>
-            <a
+            <Link
               href={SWAP_ROUTE}
-              className="border-4 border-cherry-bright hover:border-cherry-brighter h-12 px-6 flex items-center justify-center font-[InterRegular] rounded-full text-[14px] cursor-pointer text-white transition-all hover:scale-[102%]"
+              className="border-4 border-cherry-bright hover:border-cherry-brighter h-12 px-6 flex items-center justify-center font-[InterRegular] rounded-full text-sm cursor-pointer text-white transition-all hover:scale-[102%]"
             >
               Swap on SODA Exchange
-            </a>
+            </Link>
           </div>
 
           {/* Network logos scroller — tooltip only, no navigation on holders page */}
