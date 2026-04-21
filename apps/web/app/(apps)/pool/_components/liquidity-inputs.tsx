@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,8 @@ import { InputGroupInput } from '@/components/ui/input-group';
 import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import type { SpokeChainId } from '@sodax/types';
 import type { XToken } from '@sodax/types';
+import { SwitchChainDialog } from '@/components/shared/switch-chain-dialog';
+import { chainIdToChainName } from '@/providers/constants';
 import { useAllChainBalances } from '@/hooks/useAllChainBalances';
 import { useAllChainXSodaBalances } from '@/hooks/useAllChainXSodaBalances';
 import { InputGroupButton } from '@/components/ui/input-group';
@@ -41,7 +43,7 @@ export function LiquidityInputs(): React.JSX.Element {
   const router = useRouter();
   const [isSupplyDialogOpen, setIsSupplyDialogOpen] = useState<boolean>(false);
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState<boolean>(false);
-  const [pendingRecoverAfterSwitch, setPendingRecoverAfterSwitch] = useState<boolean>(false);
+  const [isSwitchChainDialogOpen, setIsSwitchChainDialogOpen] = useState<boolean>(false);
   const [isRecoveryActive, setIsRecoveryActive] = useState<boolean>(false);
   const { isManagePositionDialogOpen } = usePoolState();
   const [errorMessage, setErrorMessage] = useState<string>('');
@@ -143,11 +145,9 @@ export function LiquidityInputs(): React.JSX.Element {
   };
   const handleWithdrawWaLocSoda = async (): Promise<void> => {
     if (selectedChainId !== null && isWrongChain) {
-      setPendingRecoverAfterSwitch(true);
-      handleSwitchChain();
+      setIsSwitchChainDialogOpen(true);
       return;
     }
-    setPendingRecoverAfterSwitch(false);
     if (!spokeProvider || !poolData || !poolSpokeAssets) {
       setErrorMessage('Withdraw is unavailable. Please ensure wallet and pool data are loaded.');
       setIsErrorDialogOpen(true);
@@ -218,13 +218,9 @@ export function LiquidityInputs(): React.JSX.Element {
     }
   }, [trustlineError]);
 
-  const handleWithdrawWaLocSodaRef = useRef(handleWithdrawWaLocSoda);
-  handleWithdrawWaLocSodaRef.current = handleWithdrawWaLocSoda;
-  useEffect((): void => {
-    if (pendingRecoverAfterSwitch && !isWrongChain) {
-      void handleWithdrawWaLocSodaRef.current();
-    }
-  }, [pendingRecoverAfterSwitch, isWrongChain]);
+  const handleSwitchChainClick = (): void => {
+    void handleSwitchChain();
+  };
 
   useEffect((): void => {
     if (!hasWithdrawableWaLocSoda) {
@@ -434,6 +430,16 @@ export function LiquidityInputs(): React.JSX.Element {
         errorMessage={errorMessage}
         title="Your wallet needs a small reserve"
       />
+      {selectedChainId !== null && (
+        <SwitchChainDialog
+          open={isSwitchChainDialogOpen}
+          onOpenChange={setIsSwitchChainDialogOpen}
+          chainName={chainIdToChainName(selectedChainId)}
+          onSwitchChain={handleSwitchChainClick}
+          titleAction="recover locked SODA"
+          description={`Your locked SODA is on ${chainIdToChainName(selectedChainId)}. Switch network to recover it.`}
+        />
+      )}
     </>
   );
 }
