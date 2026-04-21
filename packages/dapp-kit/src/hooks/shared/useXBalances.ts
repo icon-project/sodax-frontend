@@ -46,6 +46,7 @@ export function useXBalances({
     queryKey: ['xBalances', xChainId, xTokens.map(x => x.symbol), address],
     queryFn: async () => {
       if (!xService) {
+        console.warn(`[useXBalances] xService is undefined for chain ${xChainId} — returning empty balances`);
         return {};
       }
 
