@@ -7,6 +7,8 @@ import type {
   ETHEREUM_MAINNET_CHAIN_ID,
   STELLAR_MAINNET_CHAIN_ID,
   BITCOIN_MAINNET_CHAIN_ID,
+  INJECTIVE_MAINNET_CHAIN_ID,
+  STACKS_MAINNET_CHAIN_ID,
 } from '../constants/index.js';
 import type { InjectiveNetworkEnv } from '../injective/index.js';
 
@@ -91,14 +93,33 @@ export type BitcoinRpcConfig = {
   radfiUmsUrl?: string;
 };
 
-// Mapped type that uses ChainId as keys and assigns appropriate value types
-// Stellar uses StellarRpcConfig, Bitcoin uses BitcoinRpcConfig, all other chains use string
+// Type for Injective RPC configuration — covers indexer and gRPC endpoints.
+// Falls back to mainnet defaults from @injectivelabs/networks for unspecified fields.
+export type InjectiveRpcConfig = {
+  indexer?: string;
+  grpc?: string;
+};
+
+// Stacks network preset names — mirrors `StacksNetworkName` from @stacks/network
+// (kept local to avoid importing external types per @sodax/types rules).
+export type StacksNetworkName = 'mainnet' | 'testnet' | 'devnet' | 'mocknet';
+
+// Mapped type that uses ChainId as keys and assigns appropriate value types per chain:
+// - Stellar    → StellarRpcConfig   (horizon + soroban URLs)
+// - Bitcoin    → BitcoinRpcConfig   (rpcUrl + radfi endpoints)
+// - Injective  → InjectiveRpcConfig (indexer + grpc endpoints)
+// - Stacks     → StacksNetworkName  ('mainnet' | 'testnet' | 'devnet' | 'mocknet')
+// - All others → string             (single RPC URL)
 export type RpcConfig = Partial<{
   [K in ChainId]: K extends typeof STELLAR_MAINNET_CHAIN_ID
     ? StellarRpcConfig
     : K extends typeof BITCOIN_MAINNET_CHAIN_ID
       ? BitcoinRpcConfig
-      : string;
+      : K extends typeof INJECTIVE_MAINNET_CHAIN_ID
+        ? InjectiveRpcConfig
+        : K extends typeof STACKS_MAINNET_CHAIN_ID
+          ? StacksNetworkName
+          : string;
 }> & { [ETHEREUM_MAINNET_CHAIN_ID]?: string | undefined };
 
 export type IntentRelayChainId = (typeof ChainIdToIntentRelayChainId)[keyof typeof ChainIdToIntentRelayChainId];

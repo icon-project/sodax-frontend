@@ -3,7 +3,7 @@ import { Network, getNetworkEndpoints } from '@injectivelabs/networks';
 import { ChainGrpcWasmApi, IndexerGrpcAccountPortfolioApi } from '@injectivelabs/sdk-ts';
 import { ChainId as InjectiveChainId } from '@injectivelabs/ts-types';
 import { MsgBroadcaster } from '@injectivelabs/wallet-core';
-import type { XToken } from '@sodax/types';
+import type { InjectiveRpcConfig, XToken } from '@sodax/types';
 import { mainnet } from 'wagmi/chains';
 import { WalletStrategy } from '@injectivelabs/wallet-strategy';
 
@@ -15,10 +15,15 @@ export class InjectiveXService extends XService {
   public chainGrpcWasmApi: ChainGrpcWasmApi;
   public msgBroadcaster: MsgBroadcaster;
 
-  private constructor() {
+  private constructor(rpcConfig?: InjectiveRpcConfig) {
     super('INJECTIVE');
 
-    const endpoints = getNetworkEndpoints(Network.Mainnet);
+    const defaults = getNetworkEndpoints(Network.Mainnet);
+    const endpoints = {
+      ...defaults,
+      indexer: rpcConfig?.indexer || defaults.indexer,
+      grpc: rpcConfig?.grpc || defaults.grpc,
+    };
 
     this.walletStrategy = new WalletStrategy({
       chainId: InjectiveChainId.Mainnet,
@@ -38,9 +43,9 @@ export class InjectiveXService extends XService {
     });
   }
 
-  public static getInstance(): InjectiveXService {
+  public static getInstance(rpcConfig?: InjectiveRpcConfig): InjectiveXService {
     if (!InjectiveXService.instance) {
-      InjectiveXService.instance = new InjectiveXService();
+      InjectiveXService.instance = new InjectiveXService(rpcConfig);
     }
     return InjectiveXService.instance;
   }

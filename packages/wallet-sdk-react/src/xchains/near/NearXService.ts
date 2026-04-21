@@ -8,10 +8,12 @@ export class NearXService extends XService {
   private static instance: NearXService;
 
   public walletSelector: NearConnector;
+  private rpcUrl: string;
 
-  private constructor() {
+  private constructor(rpcUrl: string = NEAR_DEFAULT_RPC_URL) {
     super('NEAR');
 
+    this.rpcUrl = rpcUrl;
     this.walletSelector = new NearConnector({
       network: 'mainnet',
       logger: console,
@@ -20,17 +22,18 @@ export class NearXService extends XService {
     });
   }
 
-  public static getInstance(): NearXService {
+  public static getInstance(rpcUrl?: string): NearXService {
     if (!NearXService.instance) {
-      NearXService.instance = new NearXService();
+      NearXService.instance = new NearXService(rpcUrl);
+    } else if (rpcUrl) {
+      NearXService.instance.rpcUrl = rpcUrl;
     }
     return NearXService.instance;
   }
 
   override async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
-    const url = NEAR_DEFAULT_RPC_URL;
     // reference: https://near.github.io/near-api-js/classes/_near-js_providers.json-rpc-provider.JsonRpcProvider.html
-    const provider = new JsonRpcProvider({ url });
+    const provider = new JsonRpcProvider({ url: this.rpcUrl });
 
     // get native balance
     if (xToken.symbol === 'NEAR') {

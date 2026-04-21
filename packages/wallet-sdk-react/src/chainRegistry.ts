@@ -3,7 +3,11 @@ import {
   type RpcConfig,
   type BitcoinRpcConfig,
   type StellarRpcConfig,
+  type InjectiveRpcConfig,
   ICON_MAINNET_CHAIN_ID,
+  INJECTIVE_MAINNET_CHAIN_ID,
+  NEAR_MAINNET_CHAIN_ID,
+  STACKS_MAINNET_CHAIN_ID,
   detectBitcoinAddressType,
 } from '@sodax/types';
 import {
@@ -179,7 +183,8 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
     },
   }),
   INJECTIVE: defineChain({
-    createService: () => InjectiveXService.getInstance(),
+    createService: rpcConfig =>
+      InjectiveXService.getInstance(rpcConfig?.[INJECTIVE_MAINNET_CHAIN_ID] as InjectiveRpcConfig | undefined),
     defaultConnectors: () => [
       new InjectiveXConnector('MetaMask', Wallet.Metamask),
       new InjectiveXConnector('Keplr', Wallet.Keplr),
@@ -257,7 +262,8 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
     },
   }),
   NEAR: defineChain({
-    createService: () => NearXService.getInstance(),
+    createService: rpcConfig =>
+      NearXService.getInstance(rpcConfig?.[NEAR_MAINNET_CHAIN_ID] as string | undefined),
     defaultConnectors: () => [],
     providerManaged: false,
     discoverConnectors: async (service, getStore) => {
@@ -279,7 +285,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
     },
   }),
   STACKS: defineChain({
-    createService: () => StacksXService.getInstance(),
+    createService: rpcConfig => StacksXService.getInstance(rpcConfig?.[STACKS_MAINNET_CHAIN_ID]),
     defaultConnectors: () => STACKS_PROVIDERS.map(c => new StacksXConnector(c)),
     providerManaged: false,
     createWalletProvider: (service, getStore) => {
