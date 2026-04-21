@@ -206,7 +206,7 @@ export function ConnectCard({ entry, avatarProxyUrl }: ConnectCardProps) {
         </div>
         <div className="flex items-center gap-2">
           <Image src="/symbol.png" alt="SODAX" width={14} height={14} className="opacity-40" />
-          <span className="text-cherry-bright/40 text-xs font-[InterRegular]">© 2026 ICON Foundation</span>
+          <span className="text-cherry-bright/40 text-xs font-[InterRegular]">© 2026 SODAX</span>
         </div>
       </footer>
     </div>
