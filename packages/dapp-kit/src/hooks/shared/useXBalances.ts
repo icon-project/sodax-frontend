@@ -43,7 +43,9 @@ export function useXBalances({
   address,
 }: UseXBalancesParams): UseQueryResult<Record<string, bigint>> {
   return useQuery({
-    queryKey: ['xBalances', xChainId, xTokens.map(x => x.symbol), address],
+    // Pair symbol + address: readable in devtools, unique on-chain (symbol alone
+    // can collide — e.g. scam tokens copying legitimate ticker).
+    queryKey: ['xBalances', xChainId, xTokens.map(x => [x.symbol, x.address] as const), address],
     queryFn: async () => {
       if (!xService) {
         console.warn(`[useXBalances] xService is undefined for chain ${xChainId} — returning empty balances`);
