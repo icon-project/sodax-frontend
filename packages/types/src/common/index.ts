@@ -104,12 +104,28 @@ export type InjectiveRpcConfig = {
 // (kept local to avoid importing external types per @sodax/types rules).
 export type StacksNetworkName = 'mainnet' | 'testnet' | 'devnet' | 'mocknet';
 
+/**
+ * Structural mirror of `StacksNetwork` from @stacks/network. Kept local to avoid
+ * importing external types per @sodax/types rules. Real `StacksNetwork` objects
+ * satisfy this via TS structural typing, so consumers can pass `networkFrom(...)`
+ * output directly.
+ */
+export type StacksNetworkLike = {
+  chainId: number;
+  transactionVersion: number;
+  peerNetworkId: number;
+  magicBytes: string;
+  bootAddress: string;
+  addressVersion: { singleSig: number; multiSig: number };
+  client: { baseUrl: string };
+};
+
 // Mapped type that uses ChainId as keys and assigns appropriate value types per chain:
-// - Stellar    → StellarRpcConfig   (horizon + soroban URLs)
-// - Bitcoin    → BitcoinRpcConfig   (rpcUrl + radfi endpoints)
-// - Injective  → InjectiveRpcConfig (indexer + grpc endpoints)
-// - Stacks     → StacksNetworkName  ('mainnet' | 'testnet' | 'devnet' | 'mocknet')
-// - All others → string             (single RPC URL)
+// - Stellar    → StellarRpcConfig                   (horizon + soroban URLs)
+// - Bitcoin    → BitcoinRpcConfig                   (rpcUrl + radfi endpoints)
+// - Injective  → InjectiveRpcConfig                 (indexer + grpc endpoints)
+// - Stacks     → StacksNetworkName | StacksNetworkLike (preset name or full network)
+// - All others → string                             (single RPC URL)
 export type RpcConfig = Partial<{
   [K in ChainId]: K extends typeof STELLAR_MAINNET_CHAIN_ID
     ? StellarRpcConfig
@@ -118,7 +134,7 @@ export type RpcConfig = Partial<{
       : K extends typeof INJECTIVE_MAINNET_CHAIN_ID
         ? InjectiveRpcConfig
         : K extends typeof STACKS_MAINNET_CHAIN_ID
-          ? StacksNetworkName
+          ? StacksNetworkName | StacksNetworkLike
           : string;
 }> & { [ETHEREUM_MAINNET_CHAIN_ID]?: string | undefined };
 
