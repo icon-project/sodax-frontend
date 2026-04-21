@@ -1,51 +1,13 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import { useEffect, useRef, useState } from 'react';
 
 import Image from 'next/image';
 import { KRAKEN_ROUTE, SWAP_ROUTE } from '@/constants/routes';
 import { Navbar } from '@/components/shared/navbar';
-import { NETWORK_ICON_MAP } from '@/components/network-icons';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { getNetworkDocsUrl } from '@/lib/docToUrl';
-
-const HERO_NETWORK_LOGOS = [
-  'Stellar',
-  'Near',
-  'Avalanche',
-  'Polygon',
-  'Base',
-  'Solana',
-  'Sonic',
-  'Sui',
-  'Optimism',
-  'Ethereum',
-  'Bitcoin',
-  'BNB Chain',
-  'HyperEVM',
-  'Arbitrum',
-  'Kaia',
-  'LightLink',
-];
+import { NetworkLogosScroller } from '@/components/shared/network-logos-scroller';
 
 const HoldersHeroSection = (): ReactElement => {
-  const [activeTouchIndex, setActiveTouchIndex] = useState<number | null>(null);
-  const touchBoundaryRef = useRef<HTMLDivElement>(null);
-  const touchTriggeredRef = useRef(false);
-
-  // On mobile dismiss tooltip when tapping outside the marquee
-  useEffect(() => {
-    if (activeTouchIndex === null) return;
-    const onTouchOutside = (e: TouchEvent) => {
-      if (!touchBoundaryRef.current?.contains(e.target as Node)) {
-        setActiveTouchIndex(null);
-      }
-    };
-    document.addEventListener('touchstart', onTouchOutside);
-    return () => document.removeEventListener('touchstart', onTouchOutside);
-  }, [activeTouchIndex]);
-
   return (
     <div className="hero-section">
       <div className="flex flex-col items-center bg-cherry-soda relative overflow-hidden pb-16 md:pb-20">
@@ -103,60 +65,9 @@ const HoldersHeroSection = (): ReactElement => {
             </a>
           </div>
 
-          {/* Network logos marquee — identical animation/logic to landing hero */}
-          <div ref={touchBoundaryRef} className="max-w-[480px] overflow-x-clip group/marquee opacity-60 relative mt-8">
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-[20%] z-10 bg-linear-to-r from-cherry-soda to-transparent" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-[20%] z-10 bg-linear-to-l from-cherry-soda to-transparent" />
-            <div
-              className="flex w-max animate-marquee"
-              style={activeTouchIndex !== null ? { animationPlayState: 'paused' } : undefined}
-            >
-              {[...HERO_NETWORK_LOGOS, ...HERO_NETWORK_LOGOS].map((name, i) => {
-                const Icon = NETWORK_ICON_MAP[name];
-                if (!Icon) return null;
-                return (
-                  <Tooltip key={`${name}-${i}`} open={activeTouchIndex === i ? true : undefined}>
-                    <TooltipTrigger asChild>
-                      <a
-                        href={getNetworkDocsUrl(name)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mx-3 shrink-0 text-white opacity-40 hover:opacity-100 transition-opacity duration-300 cursor-pointer"
-                        aria-label={`View ${name} documentation`}
-                        onTouchStart={e => {
-                          touchTriggeredRef.current = true;
-                          e.preventDefault();
-                          setActiveTouchIndex(prev => (prev === i ? null : i));
-                        }}
-                        onClick={e => {
-                          if (touchTriggeredRef.current) {
-                            e.preventDefault();
-                            touchTriggeredRef.current = false;
-                          }
-                        }}
-                      >
-                        <Icon width={24} height={24} aria-hidden="true" focusable="false" />
-                      </a>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      variant="bubble"
-                      side="top"
-                      sideOffset={16}
-                      className="h-[54px] items-center gap-2 px-8 py-4 text-(length:--body-comfortable)"
-                    >
-                      <a
-                        href={getNetworkDocsUrl(name)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center"
-                      >
-                        {name}
-                      </a>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
-            </div>
+          {/* Network logos scroller — tooltip only, no navigation on holders page */}
+          <div className="mt-8">
+            <NetworkLogosScroller clickable={false} />
           </div>
         </div>
       </div>
