@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import type { ChainId, ClPositionInfo, PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
 import { type XAccount, getXChainType, useXService } from '@sodax/wallet-sdk-react';
-import { useXBalances } from '@sodax/dapp-kit';
 import { UserPositions } from '@/components/dex/UserPositions';
 import {
   createWithdrawParamsProps,
@@ -18,6 +17,7 @@ import {
   useDexDeposit,
   useDexWithdraw,
   useSodaxContext,
+  useXBalances,
 } from '@sodax/dapp-kit';
 import { NavLink } from 'react-router';
 

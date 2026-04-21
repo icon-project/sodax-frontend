@@ -10,6 +10,12 @@ export class NearXService extends XService {
   public walletSelector: NearConnector;
   private rpcUrl: string;
 
+  /**
+   * @param rpcUrl - Used by `getBalance` via `JsonRpcProvider({ url: rpcUrl })`.
+   *   Does NOT affect `walletSelector` — `@hot-labs/near-connect` only accepts
+   *   the network preset name (`'mainnet'`/`'testnet'`) and fetches RPC internally.
+   *   Custom RPC is therefore read-only for balance queries.
+   */
   private constructor(rpcUrl: string = NEAR_DEFAULT_RPC_URL) {
     super('NEAR');
 

@@ -43,6 +43,12 @@ export class InjectiveXService extends XService {
     });
   }
 
+  /**
+   * @param rpcConfig - Only applied on first call. Subsequent calls return the
+   *   existing instance unchanged — gRPC/Indexer clients are built in the
+   *   constructor and can't be rebuilt at runtime. Pass the desired endpoints
+   *   via `SodaxWalletProvider.config.rpcConfig` once at app init.
+   */
   public static getInstance(rpcConfig?: InjectiveRpcConfig): InjectiveXService {
     if (!InjectiveXService.instance) {
       InjectiveXService.instance = new InjectiveXService(rpcConfig);

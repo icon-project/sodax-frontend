@@ -36,7 +36,8 @@ import {
   useSodaxContext,
   loadRadfiSession,
   useTradingWalletBalance,
-    useBackendSubmitSwapTx,
+  useBackendSubmitSwapTx,
+  useXBalances,
 } from '@sodax/dapp-kit';
 import {
   getXChainType,
@@ -47,7 +48,6 @@ import {
   useXConnection,
   useXService,
 } from '@sodax/wallet-sdk-react';
-import { useXBalances } from '@sodax/dapp-kit';
 import {
   type ChainId,
   POLYGON_MAINNET_CHAIN_ID,

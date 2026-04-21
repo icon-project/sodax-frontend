@@ -1,5 +1,5 @@
 import { useAppStore } from '@/zustand/useAppStore';
-import { useMMAllowance, useMMApprove, useRepay, useSpokeProvider } from '@sodax/dapp-kit';
+import { useMMAllowance, useMMApprove, useRepay, useSpokeProvider, useXBalances } from '@sodax/dapp-kit';
 import type { ChainId, MoneyMarketRepayParams, XToken } from '@sodax/sdk';
 import { baseChainInfo } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
@@ -29,7 +29,6 @@ import {
 import { AMOUNT_DISPLAY_DECIMALS } from '../constants';
 import { logger } from '@/lib/logger';
 import { getXChainType, useXAccount, useXService } from '@sodax/wallet-sdk-react';
-import { useXBalances } from '@sodax/dapp-kit';
 import { getChainName } from '@/constants';
 import { invalidateMmQueries } from '@/lib/invalidateMmQueries';
 import { extractTxHash } from '@/lib/extractTxHash';

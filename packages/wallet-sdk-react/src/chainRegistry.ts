@@ -3,7 +3,6 @@ import {
   type RpcConfig,
   type BitcoinRpcConfig,
   type StellarRpcConfig,
-  type InjectiveRpcConfig,
   ICON_MAINNET_CHAIN_ID,
   INJECTIVE_MAINNET_CHAIN_ID,
   NEAR_MAINNET_CHAIN_ID,
@@ -184,7 +183,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
   }),
   INJECTIVE: defineChain({
     createService: rpcConfig =>
-      InjectiveXService.getInstance(rpcConfig?.[INJECTIVE_MAINNET_CHAIN_ID] as InjectiveRpcConfig | undefined),
+      InjectiveXService.getInstance(rpcConfig?.[INJECTIVE_MAINNET_CHAIN_ID]),
     defaultConnectors: () => [
       new InjectiveXConnector('MetaMask', Wallet.Metamask),
       new InjectiveXConnector('Keplr', Wallet.Keplr),
@@ -247,7 +246,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
   // ICON: signMessage not implemented — Hana wallet does not expose a signing API.
   // connect/disconnect use createDefaultActions (no createActions override needed).
   ICON: defineChain({
-    createService: rpcConfig => IconXService.getInstance(rpcConfig?.[ICON_MAINNET_CHAIN_ID] as string | undefined),
+    createService: rpcConfig => IconXService.getInstance(rpcConfig?.[ICON_MAINNET_CHAIN_ID]),
     defaultConnectors: () => [new IconHanaXConnector()],
     providerManaged: false,
     createWalletProvider: (_service, getStore) => {
@@ -263,7 +262,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
   }),
   NEAR: defineChain({
     createService: rpcConfig =>
-      NearXService.getInstance(rpcConfig?.[NEAR_MAINNET_CHAIN_ID] as string | undefined),
+      NearXService.getInstance(rpcConfig?.[NEAR_MAINNET_CHAIN_ID]),
     defaultConnectors: () => [],
     providerManaged: false,
     discoverConnectors: async (service, getStore) => {
