@@ -22,7 +22,7 @@ export interface HoldersBannerWithButton {
 export const HOLDERS_FULL_BANNER = {
   title: 'Supply capped at 1.5B.',
   subtitle: 'No emissions, zero inflation guaranteed.',
-  imageSrc: '/sodax-mockup.png',
+  imageSrc: '/soda-supply-capped.png',
   cta: { label: 'Tokenomics', href: SODA_TOKEN_ROUTE },
 } as const satisfies HoldersBannerWithButton;
 
@@ -59,7 +59,7 @@ export const HOLDERS_IMAGE_BANNERS = [
         Same community, fresh tokenomics.
       </>
     ),
-    imageSrc: '/sodax-mockup.png',
+    imageSrc: '/soda-migrate-mockup.png',
     cta: { label: 'Migrate to SODA', href: MIGRATE_ROUTE },
   },
   {
@@ -71,7 +71,7 @@ export const HOLDERS_IMAGE_BANNERS = [
         20% of fees flow to holders.
       </>
     ),
-    imageSrc: '/sodax-mockup.png',
+    imageSrc: '/soda-fee-share.png',
     cta: { label: 'Stake SODA', href: STAKE_ROUTE },
   },
 ] as const satisfies readonly [HoldersBannerWithButton, HoldersBannerWithButton];

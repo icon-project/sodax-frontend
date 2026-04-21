@@ -17,7 +17,10 @@ const CONTAINER_WIDTH: Record<BannerVariant, string> = {
   split: 'w-full lg:w-1/2 z-10',
 };
 
-const TALL_LAYOUT = 'h-[440px] sm:h-[480px] md:h-[480px] pt-14 md:pt-18';
+const TALL_LAYOUT: Record<BannerVariant, string> = {
+  full: 'h-[424px] pt-18',
+  split: 'h-[440px] sm:h-[480px] md:h-[480px] pt-14 md:pt-18',
+};
 const SHORT_LAYOUT = 'h-[240px] justify-center px-8';
 
 const TITLE_STYLE: Record<BannerVariant, string> = {
@@ -41,14 +44,29 @@ const BANNER_IMAGE_CLASSNAME =
 export default function HoldersBanner(props: HoldersBannerProps): ReactElement {
   const { variant, title, subtitle } = props;
   const hasMedia = 'cta' in props;
+  const showTexture = variant === 'full' && hasMedia;
 
   return (
-    <div className={cn(CONTAINER_BASE, CONTAINER_WIDTH[variant], hasMedia ? TALL_LAYOUT : SHORT_LAYOUT)}>
+    <div className={cn(CONTAINER_BASE, CONTAINER_WIDTH[variant], hasMedia ? TALL_LAYOUT[variant] : SHORT_LAYOUT)}>
+      {showTexture && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 -scale-y-100 z-0">
+          <div className="relative w-[800px] h-[800px] max-w-none -translate-y-[188px]">
+            <Image src="/landing/concentric-rays-outer.svg" alt="" fill className="object-contain" />
+            <Image
+              src="/landing/concentric-rays-inner.svg"
+              alt=""
+              width={472}
+              height={472}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-[7.55deg]"
+            />
+          </div>
+        </div>
+      )}
       {hasMedia && (
         <Image className={BANNER_IMAGE_CLASSNAME} src={props.imageSrc} alt="" width={990} height={660} />
       )}
-      <div className={TITLE_STYLE[variant]}>{title}</div>
-      <p className={SUBTITLE_STYLE[variant]}>{subtitle}</p>
+      <div className={cn(TITLE_STYLE[variant], 'z-10')}>{title}</div>
+      <p className={cn(SUBTITLE_STYLE[variant], 'z-10')}>{subtitle}</p>
       {hasMedia && (
         <div className="mt-6 z-10">
           <Button asChild variant="outline" size="lg" className={BUTTON_STYLE[variant]}>
