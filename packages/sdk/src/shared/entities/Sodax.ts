@@ -50,9 +50,9 @@ export class Sodax {
     });
 
     this.moneyMarket = new MoneyMarketService({
-      config: this.config,
+      configService: this.config,
       hubProvider: this.hubProvider,
-      spoke: this.spokeService,
+      spokeService: this.spokeService,
     });
 
     this.dex = new DexService({

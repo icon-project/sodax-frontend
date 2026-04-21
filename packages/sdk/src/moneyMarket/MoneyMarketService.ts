@@ -1,46 +1,61 @@
-import { type Hex, encodeFunctionData, isAddress } from 'viem';
+import invariant from 'tiny-invariant';
+import { encodeFunctionData, isAddress } from 'viem';
 import { poolAbi } from '../shared/abis/pool.abi.js';
 import {
-  DEFAULT_RELAYER_API_ENDPOINT,
-  SpokeService,
+  type SpokeService,
   relayTxAndWaitPacket,
   type RelayErrorCode,
-  DEFAULT_RELAY_TX_TIMEOUT,
-  SolanaSpokeProvider,
   type RelayError,
   type ConfigService,
+  type DepositParams,
+  type SendMessageParams,
+  type EstimateGasParams,
+  type SpokeIsAllowanceValidParamsHub,
+  type SpokeIsAllowanceValidParamsEvmSpoke,
+  type SpokeIsAllowanceValidParamsStellar,
+  HubService,
+  Erc20Service,
+  EvmAssetManagerService,
+  EvmVaultTokenService,
+  encodeContractCalls,
+  encodeAddress,
+  calculateFeeAmount,
+  wrappedSonicAbi,
+  isHubChainKeyType,
+  isEvmSpokeOnlyChainKeyType,
+  isStellarChainKeyType,
+  isSolanaChainKeyType,
+  isBitcoinChainKeyType,
+  isValidWalletProviderForChainKey,
 } from '../index.js';
-import { isConfiguredMoneyMarketConfig } from '../shared/guards.js';
-import type {
-  EvmContractCall,
-  GetAddressType,
-  GetEstimateGasReturnType,
-  HubProvider,
-  HubTxHash,
-  MoneyMarketConfigParams,
-  MoneyMarketServiceConfig,
-  Result,
-  SpokeTxHash,
-  TxReturnType,
-} from '../shared/types/types.js';
-import { calculateFeeAmount, encodeAddress, encodeContractCalls } from '../shared/utils/index.js';
-import { EvmAssetManagerService, EvmVaultTokenService, HubService } from '../shared/services/hub/index.js';
-import { Erc20Service } from '../shared/services/erc-20/index.js';
-import invariant from 'tiny-invariant';
+import type { HubProvider } from '../shared/types/types.js';
 import {
   ChainKeys,
   type SpokeChainKey,
-  type Token,
+  type XToken,
   type Address,
+  type Hex,
   type HttpUrl,
-  getMoneyMarketConfig,
+  type EvmContractCall,
+  type HubTxHash,
+  type Result,
+  type SpokeTxHash,
+  type TxReturnType,
+  type GetAddressType,
+  type GetTokenAddressType,
+  type GetWalletProviderType,
+  type GetEstimateGasReturnType,
+  type PartnerFee,
+  type HubChainKey,
+  type EvmSpokeOnlyChainKey,
+  type StellarChainKey,
   type GetMoneyMarketTokensApiResponse,
-  type MoneyMarketConfig,
+  type OriginalAssetAddress,
+  DEFAULT_RELAY_TX_TIMEOUT,
+  HUB_CHAIN_KEY,
+  spokeChainConfig,
 } from '@sodax/types';
-import { wrappedSonicAbi } from '../shared/abis/wrappedSonic.abi.js';
 import { MoneyMarketDataService } from './MoneyMarketDataService.js';
-import { StellarSpokeService } from '../shared/services/spoke/StellarSpokeService.js';
-import { SonicSpokeService } from '../shared/services/spoke/SonicSpokeService.js';
 
 export type MoneyMarketEncodeSupplyParams = {
   asset: Address; // The address of the asset to supply.
@@ -81,15 +96,12 @@ export type MoneyMarketAction = 'supply' | 'borrow' | 'withdraw' | 'repay';
 /**
  * Parameters for a Money Market supply operation.
  *
- * @property token - The source chain token address to supply.
- * @property amount - The amount of the asset to supply.
- * @property action - The action type ('supply').
- * @property toChainId - (Optional) Target spoke chain ID to receive the supplied assets.
- *   Note: If omitted, assets are supplied to the sender's default spoke account.
- * @property toAddress - (Optional) The address on the target chain that will receive the supplied assets.
- *   Note: If omitted, assets are supplied to the sender's default spoke account.
+ * `srcChainKey: K` drives chain-narrowing of the associated walletProvider.
+ * `srcAddress` is the originating wallet on the source spoke chain.
  */
-export type MoneyMarketSupplyParams = {
+export type MoneyMarketSupplyParams<K extends SpokeChainKey = SpokeChainKey> = {
+  srcChainKey: K;
+  srcAddress: string;
   token: string;
   amount: bigint;
   action: 'supply';
@@ -97,22 +109,9 @@ export type MoneyMarketSupplyParams = {
   toAddress?: string;
 };
 
-/**
- * Parameters for a Money Market borrow operation.
- *
- * @property token - The target chain token address to borrow.
- * @property amount - The amount of the asset to borrow.
- * @property action - Action type ('borrow').
- * @property toChainId - (Optional) Target chain ID to receive the borrowed assets.
- *   Note: If omitted, borrowed assets are sent to the sender's default spoke account.
- * @property toAddress - (Optional) Target address on the taret chain to receive the borrowed assets.
- *   Note: If omitted, borrowed assets are sent to the sender's default spoke account.
- * @property fromChainId - (Optional) Source chain ID to borrow from.
- *   Note: If omitted, borrowed assets are borrowed from the sender's default spoke account.
- * @property fromAddress - (Optional) Source address on the source chain to borrow from.
- *   Note: If omitted, borrowed assets are borrowed from the sender's default spoke account.
- */
-export type MoneyMarketBorrowParams = {
+export type MoneyMarketBorrowParams<K extends SpokeChainKey = SpokeChainKey> = {
+  srcChainKey: K;
+  srcAddress: string;
   token: string;
   amount: bigint;
   action: 'borrow';
@@ -122,18 +121,9 @@ export type MoneyMarketBorrowParams = {
   toAddress?: string;
 };
 
-/**
- * Parameters for a Money Market withdraw operation.
- *
- * @property token - The target chain token address to withdraw.
- * @property amount - The amount of the asset to withdraw.
- * @property action - The action type ('withdraw').
- * @property toChainId - (Optional) Target spoke chain ID to receive the withdrawn assets.
- *   Note: If omitted, assets are sent to the sender's default spoke account.
- * @property toAddress - (Optional) Target address on the spoke chain to receive the withdrawn assets.
- *   Note:If omitted, assets are sent to the sender's default spoke account.
- */
-export type MoneyMarketWithdrawParams = {
+export type MoneyMarketWithdrawParams<K extends SpokeChainKey = SpokeChainKey> = {
+  srcChainKey: K;
+  srcAddress: string;
   token: string;
   amount: bigint;
   action: 'withdraw';
@@ -141,18 +131,9 @@ export type MoneyMarketWithdrawParams = {
   toAddress?: string;
 };
 
-/**
- * Parameters for a Money Market repay operation.
- *
- * @property token - The source chain token address to repay.
- * @property amount - The amount of the asset to repay.
- * @property action - The action type ('repay').
- * @property toChainId - (Optional) Target spoke chain ID to receive the repaid assets.
- *   Note: If omitted, assets are repaid to the sender's default spoke account.
- * @property toAddress - (Optional) Target address on the spoke chain to receive the repaid assets.
- *   Note: If omitted, assets are repaid to the sender's default spoke account.
- */
-export type MoneyMarketRepayParams = {
+export type MoneyMarketRepayParams<K extends SpokeChainKey = SpokeChainKey> = {
+  srcChainKey: K;
+  srcAddress: string;
   token: string;
   amount: bigint;
   action: 'repay';
@@ -160,11 +141,76 @@ export type MoneyMarketRepayParams = {
   toAddress?: string;
 };
 
-export type MoneyMarketParams =
-  | MoneyMarketSupplyParams
-  | MoneyMarketBorrowParams
-  | MoneyMarketWithdrawParams
-  | MoneyMarketRepayParams;
+export type MoneyMarketParams<K extends SpokeChainKey = SpokeChainKey> =
+  | MoneyMarketSupplyParams<K>
+  | MoneyMarketBorrowParams<K>
+  | MoneyMarketWithdrawParams<K>
+  | MoneyMarketRepayParams<K>;
+
+// Exec-mode wrappers (walletProvider required, K-narrowed)
+export type MoneyMarketSupplyActionParams<K extends SpokeChainKey> = {
+  params: MoneyMarketSupplyParams<K>;
+  walletProvider: GetWalletProviderType<K>;
+  skipSimulation?: boolean;
+  timeout?: number;
+};
+
+export type MoneyMarketBorrowActionParams<K extends SpokeChainKey> = {
+  params: MoneyMarketBorrowParams<K>;
+  walletProvider: GetWalletProviderType<K>;
+  skipSimulation?: boolean;
+  timeout?: number;
+};
+
+export type MoneyMarketWithdrawActionParams<K extends SpokeChainKey> = {
+  params: MoneyMarketWithdrawParams<K>;
+  walletProvider: GetWalletProviderType<K>;
+  skipSimulation?: boolean;
+  timeout?: number;
+};
+
+export type MoneyMarketRepayActionParams<K extends SpokeChainKey> = {
+  params: MoneyMarketRepayParams<K>;
+  walletProvider: GetWalletProviderType<K>;
+  skipSimulation?: boolean;
+  timeout?: number;
+};
+
+// Raw-mode wrappers (no walletProvider; caller signs/broadcasts)
+export type MoneyMarketSupplyActionParamsRaw<K extends SpokeChainKey> = {
+  params: MoneyMarketSupplyParams<K>;
+  skipSimulation?: boolean;
+};
+
+export type MoneyMarketBorrowActionParamsRaw<K extends SpokeChainKey> = {
+  params: MoneyMarketBorrowParams<K>;
+  skipSimulation?: boolean;
+};
+
+export type MoneyMarketWithdrawActionParamsRaw<K extends SpokeChainKey> = {
+  params: MoneyMarketWithdrawParams<K>;
+  skipSimulation?: boolean;
+};
+
+export type MoneyMarketRepayActionParamsRaw<K extends SpokeChainKey> = {
+  params: MoneyMarketRepayParams<K>;
+  skipSimulation?: boolean;
+};
+
+// `isAllowanceValid` accepts any action (reads allowance/trustline state only).
+export type MoneyMarketAllowanceParams<K extends SpokeChainKey> = {
+  params: MoneyMarketParams<K>;
+};
+
+// `approve`/`approveRaw` accepts any action (but only supply/repay actually require approval).
+export type MoneyMarketApproveActionParams<K extends SpokeChainKey> = {
+  params: MoneyMarketParams<K>;
+  walletProvider: GetWalletProviderType<K>;
+};
+
+export type MoneyMarketApproveActionParamsRaw<K extends SpokeChainKey> = {
+  params: MoneyMarketParams<K>;
+};
 
 export type MoneyMarketUnknownErrorCode =
   | 'SUPPLY_UNKNOWN_ERROR'
@@ -245,898 +291,956 @@ export type MoneyMarketExtraData = { address: Hex; payload: Hex };
 export type MoneyMarketOptionalExtraData = { data?: MoneyMarketExtraData };
 
 export type MoneyMarketServiceConstructorParams = {
+  configService: ConfigService;
+  spokeService: SpokeService;
   hubProvider: HubProvider;
-  spoke: SpokeService;
-  config: ConfigService;
 };
 
+/**
+ * MoneyMarketService provides supply, borrow, withdraw, and repay operations against the
+ * cross-chain money market pool on the hub chain. Mirrors the {@link SwapService} shape:
+ * public methods accept `srcChainKey` + `srcAddress` + (for exec mode) `walletProvider`
+ * instead of a bundled `SpokeProvider`. Each `create<Action>Intent` method has a `*Raw`
+ * twin that returns raw transaction data so the caller signs and broadcasts themselves.
+ *
+ * @namespace SodaxFeatures
+ */
 export class MoneyMarketService {
-  private readonly hubProvider: HubProvider;
-  private readonly spoke: SpokeService;
-  public readonly data: MoneyMarketDataService;
-  public readonly config: ConfigService;
+  // dependent services
+  readonly hubProvider: HubProvider;
+  readonly config: ConfigService;
+  readonly spokeService: SpokeService;
 
-  constructor({ config, hubProvider, spoke }: MoneyMarketServiceConstructorParams) {
+  // money market config (hoisted from config for ergonomics, mirrors SwapService)
+  readonly partnerFee: PartnerFee | undefined;
+  readonly relayerApiEndpoint: HttpUrl;
+
+  // sub-service
+  readonly data: MoneyMarketDataService;
+
+  public constructor({ configService, hubProvider, spokeService }: MoneyMarketServiceConstructorParams) {
+    this.config = configService;
     this.hubProvider = hubProvider;
-    this.data = new MoneyMarketDataService({ hubProvider, config });
-    this.config = config;
-    this.spoke = spoke;
+    this.spokeService = spokeService;
+    this.partnerFee = configService.moneyMarket.partnerFee;
+    this.relayerApiEndpoint = configService.relay.relayerApiEndpoint;
+    this.data = new MoneyMarketDataService({ hubProvider, config: configService });
   }
 
   /**
-   * Estimate the gas for a raw transaction.
-   * @param {TxReturnType<T, true>} params - The parameters for the raw transaction.
-   * @param {SpokeProvider} spokeProvider - The provider for the spoke chain.
-   * @returns {Promise<GetEstimateGasReturnType<T>>} A promise that resolves to the gas.
-   *
-   * @namespace SodaxFeatures
+   * Estimate the gas for a raw transaction. Delegates to {@link SpokeService.estimateGas}.
    */
-  public async estimateGas<T extends SpokeProviderType = SpokeProviderType>(
-    params: TxReturnType<T, true>,
-    spokeProvider: T,
-  ): Promise<GetEstimateGasReturnType<T>> {
-    return this.spoke.estimateGas(params) as Promise<GetEstimateGasReturnType<T>>;
+  public async estimateGas<K extends SpokeChainKey>(
+    params: EstimateGasParams<K>,
+  ): Promise<GetEstimateGasReturnType<K>> {
+    return this.spokeService.estimateGas(params) as Promise<GetEstimateGasReturnType<K>>;
   }
 
   /**
-   * Check if allowance is sufficient for actions on the money market pool
-   * @param {MoneyMarketParams} params - Money market params containing token address and amount
-   * @param {SpokeProvider} spokeProvider - The spoke provider instance
-   * @return {Promise<Result<boolean>>} - Returns true if allowance is sufficient, false otherwise
-   *
-   * @example
-   * const allowanceValid = await isAllowanceValid({
-   *   token: '0x...', // Address of the token (spoke chain) to supply
-   *   amount: 1000n, // Amount to supply (in token decimals)
-   *   action: 'supply',
-   * }, spokeProvider);
-   *
-   * if (!allowanceValid.ok) {
-   *   // Handle error
-   * }
-   *
-   * if (!allowanceValid.value) {
-   *   // Need to approve
-   * }
+   * Check if allowance/trustline is sufficient for the given money market action.
+   * - Supply / repay on hub: allowance vs the user's hub router.
+   * - Supply / repay on EVM spoke: allowance vs the spoke's assetManager.
+   * - Stellar (src or dst): trustline sufficiency on both wallets involved.
+   * - Withdraw / borrow: no allowance concept — returns true.
    */
-  public async isAllowanceValid<S extends SpokeProviderType>(
-    params: MoneyMarketParams,
-    spokeProvider: S,
+  public async isAllowanceValid<K extends SpokeChainKey>(
+    _params: MoneyMarketAllowanceParams<K>,
   ): Promise<Result<boolean>> {
     try {
+      const { params } = _params;
+      const srcChainKey = params.srcChainKey;
+
       invariant(params.amount > 0n, 'Amount must be greater than 0');
       invariant(params.token.length > 0, 'Token is required');
 
       if (params.action === 'withdraw' || params.action === 'borrow') {
-        const toChainId = params.toChainId ?? spokeProvider.chainConfig.chain.id;
+        const toChainId = params.toChainId ?? srcChainKey;
         invariant(
-          this.configService.isMoneyMarketSupportedToken(toChainId, params.token),
+          this.config.isMoneyMarketSupportedToken(toChainId, params.token),
           `Unsupported spoke chain (${toChainId}) token: ${params.token}`,
         );
       } else {
         invariant(
-          this.configService.isMoneyMarketSupportedToken(spokeProvider.chainConfig.chain.id, params.token),
-          `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
+          this.config.isMoneyMarketSupportedToken(srcChainKey, params.token),
+          `Unsupported spoke chain (${srcChainKey}) token: ${params.token}`,
         );
       }
 
-      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-
+      // Target chain is Stellar with a specific recipient: both recipient and (if src is Stellar) sender
+      // must have sufficient trustline for the token.
       if (params.toChainId === ChainKeys.STELLAR_MAINNET && params.toAddress) {
-        // if target chain is stellar, check if the target wallet has sufficient trustline
-        const targetHasTrustline = await StellarSpokeService.walletHasSufficientTrustline(
+        const targetHasTrustline = await this.spokeService.stellarSpokeService.hasSufficientTrustline(
           params.token,
           params.amount,
           params.toAddress,
-          this.configService.sharedConfig[ChainKeys.STELLAR_MAINNET].horizonRpcUrl,
         );
 
-        // if source chain is stellar, check if the source wallet has sufficient trustline as well
         let srcHasTrustline = true;
-        if (isStellarSpokeProviderType(spokeProvider)) {
-          srcHasTrustline = await StellarSpokeService.hasSufficientTrustline(
+        if (isStellarChainKeyType(srcChainKey)) {
+          srcHasTrustline = await this.spokeService.stellarSpokeService.hasSufficientTrustline(
             params.token,
             params.amount,
-            spokeProvider,
+            params.srcAddress,
           );
         }
 
-        return {
-          ok: true,
-          value: targetHasTrustline && srcHasTrustline,
-        };
+        return { ok: true, value: targetHasTrustline && srcHasTrustline };
       }
 
-      if (isStellarSpokeProviderType(spokeProvider)) {
-        return {
-          ok: true,
-          value: await StellarSpokeService.hasSufficientTrustline(params.token, params.amount, spokeProvider),
-        };
-      }
-      if (
-        (isEvmSpokeProviderType(spokeProvider) || isSonicSpokeProviderType(spokeProvider)) &&
-        (params.action === 'supply' || params.action === 'repay')
-      ) {
-        const spender = isHubChainId(spokeProvider, this.hubProvider)
-          ? await HubService.getUserRouter(
-              walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
-              this.hubProvider,
-            )
-          : spokeProvider.chainConfig.addresses.assetManager;
-        return await Erc20Service.isAllowanceValid(
-          params.token as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
-          params.amount,
-          walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
-          spender as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
-          spokeProvider,
-        );
+      if (isStellarChainKeyType(srcChainKey)) {
+        return await this.spokeService.isAllowanceValid({
+          srcChainKey,
+          token: params.token,
+          amount: params.amount,
+          owner: params.srcAddress,
+        } satisfies SpokeIsAllowanceValidParamsStellar);
       }
 
-      return {
-        ok: true,
-        value: true,
-      };
+      // Allowance on EVM (hub or spoke) is required only for supply / repay.
+      if (params.action === 'supply' || params.action === 'repay') {
+        if (isHubChainKeyType(srcChainKey)) {
+          const spender = await HubService.getUserRouter(
+            params.srcAddress as Address,
+            this.hubProvider,
+          );
+          return await this.spokeService.isAllowanceValid({
+            srcChainKey,
+            token: params.token,
+            amount: params.amount,
+            owner: params.srcAddress,
+            spender,
+          } satisfies SpokeIsAllowanceValidParamsHub);
+        }
+
+        if (isEvmSpokeOnlyChainKeyType(srcChainKey)) {
+          return await this.spokeService.isAllowanceValid({
+            srcChainKey,
+            token: params.token,
+            amount: params.amount,
+            owner: params.srcAddress,
+            spender: spokeChainConfig[srcChainKey].addresses.assetManager,
+          } satisfies SpokeIsAllowanceValidParamsEvmSpoke);
+        }
+      }
+
+      return { ok: true, value: true };
     } catch (error) {
-      return {
-        ok: false,
-        error: error,
-      };
+      return { ok: false, error };
     }
   }
 
   /**
-   * Approve amount spending if isAllowanceValid returns false.
-   * For evm spoke chains, the spender is the asset manager contract while
-   * for sonic spoke (hub) chain, the spender is the user router contract.
-   * NOTE: Stellar requires trustline when being either sender or receiver. Thus
-   * you should make sure that both src and destination wallets have sufficient trustlines.
-   * Make sure to invoke this method using wallet address which is about to receive the tokens!
-   * @param token - ERC20 token address
-   * @param amount - Amount to approve
-   * @param spender - Spender address
-   * @param spokeProvider - Spoke provider
-   * @returns {Promise<Result<TxReturnType<S, R>>>} - Returns the transaction receipt
-   *
-   * @example
-   * const approveResult = await approve(
-   *   {
-   *     token: '0x...', // ERC20 token address
-   *     amount: 1000n, // Amount to approve (in token decimals)
-   *     action: 'supply', // Action to perform
-   *   },
-   *   spokeProvider,
-   *   raw // Optional: true = return the raw transaction data, false = execute and return the transaction hash (default: false)
-   * );
-   *
-   * if (!approveResult.ok) {
-   *   // Handle error
-   * }
-   *
-   * const txReceipt = approveResult.value;
+   * Approve token spending for a supply/repay action, or request a Stellar trustline.
+   * For EVM hub callers the spender is the user's hub router; for EVM spokes it is the
+   * asset manager. Borrow and withdraw don't require approval — invoking this with those
+   * actions returns an error.
    */
-  public async approve<S extends SpokeProviderType, R extends boolean = false>(
-    params: MoneyMarketParams,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<Result<TxReturnType<S, R>>> {
+  public async approve<K extends SpokeChainKey>(
+    _params: MoneyMarketApproveActionParams<K>,
+  ): Promise<Result<TxReturnType<K, false>>> {
     try {
+      const { params, walletProvider } = _params;
+      const srcChainKey = params.srcChainKey;
+
       invariant(params.amount > 0n, 'Amount must be greater than 0');
       invariant(params.token.length > 0, 'Token is required');
-      if (params.action === 'withdraw' || params.action === 'borrow') {
-        const toChainId = params.toChainId ?? spokeProvider.chainConfig.chain.id;
-        invariant(
-          this.configService.isMoneyMarketSupportedToken(toChainId, params.token),
-          `Unsupported spoke chain (${toChainId}) token: ${params.token}`,
-        );
-      } else {
-        invariant(
-          this.configService.isMoneyMarketSupportedToken(spokeProvider.chainConfig.chain.id, params.token),
-          `Unsupported spoke chain (${spokeProvider.chainConfig.chain.id}) token: ${params.token}`,
-        );
-      }
+      invariant(
+        isValidWalletProviderForChainKey(srcChainKey, walletProvider),
+        `Invalid wallet provider for chain key: ${srcChainKey}, walletProvider.chainType: ${walletProvider.chainType}`,
+      );
 
-      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-
-      if (isStellarSpokeProviderType(spokeProvider)) {
-        const result = await StellarSpokeService.requestTrustline(params.token, params.amount, spokeProvider, raw);
+      if (isStellarChainKeyType(srcChainKey)) {
+        const result = await this.spokeService.stellarSpokeService.requestTrustline({
+          srcChainKey,
+          srcAddress: params.srcAddress,
+          token: params.token,
+          amount: params.amount,
+          raw: false,
+          walletProvider: walletProvider as GetWalletProviderType<StellarChainKey>,
+        });
 
         return {
           ok: true,
-          value: result satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<S, R>,
+          value: result satisfies TxReturnType<StellarChainKey, false> as TxReturnType<K, false>,
         };
       }
 
-      if (isEvmSpokeProviderType(spokeProvider) || isSonicSpokeProviderType(spokeProvider)) {
-        invariant(
-          params.action === 'supply' || params.action === 'repay',
-          'Invalid action (only supply and repay are supported on evm)',
-        );
+      invariant(
+        params.action === 'supply' || params.action === 'repay',
+        'Invalid action (only supply and repay require approval on EVM)',
+      );
+
+      if (isHubChainKeyType(srcChainKey)) {
         invariant(isAddress(params.token), 'Invalid token address');
 
-        const spender = isHubChainId(spokeProvider, this.hubProvider)
-          ? await HubService.getUserRouter(
-              walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
-              this.hubProvider,
-            )
-          : spokeProvider.chainConfig.addresses.assetManager;
+        const spender = await HubService.getUserRouter(params.srcAddress as Address, this.hubProvider);
+        const result = await this.spokeService.approve<HubChainKey, false>({
+          srcChainKey,
+          token: params.token as GetTokenAddressType<HubChainKey>,
+          amount: params.amount,
+          owner: params.srcAddress as GetAddressType<HubChainKey>,
+          spender,
+          raw: false,
+          walletProvider: walletProvider as GetWalletProviderType<HubChainKey>,
+        });
 
-        const result = (await Erc20Service.approve(
-          params.token,
-          params.amount,
-          spender as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
-          spokeProvider,
-          raw,
-        )) satisfies TxReturnType<EvmSpokeProviderType, R> as TxReturnType<S, R>;
+        if (!result.ok) return result;
 
         return {
           ok: true,
-          value: result,
+          value: result.value satisfies TxReturnType<HubChainKey, false> as TxReturnType<K, false>,
+        };
+      }
+
+      if (isEvmSpokeOnlyChainKeyType(srcChainKey)) {
+        invariant(isAddress(params.token), 'Invalid token address');
+
+        const result = await this.spokeService.approve<EvmSpokeOnlyChainKey, false>({
+          srcChainKey,
+          token: params.token as GetTokenAddressType<EvmSpokeOnlyChainKey>,
+          amount: params.amount,
+          owner: params.srcAddress as GetAddressType<EvmSpokeOnlyChainKey>,
+          spender: spokeChainConfig[srcChainKey].addresses.assetManager,
+          raw: false,
+          walletProvider: walletProvider as GetWalletProviderType<EvmSpokeOnlyChainKey>,
+        });
+
+        if (!result.ok) return result;
+
+        return {
+          ok: true,
+          value: result.value satisfies TxReturnType<EvmSpokeOnlyChainKey, false> as TxReturnType<K, false>,
         };
       }
 
       return {
         ok: false,
-        error: new Error('Approve only supported for EVM spoke chains'),
+        error: new Error('Approve only supported for hub (Sonic), EVM spokes, and Stellar'),
       };
     } catch (error) {
-      return {
-        ok: false,
-        error: error,
-      };
+      return { ok: false, error };
     }
   }
 
+  public async approveRaw<K extends SpokeChainKey>(
+    _params: MoneyMarketApproveActionParamsRaw<K>,
+  ): Promise<Result<TxReturnType<K, true>>> {
+    try {
+      const { params } = _params;
+      const srcChainKey = params.srcChainKey;
+
+      invariant(params.amount > 0n, 'Amount must be greater than 0');
+      invariant(params.token.length > 0, 'Token is required');
+
+      if (isStellarChainKeyType(srcChainKey)) {
+        const result = await this.spokeService.stellarSpokeService.requestTrustline({
+          srcChainKey,
+          srcAddress: params.srcAddress,
+          token: params.token,
+          amount: params.amount,
+          raw: true,
+        });
+
+        return {
+          ok: true,
+          value: result satisfies TxReturnType<StellarChainKey, true> as TxReturnType<K, true>,
+        };
+      }
+
+      invariant(
+        params.action === 'supply' || params.action === 'repay',
+        'Invalid action (only supply and repay require approval on EVM)',
+      );
+
+      if (isHubChainKeyType(srcChainKey)) {
+        invariant(isAddress(params.token), 'Invalid token address');
+
+        const spender = await HubService.getUserRouter(params.srcAddress as Address, this.hubProvider);
+        const result = await this.spokeService.approve<HubChainKey, true>({
+          srcChainKey,
+          token: params.token as GetTokenAddressType<HubChainKey>,
+          amount: params.amount,
+          owner: params.srcAddress as GetAddressType<HubChainKey>,
+          spender,
+          raw: true,
+        });
+
+        if (!result.ok) return result;
+
+        return {
+          ok: true,
+          value: result.value satisfies TxReturnType<HubChainKey, true> as TxReturnType<K, true>,
+        };
+      }
+
+      if (isEvmSpokeOnlyChainKeyType(srcChainKey)) {
+        invariant(isAddress(params.token), 'Invalid token address');
+
+        const result = await this.spokeService.approve<EvmSpokeOnlyChainKey, true>({
+          srcChainKey,
+          token: params.token as GetTokenAddressType<EvmSpokeOnlyChainKey>,
+          amount: params.amount,
+          owner: params.srcAddress as GetAddressType<EvmSpokeOnlyChainKey>,
+          spender: spokeChainConfig[srcChainKey].addresses.assetManager,
+          raw: true,
+        });
+
+        if (!result.ok) return result;
+
+        return {
+          ok: true,
+          value: result.value satisfies TxReturnType<EvmSpokeOnlyChainKey, true> as TxReturnType<K, true>,
+        };
+      }
+
+      return {
+        ok: false,
+        error: new Error('Approve only supported for hub (Sonic), EVM spokes, and Stellar'),
+      };
+    } catch (error) {
+      return { ok: false, error };
+    }
+  }
+
+  // ==== supply ==========================================================================
+
   /**
-   * Supply tokens to the money market pool, relay the transaction to the hub and submit the intent to the Solver API
-   * @param params - The parameters for the supply transaction.
-   * @param spokeProvider - The spoke provider.
-   * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
-   * @returns {Promise<Result<[SpokeTxHash, HubTxHash], MoneyMarketError>>} - Returns the transaction result and the hub transaction hash or error
-   *
-   * @example
-   * const result = await moneyMarketService.supply(
-   *   {
-   *     token: '0x...', // Address of the token (spoke chain address) to supply
-   *     amount: 1000n, // Amount to supply (in token decimals)
-   *   },
-   *   spokeProvider,
-   *   30000 // Optional timeout in milliseconds (default: 60000, i.e. 60 seconds)
-   * );
-   *
-   * if (!result.ok) {
-   *   // Handle error
-   * }
-   *
-   * const [
-   *  spokeTxHash, // transaction hash on the spoke chain
-   *  hubTxHash,   // transaction hash on the hub chain (i.e. the transaction that was relayed to the hub)
-   * ] = result.value;
-   * console.log('Supply transaction hashes:', { spokeTxHash, hubTxHash });
+   * Supply tokens to the money market pool, relay the transaction to the hub, and return
+   * the spoke + hub transaction hashes.
    */
-  public async supply<S extends SpokeProvider>(
-    params: MoneyMarketSupplyParams,
-    spokeProvider: S,
-    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+  public async supply<K extends SpokeChainKey>(
+    _params: MoneyMarketSupplyActionParams<K>,
   ): Promise<
     Result<
       [SpokeTxHash, HubTxHash],
       MoneyMarketError<'CREATE_SUPPLY_INTENT_FAILED' | 'SUPPLY_UNKNOWN_ERROR' | RelayErrorCode>
     >
   > {
+    const { params, timeout = DEFAULT_RELAY_TX_TIMEOUT } = _params;
+    const srcChainKey = params.srcChainKey;
+
     try {
-      const txResult = await this.createSupplyIntent(params, spokeProvider);
+      const txResult = await this.createSupplyIntent(_params);
+      if (!txResult.ok) return txResult;
 
-      if (!txResult.ok) {
-        return txResult;
-      }
-
-      // verify the spoke tx hash exists on chain
-      const verifyTxHashResult = await SpokeService.verifyTxHash(txResult.value, spokeProvider);
-
-      if (!verifyTxHashResult.ok) {
+      const verify = await this.spokeService.verifyTxHash({ txHash: txResult.value, chainKey: srcChainKey });
+      if (!verify.ok) {
         return {
           ok: false,
           error: {
             code: 'CREATE_SUPPLY_INTENT_FAILED',
-            data: {
-              payload: params,
-              error: verifyTxHashResult.error,
-            },
+            data: { payload: params, error: verify.error },
           },
         };
       }
 
-      let intentTxHash: string | null = null;
-      if (spokeProvider.chainConfig.chain.id === this.hubProvider.chainConfig.chain.id) {
-        intentTxHash = txResult.value;
-      } else {
-        const packetResult = await relayTxAndWaitPacket(
-          txResult.value,
-          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
-          spokeProvider,
-          this.config.relayerApiEndpoint,
-          timeout,
-        );
-
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              data: {
-                error: packetResult.error,
-                payload: txResult.value,
-              },
-            },
-          };
-        }
-
-        intentTxHash = packetResult.value.dst_tx_hash;
+      // Relay skipped only when source chain is the hub.
+      if (isHubChainKeyType(srcChainKey)) {
+        return { ok: true, value: [txResult.value, txResult.value] };
       }
 
-      return { ok: true, value: [txResult.value, intentTxHash] };
+      const packet = await relayTxAndWaitPacket(
+        txResult.value,
+        isSolanaChainKeyType(srcChainKey) || isBitcoinChainKeyType(srcChainKey) ? txResult.data : undefined,
+        srcChainKey,
+        this.relayerApiEndpoint,
+        timeout,
+      );
+
+      if (!packet.ok) {
+        return {
+          ok: false,
+          error: {
+            code: packet.error.code,
+            data: { error: packet.error, payload: txResult.value },
+          },
+        };
+      }
+
+      return { ok: true, value: [txResult.value, packet.value.dst_tx_hash] };
     } catch (error) {
       return {
         ok: false,
         error: {
           code: 'SUPPLY_UNKNOWN_ERROR',
-          data: {
-            error: error,
-            payload: params,
-          },
+          data: { error, payload: params },
         },
       };
     }
   }
 
-  /**
-   * Create supply intent only (without relay submit to Solver API)
-   * NOTE: This method does not submit the intent to the Solver API, it only executes the transaction on the spoke chain
-   * In order to successfully supply tokens, you need to:
-   * 1. Check if the allowance is sufficient
-   * 2. Approve the asset manager contract to spend the tokens
-   * 3. Supply the tokens
-   * 4. Submit the intent to the Solver API and await it using relayTxAndWaitPacket method
-   *
-   * @param params - The parameters for the supply transaction.
-   * @param spokeProvider - The spoke provider.
-   * @param raw - Whether to return the raw transaction data.
-   * @returns {Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode>>} - Returns the transaction result.
-   *
-   * @example
-   * const moneyMarketService = new MoneyMarketService(config);
-   * const result = await moneyMarketService.createSupplyIntent(
-   *   {
-   *     token: "0x123...", // token address
-   *     amount: 1000000000000000000n // 1 token in wei
-   *   },
-   *   spokeProvider,
-   *   raw // Optional: true = return the raw transaction data, false = exeute and return the transaction hash (default: false)
-   * );
-   *
-   * if (result.ok) {
-   *   const txHash = result.value;
-   *   console.log('Supply transaction hash:', txHash);
-   * } else {
-   *   console.error('Supply failed:', result.error);
-   * }
-   */
-  async createSupplyIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>(
-    params: MoneyMarketSupplyParams,
-    spokeProvider: S,
-    raw?: R,
+  public async createSupplyIntent<K extends SpokeChainKey>(
+    _params: MoneyMarketSupplyActionParams<K>,
   ): Promise<
-    Result<TxReturnType<S, R>, MoneyMarketError<'CREATE_SUPPLY_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
+    Result<TxReturnType<K, false>, MoneyMarketError<'CREATE_SUPPLY_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
   > {
+    const { params, walletProvider } = _params;
+    const srcChainKey = params.srcChainKey;
+    const skipSimulation = _params.skipSimulation ?? false;
+
     try {
       invariant(params.action === 'supply', 'Invalid action');
       invariant(params.token.length > 0, 'Token is required');
       invariant(params.amount > 0n, 'Amount must be greater than 0');
-
-      const fromChainId = spokeProvider.chainConfig.chain.id;
-      const fromAddress = await spokeProvider.walletProvider.getWalletAddress();
-      const toChainId = params.toChainId ?? fromChainId;
-      const toAddress = params.toAddress ?? fromAddress;
-
       invariant(
-        this.configService.isMoneyMarketSupportedToken(fromChainId, params.token),
-        `Unsupported spoke chain (${fromChainId}) token: ${params.token}`,
+        isValidWalletProviderForChainKey(srcChainKey, walletProvider),
+        `Invalid wallet provider for chain key: ${srcChainKey}, walletProvider.chainType: ${walletProvider.chainType}`,
+      );
+      invariant(
+        this.config.isMoneyMarketSupportedToken(srcChainKey, params.token),
+        `Unsupported spoke chain (${srcChainKey}) token: ${params.token}`,
       );
 
+      const toChainId = params.toChainId ?? srcChainKey;
+      const toAddress = params.toAddress ?? params.srcAddress;
+
       const [fromHubWallet, toHubWallet] = await Promise.all([
-        HubService.getUserHubWalletAddress(fromAddress, fromChainId, this.hubProvider),
+        HubService.getUserHubWalletAddress(params.srcAddress, srcChainKey, this.hubProvider),
         HubService.getUserHubWalletAddress(toAddress, toChainId, this.hubProvider),
       ]);
 
-      const data: Hex = this.buildSupplyData(fromChainId, params.token, params.amount, toHubWallet);
+      const data: Hex = this.buildSupplyData(srcChainKey, params.token, params.amount, toHubWallet);
 
-      const txResult = await SpokeService.deposit(
-        {
-          from: fromAddress,
-          to: fromHubWallet,
-          token: params.token,
-          amount: params.amount,
-          data,
-        } as GetSpokeDepositParamsType<S>,
-        spokeProvider,
-        this.hubProvider,
-        raw,
-      );
+      const txResult = await this.spokeService.deposit<K, false>({
+        srcChainKey,
+        srcAddress: params.srcAddress as GetAddressType<K>,
+        to: fromHubWallet,
+        token: params.token as GetTokenAddressType<K>,
+        amount: params.amount,
+        data,
+        skipSimulation,
+        raw: false,
+        walletProvider,
+      } satisfies DepositParams<K, false>);
 
       return {
         ok: true,
-        value: txResult as TxReturnType<S, R>,
-        data: {
-          address: fromHubWallet,
-          payload: data,
-        },
+        value: txResult as TxReturnType<K, false>,
+        data: { address: fromHubWallet, payload: data },
       };
     } catch (error) {
       return {
         ok: false,
         error: {
           code: 'CREATE_SUPPLY_INTENT_FAILED',
-          data: {
-            error,
-            payload: params,
-          },
+          data: { error, payload: params },
         },
       };
     }
   }
 
-  /**
-   * Borrow tokens from the money market pool, relay the transaction to the hub and submit the intent to the Solver API
-   * @param params - The parameters for the borrow transaction.
-   * @param spokeProvider - The spoke provider.
-   * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
-   * @returns {Promise<Result<[SpokeTxHash, HubTxHash], MoneyMarketError>>} - Returns the transaction result and the hub transaction hash or error
-   *
-   * @example
-   * const result = await moneyMarketService.borrow(
-   *   {
-   *     token: '0x...', // Address of the token (spoke chain address) to borrow
-   *     amount: 1000n, // Amount to borrow (in token decimals)
-   *   },
-   *   spokeProvider,
-   *   30000 // Optional timeout in milliseconds (default: 60000, i.e. 60 seconds)
-   * );
-   *
-   * if (!result.ok) {
-   *   // Handle error
-   * }
-   *
-   * const [
-   *  spokeTxHash, // transaction hash on the spoke chain
-   *  hubTxHash,   // transaction hash on the hub chain (i.e. the transaction that was relayed to the hub)
-   * ] = result.value;
-   * console.log('Borrow transaction hashes:', { spokeTxHash, hubTxHash });
-   */
-  public async borrow<S extends SpokeProvider>(
-    params: MoneyMarketBorrowParams,
-    spokeProvider: S,
-    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+  public async createSupplyIntentRaw<K extends SpokeChainKey>(
+    _params: MoneyMarketSupplyActionParamsRaw<K>,
+  ): Promise<
+    Result<TxReturnType<K, true>, MoneyMarketError<'CREATE_SUPPLY_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
+  > {
+    const { params } = _params;
+    const srcChainKey = params.srcChainKey;
+    const skipSimulation = _params.skipSimulation ?? false;
+
+    try {
+      invariant(params.action === 'supply', 'Invalid action');
+      invariant(params.token.length > 0, 'Token is required');
+      invariant(params.amount > 0n, 'Amount must be greater than 0');
+      invariant(
+        this.config.isMoneyMarketSupportedToken(srcChainKey, params.token),
+        `Unsupported spoke chain (${srcChainKey}) token: ${params.token}`,
+      );
+
+      const toChainId = params.toChainId ?? srcChainKey;
+      const toAddress = params.toAddress ?? params.srcAddress;
+
+      const [fromHubWallet, toHubWallet] = await Promise.all([
+        HubService.getUserHubWalletAddress(params.srcAddress, srcChainKey, this.hubProvider),
+        HubService.getUserHubWalletAddress(toAddress, toChainId, this.hubProvider),
+      ]);
+
+      const data: Hex = this.buildSupplyData(srcChainKey, params.token, params.amount, toHubWallet);
+
+      const txResult = await this.spokeService.deposit<K, true>({
+        srcChainKey,
+        srcAddress: params.srcAddress as GetAddressType<K>,
+        to: fromHubWallet,
+        token: params.token as GetTokenAddressType<K>,
+        amount: params.amount,
+        data,
+        skipSimulation,
+        raw: true,
+      } satisfies DepositParams<K, true>);
+
+      return {
+        ok: true,
+        value: txResult as TxReturnType<K, true>,
+        data: { address: fromHubWallet, payload: data },
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'CREATE_SUPPLY_INTENT_FAILED',
+          data: { error, payload: params },
+        },
+      };
+    }
+  }
+
+  // ==== borrow ==========================================================================
+
+  public async borrow<K extends SpokeChainKey>(
+    _params: MoneyMarketBorrowActionParams<K>,
   ): Promise<
     Result<
       [SpokeTxHash, HubTxHash],
       MoneyMarketError<'CREATE_BORROW_INTENT_FAILED' | 'BORROW_UNKNOWN_ERROR' | RelayErrorCode>
     >
   > {
+    const { params, timeout = DEFAULT_RELAY_TX_TIMEOUT } = _params;
+    const srcChainKey = params.srcChainKey;
+    const hubChainId = this.hubProvider.chainConfig.chain.id;
+
     try {
-      const txResult = await this.createBorrowIntent(params, spokeProvider);
+      const txResult = await this.createBorrowIntent(_params);
+      if (!txResult.ok) return txResult;
 
-      if (!txResult.ok) {
-        return txResult;
-      }
-
-      // verify the spoke tx hash exists on chain
-      const verifyTxHashResult = await SpokeService.verifyTxHash(txResult.value, spokeProvider);
-
-      if (!verifyTxHashResult.ok) {
+      const verify = await this.spokeService.verifyTxHash({ txHash: txResult.value, chainKey: srcChainKey });
+      if (!verify.ok) {
         return {
           ok: false,
           error: {
             code: 'CREATE_BORROW_INTENT_FAILED',
-            data: {
-              payload: params,
-              error: verifyTxHashResult.error,
-            },
+            data: { payload: params, error: verify.error },
           },
         };
       }
 
-      let intentTxHash: string | null = null;
-      // relay is not required only if borrow is happening on a Hub with target not being the hub chain
-      if (
-        spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id ||
-        (params.toChainId && params.toAddress && params.toChainId !== this.hubProvider.chainConfig.chain.id)
-      ) {
-        const packetResult = await relayTxAndWaitPacket(
-          txResult.value,
-          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
-          spokeProvider,
-          this.config.relayerApiEndpoint,
-          timeout,
-        );
+      // Relay is not required when the borrow is executed on hub AND the target is also hub.
+      // (Borrow from hub to a different target chain still needs the relay to deliver tokens.)
+      const needsRelay =
+        srcChainKey !== hubChainId ||
+        (params.toChainId != null && params.toAddress != null && params.toChainId !== hubChainId);
 
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              data: {
-                error: packetResult.error,
-                payload: txResult.value,
-              },
-            },
-          };
-        }
-
-        intentTxHash = packetResult.value.dst_tx_hash;
-      } else {
-        intentTxHash = txResult.value;
+      if (!needsRelay) {
+        return { ok: true, value: [txResult.value, txResult.value] };
       }
 
-      return { ok: true, value: [txResult.value, intentTxHash] };
+      const packet = await relayTxAndWaitPacket(
+        txResult.value,
+        isSolanaChainKeyType(srcChainKey) || isBitcoinChainKeyType(srcChainKey) ? txResult.data : undefined,
+        srcChainKey,
+        this.relayerApiEndpoint,
+        timeout,
+      );
+
+      if (!packet.ok) {
+        return {
+          ok: false,
+          error: {
+            code: packet.error.code,
+            data: { error: packet.error, payload: txResult.value },
+          },
+        };
+      }
+
+      return { ok: true, value: [txResult.value, packet.value.dst_tx_hash] };
     } catch (error) {
       return {
         ok: false,
         error: {
           code: 'BORROW_UNKNOWN_ERROR',
-          data: {
-            error: error,
-            payload: params,
-          },
+          data: { error, payload: params },
         },
       };
     }
   }
 
-  /**
-   * Create borrow intent only (without relay and submit to Solver API)
-   * NOTE: This method does not submit the intent to the Solver API, it only executes the transaction on the spoke chain
-   * In order to successfully borrow tokens, you need to:
-   * 1. Execute the borrow transaction on the spoke chain
-   * 2. Submit the intent to the Solver API and await it using relayTxAndWaitPacket method
-   *
-   * @param params - The parameters for the borrow transaction.
-   * @param spokeProvider - The spoke provider.
-   * @param raw - Whether to return the raw transaction data.
-   * @returns {Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode>>} - Returns the transaction result (raw transaction data or transaction hash).
-   *
-   * @example
-   * const moneyMarketService = new MoneyMarketService(config);
-   * const result = await moneyMarketService.createBorrowIntent(
-   *   {
-   *     token: "0x123...", // token address
-   *     amount: 1000000000000000000n // 1 token in wei
-   *   },
-   *   spokeProvider,
-   *   raw // Optional: true = return the raw transaction data, false = execute and return the transaction hash (default: false)
-   * );
-   *
-   * if (result.ok) {
-   *   const txHash = result.value;
-   *   console.log('Borrow transaction hash:', txHash);
-   * } else {
-   *   console.error('Borrow failed:', result.error);
-   * }
-   */
-  async createBorrowIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>(
-    params: MoneyMarketBorrowParams,
-    spokeProvider: S,
-    raw?: R,
+  public async createBorrowIntent<K extends SpokeChainKey>(
+    _params: MoneyMarketBorrowActionParams<K>,
   ): Promise<
-    Result<TxReturnType<S, R>, MoneyMarketError<'CREATE_BORROW_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
+    Result<TxReturnType<K, false>, MoneyMarketError<'CREATE_BORROW_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
   > {
-    invariant(params.action === 'borrow', 'Invalid action');
-    invariant(params.token.length > 0, 'Token is required');
-    invariant(params.amount > 0n, 'Amount must be greater than 0');
+    const { params, walletProvider } = _params;
+    const srcChainKey = params.srcChainKey;
+    const skipSimulation = _params.skipSimulation ?? false;
 
-    const fromChainId = params.fromChainId ?? spokeProvider.chainConfig.chain.id;
-    const fromAddress = params.fromAddress ?? (await spokeProvider.walletProvider.getWalletAddress());
-    const toChainId = params.toChainId ?? fromChainId;
-    const toAddress = params.toAddress ?? fromAddress;
-    const dstToken = this.configService.getMoneyMarketToken(toChainId, params.token);
+    try {
+      invariant(params.action === 'borrow', 'Invalid action');
+      invariant(params.token.length > 0, 'Token is required');
+      invariant(params.amount > 0n, 'Amount must be greater than 0');
+      invariant(
+        isValidWalletProviderForChainKey(srcChainKey, walletProvider),
+        `Invalid wallet provider for chain key: ${srcChainKey}, walletProvider.chainType: ${walletProvider.chainType}`,
+      );
 
-    invariant(dstToken, `Money market token not found for spoke chain (${toChainId}) token: ${params.token}`);
+      const fromChainId = params.fromChainId ?? srcChainKey;
+      const fromAddress = params.fromAddress ?? params.srcAddress;
+      const toChainId = params.toChainId ?? fromChainId;
+      const toAddress = params.toAddress ?? fromAddress;
+      const dstToken = this.config.getMoneyMarketToken(toChainId, params.token);
 
-    const encodedToAddress = encodeAddress(toChainId, toAddress);
-    const fromHubWallet = await HubService.getUserHubWalletAddress(fromAddress, fromChainId, this.hubProvider);
+      invariant(dstToken, `Money market token not found for spoke chain (${toChainId}) token: ${params.token}`);
 
-    const data: Hex = this.buildBorrowData(fromHubWallet, encodedToAddress, dstToken.address, params.amount, toChainId);
+      const encodedToAddress = encodeAddress(toChainId, toAddress);
+      const fromHubWallet = await HubService.getUserHubWalletAddress(fromAddress, fromChainId, this.hubProvider);
 
-    let txResult: TxReturnType<S, R>;
-    if (fromChainId === this.hubProvider.chainConfig.chain.id && isSonicSpokeProviderType(spokeProvider)) {
-      txResult = await SonicSpokeService.callWallet(data, spokeProvider, raw);
-    } else {
-      txResult = await SpokeService.callWallet(fromHubWallet, data, spokeProvider, this.hubProvider, raw);
+      const payload: Hex = this.buildBorrowData(
+        fromHubWallet,
+        encodedToAddress,
+        dstToken.address,
+        params.amount,
+        toChainId,
+      );
+
+      const sendMessageParams = {
+        srcChainKey,
+        srcAddress: params.srcAddress as GetAddressType<K>,
+        dstChainKey: HUB_CHAIN_KEY,
+        dstAddress: fromHubWallet,
+        payload,
+        skipSimulation,
+        raw: false,
+        walletProvider,
+      } as SendMessageParams<K, false>;
+
+      const txResult = await this.spokeService.sendMessage<K, false>(sendMessageParams);
+
+      return {
+        ok: true,
+        value: txResult satisfies TxReturnType<K, false>,
+        data: { address: fromHubWallet, payload },
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'CREATE_BORROW_INTENT_FAILED',
+          data: { error, payload: params },
+        },
+      };
     }
-
-    return {
-      ok: true,
-      value: txResult satisfies TxReturnType<S, R>,
-      data: {
-        address: fromHubWallet,
-        payload: data,
-      },
-    };
   }
 
-  /**
-   * Withdraw tokens from the money market pool, relay the transaction to the hub and submit the intent to the Solver API
-   *
-   * @param params - The parameters for the withdraw transaction.
-   * @param spokeProvider - The spoke provider.
-   * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
-   * @returns {Promise<Result<[SpokeTxHash, HubTxHash], MoneyMarketError>>} - Returns the spoke and hub transaction hashes or error
-   *
-   * @example
-   * const result = await moneyMarketService.withdraw(
-   *   {
-   *     token: '0x...', // Address of the token (spoke chain address) to withdraw
-   *     amount: 1000n, // Amount to withdraw (in token decimals)
-   *   },
-   *   spokeProvider,
-   *   30000 // Optional timeout in milliseconds (default: 60000, i.e. 60 seconds)
-   * );
-   *
-   * if (!result.ok) {
-   *   // Handle error
-   * }
-   *
-   * const [
-   *  spokeTxHash, // transaction hash on the spoke chain
-   *  hubTxHash,   // transaction hash on the hub chain (i.e. the transaction that was relayed to the hub)
-   * ] = result.value;
-   * console.log('Withdraw transaction hashes:', { spokeTxHash, hubTxHash });
-   */
-  public async withdraw<S extends SpokeProvider>(
-    params: MoneyMarketWithdrawParams,
-    spokeProvider: S,
-    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+  public async createBorrowIntentRaw<K extends SpokeChainKey>(
+    _params: MoneyMarketBorrowActionParamsRaw<K>,
+  ): Promise<
+    Result<TxReturnType<K, true>, MoneyMarketError<'CREATE_BORROW_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
+  > {
+    const { params } = _params;
+    const srcChainKey = params.srcChainKey;
+    const skipSimulation = _params.skipSimulation ?? false;
+
+    try {
+      invariant(params.action === 'borrow', 'Invalid action');
+      invariant(params.token.length > 0, 'Token is required');
+      invariant(params.amount > 0n, 'Amount must be greater than 0');
+
+      const fromChainId = params.fromChainId ?? srcChainKey;
+      const fromAddress = params.fromAddress ?? params.srcAddress;
+      const toChainId = params.toChainId ?? fromChainId;
+      const toAddress = params.toAddress ?? fromAddress;
+      const dstToken = this.config.getMoneyMarketToken(toChainId, params.token);
+
+      invariant(dstToken, `Money market token not found for spoke chain (${toChainId}) token: ${params.token}`);
+
+      const encodedToAddress = encodeAddress(toChainId, toAddress);
+      const fromHubWallet = await HubService.getUserHubWalletAddress(fromAddress, fromChainId, this.hubProvider);
+
+      const payload: Hex = this.buildBorrowData(
+        fromHubWallet,
+        encodedToAddress,
+        dstToken.address,
+        params.amount,
+        toChainId,
+      );
+
+      const sendMessageParams = {
+        srcChainKey,
+        srcAddress: params.srcAddress as GetAddressType<K>,
+        dstChainKey: HUB_CHAIN_KEY,
+        dstAddress: fromHubWallet,
+        payload,
+        skipSimulation,
+        raw: true,
+      } as SendMessageParams<K, true>;
+
+      const txResult = await this.spokeService.sendMessage<K, true>(sendMessageParams);
+
+      return {
+        ok: true,
+        value: txResult satisfies TxReturnType<K, true>,
+        data: { address: fromHubWallet, payload },
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'CREATE_BORROW_INTENT_FAILED',
+          data: { error, payload: params },
+        },
+      };
+    }
+  }
+
+  // ==== withdraw ========================================================================
+
+  public async withdraw<K extends SpokeChainKey>(
+    _params: MoneyMarketWithdrawActionParams<K>,
   ): Promise<
     Result<
       [SpokeTxHash, HubTxHash],
       MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED' | 'WITHDRAW_UNKNOWN_ERROR' | RelayErrorCode>
     >
   > {
+    const { params, timeout = DEFAULT_RELAY_TX_TIMEOUT } = _params;
+    const srcChainKey = params.srcChainKey;
+    const hubChainId = this.hubProvider.chainConfig.chain.id;
+    const walletRouter = this.hubProvider.chainConfig.addresses.walletRouter;
+
     try {
-      const txResult = await this.createWithdrawIntent(params, spokeProvider);
+      const txResult = await this.createWithdrawIntent(_params);
+      if (!txResult.ok) return txResult;
 
-      if (!txResult.ok) {
-        return txResult;
-      }
-
-      // verify the spoke tx hash exists on chain
-      const verifyTxHashResult = await SpokeService.verifyTxHash(txResult.value, spokeProvider);
-
-      if (!verifyTxHashResult.ok) {
+      const verify = await this.spokeService.verifyTxHash({ txHash: txResult.value, chainKey: srcChainKey });
+      if (!verify.ok) {
         return {
           ok: false,
           error: {
             code: 'CREATE_WITHDRAW_INTENT_FAILED',
-            data: {
-              payload: params,
-              error: verifyTxHashResult.error,
-            },
+            data: { payload: params, error: verify.error },
           },
         };
       }
 
-      let intentTxHash: string | null = null;
-      // relay is not required only if action is happening on a Hub with target not being the hub chain
-      if (
-        spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id ||
-        (params.toChainId &&
-          params.toAddress &&
-          params.toChainId !== this.hubProvider.chainConfig.chain.id &&
-          params.toAddress !== this.hubProvider.chainConfig.addresses.walletRouter)
-      ) {
-        const packetResult = await relayTxAndWaitPacket(
-          txResult.value,
-          spokeProvider instanceof SolanaSpokeProvider ? txResult.data : undefined,
-          spokeProvider,
-          this.config.relayerApiEndpoint,
-          timeout,
-        );
+      // Relay is not required only when: source is hub AND target is hub AND target is not the walletRouter.
+      const needsRelay =
+        srcChainKey !== hubChainId ||
+        (params.toChainId != null &&
+          params.toAddress != null &&
+          params.toChainId !== hubChainId &&
+          params.toAddress !== walletRouter);
 
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              data: {
-                error: packetResult.error,
-                payload: txResult.value,
-              },
-            },
-          };
-        }
-
-        intentTxHash = packetResult.value.dst_tx_hash;
-      } else {
-        intentTxHash = txResult.value;
+      if (!needsRelay) {
+        return { ok: true, value: [txResult.value, txResult.value] };
       }
 
-      return { ok: true, value: [txResult.value, intentTxHash] };
+      const packet = await relayTxAndWaitPacket(
+        txResult.value,
+        isSolanaChainKeyType(srcChainKey) || isBitcoinChainKeyType(srcChainKey) ? txResult.data : undefined,
+        srcChainKey,
+        this.relayerApiEndpoint,
+        timeout,
+      );
+
+      if (!packet.ok) {
+        return {
+          ok: false,
+          error: {
+            code: packet.error.code,
+            data: { error: packet.error, payload: txResult.value },
+          },
+        };
+      }
+
+      return { ok: true, value: [txResult.value, packet.value.dst_tx_hash] };
     } catch (error) {
       return {
         ok: false,
         error: {
           code: 'WITHDRAW_UNKNOWN_ERROR',
-          data: {
-            error: error,
-            payload: params,
-          },
+          data: { error, payload: params },
         },
       };
     }
   }
 
-  /**
-   * Create withdraw intent only (without relay and submit to Solver API)
-   * NOTE: This method does not submit the intent to the Solver API, it only executes the transaction on the spoke chain
-   * In order to successfully withdraw tokens, you need to:
-   * 1. Execute the withdraw transaction on the spoke chain
-   * 2. Submit the intent to the Solver API and await it using relayTxAndWaitPacket method
-   *
-   * @param params - The parameters for the withdraw transaction.
-   * @param spokeProvider - The spoke provider.
-   * @param raw - Whether to return the raw transaction data.
-   * @returns {Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode>>} - Returns the transaction result (raw transaction data or transaction hash).
-   *
-   * @example
-   * const moneyMarketService = new MoneyMarketService(config);
-   * const result = await moneyMarketService.createWithdrawIntent(
-   *   {
-   *     token: "0x123...", // token address
-   *     amount: 1000000000000000000n // 1 token in wei
-   *   },
-   *   spokeProvider,
-   *   raw // Optional: true = return the raw transaction data, false = exeute and return the transaction hash (default: false)
-   * );
-   *
-   * if (result.ok) {
-   *   const txHash = result.value;
-   *   console.log('Withdraw transaction hash:', txHash);
-   * } else {
-   *   console.error('Withdraw failed:', result.error);
-   * }
-   */
-  async createWithdrawIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>(
-    params: MoneyMarketWithdrawParams,
-    spokeProvider: S,
-    raw?: R,
+  public async createWithdrawIntent<K extends SpokeChainKey>(
+    _params: MoneyMarketWithdrawActionParams<K>,
   ): Promise<
-    Result<TxReturnType<S, R>, MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
+    Result<TxReturnType<K, false>, MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
   > {
-    invariant(params.action === 'withdraw', 'Invalid action');
-    invariant(params.token.length > 0, 'Token is required');
-    invariant(params.amount > 0n, 'Amount must be greater than 0');
+    const { params, walletProvider } = _params;
+    const srcChainKey = params.srcChainKey;
+    const skipSimulation = _params.skipSimulation ?? false;
 
-    const fromChainId = spokeProvider.chainConfig.chain.id;
-    const fromAddress = await spokeProvider.walletProvider.getWalletAddress();
-    const toChainId = params.toChainId ?? fromChainId;
-    const toAddress = params.toAddress ?? fromAddress;
+    try {
+      invariant(params.action === 'withdraw', 'Invalid action');
+      invariant(params.token.length > 0, 'Token is required');
+      invariant(params.amount > 0n, 'Amount must be greater than 0');
+      invariant(
+        isValidWalletProviderForChainKey(srcChainKey, walletProvider),
+        `Invalid wallet provider for chain key: ${srcChainKey}, walletProvider.chainType: ${walletProvider.chainType}`,
+      );
 
-    invariant(
-      this.configService.isMoneyMarketSupportedToken(toChainId, params.token),
-      `Unsupported spoke chain (${toChainId}) token: ${params.token}`,
-    );
+      const toChainId = params.toChainId ?? srcChainKey;
+      const toAddress = params.toAddress ?? params.srcAddress;
 
-    const encodedToAddress = encodeAddress(toChainId, toAddress);
-    const fromHubWallet = await HubService.getUserHubWalletAddress(fromAddress, fromChainId, this.hubProvider);
+      invariant(
+        this.config.isMoneyMarketSupportedToken(toChainId, params.token),
+        `Unsupported spoke chain (${toChainId}) token: ${params.token}`,
+      );
 
-    const data: Hex = this.buildWithdrawData(fromHubWallet, encodedToAddress, params.token, params.amount, toChainId);
+      const encodedToAddress = encodeAddress(toChainId, toAddress);
+      const fromHubWallet = await HubService.getUserHubWalletAddress(
+        params.srcAddress,
+        srcChainKey,
+        this.hubProvider,
+      );
 
-    const txResult = isSonicSpokeProviderType(spokeProvider)
-      ? await SonicSpokeService.callWallet(data, spokeProvider, raw)
-      : await SpokeService.callWallet(fromHubWallet, data, spokeProvider, this.hubProvider, raw);
+      const payload: Hex = this.buildWithdrawData(
+        fromHubWallet,
+        encodedToAddress,
+        params.token,
+        params.amount,
+        toChainId,
+      );
 
-    return {
-      ok: true,
-      value: txResult,
-      data: {
-        address: fromHubWallet,
-        payload: data,
-      },
-    };
+      const sendMessageParams = {
+        srcChainKey,
+        srcAddress: params.srcAddress as GetAddressType<K>,
+        dstChainKey: HUB_CHAIN_KEY,
+        dstAddress: fromHubWallet,
+        payload,
+        skipSimulation,
+        raw: false,
+        walletProvider,
+      } as SendMessageParams<K, false>;
+
+      const txResult = await this.spokeService.sendMessage<K, false>(sendMessageParams);
+
+      return {
+        ok: true,
+        value: txResult satisfies TxReturnType<K, false>,
+        data: { address: fromHubWallet, payload },
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'CREATE_WITHDRAW_INTENT_FAILED',
+          data: { error, payload: params },
+        },
+      };
+    }
   }
 
-  /**
-   * Repay tokens to the money market pool, relay the transaction to the hub and submit the intent to the Solver API
-   *
-   * @param params - The parameters for the repay transaction.
-   * @param spokeProvider - The spoke provider.
-   * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
-   * @returns {Promise<Result<[SpokeTxHash, HubTxHash], MoneyMarketError>>} - Returns the spoke and hub transaction hashes or error
-   *
-   * @example
-   * const result = await moneyMarketService.repay(
-   *   {
-   *     token: '0x...', // Address of the token (spoke chain address) to repay
-   *     amount: 1000n, // Amount to repay (in token decimals)
-   *   },
-   *   spokeProvider,
-   *   30000 // Optional timeout in milliseconds (default: 60000, i.e. 60 seconds)
-   * );
-   *
-   * if (!result.ok) {
-   *   // Handle error
-   * }
-   *
-   * const [
-   *  spokeTxHash, // transaction hash on the spoke chain
-   *  hubTxHash,   // transaction hash on the hub chain (i.e. the transaction that was relayed to the hub)
-   * ] = result.value;
-   * console.log('Repay transaction hashes:', { spokeTxHash, hubTxHash });
-   */
-  public async repay<S extends SpokeProvider>(
-    params: MoneyMarketRepayParams,
-    spokeProvider: S,
-    timeout = DEFAULT_RELAY_TX_TIMEOUT,
+  public async createWithdrawIntentRaw<K extends SpokeChainKey>(
+    _params: MoneyMarketWithdrawActionParamsRaw<K>,
+  ): Promise<
+    Result<TxReturnType<K, true>, MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
+  > {
+    const { params } = _params;
+    const srcChainKey = params.srcChainKey;
+    const skipSimulation = _params.skipSimulation ?? false;
+
+    try {
+      invariant(params.action === 'withdraw', 'Invalid action');
+      invariant(params.token.length > 0, 'Token is required');
+      invariant(params.amount > 0n, 'Amount must be greater than 0');
+
+      const toChainId = params.toChainId ?? srcChainKey;
+      const toAddress = params.toAddress ?? params.srcAddress;
+
+      invariant(
+        this.config.isMoneyMarketSupportedToken(toChainId, params.token),
+        `Unsupported spoke chain (${toChainId}) token: ${params.token}`,
+      );
+
+      const encodedToAddress = encodeAddress(toChainId, toAddress);
+      const fromHubWallet = await HubService.getUserHubWalletAddress(
+        params.srcAddress,
+        srcChainKey,
+        this.hubProvider,
+      );
+
+      const payload: Hex = this.buildWithdrawData(
+        fromHubWallet,
+        encodedToAddress,
+        params.token,
+        params.amount,
+        toChainId,
+      );
+
+      const sendMessageParams = {
+        srcChainKey,
+        srcAddress: params.srcAddress as GetAddressType<K>,
+        dstChainKey: HUB_CHAIN_KEY,
+        dstAddress: fromHubWallet,
+        payload,
+        skipSimulation,
+        raw: true,
+      } as SendMessageParams<K, true>;
+
+      const txResult = await this.spokeService.sendMessage<K, true>(sendMessageParams);
+
+      return {
+        ok: true,
+        value: txResult satisfies TxReturnType<K, true>,
+        data: { address: fromHubWallet, payload },
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'CREATE_WITHDRAW_INTENT_FAILED',
+          data: { error, payload: params },
+        },
+      };
+    }
+  }
+
+  // ==== repay ===========================================================================
+
+  public async repay<K extends SpokeChainKey>(
+    _params: MoneyMarketRepayActionParams<K>,
   ): Promise<
     Result<
       [SpokeTxHash, HubTxHash],
       MoneyMarketError<'CREATE_REPAY_INTENT_FAILED' | 'REPAY_UNKNOWN_ERROR' | RelayErrorCode>
     >
   > {
+    const { params, timeout = DEFAULT_RELAY_TX_TIMEOUT } = _params;
+    const srcChainKey = params.srcChainKey;
+
     try {
-      const txResult = await this.createRepayIntent(params, spokeProvider);
+      const txResult = await this.createRepayIntent(_params);
+      if (!txResult.ok) return txResult;
 
-      if (!txResult.ok) {
-        return txResult;
-      }
-
-      // verify the spoke tx hash exists on chain
-      const verifyTxHashResult = await SpokeService.verifyTxHash(txResult.value, spokeProvider);
-
-      if (!verifyTxHashResult.ok) {
+      const verify = await this.spokeService.verifyTxHash({ txHash: txResult.value, chainKey: srcChainKey });
+      if (!verify.ok) {
         return {
           ok: false,
           error: {
             code: 'CREATE_REPAY_INTENT_FAILED',
-            data: {
-              payload: params,
-              error: verifyTxHashResult.error,
-            },
+            data: { payload: params, error: verify.error },
           },
         };
       }
 
-      let intentTxHash: string | null = null;
-      // relay is not required only if repay is happening from a Hub chain
-      if (spokeProvider.chainConfig.chain.id !== this.hubProvider.chainConfig.chain.id) {
-        const packetResult = await relayTxAndWaitPacket(
-          txResult.value,
-          isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
-          spokeProvider,
-          this.config.relayerApiEndpoint,
-          timeout,
-        );
-
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              data: {
-                error: packetResult.error,
-                payload: txResult.value,
-              },
-            },
-          };
-        }
-
-        intentTxHash = packetResult.value.dst_tx_hash;
-      } else {
-        intentTxHash = txResult.value;
+      // Relay skipped only when source chain is the hub.
+      if (isHubChainKeyType(srcChainKey)) {
+        return { ok: true, value: [txResult.value, txResult.value] };
       }
 
-      return { ok: true, value: [txResult.value, intentTxHash] };
+      const packet = await relayTxAndWaitPacket(
+        txResult.value,
+        isSolanaChainKeyType(srcChainKey) || isBitcoinChainKeyType(srcChainKey) ? txResult.data : undefined,
+        srcChainKey,
+        this.relayerApiEndpoint,
+        timeout,
+      );
+
+      if (!packet.ok) {
+        return {
+          ok: false,
+          error: {
+            code: packet.error.code,
+            data: { error: packet.error, payload: txResult.value },
+          },
+        };
+      }
+
+      return { ok: true, value: [txResult.value, packet.value.dst_tx_hash] };
     } catch (error: unknown) {
-      // Simulation failure (e.g. hub revert "External call failed") is a known intent failure, not unknown
+      // Simulation failure (e.g. hub revert "External call failed") is a known intent failure, not unknown.
       const isSimulationFailure =
         error instanceof Error &&
         error.message === 'Simulation failed' &&
@@ -1151,10 +1255,7 @@ export class MoneyMarketService {
           ok: false,
           error: {
             code: 'CREATE_REPAY_INTENT_FAILED',
-            data: {
-              payload: params,
-              error: cause?.error ?? error,
-            },
+            data: { payload: params, error: cause?.error ?? error },
           },
         };
       }
@@ -1163,115 +1264,144 @@ export class MoneyMarketService {
         ok: false,
         error: {
           code: 'REPAY_UNKNOWN_ERROR',
-          data: {
-            error: error,
-            payload: params,
-          },
+          data: { error, payload: params },
         },
       };
     }
   }
 
-  /**
-   * Create repay intent only (without relay and submit to Solver API)
-   * NOTE: This method does not submit the intent to the Solver API, it only executes the transaction on the spoke chain
-   * In order to successfully repay tokens, you need to:
-   * 1. Check if the allowance is sufficient
-   * 2. Approve the asset manager contract to spend the tokens
-   * 3. Execute the repay transaction on the spoke chain
-   * 4. Submit the intent to the Solver API and await it using relayTxAndWaitPacket method
-   *
-   * @param params - The parameters for the repay transaction.
-   * @param spokeProvider - The spoke provider.
-   * @param raw - Whether to return the raw transaction data.
-   * @returns {Promise<Result<TxReturnType<S, R>, MoneyMarketErrorCode>>} The transaction result (raw transaction data or transaction hash) or error.
-   *
-   * @example
-   * const moneyMarketService = new MoneyMarketService(config);
-   * const result = await moneyMarketService.createRepayIntent(
-   *   {
-   *     token: "0x123...", // token address
-   *     amount: 1000000000000000000n // 1 token in wei
-   *   },
-   *   spokeProvider,
-   *   raw // Optional: true = return the raw transaction data, false = exeute and return the transaction hash (default: false)
-   * );
-   *
-   * if (result.ok) {
-   *   const txHash = result.value;
-   *   console.log('Repay transaction hash:', txHash);
-   * } else {
-   *   console.error('Repay failed:', result.error);
-   * }
-   */
-  async createRepayIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>(
-    params: MoneyMarketRepayParams,
-    spokeProvider: S,
-    raw?: R,
+  public async createRepayIntent<K extends SpokeChainKey>(
+    _params: MoneyMarketRepayActionParams<K>,
   ): Promise<
-    Result<TxReturnType<S, R>, MoneyMarketError<'CREATE_REPAY_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
+    Result<TxReturnType<K, false>, MoneyMarketError<'CREATE_REPAY_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
   > {
-    invariant(params.action === 'repay', 'Invalid action');
-    invariant(params.token.length > 0, 'Token is required');
-    invariant(params.amount > 0n, 'Amount must be greater than 0');
+    const { params, walletProvider } = _params;
+    const srcChainKey = params.srcChainKey;
+    const skipSimulation = _params.skipSimulation ?? false;
 
-    const fromChainId = spokeProvider.chainConfig.chain.id;
-    const fromAddress = await spokeProvider.walletProvider.getWalletAddress();
-    const toChainId = params.toChainId ?? fromChainId;
-    const toAddress = params.toAddress ?? fromAddress;
+    try {
+      invariant(params.action === 'repay', 'Invalid action');
+      invariant(params.token.length > 0, 'Token is required');
+      invariant(params.amount > 0n, 'Amount must be greater than 0');
+      invariant(
+        isValidWalletProviderForChainKey(srcChainKey, walletProvider),
+        `Invalid wallet provider for chain key: ${srcChainKey}, walletProvider.chainType: ${walletProvider.chainType}`,
+      );
+      invariant(
+        this.config.isMoneyMarketSupportedToken(srcChainKey, params.token),
+        `Unsupported spoke chain (${srcChainKey}) token: ${params.token}`,
+      );
 
-    invariant(
-      this.configService.isMoneyMarketSupportedToken(fromChainId, params.token),
-      `Unsupported spoke chain (${fromChainId}) token: ${params.token}`,
-    );
+      const toChainId = params.toChainId ?? srcChainKey;
+      const toAddress = params.toAddress ?? params.srcAddress;
 
-    const [fromHubWallet, toHubWallet] = await Promise.all([
-      HubService.getUserHubWalletAddress(fromAddress, fromChainId, this.hubProvider),
-      HubService.getUserHubWalletAddress(toAddress, toChainId, this.hubProvider),
-    ]);
+      const [fromHubWallet, toHubWallet] = await Promise.all([
+        HubService.getUserHubWalletAddress(params.srcAddress, srcChainKey, this.hubProvider),
+        HubService.getUserHubWalletAddress(toAddress, toChainId, this.hubProvider),
+      ]);
 
-    const data: Hex = this.buildRepayData(fromChainId, params.token, params.amount, toHubWallet);
+      const data: Hex = this.buildRepayData(srcChainKey, params.token, params.amount, toHubWallet);
 
-    const txResult = await SpokeService.deposit(
-      {
-        from: fromAddress,
+      const txResult = await this.spokeService.deposit<K, false>({
+        srcChainKey,
+        srcAddress: params.srcAddress as GetAddressType<K>,
         to: fromHubWallet,
-        token: params.token,
+        token: params.token as GetTokenAddressType<K>,
         amount: params.amount,
         data,
-      } as GetSpokeDepositParamsType<S>,
-      spokeProvider,
-      this.hubProvider,
-      raw,
-    );
+        skipSimulation,
+        raw: false,
+        walletProvider,
+      } satisfies DepositParams<K, false>);
 
-    return {
-      ok: true,
-      value: txResult as TxReturnType<S, R>,
-      data: {
-        address: fromHubWallet,
-        payload: data,
-      },
-    };
+      return {
+        ok: true,
+        value: txResult as TxReturnType<K, false>,
+        data: { address: fromHubWallet, payload: data },
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'CREATE_REPAY_INTENT_FAILED',
+          data: { error, payload: params },
+        },
+      };
+    }
   }
 
+  public async createRepayIntentRaw<K extends SpokeChainKey>(
+    _params: MoneyMarketRepayActionParamsRaw<K>,
+  ): Promise<
+    Result<TxReturnType<K, true>, MoneyMarketError<'CREATE_REPAY_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
+  > {
+    const { params } = _params;
+    const srcChainKey = params.srcChainKey;
+    const skipSimulation = _params.skipSimulation ?? false;
+
+    try {
+      invariant(params.action === 'repay', 'Invalid action');
+      invariant(params.token.length > 0, 'Token is required');
+      invariant(params.amount > 0n, 'Amount must be greater than 0');
+      invariant(
+        this.config.isMoneyMarketSupportedToken(srcChainKey, params.token),
+        `Unsupported spoke chain (${srcChainKey}) token: ${params.token}`,
+      );
+
+      const toChainId = params.toChainId ?? srcChainKey;
+      const toAddress = params.toAddress ?? params.srcAddress;
+
+      const [fromHubWallet, toHubWallet] = await Promise.all([
+        HubService.getUserHubWalletAddress(params.srcAddress, srcChainKey, this.hubProvider),
+        HubService.getUserHubWalletAddress(toAddress, toChainId, this.hubProvider),
+      ]);
+
+      const data: Hex = this.buildRepayData(srcChainKey, params.token, params.amount, toHubWallet);
+
+      const txResult = await this.spokeService.deposit<K, true>({
+        srcChainKey,
+        srcAddress: params.srcAddress as GetAddressType<K>,
+        to: fromHubWallet,
+        token: params.token as GetTokenAddressType<K>,
+        amount: params.amount,
+        data,
+        skipSimulation,
+        raw: true,
+      } satisfies DepositParams<K, true>);
+
+      return {
+        ok: true,
+        value: txResult as TxReturnType<K, true>,
+        data: { address: fromHubWallet, payload: data },
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error: {
+          code: 'CREATE_REPAY_INTENT_FAILED',
+          data: { error, payload: params },
+        },
+      };
+    }
+  }
+
+  // ==== build helpers (hub-side call encoding) ==========================================
+
   /**
-   * Build transaction data for supplying to the money market pool
-   * @param fromChainId - The chain ID of the source chain
-   * @param fromToken - The address of the token on source chain
-   * @param amount - The amount to deposit
-   * @param toHubAddress - The user wallet address on the hub chain
-   * @returns {Hex} The transaction data.
+   * Build transaction data for supplying to the money market pool.
    */
   public buildSupplyData(fromChainId: SpokeChainKey, fromToken: string, amount: bigint, toHubAddress: Address): Hex {
     const calls: EvmContractCall[] = [];
 
-    const fromHubAsset = this.configService.getHubAssetInfo(fromChainId, fromToken as Address);
+    const fromHubAsset = this.config.getSpokeTokenFromOriginalAssetAddress(
+      fromChainId,
+      fromToken as OriginalAssetAddress,
+    );
     invariant(fromHubAsset, `hub asset not found for source chain token (token): ${fromToken}`);
 
-    const lendingPool = this.config.lendingPool;
+    const lendingPool = this.config.moneyMarket.lendingPool;
 
-    if (!this.configService.isValidVault(fromHubAsset.hubAsset)) {
+    if (!this.config.isValidVault(fromHubAsset.hubAsset)) {
       // deposit non-vault token into the vault
       calls.push(Erc20Service.encodeApprove(fromHubAsset.hubAsset, fromHubAsset.vault, amount));
       calls.push(EvmVaultTokenService.encodeDeposit(fromHubAsset.vault, fromHubAsset.hubAsset, amount));
@@ -1290,13 +1420,7 @@ export class MoneyMarketService {
   }
 
   /**
-   * Build transaction data for borrowing from the money market pool
-   * @param fromHubAddress - The hub address of the user to borrow from
-   * @param toAddress - The user wallet address on the target chain
-   * @param toToken - The address of the token on the target chain
-   * @param amount - The amount to borrow in hub chain decimals
-   * @param toChainId - The chain ID of the target chain
-   * @returns {Hex} The transaction data.
+   * Build transaction data for borrowing from the money market pool.
    */
   public buildBorrowData(
     fromHubAddress: Address,
@@ -1305,18 +1429,19 @@ export class MoneyMarketService {
     amount: bigint,
     toChainId: SpokeChainKey,
   ): Hex {
-    const toHubAsset = this.configService.getHubAssetInfo(toChainId, toToken);
-    const dstToken = this.configService.getMoneyMarketToken(toChainId, toToken);
+    const toHubAsset = this.config.getSpokeTokenFromOriginalAssetAddress(toChainId, toToken as OriginalAssetAddress);
+    const dstToken = this.config.getMoneyMarketToken(toChainId, toToken);
     invariant(toHubAsset, `hub asset not found for target chain token (toToken): ${toToken}`);
     invariant(dstToken, `Money market token not found for spoke chain (${toChainId}) token: ${toToken}`);
 
     const assetAddress = toHubAsset.hubAsset;
     const vaultAddress = toHubAsset.vault;
-    const bnUSDVault = this.config.bnUSDVault;
-    const bnUSD = this.config.bnUSD;
+    const bnUSDVault = this.config.moneyMarket.bnUSDVault;
+    const bnUSD = this.config.moneyMarket.bnUSD;
+    const lendingPool = this.config.moneyMarket.lendingPool;
 
     const translatedInAmount = EvmVaultTokenService.translateIncomingDecimals(toHubAsset.decimals, amount);
-    const feeAmount = calculateFeeAmount(translatedInAmount, this.config.partnerFee);
+    const feeAmount = calculateFeeAmount(translatedInAmount, this.partnerFee);
     const calls: EvmContractCall[] = [];
 
     if (bnUSDVault.toLowerCase() === vaultAddress.toLowerCase()) {
@@ -1329,14 +1454,14 @@ export class MoneyMarketService {
             referralCode: 0,
             onBehalfOf: fromHubAddress,
           },
-          this.config.lendingPool,
+          lendingPool,
         ),
       );
       calls.push(Erc20Service.encodeApprove(bnUSD, bnUSDVault, translatedInAmount));
       calls.push(EvmVaultTokenService.encodeDeposit(bnUSDVault, bnUSD, translatedInAmount));
 
-      if (this.config.partnerFee && feeAmount) {
-        calls.push(Erc20Service.encodeTransfer(bnUSDVault, this.config.partnerFee.address, feeAmount));
+      if (this.partnerFee && feeAmount) {
+        calls.push(Erc20Service.encodeTransfer(bnUSDVault, this.partnerFee.address, feeAmount));
       }
     } else {
       calls.push(
@@ -1348,12 +1473,12 @@ export class MoneyMarketService {
             referralCode: 0,
             onBehalfOf: fromHubAddress,
           },
-          this.config.lendingPool,
+          lendingPool,
         ),
       );
 
-      if (this.config.partnerFee && feeAmount) {
-        calls.push(Erc20Service.encodeTransfer(vaultAddress, this.config.partnerFee.address, feeAmount));
+      if (this.partnerFee && feeAmount) {
+        calls.push(Erc20Service.encodeTransfer(vaultAddress, this.partnerFee.address, feeAmount));
       }
     }
 
@@ -1363,7 +1488,7 @@ export class MoneyMarketService {
     }
 
     let translatedAmountOut: bigint;
-    if (this.configService.isValidVault(toToken)) {
+    if (this.config.isValidVault(toToken)) {
       translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(
         toHubAsset.decimals,
         translatedInAmount - feeAmount,
@@ -1378,7 +1503,7 @@ export class MoneyMarketService {
     if (toChainId === this.hubProvider.chainConfig.chain.id) {
       if (
         assetAddress.toLowerCase() ===
-        this.configService.spokeChainConfig[toChainId].addresses.wrappedSonic.toLowerCase()
+        this.config.spokeChainConfig[toChainId].addresses.wrappedSonic.toLowerCase()
       ) {
         const withdrawToCall = {
           address: assetAddress,
@@ -1409,13 +1534,7 @@ export class MoneyMarketService {
   }
 
   /**
-   * Build transaction data for withdrawing from the money market pool
-   * @param fromHubAddress - The hub address of the user to withdraw from
-   * @param toAddress - The user wallet address on the target chain
-   * @param toToken - The address of the token on the target chain
-   * @param amount - The amount to withdraw in hub chain decimals
-   * @param toChainId - The chain ID of the target chain
-   * @returns {Hex} The transaction data.
+   * Build transaction data for withdrawing from the money market pool.
    */
   public buildWithdrawData(
     fromHubAddress: Address,
@@ -1426,30 +1545,31 @@ export class MoneyMarketService {
   ): Hex {
     const calls: EvmContractCall[] = [];
 
-    const toHubAsset = this.configService.getHubAssetInfo(toChainId, toToken as Address);
-    const dstToken = this.configService.getMoneyMarketToken(toChainId, toToken);
+    const toHubAsset = this.config.getSpokeTokenFromOriginalAssetAddress(toChainId, toToken as OriginalAssetAddress);
+    const dstToken = this.config.getMoneyMarketToken(toChainId, toToken);
     invariant(toHubAsset, `hub asset not found for target chain token (toToken): ${toToken}`);
     invariant(dstToken, `Money market token not found for spoke chain (${toChainId}) token: ${toToken}`);
 
     const assetAddress = toHubAsset.hubAsset;
     const vaultAddress = toHubAsset.vault;
+    const lendingPool = this.config.moneyMarket.lendingPool;
 
     const translatedInAmount = EvmVaultTokenService.translateIncomingDecimals(toHubAsset.decimals, amount);
 
     calls.push(
       MoneyMarketService.encodeWithdraw(
         { asset: vaultAddress, amount: translatedInAmount, to: fromHubAddress },
-        this.config.lendingPool,
+        lendingPool,
       ),
     );
 
-    if (!this.configService.isValidVault(toToken)) {
+    if (!this.config.isValidVault(toToken)) {
       // if the target token is not the vault token, we need to withdraw the tokens from the vault
       calls.push(EvmVaultTokenService.encodeWithdraw(vaultAddress, assetAddress, translatedInAmount));
     }
 
     let translatedAmountOut: bigint;
-    if (this.configService.isValidVault(toToken)) {
+    if (this.config.isValidVault(toToken)) {
       translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(toHubAsset.decimals, translatedInAmount);
     } else {
       translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(dstToken.decimals, translatedInAmount);
@@ -1458,7 +1578,7 @@ export class MoneyMarketService {
     if (toChainId === this.hubProvider.chainConfig.chain.id) {
       if (
         assetAddress.toLowerCase() ===
-        this.configService.spokeChainConfig[toChainId].addresses.wrappedSonic.toLowerCase()
+        this.config.spokeChainConfig[toChainId].addresses.wrappedSonic.toLowerCase()
       ) {
         const withdrawToCall = {
           address: assetAddress,
@@ -1488,23 +1608,22 @@ export class MoneyMarketService {
   }
 
   /**
-   * Build transaction data for repaying to the money market pool
-   * @param fromChainId - The chain ID of the source chain
-   * @param fromToken - The address of the token on the source chain
-   * @param amount - The amount to repay
-   * @param toHubAddress - The hub address of the user to repay to
-   * @returns {Hex} The transaction data.
+   * Build transaction data for repaying to the money market pool.
    */
   public buildRepayData(fromChainId: SpokeChainKey, fromToken: string, amount: bigint, toHubAddress: Address): Hex {
     const calls: EvmContractCall[] = [];
 
-    const fromHubAsset = this.configService.getHubAssetInfo(fromChainId, fromToken as Address);
+    const fromHubAsset = this.config.getSpokeTokenFromOriginalAssetAddress(
+      fromChainId,
+      fromToken as OriginalAssetAddress,
+    );
     invariant(fromHubAsset, `hub asset not found for source chain token (fromToken): ${fromToken}`);
 
     const assetAddress = fromHubAsset.hubAsset;
     const vaultAddress = fromHubAsset.vault;
-    const bnUSDVault = this.config.bnUSDVault;
-    const bnUSD = this.config.bnUSD;
+    const bnUSDVault = this.config.moneyMarket.bnUSDVault;
+    const bnUSD = this.config.moneyMarket.bnUSD;
+    const lendingPool = this.config.moneyMarket.lendingPool;
 
     const translatedAmountIn = EvmVaultTokenService.translateIncomingDecimals(fromHubAsset.decimals, amount);
 
@@ -1522,38 +1641,31 @@ export class MoneyMarketService {
       // withdraw the bnUSD debt token from the vault
       calls.push(EvmVaultTokenService.encodeWithdraw(bnUSDVault, bnUSD, translatedAmountIn));
     } else {
-      if (!this.configService.isValidVault(fromHubAsset.hubAsset)) {
+      if (!this.config.isValidVault(fromHubAsset.hubAsset)) {
         calls.push(Erc20Service.encodeApprove(assetAddress, vaultAddress, amount));
         calls.push(EvmVaultTokenService.encodeDeposit(vaultAddress, assetAddress, amount));
       }
     }
 
-    calls.push(Erc20Service.encodeApprove(repayToken, this.config.lendingPool, translatedAmountIn));
+    calls.push(Erc20Service.encodeApprove(repayToken, lendingPool, translatedAmountIn));
     calls.push(
       MoneyMarketService.encodeRepay(
         { asset: repayToken, amount: translatedAmountIn, interestRateMode: 2n, onBehalfOf: toHubAddress },
-        this.config.lendingPool,
+        lendingPool,
       ),
     );
     return encodeContractCalls(calls);
   }
 
+  // ==== static encoders (unchanged) =====================================================
+
   /**
-   * Calculate aToken amount from actual amount using liquidityIndex
-   * @param amount - The actual amount
-   * @param normalizedIncome - The current normalized income from reserve data
-   * @returns {bigint} The equivalent aToken amount
+   * Calculate aToken amount from actual amount using liquidityIndex.
    */
   static calculateATokenAmount(amount: bigint, normalizedIncome: bigint): bigint {
     return (amount * 10n ** 27n) / normalizedIncome + 1n;
   }
 
-  /**
-   * Encodes a supply transaction for a money market pool.
-   * @param {MoneyMarketEncodeWithdrawParams} params - The parameters for the supply transaction.
-   * @param {Address} lendingPool - The address of the lending pool contract.
-   * @returns {EvmContractCall} The encoded contract call.
-   */
   public static encodeSupply(params: MoneyMarketEncodeSupplyParams, lendingPool: Address): EvmContractCall {
     return {
       address: lendingPool,
@@ -1566,15 +1678,6 @@ export class MoneyMarketService {
     };
   }
 
-  /**
-   * Encodes a withdraw transaction from a pool.
-   * @param {MoneyMarketEncodeWithdrawParams} params - The parameters for the withdraw transaction.
-   * @param {Address} params.asset - The address of the asset to withdraw.
-   * @param {bigint} params.amount - The amount of the asset to withdraw.
-   * @param {Address} params.to - The address that will receive the withdrawn assets.
-   * @param {Address} lendingPool - The address of the lending pool contract.
-   * @returns {EvmContractCall} The encoded contract call.
-   */
   public static encodeWithdraw(params: MoneyMarketEncodeWithdrawParams, lendingPool: Address): EvmContractCall {
     return {
       address: lendingPool,
@@ -1587,12 +1690,6 @@ export class MoneyMarketService {
     };
   }
 
-  /**
-   * Encodes a borrow transaction from a pool.
-   * @param {MoneyMarketEncodeBorrowParams} params - The parameters for the borrow transaction.
-   * @param {Address} lendingPool - The address of the lending pool contract.
-   * @returns {EvmContractCall} The encoded contract call.
-   */
   public static encodeBorrow(params: MoneyMarketEncodeBorrowParams, lendingPool: Address): EvmContractCall {
     return {
       address: lendingPool,
@@ -1605,16 +1702,6 @@ export class MoneyMarketService {
     };
   }
 
-  /**
-   * Encodes a repay transaction for a pool.
-   * @param {MoneyMarketEncodeRepayParams} params - The parameters for the repay transaction.
-   * @param {Address} params.asset - The address of the borrowed asset to repay.
-   * @param {bigint} params.amount - The amount to repay. Use type(uint256).max to repay the entire debt.
-   * @param {number} params.interestRateMode - The interest rate mode (2 for Variable).
-   * @param {Address} params.onBehalfOf - The address of the user who will get their debt reduced/removed.
-   * @param {Address} lendingPool - The address of the lending pool contract.
-   * @returns {EvmContractCall} The encoded contract call.
-   */
   public static encodeRepay(params: MoneyMarketEncodeRepayParams, lendingPool: Address): EvmContractCall {
     return {
       address: lendingPool,
@@ -1627,12 +1714,6 @@ export class MoneyMarketService {
     };
   }
 
-  /**
-   * Encodes a repayWithATokens transaction for a pool.
-   * @param {MoneyMarketEncodeRepayWithATokensParams} params - The parameters for the repayWithATokens transaction.
-   * @param {Address} lendingPool - The address of the lending pool contract.
-   * @returns {EvmContractCall} The encoded contract call.
-   */
   public static encodeRepayWithATokens(
     params: MoneyMarketEncodeRepayWithATokensParams,
     lendingPool: Address,
@@ -1648,13 +1729,6 @@ export class MoneyMarketService {
     };
   }
 
-  /**
-   * Encodes a setUserUseReserveAsCollateral transaction.
-   * @param asset - The address of the underlying asset to be used as collateral.
-   * @param useAsCollateral - True to enable the asset as collateral, false to disable.
-   * @param lendingPool - The address of lending pool contract
-   * @returns The encoded contract call.
-   */
   public static encodeSetUserUseReserveAsCollateral(
     asset: Address,
     useAsCollateral: boolean,
@@ -1671,29 +1745,17 @@ export class MoneyMarketService {
     };
   }
 
-  /**
-   * Get the list of all supported money market tokens (supply / borrow tokens) for a given spoke chain ID
-   * @param chainId The chain ID
-   * @returns {readonly Token[]} - Array of supported tokens
-   */
-  public getSupportedTokensByChainId(chainId: SpokeChainKey): readonly Token[] {
-    return this.configService.getSupportedMoneyMarketTokensByChainId(chainId);
+  // ==== info getters =====================================================================
+
+  public getSupportedTokensByChainId(chainId: SpokeChainKey): readonly XToken[] {
+    return this.config.getSupportedMoneyMarketTokensByChainId(chainId);
   }
 
-  /**
-   * Get the list of all supported money market tokens (supply / borrow tokens)
-   * @returns {GetMoneyMarketTokensApiResponse} - Object containing all supported tokens
-   */
   public getSupportedTokens(): GetMoneyMarketTokensApiResponse {
-    return this.configService.getSupportedMoneyMarketTokens();
+    return this.config.getSupportedMoneyMarketTokens();
   }
 
-  /**
-   * Get the list of all supported money market reserves (supply / borrow reserves)
-   * NOTE: reserve addresses are on the hub chain and can be of type vault, erc20, etc.
-   * @returns {readonly Address[]} - Array of supported reserves
-   */
   public getSupportedReserves(): readonly Address[] {
-    return this.configService.getMoneyMarketReserveAssets();
+    return this.config.getMoneyMarketReserveAssets();
   }
 }
