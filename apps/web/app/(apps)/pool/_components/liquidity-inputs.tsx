@@ -21,6 +21,7 @@ import type { PoolData, PoolSpokeAssets } from '@sodax/sdk';
 import { cn, formatTokenAmount, validateChainAddress } from '@/lib/utils';
 import { formatUnits, parseUnits } from 'viem';
 import { SupplyDialog } from './supply-dialog';
+import RecoverLockedSodaDialog from './recover-locked-soda-dialog';
 import { SONIC_MAINNET_CHAIN_ID, STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
 import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
 import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
@@ -388,16 +389,6 @@ export function LiquidityInputs({
               {isRequestingTrustline ? 'Adding Stellar Trustline' : 'Add Stellar Trustline'}
               {isRequestingTrustline && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
             </Button>
-          ) : hasWithdrawableWaLocSoda ? (
-            <Button
-              variant="cherry"
-              onClick={() => void handleWithdrawWaLocSoda()}
-              className="px-6"
-              disabled={withdrawMutation.isPending}
-            >
-              {withdrawMutation.isPending ? 'Recovering SODA' : 'Recover locked SODA'}
-              {withdrawMutation.isPending && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
-            </Button>
           ) : !hasNoSodaBalance && hasNoXSodaBalance ? (
             <Button variant="cherry" onClick={handleGetXSoda} className="px-6">
               Get xSODA
@@ -434,6 +425,11 @@ export function LiquidityInputs({
         onOpenChange={setIsSupplyDialogOpen}
         poolData={poolData}
         poolSpokeAssets={poolSpokeAssets}
+      />
+      <RecoverLockedSodaDialog
+        open={hasWithdrawableWaLocSoda}
+        onRecover={() => void handleWithdrawWaLocSoda()}
+        isRecovering={withdrawMutation.isPending}
       />
       <ErrorDialog
         open={isErrorDialogOpen}
