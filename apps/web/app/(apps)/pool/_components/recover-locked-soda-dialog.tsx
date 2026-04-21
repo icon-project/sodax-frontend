@@ -7,20 +7,26 @@ import { XIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { DISCORD_ROUTE } from '@/constants/routes';
+import { formatTokenAmount } from '@/lib/utils';
 import Image from 'next/image';
 
 const SHAKE_DURATION_MS = 500;
+const RECOVER_DISPLAY_DECIMALS = 2;
 
 type RecoverLockedSodaDialogProps = {
   open: boolean;
   onRecover: () => void;
   isRecovering: boolean;
+  recoverAmount: bigint;
+  recoverDecimals: number;
 };
 
 export default function RecoverLockedSodaDialog({
   open,
   onRecover,
   isRecovering,
+  recoverAmount,
+  recoverDecimals,
 }: RecoverLockedSodaDialogProps): React.JSX.Element {
   const [isShaking, setIsShaking] = useState<boolean>(false);
 
@@ -45,7 +51,7 @@ export default function RecoverLockedSodaDialog({
           <div className="self-stretch flex justify-start items-center gap-2">
             <Image src="/soda-yellow-sm.png" alt="SODAX Symbol" width={16} height={16} className="mix-blend-multiply" />
             <div className="text-espresso text-(length:--body-super-comfortable) font-bold font-['InterBold'] leading-5">
-              Your SODA needs a quick recovery
+              Some SODA needs a quick recovery
             </div>
           </div>
 
@@ -59,7 +65,9 @@ export default function RecoverLockedSodaDialog({
             disabled={isRecovering}
             className="self-stretch h-10 px-6 py-2 bg-cherry-bright rounded-[240px] flex justify-center items-center gap-1 text-white text-(length:--body-comfortable) font-medium font-['InterMedium'] leading-5 cursor-pointer"
           >
-            {isRecovering ? 'Recovering now' : 'Recover now'}
+            {isRecovering
+              ? `Recovering ${formatTokenAmount(recoverAmount, recoverDecimals, RECOVER_DISPLAY_DECIMALS)} SODA`
+              : `Recover ${formatTokenAmount(recoverAmount, recoverDecimals, RECOVER_DISPLAY_DECIMALS)} SODA`}
             {isRecovering && <Loader2 className="w-4 h-4 animate-spin ml-2" />}
           </Button>
 

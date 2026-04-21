@@ -116,7 +116,7 @@ Write code that reads like well-written prose. Every name should tell the reader
 - **State**: Zustand stores in `stores/` (app-store for chain/page state, modal-store for modals). Server state via `@tanstack/react-query`.
 - **Provider stack** (in `providers/providers.tsx`): `SodaxProvider` → `QueryClientProvider` → `SodaxWalletProvider`
 - **UI**: shadcn/ui components (Radix UI) in `components/ui/`, shared components in `components/shared/`
-- **Hooks**: Feature-specific hooks in `hooks/` (chain balances, token prices, APY, etc.)
+- **Hooks**: Cross-route hooks live in `hooks/` (chain balances, token prices, APY, etc.). Route-scoped hooks live in the route's `_hooks/` folder (e.g. `app/(apps)/pool/_hooks/`). Route-scoped constants live in `_constants/`. The leading underscore is Next.js's private-folder convention — it opts out of routing.
 - **CMS**: TipTap editor, Notion integration, MongoDB backend in `lib/`
 
 ### SDK Packages
