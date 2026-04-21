@@ -71,7 +71,7 @@ export function NavbarSpotlight({ className = '' }: { className?: string }) {
         transition={TEXT_COLOR_TRANSITION}
         style={{ color: TEXT_COLOR_IDLE }}
       >
-        Now on Kraken!
+        Soon on Kraken!
         <motion.span
           aria-hidden
           className="absolute left-0 top-0"
@@ -99,7 +99,7 @@ export function NavbarSpotlight({ className = '' }: { className?: string }) {
               ease: 'easeInOut',
             }}
           >
-            Now on Kraken!
+            Soon on Kraken!
           </motion.span>
         </motion.span>
       </motion.p>
@@ -132,7 +132,9 @@ export function NavbarSpotlight({ className = '' }: { className?: string }) {
           opacity: isRevealed ? 1 : 0,
           x: isRevealed ? REVEALED_OFFSET_X : HIDDEN_OFFSET_X,
         }}
-        transition={isRevealed ? { ...REVEAL_SPRING, delay: TOKEN_STAGGER_S } : EXIT_TWEEN}
+        transition={
+          isRevealed ? { ...REVEAL_SPRING, ...(isHovering ? { delay: TOKEN_STAGGER_S } : {}) } : EXIT_TWEEN
+        }
       >
         <Image src="/soda-yellow.png" alt="" width={13} height={13} />
       </motion.div>
@@ -143,7 +145,7 @@ export function NavbarSpotlight({ className = '' }: { className?: string }) {
 export function NavbarSpotlightStatic({ className = '' }: { className?: string }) {
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <p className="font-[InterRegular] text-sm leading-[1.4] text-white whitespace-nowrap">Now on Kraken!</p>
+      <p className="font-[InterRegular] text-sm leading-[1.4] text-white whitespace-nowrap">Soon on Kraken!</p>
       <KrakenIcon width={16} height={13} fill="white" />
     </div>
   );
