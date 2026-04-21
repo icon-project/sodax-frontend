@@ -38,8 +38,10 @@ const BUTTON_STYLE: Record<BannerVariant, string> = {
   split: "px-6 font-['InterMedium'] cursor-pointer",
 };
 
-const BANNER_IMAGE_CLASSNAME =
-  'mix-blend-multiply absolute bottom-0 left-1/2 transform -translate-x-1/2 w-150 max-w-150 z-0';
+const BANNER_IMAGE_CLASSNAME: Record<BannerVariant, string> = {
+  full: 'absolute bottom-0 left-1/2 -translate-x-1/2 w-[468px] h-[212px] overflow-hidden z-0',
+  split: 'mix-blend-multiply absolute bottom-0 left-1/2 transform -translate-x-1/2 w-150 max-w-150 z-0',
+};
 
 export default function HoldersBanner(props: HoldersBannerProps): ReactElement {
   const { variant, title, subtitle } = props;
@@ -50,7 +52,7 @@ export default function HoldersBanner(props: HoldersBannerProps): ReactElement {
     <div className={cn(CONTAINER_BASE, CONTAINER_WIDTH[variant], hasMedia ? TALL_LAYOUT[variant] : SHORT_LAYOUT)}>
       {showTexture && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-60 -scale-y-100 z-0">
-          <div className="relative w-[800px] h-[800px] max-w-none -translate-y-[188px]">
+          <div className="relative w-[800px] h-[800px] max-w-none">
             <Image src="/landing/concentric-rays-outer.svg" alt="" fill className="object-contain" />
             <Image
               src="/landing/concentric-rays-inner.svg"
@@ -62,8 +64,19 @@ export default function HoldersBanner(props: HoldersBannerProps): ReactElement {
           </div>
         </div>
       )}
-      {hasMedia && (
-        <Image className={BANNER_IMAGE_CLASSNAME} src={props.imageSrc} alt="" width={990} height={660} />
+      {hasMedia && variant === 'full' && (
+        <div className={BANNER_IMAGE_CLASSNAME.full}>
+          <Image
+            fill
+            sizes="468px"
+            className="mix-blend-multiply object-cover object-top"
+            src={props.imageSrc}
+            alt=""
+          />
+        </div>
+      )}
+      {hasMedia && variant === 'split' && (
+        <Image className={BANNER_IMAGE_CLASSNAME.split} src={props.imageSrc} alt="" width={990} height={660} />
       )}
       <div className={cn(TITLE_STYLE[variant], 'z-10')}>{title}</div>
       <p className={cn(SUBTITLE_STYLE[variant], 'z-10')}>{subtitle}</p>
