@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import type { ChainsConfig } from '../types/config.js';
-import type { RpcConfig } from '@sodax/types';
+import { type RpcConfig, STACKS_MAINNET_CHAIN_ID } from '@sodax/types';
 import { StacksXService } from '../xchains/stacks/StacksXService.js';
 
 /**
@@ -13,7 +13,7 @@ import { StacksXService } from '../xchains/stacks/StacksXService.js';
 export function useStacksHydration(chains: ChainsConfig, rpcConfig: RpcConfig | undefined) {
   useEffect(() => {
     if (chains.STACKS) {
-      StacksXService.getInstance(rpcConfig?.stacks);
+      StacksXService.getInstance(rpcConfig?.[STACKS_MAINNET_CHAIN_ID]);
     }
-  }, [chains.STACKS, rpcConfig?.stacks]);
+  }, [chains.STACKS, rpcConfig?.[STACKS_MAINNET_CHAIN_ID]]);
 }

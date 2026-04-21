@@ -28,11 +28,15 @@ export class NearXService extends XService {
     });
   }
 
+  /**
+   * @param rpcUrl - Only applied on first call (matches InjectiveXService
+   *   semantics). Subsequent calls return the existing instance unchanged.
+   *   Pass the desired RPC via `SodaxWalletProvider.config.rpcConfig` once
+   *   at app init.
+   */
   public static getInstance(rpcUrl?: string): NearXService {
     if (!NearXService.instance) {
       NearXService.instance = new NearXService(rpcUrl);
-    } else if (rpcUrl) {
-      NearXService.instance.rpcUrl = rpcUrl;
     }
     return NearXService.instance;
   }

@@ -105,10 +105,12 @@ export type InjectiveRpcConfig = {
 export type StacksNetworkName = 'mainnet' | 'testnet' | 'devnet' | 'mocknet';
 
 /**
- * Structural mirror of `StacksNetwork` from @stacks/network. Kept local to avoid
- * importing external types per @sodax/types rules. Real `StacksNetwork` objects
- * satisfy this via TS structural typing, so consumers can pass `networkFrom(...)`
- * output directly.
+ * Structural mirror of `StacksNetwork` from @stacks/network (modeled against
+ * @stacks/network@7.3.1). Kept local to avoid importing external types per
+ * @sodax/types rules. Real `StacksNetwork` objects satisfy this via TS
+ * structural typing, so consumers can pass `networkFrom(...)` output directly.
+ * If @stacks/network adds new required fields, consumers will get a compile
+ * error until this type is updated.
  */
 export type StacksNetworkLike = {
   chainId: number;

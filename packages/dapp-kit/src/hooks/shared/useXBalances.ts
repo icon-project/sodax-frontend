@@ -47,11 +47,9 @@ export function useXBalances({
     // can collide — e.g. scam tokens copying legitimate ticker).
     queryKey: ['xBalances', xChainId, xTokens.map(x => [x.symbol, x.address] as const), address],
     queryFn: async () => {
-      if (!xService) {
-        console.warn(`[useXBalances] xService is undefined for chain ${xChainId} — returning empty balances`);
-        return {};
-      }
-
+      // Defensive fallback for tests or manual refetch paths that bypass `enabled`.
+      // The `enabled` gate below already skips this queryFn when xService is undefined.
+      if (!xService) return {};
       return xService.getBalances(address, xTokens);
     },
     enabled: !!xService && !!address && xTokens.length > 0,
