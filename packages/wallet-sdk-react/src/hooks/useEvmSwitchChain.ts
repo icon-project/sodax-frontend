@@ -81,7 +81,11 @@ export const useEvmSwitchChain = (expectedXChainId: ChainId): UseEvmSwitchChainR
 const useEvmSwitchChainInner = (expectedXChainId: ChainId): UseEvmSwitchChainReturn => {
   const xChainType = getXChainType(expectedXChainId);
   const expectedChainId = baseChainInfo[expectedXChainId].chainId;
-  assert(typeof expectedChainId === 'number', '[useEvmSwitchChain] expected numeric EVM chainId');
+  // EVM chain uses expectedChainId for switchChain(); assert it's numeric.
+  // Injective uses Ethereum mainnet separately. Other chain types — hook is a no-op.
+  if (xChainType === 'EVM') {
+    assert(typeof expectedChainId === 'number', '[useEvmSwitchChain] EVM chain must have numeric chainId');
+  }
 
   const xService = useXService('INJECTIVE');
   const injectiveXService = isInjectiveXService(xService) ? xService : undefined;
@@ -103,7 +107,7 @@ const useEvmSwitchChainInner = (expectedXChainId: ChainId): UseEvmSwitchChainRet
   const handleSwitchChain = useCallback(() => {
     if (xChainType === 'INJECTIVE') {
       switchEthereumChain();
-    } else {
+    } else if (xChainType === 'EVM' && typeof expectedChainId === 'number') {
       switchChain({ chainId: expectedChainId });
     }
   }, [switchChain, expectedChainId, xChainType]);
