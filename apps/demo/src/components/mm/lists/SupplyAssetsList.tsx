@@ -5,10 +5,11 @@ import {
   useUserFormattedSummary,
   useUserReservesData,
   useATokensBalances,
+  useXBalances,
 } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useWalletProvider, useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
+import { getXChainType, useWalletProvider, useXAccount, useXService } from '@sodax/wallet-sdk-react';
 import { formatUnits, isAddress } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
@@ -49,11 +50,13 @@ export function SupplyAssetsList(): ReactElement {
   const { address } = useXAccount(selectedChainId);
   const walletProvider = useWalletProvider(selectedChainId);
   const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
+  const xService = useXService(getXChainType(selectedChainId));
   const {
     data: balances,
     isLoading: isBalancesLoading,
     refetch: refetchWalletBalances,
   } = useXBalances({
+    xService,
     xChainId: selectedChainId,
     xTokens: tokens,
     address,

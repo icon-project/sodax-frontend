@@ -60,6 +60,22 @@ export interface WalletAddressProvider {
   getPublicKey?: () => Promise<string>;
 }
 
+/**
+ * Chain-aware service contract.
+ *
+ * Acts as the shared interface between `@sodax/wallet-sdk-react` (implementation via
+ * the abstract `XService` class) and consumers such as `@sodax/dapp-kit`, so cross-package
+ * code depends on the type contract here rather than on the concrete class or its package.
+ */
+export interface IXService {
+  readonly xChainType: ChainType;
+  getBalance(address: string | undefined, xToken: XToken): Promise<bigint>;
+  getBalances(
+    address: string | undefined,
+    xTokens: readonly XToken[],
+  ): Promise<Record<string, bigint>>;
+}
+
 export type HttpUrl = `http://${string}` | `https://${string}`;
 
 // Type for Stellar RPC configuration with horizon and soroban URLs
