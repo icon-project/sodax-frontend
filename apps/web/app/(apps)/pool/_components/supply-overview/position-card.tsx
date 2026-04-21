@@ -19,6 +19,7 @@ import { motion } from 'motion/react';
 import { CircleEllipsisIcon } from 'lucide-react';
 import { ManagePositionDialog } from '../manage-dialog';
 import { SwitchChainDialog } from '@/components/shared/switch-chain-dialog';
+import { usePoolActions } from '../../_stores/pool-store-provider';
 import type { XToken } from '@sodax/types';
 import { getUserAPY } from './utils';
 
@@ -65,6 +66,13 @@ export function PositionCard({
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isManageDialogOpen, setIsManageDialogOpen] = useState<boolean>(false);
   const [isSwitchChainDialogOpen, setIsSwitchChainDialogOpen] = useState<boolean>(false);
+  const { setIsManagePositionDialogOpen } = usePoolActions();
+  useEffect((): (() => void) | void => {
+    if (isManageDialogOpen) {
+      setIsManagePositionDialogOpen(true);
+      return () => setIsManagePositionDialogOpen(false);
+    }
+  }, [isManageDialogOpen, setIsManagePositionDialogOpen]);
   const positionKey = `${chainId}-${tokenId}`;
   const spokeChainId = resolveSpokeChainId(chainId);
   const chainName = chainIdToChainName(spokeChainId as ChainId);
