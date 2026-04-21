@@ -9,25 +9,51 @@ import {
   type IconAddress,
   type EvmContractCall,
   type IcxTokenType,
+  type IconChainKey,
+  type GetWalletProviderType,
+  type SonicChainKey,
 } from '@sodax/types';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 
-export type IcxMigrateParams = {
-  address: IcxTokenType; // The ICON address of the ICX or wICX token to migrate
-  amount: bigint; // The amount of ICX or wICX to migrate
-  to: Address; // The address that will receive the migrated assets
+export type IcxMigrateAction = {
+  params: IcxMigrateParams;
+  walletProvider: GetWalletProviderType<IconChainKey>;
+  skipSimulation?: boolean;
+  timeout?: number;
 };
 
+export type IcxMigrateActionRaw = {
+  params: IcxMigrateParams;
+  skipSimulation?: boolean;
+};
+
+export type IcxMigrateParams = {
+  srcAddress: IconAddress;
+  srcChainKey: IconChainKey; // should be ChainKeys.ICON_MAINNET
+  address: IcxTokenType; // The ICON address of the ICX or wICX token to migrate
+  amount: bigint; // The amount of ICX or wICX to migrate
+  dstAddress: Address; // The address that will receive the migrated assets
+};
+
+export type IcxRevertMigrationAction = {
+  params: IcxCreateRevertMigrationParams;
+  walletProvider: GetWalletProviderType<SonicChainKey>;
+  timeout?: number;
+  skipSimulation?: boolean;
+}
+
 export type IcxCreateRevertMigrationParams = {
+  srcAddress: Address; // should be Sonic original address
+  srcChainKey: SonicChainKey; // should be ChainKeys.SONIC_MAINNET
   amount: bigint; // The amount of wICX to migrate
-  to: IconEoaAddress; // The address that will receive the migrated SODA tokens as ICX
+  dstAddress: IconEoaAddress; // The address that will receive the migrated SODA tokens as ICX
 };
 
 export type IcxRevertMigrationParams = {
   wICX: IconAddress; // The ICON address of the wICX token
   amount: bigint; // The amount of SODA tokens to migrate to ICX
   userWallet: Address; // The hub wallet address that will migrate assets
-  to: Hex; // The Icon address that will receive the migrated SODA tokens as ICX
+  dstAddress: Hex; // The Icon address that will receive the migrated SODA tokens as ICX
 };
 
 export type IcxMigrationServiceConstructorParams = {
@@ -83,7 +109,7 @@ export class IcxMigrationService {
     calls.push(
       Erc20Service.encodeApprove(token.hubAsset, this.hubProvider.chainConfig.addresses.icxMigration, params.amount),
     );
-    calls.push(this.encodeMigrate(params.amount, params.to));
+    calls.push(this.encodeMigrate(params.amount, params.dstAddress));
     return encodeContractCalls(calls);
   }
 
@@ -109,7 +135,7 @@ export class IcxMigrationService {
     calls.push(
       EvmAssetManagerService.encodeTransfer(
         token.hubAsset,
-        params.to,
+        params.dstAddress,
         params.amount,
         this.hubProvider.chainConfig.addresses.assetManager,
       ),

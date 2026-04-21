@@ -44,6 +44,7 @@ import {
   type SendMessageParams,
   ConfigService,
   type Erc20IsAllowanceParams,
+  type DepositParams,
 } from '../../../index.js';
 
 export type SonicSpokeDepositParams<Raw extends boolean> = {
@@ -225,7 +226,7 @@ export class SonicSpokeService {
    * @returns {Promise<TxReturnType<SonicChainKey, Raw>>} A promise that resolves to the transaction hash
    */
   public static async deposit<Raw extends boolean>(
-    params: SonicSpokeDepositParams<Raw>,
+    params: DepositParams<SonicChainKey, Raw>,
   ): Promise<TxReturnType<SonicChainKey, Raw>> {
     invariant(isSonicChainKeyType(params.srcChainKey), '[SonicSpokeService] invalid spoke provider');
 

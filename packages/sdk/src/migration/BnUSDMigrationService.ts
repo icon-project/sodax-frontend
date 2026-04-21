@@ -7,25 +7,40 @@ import {
   EvmVaultTokenService,
 } from '../index.js';
 import invariant from 'tiny-invariant';
-import type { EvmContractCall, SpokeChainKey } from '@sodax/types';
+import type { EvmContractCall, GetWalletProviderType, SpokeChainKey } from '@sodax/types';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 
-export type UnifiedBnUSDMigrateParams = {
-  srcChainId: SpokeChainKey; // The source chain ID where bnUSD (legacy or new) token exists
+export type UnifiedBnUSDMigrateAction<K extends SpokeChainKey> = {
+  params: UnifiedBnUSDMigrateParams<K>;
+  walletProvider: GetWalletProviderType<K>;
+  unchecked?: boolean;
+  skipSimulation?: boolean;
+  timeout?: number;
+};
+
+export type UnifiedBnUSDMigrateActionRaw<K extends SpokeChainKey> = {
+  params: UnifiedBnUSDMigrateParams<K>;
+  unchecked?: boolean;
+  skipSimulation?: boolean;
+};
+
+export type UnifiedBnUSDMigrateParams<K extends SpokeChainKey> = {
+  srcAddress: string;
+  srcChainKey: K; // The source chain ID where bnUSD (legacy or new) token exists
   srcbnUSD: string; // The spoke address of the bnUSD source token to migrate
-  dstChainId: SpokeChainKey; // The destination chain ID for the migration
+  dstChainKey: SpokeChainKey; // The destination chain ID for the migration
   dstbnUSD: string; // The spoke address of the bnUSD destination token to receive
   amount: bigint; // The amount of bnUSD to migrate
-  to: string; // The spoke address that will receive the migrated new bnUSD tokens
+  dstAddress: string; // The spoke address that will receive the migrated new bnUSD tokens
 };
 
 type FormattedBnUSDMigrateParams = {
-  srcChainId: SpokeChainKey; // The source chain ID where the legacy bnUSD token exists
+  srcChainKey: SpokeChainKey; // The source chain ID where the legacy bnUSD token exists
   legacybnUSD: string; // The spoke address of the legacy bnUSD token to migrate
   newbnUSD: string; // The spoke address of the new bnUSD token to receive
   amount: bigint; // The amount of legacy bnUSD to migrate
-  to: Hex; // The encoded spoke address (translated to hub chain) that will receive the migrated new bnUSD tokens
-  dstChainId: SpokeChainKey; // The destination chain ID for the migration
+  dstAddress: Hex; // The encoded spoke address (translated to hub chain) that will receive the migrated new bnUSD tokens
+  dstChainKey: SpokeChainKey; // The destination chain ID for the migration
 };
 
 export type BnUSDRevertMigrationParams = {
@@ -33,8 +48,8 @@ export type BnUSDRevertMigrationParams = {
   legacybnUSD: string; // The ICON address of the legacy bnUSD token to receive
   newbnUSD: string; // The ICON address of the new bnUSD token to migrate from
   amount: bigint; // The amount of new bnUSD tokens to migrate back
-  to: Hex; // The spoke chain address that will receive the migrated legacy bnUSD tokens
-  dstChainId: SpokeChainKey; // The destination chain ID for the migration
+  dstAddress: Hex; // The spoke chain address that will receive the migrated legacy bnUSD tokens
+  dstChainKey: SpokeChainKey; // The destination chain ID for the migration
 };
 
 export type BnUSDMigrationServiceConstructorParams = {
@@ -68,7 +83,7 @@ export class BnUSDMigrationService {
    */
   public migrateData(params: FormattedBnUSDMigrateParams): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = this.config.getSpokeTokenFromOriginalAssetAddress(params.srcChainId, params.legacybnUSD);
+    const assetConfig = this.config.getSpokeTokenFromOriginalAssetAddress(params.srcChainKey, params.legacybnUSD);
     invariant(assetConfig, `hub asset not found for legacy bnUSD token: ${params.legacybnUSD}`);
 
     const bnUSDVault = this.config.moneyMarket.bnUSDVault;
@@ -84,12 +99,12 @@ export class BnUSDMigrationService {
 
     // check if bnUSD is getting migrated to hub chain bnUSD vault
     if (params.newbnUSD.toLowerCase() === bnUSDVault.toLowerCase()) {
-      calls.push(Erc20Service.encodeTransfer(bnUSDVault, params.to, translatedAmount));
+      calls.push(Erc20Service.encodeTransfer(bnUSDVault, params.dstAddress, translatedAmount));
       return encodeContractCalls(calls);
     }
 
     // Withdraw to new bnUSD
-    const dstAssetConfig = this.config.getSpokeTokenFromOriginalAssetAddress(params.dstChainId, params.newbnUSD);
+    const dstAssetConfig = this.config.getSpokeTokenFromOriginalAssetAddress(params.dstChainKey, params.newbnUSD);
     invariant(dstAssetConfig, `hub asset not found for new bnUSD token: ${params.newbnUSD}`);
 
     calls.push(EvmVaultTokenService.encodeWithdraw(bnUSDVault, dstAssetConfig.hubAsset, translatedAmount));
@@ -100,7 +115,7 @@ export class BnUSDMigrationService {
     calls.push(
       EvmAssetManagerService.encodeTransfer(
         dstAssetConfig.hubAsset,
-        params.to,
+        params.dstAddress,
         translatedAmountOut,
         this.hubProvider.chainConfig.addresses.assetManager,
       ),
@@ -137,7 +152,7 @@ export class BnUSDMigrationService {
     const translatedAmount = EvmVaultTokenService.translateIncomingDecimals(decimals, params.amount);
 
     // Migrate to legacy bnUSD vault'
-    const dstAssetConfig = this.config.getSpokeTokenFromOriginalAssetAddress(params.dstChainId, params.legacybnUSD);
+    const dstAssetConfig = this.config.getSpokeTokenFromOriginalAssetAddress(params.dstChainKey, params.legacybnUSD);
     invariant(dstAssetConfig, `hub asset not found for new bnUSD token: ${params.legacybnUSD}`);
 
     calls.push(EvmVaultTokenService.encodeWithdraw(bnUSDVault, dstAssetConfig.vault, translatedAmount));
@@ -151,7 +166,7 @@ export class BnUSDMigrationService {
     calls.push(
       EvmAssetManagerService.encodeTransfer(
         dstAssetConfig.hubAsset,
-        params.to,
+        params.dstAddress,
         translatedAmountOut,
         this.hubProvider.chainConfig.addresses.assetManager,
       ),

@@ -27,10 +27,10 @@ import {
   isSolanaChainKeyType,
   isBitcoinChainKeyType,
   isValidWalletProviderForChainKey,
+  type SpokeApproveParams,
 } from '../index.js';
 import type { HubProvider } from '../shared/types/types.js';
 import {
-  ChainKeys,
   type SpokeChainKey,
   type XToken,
   type Address,
@@ -368,20 +368,26 @@ export class MoneyMarketService {
 
       // Target chain is Stellar with a specific recipient: both recipient and (if src is Stellar) sender
       // must have sufficient trustline for the token.
-      if (params.toChainId === ChainKeys.STELLAR_MAINNET && params.toAddress) {
-        const targetHasTrustline = await this.spokeService.stellarSpokeService.hasSufficientTrustline(
-          params.token,
-          params.amount,
-          params.toAddress,
-        );
+      if (params.toChainId && isStellarChainKeyType(params.toChainId) && params.toAddress) {
+        const targetHasTrustline = (await this.spokeService.isAllowanceValid({
+          srcChainKey: params.toChainId,
+          token: params.token,
+          amount: params.amount,
+          owner: params.toAddress,
+        } satisfies SpokeIsAllowanceValidParamsStellar)) satisfies Result<boolean>;
 
         let srcHasTrustline = true;
         if (isStellarChainKeyType(srcChainKey)) {
-          srcHasTrustline = await this.spokeService.stellarSpokeService.hasSufficientTrustline(
-            params.token,
-            params.amount,
-            params.srcAddress,
-          );
+          const allowanceResult = await this.spokeService.isAllowanceValid({
+            srcChainKey,
+            token: params.token,
+            amount: params.amount,
+            owner: params.srcAddress,
+          } satisfies SpokeIsAllowanceValidParamsStellar);
+
+          if (!allowanceResult.ok) return allowanceResult;
+
+          srcHasTrustline = allowanceResult.value;
         }
 
         return { ok: true, value: targetHasTrustline && srcHasTrustline };
@@ -399,10 +405,7 @@ export class MoneyMarketService {
       // Allowance on EVM (hub or spoke) is required only for supply / repay.
       if (params.action === 'supply' || params.action === 'repay') {
         if (isHubChainKeyType(srcChainKey)) {
-          const spender = await HubService.getUserRouter(
-            params.srcAddress as Address,
-            this.hubProvider,
-          );
+          const spender = await HubService.getUserRouter(params.srcAddress as Address, this.hubProvider);
           return await this.spokeService.isAllowanceValid({
             srcChainKey,
             token: params.token,
@@ -450,19 +453,17 @@ export class MoneyMarketService {
       );
 
       if (isStellarChainKeyType(srcChainKey)) {
-        const result = await this.spokeService.stellarSpokeService.requestTrustline({
+        return (await this.spokeService.approve({
           srcChainKey,
-          srcAddress: params.srcAddress,
           token: params.token,
           amount: params.amount,
+          owner: params.srcAddress as GetAddressType<StellarChainKey>,
           raw: false,
           walletProvider: walletProvider as GetWalletProviderType<StellarChainKey>,
-        });
-
-        return {
-          ok: true,
-          value: result satisfies TxReturnType<StellarChainKey, false> as TxReturnType<K, false>,
-        };
+        } satisfies SpokeApproveParams<StellarChainKey, false> as SpokeApproveParams<
+          StellarChainKey,
+          false
+        >)) satisfies Result<TxReturnType<StellarChainKey, false>> as Result<TxReturnType<K, false>>;
       }
 
       invariant(
@@ -533,18 +534,15 @@ export class MoneyMarketService {
       invariant(params.token.length > 0, 'Token is required');
 
       if (isStellarChainKeyType(srcChainKey)) {
-        const result = await this.spokeService.stellarSpokeService.requestTrustline({
+        const result = await this.spokeService.approve({
           srcChainKey,
-          srcAddress: params.srcAddress,
           token: params.token,
           amount: params.amount,
+          owner: params.srcAddress as GetAddressType<StellarChainKey>,
           raw: true,
-        });
+        } satisfies SpokeApproveParams<StellarChainKey, true> as SpokeApproveParams<StellarChainKey, true>);
 
-        return {
-          ok: true,
-          value: result satisfies TxReturnType<StellarChainKey, true> as TxReturnType<K, true>,
-        };
+        return result satisfies Result<TxReturnType<StellarChainKey, true>> as Result<TxReturnType<K, true>>;
       }
 
       invariant(
@@ -1079,11 +1077,7 @@ export class MoneyMarketService {
       );
 
       const encodedToAddress = encodeAddress(toChainId, toAddress);
-      const fromHubWallet = await HubService.getUserHubWalletAddress(
-        params.srcAddress,
-        srcChainKey,
-        this.hubProvider,
-      );
+      const fromHubWallet = await HubService.getUserHubWalletAddress(params.srcAddress, srcChainKey, this.hubProvider);
 
       const payload: Hex = this.buildWithdrawData(
         fromHubWallet,
@@ -1145,11 +1139,7 @@ export class MoneyMarketService {
       );
 
       const encodedToAddress = encodeAddress(toChainId, toAddress);
-      const fromHubWallet = await HubService.getUserHubWalletAddress(
-        params.srcAddress,
-        srcChainKey,
-        this.hubProvider,
-      );
+      const fromHubWallet = await HubService.getUserHubWalletAddress(params.srcAddress, srcChainKey, this.hubProvider);
 
       const payload: Hex = this.buildWithdrawData(
         fromHubWallet,
@@ -1501,10 +1491,7 @@ export class MoneyMarketService {
     }
 
     if (toChainId === this.hubProvider.chainConfig.chain.id) {
-      if (
-        assetAddress.toLowerCase() ===
-        this.config.spokeChainConfig[toChainId].addresses.wrappedSonic.toLowerCase()
-      ) {
+      if (assetAddress.toLowerCase() === this.config.spokeChainConfig[toChainId].addresses.wrappedSonic.toLowerCase()) {
         const withdrawToCall = {
           address: assetAddress,
           value: 0n,
@@ -1576,10 +1563,7 @@ export class MoneyMarketService {
     }
 
     if (toChainId === this.hubProvider.chainConfig.chain.id) {
-      if (
-        assetAddress.toLowerCase() ===
-        this.config.spokeChainConfig[toChainId].addresses.wrappedSonic.toLowerCase()
-      ) {
+      if (assetAddress.toLowerCase() === this.config.spokeChainConfig[toChainId].addresses.wrappedSonic.toLowerCase()) {
         const withdrawToCall = {
           address: assetAddress,
           value: 0n,

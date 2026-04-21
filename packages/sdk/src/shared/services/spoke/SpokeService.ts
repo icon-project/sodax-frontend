@@ -60,7 +60,6 @@ import {
   type SpokeIsAllowanceValidParams,
   type SpokeApproveParams,
   Erc20Service,
-  type RequestTrustlineParams,
   type ApproveChainKeys,
   isValidWalletProviderForChainKey,
   isSpokeApproveParamsHub,

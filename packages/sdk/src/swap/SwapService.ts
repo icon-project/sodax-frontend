@@ -37,6 +37,9 @@ import {
   type WalletProviderSlot,
   isBitcoinWalletProvider,
   isValidWalletProviderForChainKey,
+  relayTxAndWaitPacket,
+  isSolanaChainKeyType,
+  type SpokeApproveParams,
 } from '../index.js';
 import {
   type SpokeChainKey,
@@ -560,49 +563,32 @@ export class SwapService {
         // on hub chain, the spoke tx hash is the same as the intent tx hash
         dstIntentTxHash = spokeTxHash;
       } else {
-        // on spoke chain, submit the spoke tx hash to the intent relay
-        const intentRelayChainId = getIntentRelayChainId(srcChainKey).toString();
-        const submitPayload: IntentRelayRequest<'submit'> =
-          (isSolanaChainKey(srcChainKey) || isBitcoinChainKey(srcChainKey)) && data
-            ? {
-                action: 'submit',
-                params: {
-                  chain_id: intentRelayChainId,
-                  tx_hash: spokeTxHash,
-                  data: {
-                    address: intent.creator,
-                    payload: data,
-                  } satisfies SubmitTxExtraData,
-                },
-              }
-            : {
-                action: 'submit',
-                params: {
-                  chain_id: intentRelayChainId,
-                  tx_hash: spokeTxHash,
-                },
-              };
-
-        const submitResult = await this.submitIntent(submitPayload);
-
-        if (!submitResult.ok) {
-          return submitResult;
-        }
-
-        // then wait until the intent is executed on the intent relay
-        const packet = await waitUntilIntentExecuted({
-          intentRelayChainId,
+        const packet = await relayTxAndWaitPacket(
           spokeTxHash,
+          isSolanaChainKeyType(srcChainKey) || isBitcoinChainKeyType(srcChainKey)
+            ? ({
+                address: intent.creator,
+                payload: data,
+              } satisfies SubmitTxExtraData)
+            : undefined,
+          srcChainKey,
+          this.relayerApiEndpoint,
           timeout,
-          apiUrl: this.relayerApiEndpoint,
-        });
+        );
 
         if (!packet.ok) {
           return {
             ok: false,
-            error: packet.error,
+            error: {
+              code: packet.error.code,
+              data: {
+                payload: params,
+                error: packet.error,
+              },
+            },
           };
         }
+
         dstIntentTxHash = packet.value.dst_tx_hash;
       }
 
@@ -738,9 +724,9 @@ export class SwapService {
           owner: params.srcAddress as GetAddressType<HubChainKey>,
           spender: this.solver.intentsContract,
           raw: true,
-        });
+        } satisfies SpokeApproveParams<HubChainKey, true> as SpokeApproveParams<HubChainKey, true>);
 
-        return result as Result<TxReturnType<K, true>>;
+        return result satisfies Result<TxReturnType<HubChainKey, true>> as Result<TxReturnType<K, true>>;
       }
 
       if (isEvmSpokeOnlyChainKeyType(params.srcChain)) {
@@ -751,8 +737,8 @@ export class SwapService {
           owner: params.srcAddress as GetAddressType<EvmSpokeOnlyChainKey>,
           spender: spokeChainConfig[params.srcChain].addresses.assetManager,
           raw: true,
-        });
-        return result as Result<TxReturnType<K, true>>;
+        } satisfies SpokeApproveParams<EvmSpokeOnlyChainKey, true> as SpokeApproveParams<EvmSpokeOnlyChainKey, true>);
+        return result satisfies Result<TxReturnType<EvmSpokeOnlyChainKey, true>> as Result<TxReturnType<K, true>>;
       }
 
       if (isStellarChainKeyType(params.srcChain)) {
@@ -762,7 +748,7 @@ export class SwapService {
           amount: params.inputAmount,
           owner: params.srcAddress as GetAddressType<StellarChainKey>,
           raw: true,
-        });
+        } satisfies SpokeApproveParams<StellarChainKey, true> as SpokeApproveParams<StellarChainKey, true>);
 
         if (!result.ok) {
           return result;

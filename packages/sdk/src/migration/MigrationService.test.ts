@@ -42,31 +42,31 @@ const mockEvmAddress = '0x2170Ed0880ac9A755fd29B2688956BD959F933F8' satisfies `0
 const mockMigrationParams: MigrationParams = {
   address: 'cx3975b43d260fb8ec802cef6e60c2f4d07486f11d', // wICX address
   amount: 1000000000000000000n, // 1 ICX with 18 decimals
-  to: mockEvmAddress,
+  dstAddress: mockEvmAddress,
 } satisfies MigrationParams;
 
 const mockRevertMigrationParams: IcxCreateRevertMigrationParams = {
   amount: 1000000000000000000n, // 1 SODA token with 18 decimals
-  to: 'hx742d35cc6634c0532925a3b8d4c9db96c4b4d8b6', // Icon address
+  dstAddress: 'hx742d35cc6634c0532925a3b8d4c9db96c4b4d8b6', // Icon address
 } satisfies IcxCreateRevertMigrationParams;
 
 // bnUSD Migration test parameters using real constants
 const mockBnUSDLegacyToNewParams: UnifiedBnUSDMigrateParams = {
-  srcChainId: ChainKeys.ICON_MAINNET,
-  dstChainId: ChainKeys.SONIC_MAINNET,
+  srcChainKey: ChainKeys.ICON_MAINNET,
+  dstChainKey: ChainKeys.SONIC_MAINNET,
   srcbnUSD: bnUSDLegacyTokens[0]?.address ?? 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb', // ICON legacy bnUSD
   dstbnUSD: bnUSDNewTokens[0]?.address ?? '0xE801CA34E19aBCbFeA12025378D19c4FBE250131', // Sonic new bnUSD
   amount: 1000000000000000000n, // 1 bnUSD with 18 decimals
-  to: mockEvmAddress,
+  dstAddress: mockEvmAddress,
 } satisfies UnifiedBnUSDMigrateParams;
 
 const mockBnUSDNewToLegacyParams: UnifiedBnUSDMigrateParams = {
-  srcChainId: ChainKeys.SONIC_MAINNET,
-  dstChainId: ChainKeys.ICON_MAINNET,
+  srcChainKey: ChainKeys.SONIC_MAINNET,
+  dstChainKey: ChainKeys.ICON_MAINNET,
   srcbnUSD: bnUSDNewTokens[0]?.address ?? '0xE801CA34E19aBCbFeA12025378D19c4FBE250131', // Sonic new bnUSD
   dstbnUSD: bnUSDLegacyTokens[0]?.address ?? 'cx88fd7df7ddff82f7cc735c871dc519838cb235bb', // ICON legacy bnUSD
   amount: 1000000000000000000n, // 1 bnUSD with 18 decimals
-  to: 'hx742d35cc6634c0532925a3b8d4c9db96c4b4d8b6', // Icon address
+  dstAddress: 'hx742d35cc6634c0532925a3b8d4c9db96c4b4d8b6', // Icon address
 } satisfies UnifiedBnUSDMigrateParams;
 
 const mockIconWalletProvider = {
@@ -174,7 +174,7 @@ describe('MigrationService', () => {
       it('should return error for empty to address', async () => {
         const invalidParams = {
           ...mockMigrationParams,
-          to: '0x' as `0x${string}`,
+          dstAddress: '0x' as `0x${string}`,
         } satisfies MigrationParams;
 
         const result = await migrationService.isAllowanceValid(invalidParams, 'migrate', mockIconSpokeProvider);
@@ -223,7 +223,7 @@ describe('MigrationService', () => {
       it('should return error for empty to address', async () => {
         const invalidParams = {
           ...mockRevertMigrationParams,
-          to: 'hx' as `hx${string}`,
+          dstAddress: 'hx' as `hx${string}`,
         } satisfies IcxCreateRevertMigrationParams;
 
         const result = await migrationService.isAllowanceValid(invalidParams, 'revert', mockSonicSpokeProvider);
@@ -334,7 +334,7 @@ describe('MigrationService', () => {
     it('should return error for empty to address', async () => {
       const invalidParams = {
         ...mockRevertMigrationParams,
-        to: 'hx' as `hx${string}`,
+        dstAddress: 'hx' as `hx${string}`,
       } satisfies IcxCreateRevertMigrationParams;
 
       const result = await migrationService.approve(invalidParams, 'revert', mockSonicSpokeProvider);
@@ -631,7 +631,7 @@ describe('MigrationService', () => {
     it('should return error for invalid to address', async () => {
       const invalidParams = {
         ...mockMigrationParams,
-        to: '0xinvalid' as `0x${string}`,
+        dstAddress: '0xinvalid' as `0x${string}`,
       } satisfies MigrationParams;
 
       const result = await migrationService.createMigrateIcxToSodaIntent(invalidParams, mockIconSpokeProvider);
@@ -776,7 +776,7 @@ describe('MigrationService', () => {
       expect(revertMigrationSpy).toHaveBeenCalledWith({
         wICX: spokeChainConfig[ChainKeys.ICON_MAINNET].addresses.wICX,
         amount: mockRevertMigrationParams.amount,
-        to: encodeAddress(ChainKeys.ICON_MAINNET, mockRevertMigrationParams.to),
+        to: encodeAddress(ChainKeys.ICON_MAINNET, mockRevertMigrationParams.dstAddress),
         userWallet: '0xUserRouterAddress',
       });
     });
@@ -787,7 +787,10 @@ describe('MigrationService', () => {
       it('should successfully migrate legacy bnUSD to new bnUSD', async () => {
         vi.spyOn(migrationService, 'createMigratebnUSDIntent').mockResolvedValueOnce({
           ok: true,
-          value: [mockTxHash, { address: mockBnUSDLegacyToNewParams.to as Address, payload: '0xbnusdmigrationdata' }],
+          value: [
+            mockTxHash,
+            { address: mockBnUSDLegacyToNewParams.dstAddress as Address, payload: '0xbnusdmigrationdata' },
+          ],
         });
         vi.spyOn(IntentRelayApiService, 'relayTxAndWaitPacket').mockResolvedValueOnce({
           ok: true,
@@ -840,7 +843,10 @@ describe('MigrationService', () => {
 
         vi.spyOn(migrationService, 'createMigratebnUSDIntent').mockResolvedValueOnce({
           ok: true,
-          value: [mockTxHash, { address: mockBnUSDLegacyToNewParams.to as Address, payload: '0xbnusdmigrationdata' }],
+          value: [
+            mockTxHash,
+            { address: mockBnUSDLegacyToNewParams.dstAddress as Address, payload: '0xbnusdmigrationdata' },
+          ],
         });
         vi.spyOn(IntentRelayApiService, 'relayTxAndWaitPacket').mockResolvedValueOnce({
           ok: false,
@@ -882,7 +888,10 @@ describe('MigrationService', () => {
       it('should successfully migrate new bnUSD to legacy bnUSD', async () => {
         vi.spyOn(migrationService, 'createMigratebnUSDIntent').mockResolvedValueOnce({
           ok: true,
-          value: [mockTxHash, { address: mockBnUSDLegacyToNewParams.to as Address, payload: '0xbnusdmigrationdata' }],
+          value: [
+            mockTxHash,
+            { address: mockBnUSDLegacyToNewParams.dstAddress as Address, payload: '0xbnusdmigrationdata' },
+          ],
         });
         vi.spyOn(IntentRelayApiService, 'relayTxAndWaitPacket').mockResolvedValueOnce({
           ok: true,
@@ -935,7 +944,10 @@ describe('MigrationService', () => {
 
         vi.spyOn(migrationService, 'createMigratebnUSDIntent').mockResolvedValueOnce({
           ok: true,
-          value: [mockTxHash, { address: mockBnUSDLegacyToNewParams.to as Address, payload: '0xbnusdmigrationdata' }],
+          value: [
+            mockTxHash,
+            { address: mockBnUSDLegacyToNewParams.dstAddress as Address, payload: '0xbnusdmigrationdata' },
+          ],
         });
         vi.spyOn(IntentRelayApiService, 'relayTxAndWaitPacket').mockResolvedValueOnce({
           ok: false,
@@ -1216,14 +1228,14 @@ describe('MigrationService', () => {
         // Test legacy to new migration
         expect(isLegacybnUSDToken(mockBnUSDLegacyToNewParams.srcbnUSD)).toBe(true);
         expect(isNewbnUSDToken(mockBnUSDLegacyToNewParams.dstbnUSD)).toBe(true);
-        expect(isLegacybnUSDChainId(mockBnUSDLegacyToNewParams.srcChainId)).toBe(true);
-        expect(isNewbnUSDChainId(mockBnUSDLegacyToNewParams.dstChainId)).toBe(true);
+        expect(isLegacybnUSDChainId(mockBnUSDLegacyToNewParams.srcChainKey)).toBe(true);
+        expect(isNewbnUSDChainId(mockBnUSDLegacyToNewParams.dstChainKey)).toBe(true);
 
         // Test new to legacy migration
         expect(isNewbnUSDToken(mockBnUSDNewToLegacyParams.srcbnUSD)).toBe(true);
         expect(isLegacybnUSDToken(mockBnUSDNewToLegacyParams.dstbnUSD)).toBe(true);
-        expect(isNewbnUSDChainId(mockBnUSDNewToLegacyParams.srcChainId)).toBe(true);
-        expect(isLegacybnUSDChainId(mockBnUSDNewToLegacyParams.dstChainId)).toBe(true);
+        expect(isNewbnUSDChainId(mockBnUSDNewToLegacyParams.srcChainKey)).toBe(true);
+        expect(isLegacybnUSDChainId(mockBnUSDNewToLegacyParams.dstChainKey)).toBe(true);
       });
     });
   });

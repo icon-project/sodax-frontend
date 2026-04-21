@@ -345,17 +345,8 @@ export function isIcxMigrateParams(value: unknown): value is IcxMigrateParams {
   return typeof value === 'object' && value !== null && 'address' in value && 'amount' in value && 'to' in value;
 }
 
-export function isUnifiedBnUSDMigrateParams(value: unknown): value is UnifiedBnUSDMigrateParams {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'srcChainId' in value &&
-    'srcbnUSD' in value &&
-    'dstChainId' in value &&
-    'dstbnUSD' in value &&
-    'amount' in value &&
-    'to' in value
-  );
+export function isUnifiedBnUSDMigrateParams(value: unknown): value is UnifiedBnUSDMigrateParams<SpokeChainKey> {
+  return typeof value === 'object' && value !== null && 'srcbnUSD' in value && 'dstbnUSD' in value;
 }
 
 export function isBalnMigrateParams(value: unknown): value is BalnMigrateParams {

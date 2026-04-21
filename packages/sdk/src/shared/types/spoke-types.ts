@@ -20,7 +20,7 @@ import type {
   GetAddressType,
   EvmSpokeOnlyChainKey,
   StellarChainKey,
-  GetWalletProviderType,
+  EvmChainKey,
 } from '@sodax/types';
 import type { OptionalSkipSimulation, WalletProviderSlot } from './types.js';
 
@@ -163,15 +163,19 @@ export type SpokeIsAllowanceValidParamsOther<K extends OtherSpokeChainKey = Othe
   };
 
 /** @internal Distributive: picks the variant based on `K`. Defaults to the full union. */
-export type SpokeIsAllowanceValidParams<K extends SpokeChainKey = SpokeChainKey> = K extends HubChainKey
-  ? SpokeIsAllowanceValidParamsHub<K>
-  : K extends EvmSpokeOnlyChainKey
-    ? SpokeIsAllowanceValidParamsEvmSpoke<K>
-    : K extends StellarChainKey
-      ? SpokeIsAllowanceValidParamsStellar<K>
-      : K extends OtherSpokeChainKey
-        ? SpokeIsAllowanceValidParamsOther<K>
-        : never;
+export type SpokeIsAllowanceValidParams<K extends SpokeChainKey = SpokeChainKey> = K extends EvmChainKey
+  ? K extends HubChainKey // handle case when EvmChainKey type is passed
+    ? SpokeIsAllowanceValidParamsHub<K>
+    : SpokeIsAllowanceValidParamsEvmSpoke<EvmSpokeOnlyChainKey>
+  : K extends HubChainKey
+    ? SpokeIsAllowanceValidParamsHub<K>
+    : K extends EvmSpokeOnlyChainKey
+      ? SpokeIsAllowanceValidParamsEvmSpoke<K>
+      : K extends StellarChainKey
+        ? SpokeIsAllowanceValidParamsStellar<K>
+        : K extends OtherSpokeChainKey
+          ? SpokeIsAllowanceValidParamsOther<K>
+          : never;
 
 export type ApproveChainKeys = HubChainKey | EvmSpokeOnlyChainKey | StellarChainKey;
 
@@ -181,24 +185,27 @@ type SpokeApproveParamsCommon<K extends SpokeChainKey, Raw extends boolean> = {
   owner: GetAddressType<K>;
 } & WalletProviderSlot<K, Raw>;
 
-export type SpokeApproveParamsHub<Raw extends boolean = boolean> = SpokeApproveParamsCommon<HubChainKey, Raw> & {
-  srcChainKey: HubChainKey;
+export type SpokeApproveParamsHub<
+  Raw extends boolean = boolean,
+  K extends HubChainKey = HubChainKey,
+> = SpokeApproveParamsCommon<K, Raw> & {
+  srcChainKey: K;
   spender: Address;
 };
 
-export type SpokeApproveParamsEvmSpoke<Raw extends boolean = boolean> = SpokeApproveParamsCommon<
-  EvmSpokeOnlyChainKey,
-  Raw
-> & {
-  srcChainKey: EvmSpokeOnlyChainKey;
+export type SpokeApproveParamsEvmSpoke<
+  Raw extends boolean = boolean,
+  K extends EvmSpokeOnlyChainKey = EvmSpokeOnlyChainKey,
+> = SpokeApproveParamsCommon<K, Raw> & {
+  srcChainKey: K;
   spender: Address;
 };
 
-export type SpokeApproveParamsStellar<Raw extends boolean = boolean> = SpokeApproveParamsCommon<
-  StellarChainKey,
-  Raw
-> & {
-  srcChainKey: StellarChainKey;
+export type SpokeApproveParamsStellar<
+  Raw extends boolean = boolean,
+  K extends StellarChainKey = StellarChainKey,
+> = SpokeApproveParamsCommon<K, Raw> & {
+  srcChainKey: K;
 };
 
 /**
@@ -209,9 +216,9 @@ export type SpokeApproveParams<
   K extends ApproveChainKeys = ApproveChainKeys,
   Raw extends boolean = boolean,
 > = K extends HubChainKey
-  ? SpokeApproveParamsHub<Raw>
+  ? SpokeApproveParamsHub<Raw, K>
   : K extends EvmSpokeOnlyChainKey
-    ? SpokeApproveParamsEvmSpoke<Raw>
+    ? SpokeApproveParamsEvmSpoke<Raw, K>
     : K extends StellarChainKey
-      ? SpokeApproveParamsStellar<Raw>
+      ? SpokeApproveParamsStellar<Raw, K>
       : never;
