@@ -61,7 +61,11 @@ export class Sodax {
       spoke: this.spokeService,
     });
 
-    this.migration = new MigrationService({ hubProvider: this.hubProvider, config: this.config });
+    this.migration = new MigrationService({
+      hubProvider: this.hubProvider,
+      config: this.config,
+      spoke: this.spokeService,
+    });
     this.bridge = new BridgeService({ hubProvider: this.hubProvider, config: this.config, spoke: this.spokeService });
     this.staking = new StakingService({ hubProvider: this.hubProvider, config: this.config, spoke: this.spokeService });
     this.partners = new PartnerService({

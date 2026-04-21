@@ -118,7 +118,7 @@ export type MigrationTokens = (typeof SupportedMigrationTokens)[number];
 export type MigrationServiceConstructorParams = {
   hubProvider: HubProvider;
   config: ConfigService;
-  spokeService: SpokeService;
+  spoke: SpokeService;
 };
 
 /**
@@ -132,16 +132,16 @@ export class MigrationService {
   readonly hubProvider: HubProvider;
   readonly relayerApiEndpoint: HttpUrl;
   readonly config: ConfigService;
-  readonly spokeService: SpokeService;
+  readonly spoke: SpokeService;
 
-  constructor({ hubProvider, config, spokeService }: MigrationServiceConstructorParams) {
+  constructor({ hubProvider, config, spoke: spokeService }: MigrationServiceConstructorParams) {
     this.hubProvider = hubProvider;
     this.icxMigration = new IcxMigrationService({ hubProvider, config });
     this.bnUSDMigrationService = new BnUSDMigrationService({ hubProvider, config });
     this.balnSwapService = new BalnSwapService({ hubProvider });
     this.relayerApiEndpoint = config.relay.relayerApiEndpoint;
     this.config = config;
-    this.spokeService = spokeService;
+    this.spoke = spokeService;
   }
 
   /**
@@ -186,7 +186,7 @@ export class MigrationService {
 
         // bnUSD only requires allowance check for EVM spoke chains
         if (isUnifiedBnUSDMigrateParams(params) && isEvmChainKeyType(params.srcChainKey)) {
-          return await this.spokeService.isAllowanceValid({
+          return await this.spoke.isAllowanceValid({
             srcChainKey: params.srcChainKey,
             token: params.srcbnUSD,
             amount: params.amount,
@@ -198,7 +198,7 @@ export class MigrationService {
         }
 
         if (isUnifiedBnUSDMigrateParams(params) && isStellarChainKeyType(params.srcChainKey)) {
-          return await this.spokeService.isAllowanceValid({
+          return await this.spoke.isAllowanceValid({
             srcChainKey: params.srcChainKey,
             token: params.srcbnUSD,
             amount: params.amount,
@@ -221,7 +221,7 @@ export class MigrationService {
             ? await HubService.getUserRouter(params.srcAddress as Address, this.hubProvider)
             : this.config.sodaxConfig.chains[params.srcChainKey].addresses.assetManager;
 
-          return await this.spokeService.isAllowanceValid({
+          return await this.spoke.isAllowanceValid({
             srcChainKey: params.srcChainKey,
             token: params.srcbnUSD,
             amount: params.amount,
@@ -231,7 +231,7 @@ export class MigrationService {
         }
 
         if (isUnifiedBnUSDMigrateParams(params) && isStellarChainKeyType(params.srcChainKey)) {
-          return await this.spokeService.isAllowanceValid({
+          return await this.spoke.isAllowanceValid({
             srcChainKey: params.srcChainKey,
             token: params.srcbnUSD,
             amount: params.amount,
@@ -246,7 +246,7 @@ export class MigrationService {
             this.hubProvider,
           );
 
-          return await this.spokeService.isAllowanceValid({
+          return await this.spoke.isAllowanceValid({
             srcChainKey: params.srcChainKey,
             token: this.hubProvider.chainConfig.addresses.sodaToken,
             amount: params.amount,
@@ -299,7 +299,7 @@ export class MigrationService {
         invariant(isUnifiedBnUSDMigrateParams(params), 'Invalid params');
 
         if (isUnifiedBnUSDMigrateParams(params) && isEvmChainKeyType(params.srcChainKey)) {
-          return (await this.spokeService.approve({
+          return (await this.spoke.approve({
             srcChainKey: params.srcChainKey,
             token: params.srcbnUSD as GetTokenAddressType<EvmChainKey>,
             amount: params.amount,
@@ -316,7 +316,7 @@ export class MigrationService {
         }
 
         if (isUnifiedBnUSDMigrateParams(params) && isStellarChainKeyType(params.srcChainKey)) {
-          return (await this.spokeService.approve({
+          return (await this.spoke.approve({
             srcChainKey: params.srcChainKey,
             token: params.srcbnUSD,
             amount: params.amount,
@@ -344,7 +344,7 @@ export class MigrationService {
             ? await HubService.getUserRouter(params.srcAddress as Address, this.hubProvider)
             : this.config.sodaxConfig.chains[params.srcChainKey].addresses.assetManager;
 
-          return (await this.spokeService.approve({
+          return (await this.spoke.approve({
             srcChainKey: params.srcChainKey,
             token: params.srcbnUSD as GetTokenAddressType<EvmChainKey>,
             amount: params.amount,
@@ -359,7 +359,7 @@ export class MigrationService {
         }
 
         if (isUnifiedBnUSDMigrateParams(params) && isStellarChainKeyType(params.srcChainKey)) {
-          return (await this.spokeService.approve({
+          return (await this.spoke.approve({
             srcChainKey: params.srcChainKey,
             token: params.srcbnUSD,
             amount: params.amount,
@@ -379,7 +379,7 @@ export class MigrationService {
             this.hubProvider,
           );
 
-          return (await this.spokeService.approve({
+          return (await this.spoke.approve({
             srcChainKey: params.srcChainKey,
             token: this.hubProvider.chainConfig.addresses.sodaToken,
             amount: params.amount,
@@ -423,7 +423,7 @@ export class MigrationService {
         invariant(isUnifiedBnUSDMigrateParams(params), 'Invalid params');
 
         if (isUnifiedBnUSDMigrateParams(params) && isEvmChainKeyType(params.srcChainKey)) {
-          return (await this.spokeService.approve({
+          return (await this.spoke.approve({
             srcChainKey: params.srcChainKey,
             token: params.srcbnUSD as GetTokenAddressType<EvmChainKey>,
             amount: params.amount,
@@ -438,7 +438,7 @@ export class MigrationService {
         }
 
         if (isUnifiedBnUSDMigrateParams(params) && isStellarChainKeyType(params.srcChainKey)) {
-          return (await this.spokeService.approve({
+          return (await this.spoke.approve({
             srcChainKey: params.srcChainKey,
             token: params.srcbnUSD,
             amount: params.amount,
@@ -465,7 +465,7 @@ export class MigrationService {
             ? await HubService.getUserRouter(params.srcAddress as Address, this.hubProvider)
             : this.config.sodaxConfig.chains[params.srcChainKey].addresses.assetManager;
 
-          return (await this.spokeService.approve({
+          return (await this.spoke.approve({
             srcChainKey: params.srcChainKey,
             token: params.srcbnUSD as GetTokenAddressType<EvmChainKey>,
             amount: params.amount,
@@ -478,7 +478,7 @@ export class MigrationService {
         }
 
         if (isUnifiedBnUSDMigrateParams(params) && isStellarChainKeyType(params.srcChainKey)) {
-          return (await this.spokeService.approve({
+          return (await this.spoke.approve({
             srcChainKey: params.srcChainKey,
             token: params.srcbnUSD,
             amount: params.amount,
@@ -497,7 +497,7 @@ export class MigrationService {
             this.hubProvider,
           );
 
-          return (await this.spokeService.approve({
+          return (await this.spoke.approve({
             srcChainKey: params.srcChainKey,
             token: this.hubProvider.chainConfig.addresses.sodaToken,
             amount: params.amount,
@@ -591,7 +591,7 @@ export class MigrationService {
       const [spokeTxHash, extraData] = intentResult.value;
 
       // verify the spoke tx hash exists on chain
-      const verifyTxHashResult = await this.spokeService.verifyTxHash({
+      const verifyTxHashResult = await this.spoke.verifyTxHash({
         txHash: spokeTxHash,
         chainKey: params.srcChainKey,
       });
@@ -914,7 +914,7 @@ export class MigrationService {
         this.hubProvider,
       );
 
-      const txResult = await this.spokeService.deposit({
+      const txResult = await this.spoke.deposit({
         srcChainKey: params.srcChainKey,
         srcAddress: params.srcAddress,
         to: hubWalletAddress,
@@ -961,7 +961,7 @@ export class MigrationService {
         this.hubProvider,
       );
 
-      const txResult = await this.spokeService.deposit({
+      const txResult = await this.spoke.deposit({
         srcChainKey: params.srcChainKey,
         srcAddress: params.srcAddress,
         to: hubWalletAddress,
@@ -1108,7 +1108,7 @@ export class MigrationService {
         this.hubProvider,
       );
 
-      const txResult = await this.spokeService.deposit({
+      const txResult = await this.spoke.deposit({
         srcChainKey: params.srcChainKey,
         srcAddress: params.srcAddress as GetAddressType<K>,
         to: hubWalletAddress,
@@ -1219,7 +1219,7 @@ export class MigrationService {
         this.hubProvider,
       );
 
-      const txResult = await this.spokeService.deposit({
+      const txResult = await this.spoke.deposit({
         srcChainKey: params.srcChainKey,
         srcAddress: params.srcAddress as GetAddressType<K>,
         to: hubWalletAddress,
@@ -1314,7 +1314,7 @@ export class MigrationService {
       );
 
       // Execute the migration transaction
-      const txResult = await this.spokeService.deposit({
+      const txResult = await this.spoke.deposit({
         srcChainKey: ChainKeys.ICON_MAINNET,
         srcAddress: params.srcAddress,
         to: hubWalletAddress,
@@ -1376,7 +1376,7 @@ export class MigrationService {
       );
 
       // Execute the migration transaction
-      const txResult = await this.spokeService.deposit({
+      const txResult = await this.spoke.deposit({
         srcChainKey: ChainKeys.ICON_MAINNET,
         srcAddress: params.srcAddress,
         to: hubWalletAddress,
