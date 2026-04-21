@@ -32,7 +32,7 @@ export default function RecoverLockedSodaDialog({
   return (
     <Dialog open={open} onOpenChange={handleDismissAttempt}>
       <DialogContent
-        className="w-full md:max-w-[480px]! py-8 px-12 bg-vibrant-white shadow-[0px_20px_160px_0px_rgba(185,172,171,0.40)] flex flex-col gap-6"
+        className="w-full md:max-w-[480px]! p-8 bg-vibrant-white shadow-[0px_20px_160px_0px_rgba(185,172,171,0.40)] flex flex-col gap-6"
         hideCloseButton
         enableMotion={true}
         shake={isShaking}

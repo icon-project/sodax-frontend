@@ -76,6 +76,7 @@ export function LiquidityInputs({
     poolData,
     poolKey: fixedPoolKey,
     spokeProvider: spokeProvider as SpokeProvider,
+    enabled: !isSupplyDialogOpen && !isManagePositionDialogOpen,
   });
   const allChainSodaBalances = useAllChainBalances({ onlySodaTokens: true });
   const allChainXSodaBalances = useAllChainXSodaBalances(selectedChainId ? [selectedChainId] : []);
