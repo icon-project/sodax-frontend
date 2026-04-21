@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { KrakenIcon } from '@/components/icons/kraken-icon';
@@ -64,45 +65,49 @@ export function NavbarSpotlight({ className = '' }: { className?: string }) {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <motion.p
-        className="relative font-[InterRegular] text-sm leading-[1.4] whitespace-nowrap"
-        initial={false}
-        animate={{ color: isHovering ? TEXT_COLOR_HOVER : TEXT_COLOR_IDLE }}
-        transition={TEXT_COLOR_TRANSITION}
-        style={{ color: TEXT_COLOR_IDLE }}
-      >
-        Soon on Kraken!
-        <motion.span
-          aria-hidden
-          className="absolute left-0 top-0"
+      <Link href="/holders" className="shrink-0">
+        <motion.p
+          className="relative font-[InterRegular] text-sm leading-[1.4] whitespace-nowrap"
           initial={false}
-          animate={{ opacity: isRevealed ? 0 : 1 }}
-          transition={AMBIENT_TRANSITION}
+          animate={{ color: isHovering ? TEXT_COLOR_HOVER : TEXT_COLOR_IDLE }}
+          transition={TEXT_COLOR_TRANSITION}
+          style={{ color: TEXT_COLOR_IDLE }}
         >
+          Soon on Kraken!
           <motion.span
-            className="block"
-            style={{
-              backgroundImage: SHIMMER_GRADIENT,
-              backgroundSize: '200% 100%',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              filter: 'drop-shadow(0 0 10px rgba(255,255,255,1))',
-            }}
-            animate={
-              isShimmerLooping ? { backgroundPosition: ['200% 0%', '0% 0%'] } : { backgroundPosition: '200% 0%' }
-            }
-            transition={{
-              duration: SHIMMER_SWEEP_S,
-              repeat: isShimmerLooping ? Number.POSITIVE_INFINITY : 0,
-              repeatDelay: SHIMMER_REPEAT_DELAY_S,
-              ease: 'easeInOut',
-            }}
+            aria-hidden
+            className="absolute left-0 top-0"
+            initial={false}
+            animate={{ opacity: isRevealed ? 0 : 1 }}
+            transition={AMBIENT_TRANSITION}
           >
-            Soon on Kraken!
+            <motion.span
+              className="block"
+              style={{
+                backgroundImage: SHIMMER_GRADIENT,
+                backgroundSize: '200% 100%',
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                filter: 'drop-shadow(0 0 10px rgba(255,255,255,1))',
+              }}
+              animate={
+                isShimmerLooping
+                  ? { backgroundPosition: ['200% 0%', '0% 0%'] }
+                  : { backgroundPosition: '200% 0%' }
+              }
+              transition={{
+                duration: SHIMMER_SWEEP_S,
+                repeat: isShimmerLooping ? Number.POSITIVE_INFINITY : 0,
+                repeatDelay: SHIMMER_REPEAT_DELAY_S,
+                ease: 'easeInOut',
+              }}
+            >
+              Soon on Kraken!
+            </motion.span>
           </motion.span>
-        </motion.span>
-      </motion.p>
+        </motion.p>
+      </Link>
 
       <motion.div
         className="shrink-0"
@@ -145,7 +150,9 @@ export function NavbarSpotlight({ className = '' }: { className?: string }) {
 export function NavbarSpotlightStatic({ className = '' }: { className?: string }) {
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <p className="font-[InterRegular] text-sm leading-[1.4] text-white whitespace-nowrap">Soon on Kraken!</p>
+      <Link href="/holders" className="font-[InterRegular] text-sm leading-[1.4] text-white whitespace-nowrap">
+        Soon on Kraken!
+      </Link>
       <KrakenIcon width={16} height={13} fill="white" />
     </div>
   );
