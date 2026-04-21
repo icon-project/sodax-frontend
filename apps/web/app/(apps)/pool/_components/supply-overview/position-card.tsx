@@ -67,7 +67,7 @@ export function PositionCard({
   const [isManageDialogOpen, setIsManageDialogOpen] = useState<boolean>(false);
   const [isSwitchChainDialogOpen, setIsSwitchChainDialogOpen] = useState<boolean>(false);
   const { setIsManagePositionDialogOpen } = usePoolActions();
-  useEffect((): (() => void) | void => {
+  useEffect(() => {
     if (isManageDialogOpen) {
       setIsManagePositionDialogOpen(true);
       return () => setIsManagePositionDialogOpen(false);
