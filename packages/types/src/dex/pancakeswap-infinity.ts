@@ -465,6 +465,7 @@ export type BinPoolParameter = {
    */
   hooksRegistration?: HooksRegistration;
   binStep: number;
+  tickSpacing: number;
 };
 /**
  * PoolKey is a unique identifier for a pool

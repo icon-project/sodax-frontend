@@ -13,8 +13,17 @@ import {
   type OriginalAssetAddress,
   type XToken,
   type IntentRelayChainId,
+  type SolverErrorResponse,
+  type SolverExecutionResponse,
+  type Result,
+  type GetAddressType,
+  type SonicChainKey,
+  type GetWalletProviderType,
+  type TxReturnType,
+  type HubChainKey,
+  type WalletProviderSlot,
 } from '@sodax/types';
-import { encodeAddress, SpokeService } from '../index.js';
+import { encodeAddress, isHubChainKeyType, isSonicChainKeyType, type SpokeService } from '../index.js';
 
 export type PartnerFeeClaimAssetBalance = {
   symbol: string;
@@ -33,13 +42,30 @@ export type AutoSwapPreferences = {
 };
 
 export type SetSwapPreferenceParams = {
+  srcChainKey: HubChainKey;
+  srcAddress: Address;
   outputToken: Address;
   dstChain: SpokeChainKey;
   dstAddress: string;
 };
 
+export type SetSwapPreferenceAction<K extends SpokeChainKey> = {
+  params: SetSwapPreferenceParams;
+  walletProvider: GetWalletProviderType<K>;
+  timeout?: number;
+  skipSimulation?: boolean;
+} & WalletProviderSlot<K, boolean>;
+
+export type SetSwapPreferenceActionRaw<K extends SpokeChainKey> = {
+  params: SetSwapPreferenceParams;
+  walletProvider: GetWalletProviderType<K>;
+  timeout?: number;
+  skipSimulation?: boolean;
+};
+
 export type FeeTokenApproveParams = {
   token: Address;
+  queryAddress: Address;
 };
 
 export type AssetEntry = {
@@ -53,6 +79,13 @@ export type PartnerFeeClaimSwapParams = {
   fromToken: Address;
   amount: bigint;
   timeout?: number;
+};
+
+export type PartnerFeeClaimSwapAction<K extends SpokeChainKey> = {
+  params: PartnerFeeClaimSwapParams;
+  walletProvider: GetWalletProviderType<K>;
+  timeout?: number;
+  skipSimulation?: boolean;
 };
 
 export type PartnerFeeClaimServiceConstructorParams = {
@@ -143,21 +176,9 @@ export class PartnerFeeClaimService {
    *   to PartnerFeeClaimAssetBalance, or an Error on failure.
    */
   public async fetchAssetsBalances(
-    params: SonicAddressOrSpokeType,
+    queryAddress: string,
   ): Promise<Result<Map<string, PartnerFeeClaimAssetBalance>, Error>> {
     try {
-      let queryAddress: string;
-      if ('address' in params) {
-        invariant(isAddress(params.address), 'Address must be a valid EVM address');
-        queryAddress = params.address;
-      } else {
-        invariant(
-          isSonicSpokeProviderType(params.spokeProvider),
-          'PartnerFeeClaimService only supports Sonic spoke provider',
-        );
-        queryAddress = await params.spokeProvider.walletProvider.getWalletAddress();
-      }
-
       // Collect all assets from all chains
       const allAssetEntries: Array<AssetEntry> = [];
 
@@ -254,26 +275,15 @@ export class PartnerFeeClaimService {
    * @returns A promise resolving to a Result containing the auto swap preferences, or an Error on failure.
    *   The auto swap preferences include the output token, destination chain, and destination address.
    */
-  public async getAutoSwapPreferences(params: SonicAddressOrSpokeType): Promise<Result<AutoSwapPreferences, Error>> {
+  public async getAutoSwapPreferences(queryAddress: string): Promise<Result<AutoSwapPreferences, Error>> {
     try {
-      let queryAddress: string;
-      if ('address' in params) {
-        invariant(isAddress(params.address), 'Address must be a valid EVM address');
-        queryAddress = params.address;
-      } else {
-        invariant(
-          isSonicSpokeProviderType(params.spokeProvider),
-          'PartnerFeeClaimService only supports Sonic spoke provider',
-        );
-        queryAddress = await params.spokeProvider.walletProvider.getWalletAddress();
-      }
       invariant(this.protocolIntentsContract, 'protocolIntentsContract is not configured in solver config');
 
       const autoSwapPreferences = await this.hubProvider.publicClient.readContract({
         address: this.protocolIntentsContract,
         abi: ProtocolIntentsAbi,
         functionName: 'getAutoSwapPreferences',
-        args: [queryAddress as GetAddressType<SonicSpokeProviderType>],
+        args: [queryAddress as GetAddressType<SonicChainKey>],
       });
 
       // If dstChain is 0 (not configured), return "not configured" without conversion
@@ -312,22 +322,17 @@ export class PartnerFeeClaimService {
    *   - Otherwise, returns the transaction hash of the submitted transaction.
    *   - If failed, returns an error object with code 'SET_SWAP_PREFERENCE_FAILED'.
    */
-  public async setSwapPreference<S extends SonicSpokeProviderType, R extends boolean = false>({
-    params,
-    spokeProvider,
-    raw,
-  }: { params: SetSwapPreferenceParams; spokeProvider: S; raw?: R }): Promise<
-    Result<TxReturnType<S, R>, SetSwapPreferenceError>
-  > {
+  public async setSwapPreference<K extends SpokeChainKey>(
+    _params: SetSwapPreferenceAction<K>,
+  ): Promise<Result<TxReturnType<K, true>, SetSwapPreferenceError>> {
+    const { params, walletProvider, timeout, skipSimulation } = _params;
     try {
-      invariant(isSonicSpokeProviderType(spokeProvider), 'PartnerFeeClaimService only supports Sonic spoke provider');
+      invariant(isHubChainKeyType(params.srcChainKey), 'PartnerFeeClaimService only supports Sonic spoke provider');
       invariant(this.protocolIntentsContract, 'protocolIntentsContract is not configured in solver config');
 
-      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-
       const outputToken =
-        params.dstChain !== this.hubProvider.chainConfig.chain.id
-          ? this.hubProvider.configService.getHubAssetInfo(params.dstChain, params.outputToken)?.hubAsset
+        params.dstChain !== this.hubProvider.chainConfig.chain.key
+          ? this.hubProvider.config.getSpokeTokenFromOriginalAssetAddress(params.dstChain, params.outputToken)?.hubAsset
           : params.outputToken;
 
       invariant(
@@ -336,7 +341,7 @@ export class PartnerFeeClaimService {
       );
 
       const rawTx = {
-        from: walletAddress as GetAddressType<SonicSpokeProviderType>,
+        from: params.srcAddress,
         to: this.protocolIntentsContract,
         value: 0n,
         data: encodeFunctionData({
@@ -348,9 +353,9 @@ export class PartnerFeeClaimService {
             encodeAddress(params.dstChain, params.dstAddress),
           ],
         }),
-      } satisfies TxReturnType<SonicSpokeProviderType, true>;
+      } satisfies TxReturnType<HubChainKey, true>;
 
-      if (raw || isSonicRawSpokeProvider(spokeProvider)) {
+      if (raw) {
         return {
           ok: true,
           value: rawTx satisfies TxReturnType<SonicSpokeProviderType, true> as TxReturnType<S, R>,
@@ -386,14 +391,11 @@ export class PartnerFeeClaimService {
    *   - address (optional): The address to check allowance for. If not provided, uses the currently connected wallet.
    * @returns Promise resolving to a Result. Value is true if token is approved (has max or sufficient allowance), false otherwise. Returns an error if the check fails.
    */
-  public async isTokenApproved({ token, spokeProvider }: FeeTokenApproveParams): Promise<Result<boolean, Error>> {
+  public async isTokenApproved({ token, queryAddress }: FeeTokenApproveParams): Promise<Result<boolean, Error>> {
     try {
-      invariant(isSonicSpokeProviderType(spokeProvider), 'PartnerFeeClaimService only supports Sonic spoke provider');
       invariant(this.protocolIntentsContract, 'protocolIntentsContract is not configured in solver config');
 
-      const queryAddress = await spokeProvider.walletProvider.getWalletAddress();
-
-      if (token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()) {
+      if (token.toLowerCase() === this.hubProvider.chainConfig.nativeToken.toLowerCase()) {
         return {
           ok: true,
           value: true,
@@ -468,7 +470,7 @@ export class PartnerFeeClaimService {
    * @param {boolean} raw - Whether to return raw transaction data
    * @returns {Promise<TxReturnType<SonicSpokeProviderType, R>>} Transaction hash or raw transaction
    */
-  public async createIntentAutoSwap<S extends SonicSpokeProviderType, R extends boolean = false>({
+  public async createIntentAutoSwap<K extends SpokeChainKey, R extends boolean = false>({
     params,
     spokeProvider,
     raw,

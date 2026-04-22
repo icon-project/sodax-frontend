@@ -12,12 +12,10 @@ export type LendingPoolServiceConstructorParams = {
 export class LendingPoolService {
   private readonly hubProvider: HubProvider;
   private readonly lendingPool: Address;
-  private readonly config: ConfigService;
 
   constructor({ hubProvider, config }: LendingPoolServiceConstructorParams) {
     this.hubProvider = hubProvider;
     this.lendingPool = config.moneyMarket.lendingPool;
-    this.config = config;
   }
 
   /**

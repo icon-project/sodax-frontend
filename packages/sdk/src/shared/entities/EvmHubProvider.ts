@@ -1,27 +1,27 @@
-import type { HubChainConfig } from '@sodax/types';
 import { type HttpTransport, type PublicClient, createPublicClient, http } from 'viem';
 import type { ConfigService } from '../config/ConfigService.js';
 
 import { SonicSpokeService } from '../services/spoke/SonicSpokeService.js';
+import type { HubConfig } from '@sodax/types';
+import { getEvmViemChain } from '../utils/constant-utils.js';
 
 export type EvmHubProviderConstructorParams = {
-  config: HubChainConfig;
-  configService: ConfigService;
+  config: ConfigService;
 };
 
 export class EvmHubProvider {
   public readonly publicClient: PublicClient<HttpTransport>;
-  public readonly chainConfig: HubChainConfig;
-  public readonly configService: ConfigService;
+  public readonly chainConfig: HubConfig;
+  public readonly config: ConfigService;
   public readonly service: SonicSpokeService;
 
-  constructor({ config, configService }: EvmHubProviderConstructorParams) {
+  constructor({ config }: EvmHubProviderConstructorParams) {
     this.publicClient = createPublicClient({
-      transport: http(config.hubRpcUrl),
-      chain: getEvmViemChain(config.chainConfig.chain.id),
+      transport: http(config.sodaxConfig.hub.rpcUrl),
+      chain: getEvmViemChain(config.sodaxConfig.hub.chain.key),
     });
-    this.chainConfig = config.chainConfig;
-    this.configService = configService;
-    this.service = new SonicSpokeService(this.publicClient);
+    this.chainConfig = config.sodaxConfig.hub;
+    this.config = config;
+    this.service = new SonicSpokeService(this.config);
   }
 }

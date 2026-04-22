@@ -265,7 +265,7 @@ export class BackendApiService implements IConfigApi {
 
   /**
    * Get the processing status of a submitted swap transaction
-   * @param params - Query parameters containing txHash and optional srcChainId
+   * @param params - Query parameters containing txHash and optional srcChain
    * @returns Promise<SubmitSwapTxStatusResponse>
    */
   public async getSubmitSwapTxStatus(
@@ -274,7 +274,7 @@ export class BackendApiService implements IConfigApi {
   ): Promise<SubmitSwapTxStatusResponse> {
     const queryParams = new URLSearchParams();
     queryParams.append('txHash', params.txHash);
-    if (params.srcChainId) queryParams.append('srcChainId', params.srcChainId);
+    if (params.srcChainKey) queryParams.append('srcChainKey', params.srcChainKey);
 
     const queryString = queryParams.toString();
     const endpoint = `/swaps/submit-tx/status?${queryString}`;

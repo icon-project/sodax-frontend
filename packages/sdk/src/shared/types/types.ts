@@ -84,8 +84,8 @@ export type RelayExtraData = { address: Hex; payload: Hex };
 export type RelayOptionalExtraData = { data?: RelayExtraData };
 
 export type RawDestinationParams = {
-  toChainId: SpokeChainKey;
-  toAddress: string;
+  dstChainKey: SpokeChainKey;
+  dstAddress: string;
 };
 export type DestinationParamsType = RawDestinationParams;
 

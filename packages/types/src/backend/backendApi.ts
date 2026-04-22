@@ -1,4 +1,11 @@
-import type { SpokeChainKey, XToken, IntentRelayChainIdMap, SpokeChainConfigMap, Address, SodaxConfig } from '../index.js';
+import type {
+  SpokeChainKey,
+  XToken,
+  IntentRelayChainIdMap,
+  SpokeChainConfigMap,
+  Address,
+  SodaxConfig,
+} from '../index.js';
 
 export type GetChainsApiResponse = readonly SpokeChainKey[];
 export type GetSwapTokensApiResponse = Record<SpokeChainKey, readonly XToken[]>;
@@ -42,7 +49,7 @@ export interface SwapIntentData {
 
 export interface SubmitSwapTxRequest {
   txHash: string;
-  srcChainId: string;
+  srcChainKey: string;
   walletAddress: string;
   intent: SwapIntentData;
   relayData: string;
@@ -55,7 +62,7 @@ export interface SubmitSwapTxResponse {
 
 export interface GetSubmitSwapTxStatusParams {
   txHash: string;
-  srcChainId?: string;
+  srcChainKey?: string;
 }
 
 export interface SubmitSwapTxStatusResult {
@@ -76,7 +83,7 @@ export type SubmitSwapTxStatus =
 
 export interface SubmitSwapTxStatusData {
   txHash: string;
-  srcChainId: string;
+  srcChainKey: string;
   status: SubmitSwapTxStatus;
   failedAtStep?: string;
   failureReason?: string;

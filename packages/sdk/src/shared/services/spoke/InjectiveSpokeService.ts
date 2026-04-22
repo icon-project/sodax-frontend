@@ -1,11 +1,12 @@
 import { fromHex } from 'viem';
-import type {
-  SendMessageParams,
-  InjectiveGasEstimate,
-  TxReturnType,
-  DepositParams,
-  EstimateGasParams,
-  GetDepositParams,
+import {
+  type SendMessageParams,
+  type DepositParams,
+  type EstimateGasParams,
+  type GetDepositParams,
+  type ConfigService,
+  type WaitForTxReceiptParams,
+  type WaitForTxReceiptReturnType,
   sleep,
 } from '../../../index.js';
 import {
@@ -24,14 +25,14 @@ import {
   ChainKeys,
   type InjectiveChainKey,
   type InjectiveRawTransaction,
-  type InjectiveRawTransactionReceipt,
   type Result,
-  type SharedChainConfig,
   spokeChainConfig,
   type JsonObject,
   type InjectiveExecuteResponse,
   type IInjectiveWalletProvider,
   type Hex,
+  type InjectiveGasEstimate,
+  type TxReturnType,
 } from '@sodax/types';
 
 export interface InstantiateMsg {
@@ -96,19 +97,21 @@ export interface State {
  */
 
 export class InjectiveSpokeService {
+  private readonly config: ConfigService;
   public readonly chainGrpcWasmApi: ChainGrpcWasmApi;
   public readonly txClient: TxGrpcApi;
   public readonly endpoints: NetworkEndpoints;
   private readonly pollingIntervalMs: number;
   private readonly maxTimeoutMs: number;
 
-  public constructor(sharedConfig: SharedChainConfig) {
-    const config = sharedConfig[ChainKeys.INJECTIVE_MAINNET];
+  public constructor(config: ConfigService) {
+    this.config = config;
     this.endpoints = getNetworkEndpoints(Network.Mainnet);
     this.chainGrpcWasmApi = new ChainGrpcWasmApi(this.endpoints.grpc);
     this.txClient = new TxGrpcApi(this.endpoints.grpc);
-    this.pollingIntervalMs = config.pollingIntervalMs;
-    this.maxTimeoutMs = config.maxTimeoutMs;
+    this.pollingIntervalMs =
+      this.config.sodaxConfig.chains[ChainKeys.INJECTIVE_MAINNET].pollingConfig.pollingIntervalMs;
+    this.maxTimeoutMs = this.config.sodaxConfig.chains[ChainKeys.INJECTIVE_MAINNET].pollingConfig.maxTimeoutMs;
   }
 
   /**
@@ -185,7 +188,7 @@ export class InjectiveSpokeService {
    */
   public async getDeposit(params: GetDepositParams<InjectiveChainKey>): Promise<bigint> {
     const response = await this.chainGrpcWasmApi.fetchSmartContractState(
-      spokeChainConfig[params.chainKey].addresses.assetManager,
+      this.config.sodaxConfig.chains[params.srcChainKey].addresses.assetManager,
       toBase64({
         get_balance: { denom: params.token },
       }),
@@ -344,8 +347,8 @@ export class InjectiveSpokeService {
   }
 
   public async waitForTransactionReceipt(
-    params: WaitForTxReceiptParams,
-  ): Promise<Result<WaitForTxReceiptReturnType<InjectiveRawTransactionReceipt>>> {
+    params: WaitForTxReceiptParams<InjectiveChainKey>,
+  ): Promise<Result<WaitForTxReceiptReturnType<InjectiveChainKey>>> {
     const { txHash, pollingIntervalMs = this.pollingIntervalMs, maxTimeoutMs = this.maxTimeoutMs } = params;
     const deadline = Date.now() + maxTimeoutMs;
 

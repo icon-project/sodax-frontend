@@ -17,21 +17,21 @@ import {
 } from '@stacks/transactions';
 import { getIntentRelayChainId, isNativeToken, spokeChainConfig, ChainKeys } from '@sodax/types';
 import type {
+  FeeEstimateTransaction,
   Result,
-  SharedChainConfig,
   StacksChainKey,
   StacksRawTransactionReceipt,
+  StacksReturnType,
   StacksTransactionParams,
+  TxReturnType,
 } from '@sodax/types';
 import { sleep } from '../../utils/shared-utils.js';
 import type {
+  ConfigService,
   DepositParams,
   EstimateGasParams,
-  FeeEstimateTransaction,
   GetDepositParams,
   SendMessageParams,
-  StacksReturnType,
-  TxReturnType,
   WaitForTxReceiptParams,
   WaitForTxReceiptReturnType,
 } from '../../../index.js';
@@ -43,12 +43,12 @@ export class StacksSpokeService {
   private readonly pollingIntervalMs: number;
   private readonly maxTimeoutMs: number;
 
-  constructor(sharedConfig: SharedChainConfig) {
+  constructor(config: ConfigService) {
     // since we only support mainnet for now, we can hardcode the single stacks chain config
-    const config = sharedConfig[ChainKeys.STACKS_MAINNET];
-    this.network = createNetwork({ network: 'mainnet', client: { baseUrl: config.rpcUrl } });
-    this.pollingIntervalMs = config.pollingIntervalMs;
-    this.maxTimeoutMs = config.maxTimeoutMs;
+    const chainConfig = config.sodaxConfig.chains[ChainKeys.STACKS_MAINNET];
+    this.network = createNetwork({ network: 'mainnet', client: { baseUrl: chainConfig.rpcUrl } });
+    this.pollingIntervalMs = chainConfig.pollingConfig.pollingIntervalMs;
+    this.maxTimeoutMs = chainConfig.pollingConfig.maxTimeoutMs;
   }
 
   public async estimateGas(params: EstimateGasParams<StacksChainKey>): Promise<FeeEstimateTransaction> {

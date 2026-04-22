@@ -152,7 +152,7 @@ export const dexPools = {
 export type DexConfig = {
   concentratedLiquidityConfig: ConcentratedLiquidityConfig;
   dexPools: Record<string, PoolKey>;
-  statATokenAddresses: Record<Address, Address>;
+  statATokenAddresses: Record<Address, Address> & typeof StatATokenAddresses;
 };
 
 export const dexConfig = {

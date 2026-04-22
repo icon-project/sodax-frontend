@@ -404,3 +404,15 @@ export type WalletProviderSlot<K extends SpokeChainKey | ChainType, Raw extends 
         walletProvider?: never;
       }
     : never;
+
+export type WalletProviderSlotOptional<K extends SpokeChainKey | ChainType, Raw extends boolean> = Raw extends false
+  ? {
+      raw?: Raw;
+      walletProvider: GetWalletProviderType<K>;
+    }
+  : Raw extends true
+    ? {
+        raw: Raw;
+        walletProvider?: never;
+      }
+    : never;

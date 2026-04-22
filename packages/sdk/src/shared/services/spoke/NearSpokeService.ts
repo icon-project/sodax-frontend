@@ -1,9 +1,9 @@
 import { fromHex } from 'viem';
 
 import {
+  type ConfigService,
   type DepositParams,
   type EstimateGasParams,
-  type SrcParams,
   type GetDepositParams,
   type RateLimitConfig,
   type SendMessageParams,
@@ -14,7 +14,6 @@ import {
 import {
   getIntentRelayChainId,
   ChainKeys,
-  type SharedChainConfig,
   type FillData,
   type FillIntent,
   type NearRawTransaction,
@@ -37,12 +36,12 @@ export class NearSpokeService {
   private readonly pollingIntervalMs: number;
   private readonly maxTimeoutMs: number;
 
-  public constructor(sharedConfig: SharedChainConfig) {
+  public constructor(config: ConfigService) {
     // since we only support mainnet for now, we can hardcode the single near chain config
-    const config = sharedConfig[ChainKeys.NEAR_MAINNET];
-    this.rpcProvider = new JsonRpcProvider({ url: config.rpcUrl });
-    this.pollingIntervalMs = config.pollingIntervalMs;
-    this.maxTimeoutMs = config.maxTimeoutMs;
+    const chainConfig = config.sodaxConfig.chains[ChainKeys.NEAR_MAINNET];
+    this.rpcProvider = new JsonRpcProvider({ url: chainConfig.rpcUrl });
+    this.pollingIntervalMs = chainConfig.pollingConfig.pollingIntervalMs;
+    this.maxTimeoutMs = chainConfig.pollingConfig.maxTimeoutMs;
   }
 
   public async estimateGas(_: EstimateGasParams<NearChainKey>): Promise<bigint> {
@@ -83,7 +82,10 @@ export class NearSpokeService {
   }
 
   async fillIntent(
-    fromInfo: SrcParams<NearChainKey>,
+    fromInfo: {
+      srcAddress: string;
+      srcChainKey: NearChainKey;
+    },
     fillData: FillData,
     deposit: bigint = BigInt('0'),
     gas: bigint = BigInt('300000000000000'),

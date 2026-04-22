@@ -8,17 +8,17 @@ import type {
   HubAddress,
   IBitcoinWalletProvider,
   Result,
-  SharedChainConfig,
+  TxReturnType,
 } from '@sodax/types';
 import { ChainKeys, detectBitcoinAddressType, getIntentRelayChainId, spokeChainConfig } from '@sodax/types';
 import * as ecc from '@bitcoinerlab/secp256k1';
 import { keccak256 } from 'viem';
 import type {
+  ConfigService,
   DepositParams,
   EstimateGasParams,
   GetDepositParams,
   SendMessageParams,
-  TxReturnType,
   WaitForTxReceiptParams,
   WaitForTxReceiptReturnType,
 } from '../../../index.js';
@@ -97,14 +97,14 @@ export class BitcoinSpokeService {
   private readonly pollingIntervalMs: number;
   private readonly maxTimeoutMs: number;
 
-  constructor(config: SharedChainConfig) {
+  constructor(config: ConfigService) {
     // since we only support mainnet for now, we can hardcode the single bitcoin chain config
-    const chainConfig = config[ChainKeys.BITCOIN_MAINNET];
+    const chainConfig = config.sodaxConfig.chains[ChainKeys.BITCOIN_MAINNET];
     this.rpcUrl = chainConfig.rpcUrl;
     this.radfi = new RadfiProvider(chainConfig.radfi);
-    this.walletMode = chainConfig.walletMode ?? 'TRADING';
-    this.pollingIntervalMs = chainConfig.pollingIntervalMs;
-    this.maxTimeoutMs = chainConfig.maxTimeoutMs;
+    this.walletMode = chainConfig.radfi.walletMode ?? 'TRADING';
+    this.pollingIntervalMs = chainConfig.pollingConfig.pollingIntervalMs;
+    this.maxTimeoutMs = chainConfig.pollingConfig.maxTimeoutMs;
   }
 
   public static getBtcNetwork(chainId: BitcoinChainKey): bitcoin.networks.Network {
@@ -380,7 +380,6 @@ export class BitcoinSpokeService {
         srcChainKey: fromChainId,
         srcAddress: from,
         token,
-        to,
         amount,
         data = '0x',
         accessToken = this.radfi.accessToken,
@@ -574,7 +573,7 @@ export class BitcoinSpokeService {
     }
 
     const signature = await (
-      params as SendMessageParams<BitcoinChainKey, true> & { walletProvider: IBitcoinWalletProvider }
+      params as SendMessageParams<BitcoinChainKey, false> & { walletProvider: IBitcoinWalletProvider }
     ).walletProvider.signEcdsaMessage(orderedPayload);
 
     onDemandWithdraw.signature = signature;

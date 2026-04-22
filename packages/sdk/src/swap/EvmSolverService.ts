@@ -11,10 +11,9 @@ import {
   parseEventLogs,
 } from 'viem';
 import { Erc20Service } from '../shared/services/erc-20/Erc20Service.js';
-import { FEE_PERCENTAGE_SCALE } from '../shared/constants.js';
 import { calculatePercentageFeeAmount, encodeAddress, randomUint256 } from '../shared/utils/shared-utils.js';
 import { encodeContractCalls } from '../shared/utils/evm-utils.js';
-import { isPartnerFeeAmount, isPartnerFeePercentage, isIntentRelayChainId } from '../shared/guards.js';
+import { isPartnerFeeAmount, isPartnerFeePercentage } from '../shared/guards.js';
 import {
   type CreateIntentParams,
   type FeeData,
@@ -31,6 +30,7 @@ import {
   type SolverConfig,
   type EvmContractCall,
   type PartnerFee,
+  FEE_PERCENTAGE_SCALE,
 } from '@sodax/types';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 import { CLPositionManagerAbi } from '@pancakeswap/infinity-sdk';

@@ -42,7 +42,7 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
 
     return {
       userReserves: userReservesRaw.map(userReserveRaw => ({
-        id: `${this.hubProvider.chainConfig.chain.id}-${userAddress}-${userReserveRaw.underlyingAsset}-${this.poolAddressesProvider}`.toLowerCase(),
+        id: `${this.hubProvider.chainConfig.chain.key}-${userAddress}-${userReserveRaw.underlyingAsset}-${this.poolAddressesProvider}`.toLowerCase(),
         underlyingAsset: userReserveRaw.underlyingAsset.toLowerCase(),
         scaledATokenBalance: userReserveRaw.scaledATokenBalance.toString(),
         usageAsCollateralEnabledOnUser: userReserveRaw.usageAsCollateralEnabledOnUser,
@@ -230,7 +230,7 @@ export class UiPoolDataProviderService implements UiPoolDataProviderInterface {
       const { virtualAccActive } = reserveRaw;
       return {
         originalId: index,
-        id: `${this.hubProvider.chainConfig.chain.id}-${reserveRaw.underlyingAsset}-${this.poolAddressesProvider}`.toLowerCase(),
+        id: `${this.hubProvider.chainConfig.chain.key}-${reserveRaw.underlyingAsset}-${this.poolAddressesProvider}`.toLowerCase(),
         underlyingAsset: reserveRaw.underlyingAsset.toLowerCase(),
         name: reserveRaw.name,
         symbol: reserveRaw.symbol,

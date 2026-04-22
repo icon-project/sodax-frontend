@@ -277,7 +277,7 @@ export type BaseChainInfo<T extends ChainType> = {
 };
 
 export type HubConfig = {
-  chain: BaseChainInfo<'EVM'>;
+  chain: BaseChainInfo<'EVM'> & { key: HubChainKey };
   addresses: {
     assetManager: Address;
     hubWallet: Address;
@@ -293,6 +293,7 @@ export type HubConfig = {
   };
   nativeToken: Address;
   wrappedNativeToken: Address;
+  rpcUrl: HttpUrl;
 } & BaseSpokeChainConfig<'EVM'>;
 
 export type EvmSpokeChainConfig = BaseSpokeChainConfig<'EVM'> & {
@@ -358,6 +359,7 @@ export type BitcoinSpokeChainConfig = BaseSpokeChainConfig<'BITCOIN'> & {
     apiKey: string;
     accessToken: string;
     refreshToken: string;
+    walletMode?: 'USER' | 'TRADING';
   };
 };
 
@@ -660,6 +662,7 @@ export const spokeChainConfig = {
     nativeToken: 'BTC' as const,
     supportedTokens: bitcoinSupportedTokens,
     radfi: {
+      walletMode: 'TRADING',
       apiUrl: 'https://api.radfi.co/api',
       apiKey: '',
       umsUrl: 'https://ums.radfi.co/api',
@@ -867,6 +870,7 @@ export const hubConfig = {
     pollingIntervalMs: 500,
     maxTimeoutMs: 30_000,
   },
+  rpcUrl: 'https://rpc.soniclabs.com',
 } as const satisfies HubConfig;
 
 export type IntentRelayChainId = (typeof RelayChainIdMap)[keyof typeof RelayChainIdMap];

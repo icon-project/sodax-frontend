@@ -22,13 +22,12 @@ import {
 } from '../../../index.js';
 import {
   type EvmSpokeOnlyChainKey,
-  type EvmRawTransactionReceipt,
-  type HttpUrl,
   type Result,
   type TxReturnType,
   getIntentRelayChainId,
   spokeChainConfig,
   type EvmReturnType,
+  type HttpUrl,
 } from '@sodax/types';
 
 export type CreateViemPublicClientParams = {

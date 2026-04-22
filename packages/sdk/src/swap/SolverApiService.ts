@@ -1,7 +1,9 @@
 import invariant from 'tiny-invariant';
+import { retry, type ConfigService } from '../index.js';
 import {
   SolverIntentErrorCode,
-  retry,
+  type Result,
+  type SolverConfig,
   type SolverErrorResponse,
   type SolverExecutionRequest,
   type SolverExecutionResponse,
@@ -10,10 +12,7 @@ import {
   type SolverIntentQuoteResponseRaw,
   type SolverIntentStatusRequest,
   type SolverIntentStatusResponse,
-  type Result,
-  type ConfigService,
-} from '../index.js';
-import type { SolverConfig } from '@sodax/types';
+} from '@sodax/types';
 
 export class SolverApiService {
   private constructor() {}
@@ -49,8 +48,14 @@ export class SolverApiService {
       'unsupported token_dst for dst chain',
     );
 
-    const tokenSrc = configService.getHubAssetInfo(payload.token_src_blockchain_id, payload.token_src)?.hubAsset;
-    const tokenDst = configService.getHubAssetInfo(payload.token_dst_blockchain_id, payload.token_dst)?.hubAsset;
+    const tokenSrc = configService.getSpokeTokenFromOriginalAssetAddress(
+      payload.token_src_blockchain_id,
+      payload.token_src,
+    )?.hubAsset;
+    const tokenDst = configService.getSpokeTokenFromOriginalAssetAddress(
+      payload.token_dst_blockchain_id,
+      payload.token_dst,
+    )?.hubAsset;
 
     invariant(tokenSrc, 'hub asset not found for token_src');
     invariant(tokenDst, 'hub asset not found for token_dst');

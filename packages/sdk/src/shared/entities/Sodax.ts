@@ -41,7 +41,7 @@ export class Sodax {
     this.backendApi = new BackendApiService(this.instanceConfig.api);
     this.config = new ConfigService({ api: this.backendApi, config: this.instanceConfig });
 
-    this.hubProvider = new EvmHubProvider({ config: this.instanceConfig.hub, configService: this.config }); // default to Sonic mainnet
+    this.hubProvider = new EvmHubProvider({ config: this.config }); // default to Sonic mainnet
     this.spokeService = new SpokeService({ config: this.config, hubProvider: this.hubProvider });
     this.swaps = new SwapService({
       configService: this.config,

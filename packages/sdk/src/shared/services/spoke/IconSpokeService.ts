@@ -5,10 +5,6 @@ import type { IconService } from 'icon-sdk-js';
 import * as rlp from 'rlp';
 import {
   type SendMessageParams,
-  type SrcParams,
-  type IconGasEstimate,
-  type WalletActionParams,
-  type TxReturnType,
   type DepositParams,
   type EstimateGasParams,
   type GetDepositParams,
@@ -16,6 +12,7 @@ import {
   type WaitForTxReceiptReturnType,
   sleep,
   BigIntToHex,
+  type ConfigService,
 } from '../../../index.js';
 import {
   type HttpUrl,
@@ -29,9 +26,12 @@ import {
   spokeChainConfig,
   isNativeToken,
   ChainKeys,
-  type SharedChainConfig,
-  type Address,
   type Hex,
+  type Address,
+  type GetAddressType,
+  type WalletProviderSlot,
+  type IconGasEstimate,
+  type TxReturnType,
 } from '@sodax/types';
 import { estimateStepCost } from '../../utils/icon-utils.js';
 
@@ -51,11 +51,13 @@ export type IconTransferToHubParams = {
   data: Hex;
 };
 
-export type IconCallParams<Raw extends boolean> = WalletActionParams<Raw, IconChainKey> & {
+export type IconCallParams<Raw extends boolean> = {
+  srcChainKey: IconChainKey;
+  srcAddress: GetAddressType<IconChainKey>;
   dstChainId: HubChainKey;
   dstAddress: HubAddress;
   payload: Hex;
-} & SrcParams<IconChainKey>;
+} & WalletProviderSlot<IconChainKey, Raw>;
 
 export class IconSpokeService {
   public readonly iconService: IconService;
@@ -63,13 +65,13 @@ export class IconSpokeService {
   private readonly pollingIntervalMs: number;
   private readonly maxTimeoutMs: number;
 
-  constructor(config: SharedChainConfig) {
+  constructor(config: ConfigService) {
     // since we only support mainnet for now, we can hardcode the single icon chain config
-    const chainConfig = config[ChainKeys.ICON_MAINNET];
+    const chainConfig = config.sodaxConfig.chains[ChainKeys.ICON_MAINNET];
     this.iconService = new IconSdk.IconService(new IconSdk.IconService.HttpProvider(chainConfig.rpcUrl));
     this.debugRpcUrl = chainConfig.debugRpcUrl;
-    this.pollingIntervalMs = chainConfig.pollingIntervalMs;
-    this.maxTimeoutMs = chainConfig.maxTimeoutMs;
+    this.pollingIntervalMs = chainConfig.pollingConfig.pollingIntervalMs;
+    this.maxTimeoutMs = chainConfig.pollingConfig.maxTimeoutMs;
   }
 
   public async estimateGas({ tx }: EstimateGasParams<IconChainKey>): Promise<IconGasEstimate> {

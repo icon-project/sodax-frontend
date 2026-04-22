@@ -10,19 +10,18 @@ import {
   type SuiRawTransactionReceipt,
   type SuiChainKey,
   spokeChainConfig,
-  type SuiSharedChainConfig,
-  type SharedChainConfig,
   ChainKeys,
   isNativeToken,
+  type TxReturnType,
+  type SuiGasEstimate,
 } from '@sodax/types';
 import { SuiClient } from '@mysten/sui/client';
 import type {
+  ConfigService,
   DepositParams,
   EstimateGasParams,
   GetDepositParams,
   SendMessageParams,
-  SuiGasEstimate,
-  TxReturnType,
   WaitForTxReceiptParams,
   WaitForTxReceiptReturnType,
 } from '../../../index.js';
@@ -33,16 +32,15 @@ export type SuiTxObject = { $kind: 'Input'; Input: number; type?: 'object' | und
 export class SuiSpokeService {
   public readonly publicClient: SuiClient;
   public assetManagerAddress: string | undefined;
-  private readonly config: SuiSharedChainConfig;
   private readonly pollingIntervalMs: number;
   private readonly maxTimeoutMs: number;
 
-  public constructor(sharedConfig: SharedChainConfig) {
+  public constructor(config: ConfigService) {
     // since we only support mainnet for now, we can hardcode the single sui chain config
-    this.config = sharedConfig[ChainKeys.SUI_MAINNET];
-    this.publicClient = new SuiClient({ url: this.config.rpcUrl });
-    this.pollingIntervalMs = this.config.pollingIntervalMs;
-    this.maxTimeoutMs = this.config.maxTimeoutMs;
+    const chainConfig = config.sodaxConfig.chains[ChainKeys.SUI_MAINNET];
+    this.publicClient = new SuiClient({ url: chainConfig.rpc_url });
+    this.pollingIntervalMs = chainConfig.pollingConfig.pollingIntervalMs;
+    this.maxTimeoutMs = chainConfig.pollingConfig.maxTimeoutMs;
   }
 
   async getCoins(address: string, token: string): Promise<SuiPaginatedCoins> {

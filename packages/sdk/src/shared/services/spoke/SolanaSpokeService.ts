@@ -17,13 +17,11 @@ import {
   isSolanaNativeToken,
 } from '../../entities/solana/utils/utils.js';
 import type {
+  ConfigService,
   DepositParams,
   EstimateGasParams,
   GetDepositParams,
-  Result,
   SendMessageParams,
-  SolanaGasEstimate,
-  TxReturnType,
   WaitForTxReceiptParams,
   WaitForTxReceiptReturnType,
 } from '../../../index.js';
@@ -34,7 +32,6 @@ import {
   spokeChainConfig,
   type HttpUrl,
   type HubAddress,
-  type SharedChainConfig,
   type SolanaAccountMeta,
   type SolanaBase58PublicKey,
   type SolanaChainKey,
@@ -43,6 +40,9 @@ import {
   type SolanaRpcResponseAndContext,
   type SolanaSerializedTransaction,
   type SolanaTokenAmount,
+  type SolanaGasEstimate,
+  type TxReturnType,
+  type Result,
 } from '@sodax/types';
 import BN from 'bn.js';
 import { getAssociatedTokenAddress } from '@solana/spl-token';
@@ -68,12 +68,12 @@ export class SolanaSpokeService {
   private readonly pollingIntervalMs: number;
   private readonly maxTimeoutMs: number;
 
-  public constructor(config: SharedChainConfig) {
-    const chainConfig = config[ChainKeys.SOLANA_MAINNET];
+  public constructor(config: ConfigService) {
+    const chainConfig = config.sodaxConfig.chains[ChainKeys.SOLANA_MAINNET];
     this.rpcUrl = chainConfig.rpcUrl;
     this.connection = new Connection(this.rpcUrl, 'confirmed');
-    this.pollingIntervalMs = chainConfig.pollingIntervalMs;
-    this.maxTimeoutMs = chainConfig.maxTimeoutMs;
+    this.pollingIntervalMs = chainConfig.pollingConfig.pollingIntervalMs;
+    this.maxTimeoutMs = chainConfig.pollingConfig.maxTimeoutMs;
   }
 
   /**

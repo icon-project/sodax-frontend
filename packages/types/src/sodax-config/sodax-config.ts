@@ -50,31 +50,6 @@ export type BitcoinSharedChainConfig = TxPollingConfig & {
   walletMode?: 'USER' | 'TRADING';
 };
 
-export type SuiSharedChainConfig = TxPollingConfig & {
-  rpcUrl: HttpUrl;
-};
-
-export type SolanaSharedChainConfig = TxPollingConfig & {
-  rpcUrl: HttpUrl;
-};
-
-export type IconSharedChainConfig = TxPollingConfig & {
-  rpcUrl: HttpUrl;
-  debugRpcUrl: HttpUrl;
-};
-
-export type InjectiveSharedChainConfig = TxPollingConfig & {
-  rpcUrl: HttpUrl;
-};
-
-export type NearSharedChainConfig = TxPollingConfig & {
-  rpcUrl: HttpUrl;
-};
-
-export type StacksSharedChainConfig = TxPollingConfig & {
-  rpcUrl: HttpUrl;
-};
-
 export type BridgeConfig = {
   partnerFee: PartnerFee | undefined; // enables override of global partner fee
 };

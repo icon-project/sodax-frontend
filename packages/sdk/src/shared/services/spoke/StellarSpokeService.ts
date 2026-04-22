@@ -113,7 +113,6 @@ export type RequestTrustlineParams<S extends StellarChainKey, R extends boolean>
 } & WalletProviderSlot<S, R>;
 
 export class StellarSpokeService {
-  private readonly config: ConfigService;
   private readonly chainConfig: StellarSpokeChainConfig;
   public readonly server: Horizon.Server;
   public readonly sorobanServer: CustomSorobanServer;
@@ -123,7 +122,6 @@ export class StellarSpokeService {
   private readonly baseFee: string;
 
   constructor(config: ConfigService) {
-    this.config = config;
     this.chainConfig = config.sodaxConfig.chains[ChainKeys.STELLAR_MAINNET];
 
     // since we only support mainnet for now, we can hardcode the single stellar chain config

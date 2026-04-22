@@ -101,13 +101,13 @@ export type InjectiveRawTransactionReceipt = {
   height: number;
   code: number;
   codespace: string;
-  data: string;
+  data?: string;
   rawLog: string;
-  info: string;
+  info?: string;
   gasWanted: number;
   gasUsed: number;
-  logs: InjectiveTxLog[];
-  events: InjectiveEvent[];
+  logs?: InjectiveTxLog[];
+  events?: InjectiveEvent[];
   timestamp: string;
 };
 
