@@ -9,11 +9,10 @@ import Image from 'next/image';
 import { Label } from '@/components/ui/label';
 import Autoplay from 'embla-carousel-autoplay';
 import { MainCtaButton } from './main-cta-button';
-import { SodaxIcon } from '../icons/sodax-icon';
 import { Separator } from '@radix-ui/react-separator';
 import { useRouter } from 'next/navigation';
-import { NEWS_ROUTE, PARTNERS_ROUTE, SWAP_ROUTE } from '@/constants/routes';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import { SWAP_ROUTE } from '@/constants/routes';
+import { Navbar } from '@/components/shared/navbar';
 import { useAppStore } from '@/stores/app-store-provider';
 
 const carouselItems = [
@@ -64,47 +63,7 @@ const ExchangeHeroSection = (): React.ReactElement => {
           unoptimized
         />
         {/* Menu Bar */}
-        <div className="w-full flex justify-between items-center pt-10 z-20 md:px-16 px-8 lg:px-8 lg:max-w-[1264px]">
-          <div className="flex items-center">
-            <SidebarTrigger className="outline-none size-8 p-0 lg:hidden" />
-            <div
-              className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            >
-              <Image src="/soda-yellow.png" alt="SODAX Symbol" width={32} height={32} />
-              <div className="hidden md:block md:ml-[11px]">
-                <SodaxIcon width={84} height={18} fill="white" />
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-8">
-            <ul className="hidden lg:flex gap-6 z-10">
-              <li>
-                <a
-                  className="text-cream font-[InterRegular] text-[14px] transition-all hover:opacity-80 cursor-pointer"
-                  href={NEWS_ROUTE}
-                >
-                  News
-                </a>
-              </li>
-              <li>
-                <a
-                  className="text-cream font-[InterRegular] text-[14px] transition-all hover:opacity-80 cursor-pointer"
-                  href={PARTNERS_ROUTE}
-                >
-                  Partners
-                </a>
-              </li>
-            </ul>
-            <button
-              type="button"
-              onClick={() => router.push(PARTNERS_ROUTE)}
-              className="bg-yellow-dark hover:bg-yellow-soda transition-all hover:scale-[102%] h-10 px-6 font-[InterBold] rounded-full text-[14px] cursor-pointer text-cherry-dark"
-            >
-              Discover SODAX
-            </button>
-          </div>
-        </div>
+        <Navbar />
         <Image
           className="mix-blend-color-dodge absolute max-w-none w-[357px] h-[357px] sm:w-[701px] sm:h-[680px] top-[30px] left-[-135px] sm:top-[-50px] lg:left-[9.5%] md:left-[-30%]"
           src="/circle1.png"
