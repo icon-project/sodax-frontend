@@ -4,7 +4,7 @@ import type React from 'react';
 
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import type { CarouselApi } from '@/components/ui/carousel';
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, type ReactNode, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Label } from '@/components/ui/label';
 import Autoplay from 'embla-carousel-autoplay';
@@ -15,10 +15,21 @@ import { SWAP_ROUTE } from '@/constants/routes';
 import { useAppStore } from '@/stores/app-store-provider';
 import { Navbar } from '@/components/shared/navbar';
 
-const heroStats: { title: string; subtitle: string; widthClass: string }[] = [
-  { title: 'Swap your assets', subtitle: 'At leading rates', widthClass: 'w-40 pr-10' },
-  { title: 'Build your savings', subtitle: 'Across networks', widthClass: 'w-42 pr-10' },
-  { title: 'Borrow stables or assets', subtitle: 'Without a bank', widthClass: 'w-39' },
+const heroStats: { title: ReactNode; subtitle: string; widthClass: string; nowrap?: boolean }[] = [
+  { title: 'Swap your assets', subtitle: 'At optimal rates', widthClass: 'w-40 pr-10' },
+  {
+    title: (
+      <>
+        Migrate
+        <br />
+        ICX to SODA
+      </>
+    ),
+    subtitle: 'Claim your tokens',
+    widthClass: 'w-42 pr-10',
+    nowrap: true,
+  },
+  { title: 'Stake and supply', subtitle: 'Fueled by fees', widthClass: 'w-39' },
 ];
 
 const carouselItems = [
@@ -61,7 +72,7 @@ const ExchangeHeroSection = (): React.ReactElement => {
     <div className="hero-section h-full">
       <div className="h-full flex flex-col items-center bg-cherry-soda relative">
         <Image
-          className="mix-blend-screen absolute max-md:top-[52%] max-md:left-1/2 max-md:-translate-x-1/2 max-md:translate-y-[-50%] sm:-right-5 sm:bottom-30 lg:left-1/2 lg:bottom-2 w-[297px] h-[445px] sm:w-[408px] sm:h-[612px] lg:w-[541px] lg:h-[811px]"
+          className="mix-blend-screen absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 sm:left-auto sm:-right-5 sm:translate-x-0 lg:left-1/2 lg:right-auto w-[297px] h-[445px] sm:w-[408px] sm:h-[612px] lg:w-[541px] lg:h-[811px]"
           src="/girl.png"
           alt="background"
           width={541}
@@ -80,36 +91,43 @@ const ExchangeHeroSection = (): React.ReactElement => {
         />
 
         {/* Center Content */}
-        <div className="flex flex-col h-[700px] w-[310px] sm:w-[400px] md:w-[700px] lg:w-[900px] lg:pt-53 md:pt-41 pt-10 lg:mr-10">
+        <div className="flex flex-col h-[700px] lg:h-auto w-[310px] sm:w-[400px] md:w-[700px] lg:w-[900px] pt-10 sm:pt-28 md:pt-41 lg:pt-[clamp(13.25rem,calc(100vh-38rem),25rem)] lg:mr-10">
           <div className="flex flex-col justify-center  w-full">
             <Label className="mix-blend-hard-light text-[54px] sm:text-[90px] md:text-[122px] lg:text-[156px] leading-none text-yellow-soda font-[InterBlack] lg:leading-[113px]">
-              FRESH DEFI
+              USE SODA
             </Label>
             <div className="leading-[1.1] text-white font-[InterBlack] text-(length:--main-title) md:mt-6">
-              to grow your finances
+              trade, stake and earn
             </div>
           </div>
-          <div className="flex h-[66px] md:mt-10 mt-96">
+          <div className="flex h-[66px] mt-96 sm:mt-24 md:mt-10">
+            {/* Mobile: single subtitle block (shown below md breakpoint) */}
             <div className="flex md:hidden">
               <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
-              <div className="flex flex-col w-40 pl-4 pr-10 justify-center">
-                <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2]">
-                  Swap, save and borrow
+              <div className="flex flex-col pl-4 pr-10 justify-center">
+                <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2] whitespace-nowrap">
+                  <span className="block">Manage</span>
+                  <span className="block">SODA and more</span>
                 </div>
-                <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
-                  Across networks
+                <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter whitespace-nowrap">
+                  Swap, stake and earn
                 </div>
               </div>
             </div>
+            {/* Desktop: four-column feature list (shown from md breakpoint up) */}
             <div className="hidden md:flex ">
-              {heroStats.map(({ title, subtitle, widthClass }) => (
-                <Fragment key={title}>
+              {heroStats.map(({ title, subtitle, widthClass, nowrap }) => (
+                <Fragment key={subtitle}>
                   <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
                   <div className={`flex flex-col pl-4 justify-center ${widthClass}`}>
-                    <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2]">
+                    <div
+                      className={`text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2] ${nowrap ? 'whitespace-nowrap' : ''}`}
+                    >
                       {title}
                     </div>
-                    <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
+                    <div
+                      className={`text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter ${nowrap ? 'whitespace-nowrap' : ''}`}
+                    >
                       {subtitle}
                     </div>
                   </div>
@@ -157,12 +175,13 @@ const ExchangeHeroSection = (): React.ReactElement => {
             </div>
             <div className="inline-flex justify-center items-start relative">
               <MainCtaButton
+                hideBubbles
                 onClick={() => {
                   router.push(SWAP_ROUTE);
                   setShouldTriggerAnimation(true);
                 }}
               >
-                launch apps
+                Launch apps
               </MainCtaButton>
             </div>
           </div>

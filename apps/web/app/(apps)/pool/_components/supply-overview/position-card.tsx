@@ -10,6 +10,7 @@ import { useEvmSwitchChain } from '@sodax/wallet-sdk-react';
 import { formatTokenAmount } from '@/lib/utils';
 import { chainIdToChainName } from '@/providers/constants';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
+import { useIsMobile } from '@/hooks/use-mobile';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Item, ItemContent, ItemMedia } from '@/components/ui/item';
@@ -60,6 +61,7 @@ export function PositionCard({
   onLiquidityValueChange,
 }: PositionCardProps): React.JSX.Element {
   const { data, isLoading, isError, error } = usePositionInfo({ tokenId, poolKey });
+  const isMobile = useIsMobile();
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [isManageDialogOpen, setIsManageDialogOpen] = useState<boolean>(false);
   const [isSwitchChainDialogOpen, setIsSwitchChainDialogOpen] = useState<boolean>(false);
@@ -91,12 +93,20 @@ export function PositionCard({
     return sodaPrice / sodaPerXSodaRate;
   }, [sodaPerXSodaRate, sodaPrice]);
 
-  const handleManageClick = (): void => {
+  const handleManageClick = (event: React.MouseEvent): void => {
+    event.stopPropagation();
     if (isWrongChain) {
       setIsSwitchChainDialogOpen(true);
       return;
     }
     setIsManageDialogOpen(true);
+  };
+
+  const handleCardTap = (): void => {
+    if (!isMobile) {
+      return;
+    }
+    setIsHovered((previousIsHovered): boolean => !previousIsHovered);
   };
 
   const handleSwitchChainClick = (): void => {
@@ -204,8 +214,9 @@ export function PositionCard({
   return (
     <div
       className="w-80 min-h-42 px-6 py-6 bg-almost-white mix-blend-multiply rounded-2xl inline-flex flex-col justify-center items-center gap-4 relative overflow-hidden"
-      onMouseEnter={(): void => setIsHovered(true)}
-      onMouseLeave={(): void => setIsHovered(false)}
+      onMouseEnter={isMobile ? undefined : (): void => setIsHovered(true)}
+      onMouseLeave={isMobile ? undefined : (): void => setIsHovered(false)}
+      onClick={handleCardTap}
     >
       <motion.div
         className="w-full flex flex-col gap-4"

@@ -6,12 +6,14 @@ interface MainCtaButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'yellow-dark' | 'yellow-soda' | 'white' | 'cherry-brighter';
   className?: string;
   children: React.ReactNode;
+  hideBubbles?: boolean;
 }
 
 export const MainCtaButton = ({
   variant = 'yellow-dark',
   className,
   children,
+  hideBubbles = false,
   ...props
 }: MainCtaButtonProps): React.ReactElement => {
   const getBgColor = () => {
@@ -47,12 +49,14 @@ export const MainCtaButton = ({
       >
         {children}
       </Button>
-      <div className="w-4 h-6 absolute -right-4 top-[7px]">
-        <div className={cn('w-2 h-2 left-[7px] top-[10px] absolute rounded-full', getBgColor())} />
-        <div className={cn('w-1 h-1 left-[9px] top-[-8px] absolute rounded-full', getBgColor())} />
-        <div className={cn('w-1.5 h-1.5 left-[0px] top-[-2px] absolute rounded-full', getBgColor())} />
-        <div className={cn('w-1 h-1 left-[12px] top-[1px] absolute rounded-full', getBgColor())} />
-      </div>
+      {!hideBubbles && (
+        <div className="w-4 h-6 absolute -right-4 top-[7px]">
+          <div className={cn('w-2 h-2 left-[7px] top-[10px] absolute rounded-full', getBgColor())} />
+          <div className={cn('w-1 h-1 left-[9px] top-[-8px] absolute rounded-full', getBgColor())} />
+          <div className={cn('w-1.5 h-1.5 left-[0px] top-[-2px] absolute rounded-full', getBgColor())} />
+          <div className={cn('w-1 h-1 left-[12px] top-[1px] absolute rounded-full', getBgColor())} />
+        </div>
+      )}
     </div>
   );
 };
