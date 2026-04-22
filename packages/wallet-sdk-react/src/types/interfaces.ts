@@ -1,11 +1,11 @@
-import type { ChainType, IXService as IXServiceBase } from '@sodax/types';
+import type { ChainType, IXServiceBase } from '@sodax/types';
 import type { XAccount } from './index.js';
 
 /**
  * Public interface for chain service implementations.
  *
  * Consumer code should depend on this interface instead of the concrete XService class.
- * Extends the shared `IXService` contract from `@sodax/types` with wallet-sdk-react
+ * Extends the shared `IXServiceBase` from `@sodax/types` with wallet-sdk-react
  * specific connector methods.
  */
 export interface IXService extends IXServiceBase {

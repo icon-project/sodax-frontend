@@ -63,13 +63,11 @@ export interface WalletAddressProvider {
 }
 
 /**
- * Chain-aware service contract.
- *
- * Acts as the shared interface between `@sodax/wallet-sdk-react` (implementation via
- * the abstract `XService` class) and consumers such as `@sodax/dapp-kit`, so cross-package
- * code depends on the type contract here rather than on the concrete class or its package.
+ * Base chain-aware service contract — the minimum shape for reading token
+ * balances on a chain. Extended by `wallet-sdk-react.IXService` with
+ * connector methods.
  */
-export interface IXService {
+export interface IXServiceBase {
   readonly xChainType: ChainType;
   getBalance(address: string | undefined, xToken: XToken): Promise<bigint>;
   getBalances(
@@ -109,8 +107,10 @@ export type StacksNetworkName = 'mainnet' | 'testnet' | 'devnet' | 'mocknet';
  * @stacks/network@7.3.1). Kept local to avoid importing external types per
  * @sodax/types rules. Real `StacksNetwork` objects satisfy this via TS
  * structural typing, so consumers can pass `networkFrom(...)` output directly.
- * If @stacks/network adds new required fields, consumers will get a compile
- * error until this type is updated.
+ *
+ * Maintenance: bump this type in lockstep with `@stacks/network` in the
+ * workspace catalog. If upstream adds required fields, consumers will get
+ * a compile error until this type is updated to match.
  */
 export type StacksNetworkLike = {
   chainId: number;

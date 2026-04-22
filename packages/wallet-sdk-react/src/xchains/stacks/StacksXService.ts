@@ -13,6 +13,12 @@ export class StacksXService extends XService {
     this.network = networkFrom(network || 'mainnet');
   }
 
+  /**
+   * @param network - Re-applied on every call (unlike `InjectiveXService` /
+   *   `NearXService` which are first-call-only). `useStacksHydration` relies
+   *   on this to update the network when `rpcConfig.stacks` changes — Stacks
+   *   doesn't hold persistent chain clients so re-configuration is cheap.
+   */
   public static getInstance(network?: StacksNetworkName | StacksNetwork): StacksXService {
     if (!StacksXService.instance) {
       StacksXService.instance = new StacksXService(network);
