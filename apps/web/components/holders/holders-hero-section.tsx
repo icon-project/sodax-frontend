@@ -4,10 +4,12 @@ import type { ReactElement } from 'react';
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { KRAKEN_ROUTE, SWAP_ROUTE } from '@/constants/routes';
+import { SWAP_ROUTE } from '@/constants/routes';
+// import { KRAKEN_ROUTE } from '@/constants/routes';
 import { Navbar } from '@/components/shared/navbar';
 import { NetworkLogosScroller } from '@/components/shared/network-logos-scroller';
-import { trackHoldersBuyKrakenClicked, trackHoldersSwapClicked } from '@/lib/analytics';
+import { trackHoldersSwapClicked } from '@/lib/analytics';
+// import { trackHoldersBuyKrakenClicked } from '@/lib/analytics';
 
 const HoldersHeroSection = (): ReactElement => {
   return (
@@ -51,7 +53,7 @@ const HoldersHeroSection = (): ReactElement => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 mt-4 z-20">
-            <a
+            {/* <a
               href={KRAKEN_ROUTE}
               target="_blank"
               rel="noopener noreferrer"
@@ -59,7 +61,7 @@ const HoldersHeroSection = (): ReactElement => {
               className="bg-yellow-dark hover:bg-yellow-soda transition-all hover:scale-[102%] h-12 px-6 flex items-center justify-center font-[InterBold] rounded-full text-sm cursor-pointer text-cherry-dark"
             >
               Buy on Kraken
-            </a>
+            </a> */}
             <Link
               href={SWAP_ROUTE}
               onClick={() => trackHoldersSwapClicked()}
