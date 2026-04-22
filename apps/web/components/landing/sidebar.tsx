@@ -12,7 +12,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { NEWS_ROUTE, PARTNERS_ROUTE, SWAP_ROUTE } from '@/constants/routes';
+import { HOLDERS_ROUTE, HOME_ROUTE, NEWS_ROUTE, PARTNERS_ROUTE, SWAP_ROUTE } from '@/constants/routes';
 
 const AppSidebar = (): React.ReactElement => {
   const { toggleSidebar } = useSidebar();
@@ -34,6 +34,16 @@ const AppSidebar = (): React.ReactElement => {
         <SidebarGroupContent className="flex flex-col items-center text-center gap-6 mt-45 z-10">
           <Image src="/soda-yellow.png" alt="SODAX Symbol" width={32} height={32} />
           <SidebarMenu className="gap-6">
+            <SidebarMenuItem>
+              <Link href={HOME_ROUTE} className="text-(length:--body-super-comfortable) text-white font-medium">
+                <p>Home</p>
+              </Link>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <Link href={HOLDERS_ROUTE} className="text-(length:--body-super-comfortable) text-white font-medium">
+                <p>Holders</p>
+              </Link>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href={PARTNERS_ROUTE} className="text-(length:--body-super-comfortable) text-white font-medium">
                 <p>Partners</p>
