@@ -794,7 +794,7 @@ export class MoneyMarketService {
   > {
     const { params, timeout = DEFAULT_RELAY_TX_TIMEOUT } = _params;
     const srcChainKey = params.srcChainKey;
-    const hubChainId = this.hubProvider.chainConfig.chain.id;
+    const hubChainId = this.hubProvider.chainConfig.chain.key;
 
     try {
       const txResult = await this.createBorrowIntent(_params);
@@ -990,7 +990,7 @@ export class MoneyMarketService {
   > {
     const { params, timeout = DEFAULT_RELAY_TX_TIMEOUT } = _params;
     const srcChainKey = params.srcChainKey;
-    const hubChainId = this.hubProvider.chainConfig.chain.id;
+    const hubChainId = this.hubProvider.chainConfig.chain.key;
     const walletRouter = this.hubProvider.chainConfig.addresses.walletRouter;
 
     try {
@@ -1490,7 +1490,7 @@ export class MoneyMarketService {
       );
     }
 
-    if (toChainId === this.hubProvider.chainConfig.chain.id) {
+    if (toChainId === this.hubProvider.chainConfig.chain.key) {
       if (assetAddress.toLowerCase() === this.config.spokeChainConfig[toChainId].addresses.wrappedSonic.toLowerCase()) {
         const withdrawToCall = {
           address: assetAddress,
@@ -1562,7 +1562,7 @@ export class MoneyMarketService {
       translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(dstToken.decimals, translatedInAmount);
     }
 
-    if (toChainId === this.hubProvider.chainConfig.chain.id) {
+    if (toChainId === this.hubProvider.chainConfig.chain.key) {
       if (assetAddress.toLowerCase() === this.config.spokeChainConfig[toChainId].addresses.wrappedSonic.toLowerCase()) {
         const withdrawToCall = {
           address: assetAddress,

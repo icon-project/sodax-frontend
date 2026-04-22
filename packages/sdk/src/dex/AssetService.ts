@@ -25,7 +25,6 @@ import {
   isBitcoinChainKeyType,
 } from '../index.js';
 import {
-  isEvmChainKey,
   SodaTokens,
   type ConcentratedLiquidityConfig,
   type EvmChainKey,

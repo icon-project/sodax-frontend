@@ -769,7 +769,7 @@ export class StakingService {
       const txResult = await this.spoke.sendMessage({
         srcAddress: params.srcAddress as GetAddressType<K>,
         srcChainKey: params.srcChainKey,
-        dstChainKey: this.hubProvider.chainConfig.chain.id,
+        dstChainKey: this.hubProvider.chainConfig.chain.key,
         dstAddress: hubWallet,
         payload: data,
         raw: false,
@@ -820,7 +820,7 @@ export class StakingService {
       const txResult = await this.spoke.sendMessage({
         srcAddress: params.srcAddress as GetAddressType<K>,
         srcChainKey: params.srcChainKey,
-        dstChainKey: this.hubProvider.chainConfig.chain.id,
+        dstChainKey: this.hubProvider.chainConfig.chain.key,
         dstAddress: hubWallet,
         payload: data,
         raw: true,
@@ -969,7 +969,7 @@ export class StakingService {
       const txResult = await this.spoke.sendMessage({
         srcAddress: params.srcAddress as GetAddressType<K>,
         srcChainKey: params.srcChainKey,
-        dstChainKey: this.hubProvider.chainConfig.chain.id,
+        dstChainKey: this.hubProvider.chainConfig.chain.key,
         dstAddress: hubWallet,
         payload: data,
         raw: false,
@@ -1026,7 +1026,7 @@ export class StakingService {
       const txResult = await this.spoke.sendMessage({
         srcAddress: params.srcAddress as GetAddressType<K>,
         srcChainKey: params.srcChainKey,
-        dstChainKey: this.hubProvider.chainConfig.chain.id,
+        dstChainKey: this.hubProvider.chainConfig.chain.key,
         dstAddress: hubWallet,
         payload: data,
         raw: true,
@@ -1187,7 +1187,7 @@ export class StakingService {
       const txResult = await this.spoke.sendMessage({
         srcAddress: params.srcAddress as GetAddressType<K>,
         srcChainKey: params.srcChainKey,
-        dstChainKey: this.hubProvider.chainConfig.chain.id,
+        dstChainKey: this.hubProvider.chainConfig.chain.key,
         dstAddress: hubWallet,
         payload: data,
         raw: false,
@@ -1242,7 +1242,7 @@ export class StakingService {
       const txResult = await this.spoke.sendMessage({
         srcAddress: params.srcAddress as GetAddressType<K>,
         srcChainKey: params.srcChainKey,
-        dstChainKey: this.hubProvider.chainConfig.chain.id,
+        dstChainKey: this.hubProvider.chainConfig.chain.key,
         dstAddress: hubWallet,
         payload: data,
         raw: true,
@@ -1291,7 +1291,7 @@ export class StakingService {
     calls.push(EvmVaultTokenService.encodeWithdraw(sodaVault, sodaAsset.hubAsset, params.amount));
     const translatedAmountOut = EvmVaultTokenService.translateOutgoingDecimals(sodaAsset.decimals, params.amount);
 
-    if (dstChainId === this.hubProvider.chainConfig.chain.id) {
+    if (dstChainId === this.hubProvider.chainConfig.chain.key) {
       calls.push(Erc20Service.encodeTransfer(sodaAsset.hubAsset, dstWallet, translatedAmountOut));
     } else {
       calls.push(
@@ -1397,7 +1397,7 @@ export class StakingService {
       const txResult = await this.spoke.sendMessage({
         srcAddress: params.srcAddress as GetAddressType<K>,
         srcChainKey: params.srcChainKey,
-        dstChainKey: this.hubProvider.chainConfig.chain.id,
+        dstChainKey: this.hubProvider.chainConfig.chain.key,
         dstAddress: hubWallet,
         payload: data,
         raw: false,
@@ -1441,7 +1441,7 @@ export class StakingService {
       const txResult = await this.spoke.sendMessage({
         srcAddress: params.srcAddress as GetAddressType<K>,
         srcChainKey: params.srcChainKey,
-        dstChainKey: this.hubProvider.chainConfig.chain.id,
+        dstChainKey: this.hubProvider.chainConfig.chain.key,
         dstAddress: hubWallet,
         payload: data,
         raw: true,

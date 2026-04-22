@@ -2,7 +2,7 @@ import type { Hex, PublicClient, HttpTransport } from 'viem';
 import {
   type RelayErrorCode,
   type RelayError,
-  SpokeService,
+  type SpokeService,
   encodeContractCalls,
   relayTxAndWaitPacket,
   Permit2Service,
@@ -19,7 +19,6 @@ import {
 import type {
   Address,
   CLPositionConfig,
-  ConcentratedLiquidityConfig,
   EvmContractCall,
   GetAddressType,
   GetWalletProviderType,
@@ -433,7 +432,6 @@ export type ClServiceConstructorParams = {
  * @namespace SodaxFeatures
  */
 export class ClService {
-  private readonly clConfig: ConcentratedLiquidityConfig;
   private readonly relayerApiEndpoint: HttpUrl;
   private readonly hubProvider: HubProvider;
   private readonly config: ConfigService;
@@ -444,7 +442,6 @@ export class ClService {
     this.spoke = spoke;
     this.hubProvider = hubProvider;
     this.relayerApiEndpoint = config.relay.relayerApiEndpoint;
-    this.clConfig = config.dex.concentratedLiquidityConfig;
   }
 
   public getAssetsForPool(srcChainKey: SpokeChainKey, poolKey: PoolKey): PoolSpokeAssets {
@@ -1328,7 +1325,7 @@ export class ClService {
     Result<TxReturnType<K, true>, ConcentratedLiquidityError<'CREATE_CLAIM_REWARDS_INTENT_FAILED'>> &
       RelayOptionalExtraData
   > {
-    const { params, skipSimulation, walletProvider } = _params;
+    const { params, skipSimulation } = _params;
     try {
       const hubWallet = await HubService.getUserHubWalletAddress(
         params.srcAddress,
@@ -1412,7 +1409,7 @@ export class ClService {
       if (!isHubChainKeyType(params.srcChainKey)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          isSolanaChainKeyType(params.srcChainKey) || isBitcoinChainKeyType(params.srcChain)
+          isSolanaChainKeyType(params.srcChainKey) || isBitcoinChainKeyType(params.srcChainKey)
             ? txResult.data
             : undefined,
           params.srcChainKey,

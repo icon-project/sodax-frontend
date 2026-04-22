@@ -40,7 +40,7 @@ export class HubService {
     const encodedAddress = encodeAddress(chainKey, address);
 
     // for hub chain, use the user router instead of CREATE3
-    if (chainKey === hubProvider.chainConfig.chain.id) {
+    if (chainKey === hubProvider.chainConfig.chain.key) {
       return HubService.getUserRouter(encodedAddress, hubProvider);
     }
 

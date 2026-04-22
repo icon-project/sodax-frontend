@@ -309,7 +309,7 @@ export class SonicSpokeService {
     const srcAddress = createIntentParams.srcAddress as Address;
 
     const outputToken = isSonicChainKey(createIntentParams.dstChain)
-      ? hubProvider.configService.getSpokeTokenFromOriginalAssetAddress(
+      ? hubProvider.config.getSpokeTokenFromOriginalAssetAddress(
           createIntentParams.dstChain,
           createIntentParams.outputToken,
         )?.hubAsset
@@ -370,7 +370,7 @@ export class SonicSpokeService {
     const srcAddress = createIntentParams.srcAddress as Address;
 
     const outputToken = isSonicChainKey(createIntentParams.dstChain)
-      ? hubProvider.configService.getSpokeTokenFromOriginalAssetAddress(
+      ? hubProvider.config.getSpokeTokenFromOriginalAssetAddress(
           createIntentParams.dstChain,
           createIntentParams.outputToken,
         )?.hubAsset

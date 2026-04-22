@@ -107,7 +107,7 @@ export class EvmAssetManagerService {
     spokeChainId: SpokeChainKey,
   ): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = hubProvider.configService.getSpokeTokenFromOriginalAssetAddress(spokeChainId, params.token);
+    const assetConfig = hubProvider.config.getSpokeTokenFromOriginalAssetAddress(spokeChainId, params.token);
 
     if (!assetConfig) {
       throw new Error(`[withdrawAssetData] Hub asset not found for token: ${params.token}`);

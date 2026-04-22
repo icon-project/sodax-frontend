@@ -415,7 +415,7 @@ export class MigrationService {
     _params: IcxRevertMigrationAction | UnifiedBnUSDMigrateAction<K>,
     action: MigrationAction,
   ): Promise<Result<TxReturnType<K, true>>> {
-    const { params, walletProvider } = _params;
+    const { params } = _params;
     try {
       if (action === 'migrate') {
         invariant(params.amount > 0n, 'Amount must be greater than 0');
