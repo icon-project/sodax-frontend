@@ -51,7 +51,7 @@ const HoldersHeroSection = (): ReactElement => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 mt-4 z-20">
-            <a
+            {/* <a
               href={KRAKEN_ROUTE}
               target="_blank"
               rel="noopener noreferrer"
@@ -59,7 +59,7 @@ const HoldersHeroSection = (): ReactElement => {
               className="bg-yellow-dark hover:bg-yellow-soda transition-all hover:scale-[102%] h-12 px-6 flex items-center justify-center font-[InterBold] rounded-full text-sm cursor-pointer text-cherry-dark"
             >
               Buy on Kraken
-            </a>
+            </a> */}
             <Link
               href={SWAP_ROUTE}
               onClick={() => trackHoldersSwapClicked()}
