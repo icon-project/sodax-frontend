@@ -1,3 +1,5 @@
+'use client';
+
 import type { ReactElement } from 'react';
 
 import Image from 'next/image';
@@ -8,7 +10,10 @@ import type { HoldersBannerWithButton, HoldersShortBanner } from './holders-bann
 
 type BannerVariant = 'full' | 'split';
 
-export type HoldersBannerProps = { variant: BannerVariant } & (HoldersBannerWithButton | HoldersShortBanner);
+export type HoldersBannerProps = { variant: BannerVariant; onCtaClick?: () => void } & (
+  | HoldersBannerWithButton
+  | HoldersShortBanner
+);
 
 const CONTAINER_BASE = 'flex flex-col items-center bg-almost-white mt-4 relative';
 
@@ -44,7 +49,7 @@ const BANNER_IMAGE_CLASSNAME: Record<BannerVariant, string> = {
 };
 
 export default function HoldersBanner(props: HoldersBannerProps): ReactElement {
-  const { variant, title, subtitle } = props;
+  const { variant, title, subtitle, onCtaClick } = props;
   const hasMedia = 'cta' in props;
   const showTexture = variant === 'full' && hasMedia;
 
@@ -83,7 +88,9 @@ export default function HoldersBanner(props: HoldersBannerProps): ReactElement {
       {hasMedia && (
         <div className="mt-6 z-10">
           <Button asChild variant="outline" size="lg" className={BUTTON_STYLE[variant]}>
-            <Link href={props.cta.href}>{props.cta.label}</Link>
+            <Link href={props.cta.href} onClick={onCtaClick}>
+              {props.cta.label}
+            </Link>
           </Button>
         </div>
       )}

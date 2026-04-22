@@ -1,11 +1,14 @@
+'use client';
+
 import type { ReactElement } from 'react';
 
 import Image from 'next/image';
 import { DISCORD_ROUTE, X_ROUTE } from '@/constants/routes';
+import { trackHoldersFollowXClicked, trackHoldersJoinDiscordClicked } from '@/lib/analytics';
 
 const COMMUNITY_LINKS = [
-  { label: 'Follow on X', href: X_ROUTE },
-  { label: 'Join the Discord', href: DISCORD_ROUTE },
+  { label: 'Follow on X', href: X_ROUTE, onClick: trackHoldersFollowXClicked },
+  { label: 'Join the Discord', href: DISCORD_ROUTE, onClick: trackHoldersJoinDiscordClicked },
 ] as const;
 
 const LINK_CLASSNAME =
@@ -31,8 +34,15 @@ export default function HoldersJoinBanner(): ReactElement {
           </div>
         </div>
         <div className="flex gap-4">
-          {COMMUNITY_LINKS.map(({ label, href }) => (
-            <a key={href} href={href} target="_blank" rel="noopener noreferrer" className={LINK_CLASSNAME}>
+          {COMMUNITY_LINKS.map(({ label, href, onClick }) => (
+            <a
+              key={href}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => onClick()}
+              className={LINK_CLASSNAME}
+            >
               {label}
             </a>
           ))}
