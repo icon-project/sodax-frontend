@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { KrakenIcon } from '@/components/icons/kraken-icon';
+import { trackKrakenSpotlightClicked } from '@/lib/analytics';
 
 const AUTOPLAY_INITIAL_DELAY_MS = 800;
 const AUTOPLAY_HOLD_MS = 2000;
@@ -65,7 +66,7 @@ export function NavbarSpotlight({ className = '' }: { className?: string }) {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <Link href="/holders" className="shrink-0">
+      <Link href="/holders" className="shrink-0" onClick={() => trackKrakenSpotlightClicked()}>
         <motion.p
           className="relative font-[InterRegular] text-sm leading-[1.4] whitespace-nowrap"
           initial={false}
@@ -150,7 +151,11 @@ export function NavbarSpotlight({ className = '' }: { className?: string }) {
 export function NavbarSpotlightStatic({ className = '' }: { className?: string }) {
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      <Link href="/holders" className="font-[InterRegular] text-sm leading-[1.4] text-white whitespace-nowrap">
+      <Link
+        href="/holders"
+        className="font-[InterRegular] text-sm leading-[1.4] text-white whitespace-nowrap"
+        onClick={() => trackKrakenSpotlightClicked()}
+      >
         Soon on Kraken!
       </Link>
       <KrakenIcon width={16} height={13} fill="white" />
