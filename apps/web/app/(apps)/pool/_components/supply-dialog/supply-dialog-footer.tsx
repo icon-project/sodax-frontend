@@ -21,15 +21,14 @@ import {
 } from '@sodax/dapp-kit';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
 import { type CreateAssetDepositParams, type PoolData, type PoolSpokeAssets, dexPools } from '@sodax/sdk';
-import type { ChainId, Hash } from '@sodax/types';
+import type { ChainId } from '@sodax/types';
 import { chainIdToChainName } from '@/providers/constants';
 import { formatUnits, parseUnits } from 'viem';
-import {
-  cn,
-  createDexTokenIdsStorageKey,
-  DEX_POSITIONS_UPDATED_EVENT,
-  dispatchDexPositionsUpdatedEvent,
-} from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { useQueryClient } from '@tanstack/react-query';
+import { dispatchDexPositionsUpdatedEvent, saveDexTokenIdToLocalStorage } from '@/lib/utils';
+import { useGetUserHubWalletAddress } from '@sodax/dapp-kit';
+import { useXAccount } from '@sodax/wallet-sdk-react';
 
 interface SupplyDialogFooterProps {
   currentSupplyStep: SupplyStep;
@@ -45,33 +44,6 @@ interface SupplyDialogFooterProps {
   poolSpokeAssets: PoolSpokeAssets | null;
 }
 
-function saveTokenIdToLocalStorage(userAddress: string, chainId: string | number, tokenId: string): void {
-  if (typeof globalThis.localStorage === 'undefined') {
-    return;
-  }
-
-  const cleanId = tokenId.trim().toLowerCase();
-  const storageKey = createDexTokenIdsStorageKey(chainId, userAddress);
-  const positions = globalThis.localStorage.getItem(storageKey);
-  const tokenIds = positions ? positions.split(',').map(value => value.trim()) : [];
-  const hasDuplicate = tokenIds.some(id => id.trim().toLowerCase() === cleanId);
-
-  if (hasDuplicate) {
-    return;
-  }
-
-  tokenIds.push(tokenId.trim());
-  globalThis.localStorage.setItem(storageKey, tokenIds.join(','));
-  globalThis.dispatchEvent(
-    new CustomEvent(DEX_POSITIONS_UPDATED_EVENT, {
-      detail: {
-        chainId,
-        userAddress,
-      },
-    }),
-  );
-}
-
 export default function SupplyDialogFooter({
   currentSupplyStep,
   onSupplyStepChange,
@@ -85,20 +57,23 @@ export default function SupplyDialogFooter({
   poolData,
   poolSpokeAssets,
 }: SupplyDialogFooterProps): React.JSX.Element {
-  const { sodax } = useSodaxContext();
-  const { selectedNetworkChainId, minPrice, maxPrice, sodaAmount, xSodaAmount } = usePoolState();
+  const { selectedChainId, minPrice, maxPrice, sodaAmount, xSodaAmount } = usePoolState();
   const [lockedSupplyAmounts, setLockedSupplyAmounts] = useState<{ token0: string; token1: string } | null>(null);
   const [isTransferred, setIsTransferred] = useState<boolean>(false);
   const [isSupplySubmitting, setIsSupplySubmitting] = useState<boolean>(false);
-  const walletProvider = useWalletProvider(selectedNetworkChainId ?? undefined);
-  const spokeProvider = useSpokeProvider(selectedNetworkChainId ?? undefined, walletProvider);
+  const walletProvider = useWalletProvider(selectedChainId ?? undefined);
+  const { address } = useXAccount(selectedChainId ?? undefined);
+  const { data: hubWalletAddress } = useGetUserHubWalletAddress(selectedChainId ?? undefined, address);
+  const spokeProvider = useSpokeProvider(selectedChainId ?? undefined, walletProvider);
   const activeSpokeProvider = spokeProvider ?? null;
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedNetworkChainId as ChainId);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId as ChainId);
   const fixedPoolKey = dexPools.ASODA_XSODA;
   const { mutateAsync: approveAsset, isPending: isApproving } = useDexApprove();
   const { mutateAsync: depositAsset, isPending: isDepositing } = useDexDeposit();
   const { mutateAsync: supplyLiquidity, isPending: isSupplying } = useSupplyLiquidity();
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
+  const { sodax } = useSodaxContext();
 
   // Notify parent when any async operation is in-flight so it can block close.
   useEffect((): void => {
@@ -331,7 +306,7 @@ export default function SupplyDialogFooter({
         setIsSupplySubmitting(true);
         onError(null);
 
-        const result = await supplyLiquidity({
+        const [, hubTxHash] = await supplyLiquidity({
           params: createSupplyLiquidityParamsProps({
             poolData,
             poolKey: fixedPoolKey,
@@ -346,27 +321,29 @@ export default function SupplyDialogFooter({
           spokeProvider,
         });
 
-        if (selectedNetworkChainId) {
-          try {
-            const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-            dispatchDexPositionsUpdatedEvent(selectedNetworkChainId, walletAddress);
-          } catch (eventError) {
-            // Keep supply successful even if local position refresh event fails.
-            console.warn('Failed to dispatch DEX positions updated event', eventError);
-          }
+        const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+        const positionsOwnerAddress = hubWalletAddress ?? walletAddress;
+        try {
+          const normalizedHubTxHash = hubTxHash as `0x${string}`;
+          const mintEvent = await sodax.dex.clService.getMintPositionEvent(normalizedHubTxHash);
+          saveDexTokenIdToLocalStorage(
+            positionsOwnerAddress,
+            selectedChainId ?? 'sonic',
+            mintEvent.tokenId.toString(),
+          );
+        } catch {
+          // Positions still refresh via API polling/event when the backend index catches up.
         }
 
-        try {
-          const [, hubTxHash] = result;
-          const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-          const mintPositionEvent = await sodax.dex.clService.getMintPositionEvent(hubTxHash as Hash);
-          if (selectedNetworkChainId) {
-            saveTokenIdToLocalStorage(walletAddress, selectedNetworkChainId, mintPositionEvent.tokenId.toString());
-          }
-        } catch (saveError) {
-          // Keep supply successful even if local position indexing fails.
-          console.warn('Failed to save minted position ID to local storage', saveError);
-        }
+        await queryClient.invalidateQueries({
+          queryKey: ['poolSavedPositions'],
+        });
+        await queryClient.refetchQueries({
+          queryKey: ['poolSavedPositions'],
+          type: 'active',
+        });
+
+        dispatchDexPositionsUpdatedEvent(selectedChainId ?? 'sonic', positionsOwnerAddress);
 
         onCompletedChange(true);
       } catch (error) {
@@ -426,7 +403,7 @@ export default function SupplyDialogFooter({
           }
         >
           {isApproveStep && isWrongChain ? (
-            <>Switch to {selectedNetworkChainId ? chainIdToChainName(selectedNetworkChainId) : 'selected network'}</>
+            <>Switch to {selectedChainId ? chainIdToChainName(selectedChainId) : 'selected network'}</>
           ) : isApproved ? (
             <Check className="w-5 h-5" />
           ) : isApproving ? (
@@ -461,7 +438,7 @@ export default function SupplyDialogFooter({
           }
         >
           {isTransferStep && isWrongChain ? (
-            <>Switch to {selectedNetworkChainId ? chainIdToChainName(selectedNetworkChainId) : 'selected network'}</>
+            <>Switch to {selectedChainId ? chainIdToChainName(selectedChainId) : 'selected network'}</>
           ) : isTransferred ? (
             <Check className="w-5 h-5" />
           ) : !isApproved ? (

@@ -8,12 +8,13 @@
 
 // ── In-app routes (same-origin paths) ───────────────────────────────────────
 export const HOME_ROUTE = '/';
-export const SWAP_ROUTE = '/swap';
-export const SAVE_ROUTE = '/save';
-export const LOANS_ROUTE = '/loans';
-export const STAKE_ROUTE = '/stake';
-export const POOL_ROUTE = '/pool';
-export const MIGRATE_ROUTE = '/migrate';
+export const EXCHANGE_ROUTE = '/exchange';
+export const SWAP_ROUTE = '/exchange/swap';
+export const SAVE_ROUTE = '/exchange/save';
+export const BORROW_ROUTE = '/exchange/loans';
+export const STAKE_ROUTE = '/exchange/stake';
+export const POOL_ROUTE = '/exchange/pool';
+export const MIGRATE_ROUTE = '/exchange/migrate';
 export const GLOSSARY_ROUTE = '/glossary';
 export const PARTNERS_ROUTE = '/partners';
 export const NEWS_ROUTE = '/news';

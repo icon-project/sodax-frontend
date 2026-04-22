@@ -46,6 +46,7 @@ type ManagePositionDialogProps = {
   initialMinPrice: string;
   initialMaxPrice: string;
   positionInfo: ClPositionInfo;
+  apyPercent: number | null;
 };
 
 function removeTokenIdFromLocalStorage(userAddress: string, chainId: string | number, tokenId: string): void {
@@ -89,6 +90,7 @@ export function ManagePositionDialog({
   initialMinPrice,
   initialMaxPrice,
   positionInfo,
+  apyPercent,
 }: ManagePositionDialogProps): React.JSX.Element {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
@@ -109,7 +111,6 @@ export function ManagePositionDialog({
   const [isShaking, setIsShaking] = useState<boolean>(false);
   const [withdrawError, setWithdrawError] = useState<string>('');
   const [isWithdrawSuccess, setIsWithdrawSuccess] = useState<boolean>(false);
-  const [completedWithdrawPercentage, setCompletedWithdrawPercentage] = useState<number | null>(null);
   const [claimError, setClaimError] = useState<string>('');
   const [isClaimActionPending, setIsClaimActionPending] = useState<boolean>(false);
   const [isClaimSuccess, setIsClaimSuccess] = useState<boolean>(false);
@@ -215,7 +216,6 @@ export function ManagePositionDialog({
       setIsShaking(false);
       setWithdrawError('');
       setIsWithdrawSuccess(false);
-      setCompletedWithdrawPercentage(null);
       setActiveTab('claim');
       setMinPrice(initialMinPrice);
       setMaxPrice(initialMaxPrice);
@@ -277,33 +277,17 @@ export function ManagePositionDialog({
   const claimErrorMessage =
     claimError || (claimRewardsMutation.error instanceof Error ? claimRewardsMutation.error.message : '');
 
-  const handlePostWithdrawClose = useCallback(async (): Promise<void> => {
-    if (!spokeProvider || completedWithdrawPercentage === null) {
-      return;
-    }
+  const refreshDexQueries = useCallback(async (): Promise<void> => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['dex', 'positionInfo', tokenId, poolKey] }),
+      queryClient.invalidateQueries({ queryKey: ['dex', 'poolBalances'] }),
+    ]);
 
-    const withdrawnPercentage = completedWithdrawPercentage;
-    setCompletedWithdrawPercentage(null);
-
-    try {
-      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-      if (withdrawnPercentage === 100) {
-        removeTokenIdFromLocalStorage(walletAddress, chainId, tokenId);
-      } else {
-        dispatchDexPositionsUpdatedEvent(chainId, walletAddress);
-      }
-    } catch (walletAddressError) {
-      // Keep withdraw successful even when local position cache refresh fails.
-      console.warn('Failed to refresh local DEX position state', walletAddressError);
-    }
-
-    try {
-      await queryClient.invalidateQueries({ queryKey: ['dex', 'positionInfo'] });
-    } catch (invalidateError) {
-      // Keep success state even when cache invalidation fails.
-      console.warn('Failed to invalidate DEX position query', invalidateError);
-    }
-  }, [chainId, completedWithdrawPercentage, queryClient, spokeProvider, tokenId]);
+    await Promise.all([
+      queryClient.refetchQueries({ queryKey: ['dex', 'positionInfo', tokenId, poolKey], type: 'active' }),
+      queryClient.refetchQueries({ queryKey: ['dex', 'poolBalances'], type: 'active' }),
+    ]);
+  }, [poolKey, queryClient, tokenId]);
 
   const handleDialogOpenChange = (nextOpen: boolean): void => {
     if (!nextOpen && (isClaimActionPending || isAddLiquidityActionPending || isWithdrawActionPending)) {
@@ -311,9 +295,7 @@ export function ManagePositionDialog({
       window.setTimeout((): void => setIsShaking(false), 500);
       return;
     }
-    if (!nextOpen && isWithdrawSuccess) {
-      void handlePostWithdrawClose();
-    }
+
     onOpenChange(nextOpen);
   };
 
@@ -353,6 +335,7 @@ export function ManagePositionDialog({
         }),
       ]);
       setIsClaimSuccess(true);
+      await refreshDexQueries();
     } catch (claimErr) {
       const message = claimErr instanceof Error ? claimErr.message : 'Claim fee failed.';
       setClaimError(message);
@@ -416,13 +399,9 @@ export function ManagePositionDialog({
         }),
         spokeProvider,
       });
-      try {
-        const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-        dispatchDexPositionsUpdatedEvent(chainId, walletAddress);
-      } catch (eventError) {
-        // Keep add-liquidity successful even if local position refresh event fails.
-        console.warn('Failed to dispatch DEX positions updated event', eventError);
-      }
+      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      dispatchDexPositionsUpdatedEvent(chainId, walletAddress);
+
       setLastEditedAmount(null);
       handleToken0AmountChange('');
       handleToken1AmountChange('');
@@ -431,6 +410,7 @@ export function ManagePositionDialog({
       setIsAddLiquidityApproved(false);
       setIsAddLiquidityTransferred(false);
       setIsAddLiquiditySuccess(true);
+      await refreshDexQueries();
     } catch (supplyError) {
       const message = supplyError instanceof Error ? supplyError.message : 'Add liquidity failed.';
       setAddLiquidityError(message);
@@ -601,14 +581,19 @@ export function ManagePositionDialog({
           });
         }
       }
+      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      if (parsedPercentage === 100) {
+        removeTokenIdFromLocalStorage(walletAddress, chainId, tokenId);
+      } else {
+        dispatchDexPositionsUpdatedEvent(chainId, walletAddress);
+      }
       setWithdrawPercentage('0');
-      setCompletedWithdrawPercentage(parsedPercentage);
       setIsWithdrawSuccess(true);
+      await refreshDexQueries();
     } catch (withdrawErr) {
       const message = withdrawErr instanceof Error ? withdrawErr.message : 'Withdraw liquidity failed.';
       setWithdrawError(message);
       setIsWithdrawSuccess(false);
-      setCompletedWithdrawPercentage(null);
     }
   };
 
@@ -653,6 +638,7 @@ export function ManagePositionDialog({
 
           <ClaimTabContent
             chainId={spokeChainId}
+            apyPercent={apyPercent}
             positionSodaBalanceText={positionSodaBalanceText}
             positionXSodaBalanceText={positionXSodaBalanceText}
             hasUnclaimedFees={hasUnclaimedFees}
@@ -669,6 +655,7 @@ export function ManagePositionDialog({
             chainId={spokeChainId}
             tokenId={tokenId}
             poolData={poolData}
+            apyPercent={apyPercent}
             positionSodaBalanceText={positionSodaBalanceText}
             positionXSodaBalanceText={positionXSodaBalanceText}
             liquidityToken0Amount={displaySodaAmount}
@@ -694,6 +681,7 @@ export function ManagePositionDialog({
             chainId={spokeChainId}
             poolData={poolData}
             positionInfo={positionInfo}
+            apyPercent={apyPercent}
             positionSodaBalanceText={positionSodaBalanceText}
             positionXSodaBalanceText={positionXSodaBalanceText}
             withdrawPercentage={withdrawPercentage}
