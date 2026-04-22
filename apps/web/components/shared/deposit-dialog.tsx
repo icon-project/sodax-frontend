@@ -180,7 +180,7 @@ const DepositDialog: React.FC<DepositDialogProps> = ({ className = '' }) => {
                       <div
                         className={`mix-blend-multiply justify-end text-base font-normal leading-snug ${activeTab === 'loans' ? "text-espresso font-['Shrikhand']" : "text-clay font-['InterRegular']"}`}
                       >
-                        Loans
+                        Borrow
                       </div>
                     </div>
                   </div>
@@ -246,7 +246,7 @@ const DepositDialog: React.FC<DepositDialogProps> = ({ className = '' }) => {
                   <br />
                 </span>
                 <span className="text-yellow-dark text-3xl font-normal font-['Shrikhand'] leading-9">
-                  a quick loans
+                  a quick borrow
                 </span>
               </div>
             </TabsContent>
@@ -373,7 +373,7 @@ const DepositDialog: React.FC<DepositDialogProps> = ({ className = '' }) => {
                       <div
                         className={`text-xs font-normal leading-snug ${activeTab === 'loans' ? "text-yellow-soda font-['Shrikhand']" : "text-white font-['InterRegular']"}`}
                       >
-                        Loans
+                        Borrow
                       </div>
                     </div>
                   </TabsTrigger>

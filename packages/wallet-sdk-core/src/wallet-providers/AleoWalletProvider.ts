@@ -4,6 +4,7 @@ import type {
   AleoExecutionResult,
   AleoTransactionReceipt,
   AleoWaitForReceiptOptions,
+  AleoNetworkEnv,
 } from '@sodax/types';
 
 import type {
@@ -15,16 +16,14 @@ import type { WalletAdapter } from '@provablehq/aleo-wallet-standard';
 
 // Lazy-load @provablehq/sdk to avoid pulling 43MB WASM into the webpack bundle graph at import time.
 // The WASM module uses top-level await which breaks SSR and causes OOM during Next.js builds.
+// The SDK default export resolves to testnet — we must import the network-specific build.
 type AleoSDK = typeof import('@provablehq/sdk');
-let sdkPromise: Promise<AleoSDK> | null = null;
-function getAleoSDK(): Promise<AleoSDK> {
-  if (!sdkPromise) {
-    sdkPromise = import('@provablehq/sdk');
-  }
-  return sdkPromise;
-}
 
-export type AleoNetwork = 'mainnet' | 'testnet';
+function loadAleoSDK(network: AleoNetworkEnv): Promise<AleoSDK> {
+  // Both builds export the same API surface — the cast is safe.
+  if (network === 'testnet') return import('@provablehq/sdk/testnet.js') as unknown as Promise<AleoSDK>;
+  return import('@provablehq/sdk/mainnet.js') as unknown as Promise<AleoSDK>;
+}
 
 /** Priority fee for private key wallets — 0 means only the base fee (calculated by ProgramManager) */
 const DEFAULT_PK_PRIORITY_FEE = 0;
@@ -42,7 +41,7 @@ export type PrivateKeyAleoWalletConfig = {
   type: 'privateKey';
   rpcUrl: string;
   privateKey: string;
-  network: AleoNetwork;
+  network: AleoNetworkEnv;
   delegate: DelegateProvingConfig;
 };
 
@@ -50,7 +49,7 @@ export type BrowserExtensionAleoWalletConfig = {
   type: 'browserExtension';
   rpcUrl: string;
   provableAdapter: WalletAdapter;
-  network?: AleoNetwork;
+  network?: AleoNetworkEnv;
 };
 
 export type AleoWalletConfig = PrivateKeyAleoWalletConfig | BrowserExtensionAleoWalletConfig;
@@ -115,7 +114,9 @@ export class AleoWalletProvider implements IAleoWalletProvider {
   }
 
   private async initialize(): Promise<InitializedState> {
-    const { Account, AleoNetworkClient, ProgramManager, AleoKeyProvider, NetworkRecordProvider } = await getAleoSDK();
+    const network = isPrivateKeyConfig(this.config) ? this.config.network : (this.config.network ?? 'mainnet');
+    const { Account, AleoNetworkClient, ProgramManager, AleoKeyProvider, NetworkRecordProvider } =
+      await loadAleoSDK(network);
 
     const keyProvider = new AleoKeyProvider();
     keyProvider.useCache(true);

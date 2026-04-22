@@ -4,6 +4,7 @@
 import { type ReactNode, createContext, useContext, useRef } from 'react';
 import { useStore } from 'zustand';
 import { createPoolStore, type PoolStore } from './pool-store';
+import { SONIC_MAINNET_CHAIN_ID, type SpokeChainId } from '@sodax/types';
 
 export type PoolStoreApi = ReturnType<typeof createPoolStore>;
 
@@ -34,16 +35,16 @@ export const usePoolStore = <T,>(selector: (store: PoolStore) => T): T => {
 };
 
 export const usePoolState = () => {
-  const selectedNetworkChainId = usePoolStore(state => state.selectedNetworkChainId);
   const selectedToken = usePoolStore(state => state.selectedToken);
   const minPrice = usePoolStore(state => state.minPrice);
   const maxPrice = usePoolStore(state => state.maxPrice);
   const sodaAmount = usePoolStore(state => state.sodaAmount);
   const xSodaAmount = usePoolStore(state => state.xSodaAmount);
   const isNetworkPickerOpened = usePoolStore(state => state.isNetworkPickerOpened);
+  const selectedChainId = (selectedToken?.xChainId as SpokeChainId | undefined) ?? SONIC_MAINNET_CHAIN_ID;
 
   return {
-    selectedNetworkChainId,
+    selectedChainId,
     selectedToken,
     minPrice,
     maxPrice,

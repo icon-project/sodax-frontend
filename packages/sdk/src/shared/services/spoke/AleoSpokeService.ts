@@ -110,7 +110,8 @@ export class AleoSpokeService {
     hubProvider: EvmHubProvider,
   ): Promise<DepositSimulationParams> {
     const assetManagerId = spokeProvider.chainConfig.addresses.assetManager;
-    const programObj = await spokeProvider.networkClient.getProgramObject(assetManagerId);
+    const networkClient = await spokeProvider.getNetworkClient();
+    const programObj = await networkClient.getProgramObject(assetManagerId);
     const assetManagerAddress = programObj.address().to_string();
     const to =
       params.to ??
@@ -176,7 +177,7 @@ export class AleoSpokeService {
     }
 
     if (isNative) {
-      return spokeProvider.transferNative(
+      return spokeProvider.transfer_native_public(
         token,
         recipient,
         amount,

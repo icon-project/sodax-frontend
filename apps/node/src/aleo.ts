@@ -43,7 +43,7 @@ if (!ALEO_PRIVATE_KEY.startsWith('APrivateKey1')) throw new Error('Invalid ALEO_
 if (!PROVABLE_API_KEY) throw new Error('PROVABLE_API_KEY is required');
 if (!PROVABLE_CONSUMER_ID) throw new Error('PROVABLE_CONSUMER_ID is required');
 const solverConfig = {
-  intentsContract: '0x0427eD01190d8a3f441877B36E87cB8E8A2Ace3c',
+  intentsContract: '0x6382D6ccD780758C5e8A6123c33ee8F4472F96ef',
   solverApiEndpoint: 'https://sodax-solver-staging.iconblockchain.xyz',
   partnerFee: undefined,
 } satisfies SolverConfigParams;
@@ -52,11 +52,10 @@ const aleoWalletProvider = new AleoWalletProvider({
   type: 'privateKey',
   rpcUrl: ALEO_RPC_URL,
   privateKey: ALEO_PRIVATE_KEY,
-  network: IS_TESTNET ? 'testnet' : 'mainnet',
+  network: IS_TESTNET === 'true' ? 'testnet' : 'mainnet',
   delegate: {
     apiKey: PROVABLE_API_KEY,
     consumerId: PROVABLE_CONSUMER_ID,
-    url: PROVABLE_DELEGATE_URL,
   },
 });
 
@@ -225,8 +224,37 @@ async function createIntent(amount: number, inputToken: string, outputToken: str
   console.log('[createIntent] txId:', txId);
   console.log('[createIntent] intentId:', intent.intentId);
 
+  // Step 2: Submit spoke tx + intent data to the relayer
   const res = await submitData(txId as string, userWallet, data);
   console.log('[createIntent] submitData response:', res);
+
+  // Step 3: Wait until the relayer executes the intent on the hub chain
+  const intentRelayChainId = getIntentRelayChainId(aleoSpokeProvider.chainConfig.chain.id).toString();
+  console.log('[createIntent] waiting for relay execution (intentRelayChainId:', intentRelayChainId, ')...');
+  const packetResult = await sodax.swaps.getSolvedIntentPacket({
+    chainId: aleoSpokeProvider.chainConfig.chain.id,
+    fillTxHash: txId as string,
+  });
+
+  if (!packetResult.ok) {
+    console.error('[createIntent] relay wait failed:', packetResult.error);
+    throw new Error(`createIntent relay failed: ${packetResult.error.code}`);
+  }
+
+  const dstTxHash = packetResult.value.dst_tx_hash;
+  console.log('[createIntent] relay executed, dstTxHash:', dstTxHash);
+
+  // Step 4: Submit to solver API so it can process and fill the swap
+  const executionResult = await sodax.swaps.postExecution({
+    intent_tx_hash: dstTxHash as `0x${string}`,
+  });
+
+  if (!executionResult.ok) {
+    console.error('[createIntent] solver submission failed:', executionResult.error);
+    throw new Error('createIntent solver submission failed');
+  }
+
+  console.log('[createIntent] solver response:', executionResult.value);
 }
 
 async function swap(amount: number, inputToken: string, outputToken: string) {

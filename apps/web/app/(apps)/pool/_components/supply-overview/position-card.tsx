@@ -19,6 +19,7 @@ import { CircleEllipsisIcon } from 'lucide-react';
 import { ManagePositionDialog } from '../manage-dialog';
 import { SwitchChainDialog } from '@/components/shared/switch-chain-dialog';
 import type { XToken } from '@sodax/types';
+import { getUserAPY } from './utils';
 
 type PositionCardProps = {
   tokenId: string;
@@ -28,6 +29,8 @@ type PositionCardProps = {
   apyPercent: number | null;
   onLiquidityValueChange: (positionKey: string, value: number) => void;
 };
+
+const MIN_VISIBLE_POSITION_USD = 0.01;
 
 function resolveSpokeChainId(chainId: string): SpokeChainId {
   if (!(chainId in spokeChainConfig)) {
@@ -106,7 +109,7 @@ export function PositionCard({
     }
 
     if (isError || !data?.isValid) {
-      onLiquidityValueChange(positionKey, 0);
+      onLiquidityValueChange(positionKey, isManageDialogOpen ? MIN_VISIBLE_POSITION_USD : 0);
       return;
     }
 
@@ -121,10 +124,14 @@ export function PositionCard({
     const sodaAmount = Number.parseFloat(amount0 || '0');
     const xSodaAmount = Number.parseFloat(amount1 || '0');
     const positionTotalUsd = sodaAmount * sodaPrice + xSodaAmount * xSodaPrice;
-    onLiquidityValueChange(positionKey, positionTotalUsd);
+    // Keep the card mounted while the manage dialog is open so async withdraw flow can complete.
+    const nextLiquidityValue =
+      isManageDialogOpen && positionTotalUsd < MIN_VISIBLE_POSITION_USD ? MIN_VISIBLE_POSITION_USD : positionTotalUsd;
+    onLiquidityValueChange(positionKey, nextLiquidityValue);
   }, [
     data,
     isError,
+    isManageDialogOpen,
     isLoading,
     onLiquidityValueChange,
     poolData.token0.decimals,
@@ -190,7 +197,9 @@ export function PositionCard({
       ? ((currentPriceValue - minPriceValue) / (maxPriceValue - minPriceValue)) * 100
       : 0;
   const clampedCurrentPriceTickLeft = Math.min(100, Math.max(0, currentPriceTickLeft));
-  const apyText = apyPercent === null ? '-- APR' : `${apyPercent.toFixed(2)}% APR`;
+  const userApyPercent =
+    apyPercent === null ? null : getUserAPY(apyPercent, minPriceValue, maxPriceValue, currentPriceValue);
+  const apyText = userApyPercent === null ? '-- APR' : `${userApyPercent.toFixed(2)}% APR`;
 
   return (
     <div
@@ -321,6 +330,7 @@ export function PositionCard({
         initialMinPrice={minPrice}
         initialMaxPrice={maxPrice}
         positionInfo={positionInfo}
+        apyPercent={userApyPercent}
       />
     </div>
   );

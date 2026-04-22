@@ -8,6 +8,7 @@ import type {
   WalletAddressProvider,
   AleoRawTransaction,
   AleoProgramId,
+  AleoNetworkEnv,
 } from '@sodax/types';
 
 import { isAleoRawSpokeProvider } from '../../guards.js';
@@ -16,13 +17,12 @@ import { DEFAULT_MAX_RETRY } from '../../constants.js';
 
 // Lazy-load @provablehq/sdk to avoid triggering WASM initialization at import time.
 // The WASM module uses top-level await which fails during SSR / Vercel builds.
+// The SDK default export resolves to testnet — we must import the network-specific build.
 type AleoSDK = typeof import('@provablehq/sdk');
-let sdkPromise: Promise<AleoSDK> | null = null;
-function getAleoSDK(): Promise<AleoSDK> {
-  if (!sdkPromise) {
-    sdkPromise = import('@provablehq/sdk');
-  }
-  return sdkPromise;
+
+function loadAleoSDK(network: AleoNetworkEnv): Promise<AleoSDK> {
+  if (network === 'testnet') return import('@provablehq/sdk/testnet.js') as unknown as Promise<AleoSDK>;
+  return import('@provablehq/sdk/mainnet.js') as unknown as Promise<AleoSDK>;
 }
 
 export const ALEO_DEFAULT_TIMEOUT = 45000;
@@ -38,20 +38,22 @@ const ALEO_TX_LENGTH = 61;
 export class AleoBaseSpokeProvider {
   public readonly chainConfig: AleoSpokeChainConfig;
   public readonly rpcUrl: string;
+  public readonly network: AleoNetworkEnv;
 
   // Lazily initialized after SDK loads — use ensureClients() in async methods.
   private _networkClient: Awaited<AleoSDK>['AleoNetworkClient']['prototype'] | null = null;
   private _programManager: Awaited<AleoSDK>['ProgramManager']['prototype'] | null = null;
 
-  constructor(config: AleoSpokeChainConfig, rpcUrl?: string) {
+  constructor(config: AleoSpokeChainConfig, rpcUrl?: string, network: AleoNetworkEnv = 'mainnet') {
     this.chainConfig = config;
     this.rpcUrl = rpcUrl ?? config.rpcUrl;
+    this.network = network;
   }
 
   /** Lazily create AleoNetworkClient and ProgramManager on first async call. */
   private async ensureClients() {
     if (!this._networkClient) {
-      const { AleoNetworkClient, ProgramManager } = await getAleoSDK();
+      const { AleoNetworkClient, ProgramManager } = await loadAleoSDK(this.network);
       this._networkClient = new AleoNetworkClient(this.rpcUrl);
       this._programManager = new ProgramManager(this.rpcUrl);
     }
@@ -65,6 +67,11 @@ export class AleoBaseSpokeProvider {
   get programManager() {
     if (!this._programManager) throw new Error('Aleo SDK not initialized. Await any async method first.');
     return this._programManager;
+  }
+
+  async getNetworkClient() {
+    await this.ensureClients();
+    return this.networkClient;
   }
 
   static getAddressBCSBytes(aleoAddress: string): Hex {
@@ -174,7 +181,7 @@ export class AleoBaseSpokeProvider {
         );
         return balanceStr ? BigInt(balanceStr.replace(/[^\d]/g, '')) : 0n;
       }
-      const { BHP256, Plaintext } = await getAleoSDK();
+      const { BHP256, Plaintext } = await loadAleoSDK(this.network);
       const bhp = new BHP256();
       const structLiteral = `{ account: ${walletAddress}, token_id: ${token}field }`;
       const plaintext = Plaintext.fromString(structLiteral);
@@ -286,7 +293,7 @@ export class AleoBaseSpokeProvider {
    * Transfer native credits cross-chain via asset_manager.aleo/transfer_native.
    * Uses: credits.aleo/transfer_public for the token transfer.
    */
-  async transferNative<S extends AleoSpokeProviderType, R extends boolean = false>(
+  async transfer_native_public<S extends AleoSpokeProviderType, R extends boolean = false>(
     token: bigint,
     dstAddress: Hex,
     amount: bigint,
@@ -372,8 +379,8 @@ export class AleoRawSpokeProvider extends AleoBaseSpokeProvider implements IRawS
   public readonly walletProvider: WalletAddressProvider;
   public readonly raw = true;
 
-  constructor(chainConfig: AleoSpokeChainConfig, walletAddress: string, rpcUrl?: string) {
-    super(chainConfig, rpcUrl);
+  constructor(chainConfig: AleoSpokeChainConfig, walletAddress: string, rpcUrl?: string, network?: AleoNetworkEnv) {
+    super(chainConfig, rpcUrl, network);
 
     if (!AleoBaseSpokeProvider.isValidAleoAddress(walletAddress)) {
       throw new Error(`Invalid Aleo wallet address: ${walletAddress}`);
@@ -389,8 +396,8 @@ export class AleoRawSpokeProvider extends AleoBaseSpokeProvider implements IRawS
 export class AleoSpokeProvider extends AleoBaseSpokeProvider implements ISpokeProvider {
   public readonly walletProvider: IAleoWalletProvider;
 
-  constructor(config: AleoSpokeChainConfig, walletProvider: IAleoWalletProvider, rpcUrl?: string) {
-    super(config, rpcUrl);
+  constructor(config: AleoSpokeChainConfig, walletProvider: IAleoWalletProvider, rpcUrl?: string, network?: AleoNetworkEnv) {
+    super(config, rpcUrl, network);
     this.walletProvider = walletProvider;
   }
 

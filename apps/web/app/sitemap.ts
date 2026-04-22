@@ -3,7 +3,7 @@ import {
   COMMUNITY_ROUTE,
   DISCORD_PAGE_ROUTE,
   GLOSSARY_ROUTE,
-  LOANS_ROUTE,
+  BORROW_ROUTE,
   MIGRATE_ROUTE,
   NEWS_ROUTE,
   PARTNERS_ROUTE,
@@ -56,7 +56,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
-      url: `${SITE_URL}${LOANS_ROUTE}`,
+      url: `${SITE_URL}${BORROW_ROUTE}`,
       lastModified: now,
       changeFrequency: 'daily',
       priority: 0.9,
