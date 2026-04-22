@@ -7,6 +7,11 @@ export { useAllXConnectors } from './useAllXConnectors.js';
 export { useIsInstalled } from './useIsInstalled.js';
 export { useChainGroups, type ChainGroup } from './useChainGroups.js';
 export { useConnectedChains, type ConnectedChain, type UseConnectedChainsResult } from './useConnectedChains.js';
+export {
+  useConnectionFlow,
+  type ConnectionStatus,
+  type UseConnectionFlowResult,
+} from './useConnectionFlow.js';
 export { useXDisconnect } from './useXDisconnect.js';
 export { useXService } from './useXService.js';
 export { useXBalances } from './useXBalances.js';
