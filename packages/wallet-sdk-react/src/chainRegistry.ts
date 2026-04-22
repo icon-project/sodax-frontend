@@ -53,6 +53,10 @@ export type StoreAccessor = () => {
 export type ChainServiceFactory<S extends XService = XService> = {
   /** Create or get the XService singleton for this chain. */
   createService: (rpcConfig?: RpcConfig) => S;
+  /** Human-readable chain name for display in modal UIs (spec §E of #1123). */
+  displayName: string;
+  /** Optional icon URL for the chain. Consumers can override when rendering. */
+  iconUrl?: string;
   /** Static connectors known at build time. Ignored for provider-managed chains. */
   defaultConnectors: () => XConnector[];
   /** true = needs React provider (EVM/Solana/Sui), false = browser extension APIs. */
@@ -112,22 +116,26 @@ const createDefaultActions = (chainType: ChainType, service: XService, getStore:
 export const chainRegistry: Record<string, ChainServiceFactory> = {
   EVM: defineChain({
     createService: () => EvmXService.getInstance(),
+    displayName: 'EVM',
     defaultConnectors: () => [],
     providerManaged: true,
   }),
   SUI: defineChain({
     createService: () => SuiXService.getInstance(),
+    displayName: 'Sui',
     defaultConnectors: () => [],
     providerManaged: true,
   }),
   SOLANA: defineChain({
     createService: () => SolanaXService.getInstance(),
+    displayName: 'Solana',
     defaultConnectors: () => [],
     providerManaged: true,
   }),
   BITCOIN: defineChain({
     createService: rpcConfig =>
       BitcoinXService.getInstance((rpcConfig?.bitcoin as BitcoinRpcConfig | undefined)?.rpcUrl),
+    displayName: 'Bitcoin',
     defaultConnectors: () => [new UnisatXConnector(), new XverseXConnector(), new OKXXConnector()],
     providerManaged: false,
     createActions: (service, getStore) => ({
@@ -180,6 +188,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
   }),
   INJECTIVE: defineChain({
     createService: () => InjectiveXService.getInstance(),
+    displayName: 'Injective',
     defaultConnectors: () => [
       new InjectiveXConnector('MetaMask', Wallet.Metamask),
       new InjectiveXConnector('Keplr', Wallet.Keplr),
@@ -213,6 +222,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
       const stellarRpc = rpcConfig?.stellar as StellarRpcConfig | undefined;
       return StellarXService.getInstance(stellarRpc?.horizonRpcUrl, stellarRpc?.sorobanRpcUrl);
     },
+    displayName: 'Stellar',
     defaultConnectors: () => [],
     providerManaged: false,
     discoverConnectors: async (service, getStore) => {
@@ -243,6 +253,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
   // connect/disconnect use createDefaultActions (no createActions override needed).
   ICON: defineChain({
     createService: rpcConfig => IconXService.getInstance(rpcConfig?.[ICON_MAINNET_CHAIN_ID] as string | undefined),
+    displayName: 'ICON',
     defaultConnectors: () => [new IconHanaXConnector()],
     providerManaged: false,
     createWalletProvider: (_service, getStore) => {
@@ -258,6 +269,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
   }),
   NEAR: defineChain({
     createService: () => NearXService.getInstance(),
+    displayName: 'NEAR',
     defaultConnectors: () => [],
     providerManaged: false,
     discoverConnectors: async (service, getStore) => {
@@ -280,6 +292,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
   }),
   STACKS: defineChain({
     createService: () => StacksXService.getInstance(),
+    displayName: 'Stacks',
     defaultConnectors: () => STACKS_PROVIDERS.map(c => new StacksXConnector(c)),
     providerManaged: false,
     createWalletProvider: (service, getStore) => {
