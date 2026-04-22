@@ -50,4 +50,12 @@ export class StellarWalletsKitXConnector extends XConnector {
   public override get icon(): string {
     return this._wallet.icon;
   }
+
+  public override get isInstalled(): boolean {
+    return this._wallet.isAvailable;
+  }
+
+  public override get installUrl(): string | undefined {
+    return this._wallet.url;
+  }
 }

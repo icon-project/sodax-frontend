@@ -1,5 +1,8 @@
 import { baseChainInfo, type ChainId, type XToken } from '@sodax/types';
 
+export { sortConnectors, type SortConnectorsOptions } from './sortConnectors.js';
+export { subscribeInstall, getInstallCounter } from './installSubscription.js';
+
 export const isNativeToken = (xToken: XToken): boolean => {
   const nativeAddresses = [
     'cx0000000000000000000000000000000000000000',

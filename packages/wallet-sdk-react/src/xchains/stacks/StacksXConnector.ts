@@ -62,6 +62,15 @@ export class StacksXConnector extends XConnector {
     return this.config.icon;
   }
 
+  public override get isInstalled(): boolean {
+    if (typeof window === 'undefined') return false;
+    return getProviderFromId(this.config.id) !== undefined;
+  }
+
+  public override get installUrl(): string | undefined {
+    return this.config.installUrl;
+  }
+
   public getProvider(): StacksProvider | undefined {
     return getProviderFromId(this.config.id);
   }
