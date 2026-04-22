@@ -4,10 +4,12 @@ import type { ReactElement } from 'react';
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { KRAKEN_ROUTE, SWAP_ROUTE } from '@/constants/routes';
+import { SWAP_ROUTE } from '@/constants/routes';
+// import { KRAKEN_ROUTE } from '@/constants/routes';
 import { Navbar } from '@/components/shared/navbar';
 import { NetworkLogosScroller } from '@/components/shared/network-logos-scroller';
-import { trackHoldersBuyKrakenClicked, trackHoldersSwapClicked } from '@/lib/analytics';
+import { trackHoldersSwapClicked } from '@/lib/analytics';
+// import { trackHoldersBuyKrakenClicked } from '@/lib/analytics';
 
 const HoldersHeroSection = (): ReactElement => {
   return (
