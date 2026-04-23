@@ -121,10 +121,10 @@ export const swapSupportedTokens = {
     spokeChainConfig[ChainKeys.SUI_MAINNET].supportedTokens.WAL,
   ] as const satisfies XToken[],
   [ChainKeys.INJECTIVE_MAINNET]: [
-    // spokeChainConfig[ChainKeys.INJECTIVE_MAINNET].supportedTokens.INJ,
-    // spokeChainConfig[ChainKeys.INJECTIVE_MAINNET].supportedTokens.bnUSD, // NOTE: Not Implemented
-    // spokeChainConfig[ChainKeys.INJECTIVE_MAINNET].supportedTokens.USDC,
-    spokeChainConfig[ChainKeys.INJECTIVE_MAINNET].supportedTokens.SODA,
+    spokeChainConfig[ChainKeys.INJECTIVE_MAINNET].supportedTokens.INJ,
+    spokeChainConfig[ChainKeys.INJECTIVE_MAINNET].supportedTokens.bnUSD,
+    spokeChainConfig[ChainKeys.INJECTIVE_MAINNET].supportedTokens.USDC,
+    // spokeChainConfig[ChainKeys.INJECTIVE_MAINNET].supportedTokens.SODA, // NOTE: not in solver wiki
   ] as const satisfies XToken[],
   [ChainKeys.NEAR_MAINNET]: [
     spokeChainConfig[ChainKeys.NEAR_MAINNET].supportedTokens.NEAR,
@@ -144,6 +144,7 @@ export const swapSupportedTokens = {
     spokeChainConfig[ChainKeys.ETHEREUM_MAINNET].supportedTokens.USDT,
     spokeChainConfig[ChainKeys.ETHEREUM_MAINNET].supportedTokens.SODA,
     spokeChainConfig[ChainKeys.ETHEREUM_MAINNET].supportedTokens.LL,
+    spokeChainConfig[ChainKeys.ETHEREUM_MAINNET].supportedTokens.sUSDat,
   ] as const,
   [ChainKeys.REDBELLY_MAINNET]: [
     spokeChainConfig[ChainKeys.REDBELLY_MAINNET].supportedTokens.RBNT,
