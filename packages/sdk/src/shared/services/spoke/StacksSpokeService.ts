@@ -27,14 +27,14 @@ import type {
 } from '@sodax/types';
 import { sleep } from '../../utils/shared-utils.js';
 import type {
-  ConfigService,
   DepositParams,
   EstimateGasParams,
   GetDepositParams,
   SendMessageParams,
   WaitForTxReceiptParams,
   WaitForTxReceiptReturnType,
-} from '../../../index.js';
+} from '../../types/spoke-types.js';
+import type { ConfigService } from '../../config/ConfigService.js';
 import { type StacksNetwork, createNetwork } from '@stacks/network';
 import { bytesToHex } from 'viem';
 

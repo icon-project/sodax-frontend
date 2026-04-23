@@ -17,14 +17,14 @@ import {
 } from '@sodax/types';
 import { SuiClient } from '@mysten/sui/client';
 import type {
-  ConfigService,
   DepositParams,
   EstimateGasParams,
   GetDepositParams,
   SendMessageParams,
   WaitForTxReceiptParams,
   WaitForTxReceiptReturnType,
-} from '../../../index.js';
+} from '../../types/spoke-types.js';
+import type { ConfigService } from '../../config/ConfigService.js';
 
 export type SuiNativeCoinResult = { $kind: 'NestedResult'; NestedResult: [number, number] };
 export type SuiTxObject = { $kind: 'Input'; Input: number; type?: 'object' | undefined };

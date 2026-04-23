@@ -6,20 +6,17 @@ import {
   type HttpTransport,
   type PublicClient,
 } from 'viem';
-import {
-  connectionAbi,
-  getEvmViemChain,
-  erc20Abi,
-  spokeAssetManagerAbi,
-  type DepositParams,
-  type GetDepositParams,
-  type SendMessageParams,
-  type EstimateGasParams,
-  type WaitForTxReceiptParams,
-  type WaitForTxReceiptReturnType,
-  type Erc20IsAllowanceParams,
-  Erc20Service,
-} from '../../../index.js';
+import { connectionAbi, erc20Abi, spokeAssetManagerAbi } from '../../abis/index.js';
+import { getEvmViemChain } from '../../utils/constant-utils.js';
+import type {
+  DepositParams,
+  GetDepositParams,
+  SendMessageParams,
+  EstimateGasParams,
+  WaitForTxReceiptParams,
+  WaitForTxReceiptReturnType,
+} from '../../types/spoke-types.js';
+import { Erc20Service, type Erc20IsAllowanceParams } from '../erc-20/Erc20Service.js';
 import {
   type EvmSpokeOnlyChainKey,
   type Result,

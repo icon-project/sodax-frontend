@@ -12,7 +12,7 @@ import {
 import { type Address, type Hex, type HttpTransport, type PublicClient, encodeFunctionData } from 'viem';
 import { balnSwapAbi } from '../shared/abis/balnSwap.abi.js';
 import type { HubProvider } from '../shared/types/types.js';
-import { encodeContractCalls, Erc20Service } from '../index.js';
+import { encodeContractCalls, Erc20Service } from '../shared/index.js';
 import invariant from 'tiny-invariant';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 

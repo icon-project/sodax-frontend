@@ -10,13 +10,13 @@ import {
   Erc4626Service,
   type ConfigService,
   HubService,
-  type MintPositionEventLog,
   type HubProvider,
   isSolanaChainKeyType,
   isBitcoinChainKeyType,
   isHubChainKeyType,
   type SendMessageParams,
-} from '../index.js';
+} from '../shared/index.js';
+import type { MintPositionEventLog } from '../swap/EvmSolverService.js';
 import type {
   Address,
   CLPositionConfig,
@@ -506,9 +506,23 @@ export class ClService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
+      if (!txResult.ok) {
+        console.error('executeSupplyLiquidity error:', txResult.error);
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_SUPPLY_LIQUIDITY_INTENT_FAILED',
+            data: {
+              error: txResult.error,
+              payload: params,
+            },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, boolean> as TxReturnType<K, Raw>,
+        value: txResult.value satisfies TxReturnType<K, boolean> as TxReturnType<K, Raw>,
         data: {
           address: hubWallet,
           payload: data,
@@ -623,9 +637,22 @@ export class ClService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_INCREASE_LIQUIDITY_INTENT_FAILED',
+            data: {
+              error: txResult.error,
+              payload: params,
+            },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
+        value: txResult.value satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
         data: {
           address: hubWallet,
           payload: encodeContractCalls(calls),
@@ -703,9 +730,22 @@ export class ClService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_DECREASE_LIQUIDITY_INTENT_FAILED',
+            data: {
+              error: txResult.error,
+              payload: params,
+            },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
+        value: txResult.value satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
         data: {
           address: hubWallet,
           payload: data,
@@ -1071,9 +1111,23 @@ export class ClService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
+      if (!txResult.ok) {
+        console.error('executeClaimRewards error:', txResult.error);
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_CLAIM_REWARDS_INTENT_FAILED',
+            data: {
+              error: txResult.error,
+              payload: params,
+            },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
+        value: txResult.value satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
         data: {
           address: hubWallet,
           payload: data,

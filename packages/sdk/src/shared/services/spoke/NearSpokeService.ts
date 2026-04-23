@@ -1,16 +1,16 @@
 import { fromHex } from 'viem';
 
-import {
-  type ConfigService,
-  type DepositParams,
-  type EstimateGasParams,
-  type GetDepositParams,
-  type RateLimitConfig,
-  type SendMessageParams,
-  type WaitForTxReceiptParams,
-  type WaitForTxReceiptReturnType,
-  sleep,
-} from '../../index.js';
+import type {
+  DepositParams,
+  EstimateGasParams,
+  GetDepositParams,
+  SendMessageParams,
+  WaitForTxReceiptParams,
+  WaitForTxReceiptReturnType,
+} from '../../types/spoke-types.js';
+import type { RateLimitConfig } from '../../types/types.js';
+import type { ConfigService } from '../../config/ConfigService.js';
+import { sleep } from '../../utils/shared-utils.js';
 import {
   getIntentRelayChainId,
   ChainKeys,

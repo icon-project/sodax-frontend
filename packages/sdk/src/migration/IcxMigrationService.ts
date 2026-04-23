@@ -1,6 +1,6 @@
 import { type Address, type Hex, encodeFunctionData } from 'viem';
 import { erc20Abi } from '../shared/abis/index.js';
-import { encodeContractCalls, Erc20Service, EvmAssetManagerService, type HubProvider } from '../index.js';
+import { encodeContractCalls, Erc20Service, EvmAssetManagerService, type HubProvider } from '../shared/index.js';
 import { icxSwapAbi } from '../shared/abis/icxSwap.abi.js';
 import invariant from 'tiny-invariant';
 import {

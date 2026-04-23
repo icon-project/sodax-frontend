@@ -1,5 +1,6 @@
 import invariant from 'tiny-invariant';
-import { retry, type ConfigService } from '../index.js';
+import { retry } from '../shared/utils/shared-utils.js';
+import type { ConfigService } from '../shared/config/ConfigService.js';
 import {
   SolverIntentErrorCode,
   type Result,

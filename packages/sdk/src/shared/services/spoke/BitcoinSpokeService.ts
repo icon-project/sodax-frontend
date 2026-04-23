@@ -2,7 +2,6 @@ import * as bitcoin from 'bitcoinjs-lib';
 import type {
   BitcoinChainKey,
   BitcoinRawTransactionReceipt,
-  BtcAddressType,
   GetAddressType,
   Hex,
   HubAddress,
@@ -14,21 +13,18 @@ import { ChainKeys, detectBitcoinAddressType, getIntentRelayChainId, spokeChainC
 import * as ecc from '@bitcoinerlab/secp256k1';
 import { keccak256 } from 'viem';
 import type {
-  ConfigService,
   DepositParams,
   EstimateGasParams,
   GetDepositParams,
   SendMessageParams,
   WaitForTxReceiptParams,
   WaitForTxReceiptReturnType,
-} from '../../../index.js';
-import {
-  sleep,
-  RadfiProvider,
-  encodeBtcPayloadToBytes,
-  estimateBitcoinTxSize,
-  normalizePsbtToBase64,
-} from '../../../index.js';
+} from '../../types/spoke-types.js';
+import type { ConfigService } from '../../config/ConfigService.js';
+import { sleep } from '../../utils/shared-utils.js';
+import { RadfiProvider } from '../../entities/btc/RadfiProvider.js';
+import { encodeBtcPayloadToBytes, estimateBitcoinTxSize, normalizePsbtToBase64, type BtcPayload, type WalletMode } from '../../entities/btc/btc-utils.js';
+export type { BtcPayload, WalletMode } from '../../entities/btc/btc-utils.js';
 
 bitcoin.initEccLib(ecc);
 
@@ -68,18 +64,6 @@ export interface BitcoinTransactionResult {
   fee: number;
   size: number;
   virtualSize: number;
-}
-
-export type WalletMode = 'USER' | 'TRADING';
-
-export interface BtcPayload {
-  src_address: string;
-  data: string;
-  src_chain_id: number;
-  dst_chain_id: number;
-  wallet_used: WalletMode;
-  timestamp: number;
-  address_type: BtcAddressType;
 }
 
 export interface OnDemandBtcPayload {

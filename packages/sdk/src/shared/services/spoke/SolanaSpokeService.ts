@@ -17,14 +17,14 @@ import {
   isSolanaNativeToken,
 } from '../../entities/solana/utils/utils.js';
 import type {
-  ConfigService,
   DepositParams,
   EstimateGasParams,
   GetDepositParams,
   SendMessageParams,
   WaitForTxReceiptParams,
   WaitForTxReceiptReturnType,
-} from '../../../index.js';
+} from '../../types/spoke-types.js';
+import type { ConfigService } from '../../config/ConfigService.js';
 import { sleep } from '../../utils/shared-utils.js';
 import {
   getIntentRelayChainId,

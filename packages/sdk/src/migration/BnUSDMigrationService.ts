@@ -5,7 +5,7 @@ import {
   EvmAssetManagerService,
   type HubProvider,
   EvmVaultTokenService,
-} from '../index.js';
+} from '../shared/index.js';
 import invariant from 'tiny-invariant';
 import type { EvmContractCall, SpokeChainKey, WalletProviderSlot } from '@sodax/types';
 import type { ConfigService } from '../shared/config/ConfigService.js';

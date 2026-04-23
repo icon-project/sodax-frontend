@@ -24,29 +24,25 @@ import {
   isSonicChainKey,
   type WalletProviderSlot,
   type EvmReturnType,
+  type HubConfig,
 } from '@sodax/types';
 import invariant from 'tiny-invariant';
-import {
-  encodeAddress,
-  randomUint256,
-  Erc20Service,
-  getEvmViemChain,
-  wrappedSonicAbi,
-  sonicWalletFactoryAbi,
-  EvmSolverService,
-  isSonicChainKeyType,
-  type WaitForTxReceiptParams,
-  type WaitForTxReceiptReturnType,
-  type CreateIntentParams,
-  type Intent,
-  type EstimateGasParams,
-  type EvmHubProvider,
-  type GetDepositParams,
-  type SendMessageParams,
-  type ConfigService,
-  type Erc20IsAllowanceParams,
-  type DepositParams,
-} from '../../../index.js';
+import { encodeAddress, randomUint256 } from '../../utils/shared-utils.js';
+import { getEvmViemChain } from '../../utils/constant-utils.js';
+import { Erc20Service, type Erc20IsAllowanceParams } from '../erc-20/Erc20Service.js';
+import { wrappedSonicAbi, sonicWalletFactoryAbi } from '../../abis/index.js';
+import { EvmSolverService } from '../../../swap/EvmSolverService.js';
+import { isSonicChainKeyType } from '../../guards.js';
+import type {
+  WaitForTxReceiptParams,
+  WaitForTxReceiptReturnType,
+  EstimateGasParams,
+  GetDepositParams,
+  SendMessageParams,
+  DepositParams,
+} from '../../types/spoke-types.js';
+import type { CreateIntentParams, Intent } from '../../types/intent-types.js';
+import type { ConfigService } from '../../config/ConfigService.js';
 
 export type SonicSpokeDepositParams<Raw extends boolean> = {
   srcAddress: Address;
@@ -88,7 +84,7 @@ export type CreateSonicSwapIntentParams<Raw extends boolean> = {
   creatorHubWalletAddress: Address;
   solverConfig: SolverConfig;
   fee: PartnerFee | undefined;
-  hubProvider: EvmHubProvider;
+  hubProvider: { config: ConfigService; chainConfig: HubConfig };
 } & WalletProviderSlot<SonicChainKey, Raw>;
 
 export type ApproveSonicWithdrawParams<Raw extends boolean> = {

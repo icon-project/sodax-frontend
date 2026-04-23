@@ -1,30 +1,19 @@
 import invariant from 'tiny-invariant';
+import { IcxMigrationService, type IcxMigrateParams, type IcxCreateRevertMigrationParams, type IcxMigrateAction, type IcxRevertMigrationAction } from './IcxMigrationService.js';
+import { BnUSDMigrationService, type UnifiedBnUSDMigrateParams, type UnifiedBnUSDMigrateAction } from './BnUSDMigrationService.js';
+import { BalnSwapService, type BalnMigrateParams, type BalnMigrateAction } from './BalnSwapService.js';
+import { isIcxMigrateParams, isBalnMigrateParams, isUnifiedBnUSDMigrateParams, isIcxCreateRevertMigrationParams } from './migration-guards.js';
 import {
-  IcxMigrationService,
   type SpokeService,
-  type IcxMigrateParams,
   relayTxAndWaitPacket,
-  type IcxCreateRevertMigrationParams,
   encodeAddress,
   type RelayError,
   isIconAddress,
-  BnUSDMigrationService,
-  BalnSwapService,
-  type BalnMigrateParams,
-  type UnifiedBnUSDMigrateParams,
-  isIcxMigrateParams,
-  isBalnMigrateParams,
-  isUnifiedBnUSDMigrateParams,
-  isIcxCreateRevertMigrationParams,
   type RelayExtraData,
   waitUntilIntentExecuted,
   type HubProvider,
-  type BalnMigrateAction,
-  type IcxMigrateAction,
   HubService,
-  type IcxRevertMigrationAction,
   isIconChainKeyType,
-  type UnifiedBnUSDMigrateAction,
   isSolanaChainKeyType,
   isBitcoinChainKeyType,
   isEvmChainKeyType,
@@ -37,7 +26,7 @@ import {
   isEvmSpokeOnlyChainKeyType,
   isOptionalEvmWalletProviderType,
   isOptionalStellarWalletProviderType,
-} from '../index.js';
+} from '../shared/index.js';
 import {
   ChainKeys,
   type Address,
@@ -921,9 +910,22 @@ export class MigrationService {
             },
       );
 
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_MIGRATION_INTENT_FAILED',
+            data: {
+              payload: params,
+              error: txResult.error,
+            },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<IconChainKey, boolean> as TxReturnType<IconChainKey, Raw>,
+        value: txResult.value satisfies TxReturnType<IconChainKey, boolean> as TxReturnType<IconChainKey, Raw>,
       };
     } catch (error) {
       return {
@@ -1080,10 +1082,23 @@ export class MigrationService {
             },
       );
 
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_MIGRATION_INTENT_FAILED',
+            data: {
+              payload: params,
+              error: txResult.error,
+            },
+          },
+        };
+      }
+
       return {
         ok: true,
         value: [
-          txResult satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
+          txResult.value satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
           {
             address: hubWalletAddress,
             payload: migrationData,
@@ -1186,9 +1201,22 @@ export class MigrationService {
             },
       );
 
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_MIGRATION_INTENT_FAILED',
+            data: {
+              payload: params,
+              error: txResult.error,
+            },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<IconChainKey, boolean> as TxReturnType<IconChainKey, Raw>,
+        value: txResult.value satisfies TxReturnType<IconChainKey, boolean> as TxReturnType<IconChainKey, Raw>,
       };
     } catch (error) {
       return {
@@ -1264,9 +1292,22 @@ export class MigrationService {
             },
       );
 
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_REVERT_MIGRATION_INTENT_FAILED',
+            data: {
+              payload: params,
+              error: txResult.error,
+            },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<SonicChainKey, boolean> as TxReturnType<SonicChainKey, Raw>,
+        value: txResult.value satisfies TxReturnType<SonicChainKey, boolean> as TxReturnType<SonicChainKey, Raw>,
       };
     } catch (error) {
       return {

@@ -28,7 +28,7 @@ import {
   isOptionalEvmWalletProviderType,
   type SpokeApproveParams,
   type SpokeService,
-} from '../index.js';
+} from '../shared/index.js';
 
 export type PartnerFeeClaimAssetBalance = {
   symbol: string;

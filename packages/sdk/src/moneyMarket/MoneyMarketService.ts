@@ -28,7 +28,7 @@ import {
   isBitcoinChainKeyType,
   isValidWalletProviderTypeForChainKey,
   type SpokeApproveParams,
-} from '../index.js';
+} from '../shared/index.js';
 import type { HubProvider, RelayOptionalExtraData } from '../shared/types/types.js';
 import {
   type SpokeChainKey,
@@ -329,8 +329,8 @@ export class MoneyMarketService {
    */
   public async estimateGas<K extends SpokeChainKey>(
     params: EstimateGasParams<K>,
-  ): Promise<GetEstimateGasReturnType<K>> {
-    return this.spokeService.estimateGas(params) as Promise<GetEstimateGasReturnType<K>>;
+  ): Promise<Result<GetEstimateGasReturnType<K>>> {
+    return this.spokeService.estimateGas(params) as Promise<Result<GetEstimateGasReturnType<K>>>;
   }
 
   /**
@@ -706,9 +706,19 @@ export class MoneyMarketService {
         walletProvider,
       } satisfies DepositParams<K, false>);
 
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_SUPPLY_INTENT_FAILED',
+            data: { error: txResult.error, payload: params },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult as TxReturnType<K, false>,
+        value: txResult.value as TxReturnType<K, false>,
         data: { address: fromHubWallet, payload: data },
       };
     } catch (error) {
@@ -759,9 +769,19 @@ export class MoneyMarketService {
         raw: true,
       } satisfies DepositParams<K, true>);
 
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_SUPPLY_INTENT_FAILED',
+            data: { error: txResult.error, payload: params },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult as TxReturnType<K, true>,
+        value: txResult.value as TxReturnType<K, true>,
         data: { address: fromHubWallet, payload: data },
       };
     } catch (error) {
@@ -892,9 +912,19 @@ export class MoneyMarketService {
 
       const txResult = await this.spokeService.sendMessage<K, false>(sendMessageParams);
 
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_BORROW_INTENT_FAILED',
+            data: { error: txResult.error, payload: params },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, false>,
+        value: txResult.value satisfies TxReturnType<K, false>,
         data: { address: fromHubWallet, payload },
       };
     } catch (error) {
@@ -951,9 +981,19 @@ export class MoneyMarketService {
 
       const txResult = await this.spokeService.sendMessage<K, true>(sendMessageParams);
 
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_BORROW_INTENT_FAILED',
+            data: { error: txResult.error, payload: params },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, true>,
+        value: txResult.value satisfies TxReturnType<K, true>,
         data: { address: fromHubWallet, payload },
       };
     } catch (error) {
@@ -1089,9 +1129,19 @@ export class MoneyMarketService {
 
       const txResult = await this.spokeService.sendMessage<K, false>(sendMessageParams);
 
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_WITHDRAW_INTENT_FAILED',
+            data: { error: txResult.error, payload: params },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, false>,
+        value: txResult.value satisfies TxReturnType<K, false>,
         data: { address: fromHubWallet, payload },
       };
     } catch (error) {
@@ -1150,9 +1200,19 @@ export class MoneyMarketService {
 
       const txResult = await this.spokeService.sendMessage<K, true>(sendMessageParams);
 
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_WITHDRAW_INTENT_FAILED',
+            data: { error: txResult.error, payload: params },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, true>,
+        value: txResult.value satisfies TxReturnType<K, true>,
         data: { address: fromHubWallet, payload },
       };
     } catch (error) {
@@ -1291,9 +1351,19 @@ export class MoneyMarketService {
         walletProvider,
       } satisfies DepositParams<K, false>);
 
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_REPAY_INTENT_FAILED',
+            data: { error: txResult.error, payload: params },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult as TxReturnType<K, false>,
+        value: txResult.value as TxReturnType<K, false>,
         data: { address: fromHubWallet, payload: data },
       };
     } catch (error) {
@@ -1344,9 +1414,19 @@ export class MoneyMarketService {
         raw: true,
       } satisfies DepositParams<K, true>);
 
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_REPAY_INTENT_FAILED',
+            data: { error: txResult.error, payload: params },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult as TxReturnType<K, true>,
+        value: txResult.value as TxReturnType<K, true>,
         data: { address: fromHubWallet, payload: data },
       };
     } catch (error) {

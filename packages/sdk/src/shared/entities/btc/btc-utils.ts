@@ -1,5 +1,16 @@
 import type { BtcAddressType } from '@sodax/types';
-import type { BtcPayload } from '../../services/spoke/BitcoinSpokeService.js';
+
+export type WalletMode = 'USER' | 'TRADING';
+
+export interface BtcPayload {
+  src_address: string;
+  data: string;
+  src_chain_id: number;
+  dst_chain_id: number;
+  wallet_used: WalletMode;
+  timestamp: number;
+  address_type: BtcAddressType;
+}
 
 /**
  * Estimate transaction size in vbytes.

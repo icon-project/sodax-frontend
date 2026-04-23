@@ -1,16 +1,15 @@
 import { fromHex, toHex, type Hex } from 'viem';
-import {
-  type EstimateGasParams,
-  CustomSorobanServer,
-  parseToStroops,
-  sleep,
-  type GetDepositParams,
-  type DepositParams,
-  type SendMessageParams,
-  type WaitForTxReceiptParams,
-  type WaitForTxReceiptReturnType,
-  type ConfigService,
-} from '../../../index.js';
+import type {
+  EstimateGasParams,
+  GetDepositParams,
+  DepositParams,
+  SendMessageParams,
+  WaitForTxReceiptParams,
+  WaitForTxReceiptReturnType,
+} from '../../types/spoke-types.js';
+import type { ConfigService } from '../../config/ConfigService.js';
+import { CustomSorobanServer } from '../../entities/stellar/CustomSorobanServer.js';
+import { parseToStroops, sleep } from '../../utils/shared-utils.js';
 import {
   rpc,
   Asset,

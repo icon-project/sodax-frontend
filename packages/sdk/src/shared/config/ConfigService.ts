@@ -25,7 +25,7 @@ import {
   type SwapsConfig,
   type BridgeConfig,
 } from '@sodax/types';
-import type { BackendApiService } from '../../index.js';
+import type { BackendApiService } from '../../backendApi/BackendApiService.js';
 
 export type ConfigServiceConstructorParams = {
   api: BackendApiService;

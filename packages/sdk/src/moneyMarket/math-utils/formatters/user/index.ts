@@ -7,30 +7,8 @@ import { formatUserReserve } from './format-user-reserve.js';
 import { generateRawUserSummary } from './generate-raw-user-summary.js';
 import { generateUserReserveSummary, type UserReserveSummaryResponse } from './generate-user-reserve-summary.js';
 
-export interface UserReserveDataString {
-  underlyingAsset: string;
-  scaledATokenBalance: string;
-  usageAsCollateralEnabledOnUser: boolean;
-  scaledVariableDebt: string;
-}
-
-export interface CombinedReserveData<T extends FormatReserveUSDResponse = FormatReserveUSDResponse>
-  extends UserReserveDataString {
-  reserve: T;
-}
-
-export interface ComputedUserReserve<T extends FormatReserveUSDResponse = FormatReserveUSDResponse>
-  extends CombinedReserveData<T> {
-  underlyingBalance: string;
-  underlyingBalanceMarketReferenceCurrency: string;
-  underlyingBalanceUSD: string;
-  variableBorrows: string;
-  variableBorrowsMarketReferenceCurrency: string;
-  variableBorrowsUSD: string;
-  totalBorrows: string;
-  totalBorrowsMarketReferenceCurrency: string;
-  totalBorrowsUSD: string;
-}
+export type { UserReserveDataString, CombinedReserveData, ComputedUserReserve } from './user-types.js';
+import type { UserReserveDataString, CombinedReserveData, ComputedUserReserve } from './user-types.js';
 
 export interface FormatUserSummaryRequest<T extends FormatReserveUSDResponse = FormatReserveUSDResponse> {
   userReserves: UserReserveDataString[];

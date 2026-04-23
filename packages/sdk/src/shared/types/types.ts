@@ -1,30 +1,6 @@
-import type {
-  BitcoinSpokeService,
-  EvmSpokeService,
-  IconSpokeService,
-  InjectiveSpokeService,
-  SolanaSpokeService,
-  SonicSpokeService,
-  StacksSpokeService,
-  StellarSpokeService,
-  SuiSpokeService,
-} from '../services/index.js';
 import type { EvmHubProvider } from '../entities/EvmHubProvider.js';
-import type { NearSpokeService } from '../services/spoke/NearSpokeService.js';
-import type {
-  EvmSpokeOnlyChainKey,
-  Hex,
-  BitcoinChainKey,
-  IconChainKey,
-  InjectiveChainKey,
-  NearChainKey,
-  SolanaChainKey,
-  SonicChainKey,
-  SpokeChainKey,
-  StellarChainKey,
-  StacksChainKey,
-  SuiChainKey,
-} from '@sodax/types';
+export type { RelayExtraData } from './relay-types.js';
+import type { RelayExtraData } from './relay-types.js';
 
 /**
  * Types derived from Core SDK specific types
@@ -32,40 +8,6 @@ import type {
  */
 
 export type HubProvider = EvmHubProvider;
-
-export type SpokeServiceType =
-  | EvmSpokeService
-  | SonicSpokeService
-  | SolanaSpokeService
-  | StellarSpokeService
-  | IconSpokeService
-  | SuiSpokeService
-  | InjectiveSpokeService
-  | StacksSpokeService
-  | NearSpokeService
-  | BitcoinSpokeService;
-
-export type GetSpokeServiceType<C extends SpokeChainKey> = C extends EvmSpokeOnlyChainKey
-  ? EvmSpokeService
-  : C extends SonicChainKey
-    ? SonicSpokeService
-    : C extends SolanaChainKey
-      ? SolanaSpokeService
-      : C extends StellarChainKey
-        ? StellarSpokeService
-        : C extends IconChainKey
-          ? IconSpokeService
-          : C extends SuiChainKey
-            ? SuiSpokeService
-            : C extends InjectiveChainKey
-              ? InjectiveSpokeService
-              : C extends StacksChainKey
-                ? StacksSpokeService
-                : C extends NearChainKey
-                  ? NearSpokeService
-                  : C extends BitcoinChainKey
-                    ? BitcoinSpokeService
-                    : SpokeServiceType;
 
 export type RateLimitConfig = {
   maxAvailable: number;
@@ -79,11 +21,8 @@ export type RateLimitConfig = {
 export type OptionalRaw<R extends boolean> = { raw?: R };
 export type OptionalSkipSimulation = { skipSimulation?: boolean };
 export type OptionalTimeout = { timeout?: number };
-export type RelayExtraData = { address: Hex; payload: Hex };
 export type RelayOptionalExtraData = { data?: RelayExtraData };
 
-export type RawDestinationParams = {
-  dstChainKey: SpokeChainKey;
-  dstAddress: string;
-};
+export type { RawDestinationParams } from './spoke-types.js';
+import type { RawDestinationParams } from './spoke-types.js';
 export type DestinationParamsType = RawDestinationParams;

@@ -23,7 +23,7 @@ import type {
   EvmChainKey,
   WalletProviderSlot,
 } from '@sodax/types';
-import type { OptionalSkipSimulation } from './types.js';
+type OptionalSkipSimulation = { skipSimulation?: boolean };
 
 /*
  * Deposit parameters type for depositing tokens into spoke chain asset manager.
@@ -207,3 +207,8 @@ export type SpokeApproveParams<K extends SpokeChainKey, Raw extends boolean> = K
     : K extends StellarChainKey
       ? SpokeApproveParamsStellar<K, Raw>
       : never;
+
+export type RawDestinationParams = {
+  dstChainKey: SpokeChainKey;
+  dstAddress: string;
+};

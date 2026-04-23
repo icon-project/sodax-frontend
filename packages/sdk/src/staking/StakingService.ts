@@ -24,7 +24,7 @@ import {
   isOptionalEvmWalletProviderType,
   isOptionalStellarWalletProviderType,
   type SendMessageParams,
-} from '../index.js';
+} from '../shared/index.js';
 import {
   type HttpUrl,
   type XToken,
@@ -510,9 +510,20 @@ export class StakingService {
             },
       );
 
+      if (!txResult.ok) {
+        console.error(txResult.error);
+        return {
+          ok: false,
+          error: {
+            code: 'STAKE_FAILED',
+            error: txResult.error,
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
+        value: txResult.value satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
         data: {
           address: hubWallet,
           payload: data,
@@ -666,9 +677,20 @@ export class StakingService {
             } satisfies SendMessageParams<K, false>),
       );
 
+      if (!txResult.ok) {
+        console.error(txResult.error);
+        return {
+          ok: false,
+          error: {
+            code: 'UNSTAKE_FAILED',
+            error: txResult.error,
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
+        value: txResult.value satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
         data: {
           address: hubWallet,
           payload: data,
@@ -823,9 +845,20 @@ export class StakingService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
+      if (!txResult.ok) {
+        console.error(txResult.error);
+        return {
+          ok: false,
+          error: {
+            code: 'INSTANT_UNSTAKE_FAILED',
+            error: txResult.error,
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, boolean> as TxReturnType<K, Raw>,
+        value: txResult.value satisfies TxReturnType<K, boolean> as TxReturnType<K, Raw>,
         data: {
           address: hubWallet,
           payload: data,
@@ -994,9 +1027,20 @@ export class StakingService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
+      if (!txResult.ok) {
+        console.error(txResult.error);
+        return {
+          ok: false,
+          error: {
+            code: 'CLAIM_FAILED',
+            error: txResult.error,
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
+        value: txResult.value satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
         data: {
           address: hubWallet,
           payload: data,
@@ -1160,9 +1204,20 @@ export class StakingService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
+      if (!txResult.ok) {
+        console.error(txResult.error);
+        return {
+          ok: false,
+          error: {
+            code: 'CANCEL_UNSTAKE_FAILED',
+            error: txResult.error,
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
+        value: txResult.value satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
         data: {
           address: hubWallet,
           payload: data,

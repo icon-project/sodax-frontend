@@ -1,13 +1,11 @@
-import {
-  SwapService,
-  MigrationService,
-  BackendApiService,
-  BridgeService,
-  StakingService,
-  DexService,
-  SpokeService,
-  EvmHubProvider,
-} from '../../index.js';
+import { SwapService } from '../../swap/SwapService.js';
+import { MigrationService } from '../../migration/MigrationService.js';
+import { BackendApiService } from '../../backendApi/BackendApiService.js';
+import { BridgeService } from '../../bridge/BridgeService.js';
+import { StakingService } from '../../staking/StakingService.js';
+import { DexService } from '../../dex/DexService.js';
+import { SpokeService } from '../services/spoke/SpokeService.js';
+import { EvmHubProvider } from './EvmHubProvider.js';
 import { MoneyMarketService } from '../../moneyMarket/MoneyMarketService.js';
 import { sodaxConfig, type DeepPartial, type Result, type SodaxConfig } from '@sodax/types';
 import type { HubProvider } from '../types/types.js';

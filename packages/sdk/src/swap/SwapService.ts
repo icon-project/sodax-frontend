@@ -8,8 +8,6 @@ import {
   calculateFeeAmount,
   calculatePercentageFeeAmount,
   encodeContractCalls,
-  SolverApiService,
-  EvmSolverService,
   isSonicChainKeyType,
   type EstimateGasParams,
   type ConfigService,
@@ -18,8 +16,6 @@ import {
   type IntentDeliveryInfo,
   type IntentRelayRequest,
   type PacketData,
-  type RelayErrorCode,
-  type WaitUntilIntentExecutedPayload,
   isBitcoinChainKeyType,
   HubService,
   isHubChainKeyType,
@@ -38,14 +34,39 @@ import {
   isOptionalStellarWalletProviderType,
   isBitcoinWalletProviderType,
   type RelayExtraData,
-} from '../index.js';
+} from '../shared/index.js';
+import { SolverApiService } from './SolverApiService.js';
+import { EvmSolverService } from './EvmSolverService.js';
+export type {
+  CreateIntentParams,
+  CreateLimitOrderParams,
+  Intent,
+  FeeData,
+  IntentData,
+  IntentState,
+  IntentCreationFailedErrorData,
+  IntentSubmitTxFailedErrorData,
+  IntentWaitUntilIntentExecutedFailedErrorData,
+  IntentPostExecutionFailedErrorData,
+  IntentCancelFailedErrorData,
+  IntentErrorCode,
+  IntentErrorData,
+  IntentError,
+} from '../shared/types/intent-types.js';
+export { IntentDataType } from '../shared/types/intent-types.js';
+import type {
+  CreateIntentParams,
+  CreateLimitOrderParams,
+  Intent,
+  IntentState,
+  IntentErrorCode,
+  IntentError,
+} from '../shared/types/intent-types.js';
 import {
   type SpokeChainKey,
-  type Address,
   type Hex,
   type Hash,
   type HttpUrl,
-  type IntentRelayChainId,
   getIntentRelayChainId,
   isBitcoinChainKey,
   type FeeAmount,
@@ -77,136 +98,6 @@ import {
   type SonicChainKey,
 } from '@sodax/types';
 
-// `srcChain: K` is the generic anchor. When the caller supplies a literal (e.g. `'ethereum'`)
-// TypeScript infers `K = 'ethereum'` and downstream `WalletProviderSlot<K, R>` narrows the
-// required walletProvider to the matching chain-specific provider interface. When the caller
-// passes a value typed as the broad `SpokeChainKey`, K stays unconstrained and the wallet
-// provider gracefully falls back to the full `IWalletProvider` union.
-export type CreateIntentParams<K extends SpokeChainKey = SpokeChainKey> = {
-  inputToken: string; // The address of the input token on spoke chain
-  outputToken: string; // The address of the output token on spoke chain
-  inputAmount: bigint; // The amount of input tokens
-  minOutputAmount: bigint; // The minimum amount of output tokens to accept
-  deadline: bigint; // Optional timestamp after which intent expires (0 = no deadline)
-  allowPartialFill: boolean; // Whether the intent can be partially filled
-  srcChain: K; // Chain ID where input tokens originate (drives type narrowing of walletProvider)
-  dstChain: SpokeChainKey; // Chain ID where output tokens should be delivered
-  srcAddress: string; // Source address (original address on spoke chain)
-  dstAddress: string; // Destination address (original address on spoke chain)
-  solver: Address; // Optional specific solver address (address(0) = any solver)
-  data: Hex; // Additional arbitrary data
-};
-
-export type CreateLimitOrderParams<K extends SpokeChainKey = SpokeChainKey> = Omit<CreateIntentParams<K>, 'deadline'>;
-
-/**
- * Parameters for creating a limit order intent.
- * Similar to CreateIntentParams but without the deadline field (deadline is automatically set to 0n for limit orders).
- *
- * @property inputToken - The address of the input token on the spoke chain.
- * @property outputToken - The address of the output token on the spoke chain.
- * @property inputAmount - The amount of input tokens to provide, denominated in the input token's decimals.
- * @property minOutputAmount - The minimum amount of output tokens to accept, denominated in the output token's decimals.
- * @property allowPartialFill - Whether the intent can be partially filled.
- * @property srcChain - Chain ID where input tokens originate.
- * @property dstChain - Chain ID where output tokens should be delivered.
- * @property srcAddress - Sender address on source chain.
- * @property dstAddress - Receiver address on destination chain.
- * @property solver - Optional specific solver address (use address(0) for any solver).
- * @property data - Additional arbitrary data (opaque, for advanced integrations/fees etc).
- */
-export type Intent = {
-  intentId: bigint; // Unique identifier for the intent
-  creator: Address; // Address that created the intent (Wallet abstraction address on hub chain)
-  inputToken: Address; // Token the user is providing (hub asset address on hub chain)
-  outputToken: Address; // Token the user wants to receive (hub asset address on hub chain)
-  inputAmount: bigint; // Amount of input tokens
-  minOutputAmount: bigint; // Minimum amount of output tokens to accept
-  deadline: bigint; // Optional timestamp after which intent expires (0 = no deadline)
-  allowPartialFill: boolean; // Whether the intent can be partially filled
-  srcChain: IntentRelayChainId; // Chain ID where input tokens originate
-  dstChain: IntentRelayChainId; // Chain ID where output tokens should be delivered
-  srcAddress: Hex; // Source address in bytes (original address on spoke chain)
-  dstAddress: Hex; // Destination address in bytes (original address on spoke chain)
-  solver: Address; // Optional specific solver address (address(0) = any solver)
-  data: Hex; // Additional arbitrary data
-};
-
-// Data types for arbitrary data
-export enum IntentDataType {
-  FEE = 1,
-}
-
-export type FeeData = {
-  fee: bigint;
-  receiver: Address;
-};
-
-export type IntentData = {
-  type: IntentDataType;
-  data: Hex;
-};
-
-export type IntentState = {
-  exists: boolean;
-  remainingInput: bigint;
-  receivedOutput: bigint;
-  pendingPayment: boolean;
-};
-
-export type IntentCreationFailedErrorData = {
-  // The user-facing input could be either a regular intent (with deadline) or a limit order
-  // (without). The error data preserves whichever shape the caller passed; downstream consumers
-  // narrow if they need the deadline.
-  payload: CreateIntentParams | CreateLimitOrderParams;
-  error: unknown;
-};
-
-export type IntentSubmitTxFailedErrorData = {
-  payload: IntentRelayRequest<'submit'>;
-  error: unknown;
-};
-
-export type IntentWaitUntilIntentExecutedFailedErrorData = {
-  payload: WaitUntilIntentExecutedPayload;
-  error: unknown;
-};
-
-export type IntentPostExecutionFailedErrorData = SolverErrorResponse & {
-  intent: Intent;
-  intentDeliveryInfo: IntentDeliveryInfo;
-};
-
-export type IntentCancelFailedErrorData = {
-  payload: Intent;
-  error: unknown;
-};
-
-export type IntentErrorCode =
-  | RelayErrorCode
-  | 'UNKNOWN'
-  | 'CREATION_FAILED'
-  | 'POST_EXECUTION_FAILED'
-  | 'CANCEL_FAILED';
-
-export type IntentErrorData<T extends IntentErrorCode> = T extends 'RELAY_TIMEOUT'
-  ? IntentWaitUntilIntentExecutedFailedErrorData
-  : T extends 'CREATION_FAILED'
-    ? IntentCreationFailedErrorData
-    : T extends 'SUBMIT_TX_FAILED'
-      ? IntentSubmitTxFailedErrorData
-      : T extends 'POST_EXECUTION_FAILED'
-        ? IntentPostExecutionFailedErrorData
-        : T extends 'UNKNOWN'
-          ? IntentCreationFailedErrorData
-          : T extends 'CANCEL_FAILED'
-            ? IntentCancelFailedErrorData
-            : never;
-
-export type IntentError<T extends IntentErrorCode = IntentErrorCode> = {
-  code: T;
-  data: IntentErrorData<T>;
-};
 
 export type GetIntentSubmitTxExtraDataParams = { txHash: Hash } | { intent: Intent };
 
@@ -279,8 +170,8 @@ export class SwapService {
    */
   public async estimateGas<C extends SpokeChainKey>(
     params: EstimateGasParams<C>,
-  ): Promise<GetEstimateGasReturnType<C>> {
-    return this.spoke.estimateGas(params) as Promise<GetEstimateGasReturnType<C>>;
+  ): Promise<Result<GetEstimateGasReturnType<C>>> {
+    return this.spoke.estimateGas(params) as Promise<Result<GetEstimateGasReturnType<C>>>;
   }
 
   /**
@@ -943,10 +834,24 @@ export class SwapService {
             },
       );
 
+      if (!txResult.ok) {
+        console.error('[SwapService.createIntent] FAILED', txResult.error);
+        return {
+          ok: false,
+          error: {
+            code: 'CREATION_FAILED',
+            data: {
+              payload: params,
+              error: txResult.error,
+            },
+          },
+        };
+      }
+
       return {
         ok: true,
         value: [
-          txResult satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
+          txResult.value satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
           { ...intent, feeAmount } as Intent & FeeAmount,
           data,
         ],
@@ -1190,9 +1095,22 @@ export class SwapService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CANCEL_FAILED',
+            data: {
+              payload: intent,
+              error: txResult.error,
+            },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, boolean> as TxReturnType<K, Raw>,
+        value: txResult.value satisfies TxReturnType<K, boolean> as TxReturnType<K, Raw>,
       };
     } catch (error) {
       return {
@@ -1350,7 +1268,7 @@ export class SwapService {
    * @returns {Promise<Intent>} The intent
    */
   public getIntent(txHash: Hash): Promise<Intent> {
-    return EvmSolverService.getIntent(txHash, this.config, this.hubProvider);
+    return EvmSolverService.getIntent(txHash, this.config, this.hubProvider.publicClient);
   }
 
   /**
@@ -1359,7 +1277,7 @@ export class SwapService {
    * @returns {Promise<IntentState>} The intent state
    */
   public getFilledIntent(txHash: Hash): Promise<IntentState> {
-    return EvmSolverService.getFilledIntent(txHash, this.solver, this.hubProvider);
+    return EvmSolverService.getFilledIntent(txHash, this.solver, this.hubProvider.publicClient);
   }
 
   /**

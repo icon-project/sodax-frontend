@@ -7,27 +7,19 @@ import {
 } from '@sodax/types';
 import invariant from 'tiny-invariant';
 import { retry } from '../../utils/shared-utils.js';
-import type { IntentError } from '../../../swap/SwapService.js';
-import type { RelayExtraData } from '../../types/types.js';
+import type { IntentError } from '../../types/intent-types.js';
+import {
+  type RelayAction,
+  type RelayErrorCode,
+  type RelayExtraData,
+  type IntentDeliveryInfo,
+  type IntentRelayRequest,
+  type WaitUntilIntentExecutedPayload,
+} from '../../types/relay-types.js';
 
-/**
- * The action type for the intent relay service.
- * submit - submit a transaction to the intent relay service
- * get_transaction_packets - get transaction packets from the intent relay service
- * get_packet - get a packet from the intent relay service
- */
-export type RelayAction = 'submit' | 'get_transaction_packets' | 'get_packet';
+export type { RelayAction, RelayErrorCode, RelayExtraData, IntentDeliveryInfo, IntentRelayRequest, WaitUntilIntentExecutedPayload };
 
-/**
- * The status of the relay transaction.
- * pending - no signatures
- * validating - not enough signatures
- * executing - enough signatures,no confirmed txn-hash
- * executed - has confirmed transaction-hash
- */
 export type RelayTxStatus = 'pending' | 'validating' | 'executing' | 'executed';
-
-export type RelayErrorCode = 'SUBMIT_TX_FAILED' | 'RELAY_TIMEOUT';
 
 export type RelayError = {
   code: RelayErrorCode;
@@ -35,20 +27,20 @@ export type RelayError = {
 };
 
 export type SubmitTxParams = {
-  chain_id: string; // The ID of the chain where the transaction was submitted
-  tx_hash: string; // The transaction hash of the submitted transaction
+  chain_id: string;
+  tx_hash: string;
   data?: RelayExtraData;
 };
 
 export type GetTransactionPacketsParams = {
-  chain_id: string; // The ID of the chain where the transaction was submitted
-  tx_hash: string; // The transaction hash of the submitted transaction
+  chain_id: string;
+  tx_hash: string;
 };
 
 export type GetPacketParams = {
-  chain_id: string; // The ID of the chain where the transaction was submitted
-  tx_hash: string; // The transaction hash of the submitted transaction
-  conn_sn: string; // The connection sequence number of the submitted transaction
+  chain_id: string;
+  tx_hash: string;
+  conn_sn: string;
 };
 
 export type SubmitTxResponse = {
@@ -67,15 +59,6 @@ export type PacketData = {
   dst_tx_hash: string;
   signatures: string[];
   payload: string;
-};
-
-export type IntentDeliveryInfo = {
-  srcChainId: SpokeChainKey; // The chain ID where the transaction was submitted
-  srcTxHash: string; // The transaction hash of the submitted transaction
-  srcAddress: string; // The wallet address which submitted the transaction
-  dstChainId: SpokeChainKey; // The destination chain ID
-  dstTxHash: string; // The transaction hash of the submitted transaction on the destination chain
-  dstAddress: string; // The destination wallet address on the destination chain
 };
 
 export type GetTransactionPacketsResponse = {
@@ -110,22 +93,6 @@ export type GetRelayResponse<T extends RelayAction> = T extends 'submit'
       : never;
 
 export type IntentRelayRequestParams = SubmitTxParams | GetTransactionPacketsParams | GetPacketParams;
-
-export type WaitUntilIntentExecutedPayload = {
-  intentRelayChainId: string;
-  spokeTxHash: string;
-  timeout?: number;
-  apiUrl: HttpUrl;
-};
-
-/**
- * Represents the request payload for submitting a transaction to the intent relay service.
- * Contains the action type and parameters including chain ID and transaction hash.
- */
-export type IntentRelayRequest<T extends RelayAction> = {
-  action: T;
-  params: GetRelayRequestParamType<T>;
-};
 
 async function postRequest<T extends RelayAction>(
   payload: IntentRelayRequest<T>,

@@ -3,17 +3,16 @@ const IconSdk = ('default' in IconSdkRaw.default ? IconSdkRaw.default : IconSdkR
 const { Converter, CallTransactionBuilder, CallBuilder } = IconSdk;
 import type { IconService } from 'icon-sdk-js';
 import * as rlp from 'rlp';
-import {
-  type SendMessageParams,
-  type DepositParams,
-  type EstimateGasParams,
-  type GetDepositParams,
-  type WaitForTxReceiptParams,
-  type WaitForTxReceiptReturnType,
-  sleep,
-  BigIntToHex,
-  type ConfigService,
-} from '../../../index.js';
+import type {
+  SendMessageParams,
+  DepositParams,
+  EstimateGasParams,
+  GetDepositParams,
+  WaitForTxReceiptParams,
+  WaitForTxReceiptReturnType,
+} from '../../types/spoke-types.js';
+import type { ConfigService } from '../../config/ConfigService.js';
+import { sleep, BigIntToHex } from '../../utils/shared-utils.js';
 import {
   type HttpUrl,
   type HubAddress,

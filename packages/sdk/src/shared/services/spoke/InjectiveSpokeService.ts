@@ -1,14 +1,14 @@
 import { fromHex } from 'viem';
-import {
-  type SendMessageParams,
-  type DepositParams,
-  type EstimateGasParams,
-  type GetDepositParams,
-  type ConfigService,
-  type WaitForTxReceiptParams,
-  type WaitForTxReceiptReturnType,
-  sleep,
-} from '../../../index.js';
+import type {
+  SendMessageParams,
+  DepositParams,
+  EstimateGasParams,
+  GetDepositParams,
+  WaitForTxReceiptParams,
+  WaitForTxReceiptReturnType,
+} from '../../types/spoke-types.js';
+import type { ConfigService } from '../../config/ConfigService.js';
+import { sleep } from '../../utils/shared-utils.js';
 import {
   toBase64,
   ChainGrpcWasmApi,

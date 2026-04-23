@@ -25,7 +25,7 @@ import {
   isEvmSpokeOnlyChainKeyType,
   isOptionalEvmWalletProviderType,
   type SendMessageParams,
-} from '../index.js';
+} from '../shared/index.js';
 import {
   SodaTokens,
   type ConcentratedLiquidityConfig,
@@ -435,9 +435,22 @@ export class AssetService {
             },
       );
 
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_DEPOSIT_INTENT_FAILED',
+            data: {
+              error: txResult.error,
+              payload: params,
+            },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
+        value: txResult.value satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
         data: {
           address: fromHubWallet,
           payload: data,
@@ -519,9 +532,22 @@ export class AssetService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: {
+            code: 'CREATE_WITHDRAW_LIQUIDITY_INTENT_FAILED',
+            data: {
+              error: txResult.error,
+              payload: params,
+            },
+          },
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, boolean> as TxReturnType<K, Raw>,
+        value: txResult.value satisfies TxReturnType<K, boolean> as TxReturnType<K, Raw>,
         data: {
           address: recipient as `0x${string}`,
           payload: data,
