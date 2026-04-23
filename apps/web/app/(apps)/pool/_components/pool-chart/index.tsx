@@ -225,10 +225,7 @@ export function PoolChart({
     const referencePrices = visibleData.map(point => point.price);
     const finiteReferences = referencePrices.filter(price => Number.isFinite(price) && price > 0);
 
-    const maxDeviation = finiteReferences.reduce(
-      (acc, price) => Math.max(acc, Math.abs(price - currentPrice)),
-      0,
-    );
+    const maxDeviation = finiteReferences.reduce((acc, price) => Math.max(acc, Math.abs(price - currentPrice)), 0);
     const minHalfSpan = Math.max(currentPrice * 0.002, 0.000001);
     const halfSpan = Math.max(maxDeviation * 1.15, minHalfSpan);
     const paddedMin = currentPrice - halfSpan;
@@ -716,7 +713,7 @@ export function PoolChart({
           anchorMin: minPrice,
           anchorMax: maxPrice,
           span: maxPrice - minPrice,
-          pxPerPrice: INNER_H / (zoomedDomainMax - zoomedDomainMin),
+          pxPerPrice: INNER_H / ((zoomedDomainMax ?? 0) - (zoomedDomainMin ?? 0)),
         };
       }
     };
