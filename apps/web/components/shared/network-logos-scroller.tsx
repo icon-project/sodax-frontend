@@ -9,6 +9,7 @@ import { getNetworkDocsUrl } from '@/lib/docToUrl';
 
 const SUPPORTED_NETWORKS = [
   'Stellar',
+  'Near',
   'Avalanche',
   'Polygon',
   'Base',
@@ -19,7 +20,9 @@ const SUPPORTED_NETWORKS = [
   'Ethereum',
   'Bitcoin',
   'BNB Chain',
+  'HyperEVM',
   'Arbitrum',
+  'Kaia',
   'LightLink',
 ];
 
@@ -45,7 +48,7 @@ export const NetworkLogosScroller = ({ clickable = true }: NetworkLogosScrollerP
   }, [activeTouchIndex]);
 
   return (
-    <div ref={touchBoundaryRef} className="max-w-[480px] overflow-x-clip group/marquee opacity-60 relative">
+    <div ref={touchBoundaryRef} className="max-w-[336px] overflow-x-clip group/marquee opacity-60 relative">
       <div className="pointer-events-none absolute inset-y-0 left-0 w-[20%] z-10 bg-linear-to-r from-cherry-soda to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-[20%] z-10 bg-linear-to-l from-cherry-soda to-transparent" />
       <div
