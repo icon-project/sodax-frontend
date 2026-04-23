@@ -4,8 +4,13 @@ export { useXConnect } from './useXConnect.js';
 export { useXConnection } from './useXConnection.js';
 export { useXConnectors } from './useXConnectors.js';
 export { useIsWalletInstalled, type UseIsWalletInstalledOptions } from './useIsWalletInstalled.js';
-export { useChainGroups, type ChainGroup } from './useChainGroups.js';
-export { useConnectedChains, type ConnectedChain, type UseConnectedChainsResult } from './useConnectedChains.js';
+export { useChainGroups, type ChainGroup, type UseChainGroupsOptions } from './useChainGroups.js';
+export {
+  useConnectedChains,
+  type ConnectedChain,
+  type UseConnectedChainsOptions,
+  type UseConnectedChainsResult,
+} from './useConnectedChains.js';
 export {
   useConnectionFlow,
   type ConnectionStatus,

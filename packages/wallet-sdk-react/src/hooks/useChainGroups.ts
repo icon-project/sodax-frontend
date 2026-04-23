@@ -16,12 +16,30 @@ export type ChainGroup = {
   connectorId: string | undefined;
 };
 
+export type UseChainGroupsOptions = {
+  /**
+   * Display order by `chainType`. Chains not listed fall to the bottom
+   * alphabetical amongst themselves. Omit to preserve the insertion order
+   * of `enabledChains` (driven by config / chainRegistry initialization).
+   */
+  order?: readonly ChainType[];
+};
+
 function getChainIdsByType(chainType: ChainType): readonly ChainId[] {
   const ids: ChainId[] = [];
   for (const [id, info] of Object.entries(baseChainInfo)) {
     if (info.type === chainType) ids.push(id as ChainId);
   }
   return ids;
+}
+
+function compareByOrder(a: ChainType, b: ChainType, order: readonly ChainType[]): number {
+  const ia = order.indexOf(a);
+  const ib = order.indexOf(b);
+  if (ia === -1 && ib === -1) return a.localeCompare(b);
+  if (ia === -1) return 1;
+  if (ib === -1) return -1;
+  return ia - ib;
 }
 
 /**
@@ -32,8 +50,13 @@ export function buildChainGroups(
   enabledChains: readonly ChainType[],
   xConnections: Partial<Record<ChainType, XConnection>>,
   registry: Record<string, ChainServiceFactory> = chainRegistry,
+  order?: readonly ChainType[],
 ): ChainGroup[] {
-  return enabledChains.map(chainType => {
+  const chains = order
+    ? [...enabledChains].sort((a, b) => compareByOrder(a, b, order))
+    : enabledChains;
+
+  return chains.map(chainType => {
     const factory = registry[chainType];
     const connection = xConnections[chainType];
     return {
@@ -62,10 +85,19 @@ export function buildChainGroups(
  *     {g.isConnected && <Badge>Connected</Badge>}
  *   </button>
  * ));
+ *
+ * @example
+ * // Deterministic display order — useful when the chain picker must render
+ * // hub-first regardless of enabledChains insertion order.
+ * const groups = useChainGroups({ order: ['EVM', 'ICON', 'SOLANA'] });
  */
-export function useChainGroups(): ChainGroup[] {
+export function useChainGroups(options: UseChainGroupsOptions = {}): ChainGroup[] {
   const enabledChains = useXWalletStore(s => s.enabledChains);
   const xConnections = useXWalletStore(s => s.xConnections);
+  const { order } = options;
 
-  return useMemo(() => buildChainGroups(enabledChains, xConnections), [enabledChains, xConnections]);
+  return useMemo(
+    () => buildChainGroups(enabledChains, xConnections, chainRegistry, order),
+    [enabledChains, xConnections, order],
+  );
 }

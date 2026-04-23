@@ -12,6 +12,16 @@ export type ConnectedChain = {
   connectorIcon: string | undefined;
 };
 
+function compareByOrder(a: ChainType, b: ChainType, order: readonly ChainType[]): number {
+  const ia = order.indexOf(a);
+  const ib = order.indexOf(b);
+  // Chains not in the supplied order fall to the bottom, alphabetical amongst themselves.
+  if (ia === -1 && ib === -1) return a.localeCompare(b);
+  if (ia === -1) return 1;
+  if (ib === -1) return -1;
+  return ia - ib;
+}
+
 export type UseConnectedChainsResult = {
   /** One entry per chain currently holding a connected account. */
   chains: ConnectedChain[];
@@ -25,6 +35,15 @@ export type UseConnectedChainsResult = {
   status: 'loading' | 'ready';
 };
 
+export type UseConnectedChainsOptions = {
+  /**
+   * Display order by `chainType`. Chains not listed fall to the bottom
+   * alphabetical amongst themselves. Omit to leave chains in the insertion
+   * order of the underlying store (non-deterministic across page reloads).
+   */
+  order?: readonly ChainType[];
+};
+
 /**
  * Pure helper — extracted for testability. Same logic as `useConnectedChains`
  * but without React hook bindings. `isReady` defaults to `true` so tests that
@@ -34,6 +53,7 @@ export function buildConnectedChains(
   xConnections: Partial<Record<ChainType, XConnection>>,
   xConnectorsByChain: Partial<Record<ChainType, XConnector[]>>,
   isReady = true,
+  order?: readonly ChainType[],
 ): UseConnectedChainsResult {
   const chains: ConnectedChain[] = [];
   for (const [key, connection] of Object.entries(xConnections)) {
@@ -48,6 +68,10 @@ export function buildConnectedChains(
       connectorName: connector?.name,
       connectorIcon: connector?.icon,
     });
+  }
+
+  if (order) {
+    chains.sort((a, b) => compareByOrder(a.chainType, b.chainType, order));
   }
 
   return {
@@ -78,8 +102,14 @@ function subscribeHydration(onChange: () => void): () => void {
  * const { chains, total, status } = useConnectedChains();
  * if (status === 'loading') return <Skeleton />;
  * return total >= 1 ? <ConnectedChainsDisplay chains={chains} /> : <ConnectCta />;
+ *
+ * @example
+ * // Deterministic display order — required if rendering a list that must
+ * // be stable across page reloads (hydrator race otherwise randomizes
+ * // insertion order).
+ * const { chains } = useConnectedChains({ order: ['EVM', 'ICON', 'SOLANA'] });
  */
-export function useConnectedChains(): UseConnectedChainsResult {
+export function useConnectedChains(options: UseConnectedChainsOptions = {}): UseConnectedChainsResult {
   const xConnections = useXWalletStore(s => s.xConnections);
   const xConnectorsByChain = useXWalletStore(s => s.xConnectorsByChain);
   const isReady = useSyncExternalStore(
@@ -88,8 +118,9 @@ export function useConnectedChains(): UseConnectedChainsResult {
     () => false,
   );
 
+  const { order } = options;
   return useMemo(
-    () => buildConnectedChains(xConnections, xConnectorsByChain, isReady),
-    [xConnections, xConnectorsByChain, isReady],
+    () => buildConnectedChains(xConnections, xConnectorsByChain, isReady, order),
+    [xConnections, xConnectorsByChain, isReady, order],
   );
 }
