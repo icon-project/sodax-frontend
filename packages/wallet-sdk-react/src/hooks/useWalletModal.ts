@@ -2,12 +2,10 @@ import { useCallback } from 'react';
 import type { ChainType } from '@sodax/types';
 import type { XConnector } from '@/core/XConnector.js';
 import type { XAccount } from '@/types/index.js';
+import { WALLET_MODAL_HYDRATION_TIMEOUT_MS } from '@/constants.js';
 import { useWalletModalStore, type WalletModalState } from '@/useWalletModalStore.js';
 import { useXWalletStore } from '@/useXWalletStore.js';
 import { useXConnect } from './useXConnect.js';
-
-/** How long to wait for provider-managed chains' Hydrator to populate xConnections after connect() resolves. */
-const HYDRATION_TIMEOUT_MS = 30_000;
 
 /**
  * Subscribe to `useXWalletStore` for an `xConnections[chainType].xAccount`
@@ -19,7 +17,10 @@ const HYDRATION_TIMEOUT_MS = 30_000;
  * `undefined` because the account materializes asynchronously after wagmi
  * / wallet-adapter reports the connect as ready.
  */
-function waitForXConnection(chainType: ChainType, timeoutMs = HYDRATION_TIMEOUT_MS): Promise<XAccount | undefined> {
+function waitForXConnection(
+  chainType: ChainType,
+  timeoutMs = WALLET_MODAL_HYDRATION_TIMEOUT_MS,
+): Promise<XAccount | undefined> {
   return new Promise(resolve => {
     let settled = false;
     const finish = (account: XAccount | undefined) => {
