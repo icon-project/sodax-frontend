@@ -190,7 +190,7 @@ export class XverseXConnector extends BitcoinXConnector {
   }
 
   public override get icon(): string {
-    return WALLET_METADATA.xverse.iconUrl;
+    return WALLET_METADATA.xverse.icon;
   }
 
   async connect(): Promise<XAccount | undefined> {

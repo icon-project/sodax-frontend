@@ -68,14 +68,4 @@ export abstract class XConnector implements IXConnector {
   public get installUrl(): string | undefined {
     return undefined;
   }
-
-  /** Display icon URL. Defaults to `icon` so existing overrides cascade. */
-  public get iconUrl(): string | undefined {
-    return this.icon;
-  }
-
-  /** When true, sortConnectors() ranks this connector above unmarked ones. SDK never sets this. */
-  public get isPreferred(): boolean | undefined {
-    return undefined;
-  }
 }

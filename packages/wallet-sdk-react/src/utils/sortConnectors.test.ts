@@ -41,30 +41,21 @@ describe('sortConnectors', () => {
     expect(result.map(x => x.id)).toEqual(['b', 'a']);
   });
 
-  it('ranks isPreferred=true above unmarked when not in preferred[]', () => {
-    const a = connector({ id: 'a' });
-    const b = connector({ id: 'b', isPreferred: true });
-    const c = connector({ id: 'c' });
-    expect(sortConnectors([a, b, c]).map(x => x.id)).toEqual(['b', 'a', 'c']);
-  });
-
-  it('ranks installed above not-installed when isPreferred tied', () => {
+  it('ranks installed above not-installed when not in preferred[]', () => {
     const a = connector({ id: 'a', isInstalled: false });
     const b = connector({ id: 'b', isInstalled: true });
     const c = connector({ id: 'c', isInstalled: false });
     expect(sortConnectors([a, b, c]).map(x => x.id)).toEqual(['b', 'a', 'c']);
   });
 
-  it('applies full precedence: preferred[] > isPreferred > isInstalled > original', () => {
-    const a = connector({ id: 'a', isPreferred: true, isInstalled: false });
+  it('applies full precedence: preferred[] > isInstalled > original', () => {
+    const a = connector({ id: 'a', isInstalled: false });
     const b = connector({ id: 'b', isInstalled: true });
     const c = connector({ id: 'c', isInstalled: false });
-    const d = connector({ id: 'd', isPreferred: true, isInstalled: true });
-    // Expected order and why each rank wins:
-    //   b — appears in preferred[] (highest priority)
-    //   d — isPreferred + isInstalled
-    //   a — isPreferred but not installed
-    //   c — neither preferred nor installed
+    const d = connector({ id: 'd', isInstalled: true });
+    // preferred = ['b'] → b ranks first
+    // Among {a, c, d}: isInstalled breaks tie → d above a, c (both not installed)
+    // a, c keep original order
     const result = sortConnectors([a, b, c, d], { preferred: ['b'] });
     expect(result.map(x => x.id)).toEqual(['b', 'd', 'a', 'c']);
   });

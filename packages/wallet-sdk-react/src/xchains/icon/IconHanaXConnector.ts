@@ -53,6 +53,6 @@ export class IconHanaXConnector extends XConnector {
   }
 
   public override get icon(): string {
-    return WALLET_METADATA.hana.iconUrl;
+    return WALLET_METADATA.hana.icon;
   }
 }

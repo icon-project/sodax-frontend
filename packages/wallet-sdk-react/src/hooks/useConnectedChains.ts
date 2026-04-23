@@ -46,7 +46,7 @@ export function buildConnectedChains(
       account: connection.xAccount,
       connectorId: connection.xConnectorId,
       connectorName: connector?.name,
-      connectorIcon: connector?.iconUrl ?? connector?.icon,
+      connectorIcon: connector?.icon,
     });
   }
 

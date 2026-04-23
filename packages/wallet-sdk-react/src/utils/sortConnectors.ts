@@ -8,12 +8,10 @@ export type SortConnectorsOptions = {
 /**
  * Stable sort of connectors for display. Ranking (highest first):
  *   1. Appears in `preferred[]` — earlier entries rank higher
- *   2. `connector.isPreferred === true`
- *   3. `connector.isInstalled === true`
- *   4. Original order (stable)
+ *   2. `connector.isInstalled === true`
+ *   3. Original order (stable)
  *
- * Pure function — does not subscribe or read window. Call from inside a memo
- * when input identity is stable to avoid unnecessary re-sorts.
+ * Pure function — does not subscribe or read window.
  */
 export function sortConnectors<T extends IXConnector>(
   connectors: readonly T[],
@@ -31,9 +29,6 @@ export function sortConnectors<T extends IXConnector>(
         if (aPref === undefined) return 1;
         if (bPref === undefined) return -1;
         return aPref - bPref;
-      }
-      if (a.connector.isPreferred !== b.connector.isPreferred) {
-        return a.connector.isPreferred ? -1 : 1;
       }
       if (a.connector.isInstalled !== b.connector.isInstalled) {
         return a.connector.isInstalled ? -1 : 1;

@@ -90,7 +90,7 @@ export class OKXXConnector extends BitcoinXConnector {
   }
 
   public override get icon(): string {
-    return WALLET_METADATA.okx.iconUrl;
+    return WALLET_METADATA.okx.icon;
   }
 
   async connect(): Promise<XAccount | undefined> {

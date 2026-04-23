@@ -47,9 +47,7 @@ describe('buildConnectedChains', () => {
     const result = buildConnectedChains(
       { BITCOIN: { xAccount: { address: 'bc1q', xChainType: 'BITCOIN' }, xConnectorId: 'unisat' } },
       {
-        BITCOIN: [
-          fakeConnector({ id: 'unisat', name: 'Unisat', xChainType: 'BITCOIN', iconUrl: 'https://u.img' }),
-        ],
+        BITCOIN: [fakeConnector({ id: 'unisat', name: 'Unisat', xChainType: 'BITCOIN', icon: 'https://u.img' })],
       } as Partial<Record<ChainType, XConnector[]>>,
     );
     expect(result.chains[0]?.connectorName).toBe('Unisat');
@@ -80,15 +78,13 @@ describe('buildConnectedChains', () => {
     expect(result.status).toBe('ready');
   });
 
-  it('falls back to connector.icon when iconUrl not set', () => {
+  it('connectorIcon undefined when connector.icon is undefined', () => {
     const result = buildConnectedChains(
-      { BITCOIN: { xAccount: { address: 'bc1q', xChainType: 'BITCOIN' }, xConnectorId: 'legacy' } },
+      { BITCOIN: { xAccount: { address: 'bc1q', xChainType: 'BITCOIN' }, xConnectorId: 'no-icon' } },
       {
-        BITCOIN: [
-          fakeConnector({ id: 'legacy', icon: 'https://legacy.icon', iconUrl: undefined }),
-        ],
+        BITCOIN: [fakeConnector({ id: 'no-icon', icon: undefined })],
       } as Partial<Record<ChainType, XConnector[]>>,
     );
-    expect(result.chains[0]?.connectorIcon).toBe('https://legacy.icon');
+    expect(result.chains[0]?.connectorIcon).toBeUndefined();
   });
 });

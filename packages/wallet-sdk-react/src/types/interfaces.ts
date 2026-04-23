@@ -32,10 +32,6 @@ export interface IXConnector {
   readonly isInstalled: boolean;
   /** URL where users can install the wallet extension if missing. */
   readonly installUrl?: string;
-  /** Display icon URL. Falls back to `icon` for backward compatibility. */
-  readonly iconUrl?: string;
-  /** When true, sortConnectors() ranks this connector above unmarked ones. SDK never sets this; consumers opt in per wallet. */
-  readonly isPreferred?: boolean;
 
   connect(): Promise<XAccount | undefined>;
   disconnect(): Promise<void>;

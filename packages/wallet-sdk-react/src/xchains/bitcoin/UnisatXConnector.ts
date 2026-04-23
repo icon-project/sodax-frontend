@@ -91,7 +91,7 @@ export class UnisatXConnector extends BitcoinXConnector {
   }
 
   public override get icon(): string {
-    return WALLET_METADATA.unisat.iconUrl;
+    return WALLET_METADATA.unisat.icon;
   }
 
   async connect(): Promise<XAccount | undefined> {
