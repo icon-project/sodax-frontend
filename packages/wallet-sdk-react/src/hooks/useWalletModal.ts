@@ -121,6 +121,21 @@ export function useWalletModal(options: UseWalletModalOptions = {}): UseWalletMo
 
   const selectWallet = useCallback(
     async (connector: XConnector): Promise<XAccount | undefined> => {
+      // Pre-check installation. Some legacy connectors (e.g. IconHanaXConnector)
+      // imperatively `window.open(installUrl)` from inside `connect()` when
+      // the extension isn't injected — that hides the error and leaves the
+      // state machine stuck in `connecting` until the timeout. Surface it
+      // up-front so the modal renders an actionable error immediately.
+      if (!connector.isInstalled) {
+        const installHint = connector.installUrl ? ' Install the extension and reload the page.' : '';
+        setError(
+          connector.xChainType,
+          connector,
+          new Error(`${connector.name} is not installed.${installHint}`),
+        );
+        return undefined;
+      }
+
       setConnecting(connector.xChainType, connector);
       try {
         // Non-provider-managed chains (Bitcoin, ICON, Stellar, NEAR, Stacks,
