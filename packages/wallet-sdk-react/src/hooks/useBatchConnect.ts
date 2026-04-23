@@ -4,6 +4,7 @@ import type { XConnector } from '@/core/XConnector.js';
 import type { XAccount } from '@/types/index.js';
 import { assert } from '@/shared/guards.js';
 import { useXWalletStore } from '@/useXWalletStore.js';
+import { matchesConnectorIdentifier } from '@/utils/matchConnectorIdentifier.js';
 import { useXConnect } from './useXConnect.js';
 
 export type BatchConnectResult = {
@@ -42,11 +43,6 @@ type BatchConnectTarget = {
   connector: XConnector;
 };
 
-const matchesIdentifier = (connector: XConnector, identifier: string): boolean => {
-  const needle = identifier.toLowerCase();
-  return connector.id.toLowerCase().includes(needle) || connector.name.toLowerCase().includes(needle);
-};
-
 /**
  * Pure helper — resolves user-supplied wallet identifiers to concrete
  * `{ chainType, connector }` targets across every chain the wallet is
@@ -61,7 +57,7 @@ export function resolveBatchTargets(
   for (const [chainType, chainConnectors] of Object.entries(connectorsByChain)) {
     if (!chainConnectors?.length) continue;
     for (const identifier of connectors) {
-      const match = chainConnectors.find(c => matchesIdentifier(c, identifier));
+      const match = chainConnectors.find(c => matchesConnectorIdentifier(c, identifier));
       if (match) {
         targets.push({ chainType: chainType as ChainType, connector: match });
         break;
