@@ -5,6 +5,7 @@ import type { ReactElement, ReactNode } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { SodaxIcon } from '@/components/icons/sodax-icon';
+import { NavbarSpotlight, NavbarSpotlightStatic } from '@/components/shared/navbar-spotlight';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { HOLDERS_ROUTE, HOME_ROUTE, NEWS_ROUTE, PARTNERS_ROUTE } from '@/constants/routes';
 
@@ -54,6 +55,7 @@ export function Navbar({ cta }: NavbarProps = {}): ReactElement {
             <SodaxIcon width={84} height={18} fill="white" />
           </div>
         </Link>
+        <NavbarSpotlight className="hidden md:flex ml-8" />
       </div>
       <div className="flex items-center gap-8">
         <ul className="hidden lg:flex gap-6 z-10">
@@ -68,6 +70,7 @@ export function Navbar({ cta }: NavbarProps = {}): ReactElement {
             </li>
           ))}
         </ul>
+        <NavbarSpotlightStatic className="md:hidden" />
         {cta ?? <NavbarCta label="Discover SODAX" href={PARTNERS_ROUTE} />}
       </div>
     </div>

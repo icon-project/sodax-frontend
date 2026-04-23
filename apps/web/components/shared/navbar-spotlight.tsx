@@ -74,7 +74,7 @@ export function NavbarSpotlight({ className = '' }: { className?: string }) {
           transition={TEXT_COLOR_TRANSITION}
           style={{ color: TEXT_COLOR_IDLE }}
         >
-          Soon on Kraken!
+          Now on Kraken!
           <motion.span
             aria-hidden
             className="absolute left-0 top-0"
@@ -104,7 +104,7 @@ export function NavbarSpotlight({ className = '' }: { className?: string }) {
                 ease: 'easeInOut',
               }}
             >
-              Soon on Kraken!
+              Now on Kraken!
             </motion.span>
           </motion.span>
         </motion.p>
@@ -156,7 +156,7 @@ export function NavbarSpotlightStatic({ className = '' }: { className?: string }
         className="font-[InterRegular] text-sm leading-[1.4] text-white whitespace-nowrap"
         onClick={() => trackKrakenSpotlightClicked()}
       >
-        Soon on Kraken!
+        → Now on Kraken!
       </Link>
       <KrakenIcon width={16} height={13} fill="white" />
     </div>
