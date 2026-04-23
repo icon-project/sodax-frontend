@@ -11,6 +11,17 @@ export {
   type ConnectionStatus,
   type UseConnectionFlowResult,
 } from './useConnectionFlow.js';
+export {
+  useBatchConnect,
+  type BatchConnectResult,
+  type UseBatchConnectOptions,
+  type UseBatchConnectResult,
+} from './useBatchConnect.js';
+export {
+  useBatchDisconnect,
+  type BatchDisconnectResult,
+  type UseBatchDisconnectResult,
+} from './useBatchDisconnect.js';
 export { useXDisconnect } from './useXDisconnect.js';
 export { useXService } from './useXService.js';
 export { useXBalances } from './useXBalances.js';
