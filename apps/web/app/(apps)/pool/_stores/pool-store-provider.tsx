@@ -45,6 +45,7 @@ export const usePoolState = () => {
   const sodaAmount = usePoolStore(state => state.sodaAmount);
   const xSodaAmount = usePoolStore(state => state.xSodaAmount);
   const isNetworkPickerOpened = usePoolStore(state => state.isNetworkPickerOpened);
+  const isManagePositionDialogOpen = usePoolStore(state => state.isManagePositionDialogOpen);
   const selectedChainId = (selectedToken?.xChainId as SpokeChainId | undefined) ?? SONIC_MAINNET_CHAIN_ID;
 
   const { data: poolData } = usePoolData({ poolKey: dexPools.ASODA_XSODA });
@@ -67,6 +68,7 @@ export const usePoolState = () => {
     sodaAmount,
     xSodaAmount,
     isNetworkPickerOpened,
+    isManagePositionDialogOpen,
   };
 };
 
@@ -77,6 +79,7 @@ export const usePoolActions = () => {
   const setSodaAmount = usePoolStore(state => state.setSodaAmount);
   const setXSodaAmount = usePoolStore(state => state.setXSodaAmount);
   const setIsNetworkPickerOpened = usePoolStore(state => state.setIsNetworkPickerOpened);
+  const setIsManagePositionDialogOpen = usePoolStore(state => state.setIsManagePositionDialogOpen);
   const resetPoolState = usePoolStore(state => state.resetPoolState);
 
   return {
@@ -86,6 +89,7 @@ export const usePoolActions = () => {
     setSodaAmount,
     setXSodaAmount,
     setIsNetworkPickerOpened,
+    setIsManagePositionDialogOpen,
     resetPoolState,
   };
 };

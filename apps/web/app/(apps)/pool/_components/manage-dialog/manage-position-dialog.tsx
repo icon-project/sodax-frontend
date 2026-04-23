@@ -30,7 +30,7 @@ import { ClaimTabContent } from '@/app/(apps)/pool/_components/manage-dialog/cla
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WithdrawTabContent } from '@/app/(apps)/pool/_components/manage-dialog/withdraw-tab-content';
-import { formatUnits, parseUnits } from 'viem';
+import { formatUnits, parseUnits, type Hex } from 'viem';
 import type { CreateAssetDepositParams } from '@sodax/sdk';
 import { createDexTokenIdsStorageKey, dispatchDexPositionsUpdatedEvent, formatTokenAmount } from '@/lib/utils';
 import { trackAddLiquidityCompleted, trackWithdrawLiquidityCompleted, trackClaimFeesCompleted } from '@/lib/analytics';
@@ -115,6 +115,7 @@ export function ManagePositionDialog({
   const [isShaking, setIsShaking] = useState<boolean>(false);
   const [withdrawError, setWithdrawError] = useState<string>('');
   const [isWithdrawSuccess, setIsWithdrawSuccess] = useState<boolean>(false);
+  const [isWithdrawInProgress, setIsWithdrawInProgress] = useState<boolean>(false);
   const [claimError, setClaimError] = useState<string>('');
   const [isClaimActionPending, setIsClaimActionPending] = useState<boolean>(false);
   const [isClaimSuccess, setIsClaimSuccess] = useState<boolean>(false);
@@ -270,14 +271,16 @@ export function ManagePositionDialog({
 
   const isAddLiquidityActionPending =
     approveMutation.isPending || depositMutation.isPending || supplyLiquidityMutation.isPending;
-  const isWithdrawActionPending = decreaseLiquidityMutation.isPending || withdrawMutation.isPending;
+  const isWithdrawActionPending =
+    isWithdrawInProgress || decreaseLiquidityMutation.isPending || withdrawMutation.isPending;
   const isPending =
     isClaimActionPending ||
     approveMutation.isPending ||
     depositMutation.isPending ||
     withdrawMutation.isPending ||
     supplyLiquidityMutation.isPending ||
-    decreaseLiquidityMutation.isPending;
+    decreaseLiquidityMutation.isPending ||
+    isWithdrawInProgress;
   const claimErrorMessage =
     claimError || (claimRewardsMutation.error instanceof Error ? claimRewardsMutation.error.message : '');
 
@@ -571,7 +574,12 @@ export function ManagePositionDialog({
       return;
     }
 
+    setIsWithdrawInProgress(true);
     try {
+      const preDecreaseToken0HubBalance =
+        poolData.token0IsStatAToken && poolSpokeAssets && parsedPercentage === 100
+          ? await sodax.dex.assetService.getDeposit(poolData.token0.address, spokeProvider)
+          : 0n;
       const [withdrawSpokeTxHash, withdrawHubTxHash] = await decreaseLiquidityMutation.mutateAsync({
         params: createDecreaseLiquidityParamsProps({
           poolKey,
@@ -583,15 +591,33 @@ export function ManagePositionDialog({
         spokeProvider,
       });
       if (poolData.token0IsStatAToken && poolSpokeAssets) {
-        const percentageBasisPoints = parsedPercentage === 100 ? 10000n : BigInt(Math.floor(parsedPercentage * 100));
-        const decreasedToken0Amount =
-          percentageBasisPoints >= 10000n
-            ? positionInfo.amount0
-            : (positionInfo.amount0 * percentageBasisPoints) / 10000n;
-
-        const withdrawSlippageMultiplier = BigInt(Math.floor((100 - WITHDRAW_LIQUIDITY_SLIPPAGE_PERCENT) * 100));
-        const token0WithdrawAmount =
-          decreasedToken0Amount === 0n ? 0n : (decreasedToken0Amount * withdrawSlippageMultiplier) / 10000n;
+        let token0WithdrawAmount: bigint;
+        if (parsedPercentage === 100) {
+          // At 100% the position is fully burned, so there's no remaining liquidity
+          // to absorb the gap between `positionInfo.amount0` (a cached prediction)
+          // and the real amount that landed in the hub vault. Compute the delta
+          // from pre/post decrease hub balance so we (1) match exactly what this
+          // decrease deposited and (2) don't sweep balance from other positions.
+          // Wait for the hub tx receipt on our own RPC first — the relayer may
+          // report the tx as executed before our node has indexed its state.
+          await sodax.hubProvider.publicClient.waitForTransactionReceipt({
+            hash: withdrawHubTxHash as Hex,
+          });
+          const postDecreaseToken0HubBalance = await sodax.dex.assetService.getDeposit(
+            poolData.token0.address,
+            spokeProvider,
+          );
+          token0WithdrawAmount =
+            postDecreaseToken0HubBalance > preDecreaseToken0HubBalance
+              ? postDecreaseToken0HubBalance - preDecreaseToken0HubBalance
+              : 0n;
+        } else {
+          const percentageBasisPoints = BigInt(Math.floor(parsedPercentage * 100));
+          const decreasedToken0Amount = (positionInfo.amount0 * percentageBasisPoints) / 10000n;
+          const withdrawSlippageMultiplier = BigInt(Math.floor((100 - WITHDRAW_LIQUIDITY_SLIPPAGE_PERCENT) * 100));
+          token0WithdrawAmount =
+            decreasedToken0Amount === 0n ? 0n : (decreasedToken0Amount * withdrawSlippageMultiplier) / 10000n;
+        }
 
         if (token0WithdrawAmount > 0n) {
           await withdrawMutation.mutateAsync({
@@ -613,6 +639,7 @@ export function ManagePositionDialog({
       }
       setWithdrawPercentage('0');
       setIsWithdrawSuccess(true);
+      setIsWithdrawInProgress(false);
       trackWithdrawLiquidityCompleted({
         position_id: tokenId,
         withdraw_percentage: parsedPercentage,
@@ -625,6 +652,8 @@ export function ManagePositionDialog({
       const message = withdrawErr instanceof Error ? withdrawErr.message : 'Withdraw liquidity failed.';
       setWithdrawError(message);
       setIsWithdrawSuccess(false);
+    } finally {
+      setIsWithdrawInProgress(false);
     }
   };
 
@@ -717,7 +746,7 @@ export function ManagePositionDialog({
             positionXSodaBalanceText={positionXSodaBalanceText}
             withdrawPercentage={withdrawPercentage}
             isPending={isPending}
-            isWithdrawPending={decreaseLiquidityMutation.isPending || withdrawMutation.isPending}
+            isWithdrawPending={isWithdrawActionPending}
             isSuccess={isWithdrawSuccess}
             error={withdrawError}
             onWithdrawPercentageChange={(value: string) => {
