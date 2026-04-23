@@ -25,6 +25,7 @@ import type { ChainId } from '@sodax/types';
 import { chainIdToChainName } from '@/providers/constants';
 import { formatUnits, parseUnits } from 'viem';
 import { cn } from '@/lib/utils';
+import { trackSupplyLiquidityCompleted } from '@/lib/analytics';
 import { useQueryClient } from '@tanstack/react-query';
 import { dispatchDexPositionsUpdatedEvent, saveDexTokenIdToLocalStorage } from '@/lib/utils';
 import { useGetUserHubWalletAddress } from '@sodax/dapp-kit';
@@ -306,9 +307,16 @@ export default function SupplyDialogFooter({
         setIsSupplySubmitting(true);
         onError(null);
 
+        // Stale sqrtPriceX96 produces too-tight amount ceilings for narrow ranges, reverting the mint.
+        const freshPoolData = await sodax.dex.clService.getPoolData(
+          fixedPoolKey,
+          sodax.hubProvider.publicClient,
+        );
+        queryClient.setQueryData(['dex', 'poolData', fixedPoolKey], freshPoolData);
+
         const [, hubTxHash] = await supplyLiquidity({
           params: createSupplyLiquidityParamsProps({
-            poolData,
+            poolData: freshPoolData,
             poolKey: fixedPoolKey,
             minPrice: minPrice.toString(),
             maxPrice: maxPrice.toString(),
@@ -346,6 +354,14 @@ export default function SupplyDialogFooter({
         dispatchDexPositionsUpdatedEvent(selectedChainId ?? 'sonic', positionsOwnerAddress);
 
         onCompletedChange(true);
+        trackSupplyLiquidityCompleted({
+          amount_soda: sodaAmount,
+          amount_xsoda: xSodaAmount,
+          min_price: minPrice.toString(),
+          max_price: maxPrice.toString(),
+          source_chain: chainIdToChainName(selectedChainId as ChainId),
+          transaction_hash: hubTxHash as string,
+        });
       } catch (error) {
         setIsSupplySubmitting(false);
         const errorObj = error as { message?: string; shortMessage?: string };

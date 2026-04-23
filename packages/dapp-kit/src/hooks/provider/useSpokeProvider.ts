@@ -1,4 +1,4 @@
-import { useSodaxContext } from '@/index';
+import { useSodaxContext } from '@/index.js';
 import {
   BitcoinSpokeProvider,
   EvmSpokeProvider,

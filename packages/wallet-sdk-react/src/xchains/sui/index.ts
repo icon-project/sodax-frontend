@@ -1,2 +1,2 @@
-export { SuiXService } from './SuiXService';
-export { SuiXConnector } from './SuiXConnector';
+export { SuiXService } from './SuiXService.js';
+export { SuiXConnector } from './SuiXConnector.js';

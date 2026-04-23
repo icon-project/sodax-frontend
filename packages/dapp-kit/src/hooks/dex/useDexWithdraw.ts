@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
 import type { SpokeProvider, SpokeTxHash, HubTxHash, CreateAssetWithdrawParams } from '@sodax/sdk';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 
 export type UseDexWithdrawParams = {
   params: CreateAssetWithdrawParams;

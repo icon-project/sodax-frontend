@@ -1,33 +1,12 @@
 import type { ChainType } from '@sodax/types';
 
-import { BitcoinXService, IconXService, InjectiveXService, SolanaXService, StellarXService } from '..';
-import { SuiXService } from '..';
-import { EvmXService } from '..';
-import type { XService } from '../core';
-import { NearXService } from '../xchains/near/NearXService';
-import { StacksXService } from '../xchains/stacks/StacksXService';
+import type { XService } from '../core/index.js';
+import { useXWalletStore } from '../useXWalletStore.js';
 
 export function getXService(xChainType: ChainType): XService {
-  switch (xChainType) {
-    case 'BITCOIN':
-      return BitcoinXService.getInstance();
-    case 'EVM':
-      return EvmXService.getInstance();
-    case 'SUI':
-      return SuiXService.getInstance();
-    case 'SOLANA':
-      return SolanaXService.getInstance();
-    case 'ICON':
-      return IconXService.getInstance();
-    case 'INJECTIVE':
-      return InjectiveXService.getInstance();
-    case 'STELLAR':
-      return StellarXService.getInstance();
-    case 'NEAR':
-      return NearXService.getInstance();
-    case 'STACKS':
-      return StacksXService.getInstance();
-    default:
-      throw new Error(`Unsupported chain type: ${xChainType}`);
+  const service = useXWalletStore.getState().xServices[xChainType];
+  if (!service) {
+    throw new Error(`XService for chain type "${xChainType}" is not initialized. Is the chain enabled in config?`);
   }
+  return service;
 }

@@ -1,4 +1,4 @@
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 import type { Intent, IntentError, IntentErrorCode, Result, SpokeProvider } from '@sodax/sdk';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 

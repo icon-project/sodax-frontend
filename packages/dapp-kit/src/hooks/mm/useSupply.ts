@@ -1,6 +1,6 @@
 import type { MoneyMarketError, MoneyMarketSupplyParams, RelayErrorCode, SpokeProvider } from '@sodax/sdk';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 
 interface SupplyResponse {
   ok: true;

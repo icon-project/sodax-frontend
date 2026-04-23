@@ -1,5 +1,6 @@
 import type { ChainType, XToken } from '@sodax/types';
-import type { XConnector } from './XConnector';
+import type { IXService } from '../types/interfaces.js';
+import type { XConnector } from './XConnector.js';
 
 /**
  * Abstract base class for blockchain service implementations.
@@ -18,7 +19,7 @@ import type { XConnector } from './XConnector';
  * @property {XConnector[]} xConnectors - Available wallet connectors for this chain
  *
  */
-export abstract class XService {
+export abstract class XService implements IXService {
   /** The blockchain type this service handles */
   public readonly xChainType: ChainType;
 

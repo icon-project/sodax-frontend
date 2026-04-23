@@ -5,7 +5,7 @@ import type {
   SpokeProvider,
   SpokeTxHash,
 } from '@sodax/sdk';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 
 export type UseDecreaseLiquidityParams = {
   params: ConcentratedLiquidityDecreaseLiquidityParams;

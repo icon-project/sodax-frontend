@@ -4,7 +4,7 @@ import type {
   UseCreateSupplyLiquidityParamsProps,
   UseCreateSupplyLiquidityParamsResult,
   UseCreateWithdrawParamsProps,
-} from '@/hooks/dex';
+} from '@/hooks/dex/index.js';
 import {
   ClService,
   type CreateAssetWithdrawParams,
@@ -124,20 +124,26 @@ export function createSupplyLiquidityParamsProps({
   const tickLower = ClService.priceToTick(minPriceNum, token0, token1, tickSpacing);
   const tickUpper = ClService.priceToTick(maxPriceNum, token0, token1, tickSpacing);
 
-  // Apply slippage BEFORE calculating liquidity
-  const slippageMultiplier = BigInt(Math.floor((100 - slippage) * 100)); // e.g., 0.5% => 9950
-
-  const amount0ForLiquidity = (amount0BigInt * slippageMultiplier) / 10000n;
-  const amount1ForLiquidity = (amount1BigInt * slippageMultiplier) / 10000n;
-
-  // Calculate liquidity based on reduced amounts (accounting for slippage)
+  // Calculate liquidity from full amounts (the desired deposit)
   const liquidity = ClService.calculateLiquidityFromAmounts(
-    amount0ForLiquidity,
-    amount1ForLiquidity,
+    amount0BigInt,
+    amount1BigInt,
     tickLower,
     tickUpper,
     BigInt(poolData.currentTick),
   );
+
+  // Apply slippage to get max amounts — the ceiling the contract is allowed to pull.
+  // If price moves unfavorably, the contract may need slightly more tokens than expected.
+  const { amount0Max, amount1Max } = ClService.calculateMaxAmountsForSlippage(
+    liquidity,
+    tickLower,
+    tickUpper,
+    BigInt(poolData.currentTick),
+    poolData.sqrtPriceX96,
+    slippage,
+  );
+
   const tokenId = positionId ? BigInt(positionId) : undefined;
 
   return {
@@ -145,8 +151,8 @@ export function createSupplyLiquidityParamsProps({
     tickLower,
     tickUpper,
     liquidity,
-    amount0Max: amount0BigInt,
-    amount1Max: amount1BigInt,
+    amount0Max,
+    amount1Max,
     sqrtPriceX96: poolData.sqrtPriceX96,
     positionId,
     isValidPosition,

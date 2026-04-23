@@ -1,5 +1,5 @@
 // packages/dapp-kit/src/hooks/staking/useInstantUnstakeRatio.ts
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 
 /**

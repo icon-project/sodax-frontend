@@ -1,5 +1,5 @@
 // packages/dapp-kit/src/hooks/staking/useStakingConfig.ts
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 import type { StakingConfig } from '@sodax/sdk';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 

@@ -41,10 +41,10 @@ const rpcConfig: RpcConfig = {
   // },
   bitcoin: {
     radfiApiUrl: 'https://api.radfi.co/api',
-    radfiUmsUrl: 'https://ums.radfi.co/api'
+    radfiUmsUrl: 'https://ums.radfi.co/api',
+    rpcUrl: 'https://mempool.space/api',
   },
 };
-
 
 const configMap: Record<SolverEnv, SolverConfigParams> = {
   [SolverEnv.Production]: productionSolverConfig,
@@ -55,6 +55,28 @@ const configMap: Record<SolverEnv, SolverConfigParams> = {
 export default function Providers({ children }: { children: ReactNode }) {
   const { solverEnvironment } = useAppStore();
 
+  const walletConfig = useMemo(() => {
+    const wcProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
+    const evmConfig: Record<string, unknown> = { ssr: false, reconnectOnMount: true };
+    if (wcProjectId) {
+      evmConfig.walletConnect = { projectId: wcProjectId };
+    }
+    return {
+      chains: {
+        EVM: evmConfig,
+        SOLANA: {},
+        SUI: {},
+        BITCOIN: {},
+        ICON: {},
+        INJECTIVE: {},
+        STELLAR: {},
+        NEAR: {},
+        STACKS: {},
+      },
+      rpcConfig,
+    };
+  }, []);
+
   const sodaxConfig: SodaxConfig = useMemo(() => {
     return {
       swaps: configMap[solverEnvironment],
@@ -64,7 +86,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   return (
     <SodaxProvider testnet={false} config={sodaxConfig} rpcConfig={rpcConfig}>
       <QueryClientProvider client={queryClient}>
-        <SodaxWalletProvider rpcConfig={rpcConfig} options={{ wagmi: { ssr: false, reconnectOnMount: true } }}>{children}</SodaxWalletProvider>
+        <SodaxWalletProvider config={walletConfig}>{children}</SodaxWalletProvider>
       </QueryClientProvider>
     </SodaxProvider>
   );

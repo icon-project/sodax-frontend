@@ -1,7 +1,7 @@
-import { getXChainType } from '@/actions';
+import { getXChainType } from '@/actions/index.js';
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
 import type { ChainId, XToken } from '@sodax/types';
-import { useXService } from './useXService';
+import { useXService } from './useXService.js';
 
 /**
  * Hook to fetch token balances for multiple tokens on a specific chain

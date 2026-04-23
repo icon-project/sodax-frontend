@@ -1,8 +1,6 @@
 import type { ReactNode, ReactElement } from 'react';
-import React from 'react';
-
 import { Sodax, type SodaxConfig } from '@sodax/sdk';
-import { SodaxContext } from '@/contexts';
+import { SodaxContext } from '@/contexts/index.js';
 import type { RpcConfig } from '@sodax/types';
 
 interface SodaxProviderProps {

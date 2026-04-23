@@ -3,6 +3,7 @@ import { formatUnits } from 'viem';
 import { hubAssets, type XToken } from '@sodax/types';
 import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { formatCompactNumber } from '@/lib/utils';
+import { AAVE_INDEX_PRECISION } from '@/components/mm/constants';
 
 /**
  * React hook that computes key financial metrics for a money market reserve.
@@ -41,7 +42,8 @@ interface UseReserveMetricsProps {
   userReserves: UserReserveData[];
 }
 
-interface ReserveMetricsResult {
+export interface ReserveMetricsResult {
+  /** Per-reserve user row from the hub UI pool data (supply + debt + collateral flags). */
   userReserve?: UserReserveData;
   formattedReserve?: FormatReserveUSDResponse;
   supplyAPR: string;
@@ -110,7 +112,7 @@ export function useReserveMetrics({
       borrowAPY = `${getCompoundedRate(variableBorrowRate).toFixed(4)}%`;
 
       const availableLiquidity = Number(formatUnits(BigInt(formattedReserve.availableLiquidity), 18));
-      const totalVariableDebt = Number(formattedReserve.totalScaledVariableDebt);
+      const totalVariableDebt = Number(formattedReserve.totalVariableDebt);
       const total = availableLiquidity + totalVariableDebt;
       totalSupply = formatCompactNumber(Number(total));
       totalBorrow = formatCompactNumber(Number(totalVariableDebt));
@@ -132,7 +134,7 @@ export function useReserveMetrics({
         // We apply the current liquidity index to get the real,interest-adjusted amount the user has supplied.
         const liquidityIndex = BigInt(formattedReserve.liquidityIndex);
         const scaledBalance = BigInt(userReserve.scaledATokenBalance);
-        const balanceRaw = (scaledBalance * liquidityIndex) / BigInt(1e27);
+        const balanceRaw = (scaledBalance * liquidityIndex) / AAVE_INDEX_PRECISION;
         const suppliedTokens = Number(formatUnits(balanceRaw, decimals));
         const suppliedUsd = suppliedTokens * priceInUsd;
         if (Number.isFinite(suppliedUsd) && suppliedUsd > 0) {

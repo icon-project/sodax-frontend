@@ -1,9 +1,8 @@
-import type { InjectiveXService } from '@/xchains/injective';
+import { InjectiveXService } from '@/xchains/injective/index.js';
 import { Wallet } from '@injectivelabs/wallet-base';
-import React from 'react';
-import { useEffect } from 'react';
-import { useXService } from './useXService';
-import type { EvmWalletStrategy } from '@injectivelabs/wallet-evm';
+import { useEffect, useState } from 'react';
+import { useXService } from './useXService.js';
+import { assert, hasFunctionProperty, isRecord } from '@/shared/guards.js';
 
 /**
  * React hook that returns the current Ethereum chain ID when using MetaMask wallet for Injective.
@@ -16,8 +15,9 @@ import type { EvmWalletStrategy } from '@injectivelabs/wallet-evm';
  * @returns The current Ethereum chain ID as a number, or null if not available/connected
  */
 export default function useEthereumChainId(): number | null {
-  const injectiveXService = useXService('INJECTIVE') as unknown as InjectiveXService;
-  const [ethereumChainId, setEthereumChainId] = React.useState<number | null>(null);
+  const xService = useXService('INJECTIVE');
+  const injectiveXService = xService instanceof InjectiveXService ? xService : undefined;
+  const [ethereumChainId, setEthereumChainId] = useState<number | null>(null);
   useEffect(() => {
     if (!injectiveXService?.walletStrategy?.getWallet()) return;
     const walletStrategy = injectiveXService.walletStrategy;
@@ -27,16 +27,19 @@ export default function useEthereumChainId(): number | null {
       try {
         const chainId = await walletStrategy.getEthereumChainId();
         setEthereumChainId(Number.parseInt(chainId));
-      } catch (e) {
-        console.warn('Failed to get Ethereum chain ID:', e);
+      } catch (error) {
+        console.warn('Failed to get Ethereum chain ID:', error);
       }
     };
     getEthereumChainId();
 
     try {
-      (walletStrategy.getStrategy() as EvmWalletStrategy).onChainIdChanged(getEthereumChainId);
-    } catch (e) {
-      console.warn('Failed to subscribe to chain ID changes:', e);
+      const strategy = walletStrategy.getStrategy();
+      const isEvmStrategy = isRecord(strategy) && hasFunctionProperty(strategy, 'onChainIdChanged');
+      assert(isEvmStrategy, '[useEthereumChainId] walletStrategy.getStrategy() is not an EvmWalletStrategy');
+      strategy.onChainIdChanged(getEthereumChainId);
+    } catch (error) {
+      console.warn('Failed to subscribe to chain ID changes:', error);
     }
   }, [injectiveXService?.walletStrategy]);
 

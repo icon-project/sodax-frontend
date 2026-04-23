@@ -1,12 +1,13 @@
-import { XService } from '@/core/XService';
-import { isNativeToken } from '@/utils';
+import { XService } from '@/core/XService.js';
+import { isNativeToken } from '@/utils/index.js';
 import type { XToken } from '@sodax/types';
+import { BITCOIN_DEFAULT_RPC_URL } from '@/constants.js';
 
 export class BitcoinXService extends XService {
   private static instance: BitcoinXService;
   private rpcUrl: string;
 
-  private constructor(rpcUrl = 'https://mempool.space/api') {
+  private constructor(rpcUrl = BITCOIN_DEFAULT_RPC_URL) {
     super('BITCOIN');
     this.rpcUrl = rpcUrl;
   }
@@ -20,7 +21,7 @@ export class BitcoinXService extends XService {
     return BitcoinXService.instance;
   }
 
-  async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
+  override async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
     if (!address) return 0n;
 
     try {

@@ -1,8 +1,8 @@
-import { XService } from '@/core/XService';
+import { XService } from '@/core/XService.js';
 import type { IconService } from 'icon-sdk-js';
 import * as IconSdkRaw from 'icon-sdk-js';
 import type { XToken } from '@sodax/types';
-import { isNativeToken } from '@/utils';
+import { isNativeToken } from '@/utils/index.js';
 
 const IconSdk = ('default' in IconSdkRaw.default ? IconSdkRaw.default : IconSdkRaw) as typeof IconSdkRaw;
 const { IconService: IconServiceConstructor, Builder: IconBuilder, Converter: IconConverter } = IconSdk;
@@ -41,16 +41,18 @@ export class IconXService extends XService {
 
   public iconService: IconService;
 
-  private constructor() {
+  private constructor(rpcUrl?: string) {
     super('ICON');
+    const mainnetInfo = CHAIN_INFO[SupportedChainId.MAINNET];
+    if (!mainnetInfo) throw new Error('ICON mainnet chain info not found');
     this.iconService = new IconServiceConstructor(
-      new IconServiceConstructor.HttpProvider(CHAIN_INFO[SupportedChainId.MAINNET].APIEndpoint),
+      new IconServiceConstructor.HttpProvider(rpcUrl ?? mainnetInfo.APIEndpoint),
     );
   }
 
-  public static getInstance(): IconXService {
+  public static getInstance(rpcUrl?: string): IconXService {
     if (!IconXService.instance) {
-      IconXService.instance = new IconXService();
+      IconXService.instance = new IconXService(rpcUrl);
     }
     return IconXService.instance;
   }
@@ -67,7 +69,7 @@ export class IconXService extends XService {
       const result = await this.iconService.call(rawTx).execute();
       const aggs = result['returnData'];
 
-      const data = aggs.map(agg => {
+      const data = aggs.map((agg: Record<string, string>) => {
         if (agg['success'] === '0x0') {
           return null;
         }
@@ -81,10 +83,10 @@ export class IconXService extends XService {
     }
   }
 
-  async getBalances(address: string | undefined, xTokens: XToken[]) {
+  override async getBalances(address: string | undefined, xTokens: XToken[]) {
     if (!address) return {};
 
-    const balances = {};
+    const balances: Record<string, bigint> = {};
 
     const nativeXToken = xTokens.find(xToken => isNativeToken(xToken));
     const nonNativeXTokens = xTokens.filter(xToken => !isNativeToken(xToken));
@@ -102,14 +104,16 @@ export class IconXService extends XService {
       };
     });
 
-    const data: string[] = await this.getAggregateData(
+    const data: (string | null)[] = await this.getAggregateData(
       false,
       cds.filter(cd => cd.target.startsWith('cx')),
     );
 
     return nonNativeXTokens.reduce((agg, token, idx) => {
       const balance = data[idx];
-      balances[token.address] = BigInt(balance);
+      if (balance) {
+        balances[token.address] = BigInt(balance);
+      }
 
       return agg;
     }, balances);

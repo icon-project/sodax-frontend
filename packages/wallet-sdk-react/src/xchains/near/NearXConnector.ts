@@ -1,8 +1,8 @@
-import type { XAccount } from '@/types';
+import type { XAccount } from '@/types/index.js';
 
-import { XConnector } from '@/core';
+import { XConnector } from '@/core/index.js';
 import type { NearWalletBase } from '@hot-labs/near-connect';
-import { NearXService } from './NearXService';
+import { NearXService } from './NearXService.js';
 
 export class NearXConnector extends XConnector {
   _wallet: NearWalletBase;
@@ -22,6 +22,7 @@ export class NearXConnector extends XConnector {
     const accounts = await wallet.getAccounts();
 
     if (accounts.length === 0 || accounts[0] === undefined) {
+      console.warn(`[NearXConnector] connect: ${this._wallet.manifest.name} returned no accounts`);
       return undefined;
     }
 
@@ -36,7 +37,7 @@ export class NearXConnector extends XConnector {
     await walletSelector.disconnect(this._wallet);
   }
 
-  public get icon() {
+  public override get icon(): string {
     return this._wallet.manifest.icon;
   }
 }

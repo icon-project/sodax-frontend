@@ -111,7 +111,7 @@ export default function BnusdMigration() {
           <div className="w-full self-stretch bg-[#efe9e8] rounded-2xl inline-flex flex-col justify-start items-start gap-2 p-(--layout-space-comfortable) lg:mt-4 mt-2">
             <div className="self-stretch inline-flex justify-center items-center gap-2">
               <div className="w-4 h-4 relative mix-blend-multiply">
-                <Image src="/symbol_dark.png" alt="" width={16} height={16} />
+                <Image src="/soda-yellow-sm.png" alt="" width={16} height={16} />
               </div>
               <div className="flex-1 justify-center text-espresso text-base font-['InterBold'] text-(size:--body-super-comfortable) leading-tight">
                 {`You're migrating bnUSD from ${chainIdToChainName(direction.from)} to ${chainIdToChainName(direction.to)}`}

@@ -6,7 +6,7 @@ import {
   saveRadfiSession,
   clearRadfiSession,
   type RadfiSession,
-} from './useRadfiAuth';
+} from './useRadfiAuth.js';
 
 const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 min — refresh before access token expires (10 min TTL)
 

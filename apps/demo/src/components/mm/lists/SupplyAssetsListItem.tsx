@@ -1,13 +1,22 @@
 import React, { type ReactElement, useMemo } from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 import type { XToken, Address } from '@sodax/types';
-import { formatUnits, parseUnits, isAddress } from 'viem';
+import { formatUnits } from 'viem';
 import type { FormatReserveUSDResponse, UserReserveData } from '@sodax/sdk';
 import { useReserveMetrics } from '@/hooks/useReserveMetrics';
-// import { OldBorrowButton } from './OldBorrowButton';
 import { Button } from '@/components/ui/button';
-import { DUST_THRESHOLD, ATOKEN_DECIMALS } from '../constants';
+import { DUST_THRESHOLD, ATOKEN_DECIMALS, MAX_WITHDRAW_SAFETY_MARGIN, HF_LIMITED_THRESHOLD, BALANCE_DISPLAY_DECIMALS } from '../constants';
 import { isUserReserveDataArray, isValidAddress } from '../typeGuards';
+import { truncateToDecimals } from '@/lib/utils';
+
+/** Portfolio snapshot from useUserFormattedSummary used for HF-aware max withdrawal. */
+export type MmPortfolioSummary = {
+  healthFactor: string | undefined;
+  totalBorrowsUSD: string | undefined;
+  totalCollateralUSD: string | undefined;
+  /** Weighted-average liquidation threshold across all collateral (normalized, e.g. "0.8"). */
+  currentLiquidationThreshold: string | undefined;
+};
 
 interface SupplyAssetsListItemProps {
   token: XToken;
@@ -16,8 +25,10 @@ interface SupplyAssetsListItemProps {
   userReserves: readonly UserReserveData[];
   aTokenBalancesMap?: Map<Address, bigint>;
   onRefreshReserves?: () => void;
-  onWithdrawClick: (token: XToken, maxWithdraw: string) => void;
+  onWithdrawClick: (token: XToken, maxWithdraw: string, isHfLimited: boolean) => void;
   onSupplyClick: (token: XToken, maxSupply: string) => void;
+  /** Hub portfolio summary for HF-aware max withdrawal calculation. */
+  mmPortfolio?: MmPortfolioSummary;
 }
 
 export function SupplyAssetsListItem({
@@ -28,6 +39,7 @@ export function SupplyAssetsListItem({
   aTokenBalancesMap,
   onWithdrawClick,
   onSupplyClick,
+  mmPortfolio,
 }: SupplyAssetsListItemProps): ReactElement {
   // Validate userReserves array before passing to useReserveMetrics
   if (!isUserReserveDataArray(userReserves)) {
@@ -51,13 +63,62 @@ export function SupplyAssetsListItem({
 
   // ALWAYS USE ATOKEN_DECIMALS (18) FOR aTOKENS
   const formattedBalance =
-    aTokenBalance !== undefined ? Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS)).toFixed(5) : '-';
+    aTokenBalance !== undefined ? truncateToDecimals(Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS)), BALANCE_DISPLAY_DECIMALS) : '-';
 
-  // Simple approach: use formattedBalance (rounded display value) - this was working before
+  /**
+   * Health-factor-aware max withdrawal — Aave V3 formula.
+   *
+   * Reference: Aave V3 Technical Paper, Section 4.1 (Health Factor)
+   * https://github.com/aave/aave-v3-core/blob/master/techpaper/Aave_V3_Technical_Paper.pdf
+   *
+   * HF = (totalCollateral × weightedAvgLT) / totalBorrows
+   *
+   * To keep HF >= 1 after withdrawing:
+   *   excessCollateralUSD = totalCollateralUSD × weightedAvgLT − totalBorrowsUSD
+   *   maxWithdrawUSD      = excessCollateralUSD / thisAssetLT
+   *   maxWithdrawTokens   = maxWithdrawUSD / assetPriceUSD
+   *   maxWithdraw         = min(aTokenBalance, maxWithdrawTokens) × safetyMargin
+   *
+   * Falls back to aTokenBalance × 0.99 when there are no borrows or asset is not collateral.
+   */
   const maxWithdrawExact = useMemo(() => {
     if (!aTokenBalance || aTokenBalance === 0n || !aTokenAddress) return '0';
-    return formattedBalance !== '-' ? formattedBalance : '0';
-  }, [aTokenBalance, aTokenAddress, formattedBalance]);
+    const fullBalance = Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS));
+
+    const isCollateral = metrics.userReserve?.usageAsCollateralEnabledOnUser ?? false;
+    const totalBorrowsUSD = Number(mmPortfolio?.totalBorrowsUSD ?? '0');
+    const hasBorrows = Number.isFinite(totalBorrowsUSD) && totalBorrowsUSD > 0;
+
+    if (!isCollateral || !hasBorrows || !mmPortfolio || !metrics.formattedReserve) {
+      return truncateToDecimals(fullBalance * MAX_WITHDRAW_SAFETY_MARGIN, token.decimals);
+    }
+
+    const totalCollateralUSD = Number(mmPortfolio.totalCollateralUSD ?? '0');
+    const weightedAvgLT = Number(mmPortfolio.currentLiquidationThreshold ?? '0');
+    const assetLT = Number(metrics.formattedReserve.formattedReserveLiquidationThreshold ?? '0');
+    const assetPriceUSD = Number(metrics.formattedReserve.priceInUSD ?? '0');
+
+    if (assetLT <= 0 || assetPriceUSD <= 0) {
+      return truncateToDecimals(fullBalance * MAX_WITHDRAW_SAFETY_MARGIN, token.decimals);
+    }
+
+    const excessCollateralUSD = totalCollateralUSD * weightedAvgLT - totalBorrowsUSD;
+    if (excessCollateralUSD <= 0) return '0';
+
+    const maxWithdrawTokens = excessCollateralUSD / assetLT / assetPriceUSD;
+    const cappedMax = Math.min(fullBalance, maxWithdrawTokens);
+
+    return truncateToDecimals(cappedMax * MAX_WITHDRAW_SAFETY_MARGIN, token.decimals);
+  }, [aTokenBalance, aTokenAddress, token.decimals, metrics.userReserve, metrics.formattedReserve, mmPortfolio]);
+
+  const isHfLimited = useMemo(() => {
+    if (!aTokenBalance || aTokenBalance === 0n) return false;
+    const fullBalance = Number(formatUnits(aTokenBalance, ATOKEN_DECIMALS));
+    const maxWithdrawNum = Number.parseFloat(maxWithdrawExact);
+    // maxWithdrawExact already includes the safety margin, so compare against a slightly lower threshold
+    // to detect whether the HF formula actually reduced the amount below what the balance alone allows
+    return Number.isFinite(maxWithdrawNum) && maxWithdrawNum < fullBalance * HF_LIMITED_THRESHOLD;
+  }, [aTokenBalance, maxWithdrawExact]);
 
   // Check if user has meaningful supply: balance exists AND formatted amount is greater than DUST_THRESHOLD
   // This prevents enabling withdraw button for dust amounts that display as "0.00000"
@@ -135,9 +196,7 @@ export function SupplyAssetsListItem({
             variant="cherry"
             size="sm"
             onClick={() => {
-              // Use the exact calculated max withdraw instead of rounded formattedBalance
-              const maxWithdrawValue = maxWithdrawExact;
-              onWithdrawClick(token, maxWithdrawValue);
+              onWithdrawClick(token, maxWithdrawExact, isHfLimited);
             }}
             disabled={!hasSupply}
             className="flex-1 min-w-[85px]"

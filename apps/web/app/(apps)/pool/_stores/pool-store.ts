@@ -3,9 +3,6 @@ import { createStore } from 'zustand/vanilla';
 import { persist } from 'zustand/middleware';
 import type { XToken } from '@sodax/types';
 
-export const INITIAL_PRICE = 1;
-export const INITIAL_MIN_PRICE = +(INITIAL_PRICE * 0.85).toFixed(2);
-export const INITIAL_MAX_PRICE = +(INITIAL_PRICE * 1.15).toFixed(2);
 const APY_POOL_ID = '0x1fbed2bab018dd01756162d135964186addbab00158eda8013de8a15948995cd';
 
 type PoolApyApiResponse = {
@@ -23,11 +20,12 @@ function getValidatedApy(value: number | null | undefined): number | null {
 
 export type PoolState = {
   selectedToken: XToken | null;
-  minPrice: number;
-  maxPrice: number;
+  minPrice: number | null;
+  maxPrice: number | null;
   sodaAmount: string;
   xSodaAmount: string;
   isNetworkPickerOpened: boolean;
+  isManagePositionDialogOpen: boolean;
   poolApyPercent: number | null;
   poolApyStatus: PoolApyStatus;
 };
@@ -39,6 +37,7 @@ export type PoolActions = {
   setSodaAmount: (amount: string) => void;
   setXSodaAmount: (amount: string) => void;
   setIsNetworkPickerOpened: (isOpened: boolean) => void;
+  setIsManagePositionDialogOpen: (isOpen: boolean) => void;
   fetchPoolApy: () => Promise<void>;
   resetPoolState: () => void;
 };
@@ -47,11 +46,12 @@ export type PoolStore = PoolState & PoolActions;
 
 export const defaultPoolState: PoolState = {
   selectedToken: null,
-  minPrice: INITIAL_MIN_PRICE,
-  maxPrice: INITIAL_MAX_PRICE,
+  minPrice: null,
+  maxPrice: null,
   sodaAmount: '',
   xSodaAmount: '',
   isNetworkPickerOpened: false,
+  isManagePositionDialogOpen: false,
   poolApyPercent: null,
   poolApyStatus: 'idle',
 };
@@ -70,6 +70,7 @@ export const createPoolStore = (initState: PoolState = defaultPoolState) => {
         setSodaAmount: (amount: string) => set({ sodaAmount: amount }),
         setXSodaAmount: (amount: string) => set({ xSodaAmount: amount }),
         setIsNetworkPickerOpened: (isOpened: boolean) => set({ isNetworkPickerOpened: isOpened }),
+        setIsManagePositionDialogOpen: (isOpen: boolean) => set({ isManagePositionDialogOpen: isOpen }),
         fetchPoolApy: async (): Promise<void> => {
           const currentStatus = get().poolApyStatus;
           if (currentStatus === 'loading' || currentStatus === 'success') {
@@ -112,7 +113,12 @@ export const createPoolStore = (initState: PoolState = defaultPoolState) => {
           })),
       }),
       {
-        name: 'sodax-pool-store',
+        name: 'pool-store',
+        partialize: (state): Pick<PoolState, 'minPrice' | 'maxPrice'> => ({
+          minPrice: state.minPrice,
+          maxPrice: state.maxPrice,
+        }),
+        version: 2,
       },
     ),
   );

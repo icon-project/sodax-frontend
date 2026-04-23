@@ -1,5 +1,5 @@
 import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 import type { MoneyMarketParams, SpokeProvider } from '@sodax/sdk';
 
 export type UseMMAllowanceParams = {

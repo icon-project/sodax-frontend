@@ -17,11 +17,17 @@ export const POOL_ROUTE = '/exchange/pool';
 export const MIGRATE_ROUTE = '/exchange/migrate';
 export const GLOSSARY_ROUTE = '/glossary';
 export const PARTNERS_ROUTE = '/partners';
+export const HOLDERS_ROUTE = '/holders';
 export const NEWS_ROUTE = '/news';
 export const COMMUNITY_ROUTE = '/community';
 export const PARTNER_DASHBOARD_ROUTE = '/partner-dashboard';
 /** In-app page that redirects to Discord invite; use DISCORD_ROUTE for external links. */
 export const DISCORD_PAGE_ROUTE = '/discord';
+export const SWAP_FOR_APPS_ROUTE = 'https://docs.sodax.com/developers/packages/foundation/sdk/functional-modules/swaps';
+export const LEAD_BORROW_FOR_APPS_ROUTE =
+  'https://docs.sodax.com/developers/packages/foundation/sdk/functional-modules/money_market';
+export const BRIDGE_SERVICES_ROUTE =
+  'https://docs.sodax.com/developers/packages/foundation/sdk/functional-modules/bridge';
 
 /** True when pathname is the partner dashboard or a sub-route. */
 export function isPartnerRoute(pathname: string): boolean {
@@ -61,10 +67,13 @@ export const X_INTENT_FOLLOW_ROUTE = 'https://x.com/intent/user?screen_name=goso
 export const LINKTREE_ROUTE = 'https://linktr.ee/go.sodax';
 export const REDDIT_ROUTE = 'https://www.reddit.com/r/SODAX/';
 export const YOUTUBE_ROUTE = 'https://www.youtube.com/@gosodax';
+export const LINKEDIN_ROUTE = 'https://www.linkedin.com/company/gosodax';
 
 // ── External apps & partners ───────────────────────────────────────────────
 export const BALANCED_DEFI_ROUTE = 'https://app.balanced.network/';
 export const HANA_WALLET_ROUTE = 'https://www.hanawallet.io/';
+export const HOUDINI_SWAP_ROUTE = 'https://app.houdiniswap.com/';
+export const KRAKEN_ROUTE = 'https://www.kraken.com/';
 
 // ── Resources & tools (external) ───────────────────────────────────────────
 /** Frontend repo (this app). */
@@ -83,3 +92,10 @@ export const REDDIT_SUBMIT_BASE_ROUTE = 'https://reddit.com/submit';
 
 // Partner-specific URLs (lightlink, amped, etc.) live in partner pages; add here
 // only if reused. Explorer base URLs stay in config (web3.ts, chain-explorers.ts).
+export const LEAD_MAGNET_PDF_ROUTE = '/lead-magnet/sodax-builders-guide-to-defi.pdf';
+export const CONSENSUS_MIAMI_ROUTE = '/consensus-miami';
+/** Mobile-first teammate business card. Pass the Notion `slug` field. */
+export const connectRoute = (slug: string): string => `/connect/${slug}`;
+export const INTEGRATION_OPTIONS_ROUTE = '/partners#integration-options';
+export const CASE_STUDIES_ROUTE = '/partners#case-studies';
+export const SODA_TOKEN_ROUTE = '/community/soda-token';

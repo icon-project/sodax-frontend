@@ -7,8 +7,8 @@ import type {
   Result,
   ChainId,
 } from '@sodax/sdk';
-import { useSodaxContext } from '../shared/useSodaxContext';
-import { MIGRATION_MODE_BNUSD, MIGRATION_MODE_ICX_SODA, type MigrationIntentParams } from './types';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
+import { MIGRATION_MODE_BNUSD, MIGRATION_MODE_ICX_SODA, type MigrationIntentParams } from './types.js';
 import { useQueryClient } from '@tanstack/react-query';
 
 interface UseApproveReturn {

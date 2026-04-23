@@ -1,7 +1,7 @@
 import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import type { OrderbookResponse } from '@sodax/sdk';
-import { useSodaxContext } from '../shared/useSodaxContext';
-import type { BackendPaginationParams } from './types';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
+import type { BackendPaginationParams } from './types.js';
 
 export type UseBackendOrderbookParams = {
   queryOptions?: UseQueryOptions<OrderbookResponse | undefined, Error>;

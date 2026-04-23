@@ -9,6 +9,7 @@ import BridgePage from './pages/bridge/page';
 import StakingPage from './pages/staking/page';
 import PartnerFeeClaimPage from './pages/partner-fee-claim/page';
 import DexPage from './pages/dex/page';
+import RecoveryPage from './pages/recovery/page';
 
 
 const router = createBrowserRouter([
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
       {
         path: '/dex',
         element: <DexPage />,
+      },
+      {
+        path: '/recovery',
+        element: <RecoveryPage />,
       },
     ],
   },

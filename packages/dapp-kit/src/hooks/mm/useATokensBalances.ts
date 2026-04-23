@@ -1,7 +1,7 @@
 // packages/dapp-kit/src/hooks/mm/useATokens.ts
 import { isAddress, type Address } from 'viem';
 import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 import type { SpokeProvider } from '@sodax/sdk';
 import { HubService } from '@sodax/sdk';
 

@@ -1,128 +1,178 @@
 'use client';
 
-import { Label } from '@/components/ui/label';
 import { FooterLink } from '@/components/landing/footer-link';
-import Image from 'next/image';
-import { useState } from 'react';
 import TermsModal from '@/components/landing/terms-modal';
+import { showCookiePreferences } from '@/components/cookie-consent/cookie-consent-banner';
 import {
-  BALANCED_DEFI_ROUTE,
   BRAND_KIT_ROUTE,
+  BRIDGE_SERVICES_ROUTE,
   DISCORD_ROUTE,
   DOCUMENTATION_GITBOOK_ROUTE,
+  EXCHANGE_ROUTE,
   GITHUB_ROUTE,
-  GLOSSARY_ROUTE,
-  HANA_WALLET_ROUTE,
-  LINKTREE_ROUTE,
+  LEAD_BORROW_FOR_APPS_ROUTE,
+  LINKEDIN_ROUTE,
   NEWS_ROUTE,
   PARTNER_DASHBOARD_ROUTE,
   SODAX_SCAN_ROUTE,
-  SWAP_ROUTE,
+  SWAP_FOR_APPS_ROUTE,
   X_ROUTE,
 } from '@/constants/routes';
-import { showCookiePreferences } from '@/components/cookie-consent/cookie-consent-banner';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
 
 interface FooterProps {
   onTermsClick?: () => void;
 }
 
 const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
-  const [isTermsModalOpen, setIsTermsModalOpen] = useState<boolean>(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
 
   const handleTermsClick = () => {
     setIsTermsModalOpen(true);
     onTermsClick?.();
   };
+
   return (
-    <div className="h-140 flex flex-wrap-reverse sm:flex-wrap-reverse lg:justify-center bg-almost-white footer pt-20">
-      <div className="p-4 pl-0 min-w-50 ml-8">
-        <div className="flex items-center">
-          <Image src="/symbol2.png" alt="SODAX Symbol" width={32} height={32} />
-          <span className="ml-2 font-black text-2xl text-cherry-bright">SODAX</span>
-        </div>
-        <div>
-          <Label className="text-[12px] font-[InterMedium] text-cherry-bright mt-5">
-            © 2026 ICON Foundation. All rights reserved.
-          </Label>
-        </div>
-      </div>
-      <div className="sm:inline-flex sm:justify-start sm:items-start gap-10 p-4 ml-8 pl-0 flex flex-wrap lg:ml-27.75">
-        <div className="inline-flex flex-col justify-start items-start gap-3 w-38">
-          <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">
-            using soda
-          </div>
-          <FooterLink href={SWAP_ROUTE}>SODAX Swap</FooterLink>
-          <FooterLink href={HANA_WALLET_ROUTE} showArrow>
-            Hana Wallet
-          </FooterLink>
-          <FooterLink href={BALANCED_DEFI_ROUTE} showArrow>
-            Balanced DeFi
-          </FooterLink>
-          <FooterLink href={PARTNER_DASHBOARD_ROUTE} showArrow>
-            <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">
-              partner portal
+    <footer className="bg-almost-white">
+      <div className="mx-auto max-w-[944px] px-6 pt-20 pb-20 sm:px-8 sm:pt-[120px] sm:pb-[120px]">
+        {/* Logo + Navigation columns */}
+        <div className="flex flex-wrap items-start justify-between gap-y-10">
+          {/* Logo */}
+          <div className="shrink-0">
+            <div className="flex items-center">
+              <Image src="/soda-cherry.png" alt="SODAX Symbol" width={32} height={32} className="sm:hidden" />
+              <Image
+                src="/soda-cherry-grey.svg"
+                alt="SODAX Symbol"
+                width={30}
+                height={32}
+                className="hidden sm:block"
+              />
+              <span className="ml-2 font-black text-2xl text-cherry-bright sm:text-cherry-grey">SODAX</span>
             </div>
-          </FooterLink>
-        </div>
-        <div className="inline-flex flex-col justify-start items-start gap-3 w-33.5">
-          <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">
-            socials
           </div>
-          <FooterLink href={NEWS_ROUTE}>News</FooterLink>
-          <FooterLink href={DISCORD_ROUTE} showArrow>
-            Discord
-          </FooterLink>
-          <FooterLink href={X_ROUTE} showArrow>
-            X (Twitter)
-          </FooterLink>
-          <FooterLink href={LINKTREE_ROUTE} showArrow>
-            Linktree
-          </FooterLink>
+
+          {/* Navigation columns */}
+          <nav className="flex flex-wrap gap-10">
+            {/* Cross-network products */}
+            <div className="flex flex-col gap-2">
+              <h3 className="text-[9px] font-bold uppercase leading-[1.2] text-clay-light">Cross-network products</h3>
+              <div className="flex flex-col gap-2">
+                {/* B2B filled bubbles */}
+                <a
+                  href={SWAP_FOR_APPS_ROUTE}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-6 w-fit items-center rounded-full bg-cream-white px-3 pt-0.5 text-xs text-espresso leading-[1.4] hover:bg-cherry-grey transition-colors"
+                >
+                  Intent swaps for apps
+                </a>
+                <a
+                  href={LEAD_BORROW_FOR_APPS_ROUTE}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-6 w-fit items-center rounded-full bg-cream-white px-3 pt-0.5 text-xs text-espresso leading-[1.4] hover:bg-cherry-grey transition-colors"
+                >
+                  Lend / Borrow for apps
+                </a>
+                <a
+                  href={BRIDGE_SERVICES_ROUTE}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex h-6 w-fit items-center rounded-full bg-cream-white px-3 pt-0.5 text-xs text-espresso leading-[1.4] hover:bg-cherry-grey transition-colors"
+                >
+                  Bridge service
+                </a>
+                {/* B2C outline bubble */}
+                <Link
+                  href={EXCHANGE_ROUTE}
+                  className="flex h-6 w-fit items-center rounded-full border-2 border-cream-white px-3 pt-0.5 text-xs text-clay leading-[1.4] hover:border-cherry-grey transition-colors"
+                >
+                  SODA Exchange
+                </Link>
+              </div>
+            </div>
+
+            {/* Socials */}
+            <div className="flex flex-col gap-2">
+              <h3 className="text-[9px] font-bold uppercase leading-[1.2] text-clay-light">Socials</h3>
+              <FooterLink href={X_ROUTE} showArrow>
+                X (Twitter)
+              </FooterLink>
+              <FooterLink href={DISCORD_ROUTE} showArrow>
+                Discord
+              </FooterLink>
+              <FooterLink href={LINKEDIN_ROUTE} showArrow>
+                LinkedIn
+              </FooterLink>
+              <FooterLink href={GITHUB_ROUTE} showArrow>
+                GitHub
+              </FooterLink>
+            </div>
+
+            {/* Resources */}
+            <div className="flex flex-col gap-2">
+              <h3 className="text-[9px] font-bold uppercase leading-[1.2] text-clay-light">Resources</h3>
+              <FooterLink href={DOCUMENTATION_GITBOOK_ROUTE} showArrow>
+                Documentation
+              </FooterLink>
+              <FooterLink href={SODAX_SCAN_ROUTE} showArrow>
+                Transaction scanner
+              </FooterLink>
+              <FooterLink
+                href={BRAND_KIT_ROUTE}
+                showArrowDown
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = BRAND_KIT_ROUTE;
+                  link.download = 'SODAX.logos.and.token.zip';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+              >
+                Brand Kit
+              </FooterLink>
+              <FooterLink href={PARTNER_DASHBOARD_ROUTE}>Partner portal</FooterLink>
+            </div>
+          </nav>
         </div>
-        <div className="inline-flex flex-col justify-start items-start gap-3 w-33.5">
-          <div className="justify-start text-cherry-bright text-base font-normal font-['Shrikhand'] leading-4">
-            resources
+
+        {/* Divider */}
+        <div className="mt-6 border-t border-clay-light/30" />
+
+        {/* Bottom bar */}
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-clay-light leading-[1.4]">&copy; 2026 SODAX. All rights reserved.</p>
+          <div className="flex items-center gap-4">
+            <FooterLink href={NEWS_ROUTE} className="text-clay-light hover:text-espresso">
+              News
+            </FooterLink>
+            <button
+              type="button"
+              onClick={handleTermsClick}
+              className="inline-flex items-center text-xs text-clay-light leading-[1.4] hover:text-espresso transition-colors cursor-pointer"
+            >
+              Terms
+            </button>
+            <button
+              type="button"
+              onClick={e => {
+                e.preventDefault();
+                showCookiePreferences();
+              }}
+              className="inline-flex items-center text-xs text-clay-light leading-[1.4] hover:text-espresso transition-colors cursor-pointer"
+            >
+              Cookie settings
+            </button>
           </div>
-          <FooterLink href={DOCUMENTATION_GITBOOK_ROUTE} showArrow>
-            Documentation
-          </FooterLink>
-          <FooterLink href={GITHUB_ROUTE} showArrow>
-            Github
-          </FooterLink>
-          <FooterLink href={SODAX_SCAN_ROUTE} showArrow>
-            SODAX Scan
-          </FooterLink>
-          <FooterLink href={GLOSSARY_ROUTE}>Glossary</FooterLink>
-          <FooterLink
-            href={BRAND_KIT_ROUTE}
-            showArrowDown={true}
-            onClick={() => {
-              const link = document.createElement('a');
-              link.href = BRAND_KIT_ROUTE;
-              link.download = 'SODAX.logos.and.token.zip';
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-            }}
-          >
-            Brand Kit
-          </FooterLink>
-          <FooterLink href="#" onClick={handleTermsClick}>
-            Terms
-          </FooterLink>
-          <FooterLink
-            href="#"
-            onClick={e => {
-              e.preventDefault();
-              showCookiePreferences();
-            }}
-          >
-            Cookie Settings
-          </FooterLink>
         </div>
       </div>
+
       <TermsModal open={isTermsModalOpen} onOpenChange={setIsTermsModalOpen} />
-    </div>
+    </footer>
   );
 };
 

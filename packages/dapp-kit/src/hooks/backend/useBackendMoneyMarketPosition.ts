@@ -1,6 +1,6 @@
 import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import type { MoneyMarketPosition } from '@sodax/sdk';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 
 export type UseBackendMoneyMarketPositionParams = {
   userAddress: string | undefined;

@@ -1,8 +1,8 @@
-import { useXWagmiStore } from '@/useXWagmiStore';
-import { ICONexRequestEventType, ICONexResponseEventType, request } from './iconex';
+import { useXWalletStore } from '@/useXWalletStore.js';
+import { ICONexRequestEventType, ICONexResponseEventType, request } from './iconex/index.js';
 
 export const reconnectIcon = async () => {
-  const iconConnection = useXWagmiStore.getState().xConnections.ICON;
+  const iconConnection = useXWalletStore.getState().xConnections.ICON;
   if (!iconConnection) return;
 
   const recentXConnectorId = iconConnection.xConnectorId;
@@ -12,17 +12,12 @@ export const reconnectIcon = async () => {
   });
 
   if (detail?.type === ICONexResponseEventType.RESPONSE_ADDRESS) {
-    useXWagmiStore.setState({
-      xConnections: {
-        ...useXWagmiStore.getState().xConnections,
-        ICON: {
-          xAccount: {
-            address: detail?.payload,
-            xChainType: 'ICON',
-          },
-          xConnectorId: recentXConnectorId,
-        },
+    useXWalletStore.getState().setXConnection('ICON', {
+      xAccount: {
+        address: detail?.payload,
+        xChainType: 'ICON',
       },
+      xConnectorId: recentXConnectorId,
     });
   }
 };

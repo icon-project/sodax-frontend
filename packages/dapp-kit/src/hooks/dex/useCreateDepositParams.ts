@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { CreateAssetDepositParams, PoolData, PoolSpokeAssets } from '@sodax/sdk';
-import { createDepositParamsProps } from '@/utils/dex-utils';
+import { createDepositParamsProps } from '@/utils/dex-utils.js';
 
 export type UseCreateDepositParamsProps = {
   tokenIndex: 0 | 1;

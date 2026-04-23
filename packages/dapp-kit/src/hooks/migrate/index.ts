@@ -1,4 +1,4 @@
-export { useMigrate } from './useMigrate';
-export { useMigrationAllowance } from './useMigrationAllowance';
-export { useMigrationApprove } from './useMigrationApprove';
-export * from './types';
+export { useMigrate } from './useMigrate.js';
+export { useMigrationAllowance } from './useMigrationAllowance.js';
+export { useMigrationApprove } from './useMigrationApprove.js';
+export * from './types.js';

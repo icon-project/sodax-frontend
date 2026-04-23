@@ -1,5 +1,5 @@
-import type { XAccount } from '@/types';
-import { XConnector } from '@/core';
+import type { XAccount } from '@/types/index.js';
+import { XConnector } from '@/core/index.js';
 import type { StacksProvider } from '@stacks/connect';
 import { request, disconnect } from '@stacks/connect';
 
@@ -13,8 +13,9 @@ export interface StacksProviderConfig {
 
 /** Resolves a provider from `window` by dot-separated ID, matching @stacks/connect-ui's getProviderFromId */
 function getProviderFromId(id: string): StacksProvider | undefined {
-  // biome-ignore lint/suspicious/noExplicitAny: window property traversal requires any
-  return id.split('.').reduce<any>((acc, part) => acc?.[part], window) as StacksProvider | undefined;
+  return id.split('.').reduce<unknown>((acc, part) => (acc as Record<string, unknown>)?.[part], window) as
+    | StacksProvider
+    | undefined;
 }
 
 export class StacksXConnector extends XConnector {
@@ -36,10 +37,14 @@ export class StacksXConnector extends XConnector {
     }
 
     const response = await request({ provider }, 'stx_getAddresses');
-    // @ts-ignore
-    const stxAddress = response.addresses.find(a => a.purpose === 'stacks');
+    // Stacks SDK types don't include `purpose` on AddressEntry, but wallets return it at runtime
+    const stxAddress = response.addresses.find(a => (a as unknown as { purpose?: string }).purpose === 'stacks');
 
     if (!stxAddress) {
+      console.warn(
+        `[StacksXConnector] ${this.config.name}: no address with purpose="stacks" returned from stx_getAddresses`,
+        response.addresses,
+      );
       return undefined;
     }
 
@@ -53,7 +58,7 @@ export class StacksXConnector extends XConnector {
     disconnect();
   }
 
-  public get icon(): string {
+  public override get icon(): string {
     return this.config.icon;
   }
 

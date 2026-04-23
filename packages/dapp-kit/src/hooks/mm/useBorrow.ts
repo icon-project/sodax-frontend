@@ -1,5 +1,5 @@
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 import type { MoneyMarketBorrowParams, MoneyMarketError, RelayErrorCode, SpokeProvider } from '@sodax/sdk';
 
 interface BorrowResponse {

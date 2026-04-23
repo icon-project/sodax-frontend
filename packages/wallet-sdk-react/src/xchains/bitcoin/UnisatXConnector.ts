@@ -1,6 +1,6 @@
-import type { XAccount } from '@/types';
+import type { XAccount } from '@/types/index.js';
 import { detectBitcoinAddressType, type IBitcoinWalletProvider, type AddressType } from '@sodax/types';
-import { BitcoinXConnector } from './BitcoinXConnector';
+import { BitcoinXConnector } from './BitcoinXConnector.js';
 
 // Minimal Unisat window API types
 interface UnisatWallet {
@@ -81,7 +81,7 @@ export class UnisatXConnector extends BitcoinXConnector {
     return typeof window !== 'undefined' && !!window.unisat;
   }
 
-  public get icon(): string {
+  public override get icon(): string {
     return 'https://avatars.githubusercontent.com/u/125119198?s=200&v=4';
   }
 
@@ -92,7 +92,10 @@ export class UnisatXConnector extends BitcoinXConnector {
 
     const accounts = await window.unisat.requestAccounts();
     const address = accounts[0];
-    if (!address) return undefined;
+    if (!address) {
+      console.warn('[UnisatXConnector] connect: requestAccounts returned no address');
+      return undefined;
+    }
 
     this.walletProvider = new UnisatWalletProvider(window.unisat, address);
 

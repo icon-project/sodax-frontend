@@ -1,7 +1,8 @@
-import { XService } from '@/core/XService';
+import { XService } from '@/core/XService.js';
 import type { XToken } from '@sodax/types';
 import { NearConnector } from '@hot-labs/near-connect';
 import { JsonRpcProvider } from 'near-api-js';
+import { NEAR_DEFAULT_RPC_URL } from '@/constants.js';
 
 export class NearXService extends XService {
   private static instance: NearXService;
@@ -26,8 +27,8 @@ export class NearXService extends XService {
     return NearXService.instance;
   }
 
-  async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
-    const url = 'https://1rpc.io/near';
+  override async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
+    const url = NEAR_DEFAULT_RPC_URL;
     // reference: https://near.github.io/near-api-js/classes/_near-js_providers.json-rpc-provider.JsonRpcProvider.html
     const provider = new JsonRpcProvider({ url });
 

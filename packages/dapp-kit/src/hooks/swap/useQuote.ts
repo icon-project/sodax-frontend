@@ -1,5 +1,5 @@
 import type { SolverErrorResponse, SolverIntentQuoteRequest, SolverIntentQuoteResponse, Result } from '@sodax/sdk';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useMemo } from 'react';
 

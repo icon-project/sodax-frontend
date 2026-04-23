@@ -78,6 +78,10 @@ src/
 - `react` (peer, >=18)
 - `viem` — Ethereum utilities
 
+## AI Skills (Scaffolding Guides)
+
+See `skills/SKILLS.md` for AI-agent-friendly guides to scaffold each feature with dapp-kit hooks. Covers setup, wallet connectivity, swap, bridge, money market, staking, migration, DEX, and backend queries. All examples follow the single-object-parameter convention.
+
 ## Build
 
 tsup: dual ESM (`.mjs`) + CJS (`.cjs`). React and React Query are externalized (not bundled).

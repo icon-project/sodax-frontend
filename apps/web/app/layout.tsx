@@ -8,6 +8,7 @@ import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppStoreProvider } from '@/stores/app-store-provider';
 import { GoogleTagManager } from '@next/third-parties/google';
 import { CookieConsentBanner } from '@/components/cookie-consent/cookie-consent-banner';
+import IntercomMobileOffsetFix from '@/components/shared/intercom/intercom-mobile-offset-fix';
 import { headers } from 'next/headers';
 import { cookieToInitialState } from 'wagmi';
 import { rpcConfig } from '../providers/constants';
@@ -22,7 +23,10 @@ const geistMono = localFont({
   variable: '--font-geist-mono',
 });
 
+const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://sodax.com';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(baseUrl),
   title: 'SODAX · Infrastructure for Modern Money',
   description:
     'SODAX is a cross-network execution and liquidity system that helps applications support complex financial actions without becoming cross-network infrastructure companies.',
@@ -49,7 +53,7 @@ export const metadata: Metadata = {
     siteName: 'SODAX',
     images: [
       {
-        url: 'https://sodax.com/link-preview.png',
+        url: '/link-preview.png',
         width: 1200,
         height: 630,
         alt: 'SODAX · Infrastructure for Modern Money',
@@ -61,7 +65,7 @@ export const metadata: Metadata = {
     title: 'SODAX · Infrastructure for Modern Money',
     description:
       'SODAX is a cross-network execution and liquidity system that helps applications support complex financial actions without becoming cross-network infrastructure companies.',
-    images: ['https://sodax.com/link-preview.png'],
+    images: ['/link-preview.png'],
     site: '@gosodax',
     creator: '@gosodax',
   },
@@ -85,7 +89,7 @@ const structuredData = {
       '@id': 'https://sodax.com/#organization',
       name: 'SODAX',
       url: 'https://sodax.com',
-      logo: 'https://sodax.com/symbol2.png',
+      logo: 'https://sodax.com/soda-cherry.png',
       sameAs: [X_ROUTE, GITHUB_ROUTE, DISCORD_ROUTE],
     },
     {
@@ -147,6 +151,7 @@ gtag('consent','default',{'ad_storage':'denied','ad_user_data':'denied','ad_pers
           </Providers>
         </SidebarProvider>
         <CookieConsentBanner />
+        <IntercomMobileOffsetFix />
       </body>
     </html>
   );

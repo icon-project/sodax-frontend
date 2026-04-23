@@ -1,7 +1,12 @@
-import type { XAccount } from '@/types';
-import { ICONexRequestEventType, ICONexResponseEventType, request } from './iconex';
+import type { XAccount } from '@/types/index.js';
+import { ICONexRequestEventType, ICONexResponseEventType, request } from './iconex/index.js';
 
-import { XConnector } from '@/core/XConnector';
+import { XConnector } from '@/core/XConnector.js';
+import { assert, hasBooleanProperty, isRecord } from '@/shared/guards.js';
+
+const isHanaWallet = (value: unknown): value is { isAvailable?: boolean } => {
+  return isRecord(value) && (value.isAvailable === undefined || hasBooleanProperty(value, 'isAvailable'));
+};
 
 export class IconHanaXConnector extends XConnector {
   constructor() {
@@ -9,8 +14,10 @@ export class IconHanaXConnector extends XConnector {
   }
 
   async connect(): Promise<XAccount | undefined> {
-    const { hanaWallet } = window as any;
-    if (window && !hanaWallet && !hanaWallet?.isAvailable) {
+    const hanaWallet = (window as unknown as Record<string, unknown>).hanaWallet;
+    assert(isHanaWallet(hanaWallet) || hanaWallet === undefined, '[IconHanaXConnector] invalid window.hanaWallet type');
+
+    if (!hanaWallet || !hanaWallet.isAvailable) {
       window.open('https://chromewebstore.google.com/detail/hana-wallet/jfdlamikmbghhapbgfoogdffldioobgl', '_blank');
       return;
     }
@@ -26,6 +33,7 @@ export class IconHanaXConnector extends XConnector {
       };
     }
 
+    console.warn('[IconHanaXConnector] connect: unexpected response from Hana wallet', detail);
     return undefined;
   }
 
@@ -33,7 +41,7 @@ export class IconHanaXConnector extends XConnector {
     console.log('HanaIconXConnector disconnected');
   }
 
-  public get icon() {
+  public override get icon(): string {
     return 'https://raw.githubusercontent.com/balancednetwork/icons/master/wallets/hana.svg';
   }
 }

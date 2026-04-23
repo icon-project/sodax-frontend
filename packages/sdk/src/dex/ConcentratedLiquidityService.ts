@@ -1614,16 +1614,16 @@ export class ClService {
     tickLower: bigint,
     tickUpper: bigint,
     currentTick: bigint,
+    sqrtPriceX96: bigint,
   ): bigint {
     if (amount0 === 0n) return 0n;
 
     const sqrtRatioX96Lower = TickMath.getSqrtRatioAtTick(Number(tickLower));
     const sqrtRatioX96Upper = TickMath.getSqrtRatioAtTick(Number(tickUpper));
-    const sqrtRatioX96Current = TickMath.getSqrtRatioAtTick(Number(currentTick));
 
     // Calculate liquidity using only amount0 (use a very large value for amount1 to not constrain)
     const liquidity = maxLiquidityForAmounts(
-      sqrtRatioX96Current,
+      sqrtPriceX96,
       sqrtRatioX96Lower,
       sqrtRatioX96Upper,
       amount0,
@@ -1636,7 +1636,7 @@ export class ClService {
       Number(currentTick),
       Number(tickLower),
       Number(tickUpper),
-      sqrtRatioX96Current,
+      sqrtPriceX96,
       liquidity,
     );
 
@@ -1656,16 +1656,16 @@ export class ClService {
     tickLower: bigint,
     tickUpper: bigint,
     currentTick: bigint,
+    sqrtPriceX96: bigint,
   ): bigint {
     if (amount1 === 0n) return 0n;
 
     const sqrtRatioX96Lower = TickMath.getSqrtRatioAtTick(Number(tickLower));
     const sqrtRatioX96Upper = TickMath.getSqrtRatioAtTick(Number(tickUpper));
-    const sqrtRatioX96Current = TickMath.getSqrtRatioAtTick(Number(currentTick));
 
     // Calculate liquidity using only amount1 (use a very large value for amount0 to not constrain)
     const liquidity = maxLiquidityForAmounts(
-      sqrtRatioX96Current,
+      sqrtPriceX96,
       sqrtRatioX96Lower,
       sqrtRatioX96Upper,
       BigInt('0xffffffffffffffffffffffffffffffff'), // max uint128
@@ -1678,11 +1678,92 @@ export class ClService {
       Number(currentTick),
       Number(tickLower),
       Number(tickUpper),
-      sqrtRatioX96Current,
+      sqrtPriceX96,
       liquidity,
     );
 
     return amount0;
+  }
+
+  /**
+   * Calculate amount0Max and amount1Max for a given liquidity and slippage tolerance.
+   * For concentrated liquidity, a price drop increases the amount0 needed and a price rise increases the amount1 needed.
+   * This calculates the worst-case amounts for each token independently.
+   */
+  public static calculateMaxAmountsForSlippage(
+    liquidity: bigint,
+    tickLower: bigint,
+    tickUpper: bigint,
+    currentTick: bigint,
+    sqrtPriceX96: bigint,
+    slippagePercent: number,
+  ): { amount0Max: bigint; amount1Max: bigint } {
+    // Calculate amounts at the current price
+    const amount0AtCurrent = PositionMath.getToken0Amount(
+      Number(currentTick),
+      Number(tickLower),
+      Number(tickUpper),
+      sqrtPriceX96,
+      liquidity,
+    );
+    const amount1AtCurrent = PositionMath.getToken1Amount(
+      Number(currentTick),
+      Number(tickLower),
+      Number(tickUpper),
+      sqrtPriceX96,
+      liquidity,
+    );
+
+    // Apply slippage using integer math so we keep all ~160 bits of sqrtPriceX96.
+    // Identity: sqrtPriceX96 * sqrt(1 ± s) = sqrt(sqrtPriceX96² * (SCALE ± scaled) / SCALE)
+    const SLIPPAGE_SCALE = 1_000_000_000n;
+    const slippageScaled = BigInt(Math.round((slippagePercent * Number(SLIPPAGE_SCALE)) / 100));
+    const sqrtPriceX96Squared = sqrtPriceX96 * sqrtPriceX96;
+
+    const sqrtPriceX96Down = ClService.sqrtBigInt(
+      (sqrtPriceX96Squared * (SLIPPAGE_SCALE - slippageScaled)) / SLIPPAGE_SCALE,
+    );
+    const sqrtPriceX96Up = ClService.sqrtBigInt(
+      (sqrtPriceX96Squared * (SLIPPAGE_SCALE + slippageScaled)) / SLIPPAGE_SCALE,
+    );
+    const tickDown = TickMath.getTickAtSqrtRatio(sqrtPriceX96Down);
+    const tickUp = TickMath.getTickAtSqrtRatio(sqrtPriceX96Up);
+
+    const amount0AtPriceDrop = PositionMath.getToken0Amount(
+      tickDown,
+      Number(tickLower),
+      Number(tickUpper),
+      sqrtPriceX96Down,
+      liquidity,
+    );
+
+    const amount1AtPriceRise = PositionMath.getToken1Amount(
+      tickUp,
+      Number(tickLower),
+      Number(tickUpper),
+      sqrtPriceX96Up,
+      liquidity,
+    );
+
+    // Take the worst case for each token
+    const amount0Max = amount0AtPriceDrop > amount0AtCurrent ? amount0AtPriceDrop : amount0AtCurrent;
+    const amount1Max = amount1AtPriceRise > amount1AtCurrent ? amount1AtPriceRise : amount1AtCurrent;
+
+    return { amount0Max, amount1Max };
+  }
+
+  /**
+   * Integer square root via Newton's method. Returns floor(sqrt(n)).
+   */
+  private static sqrtBigInt(n: bigint): bigint {
+    if (n < 0n) throw new Error('sqrtBigInt: negative input');
+    if (n < 2n) return n;
+    let x = 1n << ((BigInt(n.toString(2).length) + 1n) / 2n);
+    while (true) {
+      const next = (x + n / x) / 2n;
+      if (next >= x) return x;
+      x = next;
+    }
   }
 
   /**

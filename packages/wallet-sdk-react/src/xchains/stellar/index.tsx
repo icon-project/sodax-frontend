@@ -1,2 +1,2 @@
-export { StellarXService } from './StellarXService';
-export { StellarWalletsKitXConnector } from './StellarWalletsKitXConnector';
+export { StellarXService } from './StellarXService.js';
+export { StellarWalletsKitXConnector } from './StellarWalletsKitXConnector.js';

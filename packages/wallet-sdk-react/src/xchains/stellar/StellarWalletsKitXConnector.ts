@@ -1,7 +1,7 @@
-import type { XAccount } from '@/types';
+import type { XAccount } from '@/types/index.js';
 
-import { XConnector } from '@/core';
-import { StellarXService } from './StellarXService';
+import { XConnector } from '@/core/index.js';
+import { StellarXService } from './StellarXService.js';
 
 export type StellarWalletType = {
   icon: string;
@@ -47,7 +47,7 @@ export class StellarWalletsKitXConnector extends XConnector {
 
   async disconnect(): Promise<void> {}
 
-  public get icon() {
+  public override get icon(): string {
     return this._wallet.icon;
   }
 }

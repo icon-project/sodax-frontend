@@ -17,7 +17,7 @@ class CustomSorobanServer extends SorobanRpc.Server {
     this.customHeaders = customHeaders;
   }
 
-  async simulateTransaction(
+  override async simulateTransaction(
     tx: Transaction<Memo<MemoType>, Operation[]>,
   ): Promise<SorobanRpc.Api.SimulateTransactionResponse> {
     const requestOptions = {
@@ -43,7 +43,7 @@ class CustomSorobanServer extends SorobanRpc.Server {
     return response.json().then(json => json.result);
   }
 
-  async sendTransaction(tx: Transaction | FeeBumpTransaction): Promise<SorobanRpc.Api.SendTransactionResponse> {
+  override async sendTransaction(tx: Transaction | FeeBumpTransaction): Promise<SorobanRpc.Api.SendTransactionResponse> {
     const requestOptions = {
       method: 'POST',
       headers: {
@@ -67,7 +67,7 @@ class CustomSorobanServer extends SorobanRpc.Server {
     return response.json().then(json => json.result);
   }
 
-  async getTransaction(hash: string): Promise<SorobanRpc.Api.GetTransactionResponse> {
+  override async getTransaction(hash: string): Promise<SorobanRpc.Api.GetTransactionResponse> {
     const requestOptions = {
       method: 'POST',
       headers: {

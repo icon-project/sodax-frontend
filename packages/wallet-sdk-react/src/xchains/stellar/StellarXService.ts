@@ -1,9 +1,10 @@
-import { XService } from '@/core/XService';
+import { XService } from '@/core/XService.js';
 import { StellarWalletsKit, WalletNetwork, allowAllModules } from '@creit.tech/stellar-wallets-kit';
 import * as StellarSdk from '@stellar/stellar-sdk';
-import CustomSorobanServer from './CustomSorobanServer';
-import { getTokenBalance } from './utils';
+import CustomSorobanServer from './CustomSorobanServer.js';
+import { getTokenBalance } from './utils.js';
 import type { XToken } from '@sodax/types';
+import { STELLAR_DEFAULT_HORIZON_RPC_URL, STELLAR_DEFAULT_SOROBAN_RPC_URL } from '@/constants.js';
 
 /** Base reserve in stroops (0.5 XLM). Each subentry (trustline, signer, data entry, offer) adds one base reserve. */
 const STELLAR_BASE_RESERVE_STROOPS = 5_000_000;
@@ -30,7 +31,7 @@ export class StellarXService extends XService {
   public server: StellarSdk.Horizon.Server;
   public sorobanServer: CustomSorobanServer;
 
-  private constructor() {
+  private constructor(horizonRpcUrl?: string, sorobanRpcUrl?: string) {
     super('STELLAR');
 
     this.walletsKit = new StellarWalletsKit({
@@ -38,18 +39,25 @@ export class StellarXService extends XService {
       modules: allowAllModules(),
     });
 
-    this.server = new StellarSdk.Horizon.Server('https://horizon.stellar.org', { allowHttp: true });
-    this.sorobanServer = new CustomSorobanServer('https://rpc.ankr.com/stellar_soroban', {});
+    this.server = new StellarSdk.Horizon.Server(horizonRpcUrl ?? STELLAR_DEFAULT_HORIZON_RPC_URL, { allowHttp: true });
+    this.sorobanServer = new CustomSorobanServer(sorobanRpcUrl ?? STELLAR_DEFAULT_SOROBAN_RPC_URL, {});
   }
 
-  public static getInstance(): StellarXService {
+  public static getInstance(horizonRpcUrl?: string, sorobanRpcUrl?: string): StellarXService {
     if (!StellarXService.instance) {
-      StellarXService.instance = new StellarXService();
+      StellarXService.instance = new StellarXService(horizonRpcUrl, sorobanRpcUrl);
+    } else {
+      if (horizonRpcUrl) {
+        StellarXService.instance.server = new StellarSdk.Horizon.Server(horizonRpcUrl, { allowHttp: true });
+      }
+      if (sorobanRpcUrl) {
+        StellarXService.instance.sorobanServer = new CustomSorobanServer(sorobanRpcUrl, {});
+      }
     }
     return StellarXService.instance;
   }
 
-  async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
+  override async getBalance(address: string | undefined, xToken: XToken): Promise<bigint> {
     if (!address) return BigInt(0);
 
     const stellarAccount = await this.server.loadAccount(address);

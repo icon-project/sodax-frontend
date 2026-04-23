@@ -1,4 +1,4 @@
-import { XService } from '@/core/XService';
+import { XService } from '@/core/XService.js';
 import { Network, getNetworkEndpoints } from '@injectivelabs/networks';
 import { ChainGrpcWasmApi, IndexerGrpcAccountPortfolioApi } from '@injectivelabs/sdk-ts';
 import { ChainId as InjectiveChainId } from '@injectivelabs/ts-types';
@@ -45,7 +45,7 @@ export class InjectiveXService extends XService {
     return InjectiveXService.instance;
   }
 
-  async getBalance(address: string | undefined, xToken: XToken) {
+  override async getBalance(address: string | undefined, xToken: XToken) {
     if (!address) return 0n;
 
     const portfolio = await this.indexerGrpcAccountPortfolioApi.fetchAccountPortfolioBalances(address);

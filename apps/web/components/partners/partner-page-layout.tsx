@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import { MarketingHeader } from '@/components/shared/marketing-header';
-import { PartnerSimpleFooter } from './partner-simple-footer';
+import { Navbar } from '@/components/shared/navbar';
+import Footer from '@/components/landing/footer';
 
 export interface PartnerMetadata {
   partnerName: string;
@@ -17,8 +17,6 @@ export interface PartnerMetadata {
 interface PartnerPageLayoutProps {
   metadata: PartnerMetadata;
   children: React.ReactNode;
-  backLink?: string;
-  backText?: string;
 }
 
 export function generatePartnerMetadata(metadata: PartnerMetadata): Metadata {
@@ -44,20 +42,22 @@ export function generatePartnerMetadata(metadata: PartnerMetadata): Metadata {
   };
 }
 
-export function PartnerPageLayout({ metadata, children, backLink, backText }: PartnerPageLayoutProps) {
+export function PartnerPageLayout({ metadata, children }: PartnerPageLayoutProps) {
   const { partnerName, tagline, description, logoUrl } = metadata;
 
   return (
-    <div className="relative bg-white flex flex-col min-h-screen w-full">
-      <MarketingHeader backLink={backLink} backText={backText} />
+    <div className="bg-white flex flex-col min-h-screen w-full">
+      <div className="w-full flex flex-col items-center bg-cherry-soda pb-10">
+        <Navbar />
+      </div>
 
       {/* Content */}
-      <div className="flex flex-col items-center w-full pt-30">
+      <div className="flex flex-col items-center w-full">
         <div className="flex flex-col gap-8 items-start pt-14 pb-14 w-full max-w-5xl px-4 md:px-8">{children}</div>
       </div>
 
       {/* Footer */}
-      <PartnerSimpleFooter />
+      <Footer />
 
       {/* Structured Data */}
       <script
@@ -79,7 +79,7 @@ export function PartnerPageLayout({ metadata, children, backLink, backText }: Pa
               name: 'SODAX',
               logo: {
                 '@type': 'ImageObject',
-                url: 'https://sodax.com/symbol.png',
+                url: 'https://sodax.com/soda-yellow.png',
               },
             },
             about: {

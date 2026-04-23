@@ -1,7 +1,7 @@
 import type { SpokeChainId } from '@sodax/types';
 import type { FormatUserSummaryResponse, FormatReserveUSDResponse, SpokeProvider } from '@sodax/sdk';
 import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 
 type BaseQueryOptions = {
   queryOptions?: UseQueryOptions<FormatUserSummaryResponse<FormatReserveUSDResponse>, Error>;

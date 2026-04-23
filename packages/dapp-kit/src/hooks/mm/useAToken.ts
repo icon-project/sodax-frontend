@@ -1,7 +1,7 @@
 import { isAddress } from 'viem';
 import type { XToken } from '@sodax/sdk';
 import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
-import { useSodaxContext } from '../shared/useSodaxContext';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 
 export type UseATokenParams = {
   aToken: string;
