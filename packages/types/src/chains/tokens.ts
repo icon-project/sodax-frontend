@@ -1,4 +1,4 @@
-import type { Address } from '../index.js';
+import type { Address } from '../shared/shared.js';
 // Import ChainKeys directly from chain-keys.js (not chains.js) to break an ESM circular-init
 // cycle: chains.ts imports from tokens.ts, and tokens.ts imports ChainKeys — if we source it
 // from chains.js the value is still undefined when tokens.ts initializes.

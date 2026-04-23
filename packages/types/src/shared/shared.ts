@@ -11,3 +11,8 @@ export type Address = `0x${string}`;
 export type HubAddress = Address;
 export type OriginalAssetAddress = string;
 export type HttpUrl = `http://${string}` | `https://${string}`;
+
+export type TxPollingConfig = {
+  pollingIntervalMs: number;
+  maxTimeoutMs: number;
+};

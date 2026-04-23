@@ -3,16 +3,10 @@ import {
   type SpokeChainKey,
   type LegacybnUSDChainId,
   type NewbnUSDChainId,
-  type XToken,
   bnUSDLegacySpokeChainIds,
   bnUSDLegacyTokens,
-  type ConcentratedLiquidityConfig,
-  type SolverConfig,
-  solverConfig,
-  concentratedLiquidityConfig,
   spokeChainConfig,
   type LegacybnUSDToken,
-  spokeChainKeysSet,
   HUB_CHAIN_KEY,
   type EVM_CHAIN_KEYS,
   EVM_CHAIN_KEYS_SET,
@@ -35,15 +29,17 @@ import {
   STACKS_CHAIN_KEYS_SET,
   type STACKS_CHAIN_KEYS,
   baseChainInfo,
-  type ChainType,
   RelayChainIdMap,
   type IntentRelayChainId,
-  type ChainKey,
   IntentRelayChainIdToChainKey,
   EVM_SPOKE_ONLY_CHAIN_KEYS_SET,
   EVM_SPOKE_ONLY_CHAIN_KEYS,
-  type IWalletProvider,
-} from '../index.js';
+} from '../chains/chains.js';
+import { spokeChainKeysSet, type ChainKey, type ChainType } from '../chains/chain-keys.js';
+import { type XToken } from '../chains/tokens.js';
+import { type ConcentratedLiquidityConfig, concentratedLiquidityConfig } from '../dex/dex.js';
+import { type SolverConfig, solverConfig } from '../common/constants.js';
+import type { IWalletProvider } from '../wallet/providers.js';
 
 export function isHubChainKey(chainId: SpokeChainKey): boolean {
   return chainId === HUB_CHAIN_KEY;

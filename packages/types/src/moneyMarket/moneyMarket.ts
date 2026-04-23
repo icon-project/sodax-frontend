@@ -1,13 +1,7 @@
-import {
-  type MoneyMarketConfig,
-  type XToken,
-  spokeChainConfig,
-  ChainKeys,
-  SodaTokens,
-  type SpokeChainKey,
-  type Address,
-  hubConfig,
-} from '../index.js';
+import type { MoneyMarketConfig } from '../common/common.js';
+import type { Address } from '../shared/shared.js';
+import { type XToken, SodaTokens } from '../chains/tokens.js';
+import { spokeChainConfig, ChainKeys, type SpokeChainKey, hubConfig } from '../chains/chains.js';
 
 // currently supported spoke chain tokens for money market
 export const moneyMarketSupportedTokens = {

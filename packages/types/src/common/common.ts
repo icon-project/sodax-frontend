@@ -1,35 +1,18 @@
-import type {
-  Address,
-  BitcoinReturnType,
-  ChainKeys,
-  ChainType,
-  EvmRawTransaction,
-  EvmReturnType,
-  GetChainType,
-  GetWalletProviderType,
-  Hex,
-  HttpUrl,
-  IconAddress,
-  IconRawTransaction,
-  IconReturnType,
-  InjectiveRawTransaction,
-  InjectiveReturnType,
-  NearRawTransaction,
-  NearReturnType,
-  SolanaRawTransaction,
-  SolanaReturnType,
-  SolverConfig,
-  SpokeChainConfig,
-  spokeChainConfig,
-  SpokeChainKey,
-  StacksRawTransaction,
-  StacksReturnType,
-  StellarRawTransaction,
-  StellarReturnType,
-  SuiRawTransaction,
-  SuiReturnType,
-  XToken,
-} from '../index.js';
+import type { Address, Hex, HttpUrl } from '../shared/shared.js';
+import type { ChainKeys, ChainType } from '../chains/chain-keys.js';
+import type { GetChainType, SpokeChainConfig, spokeChainConfig, SpokeChainKey, IconAddress } from '../chains/chains.js';
+import type { XToken } from '../chains/tokens.js';
+import type { EvmRawTransaction, EvmReturnType } from '../evm/evm.js';
+import type { BitcoinReturnType } from '../bitcoin/bitcoin.js';
+import type { IconRawTransaction, IconReturnType } from '../icon/icon.js';
+import type { InjectiveRawTransaction, InjectiveReturnType } from '../injective/injective.js';
+import type { NearRawTransaction, NearReturnType } from '../near/near.js';
+import type { SolanaRawTransaction, SolanaReturnType } from '../solana/solana.js';
+import type { StacksRawTransaction, StacksReturnType } from '../stacks/stacks.js';
+import type { StellarRawTransaction, StellarReturnType } from '../stellar/stellar.js';
+import type { SuiRawTransaction, SuiReturnType } from '../sui/sui.js';
+import type { SolverConfig } from './constants.js';
+import type { GetWalletProviderType } from '../wallet/providers.js';
 
 export type Default = {
   default: boolean;

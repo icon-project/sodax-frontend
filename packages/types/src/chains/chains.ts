@@ -29,7 +29,7 @@ import {
 
 import { ChainKeys, CHAIN_KEYS, type ChainKey, type ChainType } from './chain-keys.js';
 import type { XToken } from './tokens.js';
-import type { TxPollingConfig } from '../index.js';
+import type { TxPollingConfig } from '../shared/shared.js';
 export * from './chain-keys.js';
 
 // NOTE: This is not the same as the actual chain ids (wormhole based ids), only used for intent relay

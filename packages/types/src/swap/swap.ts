@@ -1,5 +1,7 @@
 // currently supported spoke chain tokens for solver
-import { type PartnerFee, type SpokeChainKey, type XToken, SodaTokens } from '../index.js';
+import type { PartnerFee } from '../common/common.js';
+import type { SpokeChainKey } from '../chains/chains.js';
+import { type XToken, SodaTokens } from '../chains/tokens.js';
 import { spokeChainConfig, ChainKeys } from '../chains/chains.js';
 
 export const swapSupportedTokens = {

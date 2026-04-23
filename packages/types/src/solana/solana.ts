@@ -1,4 +1,5 @@
-import type { Base64String, ICoreWallet } from '../index.js';
+import type { Base64String } from '../shared/shared.js';
+import type { ICoreWallet } from '../wallet/wallet.js';
 import type { VersionedTransactionResponse } from './solana-web3.js';
 
 export type SolanaEoaAddress = string;

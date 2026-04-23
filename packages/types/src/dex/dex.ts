@@ -1,4 +1,5 @@
-import { StatATokenAddresses, type Address } from '../index.js';
+import type { Address } from '../shared/shared.js';
+import { StatATokenAddresses } from '../chains/tokens.js';
 import type { PoolKey } from './pancakeswap-infinity.js';
 
 // Re-export imported types for external usage with explicit type definitions for clarity.

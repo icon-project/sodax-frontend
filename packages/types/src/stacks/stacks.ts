@@ -1,4 +1,4 @@
-import type { ICoreWallet } from '../index.js';
+import type { ICoreWallet } from '../wallet/wallet.js';
 
 export type StacksRawTransaction = {
   payload: string; // hex-encoded serialized transaction payload

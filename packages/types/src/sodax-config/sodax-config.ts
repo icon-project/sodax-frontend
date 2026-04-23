@@ -1,4 +1,4 @@
-import type { HttpUrl } from '../shared/shared.js';
+import type { HttpUrl, TxPollingConfig } from '../shared/shared.js';
 import {
   apiConfig,
   solverConfig,
@@ -20,11 +20,6 @@ import {
 } from '../chains/chains.js';
 
 // -- Per-chain shared config types (user-overridable runtime config) --
-
-export type TxPollingConfig = {
-  pollingIntervalMs: number;
-  maxTimeoutMs: number;
-};
 
 export type EvmSharedChainConfig = TxPollingConfig & {
   rpcUrl: HttpUrl;

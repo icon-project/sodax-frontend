@@ -1,4 +1,5 @@
-import type { Hex, ICoreWallet } from '../index.js';
+import type { Hex } from '../shared/shared.js';
+import type { ICoreWallet } from '../wallet/wallet.js';
 import type { RpcTransactionResponse } from './near-api-js.js';
 
 export interface TransferArgs {

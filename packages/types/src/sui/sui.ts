@@ -1,4 +1,5 @@
-import type { Base64String, Hex, ICoreWallet } from '../index.js';
+import type { Base64String, Hex } from '../shared/shared.js';
+import type { ICoreWallet } from '../wallet/wallet.js';
 
 export type SuiReturnType<Raw extends boolean> = Raw extends true
   ? SuiRawTransaction

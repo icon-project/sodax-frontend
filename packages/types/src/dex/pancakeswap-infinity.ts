@@ -1,4 +1,5 @@
-import type { Address, Prettify } from '../index.js';
+import type { Address } from '../shared/shared.js';
+import type { Prettify } from '../common/common.js';
 
 export type BigintIsh = bigint | number | string;
 export declare enum TradeType {

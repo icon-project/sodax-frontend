@@ -1,4 +1,4 @@
-import type { ICoreWallet } from '../index.js';
+import type { ICoreWallet } from '../wallet/wallet.js';
 
 /** Check whether an AddressType is supported for signing/spending. */
 export function isSupportedBitcoinAddressType(addressType: string): addressType is BtcAddressType {

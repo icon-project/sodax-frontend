@@ -1,11 +1,8 @@
-import type {
-  SpokeChainKey,
-  XToken,
-  IntentRelayChainIdMap,
-  SpokeChainConfigMap,
-  Address,
-  SodaxConfig,
-} from '../index.js';
+import type { SpokeChainKey, IntentRelayChainIdMap } from '../chains/chains.js';
+import type { XToken } from '../chains/tokens.js';
+import type { SpokeChainConfigMap } from '../common/common.js';
+import type { Address } from '../shared/shared.js';
+import type { SodaxConfig } from '../sodax-config/sodax-config.js';
 
 export type GetChainsApiResponse = readonly SpokeChainKey[];
 export type GetSwapTokensApiResponse = Record<SpokeChainKey, readonly XToken[]>;
