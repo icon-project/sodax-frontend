@@ -824,13 +824,6 @@ export const spokeChainConfig = {
         address: '0x0c880f6761F1af8d9Aa9C466984b80DAb9a8c9e8',
         xChainId: ARBITRUM_MAINNET_CHAIN_ID,
       },
-      USDT0: {
-        symbol: 'USDT0',
-        name: 'Tether USD0',
-        decimals: 6,
-        address: '0x7F850B0aB1988Dd17B69ac564c1E2857949e4dEe',
-        xChainId: ARBITRUM_MAINNET_CHAIN_ID,
-      },
       rETH: {
         symbol: 'rETH',
         name: 'Rocket Pool ETH',
@@ -3308,7 +3301,6 @@ export const swapSupportedTokens = {
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.UNI,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.CRV,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.PENDLE,
-    spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.USDT0,
     spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID].supportedTokens.rETH,
   ] as const satisfies XToken[],
   [BASE_MAINNET_CHAIN_ID]: [
