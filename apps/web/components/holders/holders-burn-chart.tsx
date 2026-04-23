@@ -9,8 +9,8 @@ interface HoldersBurnChartProps {
   series: readonly PublicStatsBurnChartPoint[];
 }
 
-const CHART_HEIGHT_PX = 120;
-const MIN_BAR_HEIGHT_PCT = 2;
+const CHART_HEIGHT_PX = 140;
+const MIN_BAR_HEIGHT_PCT = 3;
 
 export default function HoldersBurnChart({ series }: HoldersBurnChartProps): ReactElement | null {
   if (series.length === 0) {
@@ -20,9 +20,9 @@ export default function HoldersBurnChart({ series }: HoldersBurnChartProps): Rea
   const peakBurn = Math.max(...series.map(point => point.burned_period), 0);
 
   return (
-    <div className="w-full max-w-3xl mx-auto mt-6">
+    <div className="w-full max-w-3xl mx-auto mt-8">
       <div
-        className="flex items-end justify-between gap-[2px] md:gap-1 w-full"
+        className="flex items-end justify-between gap-[3px] md:gap-1 w-full border-b border-cherry-grey pb-px"
         style={{ height: CHART_HEIGHT_PX }}
         role="img"
         aria-label={`Daily SODA burned over the last ${series.length} days`}
@@ -41,7 +41,7 @@ export default function HoldersBurnChart({ series }: HoldersBurnChartProps): Rea
           );
         })}
       </div>
-      <div className="flex justify-between mt-2 font-[InterRegular] text-cherry-bright text-(length:--body-comfortable)">
+      <div className="flex justify-between mt-3 font-[InterRegular] text-cherry-bright text-(length:--body-comfortable) uppercase tracking-wider">
         <span>{formatDateLabel(series[0]?.bucket_start)}</span>
         <span>{formatDateLabel(series[series.length - 1]?.bucket_start)}</span>
       </div>
