@@ -3,7 +3,45 @@ import type { ChainType } from '@sodax/types';
 import type { XConnector } from '@/core/XConnector.js';
 import type { XAccount } from '@/types/index.js';
 import { useWalletModalStore, type WalletModalState } from '@/useWalletModalStore.js';
+import { useXWalletStore } from '@/useXWalletStore.js';
 import { useXConnect } from './useXConnect.js';
+
+/** How long to wait for provider-managed chains' Hydrator to populate xConnections after connect() resolves. */
+const HYDRATION_TIMEOUT_MS = 30_000;
+
+/**
+ * Subscribe to `useXWalletStore` for an `xConnections[chainType].xAccount`
+ * with a non-empty address, resolving with the account when it appears or
+ * `undefined` when the timeout expires.
+ *
+ * Provider-managed chains (EVM, Solana, Sui) populate `xConnections` via
+ * their Hydrator components — `useXConnect`'s mutation resolves with
+ * `undefined` because the account materializes asynchronously after wagmi
+ * / wallet-adapter reports the connect as ready.
+ */
+function waitForXConnection(chainType: ChainType, timeoutMs = HYDRATION_TIMEOUT_MS): Promise<XAccount | undefined> {
+  return new Promise(resolve => {
+    let settled = false;
+    const finish = (account: XAccount | undefined) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      unsubscribe();
+      resolve(account);
+    };
+
+    const timer = setTimeout(() => finish(undefined), timeoutMs);
+
+    const unsubscribe = useXWalletStore.subscribe(state => {
+      const account = state.xConnections[chainType]?.xAccount;
+      if (account?.address) finish(account);
+    });
+
+    // Immediate check — Hydrator may have already populated synchronously.
+    const initial = useXWalletStore.getState().xConnections[chainType]?.xAccount;
+    if (initial?.address) finish(initial);
+  });
+}
 
 export type { WalletModalState };
 
@@ -85,19 +123,25 @@ export function useWalletModal(options: UseWalletModalOptions = {}): UseWalletMo
     async (connector: XConnector): Promise<XAccount | undefined> => {
       setConnecting(connector.xChainType, connector);
       try {
-        const account = await connect(connector);
-        if (account) {
+        // Non-provider-managed chains (Bitcoin, ICON, Stellar, NEAR, Stacks,
+        // Injective) return the account directly. Provider-managed chains
+        // (EVM, Solana, Sui) resolve with `undefined` and populate
+        // xConnections via their Hydrator — wait for that.
+        const direct = await connect(connector);
+        const account = direct?.address ? direct : await waitForXConnection(connector.xChainType);
+
+        if (account?.address) {
           setSuccess(connector.xChainType, connector, account);
           await onConnected?.(connector.xChainType, account);
           return account;
         }
-        // connect resolved with undefined — surface as a generic error so the
-        // state machine reaches the error branch instead of getting stuck in
-        // `connecting`.
+
+        // Hydrator never populated within the timeout window — most likely
+        // the user closed the popup or the wallet failed silently.
         setError(
           connector.xChainType,
           connector,
-          new Error(`useWalletModal: ${connector.id} connect resolved with no account`),
+          new Error('Connection did not complete. Did you close the wallet popup?'),
         );
         return undefined;
       } catch (raw) {
