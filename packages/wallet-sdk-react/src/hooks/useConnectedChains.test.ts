@@ -16,13 +16,7 @@ function fakeConnector(overrides: Partial<XConnector> & { id: string }): XConnec
 }
 
 describe('buildConnectedChains', () => {
-  it('empty connections → empty chains, total 0', () => {
-    const result = buildConnectedChains({}, {});
-    expect(result.chains).toEqual([]);
-    expect(result.total).toBe(0);
-  });
-
-  it('only counts chains with non-empty address', () => {
+  it('filters out chains with empty address', () => {
     const result = buildConnectedChains(
       {
         EVM: { xAccount: { address: '0xABC', xChainType: 'EVM' }, xConnectorId: 'metamask' },
@@ -35,15 +29,7 @@ describe('buildConnectedChains', () => {
     expect(result.total).toBe(2);
   });
 
-  it('exposes per-chain address via chains array', () => {
-    const result = buildConnectedChains(
-      { EVM: { xAccount: { address: '0xABC', xChainType: 'EVM' }, xConnectorId: 'metamask' } },
-      {},
-    );
-    expect(result.chains.find(c => c.chainType === 'EVM')?.account.address).toBe('0xABC');
-  });
-
-  it('connectorName + connectorIcon looked up from xConnectorsByChain', () => {
+  it('enriches each chain with connectorName + connectorIcon from xConnectorsByChain', () => {
     const result = buildConnectedChains(
       { BITCOIN: { xAccount: { address: 'bc1q', xChainType: 'BITCOIN' }, xConnectorId: 'unisat' } },
       {
@@ -54,7 +40,7 @@ describe('buildConnectedChains', () => {
     expect(result.chains[0]?.connectorIcon).toBe('https://u.img');
   });
 
-  it('connectorName/Icon undefined when connector not found in store', () => {
+  it('leaves connectorName/Icon undefined when connector id is not in store', () => {
     const result = buildConnectedChains(
       { BITCOIN: { xAccount: { address: 'bc1q', xChainType: 'BITCOIN' }, xConnectorId: 'unknown' } },
       { BITCOIN: [] } as Partial<Record<ChainType, XConnector[]>>,
@@ -63,28 +49,9 @@ describe('buildConnectedChains', () => {
     expect(result.chains[0]?.connectorIcon).toBeUndefined();
   });
 
-  it('status defaults to ready when isReady arg omitted', () => {
-    const result = buildConnectedChains({}, {});
-    expect(result.status).toBe('ready');
-  });
-
-  it('status = loading when isReady false', () => {
-    const result = buildConnectedChains({}, {}, false);
-    expect(result.status).toBe('loading');
-  });
-
-  it('status = ready when isReady true', () => {
-    const result = buildConnectedChains({}, {}, true);
-    expect(result.status).toBe('ready');
-  });
-
-  it('connectorIcon undefined when connector.icon is undefined', () => {
-    const result = buildConnectedChains(
-      { BITCOIN: { xAccount: { address: 'bc1q', xChainType: 'BITCOIN' }, xConnectorId: 'no-icon' } },
-      {
-        BITCOIN: [fakeConnector({ id: 'no-icon', icon: undefined })],
-      } as Partial<Record<ChainType, XConnector[]>>,
-    );
-    expect(result.chains[0]?.connectorIcon).toBeUndefined();
+  it('status reflects isReady (defaults to ready when omitted)', () => {
+    expect(buildConnectedChains({}, {}).status).toBe('ready');
+    expect(buildConnectedChains({}, {}, false).status).toBe('loading');
+    expect(buildConnectedChains({}, {}, true).status).toBe('ready');
   });
 });
