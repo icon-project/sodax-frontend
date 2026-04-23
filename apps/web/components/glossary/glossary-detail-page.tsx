@@ -10,7 +10,7 @@ import {
   X_ROUTE,
   YOUTUBE_ROUTE,
 } from '@/constants/routes';
-import { MarketingHeader } from '@/components/shared/marketing-header';
+import { Navbar } from '@/components/shared/navbar';
 import Footer from '@/components/landing/footer';
 import { BookOpenIcon } from '@phosphor-icons/react/dist/ssr';
 import { DecorativeDivider } from '@/components/ui/decorative-divider';
@@ -162,8 +162,10 @@ export default async function GlossaryDetailPage({
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <div className="min-h-screen bg-cream-white flex flex-col w-full">
-        <MarketingHeader backLink={GLOSSARY_ROUTE} backText="← glossary" />
-        <div className="max-w-7xl mx-auto pt-30 w-full px-4">
+        <div className="w-full flex flex-col items-center bg-cherry-soda pb-10">
+          <Navbar />
+        </div>
+        <div className="max-w-7xl mx-auto w-full px-4">
           <article className="py-8 flex-1 flex flex-col items-start overflow-clip w-full">
             {/* Breadcrumb */}
             <nav className="mb-6 text-sm text-clay" aria-label="Breadcrumb">

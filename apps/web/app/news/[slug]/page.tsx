@@ -7,7 +7,7 @@ import { NEWS_ROUTE } from '@/constants/routes';
 import { getDb } from '@/lib/db';
 import { sanitizeHtml } from '@/lib/sanitize';
 import { getGlossaryTerms, injectGlossaryLinks } from '@/lib/glossary-linker';
-import { MarketingHeader } from '@/components/shared/marketing-header';
+import { Navbar } from '@/components/shared/navbar';
 import Footer from '@/components/landing/footer';
 import { ShareButton } from '@/components/news/share-button';
 
@@ -249,9 +249,11 @@ export default async function NewsArticlePage({
         // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD structured data for SEO
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbStructuredData) }}
       />
-      <div className="relative min-h-screen w-full bg-almost-white">
-        <MarketingHeader backLink={NEWS_ROUTE} backText="← news" />
-        <div className="max-w-7xl mx-auto pt-30">
+      <div className="min-h-screen w-full bg-almost-white">
+        <div className="w-full flex flex-col items-center bg-cherry-soda pb-10">
+          <Navbar />
+        </div>
+        <div className="max-w-7xl mx-auto">
           {/* Article */}
           <article className="py-8" itemScope itemType="https://schema.org/NewsArticle">
             <div className="container mx-auto px-4 max-w-4xl">
