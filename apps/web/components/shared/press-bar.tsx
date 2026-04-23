@@ -176,7 +176,7 @@ export const PressBar = (): ReactElement => {
                       rel="noopener noreferrer"
                       draggable={false}
                       aria-label={`Read ${logo.name} coverage`}
-                      className="shrink-0 opacity-60 hover:opacity-100 transition-opacity duration-300 cursor-[inherit]"
+                      className="shrink-0 opacity-60 hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                       onClick={handleLogoClick}
                     >
                       <LogoAsset />
