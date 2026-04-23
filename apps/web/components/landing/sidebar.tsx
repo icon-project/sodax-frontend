@@ -12,7 +12,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { HOME_ROUTE, NEWS_ROUTE, PARTNERS_ROUTE, SWAP_ROUTE } from '@/constants/routes';
+import { HOLDERS_ROUTE, HOME_ROUTE, NEWS_ROUTE, PARTNERS_ROUTE, SWAP_ROUTE } from '@/constants/routes';
 
 const AppSidebar = (): React.ReactElement => {
   const { toggleSidebar } = useSidebar();
@@ -37,6 +37,11 @@ const AppSidebar = (): React.ReactElement => {
             <SidebarMenuItem>
               <Link href={HOME_ROUTE} className="text-(length:--body-super-comfortable) text-white font-medium">
                 <p>Home</p>
+              </Link>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <Link href={HOLDERS_ROUTE} className="text-(length:--body-super-comfortable) text-white font-medium">
+                <p>Holders</p>
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>

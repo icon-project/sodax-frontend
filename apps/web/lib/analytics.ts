@@ -88,10 +88,34 @@ export interface LeadMagnetPdfDownloadedEvent {
   variant_id: string;
 }
 
-// Kraken spotlight (homepage "Soon on Kraken!" link → /holders)
+// Holders page CTAs
 
-export interface KrakenSpotlightClickedEvent {
-  event: 'kraken_spotlight_clicked';
+export interface HoldersBuyKrakenClickedEvent {
+  event: 'holders_buy_kraken_clicked';
+}
+
+export interface HoldersSwapClickedEvent {
+  event: 'holders_swap_clicked';
+}
+
+export interface HoldersTokenomicsClickedEvent {
+  event: 'holders_tokenomics_clicked';
+}
+
+export interface HoldersMigrateClickedEvent {
+  event: 'holders_migrate_clicked';
+}
+
+export interface HoldersStakeClickedEvent {
+  event: 'holders_stake_clicked';
+}
+
+export interface HoldersFollowXClickedEvent {
+  event: 'holders_follow_x_clicked';
+}
+
+export interface HoldersJoinDiscordClickedEvent {
+  event: 'holders_join_discord_clicked';
 }
 
 // Pool events
@@ -230,8 +254,34 @@ export function trackLeadMagnetPdfDownloaded(params: Omit<LeadMagnetPdfDownloade
   pushToDataLayer({ event: 'lead_magnet_pdf_downloaded', ...params });
 }
 
-export function trackKrakenSpotlightClicked(): void {
-  pushToDataLayer({ event: 'kraken_spotlight_clicked' });
+// Holders page tracking
+
+export function trackHoldersBuyKrakenClicked(): void {
+  pushToDataLayer({ event: 'holders_buy_kraken_clicked' });
+}
+
+export function trackHoldersSwapClicked(): void {
+  pushToDataLayer({ event: 'holders_swap_clicked' });
+}
+
+export function trackHoldersTokenomicsClicked(): void {
+  pushToDataLayer({ event: 'holders_tokenomics_clicked' });
+}
+
+export function trackHoldersMigrateClicked(): void {
+  pushToDataLayer({ event: 'holders_migrate_clicked' });
+}
+
+export function trackHoldersStakeClicked(): void {
+  pushToDataLayer({ event: 'holders_stake_clicked' });
+}
+
+export function trackHoldersFollowXClicked(): void {
+  pushToDataLayer({ event: 'holders_follow_x_clicked' });
+}
+
+export function trackHoldersJoinDiscordClicked(): void {
+  pushToDataLayer({ event: 'holders_join_discord_clicked' });
 }
 
 // Pool tracking

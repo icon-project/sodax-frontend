@@ -12,8 +12,8 @@ import { MainCtaButton } from './main-cta-button';
 import { Separator } from '@radix-ui/react-separator';
 import { useRouter } from 'next/navigation';
 import { SWAP_ROUTE } from '@/constants/routes';
-import { useAppStore } from '@/stores/app-store-provider';
 import { Navbar } from '@/components/shared/navbar';
+import { useAppStore } from '@/stores/app-store-provider';
 
 const heroStats: { title: ReactNode; subtitle: string; widthClass: string; nowrap?: boolean }[] = [
   { title: 'Swap your assets', subtitle: 'At optimal rates', widthClass: 'w-40 pr-10' },

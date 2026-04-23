@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { DISCORD_ROUTE, GITHUB_ROUTE, X_ROUTE } from '@/constants/routes';
-import { MarketingHeader } from '@/components/shared/marketing-header';
+import { Navbar } from '@/components/shared/navbar';
 import PartnersHeroSection from '@/components/partners/partners-hero-section';
 import PartnerCategoriesSection from '@/components/partners/partner-categories-section';
 import SodaxAdvantageSection from '@/components/partners/sodax-advantage-section';
@@ -103,7 +103,9 @@ export default function PartnersPage() {
     <div className="partners-page relative w-full overflow-x-hidden bg-cream">
       {/* biome-ignore lint/security/noDangerouslySetInnerHtml: Safe usage for JSON-LD structured data */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
-      <MarketingHeader />
+      <div className="absolute top-0 left-0 right-0 z-50 flex flex-col items-center bg-cherry-soda pb-10">
+        <Navbar />
+      </div>
       <main>
         <PartnersHeroSection />
         <PartnerCategoriesSection />

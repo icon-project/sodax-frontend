@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import type { Metadata } from 'next';
 import { ArrowRight, ExternalLink } from 'lucide-react';
-import { MarketingHeader } from '@/components/shared/marketing-header';
+import { Navbar } from '@/components/shared/navbar';
 import Footer from '@/components/landing/footer';
 import { PageActions } from '@/components/partners/page-actions';
 import { AnimatedSection, AnimatedScrollSection } from '@/components/partners/animated-section';
@@ -147,8 +147,10 @@ function TeamMember({
 
 export default function SodaxSDKPage() {
   return (
-    <div className="relative bg-white flex flex-col min-h-screen w-full">
-      <MarketingHeader />
+    <div className="bg-white flex flex-col min-h-screen w-full">
+      <div className="w-full flex flex-col items-center bg-cherry-soda pb-10">
+        <Navbar />
+      </div>
 
       <div className="flex flex-col items-center w-full">
         <div className="flex flex-col gap-8 items-start pt-14 pb-14 w-full max-w-5xl px-4 md:px-8">

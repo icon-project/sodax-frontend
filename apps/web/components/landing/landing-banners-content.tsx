@@ -68,22 +68,17 @@ export const LANDING_SMALL_BANNERS = [
     imageSrc: '/homepage_banner.png',
   },
   {
-    title: 'Explore the SODA Exchange',
-    subtitle: 'Migrate to SODA & earn from staking and liquidity. Swap across 18 networks.',
-    buttonLabel: 'SODA Exchange',
-    href: 'https://www.sodax.com/exchange',
-    imageSrc: '/test.png',
+    title: 'Migrate to SODA',
+    subtitle: '1:1 exchange for ICX holders.',
+    buttonLabel: 'Migrate',
+    href: 'https://www.sodax.com/migrate',
+    imageSrc: '/sodax-mockup.png',
   },
   {
     title: 'SODA Token',
     subtitle: 'Fees driving growth and token burns.',
     buttonLabel: 'Learn more',
     href: SODA_TOKEN_ROUTE,
-    imageSrc: '/banner3.png',
+    imageSrc: '/soda-burn.png',
   },
-] as const satisfies readonly [
-  LandingBannerContent,
-  LandingBannerContent,
-  LandingBannerContent,
-  LandingBannerContent,
-];
+] as const satisfies readonly [LandingBannerContent, LandingBannerContent, LandingBannerContent, LandingBannerContent];

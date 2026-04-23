@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { MarketingHeader } from '@/components/shared/marketing-header';
+import { Navbar } from '@/components/shared/navbar';
 import Footer from '@/components/landing/footer';
 
 export interface PartnerMetadata {
@@ -46,8 +46,10 @@ export function PartnerPageLayout({ metadata, children }: PartnerPageLayoutProps
   const { partnerName, tagline, description, logoUrl } = metadata;
 
   return (
-    <div className="relative bg-white flex flex-col min-h-screen w-full">
-      <MarketingHeader />
+    <div className="bg-white flex flex-col min-h-screen w-full">
+      <div className="w-full flex flex-col items-center bg-cherry-soda pb-10">
+        <Navbar />
+      </div>
 
       {/* Content */}
       <div className="flex flex-col items-center w-full">
