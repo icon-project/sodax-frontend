@@ -20,10 +20,7 @@ const SUPPORTED_NETWORKS = [
   'Ethereum',
   'Bitcoin',
   'BNB Chain',
-  'HyperEVM',
   'Arbitrum',
-  'Kaia',
-  'LightLink',
 ];
 
 type NetworkLogosScrollerProps = {

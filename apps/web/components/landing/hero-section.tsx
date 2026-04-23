@@ -5,12 +5,13 @@ import type React from 'react';
 import Image from 'next/image';
 import { Navbar } from '@/components/shared/navbar';
 import { NetworkLogosScroller } from '@/components/shared/network-logos-scroller';
+import { PressBar } from '@/components/shared/press-bar';
 import { LeadMagnetCTA } from './lead-magnet-cta';
 
 const HeroSection = (): React.ReactElement => {
   return (
     <div className="hero-section">
-      <div className="min-h-dvh flex flex-col items-center bg-cherry-soda relative overflow-hidden">
+      <div className="h-dvh lg:h-auto lg:min-h-dvh flex flex-col items-center bg-cherry-soda relative overflow-hidden">
         {/* Background staircase shapes — hidden below lg, fade-masked on both edges, blend into cherry-soda */}
         <div className="absolute hidden lg:block left-[calc(-816px+31.25vw)] top-0 w-[1080px] h-full mix-blend-lighten opacity-60 pointer-events-none mask-[linear-gradient(to_right,transparent,black_360px,black_calc(100%-360px),transparent)]">
           <Image src="/landing/hero-bg-left.png" alt="" fill className="object-cover" />
@@ -55,6 +56,9 @@ const HeroSection = (): React.ReactElement => {
           {/* Network logos scroller */}
           <NetworkLogosScroller />
         </div>
+
+        {/* Press bar pinned to bottom of hero */}
+        <PressBar />
       </div>
     </div>
   );
