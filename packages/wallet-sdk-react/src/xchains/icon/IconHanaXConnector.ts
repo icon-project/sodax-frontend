@@ -5,8 +5,8 @@ import { XConnector } from '@/core/XConnector.js';
 import { assert, hasBooleanProperty, isRecord } from '@/shared/guards.js';
 import { WALLET_METADATA } from '@/constants.js';
 
-const isHanaWallet = (value: unknown): value is { isAvailable?: boolean } => {
-  return isRecord(value) && (value.isAvailable === undefined || hasBooleanProperty(value, 'isAvailable'));
+const isHanaWallet = (value: unknown): value is { available?: boolean } => {
+  return isRecord(value) && (value.available === undefined || hasBooleanProperty(value, 'available'));
 };
 
 export class IconHanaXConnector extends XConnector {
@@ -17,7 +17,7 @@ export class IconHanaXConnector extends XConnector {
   public override get isInstalled(): boolean {
     if (typeof window === 'undefined') return false;
     const hanaWallet = (window as unknown as Record<string, unknown>).hanaWallet;
-    return isHanaWallet(hanaWallet) && hanaWallet.isAvailable === true;
+    return isHanaWallet(hanaWallet) && hanaWallet.available === true;
   }
 
   public override get installUrl(): string {
@@ -28,7 +28,7 @@ export class IconHanaXConnector extends XConnector {
     const hanaWallet = (window as unknown as Record<string, unknown>).hanaWallet;
     assert(isHanaWallet(hanaWallet) || hanaWallet === undefined, '[IconHanaXConnector] invalid window.hanaWallet type');
 
-    if (!hanaWallet || !hanaWallet.isAvailable) {
+    if (!hanaWallet || !hanaWallet.available) {
       window.open(WALLET_METADATA.hana.installUrl, '_blank');
       return;
     }
