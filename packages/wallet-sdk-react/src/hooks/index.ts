@@ -3,7 +3,7 @@ export { useXAccounts } from './useXAccounts.js';
 export { useXConnect } from './useXConnect.js';
 export { useXConnection } from './useXConnection.js';
 export { useXConnectors } from './useXConnectors.js';
-export { useIsInstalled } from './useIsInstalled.js';
+export { useIsWalletInstalled, type UseIsWalletInstalledOptions } from './useIsWalletInstalled.js';
 export { useChainGroups, type ChainGroup } from './useChainGroups.js';
 export { useConnectedChains, type ConnectedChain, type UseConnectedChainsResult } from './useConnectedChains.js';
 export {
