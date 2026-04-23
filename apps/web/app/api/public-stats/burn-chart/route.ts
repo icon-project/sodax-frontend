@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import type { PublicStatsBurnChartPoint, PublicStatsBurnChartResponse } from '@/lib/public-stats-types';
 
 const BD_API_BASE_URL = process.env.BD_API_BASE_URL ?? 'https://bd-api.sodax.com';
-const BD_PUBLIC_STATS_API_KEY = process.env.BD_PUBLIC_STATS_API_KEY;
+const BD_PUBLIC_STATS_API_KEY = process.env.PUBLIC_STATS_API_KEY;
 
 const UPSTREAM_TIMEOUT_MS = 8000;
 const EDGE_CACHE_SECONDS = 60;

@@ -5,46 +5,30 @@ import type { ReactElement, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface HoldersStatsTileProps {
-  eyebrow: string;
-  headline: ReactNode;
-  headlineAriaLabel?: string;
-  subtitle?: ReactNode;
-  footer?: ReactNode;
+  primary: ReactNode;
+  primaryAriaLabel?: string;
+  label: ReactNode;
   className?: string;
 }
 
-const CONTAINER_CLASS =
-  'w-full bg-almost-white mt-4 flex flex-col items-center justify-center text-center px-6 py-10 md:py-12';
+const CONTAINER_CLASS = 'flex flex-col items-center text-center gap-3 px-6 py-4';
+const PRIMARY_CLASS =
+  "font-['InterBlack'] text-cherry-dark leading-[1] text-[56px] sm:text-[64px] md:text-[72px] tracking-tight";
+const LABEL_CLASS =
+  "font-['InterRegular'] text-espresso text-(length:--body-super-comfortable) leading-[1.3] max-w-[22ch]";
 
 export default function HoldersStatsTile({
-  eyebrow,
-  headline,
-  headlineAriaLabel,
-  subtitle,
-  footer,
+  primary,
+  primaryAriaLabel,
+  label,
   className,
 }: HoldersStatsTileProps): ReactElement {
   return (
     <div className={cn(CONTAINER_CLASS, className)}>
-      <div className="font-[InterRegular] text-cherry-soda text-(length:--body-comfortable) uppercase tracking-wider">
-        {eyebrow}
+      <div className={PRIMARY_CLASS} aria-label={primaryAriaLabel}>
+        {primary}
       </div>
-      <div
-        className="font-[InterBold] text-black text-(length:--app-title) leading-[1.1] mt-3"
-        aria-label={headlineAriaLabel}
-      >
-        {headline}
-      </div>
-      {subtitle && (
-        <div className="font-[InterRegular] text-espresso text-(length:--body-super-comfortable) leading-[1.4] mt-3 max-w-md">
-          {subtitle}
-        </div>
-      )}
-      {footer && (
-        <div className="font-[InterRegular] text-cherry-bright text-(length:--body-comfortable) leading-[1.4] mt-4">
-          {footer}
-        </div>
-      )}
+      <div className={LABEL_CLASS}>{label}</div>
     </div>
   );
 }
