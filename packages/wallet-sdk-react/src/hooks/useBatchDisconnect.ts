@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import type { ChainType } from '@sodax/types';
-import { useXWalletStore } from '../useXWalletStore.js';
+import { useXWalletStore } from '@/useXWalletStore.js';
 import { useXDisconnect } from './useXDisconnect.js';
 
 export type BatchDisconnectResult = {

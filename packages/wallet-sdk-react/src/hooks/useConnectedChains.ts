@@ -1,8 +1,8 @@
 import { useMemo, useSyncExternalStore } from 'react';
 import type { ChainType } from '@sodax/types';
-import type { XAccount, XConnection } from '../types/index.js';
-import type { XConnector } from '../core/index.js';
-import { useXWalletStore } from '../useXWalletStore.js';
+import type { XAccount, XConnection } from '@/types/index.js';
+import type { XConnector } from '@/core/index.js';
+import { useXWalletStore } from '@/useXWalletStore.js';
 
 export type ConnectedChain = {
   chainType: ChainType;

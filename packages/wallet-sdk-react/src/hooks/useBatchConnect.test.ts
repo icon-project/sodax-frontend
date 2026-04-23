@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { ChainType } from '@sodax/types';
 import { resolveBatchTargets, runBatchConnect } from './useBatchConnect.js';
-import type { XConnector } from '../core/XConnector.js';
+import type { XConnector } from '@/core/XConnector.js';
 
 function fakeConnector(id: string, name: string, xChainType: ChainType): XConnector {
   return {

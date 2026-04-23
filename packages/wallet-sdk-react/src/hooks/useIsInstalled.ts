@@ -1,5 +1,5 @@
-import type { IXConnector } from '../types/interfaces.js';
-import { useXWalletStore } from '../useXWalletStore.js';
+import type { IXConnector } from '@/types/interfaces.js';
+import { useXWalletStore } from '@/useXWalletStore.js';
 
 /**
  * Returns true if any connector across all enabled chains matches the predicate

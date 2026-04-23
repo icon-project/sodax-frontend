@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import type { ChainType } from '@sodax/types';
-import type { XAccount } from '../types/index.js';
-import type { XConnector } from '../core/XConnector.js';
+import type { XAccount } from '@/types/index.js';
+import type { XConnector } from '@/core/XConnector.js';
 import { useXConnect } from './useXConnect.js';
 import { useXDisconnect } from './useXDisconnect.js';
 

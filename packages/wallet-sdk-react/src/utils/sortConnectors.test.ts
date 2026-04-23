@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { sortConnectors } from './sortConnectors.js';
-import type { IXConnector } from '../types/interfaces.js';
+import type { IXConnector } from '@/types/interfaces.js';
 
 function connector(overrides: Partial<IXConnector> & { id: string }): IXConnector {
   return {

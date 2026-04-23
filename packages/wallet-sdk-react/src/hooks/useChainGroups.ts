@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { baseChainInfo, type ChainId, type ChainType } from '@sodax/types';
-import type { XAccount, XConnection } from '../types/index.js';
-import { useXWalletStore } from '../useXWalletStore.js';
-import { chainRegistry, type ChainServiceFactory } from '../chainRegistry.js';
+import type { XAccount, XConnection } from '@/types/index.js';
+import { useXWalletStore } from '@/useXWalletStore.js';
+import { chainRegistry, type ChainServiceFactory } from '@/chainRegistry.js';
 
 export type ChainGroup = {
   chainType: ChainType;

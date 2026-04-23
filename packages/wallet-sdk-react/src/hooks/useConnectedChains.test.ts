@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { ChainType } from '@sodax/types';
 import { buildConnectedChains } from './useConnectedChains.js';
-import type { XConnector } from '../core/index.js';
+import type { XConnector } from '@/core/index.js';
 
 function fakeConnector(overrides: Partial<XConnector> & { id: string }): XConnector {
   return {

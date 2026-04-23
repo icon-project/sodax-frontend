@@ -1,6 +1,6 @@
 import type { ChainType } from '@sodax/types';
-import type { XConnector } from '../core/index.js';
-import { useXWalletStore } from '../useXWalletStore.js';
+import type { XConnector } from '@/core/index.js';
+import { useXWalletStore } from '@/useXWalletStore.js';
 
 const warnedChains = new Set<ChainType>();
 

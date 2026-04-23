@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { ChainType } from '@sodax/types';
 import { buildChainGroups } from './useChainGroups.js';
-import type { ChainServiceFactory } from '../chainRegistry.js';
+import type { ChainServiceFactory } from '@/chainRegistry.js';
 
 const registry = {
   EVM: { displayName: 'EVM', iconUrl: 'https://example.com/evm.png' },

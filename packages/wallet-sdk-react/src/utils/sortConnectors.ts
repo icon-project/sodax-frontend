@@ -1,4 +1,4 @@
-import type { IXConnector } from '../types/interfaces.js';
+import type { IXConnector } from '@/types/interfaces.js';
 
 export type SortConnectorsOptions = {
   /** Connector IDs to prioritize. Earlier entries win. */
