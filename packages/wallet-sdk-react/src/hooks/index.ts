@@ -22,6 +22,12 @@ export {
   type BatchDisconnectResult,
   type UseBatchDisconnectResult,
 } from './useBatchDisconnect.js';
+export {
+  useWalletModal,
+  type WalletModalState,
+  type UseWalletModalOptions,
+  type UseWalletModalResult,
+} from './useWalletModal.js';
 export { useXDisconnect } from './useXDisconnect.js';
 export { useXService } from './useXService.js';
 export { useXBalances } from './useXBalances.js';
