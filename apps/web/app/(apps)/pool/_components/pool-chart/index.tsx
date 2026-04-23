@@ -1,345 +1,34 @@
-// apps/web/app/(apps)/pool/_components/pool-chart.tsx
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type React from 'react';
 import * as d3 from 'd3';
 import { MinusCircleIcon, PlusCircleIcon, Scan } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-
-type PricePoint = {
-  time: number;
-  price: number;
-};
-
-type TickPoint = {
-  price: number;
-  liquidity: number;
-};
-
-type LiquidityBucket = {
-  tick_lower: number;
-  tick_upper: number;
-  liquidity: string;
-  is_current: boolean;
-};
-
-type LiquidityApiResponse = {
-  buckets?: unknown;
-};
-
-type OhlcInterval = '1h' | '1d';
-
-type OhlcApiPoint = {
-  bucket: string;
-  close_sqrt: string;
-};
-
-function normalizeExternalPrice(value: number | null | undefined): number | null {
-  if (value === null || value === undefined || !Number.isFinite(value) || value <= 0) {
-    return null;
-  }
-  return roundPrice(value);
-}
-
-function getPriceDecimals(value: number): number {
-  const absValue = Math.abs(value);
-  if (absValue >= 1000) {
-    return 2;
-  }
-  if (absValue >= 1) {
-    return 4;
-  }
-  if (absValue >= 0.1) {
-    return 5;
-  }
-  if (absValue >= 0.01) {
-    return 6;
-  }
-  if (absValue >= 0.001) {
-    return 7;
-  }
-  return 8;
-}
-
-function roundPrice(value: number): number {
-  if (!Number.isFinite(value)) {
-    return 0;
-  }
-  return +value.toFixed(getPriceDecimals(value));
-}
-
-function formatPairPrice(value: number): string {
-  const decimals = Math.abs(value) >= 1 ? 2 : getPriceDecimals(value);
-  return d3.format(`,.${decimals}f`)(value);
-}
-
-const DEFAULT_CURRENT_PRICE = 0.78;
-const MOCK_CHART_MIN_PRICE = 0.1;
-const MOCK_CHART_MAX_PRICE = 1.5;
-
-function clampMockPrice(value: number): number {
-  return Math.max(MOCK_CHART_MIN_PRICE, Math.min(MOCK_CHART_MAX_PRICE, value));
-}
-
-function createSeededRandom(seed: number): () => number {
-  let state = seed >>> 0;
-  return (): number => {
-    state = (state * 1664525 + 1013904223) >>> 0;
-    return state / 4294967296;
-  };
-}
-
-function generatePairData(days: number): PricePoint[] {
-  const data: PricePoint[] = [];
-  const now = Date.now();
-  const intervalMs = days <= 1 ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
-  const totalIntervals = Math.max(2, Math.floor((days * 24 * 60 * 60 * 1000) / intervalMs) + 1);
-  const random = createSeededRandom(days * 9973 + 17);
-
-  let price = DEFAULT_CURRENT_PRICE * (0.92 + random() * 0.16);
-  let velocity = 0;
-  let regimeDrift = (random() - 0.5) * 0.02;
-  let regimeSpan = Math.max(8, Math.floor(totalIntervals * (0.08 + random() * 0.12)));
-
-  for (let i = totalIntervals - 1; i >= 0; i--) {
-    const index = totalIntervals - 1 - i;
-    if (index > 0 && index % regimeSpan === 0) {
-      regimeDrift = (random() - 0.5) * 0.03;
-      regimeSpan = Math.max(8, Math.floor(totalIntervals * (0.06 + random() * 0.18)));
-    }
-
-    const shock = random() < 0.04 ? (random() - 0.5) * 0.22 : 0;
-    const noise = (random() - 0.5) * 0.04;
-    const meanReversion = (DEFAULT_CURRENT_PRICE - price) * 0.08;
-    velocity = velocity * 0.6 + regimeDrift + noise + shock + meanReversion;
-
-    price = clampMockPrice(price + velocity);
-    const isLast = i === 0;
-    const nextPrice = isLast ? DEFAULT_CURRENT_PRICE : price;
-    data.push({ time: now - i * intervalMs, price: roundPrice(nextPrice) });
-  }
-
-  return data;
-}
-
-function tickIndexToPrice(tick: number): number | null {
-  if (!Number.isFinite(tick)) {
-    return null;
-  }
-  const price = 1.0001 ** tick;
-  if (!Number.isFinite(price) || price <= 0) {
-    return null;
-  }
-  return roundPrice(price);
-}
-
-function parseLiquidityTickPoints(payload: unknown): TickPoint[] {
-  if (!payload || typeof payload !== 'object') {
-    return [];
-  }
-
-  const data = payload as LiquidityApiResponse;
-  if (!Array.isArray(data.buckets)) {
-    return [];
-  }
-
-  const points = data.buckets
-    .map((item): TickPoint | null => {
-      if (!item || typeof item !== 'object') {
-        return null;
-      }
-      const bucket = item as Partial<LiquidityBucket>;
-      if (
-        typeof bucket.tick_lower !== 'number' ||
-        !Number.isFinite(bucket.tick_lower) ||
-        typeof bucket.tick_upper !== 'number' ||
-        !Number.isFinite(bucket.tick_upper)
-      ) {
-        return null;
-      }
-
-      const centerTick = (bucket.tick_lower + bucket.tick_upper) / 2;
-      const price = tickIndexToPrice(centerTick);
-      if (price === null) {
-        return null;
-      }
-
-      const liquidityValue = Number(bucket.liquidity ?? '0');
-      const liquidity = Number.isFinite(liquidityValue) && liquidityValue >= 0 ? liquidityValue : 0;
-      return { price, liquidity };
-    })
-    .filter((point): point is TickPoint => point !== null)
-    .sort((a, b) => a.price - b.price);
-
-  // Merge identical price rows so the curve remains stable after rounding.
-  const deduped: TickPoint[] = [];
-  for (const point of points) {
-    const last = deduped[deduped.length - 1];
-    if (last && last.price === point.price) {
-      last.liquidity += point.liquidity;
-    } else {
-      deduped.push({ ...point });
-    }
-  }
-  return deduped;
-}
-
-const Q96 = 2n ** 96n;
-const SQRT_PRECISION = 1_000_000_000n;
-
-function sqrtPriceX96ToPrice(value: string): number | null {
-  if (!/^\d+$/.test(value)) {
-    return null;
-  }
-  const sqrtX96 = BigInt(value);
-  if (sqrtX96 <= 0n) {
-    return null;
-  }
-
-  const integerPart = sqrtX96 / Q96;
-  const fractionPart = ((sqrtX96 % Q96) * SQRT_PRECISION) / Q96;
-  const sqrtAsNumber = Number(integerPart) + Number(fractionPart) / Number(SQRT_PRECISION);
-  if (!Number.isFinite(sqrtAsNumber) || sqrtAsNumber <= 0) {
-    return null;
-  }
-
-  const price = sqrtAsNumber * sqrtAsNumber;
-  return Number.isFinite(price) && price > 0 ? roundPrice(price) : null;
-}
-
-function parseOhlcPricePoints(payload: unknown): PricePoint[] {
-  if (!Array.isArray(payload)) {
-    return [];
-  }
-
-  const points = payload
-    .map((item): PricePoint | null => {
-      if (!item || typeof item !== 'object') {
-        return null;
-      }
-      const ohlc = item as Partial<OhlcApiPoint>;
-      const bucketTime = ohlc.bucket ? Date.parse(ohlc.bucket) : Number.NaN;
-      const price = ohlc.close_sqrt ? sqrtPriceX96ToPrice(ohlc.close_sqrt) : null;
-      if (!Number.isFinite(bucketTime) || price === null) {
-        return null;
-      }
-      return { time: bucketTime, price };
-    })
-    .filter((point): point is PricePoint => point !== null)
-    .sort((a, b) => a.time - b.time);
-
-  if (!points.length) {
-    return points;
-  }
-
-  const deduped: PricePoint[] = [];
-  let lastTime: number | null = null;
-  for (const point of points) {
-    if (point.time !== lastTime) {
-      deduped.push(point);
-      lastTime = point.time;
-    } else {
-      deduped[deduped.length - 1] = point;
-    }
-  }
-  return deduped;
-}
-
-function getInitialPriceBand(prices: PricePoint[], fallbackPrice: number): { min: number; max: number } {
-  const validPrices = prices.map(point => point.price).filter(price => Number.isFinite(price) && price > 0);
-  const latestValidPrice = validPrices.length > 0 ? validPrices[validPrices.length - 1] : undefined;
-
-  const basePrice =
-    latestValidPrice !== undefined
-      ? latestValidPrice
-      : Number.isFinite(fallbackPrice) && fallbackPrice > 0
-        ? fallbackPrice
-        : DEFAULT_CURRENT_PRICE;
-
-  const seriesMin = validPrices.length > 0 ? Math.min(...validPrices) : basePrice;
-  const seriesMax = validPrices.length > 0 ? Math.max(...validPrices) : basePrice;
-  const marketSpan = Math.max(seriesMax - seriesMin, 0);
-  const minSpan = Math.max(basePrice * 0.006, 0.000001);
-  const bandSpan = Math.max(marketSpan * 2.5, minSpan);
-
-  const computedMin = Math.max(basePrice - bandSpan / 2, 0.00000001);
-  const computedMax = basePrice + bandSpan / 2;
-  const roundedMin = roundPrice(computedMin);
-  const roundedMax = roundPrice(computedMax);
-
-  if (!Number.isFinite(roundedMin) || !Number.isFinite(roundedMax) || roundedMax <= roundedMin) {
-    const fallbackMin = roundPrice(Math.max(basePrice * 0.997, 0.00000001));
-    const fallbackMax = roundPrice(basePrice * 1.003);
-    return { min: fallbackMin, max: fallbackMax };
-  }
-
-  return { min: roundedMin, max: roundedMax };
-}
+import type { BandDragAnchor, DragTarget, PoolChartProps, PricePoint, TickPoint } from './types';
+import {
+  C,
+  DEFAULT_CURRENT_PRICE,
+  HEIGHT,
+  INTERACTIVE,
+  ML,
+  MOCK_CHART_MAX_PRICE,
+  MOCK_CHART_MIN_PRICE,
+  RANGES,
+  RANGE_DAYS,
+  RANGE_FETCH_CONFIG,
+  SHOW_MIN_MAX_HANDLES,
+  TICK_W,
+  TM,
+} from './constants';
+import { generatePairData, getInitialPriceBand } from './mock-data';
+import { parseLiquidityTickPoints, parseOhlcPricePoints } from './parsers';
+import { formatPairPrice, normalizeExternalPrice, roundPrice } from './price-utils';
 
 const ALL_DATA = generatePairData(730);
 const LATEST_POINT: PricePoint = ALL_DATA[ALL_DATA.length - 1] ?? { time: Date.now(), price: DEFAULT_CURRENT_PRICE };
 const CURRENT_PRICE = LATEST_POINT.price;
 const TICK_DATA: TickPoint[] = [];
-
-const C = {
-  lineInside: '#483534',
-  lineOutside: '#8E7E7D',
-  lineWidthIn: 3,
-  lineWidthOut: 1.5,
-  nowLine: '#B9ACAB',
-  minMaxLine: '#D7CDCB',
-  bandFill: '#EDE6E6',
-  bandOpacityTop: 0.18,
-  bandOpacityBot: 0.1,
-  textDim: '#8E7E7D',
-  tickInStroke: 'transparent',
-  tickOutStroke: 'transparent',
-  tickInFill: '#B9ACAB',
-  tickInOpacityA: 0.55,
-  tickInOpacityB: 0.04,
-  tickOutFill: '#EDE6E6',
-  tickOutOpacityA: 0.55,
-  tickOutOpacityB: 0.04,
-  handleCircle: 'white',
-  handleGrip: '#B9ACAB',
-} as const;
-
-const RANGES = [
-  { label: '1D', ms: 1 * 86400000 },
-  { label: '1W', ms: 7 * 86400000 },
-  { label: '1M', ms: 30 * 86400000 },
-  { label: '1Y', ms: 365 * 86400000 },
-  { label: 'All time', ms: null },
-] as const;
-
-const RANGE_FETCH_CONFIG: Record<
-  (typeof RANGES)[number]['label'],
-  { interval: OhlcInterval; lookbackMs: number; limit: number }
-> = {
-  '1D': { interval: '1h', lookbackMs: 1 * 86400000, limit: 200 },
-  '1W': { interval: '1h', lookbackMs: 7 * 86400000, limit: 300 },
-  '1M': { interval: '1d', lookbackMs: 30 * 86400000, limit: 300 },
-  '1Y': { interval: '1d', lookbackMs: 365 * 86400000, limit: 400 },
-  'All time': { interval: '1d', lookbackMs: 730 * 86400000, limit: 500 },
-};
-
-const HEIGHT = 132;
-const ML = { top: 24, right: 0, bottom: 8, left: 0 };
-const TICK_W = 90;
-const TM = { top: 20, right: 0, bottom: 36, left: 0 };
-
-// When false, disables dragging and zooming of the chart. Min/Max are controlled externally.
-const INTERACTIVE = false as const;
-const SHOW_MIN_MAX_HANDLES = false as const;
-
-type PoolChartProps = {
-  pairPrice?: number | null;
-  poolId?: string | null;
-  minPrice?: number;
-  maxPrice?: number;
-  onMinPriceChange?: (price: number) => void;
-  onMaxPriceChange?: (price: number) => void;
-};
 
 export function PoolChart({
   pairPrice,
@@ -391,20 +80,13 @@ export function PoolChart({
   const [tickData, setTickData] = useState<TickPoint[]>(TICK_DATA);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const draggingRef = useRef<'min' | 'max' | 'band' | null>(null);
-  const dragDataRef = useRef<{
-    anchorY: number;
-    anchorMin: number;
-    anchorMax: number;
-    span: number;
-    pxPerPrice: number;
-  } | null>(null);
+  const draggingRef = useRef<DragTarget | null>(null);
+  const dragDataRef = useRef<BandDragAnchor | null>(null);
 
   const INNER_W = width - ML.left - ML.right;
   const INNER_H = HEIGHT - ML.top - ML.bottom;
   const TICK_IH = HEIGHT - TM.top - TM.bottom;
   const TICK_IW = TICK_W - TM.left - TM.right;
-  const RANGE_DAYS = { '1D': 1, '1W': 7, '1M': 30, '1Y': 365, 'All time': 730 };
 
   useEffect(() => {
     if (externalPairPrice === null) {
@@ -541,7 +223,6 @@ export function PoolChart({
     }
 
     const referencePrices = visibleData.map(point => point.price);
-    referencePrices.push(minPrice, maxPrice);
     const finiteReferences = referencePrices.filter(price => Number.isFinite(price) && price > 0);
 
     const maxDeviation = finiteReferences.reduce(
@@ -556,12 +237,14 @@ export function PoolChart({
       return [defaultMin, defaultMax];
     }
     return [roundPrice(paddedMin), roundPrice(paddedMax)];
-  }, [visibleData, minPrice, maxPrice, currentPrice]);
+  }, [visibleData, currentPrice]);
 
-  const yScale = useMemo(
+  const yScaleBase = useMemo(
     () => d3.scaleLinear().domain([yDomainMin, yDomainMax]).range([INNER_H, 0]),
     [yDomainMin, yDomainMax, INNER_H],
   );
+
+  const yScale = useMemo(() => zoomTransform.rescaleY(yScaleBase), [zoomTransform, yScaleBase]);
 
   const clamp = useCallback((v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v)), []);
   const priceToY = useCallback((p: number) => clamp(yScale(p), 0, INNER_H), [yScale, INNER_H, clamp]);
@@ -993,7 +676,7 @@ export function PoolChart({
       return;
     }
 
-    const getHit = (event: Event): 'min' | 'max' | 'band' | null => {
+    const getHit = (event: Event): DragTarget | null => {
       const target = event.target;
       if (!(target instanceof SVGElement)) {
         return null;
@@ -1027,12 +710,13 @@ export function PoolChart({
       draggingRef.current = hit;
 
       if (hit === 'band') {
+        const [zoomedDomainMin, zoomedDomainMax] = yScale.domain();
         dragDataRef.current = {
           anchorY: getY(event),
           anchorMin: minPrice,
           anchorMax: maxPrice,
           span: maxPrice - minPrice,
-          pxPerPrice: INNER_H / (yDomainMax - yDomainMin),
+          pxPerPrice: INNER_H / (zoomedDomainMax - zoomedDomainMin),
         };
       }
     };
@@ -1085,7 +769,7 @@ export function PoolChart({
       svgEl.removeEventListener('touchmove', onMove, { capture: true });
       svgEl.removeEventListener('touchend', onUp, { capture: true });
     };
-  }, [yScale, minPrice, maxPrice, currentPrice, INNER_H, yDomainMin, yDomainMax, setMinPrice, setMaxPrice]);
+  }, [yScale, minPrice, maxPrice, currentPrice, INNER_H, setMinPrice, setMaxPrice]);
 
   const doZoom = useCallback((factor: number) => {
     if (INTERACTIVE && zoomBehRef.current && zoomObjRef.current) {
@@ -1122,6 +806,7 @@ export function PoolChart({
           display: block;
           width: 100%;
           overflow: visible;
+          touch-action: none;
         }
         .lri-tick-panel {
           position: absolute;
