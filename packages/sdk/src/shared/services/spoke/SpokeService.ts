@@ -59,7 +59,7 @@ import {
   type SpokeIsAllowanceValidParams,
   type SpokeApproveParams,
   Erc20Service,
-  isValidWalletProviderForChainKey,
+  isValidWalletProviderTypeForChainKey,
   isSpokeApproveParamsHub,
   type Erc20ApproveParams,
   isSpokeApproveParamsEvmSpoke,
@@ -206,7 +206,7 @@ export class SpokeService {
   ): Promise<Result<TxReturnType<K, Raw>>> {
     try {
       invariant(
-        isValidWalletProviderForChainKey(params.srcChainKey, params.walletProvider),
+        isValidWalletProviderTypeForChainKey(params.srcChainKey, params.walletProvider),
         `Invalid wallet provider for chain key: ${params.srcChainKey}, walletProvider.chainType: ${params.walletProvider?.chainType}`,
       );
 

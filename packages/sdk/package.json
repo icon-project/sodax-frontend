@@ -42,6 +42,7 @@
     "pretty": "biome format . --write",
     "lint": "biome lint . --write",
     "check-exports": "attw $(pnpm pack) --ignore-rules=cjs-resolves-to-esm",
+    "check:circular-deps": "madge --circular --exclude 'types/dist' $(find ./src -name '*.ts')",
     "prepublishOnly": "pnpm run ci",
     "local-release": "changeset version && changeset publish",
     "clean": "rm -rf node_modules && rm -rf dist && rm -rf .turbo"
@@ -81,6 +82,7 @@
     "@types/bn.js": "^5.1.6",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "madge": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

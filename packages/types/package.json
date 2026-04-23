@@ -37,10 +37,12 @@
     "pretty": "biome format . --write",
     "lint": "biome lint . --write",
     "check-exports": "attw $(pnpm pack) --ignore-rules=cjs-resolves-to-esm",
+    "check:circular-deps": "madge --circular $(find ./src -name '*.ts')",
     "clean": "rm -rf node_modules && rm -rf dist && rm -rf .turbo"
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "madge": "catalog:",
     "typescript": "catalog:"
   },
   "keywords": [],

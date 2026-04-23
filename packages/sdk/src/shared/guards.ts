@@ -440,7 +440,7 @@ export function isOptionalStellarWalletProviderType(
   return walletProvider === undefined || isStellarWalletProviderType(walletProvider);
 }
 
-export function isValidWalletProviderForChainKey<K extends SpokeChainKey>(
+export function isValidWalletProviderTypeForChainKey<K extends SpokeChainKey>(
   chainKey: K,
   walletProvider: IWalletProvider | undefined,
 ): walletProvider is GetWalletProviderType<K> {

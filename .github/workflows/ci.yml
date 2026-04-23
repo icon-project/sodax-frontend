@@ -41,6 +41,10 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Check Circular Dependencies
+        run: pnpm check:circular-deps
+        continue-on-error: true
+
       - name: Build Packages
         run: pnpm build:packages
       - name: CJS Compatibility Check

@@ -31,7 +31,7 @@ import {
   type SpokeIsAllowanceValidParamsStellar,
   isEvmSpokeOnlyChainKeyType,
   isStellarChainKeyType,
-  isValidWalletProviderForChainKey,
+  isValidWalletProviderTypeForChainKey,
   relayTxAndWaitPacket,
   isSolanaChainKeyType,
   isOptionalEvmWalletProviderType,
@@ -830,7 +830,7 @@ export class SwapService {
     const { params, skipSimulation } = _params;
 
     invariant(
-      isValidWalletProviderForChainKey(params.srcChain, _params.walletProvider),
+      isValidWalletProviderTypeForChainKey(params.srcChain, _params.walletProvider),
       `Invalid wallet provider for chain key: ${params.srcChain}`,
     );
     invariant(
