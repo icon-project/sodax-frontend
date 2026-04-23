@@ -15,12 +15,11 @@ export interface IXService {
 }
 
 /**
- * Public interface for wallet connector implementations with enriched metadata
- * for modal UIs (spec §F of issue #1123).
+ * Public interface for wallet connector implementations.
  *
- * `isInstalled` reflects live install state when read via `useXConnectors()` —
- * the hook re-renders on focus / visibilitychange / EIP-6963 events so consumers
- * always see current state without polling.
+ * `isInstalled` reads `window.*` at getter-call time (render time); no extra
+ * subscription is installed. Components get fresh values through normal React
+ * render triggers (store updates, parent rerenders).
  */
 export interface IXConnector {
   readonly xChainType: ChainType;
