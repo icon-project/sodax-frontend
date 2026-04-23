@@ -393,26 +393,12 @@ export type BridgeLimit = {
 
 export type SpokeChainConfigMap = Record<SpokeChainKey, SpokeChainConfig>;
 
-export type WalletProviderSlot<K extends SpokeChainKey | ChainType, Raw extends boolean> = Raw extends false
-  ? {
-      raw: Raw;
-      walletProvider: GetWalletProviderType<K>;
-    }
-  : Raw extends true
-    ? {
-        raw: Raw;
-        walletProvider?: never;
-      }
-    : never;
+export type WalletProviderSlot<K extends SpokeChainKey | ChainType, Raw extends boolean> = Raw extends true
+  ? { raw: true; walletProvider?: never }
+  : { raw: false; walletProvider: GetWalletProviderType<K> };
 
-export type WalletProviderSlotOptional<K extends SpokeChainKey | ChainType, Raw extends boolean> = Raw extends false
-  ? {
-      raw?: Raw;
-      walletProvider: GetWalletProviderType<K>;
-    }
-  : Raw extends true
-    ? {
-        raw: Raw;
-        walletProvider?: never;
-      }
-    : never;
+// export type RawOf<T extends { raw?: boolean }> = [T['raw']] extends [true] ? true : false;
+export type ExecuteAction<A> = Extract<A, { raw?: false }>;
+export type RawAction<A> = Extract<A, { raw: true }>;
+
+export type GetActionChainType<T extends { srcChainKey: SpokeChainKey }> = GetChainType<T['srcChainKey']>;

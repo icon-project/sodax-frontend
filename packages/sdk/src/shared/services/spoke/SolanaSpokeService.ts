@@ -222,9 +222,9 @@ export class SolanaSpokeService {
    * @param raw - Whether to return the raw transaction data.
    * @returns The transaction result.
    */
-  public async sendMessage<R extends boolean = false>(
-    params: SendMessageParams<SolanaChainKey, R>,
-  ): Promise<TxReturnType<SolanaChainKey, R>> {
+  public async sendMessage<Raw extends boolean>(
+    params: SendMessageParams<SolanaChainKey, Raw>,
+  ): Promise<TxReturnType<SolanaChainKey, Raw>> {
     const dstChainId = getIntentRelayChainId(params.dstChainKey);
     const payload = keccak256(params.payload);
     const chainConfig = spokeChainConfig[params.srcChainKey];
@@ -268,11 +268,11 @@ export class SolanaSpokeService {
         to: connectionProgram.programId.toBase58(),
         value: 0n,
         data: Buffer.from(serializedTransaction).toString('base64'),
-      } satisfies TxReturnType<SolanaChainKey, true> as TxReturnType<SolanaChainKey, R>;
+      } satisfies TxReturnType<SolanaChainKey, true> as TxReturnType<SolanaChainKey, Raw>;
     }
     return params.walletProvider.sendTransaction(serializedTransaction) satisfies Promise<
       TxReturnType<SolanaChainKey, false>
-    > as Promise<TxReturnType<SolanaChainKey, R>>;
+    > as Promise<TxReturnType<SolanaChainKey, Raw>>;
   }
 
   // NOTE: this is method returns unsigned transaction data

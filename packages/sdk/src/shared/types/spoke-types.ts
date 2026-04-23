@@ -21,8 +21,9 @@ import type {
   EvmSpokeOnlyChainKey,
   StellarChainKey,
   EvmChainKey,
+  WalletProviderSlot,
 } from '@sodax/types';
-import type { OptionalSkipSimulation, WalletProviderSlot } from './types.js';
+import type { OptionalSkipSimulation } from './types.js';
 
 /*
  * Deposit parameters type for depositing tokens into spoke chain asset manager.
@@ -61,14 +62,14 @@ export type DepositSimulationParams = {
   srcAddress: Hex;
 };
 
-export type SendMessageParams<ChainKey extends SpokeChainKey = SpokeChainKey, Raw extends boolean = boolean> = {
-  srcChainKey: ChainKey; // The chain key of the spoke (origin) chain
-  srcAddress: GetAddressType<ChainKey>; // The address of the user on the spoke (origin) chain
+export type SendMessageParams<K extends SpokeChainKey, Raw extends boolean> = {
+  srcChainKey: K; // The chain key of the spoke (origin) chain
+  srcAddress: GetAddressType<K>; // The address of the user on the spoke (origin) chain
   dstChainKey: HubChainKey; // hub chain key to which the message is sent
   dstAddress: HubAddress; // The wallet abstraction address on the hub chain.
   payload: Hex; // encoded contract call data
 } & OptionalSkipSimulation &
-  WalletProviderSlot<ChainKey, Raw>;
+  WalletProviderSlot<K, Raw>;
 
 export type WalletSimulationParams = {
   target: Address;
@@ -77,10 +78,7 @@ export type WalletSimulationParams = {
   payload: Hex;
 };
 
-export type VerifySimulationParams<
-  ChainKey extends SpokeChainKey = SpokeChainKey,
-  Raw extends boolean = boolean,
-> = SendMessageParams<ChainKey, Raw>;
+export type VerifySimulationParams<ChainKey extends SpokeChainKey, Raw extends boolean> = SendMessageParams<ChainKey, Raw>;
 
 export type GetTxReceiptType<C extends SpokeChainKey | ChainType> = GetChainType<C> extends 'EVM'
   ? EvmRawTransactionReceipt
@@ -177,34 +175,24 @@ export type SpokeIsAllowanceValidParams<K extends SpokeChainKey = SpokeChainKey>
           ? SpokeIsAllowanceValidParamsOther<K>
           : never;
 
-export type ApproveChainKeys = HubChainKey | EvmSpokeOnlyChainKey | StellarChainKey;
-
 type SpokeApproveParamsCommon<K extends SpokeChainKey, Raw extends boolean> = {
   token: GetTokenAddressType<K>;
   amount: bigint;
   owner: GetAddressType<K>;
 } & WalletProviderSlot<K, Raw>;
 
-export type SpokeApproveParamsHub<
-  Raw extends boolean = boolean,
-  K extends HubChainKey = HubChainKey,
-> = SpokeApproveParamsCommon<K, Raw> & {
+export type SpokeApproveParamsHub<K extends HubChainKey, Raw extends boolean> = SpokeApproveParamsCommon<K, Raw> & {
   srcChainKey: K;
   spender: Address;
 };
 
-export type SpokeApproveParamsEvmSpoke<
-  Raw extends boolean = boolean,
-  K extends EvmSpokeOnlyChainKey = EvmSpokeOnlyChainKey,
-> = SpokeApproveParamsCommon<K, Raw> & {
-  srcChainKey: K;
-  spender: Address;
-};
+export type SpokeApproveParamsEvmSpoke<K extends EvmSpokeOnlyChainKey, Raw extends boolean> =
+  SpokeApproveParamsCommon<K, Raw> & {
+    srcChainKey: K;
+    spender: Address;
+  };
 
-export type SpokeApproveParamsStellar<
-  Raw extends boolean = boolean,
-  K extends StellarChainKey = StellarChainKey,
-> = SpokeApproveParamsCommon<K, Raw> & {
+export type SpokeApproveParamsStellar<K extends StellarChainKey, Raw extends boolean> = SpokeApproveParamsCommon<K, Raw> & {
   srcChainKey: K;
 };
 
@@ -212,13 +200,10 @@ export type SpokeApproveParamsStellar<
  * Plain union of approve-capable variants. Callers who want narrow-`K` typing should instantiate
  * the specific variant (e.g. `SpokeApproveParamsHub<R>`) directly.
  */
-export type SpokeApproveParams<
-  K extends ApproveChainKeys = ApproveChainKeys,
-  Raw extends boolean = boolean,
-> = K extends HubChainKey
-  ? SpokeApproveParamsHub<Raw, K>
+export type SpokeApproveParams<K extends SpokeChainKey, Raw extends boolean> = K extends HubChainKey
+  ? SpokeApproveParamsHub<K, Raw>
   : K extends EvmSpokeOnlyChainKey
-    ? SpokeApproveParamsEvmSpoke<Raw, K>
+    ? SpokeApproveParamsEvmSpoke<K, Raw>
     : K extends StellarChainKey
-      ? SpokeApproveParamsStellar<Raw, K>
+      ? SpokeApproveParamsStellar<K, Raw>
       : never;

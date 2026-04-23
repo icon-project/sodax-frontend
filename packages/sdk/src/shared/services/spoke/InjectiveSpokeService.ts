@@ -252,9 +252,9 @@ export class InjectiveSpokeService {
    *   - {boolean} raw: The return type raw or just transaction hash.
    * @returns {Promise<TxReturnType<InjectiveChainKey, R>>} A promise that resolves to the transaction hash.
    */
-  async sendMessage<R extends boolean = false>(
-    params: SendMessageParams<InjectiveChainKey, R>,
-  ): Promise<TxReturnType<InjectiveChainKey, R>> {
+  async sendMessage<Raw extends boolean>(
+    params: SendMessageParams<InjectiveChainKey, Raw>,
+  ): Promise<TxReturnType<InjectiveChainKey, Raw>> {
     const { srcAddress: from, srcChainKey: fromChainId, dstChainKey: dstChainId, dstAddress, payload } = params;
     const relayId = getIntentRelayChainId(dstChainId);
 
@@ -272,11 +272,11 @@ export class InjectiveSpokeService {
         from,
         spokeChainConfig[fromChainId].addresses.connection,
         msg,
-      )) satisfies TxReturnType<InjectiveChainKey, true> as TxReturnType<InjectiveChainKey, R>;
+      )) satisfies TxReturnType<InjectiveChainKey, true> as TxReturnType<InjectiveChainKey, Raw>;
     }
 
     const res = await params.walletProvider.execute(from, spokeChainConfig[fromChainId].addresses.connection, msg);
-    return res.transactionHash satisfies TxReturnType<InjectiveChainKey, false> as TxReturnType<InjectiveChainKey, R>;
+    return res.transactionHash satisfies TxReturnType<InjectiveChainKey, false> as TxReturnType<InjectiveChainKey, Raw>;
   }
 
   async receiveMessage(

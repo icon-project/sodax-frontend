@@ -26,6 +26,8 @@ import type {
   IWalletProvider,
   IBitcoinWalletProvider,
   GetWalletProviderType,
+  IEvmWalletProvider,
+  IStellarWalletProvider,
 } from '@sodax/types';
 import type { IntentError } from '../swap/SwapService.js';
 import type { MoneyMarketError, MoneyMarketUnknownError } from '../moneyMarket/MoneyMarketService.js';
@@ -57,9 +59,6 @@ import {
 import type { RawDestinationParams } from './types/types.js';
 import type {
   SpokeApproveParams,
-  SpokeApproveParamsEvmSpoke,
-  SpokeApproveParamsHub,
-  SpokeApproveParamsStellar,
   SpokeIsAllowanceValidParams,
   SpokeIsAllowanceValidParamsEvmSpoke,
   SpokeIsAllowanceValidParamsHub,
@@ -183,17 +182,31 @@ export function isSpokeIsAllowanceValidParamsStellar(
   return isStellarChainKeyType(params.srcChainKey);
 }
 
-export function isSpokeApproveParamsHub(params: SpokeApproveParams): params is SpokeApproveParamsHub {
+export function isSpokeApproveParamsHub<K extends SpokeChainKey, Raw extends boolean>(
+  params: SpokeApproveParams<K, Raw>,
+): params is Extract<SpokeApproveParams<K, Raw>, { srcChainKey: HubChainKey }> {
   return isHubChainKeyType(params.srcChainKey);
 }
 
-export function isSpokeApproveParamsEvmSpoke(params: SpokeApproveParams): params is SpokeApproveParamsEvmSpoke {
+export function isSpokeApproveParamsEvmSpoke<K extends SpokeChainKey, Raw extends boolean>(
+  params: SpokeApproveParams<K, Raw>,
+): params is Extract<SpokeApproveParams<K, Raw>, { srcChainKey: EvmSpokeOnlyChainKey }> {
   return isEvmSpokeOnlyChainKeyType(params.srcChainKey);
 }
 
-export function isSpokeApproveParamsStellar(params: SpokeApproveParams): params is SpokeApproveParamsStellar {
+export function isSpokeApproveParamsStellar<K extends SpokeChainKey, Raw extends boolean>(
+  params: SpokeApproveParams<K, Raw>,
+): params is Extract<SpokeApproveParams<K, Raw>, { srcChainKey: StellarChainKey }> {
   return isStellarChainKeyType(params.srcChainKey);
 }
+
+// export function isSpokeApproveParamsEvmSpoke(params: SpokeApproveParams<K, Raw>, K extends SpokeChainKey, Raw extends boolean): params is SpokeApproveParamsEvmSpoke<K, Raw> {
+//   return isEvmSpokeOnlyChainKeyType(params.srcChainKey);
+// }
+
+// export function isSpokeApproveParamsStellar(params: SpokeApproveParams<K, Raw>, K extends SpokeChainKey, Raw extends boolean): params is SpokeApproveParamsStellar<K, Raw> {
+//   return isStellarChainKeyType(params.srcChainKey);
+// }
 export function isConfiguredSolverConfig(
   value: SolverConfigParams,
 ): value is Prettify<SolverConfig & Optional<PartnerFeeConfig, 'partnerFee'>> {
@@ -403,8 +416,28 @@ export function isSubmitSwapTxStatusResponse(value: unknown): value is SubmitSwa
 // Concrete-typed discriminant guards refine `IWalletProvider` to its specific variant via the
 // `chainType` discriminator. Prefer these inside generic method bodies where
 // `isValidWalletProviderForChainKey<K>` can't refine past `GetWalletProviderType<K>`.
-export function isBitcoinWalletProvider(wp: IWalletProvider): wp is IBitcoinWalletProvider {
+export function isBitcoinWalletProviderType(wp: IWalletProvider): wp is IBitcoinWalletProvider {
   return wp.chainType === 'BITCOIN';
+}
+
+export function isEvmWalletProviderType(walletProvider: IWalletProvider): walletProvider is IEvmWalletProvider {
+  return walletProvider.chainType === 'EVM';
+}
+
+export function isStellarWalletProviderType(walletProvider: IWalletProvider): walletProvider is IStellarWalletProvider {
+  return walletProvider.chainType === 'STELLAR';
+}
+
+export function isOptionalEvmWalletProviderType(
+  walletProvider: IWalletProvider | undefined,
+): walletProvider is IEvmWalletProvider | undefined {
+  return walletProvider === undefined || isEvmWalletProviderType(walletProvider);
+}
+
+export function isOptionalStellarWalletProviderType(
+  walletProvider: IWalletProvider | undefined,
+): walletProvider is IStellarWalletProvider | undefined {
+  return walletProvider === undefined || isStellarWalletProviderType(walletProvider);
 }
 
 export function isValidWalletProviderForChainKey<K extends SpokeChainKey>(
@@ -412,6 +445,12 @@ export function isValidWalletProviderForChainKey<K extends SpokeChainKey>(
   walletProvider: IWalletProvider | undefined,
 ): walletProvider is GetWalletProviderType<K> {
   return walletProvider === undefined || getChainType(chainKey) === walletProvider.chainType;
+}
+
+export function isOptionalBitcoinWalletProviderType(
+  walletProvider: IWalletProvider | undefined,
+): walletProvider is IBitcoinWalletProvider | undefined {
+  return walletProvider === undefined || isBitcoinWalletProviderType(walletProvider);
 }
 
 // TODO re-check all guards after core types and ask check to ensure correct property checks after refactoring

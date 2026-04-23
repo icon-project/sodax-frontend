@@ -6,7 +6,7 @@ import {
   type EvmReturnType,
   type Result,
   type TxReturnType,
-  type GetWalletProviderType,
+  type WalletProviderSlot,
 } from '@sodax/types';
 
 export type Erc20ApproveParams<Raw extends boolean> = {
@@ -14,8 +14,7 @@ export type Erc20ApproveParams<Raw extends boolean> = {
   amount: bigint;
   from: Address;
   spender: Address;
-  walletProvider: GetWalletProviderType<EvmChainKey> | undefined;
-};
+} & WalletProviderSlot<EvmChainKey, Raw>;
 
 export type Erc20IsAllowanceParams<ChainKey extends EvmChainKey> = {
   token: Address;
@@ -109,7 +108,9 @@ export class Erc20Service {
    * @param spender - Spender address
    * @param provider - EVM Provider
    */
-  static async approve<Raw extends boolean>(params: Erc20ApproveParams<Raw>): Promise<TxReturnType<EvmChainKey, Raw>> {
+  static async approve<Raw extends boolean>(
+    params: Erc20ApproveParams<Raw>,
+  ): Promise<TxReturnType<EvmChainKey, Raw>> {
     const rawTx = {
       from: params.from,
       to: params.token,
@@ -121,7 +122,7 @@ export class Erc20Service {
       }),
     } satisfies EvmReturnType<true>;
 
-    if (!params.walletProvider) {
+    if (params.raw) {
       return rawTx satisfies TxReturnType<EvmChainKey, true> as TxReturnType<EvmChainKey, Raw>;
     }
 

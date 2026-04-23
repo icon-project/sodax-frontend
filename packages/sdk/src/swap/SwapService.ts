@@ -14,18 +14,15 @@ import {
   type EstimateGasParams,
   type ConfigService,
   type HubProvider,
-  type DepositParams,
   type GetRelayResponse,
   type IntentDeliveryInfo,
   type IntentRelayRequest,
   type PacketData,
   type RelayErrorCode,
-  type SubmitTxExtraData,
   type WaitUntilIntentExecutedPayload,
   isBitcoinChainKeyType,
   HubService,
   isHubChainKeyType,
-  type CreateSonicSwapIntentParams,
   reverseEncodeAddress,
   type SendMessageParams,
   type SpokeIsAllowanceValidParams,
@@ -34,12 +31,13 @@ import {
   type SpokeIsAllowanceValidParamsStellar,
   isEvmSpokeOnlyChainKeyType,
   isStellarChainKeyType,
-  type WalletProviderSlot,
-  isBitcoinWalletProvider,
   isValidWalletProviderForChainKey,
   relayTxAndWaitPacket,
   isSolanaChainKeyType,
-  type SpokeApproveParams,
+  isOptionalEvmWalletProviderType,
+  isOptionalStellarWalletProviderType,
+  isBitcoinWalletProviderType,
+  type RelayExtraData,
 } from '../index.js';
 import {
   type SpokeChainKey,
@@ -65,7 +63,6 @@ import {
   type GetEstimateGasReturnType,
   type SolverConfig,
   type XToken,
-  type IEvmWalletProvider,
   HUB_CHAIN_KEY,
   isHubChainKey,
   DEFAULT_RELAY_TX_TIMEOUT,
@@ -76,6 +73,8 @@ import {
   type EvmSpokeOnlyChainKey,
   type StellarChainKey,
   spokeChainConfig,
+  type WalletProviderSlot,
+  type SonicChainKey,
 } from '@sodax/types';
 
 // `srcChain: K` is the generic anchor. When the caller supplies a literal (e.g. `'ethereum'`)
@@ -214,34 +213,18 @@ export type GetIntentSubmitTxExtraDataParams = { txHash: Hash } | { intent: Inte
 // Exec-mode params: walletProvider is required and K-narrowed. Consumed by `createIntent`,
 // `createLimitOrder`, `createLimitOrderIntent`, `approve` — methods that send a transaction
 // and return an executed tx hash.
-export type SwapActionParams<K extends SpokeChainKey> = {
-  params: CreateIntentParams<K>;
-  walletProvider: GetWalletProviderType<K>;
-  skipSimulation?: boolean;
-  timeout?: number;
-  fee?: PartnerFee;
-};
-
-// Raw-mode params: no walletProvider, caller signs/broadcasts the returned raw tx themselves.
-// Consumed by the `*Raw` twin of each action method.
-export type SwapActionParamsRaw<K extends SpokeChainKey> = {
+export type SwapActionParams<K extends SpokeChainKey, Raw extends boolean> = {
   params: CreateIntentParams<K>;
   skipSimulation?: boolean;
   timeout?: number;
   fee?: PartnerFee;
-};
+} & WalletProviderSlot<K, Raw>;
 
-export type LimitOrderActionParams<K extends SpokeChainKey> = Omit<SwapActionParams<K>, 'params'> & {
+export type LimitOrderActionParams<K extends SpokeChainKey, Raw extends boolean> = Omit<
+  SwapActionParams<K, Raw>,
+  'params'
+> & {
   params: CreateLimitOrderParams<K>;
-};
-
-export type LimitOrderActionParamsRaw<K extends SpokeChainKey> = Omit<SwapActionParamsRaw<K>, 'params'> & {
-  params: CreateLimitOrderParams<K>;
-};
-
-export type SwapAllowanceParams<K extends SpokeChainKey> = {
-  params: CreateIntentParams<K> | CreateLimitOrderParams<K>;
-  walletProvider: GetWalletProviderType<K>;
 };
 
 /**
@@ -250,18 +233,17 @@ export type SwapAllowanceParams<K extends SpokeChainKey> = {
  * narrow to a specific ChainKey, the user passes `srcChainKey: K` explicitly. At runtime we
  * assert that `getIntentRelayChainId(srcChainKey) === intent.srcChain` and throw if not.
  */
-export type CancelIntentParams<K extends SpokeChainKey, R extends boolean> = {
+export type CancelIntentParams<K extends SpokeChainKey, Raw extends boolean> = {
   srcChainKey: K;
   intent: Intent;
-  raw?: R;
   skipSimulation?: boolean;
   fee?: PartnerFee;
   timeout?: number;
-} & WalletProviderSlot<K, R>;
+} & WalletProviderSlot<K, Raw>;
 
 export type SwapServiceConstructorParams = {
-  configService: ConfigService;
-  spokeService: SpokeService;
+  config: ConfigService;
+  spoke: SpokeService;
   hubProvider: HubProvider;
 };
 
@@ -273,20 +255,20 @@ export class SwapService {
   // dependent services
   readonly hubProvider: HubProvider;
   readonly config: ConfigService;
-  readonly spokeService: SpokeService;
+  readonly spoke: SpokeService;
 
   // swap config
   readonly solver: SolverConfig;
   readonly partnerFee: PartnerFee | undefined;
   readonly relayerApiEndpoint: HttpUrl;
 
-  public constructor({ configService, hubProvider, spokeService }: SwapServiceConstructorParams) {
-    this.solver = configService.solver;
-    this.partnerFee = configService.swaps.partnerFee;
-    this.relayerApiEndpoint = configService.relay.relayerApiEndpoint;
-    this.config = configService;
+  public constructor({ config, hubProvider, spoke }: SwapServiceConstructorParams) {
+    this.solver = config.solver;
+    this.partnerFee = config.swaps.partnerFee;
+    this.relayerApiEndpoint = config.relay.relayerApiEndpoint;
+    this.config = config;
     this.hubProvider = hubProvider;
-    this.spokeService = spokeService;
+    this.spoke = spoke;
   }
 
   /**
@@ -298,7 +280,7 @@ export class SwapService {
   public async estimateGas<C extends SpokeChainKey>(
     params: EstimateGasParams<C>,
   ): Promise<GetEstimateGasReturnType<C>> {
-    return this.spokeService.estimateGas(params) as Promise<GetEstimateGasReturnType<C>>;
+    return this.spoke.estimateGas(params) as Promise<GetEstimateGasReturnType<C>>;
   }
 
   /**
@@ -523,7 +505,7 @@ export class SwapService {
    * }
    */
   public async swap<K extends SpokeChainKey>(
-    _params: SwapActionParams<K>,
+    _params: SwapActionParams<K, false>,
   ): Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>> {
     const { params } = _params;
     const srcChainKey = params.srcChain;
@@ -539,7 +521,7 @@ export class SwapService {
       const [spokeTxHash, intent, data] = createIntentResult.value;
 
       // then verify the spoke tx hash exists on chain
-      const verifyTxHashResult = await this.spokeService.verifyTxHash({
+      const verifyTxHashResult = await this.spoke.verifyTxHash({
         txHash: spokeTxHash,
         chainKey: srcChainKey,
       });
@@ -565,10 +547,10 @@ export class SwapService {
         const packet = await relayTxAndWaitPacket(
           spokeTxHash,
           isSolanaChainKeyType(srcChainKey) || isBitcoinChainKeyType(srcChainKey)
-            ? ({
+            ? {
                 address: intent.creator,
                 payload: data,
-              } satisfies SubmitTxExtraData)
+              }
             : undefined,
           srcChainKey,
           this.relayerApiEndpoint,
@@ -665,13 +647,15 @@ export class SwapService {
    *   console.log('Approval required');
    * }
    */
-  public async isAllowanceValid<K extends SpokeChainKey>(_params: SwapActionParams<K>): Promise<Result<boolean>> {
+  public async isAllowanceValid<K extends SpokeChainKey>(
+    _params: SwapActionParams<K, boolean>,
+  ): Promise<Result<boolean>> {
     try {
       const { params } = _params;
       const srcChainKey = params.srcChain;
 
       if (isHubChainKeyType(srcChainKey)) {
-        return await this.spokeService.isAllowanceValid({
+        return await this.spoke.isAllowanceValid({
           srcChainKey,
           token: params.inputToken,
           amount: params.inputAmount,
@@ -681,7 +665,7 @@ export class SwapService {
       }
 
       if (isEvmSpokeOnlyChainKeyType(srcChainKey)) {
-        return await this.spokeService.isAllowanceValid({
+        return await this.spoke.isAllowanceValid({
           srcChainKey,
           token: params.inputToken,
           amount: params.inputAmount,
@@ -691,7 +675,7 @@ export class SwapService {
       }
 
       if (isStellarChainKeyType(srcChainKey)) {
-        return await this.spokeService.isAllowanceValid({
+        return await this.spoke.isAllowanceValid({
           srcChainKey,
           token: params.inputToken,
           amount: params.inputAmount,
@@ -705,122 +689,32 @@ export class SwapService {
     }
   }
 
-  public async approveRaw<K extends SpokeChainKey>(
-    _params: SwapActionParamsRaw<K>,
-  ): Promise<Result<TxReturnType<K, true>>> {
+  public async approve<K extends SpokeChainKey, Raw extends boolean>(
+    _params: SwapActionParams<K, Raw>,
+  ): Promise<Result<TxReturnType<K, Raw>>> {
+    const { params } = _params;
+
     try {
-      const { params } = _params;
-
-      // NOTE: SpokeService.approve currently only exposes the exec shape in its type signature;
-      // returning a raw-tx variant will come after the spoke approve layer grows raw support.
-      // For now the unknown cast below is a stop-gap so the public API shape is right even
-      // though the runtime still executes.
-      if (isHubChainKeyType(params.srcChain)) {
-        const result = await this.spokeService.approve({
+      if (isHubChainKeyType(params.srcChain) || isEvmSpokeOnlyChainKeyType(params.srcChain)) {
+        invariant(
+          isOptionalEvmWalletProviderType(_params.walletProvider),
+          'Invalid wallet provider. Expected Evm wallet provider.',
+        );
+        const spender = isHubChainKeyType(params.srcChain)
+          ? this.solver.intentsContract
+          : spokeChainConfig[params.srcChain].addresses.assetManager;
+        const coreParams = {
           srcChainKey: params.srcChain,
-          token: params.inputToken as GetTokenAddressType<HubChainKey>,
+          owner: params.srcAddress as GetAddressType<HubChainKey | EvmSpokeOnlyChainKey>,
+          token: params.inputToken as GetTokenAddressType<HubChainKey | EvmSpokeOnlyChainKey>,
           amount: params.inputAmount,
-          owner: params.srcAddress as GetAddressType<HubChainKey>,
-          spender: this.solver.intentsContract,
-          raw: true,
-        } satisfies SpokeApproveParams<HubChainKey, true> as SpokeApproveParams<HubChainKey, true>);
+          spender,
+        } as const;
 
-        return result satisfies Result<TxReturnType<HubChainKey, true>> as Result<TxReturnType<K, true>>;
-      }
-
-      if (isEvmSpokeOnlyChainKeyType(params.srcChain)) {
-        const result = await this.spokeService.approve({
-          srcChainKey: params.srcChain,
-          token: params.inputToken as GetTokenAddressType<EvmSpokeOnlyChainKey>,
-          amount: params.inputAmount,
-          owner: params.srcAddress as GetAddressType<EvmSpokeOnlyChainKey>,
-          spender: spokeChainConfig[params.srcChain].addresses.assetManager,
-          raw: true,
-        } satisfies SpokeApproveParams<EvmSpokeOnlyChainKey, true> as SpokeApproveParams<EvmSpokeOnlyChainKey, true>);
-        return result satisfies Result<TxReturnType<EvmSpokeOnlyChainKey, true>> as Result<TxReturnType<K, true>>;
-      }
-
-      if (isStellarChainKeyType(params.srcChain)) {
-        const result = await this.spokeService.approve<StellarChainKey, true>({
-          srcChainKey: params.srcChain,
-          token: params.inputToken,
-          amount: params.inputAmount,
-          owner: params.srcAddress as GetAddressType<StellarChainKey>,
-          raw: true,
-        } satisfies SpokeApproveParams<StellarChainKey, true> as SpokeApproveParams<StellarChainKey, true>);
-
-        if (!result.ok) {
-          return result;
-        }
-        return {
-          ok: true,
-          value: result.value satisfies TxReturnType<StellarChainKey, true> as TxReturnType<K, true>,
-        };
-      }
-
-      return {
-        ok: false,
-        error: new Error('Approve only supported for hub (Sonic), EVM spokes, and Stellar'),
-      };
-    } catch (error) {
-      return { ok: false, error };
-    }
-  }
-
-  public async approve<K extends SpokeChainKey>(_params: SwapActionParams<K>): Promise<Result<TxReturnType<K, false>>> {
-    try {
-      const { params } = _params;
-
-      if (isHubChainKeyType(params.srcChain)) {
-        const result = await this.spokeService.approve<HubChainKey, false>({
-          srcChainKey: params.srcChain,
-          token: params.inputToken as GetTokenAddressType<HubChainKey>,
-          amount: params.inputAmount,
-          owner: params.srcAddress as GetAddressType<HubChainKey>,
-          spender: this.solver.intentsContract,
-          raw: false,
-          walletProvider: _params.walletProvider as GetWalletProviderType<HubChainKey>,
-        } satisfies SpokeApproveParams<HubChainKey, false> as SpokeApproveParams<HubChainKey, false>);
-
-        if (!result.ok) {
-          return result;
-        }
-
-        return {
-          ok: true,
-          value: result.value satisfies TxReturnType<HubChainKey, false> as TxReturnType<K, false>,
-        };
-      }
-
-      if (isEvmSpokeOnlyChainKeyType(params.srcChain)) {
-        const result = await this.spokeService.approve<EvmSpokeOnlyChainKey, false>({
-          srcChainKey: params.srcChain,
-          token: params.inputToken as GetTokenAddressType<EvmSpokeOnlyChainKey>,
-          amount: params.inputAmount,
-          owner: params.srcAddress as GetAddressType<EvmSpokeOnlyChainKey>,
-          spender: spokeChainConfig[params.srcChain].addresses.assetManager,
-          raw: false,
-          walletProvider: _params.walletProvider as GetWalletProviderType<EvmSpokeOnlyChainKey>,
-        } satisfies SpokeApproveParams<EvmSpokeOnlyChainKey, false> as SpokeApproveParams<EvmSpokeOnlyChainKey, false>);
-
-        if (!result.ok) {
-          return result;
-        }
-
-        return {
-          ok: true,
-          value: result.value satisfies TxReturnType<EvmSpokeOnlyChainKey, false> as TxReturnType<K, false>,
-        };
-      }
-
-      if (isStellarChainKeyType(params.srcChain)) {
-        const result = await this.spokeService.approve<StellarChainKey, false>({
-          srcChainKey: params.srcChain,
-          token: params.inputToken,
-          amount: params.inputAmount,
-          owner: params.srcAddress as GetAddressType<StellarChainKey>,
-          raw: false,
-          walletProvider: _params.walletProvider as GetWalletProviderType<StellarChainKey>,
+        const result = await this.spoke.approve<HubChainKey | EvmSpokeOnlyChainKey, Raw>({
+          ...coreParams,
+          raw: _params.raw,
+          walletProvider: _params.walletProvider,
         });
 
         if (!result.ok) {
@@ -829,7 +723,40 @@ export class SwapService {
 
         return {
           ok: true,
-          value: result.value satisfies TxReturnType<StellarChainKey, false> as TxReturnType<K, false>,
+          value: result.value satisfies TxReturnType<EvmSpokeOnlyChainKey, Raw> as TxReturnType<K, Raw>,
+        };
+      }
+
+      if (isStellarChainKeyType(params.srcChain)) {
+        invariant(
+          isOptionalStellarWalletProviderType(_params.walletProvider),
+          'Invalid wallet provider. Expected Stellar wallet provider.',
+        );
+        const coreParams = {
+          srcChainKey: params.srcChain,
+          token: params.inputToken,
+          amount: params.inputAmount,
+          owner: params.srcAddress as GetAddressType<StellarChainKey>,
+        } as const;
+
+        const result = await this.spoke.approve<StellarChainKey, boolean>(
+          _params.raw
+            ? {
+                ...coreParams,
+                raw: true,
+              }
+            : {
+                ...coreParams,
+                raw: false,
+                walletProvider: _params.walletProvider,
+              },
+        );
+
+        if (!result.ok) return result;
+
+        return {
+          ok: true,
+          value: result.value satisfies TxReturnType<StellarChainKey, boolean> as TxReturnType<K, Raw>,
         };
       }
 
@@ -897,118 +824,27 @@ export class SwapService {
    * - When `raw: false`, walletProvider is REQUIRED and must match the chain type
    *   implied by `srcChainKey` (e.g. `srcChainKey: 'ethereum'` → walletProvider: IEvmWalletProvider).
    */
-  public async createIntentRaw<K extends SpokeChainKey>(
-    _params: SwapActionParamsRaw<K>,
-  ): Promise<Result<[TxReturnType<K, true>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>> {
-    const { params } = _params;
-    const srcChainKey = params.srcChain;
-
-    // default values
-    const fee = _params.fee ?? this.config.swaps.partnerFee;
-    const skipSimulation = _params.skipSimulation ?? false;
+  public async createIntent<K extends SpokeChainKey, Raw extends boolean>(
+    _params: SwapActionParams<K, Raw>,
+  ): Promise<Result<[TxReturnType<K, Raw>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>> {
+    const { params, skipSimulation } = _params;
 
     invariant(
-      this.config.isValidOriginalAssetAddress(srcChainKey, params.inputToken),
-      `Unsupported spoke chain token (srcChainKey): ${srcChainKey}, params.inputToken): ${params.inputToken}`,
+      isValidWalletProviderForChainKey(params.srcChain, _params.walletProvider),
+      `Invalid wallet provider for chain key: ${params.srcChain}`,
+    );
+    invariant(
+      this.config.isValidOriginalAssetAddress(params.srcChain, params.inputToken),
+      `Unsupported spoke chain token (srcChainKey): ${params.srcChain}, params.inputToken): ${params.inputToken}`,
     );
     invariant(
       this.config.isValidOriginalAssetAddress(params.dstChain, params.outputToken),
       `Unsupported spoke chain token (params.dstChain): ${params.dstChain}, params.outputToken): ${params.outputToken}`,
     );
-    invariant(this.config.isValidSpokeChainKey(srcChainKey), `Invalid spoke chain (srcChainKey): ${srcChainKey}`);
     invariant(
-      this.config.isValidSpokeChainKey(params.dstChain),
-      `Invalid spoke chain (params.dstChain): ${params.dstChain}`,
+      this.config.isValidSpokeChainKey(params.srcChain),
+      `Invalid spoke chain (srcChainKey): ${params.srcChain}`,
     );
-
-    try {
-      // derive users hub wallet address
-      const creatorHubWalletAddress = await HubService.getUserHubWalletAddress(
-        params.srcAddress,
-        srcChainKey,
-        this.hubProvider,
-      );
-
-      if (isHubChainKeyType(srcChainKey) && isSonicChainKeyType(srcChainKey)) {
-        const sonicParams = {
-          createIntentParams: params,
-          creatorHubWalletAddress,
-          solverConfig: this.solver,
-          fee,
-          hubProvider: this.hubProvider,
-          raw: true,
-        } satisfies CreateSonicSwapIntentParams<true>;
-
-        const [txResult, intent, feeAmount, data] = await SonicSpokeService.createRawSwapIntent(sonicParams);
-
-        return {
-          ok: true,
-          value: [txResult as TxReturnType<K, true>, { ...intent, feeAmount } as Intent & FeeAmount, data],
-        };
-      }
-
-      // construct the intent data
-      const [data, intent, feeAmount] = EvmSolverService.constructCreateIntentData(
-        {
-          ...params,
-          srcAddress: params.srcAddress,
-        },
-        creatorHubWalletAddress,
-        this.config,
-        fee,
-      );
-
-      const txResult = await this.spokeService.deposit<K, true>({
-        srcChainKey,
-        srcAddress: params.srcAddress as GetAddressType<K>,
-        to: creatorHubWalletAddress,
-        token: params.inputToken as GetTokenAddressType<K>,
-        amount: params.inputAmount,
-        data: data,
-        skipSimulation,
-        raw: true,
-      } satisfies DepositParams<K, true>);
-
-      return {
-        ok: true,
-        value: [txResult as TxReturnType<K, true>, { ...intent, feeAmount } as Intent & FeeAmount, data],
-      };
-    } catch (error) {
-      console.error('[SwapService.createIntent] FAILED', error);
-      return {
-        ok: false,
-        error: {
-          code: 'CREATION_FAILED',
-          data: {
-            payload: params,
-            error: error,
-          },
-        },
-      };
-    }
-  }
-
-  public async createIntent<K extends SpokeChainKey>(
-    _params: SwapActionParams<K>,
-  ): Promise<Result<[TxReturnType<K, false>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>> {
-    const { params, walletProvider } = _params;
-    const srcChainKey = params.srcChain;
-    const fee = _params.fee ?? this.config.swaps.partnerFee;
-    const skipSimulation = _params.skipSimulation ?? false;
-
-    invariant(
-      isValidWalletProviderForChainKey(srcChainKey, walletProvider),
-      `Invalid wallet provider for chain key: ${srcChainKey}, walletProvider.chainType: ${walletProvider.chainType}`,
-    );
-    invariant(
-      this.config.isValidOriginalAssetAddress(srcChainKey, params.inputToken),
-      `Unsupported spoke chain token (srcChainKey): ${srcChainKey}, params.inputToken): ${params.inputToken}`,
-    );
-    invariant(
-      this.config.isValidOriginalAssetAddress(params.dstChain, params.outputToken),
-      `Unsupported spoke chain token (params.dstChain): ${params.dstChain}, params.outputToken): ${params.outputToken}`,
-    );
-    invariant(this.config.isValidSpokeChainKey(srcChainKey), `Invalid spoke chain (srcChainKey): ${srcChainKey}`);
     invariant(
       this.config.isValidSpokeChainKey(params.dstChain),
       `Invalid spoke chain (params.dstChain): ${params.dstChain}`,
@@ -1027,43 +863,49 @@ export class SwapService {
       // Bitcoin TRADING mode: use trading wallet for hub wallet derivation (see getEffectiveWalletAddress)
       // NOTE: bitcoin is only enabled in non-raw execution mode == walletProvider is required
       let walletAddress: string = personalAddress;
-      if (isBitcoinChainKeyType(params.srcChain)) {
+      if (isBitcoinChainKeyType(params.srcChain) && _params.raw === false) {
         invariant(
-          isBitcoinWalletProvider(_params.walletProvider),
+          isBitcoinWalletProviderType(_params.walletProvider),
           `Invalid wallet provider for chain key: ${params.srcChain}`,
         );
-        walletAddress = await this.spokeService.bitcoinSpokeService.getEffectiveWalletAddress(personalAddress);
-        await this.spokeService.bitcoinSpokeService.radfi.ensureRadfiAccessToken(_params.walletProvider);
+        walletAddress = await this.spoke.bitcoinSpokeService.getEffectiveWalletAddress(personalAddress);
+        await this.spoke.bitcoinSpokeService.radfi.ensureRadfiAccessToken(_params.walletProvider);
       }
 
       // derive users hub wallet address
       const creatorHubWalletAddress = await HubService.getUserHubWalletAddress(
         walletAddress,
-        srcChainKey,
+        params.srcChain,
         this.hubProvider,
       );
 
-      if (isHubChainKeyType(srcChainKey) && isSonicChainKeyType(srcChainKey)) {
-        // on hub chain create intent directly
-
-        // K is narrowed to SonicChainKey inside this branch, but the outer generic `K` doesn't
-        // propagate that narrowing back into `GetWalletProviderType<K>` here. Sonic is EVM by
-        // definition, so cast to the concrete provider type expected by the sonic params shape.
-        const sonicParams = {
+      if (isHubChainKeyType(params.srcChain) && isSonicChainKeyType(params.srcChain)) {
+        const coreSonicParams = {
           createIntentParams: params,
           creatorHubWalletAddress,
-          solverConfig: this.config.solver,
+          solverConfig: this.solver,
           fee: this.config.swaps.partnerFee,
           hubProvider: this.hubProvider,
-          raw: false,
-          walletProvider: walletProvider as IEvmWalletProvider,
-        } satisfies CreateSonicSwapIntentParams<false>;
+        } as const;
 
-        const [txResult, intent, feeAmount, data] = await SonicSpokeService.createAndExecuteSwapIntent(sonicParams);
+        // on hub chain create intent directly
+        const [txResult, intent, feeAmount, data] = await SonicSpokeService.createSwapIntent(
+          _params.raw
+            ? { ...coreSonicParams, raw: true }
+            : {
+                ...coreSonicParams,
+                raw: false,
+                walletProvider: _params.walletProvider as GetWalletProviderType<SonicChainKey>,
+              },
+        );
 
         return {
           ok: true,
-          value: [txResult as TxReturnType<K, false>, { ...intent, feeAmount } as Intent & FeeAmount, data],
+          value: [
+            txResult satisfies TxReturnType<SonicChainKey, boolean> as TxReturnType<K, Raw>,
+            { ...intent, feeAmount } as Intent & FeeAmount,
+            data,
+          ],
         };
       }
 
@@ -1075,24 +917,39 @@ export class SwapService {
         },
         creatorHubWalletAddress,
         this.config,
-        fee,
+        this.config.swaps.partnerFee,
       );
 
-      const txResult = await this.spokeService.deposit({
-        srcChainKey,
+      const coreDepositParams = {
+        srcChainKey: params.srcChain,
         srcAddress: walletAddress as GetAddressType<K>,
         to: creatorHubWalletAddress,
         token: params.inputToken as GetTokenAddressType<K>,
         amount: params.inputAmount,
         data: data,
         skipSimulation,
-        raw: false,
-        walletProvider: _params.walletProvider,
-      } satisfies DepositParams<K, false>);
+      } as const;
+
+      const txResult = await this.spoke.deposit(
+        _params.raw
+          ? {
+              ...coreDepositParams,
+              raw: true,
+            }
+          : {
+              ...coreDepositParams,
+              raw: false,
+              walletProvider: _params.walletProvider as GetWalletProviderType<K>,
+            },
+      );
 
       return {
         ok: true,
-        value: [txResult as TxReturnType<K, false>, { ...intent, feeAmount } as Intent & FeeAmount, data],
+        value: [
+          txResult satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
+          { ...intent, feeAmount } as Intent & FeeAmount,
+          data,
+        ],
       };
     } catch (error) {
       console.error('[SwapService.createIntent] FAILED', error);
@@ -1156,7 +1013,7 @@ export class SwapService {
    * }
    */
   public async createLimitOrder<K extends SpokeChainKey>(
-    _params: LimitOrderActionParams<K>,
+    _params: LimitOrderActionParams<K, false>,
   ): Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>> {
     const { fee = this.config.swaps.partnerFee, timeout = DEFAULT_RELAY_TX_TIMEOUT, skipSimulation = false } = _params;
     // Force deadline to 0n (no deadline) for limit orders. K is preserved on the resulting
@@ -1167,11 +1024,11 @@ export class SwapService {
     } as CreateIntentParams<K>;
 
     return this.swap<K>({
+      ..._params,
       params,
       fee,
       timeout,
       skipSimulation,
-      walletProvider: _params.walletProvider,
     });
   }
 
@@ -1221,46 +1078,20 @@ export class SwapService {
    *   // handle error
    * }
    */
-  public async createLimitOrderIntent<K extends SpokeChainKey>(
-    _params: LimitOrderActionParams<K>,
-  ): Promise<Result<[TxReturnType<K, false>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>> {
-    const { params } = _params;
-    const fee = _params.fee ?? this.config.swaps.partnerFee;
-    const skipSimulation = _params.skipSimulation ?? false;
-
+  public async createLimitOrderIntent<K extends SpokeChainKey, Raw extends boolean>(
+    _params: LimitOrderActionParams<K, Raw>,
+  ): Promise<Result<[TxReturnType<K, Raw>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>> {
     // Force deadline to 0n for limit orders. srcChain is preserved on params so K narrowing
     // flows through to createIntent unchanged.
     const limitOrderParams: CreateIntentParams<K> = {
-      ...params,
+      ..._params.params,
       deadline: 0n,
-    } as CreateIntentParams<K>;
+    } as const as CreateIntentParams<K>;
 
-    return this.createIntent<K>({
+    return this.createIntent({
       ..._params,
       params: limitOrderParams,
-      fee,
-      skipSimulation,
-    });
-  }
-
-  public async createLimitOrderIntentRaw<K extends SpokeChainKey>(
-    _params: LimitOrderActionParamsRaw<K>,
-  ): Promise<Result<[TxReturnType<K, true>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>> {
-    const { params } = _params;
-    const fee = _params.fee ?? this.config.swaps.partnerFee;
-    const skipSimulation = _params.skipSimulation ?? false;
-
-    const limitOrderParams: CreateIntentParams<K> = {
-      ...params,
-      deadline: 0n,
-    } as CreateIntentParams<K>;
-
-    return this.createIntentRaw<K>({
-      ..._params,
-      params: limitOrderParams,
-      fee,
-      skipSimulation,
-    });
+    } as SwapActionParams<K, Raw>);
   }
 
   /**
@@ -1322,38 +1153,46 @@ export class SwapService {
    * runtime we assert `getIntentRelayChainId(srcChainKey) === intent.srcChain` to catch
    * mismatches. The generic `K` then drives `walletProvider` narrowing just like createIntent.
    */
-  public async createCancelIntent<K extends SpokeChainKey, R extends boolean = false>(
-    params: CancelIntentParams<K, R>,
-  ): Promise<Result<TxReturnType<K, R>, IntentError<'CANCEL_FAILED'>>> {
-    const { srcChainKey, intent } = params;
-    const raw = (params.raw ?? false) as R;
+  public async createCancelIntent<K extends SpokeChainKey, Raw extends boolean>(
+    params: CancelIntentParams<K, Raw>,
+  ): Promise<Result<TxReturnType<K, Raw>, IntentError<'CANCEL_FAILED'>>> {
+    const { intent } = params;
 
     try {
       invariant(this.config.isValidIntentRelayChainId(intent.srcChain), `Invalid intent.srcChain: ${intent.srcChain}`);
       invariant(this.config.isValidIntentRelayChainId(intent.dstChain), `Invalid intent.dstChain: ${intent.dstChain}`);
       invariant(
-        getIntentRelayChainId(srcChainKey) === intent.srcChain,
-        `srcChainKey (${srcChainKey}) does not match intent.srcChain (${intent.srcChain}). Expected relay chain id ${getIntentRelayChainId(srcChainKey)}.`,
+        getIntentRelayChainId(params.srcChainKey) === intent.srcChain,
+        `srcChainKey (${params.srcChainKey}) does not match intent.srcChain (${intent.srcChain}). Expected relay chain id ${getIntentRelayChainId(params.srcChainKey)}.`,
       );
 
       const intentsContract = this.solver.intentsContract;
 
-      const sendMessageParams = {
-        srcChainKey,
-        srcAddress: reverseEncodeAddress(srcChainKey, intent.srcAddress),
+      const coreParams = {
+        srcChainKey: params.srcChainKey,
+        srcAddress: reverseEncodeAddress(params.srcChainKey, intent.srcAddress) as GetAddressType<K>,
         dstChainKey: HUB_CHAIN_KEY,
         dstAddress: intent.creator,
         payload: encodeContractCalls([EvmSolverService.encodeCancelIntent(intent, intentsContract)]),
-        raw,
         skipSimulation: params.skipSimulation,
-        ...(raw === false ? { walletProvider: (params as CancelIntentParams<K, false>).walletProvider } : {}),
-      } as unknown as SendMessageParams<K, R>;
+      } as const;
 
-      const txResult = (await this.spokeService.sendMessage<K, R>(sendMessageParams)) satisfies TxReturnType<K, R>;
+      const sendMessageParams = params.raw
+        ? ({
+            ...coreParams,
+            raw: true,
+          } satisfies SendMessageParams<K, true>)
+        : ({
+            ...coreParams,
+            raw: false,
+            walletProvider: params.walletProvider,
+          } satisfies SendMessageParams<K, false>);
+
+      const txResult = await this.spoke.sendMessage(sendMessageParams);
 
       return {
         ok: true,
-        value: txResult,
+        value: txResult satisfies TxReturnType<K, boolean> as TxReturnType<K, Raw>,
       };
     } catch (error) {
       return {
@@ -1406,7 +1245,7 @@ export class SwapService {
       const cancelTxHash = cancelResult.value;
 
       // 2. Verify the cancel tx hash exists on chain
-      const verifyTxHashResult = await this.spokeService.verifyTxHash({
+      const verifyTxHashResult = await this.spoke.verifyTxHash({
         txHash: cancelTxHash,
         chainKey: srcChainKey,
       });
@@ -1489,7 +1328,7 @@ export class SwapService {
    * @param {Intent} params.intent - The intent
    * @returns {Promise<SubmitTxExtraData>} The submit tx extra data
    */
-  public async getIntentSubmitTxExtraData(params: GetIntentSubmitTxExtraDataParams): Promise<SubmitTxExtraData> {
+  public async getIntentSubmitTxExtraData(params: GetIntentSubmitTxExtraDataParams): Promise<RelayExtraData> {
     let intent: Intent;
     if ('txHash' in params) {
       intent = await this.getIntent(params.txHash);

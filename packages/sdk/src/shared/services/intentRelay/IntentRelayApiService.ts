@@ -8,7 +8,7 @@ import {
 import invariant from 'tiny-invariant';
 import { retry } from '../../utils/shared-utils.js';
 import type { IntentError } from '../../../swap/SwapService.js';
-import type { Hex } from 'viem';
+import type { RelayExtraData } from '../../types/types.js';
 
 /**
  * The action type for the intent relay service.
@@ -34,12 +34,10 @@ export type RelayError = {
   error: unknown;
 };
 
-export type SubmitTxExtraData = { address: Hex; payload: Hex };
-
 export type SubmitTxParams = {
   chain_id: string; // The ID of the chain where the transaction was submitted
   tx_hash: string; // The transaction hash of the submitted transaction
-  data?: SubmitTxExtraData;
+  data?: RelayExtraData;
 };
 
 export type GetTransactionPacketsParams = {
@@ -273,7 +271,7 @@ export async function waitUntilIntentExecuted(
  */
 export async function relayTxAndWaitPacket(
   spokeTxHash: string,
-  data: { address: Hex; payload: Hex } | undefined,
+  data: RelayExtraData | undefined,
   chainkey: SpokeChainKey,
   relayerApiEndpoint: HttpUrl,
   timeout = DEFAULT_RELAY_TX_TIMEOUT,

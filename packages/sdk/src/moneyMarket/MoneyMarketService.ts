@@ -29,7 +29,7 @@ import {
   isValidWalletProviderForChainKey,
   type SpokeApproveParams,
 } from '../index.js';
-import type { HubProvider } from '../shared/types/types.js';
+import type { HubProvider, RelayOptionalExtraData } from '../shared/types/types.js';
 import {
   type SpokeChainKey,
   type XToken,
@@ -286,9 +286,6 @@ export type MoneyMarketError<T extends MoneyMarketErrorCode> = {
   code: T;
   data: GetMoneyMarketError<T>;
 };
-
-export type MoneyMarketExtraData = { address: Hex; payload: Hex };
-export type MoneyMarketOptionalExtraData = { data?: MoneyMarketExtraData };
 
 export type MoneyMarketServiceConstructorParams = {
   configService: ConfigService;
@@ -669,9 +666,7 @@ export class MoneyMarketService {
 
   public async createSupplyIntent<K extends SpokeChainKey>(
     _params: MoneyMarketSupplyActionParams<K>,
-  ): Promise<
-    Result<TxReturnType<K, false>, MoneyMarketError<'CREATE_SUPPLY_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
-  > {
+  ): Promise<Result<TxReturnType<K, false>, MoneyMarketError<'CREATE_SUPPLY_INTENT_FAILED'>> & RelayOptionalExtraData> {
     const { params, walletProvider } = _params;
     const srcChainKey = params.srcChainKey;
     const skipSimulation = _params.skipSimulation ?? false;
@@ -729,9 +724,7 @@ export class MoneyMarketService {
 
   public async createSupplyIntentRaw<K extends SpokeChainKey>(
     _params: MoneyMarketSupplyActionParamsRaw<K>,
-  ): Promise<
-    Result<TxReturnType<K, true>, MoneyMarketError<'CREATE_SUPPLY_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
-  > {
+  ): Promise<Result<TxReturnType<K, true>, MoneyMarketError<'CREATE_SUPPLY_INTENT_FAILED'>> & RelayOptionalExtraData> {
     const { params } = _params;
     const srcChainKey = params.srcChainKey;
     const skipSimulation = _params.skipSimulation ?? false;
@@ -853,9 +846,7 @@ export class MoneyMarketService {
 
   public async createBorrowIntent<K extends SpokeChainKey>(
     _params: MoneyMarketBorrowActionParams<K>,
-  ): Promise<
-    Result<TxReturnType<K, false>, MoneyMarketError<'CREATE_BORROW_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
-  > {
+  ): Promise<Result<TxReturnType<K, false>, MoneyMarketError<'CREATE_BORROW_INTENT_FAILED'>> & RelayOptionalExtraData> {
     const { params, walletProvider } = _params;
     const srcChainKey = params.srcChainKey;
     const skipSimulation = _params.skipSimulation ?? false;
@@ -919,9 +910,7 @@ export class MoneyMarketService {
 
   public async createBorrowIntentRaw<K extends SpokeChainKey>(
     _params: MoneyMarketBorrowActionParamsRaw<K>,
-  ): Promise<
-    Result<TxReturnType<K, true>, MoneyMarketError<'CREATE_BORROW_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
-  > {
+  ): Promise<Result<TxReturnType<K, true>, MoneyMarketError<'CREATE_BORROW_INTENT_FAILED'>> & RelayOptionalExtraData> {
     const { params } = _params;
     const srcChainKey = params.srcChainKey;
     const skipSimulation = _params.skipSimulation ?? false;
@@ -1053,7 +1042,7 @@ export class MoneyMarketService {
   public async createWithdrawIntent<K extends SpokeChainKey>(
     _params: MoneyMarketWithdrawActionParams<K>,
   ): Promise<
-    Result<TxReturnType<K, false>, MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
+    Result<TxReturnType<K, false>, MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED'>> & RelayOptionalExtraData
   > {
     const { params, walletProvider } = _params;
     const srcChainKey = params.srcChainKey;
@@ -1119,7 +1108,7 @@ export class MoneyMarketService {
   public async createWithdrawIntentRaw<K extends SpokeChainKey>(
     _params: MoneyMarketWithdrawActionParamsRaw<K>,
   ): Promise<
-    Result<TxReturnType<K, true>, MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
+    Result<TxReturnType<K, true>, MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED'>> & RelayOptionalExtraData
   > {
     const { params } = _params;
     const srcChainKey = params.srcChainKey;
@@ -1262,9 +1251,7 @@ export class MoneyMarketService {
 
   public async createRepayIntent<K extends SpokeChainKey>(
     _params: MoneyMarketRepayActionParams<K>,
-  ): Promise<
-    Result<TxReturnType<K, false>, MoneyMarketError<'CREATE_REPAY_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
-  > {
+  ): Promise<Result<TxReturnType<K, false>, MoneyMarketError<'CREATE_REPAY_INTENT_FAILED'>> & RelayOptionalExtraData> {
     const { params, walletProvider } = _params;
     const srcChainKey = params.srcChainKey;
     const skipSimulation = _params.skipSimulation ?? false;
@@ -1322,9 +1309,7 @@ export class MoneyMarketService {
 
   public async createRepayIntentRaw<K extends SpokeChainKey>(
     _params: MoneyMarketRepayActionParamsRaw<K>,
-  ): Promise<
-    Result<TxReturnType<K, true>, MoneyMarketError<'CREATE_REPAY_INTENT_FAILED'>> & MoneyMarketOptionalExtraData
-  > {
+  ): Promise<Result<TxReturnType<K, true>, MoneyMarketError<'CREATE_REPAY_INTENT_FAILED'>> & RelayOptionalExtraData> {
     const { params } = _params;
     const srcChainKey = params.srcChainKey;
     const skipSimulation = _params.skipSimulation ?? false;

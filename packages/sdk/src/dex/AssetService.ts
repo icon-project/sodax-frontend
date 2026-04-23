@@ -18,17 +18,20 @@ import {
   isStellarChainKeyType,
   type SpokeIsAllowanceValidParamsStellar,
   isHubChainKeyType,
-  type SpokeApproveParams,
   isEvmChainKeyType,
-  type DepositParams,
   isSolanaChainKeyType,
   isBitcoinChainKeyType,
+  isOptionalStellarWalletProviderType,
+  isEvmSpokeOnlyChainKeyType,
+  isOptionalEvmWalletProviderType,
+  type SendMessageParams,
 } from '../index.js';
 import {
   SodaTokens,
   type ConcentratedLiquidityConfig,
   type EvmChainKey,
   type EvmContractCall,
+  type EvmSpokeOnlyChainKey,
   type GetAddressType,
   type GetTokenAddressType,
   type GetWalletProviderType,
@@ -41,6 +44,7 @@ import {
   type SpokeTxHash,
   type StellarChainKey,
   type TxReturnType,
+  type WalletProviderSlot,
 } from '@sodax/types';
 import { encodeFunctionData, erc20Abi, isAddress } from 'viem';
 import invariant from 'tiny-invariant';
@@ -64,31 +68,17 @@ export type CreateAssetDepositParams<K extends SpokeChainKey> = {
   dst?: DestinationParamsType;
 };
 
-export type AssetWithdrawAction<K extends SpokeChainKey> = {
+export type AssetWithdrawAction<K extends SpokeChainKey, Raw extends boolean> = {
   params: CreateAssetWithdrawParams<K>;
-  walletProvider: GetWalletProviderType<K>;
   skipSimulation?: boolean;
   timeout?: number;
-};
+} & WalletProviderSlot<K, Raw>;
 
-export type AssetWithdrawActionRaw<K extends SpokeChainKey> = {
-  params: CreateAssetWithdrawParams<K>;
-  walletProvider: GetWalletProviderType<K>;
-  skipSimulation?: boolean;
-};
-
-export type AssetDepositAction<K extends SpokeChainKey> = {
+export type AssetDepositAction<K extends SpokeChainKey, Raw extends boolean> = {
   params: CreateAssetDepositParams<K>;
-  walletProvider: GetWalletProviderType<K>;
   skipSimulation?: boolean;
   timeout?: number;
-};
-
-export type AssetDepositActionRaw<K extends SpokeChainKey> = {
-  params: CreateAssetDepositParams<K>;
-  walletProvider: GetWalletProviderType<K>;
-  skipSimulation?: boolean;
-};
+} & WalletProviderSlot<K, Raw>;
 
 export type AssetServiceUnknownErrorCode = 'DEPOSIT_UNKNOWN_ERROR' | 'ALLOWANCE_CHECK_FAILED' | 'APPROVAL_FAILED';
 
@@ -210,7 +200,9 @@ export class AssetService {
    *   // Approval or trustline is needed
    * }
    */
-  public async isAllowanceValid<K extends SpokeChainKey>(_params: AssetDepositAction<K>): Promise<Result<boolean>> {
+  public async isAllowanceValid<K extends SpokeChainKey, Raw extends boolean>(
+    _params: AssetDepositAction<K, Raw>,
+  ): Promise<Result<boolean>> {
     const { params } = _params;
     try {
       invariant(params.amount > 0n, 'Amount must be greater than 0');
@@ -284,114 +276,80 @@ export class AssetService {
    * );
    *
    */
-  public async approve<K extends SpokeChainKey>(
-    _params: AssetDepositAction<K>,
-  ): Promise<Result<TxReturnType<K, false>>> {
-    const { params, walletProvider } = _params;
-    try {
-      invariant(params.amount > 0n, 'Amount must be greater than 0');
-      invariant(params.asset.length > 0, 'Source asset is required');
-
-      if (isStellarChainKeyType(params.srcChainKey)) {
-        return (await this.spoke.approve({
-          srcChainKey: params.srcChainKey,
-          token: params.asset,
-          amount: params.amount,
-          owner: params.srcAddress as GetAddressType<StellarChainKey>,
-          raw: false,
-          walletProvider: walletProvider as GetWalletProviderType<StellarChainKey>,
-        } satisfies SpokeApproveParams<StellarChainKey, false> as SpokeApproveParams<
-          StellarChainKey,
-          false
-        >)) satisfies Result<TxReturnType<StellarChainKey, false>> as Result<TxReturnType<K, false>>;
-      }
-
-      if (isEvmChainKeyType(params.srcChainKey) || isHubChainKeyType(params.srcChainKey)) {
-        invariant(isAddress(params.asset), 'Invalid source asset address for EVM chain');
-
-        const spender = isHubChainKeyType(params.srcChainKey)
-          ? await HubService.getUserHubWalletAddress(params.srcAddress, params.srcChainKey, this.hubProvider)
-          : this.config.sodaxConfig.chains[params.srcChainKey].addresses.assetManager;
-
-        const result = await this.spoke.approve({
-          srcChainKey: params.srcChainKey,
-          token: params.asset,
-          amount: params.amount,
-          owner: params.srcAddress as GetAddressType<EvmChainKey | HubChainKey>,
-          spender: spender as GetAddressType<EvmChainKey | HubChainKey>,
-          raw: false,
-          walletProvider: walletProvider as GetWalletProviderType<EvmChainKey | HubChainKey>,
-        } satisfies SpokeApproveParams<EvmChainKey, false> as SpokeApproveParams<EvmChainKey, false>);
-
-        if (!result.ok) return result;
-
-        return result satisfies Result<TxReturnType<EvmChainKey, false>> as Result<TxReturnType<K, false>>;
-      }
-
-      return {
-        ok: false,
-        error: {
-          code: 'APPROVAL_FAILED',
-          data: {
-            error: new Error('Approve only supported for EVM/Stellar spoke chains'),
-            payload: params,
-          },
-        },
-      };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'APPROVAL_FAILED',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
-      };
-    }
-  }
-
-  public async approveRaw<K extends SpokeChainKey>(
-    _params: AssetDepositActionRaw<K>,
-  ): Promise<Result<TxReturnType<K, true>>> {
+  public async approve<K extends SpokeChainKey, Raw extends boolean>(
+    _params: AssetDepositAction<K, Raw>,
+  ): Promise<Result<TxReturnType<K, Raw>>> {
     const { params } = _params;
     try {
       invariant(params.amount > 0n, 'Amount must be greater than 0');
       invariant(params.asset.length > 0, 'Source asset is required');
 
       if (isStellarChainKeyType(params.srcChainKey)) {
-        return (await this.spoke.approve({
+        invariant(
+          isOptionalStellarWalletProviderType(_params.walletProvider),
+          'Invalid wallet provider. Expected Stellar wallet provider.',
+        );
+        const coreParams = {
           srcChainKey: params.srcChainKey,
           token: params.asset,
           amount: params.amount,
           owner: params.srcAddress as GetAddressType<StellarChainKey>,
-          raw: true,
-        } satisfies SpokeApproveParams<StellarChainKey, true> as SpokeApproveParams<
-          StellarChainKey,
-          true
-        >)) satisfies Result<TxReturnType<StellarChainKey, true>> as Result<TxReturnType<K, true>>;
+        } as const;
+
+        const result = await this.spoke.approve<StellarChainKey, boolean>(
+          _params.raw
+            ? {
+                ...coreParams,
+                raw: true,
+              }
+            : {
+                ...coreParams,
+                raw: false,
+                walletProvider: _params.walletProvider,
+              },
+        );
+
+        if (!result.ok) return result;
+
+        return {
+          ok: true,
+          value: result.value satisfies TxReturnType<StellarChainKey, boolean> as TxReturnType<K, Raw>,
+        };
       }
 
-      if (isEvmChainKeyType(params.srcChainKey) || isHubChainKeyType(params.srcChainKey)) {
+      if (isEvmSpokeOnlyChainKeyType(params.srcChainKey) || isHubChainKeyType(params.srcChainKey)) {
         invariant(isAddress(params.asset), 'Invalid source asset address for EVM chain');
+        invariant(
+          isOptionalEvmWalletProviderType(_params.walletProvider),
+          'Invalid wallet provider. Expected Evm wallet provider.',
+        );
 
         const spender = isHubChainKeyType(params.srcChainKey)
           ? await HubService.getUserHubWalletAddress(params.srcAddress, params.srcChainKey, this.hubProvider)
           : this.config.sodaxConfig.chains[params.srcChainKey].addresses.assetManager;
 
-        const result = await this.spoke.approve({
+        const coreParams = {
           srcChainKey: params.srcChainKey,
           token: params.asset,
           amount: params.amount,
           owner: params.srcAddress as GetAddressType<EvmChainKey | HubChainKey>,
           spender: spender as GetAddressType<EvmChainKey | HubChainKey>,
-          raw: true,
-        } satisfies SpokeApproveParams<EvmChainKey, true> as SpokeApproveParams<EvmChainKey, true>);
+        } as const;
 
-        if (!result.ok) return result;
+        const result = await this.spoke.approve<HubChainKey | EvmSpokeOnlyChainKey, Raw>({
+          ...coreParams,
+          raw: _params.raw,
+          walletProvider: _params.walletProvider,
+        });
 
-        return result satisfies Result<TxReturnType<EvmChainKey, true>> as Result<TxReturnType<K, true>>;
+        if (!result.ok) {
+          return result;
+        }
+
+        return {
+          ok: true,
+          value: result.value satisfies TxReturnType<EvmSpokeOnlyChainKey, Raw> as TxReturnType<K, Raw>,
+        };
       }
 
       return {
@@ -421,80 +379,9 @@ export class AssetService {
   /**
    * Execute deposit action - wraps tokens and prepares for liquidity provision
    */
-  public async executeDeposit<K extends SpokeChainKey>(
-    _params: AssetDepositAction<K>,
-  ): Promise<
-    Result<TxReturnType<K, false>, AssetServiceError<'CREATE_DEPOSIT_INTENT_FAILED'>> & RelayOptionalExtraData
-  > {
-    const { params, walletProvider, skipSimulation } = _params;
-    try {
-      invariant(params.amount > 0n, 'Amount must be greater than 0');
-      invariant(params.asset.length > 0, 'Source asset is required');
-      invariant(params.poolToken.length > 0, 'Pool token is required');
-
-      const fromHubWallet = await HubService.getUserHubWalletAddress(
-        params.srcAddress,
-        params.srcChainKey,
-        this.hubProvider,
-      );
-      let recipient = fromHubWallet;
-
-      if (params.dst) {
-        recipient = await HubService.getUserHubWalletAddress(
-          params.dst.dstAddress,
-          params.dst.dstChainKey,
-          this.hubProvider,
-        );
-      }
-
-      const calls = await this.getTokenWrapAction(
-        params.asset,
-        params.srcChainKey,
-        params.amount,
-        params.poolToken,
-        recipient,
-      );
-      const data: Hex = encodeContractCalls(calls);
-
-      const txResult = await this.spoke.deposit({
-        srcAddress: params.srcAddress as GetAddressType<K>,
-        srcChainKey: params.srcChainKey,
-        to: recipient,
-        token: params.asset as GetTokenAddressType<K>,
-        amount: params.amount,
-        data,
-        raw: false,
-        walletProvider,
-        skipSimulation,
-      } satisfies DepositParams<K, false> as DepositParams<K, false>);
-
-      return {
-        ok: true,
-        value: txResult satisfies TxReturnType<K, false> as TxReturnType<K, false>,
-        data: {
-          address: fromHubWallet,
-          payload: data,
-        },
-      };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'CREATE_DEPOSIT_INTENT_FAILED',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
-      };
-    }
-  }
-
-  public async executeDepositRaw<K extends SpokeChainKey>(
-    _params: AssetDepositActionRaw<K>,
-  ): Promise<
-    Result<TxReturnType<K, true>, AssetServiceError<'CREATE_DEPOSIT_INTENT_FAILED'>> & RelayOptionalExtraData
-  > {
+  public async executeDeposit<K extends SpokeChainKey, Raw extends boolean>(
+    _params: AssetDepositAction<K, Raw>,
+  ): Promise<Result<TxReturnType<K, Raw>, AssetServiceError<'CREATE_DEPOSIT_INTENT_FAILED'>> & RelayOptionalExtraData> {
     const { params, skipSimulation } = _params;
     try {
       invariant(params.amount > 0n, 'Amount must be greater than 0');
@@ -525,20 +412,32 @@ export class AssetService {
       );
       const data: Hex = encodeContractCalls(calls);
 
-      const txResult = await this.spoke.deposit({
+      const coreParams = {
         srcAddress: params.srcAddress as GetAddressType<K>,
         srcChainKey: params.srcChainKey,
         to: recipient,
         token: params.asset as GetTokenAddressType<K>,
         amount: params.amount,
         data,
-        raw: true,
         skipSimulation,
-      } satisfies DepositParams<K, true> as DepositParams<K, true>);
+      } as const;
+
+      const txResult = await this.spoke.deposit(
+        _params.raw
+          ? {
+              ...coreParams,
+              raw: true,
+            }
+          : {
+              ...coreParams,
+              raw: false,
+              walletProvider: _params.walletProvider as GetWalletProviderType<K>,
+            },
+      );
 
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, true> as TxReturnType<K, true>,
+        value: txResult satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
         data: {
           address: fromHubWallet,
           payload: data,
@@ -561,82 +460,10 @@ export class AssetService {
   /**
    * Execute withdraw action - withdraws tokens from a position
    */
-  public async executeWithdraw<K extends SpokeChainKey>(
-    _params: AssetWithdrawAction<K>,
+  public async executeWithdraw<K extends SpokeChainKey, Raw extends boolean>(
+    _params: AssetWithdrawAction<K, Raw>,
   ): Promise<
-    Result<TxReturnType<K, false>, AssetServiceError<'CREATE_WITHDRAW_LIQUIDITY_INTENT_FAILED'>> &
-      RelayOptionalExtraData
-  > {
-    const { params, walletProvider, skipSimulation } = _params;
-    try {
-      invariant(params.amount > 0n, 'Amount must be greater than 0');
-      invariant(params.asset.length > 0, 'Source asset is required');
-      invariant(params.poolToken.length > 0, 'Pool token is required');
-
-      const fromHubWallet = await HubService.getUserHubWalletAddress(
-        params.srcAddress,
-        params.srcChainKey,
-        this.hubProvider,
-      );
-      let recipient: string = params.srcAddress;
-      let dstChainKey: SpokeChainKey = params.srcChainKey;
-
-      if (params.dst) {
-        recipient = await HubService.getUserHubWalletAddress(
-          params.dst.dstAddress,
-          params.dst.dstChainKey,
-          this.hubProvider,
-        );
-        dstChainKey = params.dst.dstChainKey;
-      }
-
-      const calls = await this.getTokenUnwrapAction(
-        dstChainKey,
-        params.asset,
-        params.amount,
-        fromHubWallet,
-        encodeAddress(dstChainKey, recipient),
-      );
-
-      const data = encodeContractCalls(calls);
-
-      const txResult = await this.spoke.sendMessage({
-        srcAddress: recipient as GetAddressType<K>,
-        srcChainKey: dstChainKey as K,
-        dstChainKey: this.hubProvider.chainConfig.chain.key,
-        dstAddress: fromHubWallet,
-        payload: data,
-        raw: false,
-        walletProvider,
-        skipSimulation,
-      });
-
-      return {
-        ok: true,
-        value: txResult satisfies TxReturnType<K, false> as TxReturnType<K, false>,
-        data: {
-          address: recipient as `0x${string}`,
-          payload: data,
-        },
-      };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'CREATE_WITHDRAW_LIQUIDITY_INTENT_FAILED',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
-      };
-    }
-  }
-
-  public async executeWithdrawRaw<K extends SpokeChainKey>(
-    _params: AssetWithdrawActionRaw<K>,
-  ): Promise<
-    Result<TxReturnType<K, true>, AssetServiceError<'CREATE_WITHDRAW_LIQUIDITY_INTENT_FAILED'>> & RelayOptionalExtraData
+    Result<TxReturnType<K, Raw>, AssetServiceError<'CREATE_WITHDRAW_LIQUIDITY_INTENT_FAILED'>> & RelayOptionalExtraData
   > {
     const { params, skipSimulation } = _params;
     try {
@@ -670,20 +497,31 @@ export class AssetService {
       );
 
       const data = encodeContractCalls(calls);
-
-      const txResult = await this.spoke.sendMessage({
+      const coreParams = {
         srcAddress: recipient as GetAddressType<K>,
         srcChainKey: dstChainKey as K,
         dstChainKey: this.hubProvider.chainConfig.chain.key,
         dstAddress: fromHubWallet,
         payload: data,
-        raw: true,
         skipSimulation,
-      });
+      };
+
+      const sendMessageParams = _params.raw
+        ? ({
+            ...coreParams,
+            raw: true,
+          } satisfies SendMessageParams<K, true>)
+        : ({
+            ...coreParams,
+            raw: false,
+            walletProvider: _params.walletProvider,
+          } satisfies SendMessageParams<K, false>);
+
+      const txResult = await this.spoke.sendMessage(sendMessageParams);
 
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<K, true> as TxReturnType<K, true>,
+        value: txResult satisfies TxReturnType<K, boolean> as TxReturnType<K, Raw>,
         data: {
           address: recipient as `0x${string}`,
           payload: data,
@@ -766,7 +604,7 @@ export class AssetService {
    * }
    */
   public async deposit<K extends SpokeChainKey>(
-    _params: AssetDepositAction<K>,
+    _params: AssetDepositAction<K, false>,
   ): Promise<Result<[SpokeTxHash, HubTxHash], AssetServiceError<AssetServiceErrorCode>>> {
     const { params, timeout } = _params;
     try {
@@ -847,7 +685,7 @@ export class AssetService {
    * console.log('Withdraw transaction hashes:', { spokeTxHash, hubTxHash });
    */
   public async withdraw<K extends SpokeChainKey>(
-    _params: AssetWithdrawAction<K>,
+    _params: AssetWithdrawAction<K, false>,
   ): Promise<Result<[SpokeTxHash, HubTxHash], AssetServiceError<AssetServiceErrorCode>>> {
     const { params, timeout } = _params;
     try {

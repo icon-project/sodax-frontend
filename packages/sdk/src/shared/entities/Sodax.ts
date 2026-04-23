@@ -44,9 +44,9 @@ export class Sodax {
     this.hubProvider = new EvmHubProvider({ config: this.config }); // default to Sonic mainnet
     this.spokeService = new SpokeService({ config: this.config, hubProvider: this.hubProvider });
     this.swaps = new SwapService({
-      configService: this.config,
+      config: this.config,
       hubProvider: this.hubProvider,
-      spokeService: this.spokeService,
+      spoke: this.spokeService,
     });
 
     this.moneyMarket = new MoneyMarketService({

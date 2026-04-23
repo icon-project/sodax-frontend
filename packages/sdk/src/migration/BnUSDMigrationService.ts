@@ -7,22 +7,15 @@ import {
   EvmVaultTokenService,
 } from '../index.js';
 import invariant from 'tiny-invariant';
-import type { EvmContractCall, GetWalletProviderType, SpokeChainKey } from '@sodax/types';
+import type { EvmContractCall, SpokeChainKey, WalletProviderSlot } from '@sodax/types';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 
-export type UnifiedBnUSDMigrateAction<K extends SpokeChainKey> = {
+export type UnifiedBnUSDMigrateAction<K extends SpokeChainKey, Raw extends boolean> = {
   params: UnifiedBnUSDMigrateParams<K>;
-  walletProvider: GetWalletProviderType<K>;
   unchecked?: boolean;
   skipSimulation?: boolean;
   timeout?: number;
-};
-
-export type UnifiedBnUSDMigrateActionRaw<K extends SpokeChainKey> = {
-  params: UnifiedBnUSDMigrateParams<K>;
-  unchecked?: boolean;
-  skipSimulation?: boolean;
-};
+} & WalletProviderSlot<K, Raw>;
 
 export type UnifiedBnUSDMigrateParams<K extends SpokeChainKey> = {
   srcAddress: string;

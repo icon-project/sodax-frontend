@@ -191,7 +191,7 @@ export class EvmSpokeService {
       }),
     };
 
-    if (params.raw === true) {
+    if (params.raw) {
       return rawTx satisfies TxReturnType<EvmSpokeOnlyChainKey, true> as TxReturnType<EvmSpokeOnlyChainKey, Raw>;
     }
 

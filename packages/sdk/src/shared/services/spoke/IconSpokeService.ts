@@ -153,7 +153,7 @@ export class IconSpokeService {
    * Sends a message to the hub chain.
    * @param {bigint} dstChainId - The chain ID of the destination chain.
    */
-  public async sendMessage<Raw extends boolean = false>(
+  public async sendMessage<Raw extends boolean>(
     params: SendMessageParams<IconChainKey, Raw>,
   ): Promise<TxReturnType<IconChainKey, Raw>> {
     const { srcAddress: from, srcChainKey: fromChainId, dstChainKey: dstChainId, dstAddress, payload } = params;

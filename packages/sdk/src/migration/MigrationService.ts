@@ -4,7 +4,6 @@ import {
   type SpokeService,
   type IcxMigrateParams,
   relayTxAndWaitPacket,
-  SonicSpokeService,
   type IcxCreateRevertMigrationParams,
   encodeAddress,
   type RelayError,
@@ -21,15 +20,11 @@ import {
   waitUntilIntentExecuted,
   type HubProvider,
   type BalnMigrateAction,
-  type DepositParams,
-  type BalnMigrateActionRaw,
   type IcxMigrateAction,
-  type IcxMigrateActionRaw,
   HubService,
   type IcxRevertMigrationAction,
   isIconChainKeyType,
   type UnifiedBnUSDMigrateAction,
-  type UnifiedBnUSDMigrateActionRaw,
   isSolanaChainKeyType,
   isBitcoinChainKeyType,
   isEvmChainKeyType,
@@ -39,6 +34,9 @@ import {
   type SpokeIsAllowanceValidParams,
   type SpokeIsAllowanceValidParamsHub,
   type SpokeApproveParams,
+  isEvmSpokeOnlyChainKeyType,
+  isOptionalEvmWalletProviderType,
+  isOptionalStellarWalletProviderType,
 } from '../index.js';
 import {
   ChainKeys,
@@ -62,6 +60,7 @@ import {
   type GetWalletProviderType,
   type StellarChainKey,
   type HubChainKey,
+  type EvmSpokeOnlyChainKey,
 } from '@sodax/types';
 import { isAddress } from 'viem';
 import type { ConfigService } from '../shared/config/ConfigService.js';
@@ -287,134 +286,10 @@ export class MigrationService {
    * );
    *
    */
-  public async approve<K extends SpokeChainKey>(
-    _params: IcxRevertMigrationAction | UnifiedBnUSDMigrateAction<K>,
+  public async approve<K extends SpokeChainKey, Raw extends boolean>(
+    _params: IcxRevertMigrationAction<Raw> | UnifiedBnUSDMigrateAction<K, Raw>,
     action: MigrationAction,
-  ): Promise<Result<TxReturnType<K, false>>> {
-    const { params, walletProvider } = _params;
-    try {
-      if (action === 'migrate') {
-        invariant(params.amount > 0n, 'Amount must be greater than 0');
-        invariant(params.dstAddress.length > 0, 'To address is required');
-        invariant(isUnifiedBnUSDMigrateParams(params), 'Invalid params');
-
-        if (isUnifiedBnUSDMigrateParams(params) && isEvmChainKeyType(params.srcChainKey)) {
-          return (await this.spoke.approve({
-            srcChainKey: params.srcChainKey,
-            token: params.srcbnUSD as GetTokenAddressType<EvmChainKey>,
-            amount: params.amount,
-            owner: params.srcAddress as GetAddressType<EvmChainKey>,
-            spender: isHubChainKeyType(params.srcChainKey)
-              ? (this.config.sodaxConfig.chains[params.srcChainKey].supportedTokens.bnUSD.address as Address)
-              : this.config.sodaxConfig.chains[params.srcChainKey].addresses.assetManager,
-            raw: false,
-            walletProvider: walletProvider as GetWalletProviderType<EvmChainKey>,
-          } satisfies SpokeApproveParams<EvmChainKey, false> as SpokeApproveParams<
-            EvmChainKey,
-            false
-          >)) satisfies Result<TxReturnType<EvmChainKey, false>> as Result<TxReturnType<K, false>>;
-        }
-
-        if (isUnifiedBnUSDMigrateParams(params) && isStellarChainKeyType(params.srcChainKey)) {
-          return (await this.spoke.approve({
-            srcChainKey: params.srcChainKey,
-            token: params.srcbnUSD,
-            amount: params.amount,
-            owner: params.srcAddress as GetAddressType<StellarChainKey>,
-            raw: false,
-            walletProvider: walletProvider as GetWalletProviderType<StellarChainKey>,
-          } satisfies SpokeApproveParams<StellarChainKey, false> as SpokeApproveParams<
-            StellarChainKey,
-            false
-          >)) satisfies Result<TxReturnType<StellarChainKey, false>> as Result<TxReturnType<K, false>>;
-        }
-
-        return {
-          ok: false,
-          error: new Error('Invalid params for migrate action'),
-        };
-      }
-      if (action === 'revert') {
-        invariant(params.amount > 0n, 'Amount must be greater than 0');
-        invariant(params.dstAddress.length > 0, 'To address is required');
-        invariant(isIcxCreateRevertMigrationParams(params) || isUnifiedBnUSDMigrateParams(params), 'Invalid params');
-
-        if (isUnifiedBnUSDMigrateParams(params) && isEvmChainKeyType(params.srcChainKey)) {
-          const spender: Address = isHubChainKeyType(params.srcChainKey)
-            ? await HubService.getUserRouter(params.srcAddress as Address, this.hubProvider)
-            : this.config.sodaxConfig.chains[params.srcChainKey].addresses.assetManager;
-
-          return (await this.spoke.approve({
-            srcChainKey: params.srcChainKey,
-            token: params.srcbnUSD as GetTokenAddressType<EvmChainKey>,
-            amount: params.amount,
-            owner: params.srcAddress as GetAddressType<EvmChainKey>,
-            spender,
-            raw: false,
-            walletProvider: walletProvider as GetWalletProviderType<EvmChainKey>,
-          } satisfies SpokeApproveParams<EvmChainKey, false> as SpokeApproveParams<
-            EvmChainKey,
-            false
-          >)) satisfies Result<TxReturnType<EvmChainKey, false>> as Result<TxReturnType<K, false>>;
-        }
-
-        if (isUnifiedBnUSDMigrateParams(params) && isStellarChainKeyType(params.srcChainKey)) {
-          return (await this.spoke.approve({
-            srcChainKey: params.srcChainKey,
-            token: params.srcbnUSD,
-            amount: params.amount,
-            owner: params.srcAddress as GetAddressType<StellarChainKey>,
-            raw: false,
-            walletProvider: walletProvider as GetWalletProviderType<StellarChainKey>,
-          } satisfies SpokeApproveParams<StellarChainKey, false> as SpokeApproveParams<
-            StellarChainKey,
-            false
-          >)) satisfies Result<TxReturnType<StellarChainKey, false>> as Result<TxReturnType<K, false>>;
-        }
-
-        if (isHubChainKeyType(params.srcChainKey) && isIcxCreateRevertMigrationParams(params)) {
-          const userRouter = await HubService.getUserHubWalletAddress(
-            params.srcAddress,
-            params.srcChainKey,
-            this.hubProvider,
-          );
-
-          return (await this.spoke.approve({
-            srcChainKey: params.srcChainKey,
-            token: this.hubProvider.chainConfig.addresses.sodaToken,
-            amount: params.amount,
-            owner: params.srcAddress,
-            spender: userRouter,
-            raw: false,
-            walletProvider: walletProvider as GetWalletProviderType<HubChainKey>,
-          } satisfies SpokeApproveParams<HubChainKey, false> as SpokeApproveParams<
-            HubChainKey,
-            false
-          >)) satisfies Result<TxReturnType<HubChainKey, false>> as Result<TxReturnType<K, false>>;
-        }
-
-        return {
-          ok: false,
-          error: new Error('Invalid params or chain type for revert action'),
-        };
-      }
-
-      return {
-        ok: false,
-        error: new Error('Invalid action'),
-      };
-    } catch (error) {
-      return {
-        ok: false,
-        error: error,
-      };
-    }
-  }
-
-  public async approveRaw<K extends SpokeChainKey>(
-    _params: IcxRevertMigrationAction | UnifiedBnUSDMigrateAction<K>,
-    action: MigrationAction,
-  ): Promise<Result<TxReturnType<K, true>>> {
+  ): Promise<Result<TxReturnType<K, Raw>>> {
     const { params } = _params;
     try {
       if (action === 'migrate') {
@@ -422,32 +297,76 @@ export class MigrationService {
         invariant(params.dstAddress.length > 0, 'To address is required');
         invariant(isUnifiedBnUSDMigrateParams(params), 'Invalid params');
 
-        if (isUnifiedBnUSDMigrateParams(params) && isEvmChainKeyType(params.srcChainKey)) {
-          return (await this.spoke.approve({
-            srcChainKey: params.srcChainKey,
-            token: params.srcbnUSD as GetTokenAddressType<EvmChainKey>,
+        if (isUnifiedBnUSDMigrateParams(params) && isEvmSpokeOnlyChainKeyType(params.srcChainKey)) {
+          invariant(
+            isOptionalEvmWalletProviderType(_params.walletProvider),
+            'Invalid wallet provider. Expected Evm wallet provider.',
+          );
+
+          const srcChainKey = params.srcChainKey as EvmSpokeOnlyChainKey;
+          const coreParams = {
+            srcChainKey: srcChainKey, // required type assertion to avoid type error
+            token: params.srcbnUSD as GetTokenAddressType<EvmSpokeOnlyChainKey>,
             amount: params.amount,
-            owner: params.srcAddress as GetAddressType<EvmChainKey>,
+            owner: params.srcAddress as GetAddressType<EvmSpokeOnlyChainKey>,
             spender: isHubChainKeyType(params.srcChainKey)
-              ? (this.config.sodaxConfig.chains[params.srcChainKey].supportedTokens.bnUSD.address as Address)
-              : this.config.sodaxConfig.chains[params.srcChainKey].addresses.assetManager,
-            raw: true,
-          } satisfies SpokeApproveParams<EvmChainKey, true> as SpokeApproveParams<EvmChainKey, true>)) satisfies Result<
-            TxReturnType<EvmChainKey, true>
-          > as Result<TxReturnType<K, true>>;
+              ? this.config.sodaxConfig.chains[srcChainKey].supportedTokens.bnUSD.address
+              : this.config.sodaxConfig.chains[srcChainKey].addresses.assetManager,
+          } as const;
+
+          const approveParams = _params.raw
+            ? ({
+                ...coreParams,
+                raw: true,
+              } satisfies SpokeApproveParams<EvmSpokeOnlyChainKey, true>)
+            : ({
+                ...coreParams,
+                raw: false,
+                walletProvider: _params.walletProvider,
+              } satisfies SpokeApproveParams<EvmSpokeOnlyChainKey, false>);
+
+          const result = await this.spoke.approve<EvmSpokeOnlyChainKey, boolean>(approveParams);
+
+          if (!result.ok) return result;
+
+          return {
+            ok: true,
+            value: result.value satisfies TxReturnType<EvmSpokeOnlyChainKey, boolean> as TxReturnType<K, Raw>,
+          };
         }
 
         if (isUnifiedBnUSDMigrateParams(params) && isStellarChainKeyType(params.srcChainKey)) {
-          return (await this.spoke.approve({
+          invariant(
+            isOptionalStellarWalletProviderType(_params.walletProvider),
+            'Invalid wallet provider. Expected Stellar wallet provider.',
+          );
+
+          const coreParams = {
             srcChainKey: params.srcChainKey,
             token: params.srcbnUSD,
             amount: params.amount,
             owner: params.srcAddress as GetAddressType<StellarChainKey>,
-            raw: true,
-          } satisfies SpokeApproveParams<StellarChainKey, true> as SpokeApproveParams<
-            StellarChainKey,
-            true
-          >)) satisfies Result<TxReturnType<StellarChainKey, true>> as Result<TxReturnType<K, true>>;
+          } as const;
+
+          const result = await this.spoke.approve<StellarChainKey, boolean>(
+            _params.raw
+              ? {
+                  ...coreParams,
+                  raw: true,
+                }
+              : {
+                  ...coreParams,
+                  raw: false,
+                  walletProvider: _params.walletProvider,
+                },
+          );
+
+          if (!result.ok) return result;
+
+          return {
+            ok: true,
+            value: result.value satisfies TxReturnType<StellarChainKey, boolean> as TxReturnType<K, Raw>,
+          };
         }
 
         return {
@@ -460,53 +379,118 @@ export class MigrationService {
         invariant(params.dstAddress.length > 0, 'To address is required');
         invariant(isIcxCreateRevertMigrationParams(params) || isUnifiedBnUSDMigrateParams(params), 'Invalid params');
 
-        if (isUnifiedBnUSDMigrateParams(params) && isEvmChainKeyType(params.srcChainKey)) {
+        if (isUnifiedBnUSDMigrateParams(params) && isEvmSpokeOnlyChainKeyType(params.srcChainKey)) {
+          invariant(
+            isOptionalEvmWalletProviderType(_params.walletProvider),
+            'Invalid wallet provider. Expected Evm wallet provider.',
+          );
+
           const spender: Address = isHubChainKeyType(params.srcChainKey)
             ? await HubService.getUserRouter(params.srcAddress as Address, this.hubProvider)
             : this.config.sodaxConfig.chains[params.srcChainKey].addresses.assetManager;
 
-          return (await this.spoke.approve({
-            srcChainKey: params.srcChainKey,
+          const srcChainKey = params.srcChainKey as EvmSpokeOnlyChainKey;
+          const coreParams = {
+            srcChainKey: srcChainKey,
             token: params.srcbnUSD as GetTokenAddressType<EvmChainKey>,
             amount: params.amount,
             owner: params.srcAddress as GetAddressType<EvmChainKey>,
             spender,
-            raw: true,
-          } satisfies SpokeApproveParams<EvmChainKey, true> as SpokeApproveParams<EvmChainKey, true>)) satisfies Result<
-            TxReturnType<EvmChainKey, true>
-          > as Result<TxReturnType<K, true>>;
+          } as const;
+
+          const approveParams = _params.raw
+            ? ({
+                ...coreParams,
+                raw: true,
+              } satisfies SpokeApproveParams<EvmSpokeOnlyChainKey, true>)
+            : ({
+                ...coreParams,
+                raw: false,
+                walletProvider: _params.walletProvider,
+              } satisfies SpokeApproveParams<EvmSpokeOnlyChainKey, false>);
+
+          const result = await this.spoke.approve<EvmSpokeOnlyChainKey, boolean>(approveParams);
+
+          if (!result.ok) return result;
+
+          return {
+            ok: true,
+            value: result.value satisfies TxReturnType<EvmSpokeOnlyChainKey, boolean> as TxReturnType<K, Raw>,
+          };
         }
 
         if (isUnifiedBnUSDMigrateParams(params) && isStellarChainKeyType(params.srcChainKey)) {
-          return (await this.spoke.approve({
+          invariant(
+            isOptionalStellarWalletProviderType(_params.walletProvider),
+            'Invalid wallet provider. Expected Stellar wallet provider.',
+          );
+
+          const coreParams = {
             srcChainKey: params.srcChainKey,
             token: params.srcbnUSD,
             amount: params.amount,
             owner: params.srcAddress as GetAddressType<StellarChainKey>,
-            raw: true,
-          } satisfies SpokeApproveParams<StellarChainKey, true> as SpokeApproveParams<
-            StellarChainKey,
-            true
-          >)) satisfies Result<TxReturnType<StellarChainKey, true>> as Result<TxReturnType<K, true>>;
+          } as const;
+
+          const result = await this.spoke.approve<StellarChainKey, boolean>(
+            _params.raw
+              ? {
+                  ...coreParams,
+                  raw: true,
+                }
+              : {
+                  ...coreParams,
+                  raw: false,
+                  walletProvider: _params.walletProvider,
+                },
+          );
+
+          if (!result.ok) return result;
+
+          return {
+            ok: true,
+            value: result.value satisfies TxReturnType<StellarChainKey, boolean> as TxReturnType<K, Raw>,
+          };
         }
 
         if (isHubChainKeyType(params.srcChainKey) && isIcxCreateRevertMigrationParams(params)) {
+          invariant(
+            isOptionalEvmWalletProviderType(_params.walletProvider),
+            'Invalid wallet provider. Expected Evm wallet provider.',
+          );
           const userRouter = await HubService.getUserHubWalletAddress(
             params.srcAddress,
             params.srcChainKey,
             this.hubProvider,
           );
 
-          return (await this.spoke.approve({
+          const coreParams = {
             srcChainKey: params.srcChainKey,
             token: this.hubProvider.chainConfig.addresses.sodaToken,
             amount: params.amount,
             owner: params.srcAddress,
             spender: userRouter,
-            raw: true,
-          } satisfies SpokeApproveParams<HubChainKey, true> as SpokeApproveParams<HubChainKey, true>)) satisfies Result<
-            TxReturnType<HubChainKey, true>
-          > as Result<TxReturnType<K, true>>;
+          } as const;
+
+          const approveParams = _params.raw
+            ? ({
+                ...coreParams,
+                raw: true,
+              } satisfies SpokeApproveParams<HubChainKey, true>)
+            : ({
+                ...coreParams,
+                raw: false,
+                walletProvider: _params.walletProvider,
+              } satisfies SpokeApproveParams<HubChainKey, false>);
+
+          const result = await this.spoke.approve<HubChainKey, boolean>(approveParams);
+
+          if (!result.ok) return result;
+
+          return {
+            ok: true,
+            value: result.value satisfies TxReturnType<EvmSpokeOnlyChainKey, boolean> as TxReturnType<K, Raw>,
+          };
         }
 
         return {
@@ -570,7 +554,7 @@ export class MigrationService {
    * }
    */
   async migratebnUSD<K extends SpokeChainKey>(
-    _params: UnifiedBnUSDMigrateAction<K>,
+    _params: UnifiedBnUSDMigrateAction<K, false>,
   ): Promise<
     Result<
       [string, Hex],
@@ -678,7 +662,7 @@ export class MigrationService {
    * console.log('Migration transaction hashes:', { spokeTxHash, hubTxHash });
    */
   async migrateIcxToSoda(
-    _params: IcxMigrateAction,
+    _params: IcxMigrateAction<false>,
   ): Promise<
     Result<
       [Hex, Hex],
@@ -755,7 +739,7 @@ export class MigrationService {
    * console.log('Revert migration transaction hashes:', { hubTxHash, spokeTxHash });
    */
   async revertMigrateSodaToIcx(
-    _params: IcxRevertMigrationAction,
+    _params: IcxRevertMigrationAction<false>,
   ): Promise<
     Result<
       [Hex, Hex],
@@ -831,7 +815,7 @@ export class MigrationService {
    * console.log('Migration transaction hashes:', { spokeTxHash, hubTxHash });
    */
   async migrateBaln(
-    _params: BalnMigrateAction,
+    _params: BalnMigrateAction<false>,
   ): Promise<
     Result<
       [Hex, Hex],
@@ -897,56 +881,9 @@ export class MigrationService {
    * );
    *
    */
-  async createMigrateBalnIntent(
-    _params: BalnMigrateAction,
-  ): Promise<Result<TxReturnType<IconChainKey, false>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
-    const { params, skipSimulation, walletProvider } = _params;
-
-    try {
-      const balnToken = this.config.sodaxConfig.chains[params.srcChainKey].supportedTokens.BALN.address;
-      invariant(balnToken, 'BALN token not found');
-
-      const migrationData = this.balnSwapService.swapData(balnToken, params, this.config);
-
-      const hubWalletAddress = await HubService.getUserHubWalletAddress(
-        params.srcAddress,
-        params.srcChainKey,
-        this.hubProvider,
-      );
-
-      const txResult = await this.spoke.deposit({
-        srcChainKey: params.srcChainKey,
-        srcAddress: params.srcAddress,
-        to: hubWalletAddress,
-        token: balnToken,
-        amount: params.amount,
-        data: migrationData,
-        skipSimulation,
-        raw: false,
-        walletProvider,
-      } satisfies DepositParams<IconChainKey, false>);
-
-      return {
-        ok: true,
-        value: txResult satisfies TxReturnType<IconChainKey, false>,
-      };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'CREATE_MIGRATION_INTENT_FAILED',
-          data: {
-            payload: params,
-            error: error,
-          },
-        },
-      };
-    }
-  }
-
-  async createMigrateBalnIntentRaw(
-    _params: BalnMigrateActionRaw,
-  ): Promise<Result<TxReturnType<IconChainKey, true>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
+  async createMigrateBalnIntent<Raw extends boolean>(
+    _params: BalnMigrateAction<Raw>,
+  ): Promise<Result<TxReturnType<IconChainKey, Raw>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
     const { params, skipSimulation } = _params;
 
     try {
@@ -961,7 +898,7 @@ export class MigrationService {
         this.hubProvider,
       );
 
-      const txResult = await this.spoke.deposit({
+      const coreParams = {
         srcChainKey: params.srcChainKey,
         srcAddress: params.srcAddress,
         to: hubWalletAddress,
@@ -969,12 +906,24 @@ export class MigrationService {
         amount: params.amount,
         data: migrationData,
         skipSimulation,
-        raw: true,
-      } satisfies DepositParams<IconChainKey, true>);
+      } as const;
+
+      const txResult = await this.spoke.deposit(
+        _params.raw
+          ? {
+              ...coreParams,
+              raw: true,
+            }
+          : {
+              ...coreParams,
+              raw: false,
+              walletProvider: _params.walletProvider,
+            },
+      );
 
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<IconChainKey, true>,
+        value: txResult satisfies TxReturnType<IconChainKey, boolean> as TxReturnType<IconChainKey, Raw>,
       };
     } catch (error) {
       return {
@@ -1033,120 +982,9 @@ export class MigrationService {
    *   spokeProvider
    * );
    */
-  async createMigratebnUSDIntent<K extends SpokeChainKey>(
-    _params: UnifiedBnUSDMigrateAction<K>,
-  ): Promise<Result<[TxReturnType<K, false>, RelayExtraData], MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
-    const { params, unchecked, skipSimulation, walletProvider } = _params;
-    try {
-      if (!unchecked) {
-        invariant(this.config.isValidSpokeChainKey(params.srcChainKey), 'Invalid spoke source chain key');
-        invariant(this.config.isValidSpokeChainKey(params.dstChainKey), 'Invalid spoke destination chain key');
-        invariant(params.srcbnUSD.length > 0, 'Legacy bnUSD token address is required');
-        invariant(params.dstbnUSD.length > 0, 'New bnUSD token address is required');
-        invariant(params.amount > 0, 'Amount must be greater than 0');
-        invariant(params.dstAddress.length > 0, 'Recipient address is required');
-        invariant(
-          !(isLegacybnUSDToken(params.srcbnUSD) && isLegacybnUSDToken(params.dstbnUSD)),
-          'srcbnUSD and dstbnUSD cannot both be legacy bnUSD tokens',
-        );
-      }
-
-      let migrationData: Hex;
-      if (isLegacybnUSDToken(params.srcbnUSD)) {
-        // migration from legacy bnUSD to new bnUSD
-        if (!unchecked) {
-          invariant(
-            isLegacybnUSDChainId(params.srcChainKey),
-            'srcChainId must be a legacy bnUSD chain (icon, sui, stellar) if srcbnUSD is a legacy bnUSD token',
-          );
-          invariant(
-            isNewbnUSDChainId(params.dstChainKey),
-            'dstChainId must be a new bnUSD chain (all spoke chains besides Icon) if dstbnUSD is a legacy bnUSD token',
-          );
-        }
-
-        migrationData = this.bnUSDMigrationService.migrateData({
-          srcChainKey: params.srcChainKey,
-          legacybnUSD: params.srcbnUSD,
-          newbnUSD: params.dstbnUSD,
-          dstChainKey: params.dstChainKey,
-          amount: params.amount,
-          dstAddress: encodeAddress(params.dstChainKey, params.dstAddress),
-        });
-      } else if (isLegacybnUSDToken(params.dstbnUSD)) {
-        // reverse migration from new bnUSD to legacy bnUSD
-        if (!unchecked) {
-          invariant(
-            isLegacybnUSDChainId(params.dstChainKey),
-            'dstChainId must be a legacy bnUSD chain (sui, stellar, icon) if dstbnUSD is a legacy bnUSD token',
-          );
-          invariant(
-            isNewbnUSDToken(params.srcbnUSD),
-            'srcbnUSD must be a new bnUSD token if dstbnUSD is a legacy bnUSD token',
-          );
-          invariant(
-            isNewbnUSDChainId(params.srcChainKey),
-            'srcChainId must be a new bnUSD chain (all spoke chains besides Icon) if srcbnUSD is a new bnUSD token',
-          );
-        }
-
-        migrationData = this.bnUSDMigrationService.revertMigrationData({
-          srcChainId: params.srcChainKey,
-          legacybnUSD: params.dstbnUSD,
-          newbnUSD: params.srcbnUSD,
-          dstChainKey: params.dstChainKey,
-          amount: params.amount,
-          dstAddress: encodeAddress(params.dstChainKey, params.dstAddress),
-        });
-      } else {
-        throw new Error('srcbnUSD or dstbnUSD must be a legacy bnUSD token');
-      }
-
-      const hubWalletAddress = await HubService.getUserHubWalletAddress(
-        params.srcAddress,
-        params.srcChainKey,
-        this.hubProvider,
-      );
-
-      const txResult = await this.spoke.deposit({
-        srcChainKey: params.srcChainKey,
-        srcAddress: params.srcAddress as GetAddressType<K>,
-        to: hubWalletAddress,
-        token: params.srcbnUSD as GetTokenAddressType<K>,
-        amount: params.amount,
-        data: migrationData,
-        skipSimulation,
-        raw: false,
-        walletProvider,
-      });
-
-      return {
-        ok: true,
-        value: [
-          txResult satisfies TxReturnType<K, false> as TxReturnType<K, false>,
-          {
-            address: hubWalletAddress,
-            payload: migrationData,
-          } satisfies RelayExtraData,
-        ],
-      };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'CREATE_MIGRATION_INTENT_FAILED',
-          data: {
-            payload: params,
-            error: error,
-          },
-        },
-      };
-    }
-  }
-
-  async createMigratebnUSDIntentRaw<K extends SpokeChainKey>(
-    _params: UnifiedBnUSDMigrateActionRaw<K>,
-  ): Promise<Result<[TxReturnType<K, true>, RelayExtraData], MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
+  async createMigratebnUSDIntent<K extends SpokeChainKey, Raw extends boolean>(
+    _params: UnifiedBnUSDMigrateAction<K, Raw>,
+  ): Promise<Result<[TxReturnType<K, Raw>, RelayExtraData], MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
     const { params, unchecked, skipSimulation } = _params;
     try {
       if (!unchecked) {
@@ -1219,7 +1057,7 @@ export class MigrationService {
         this.hubProvider,
       );
 
-      const txResult = await this.spoke.deposit({
+      const coreParams = {
         srcChainKey: params.srcChainKey,
         srcAddress: params.srcAddress as GetAddressType<K>,
         to: hubWalletAddress,
@@ -1227,13 +1065,25 @@ export class MigrationService {
         amount: params.amount,
         data: migrationData,
         skipSimulation,
-        raw: true,
-      });
+      } as const;
+
+      const txResult = await this.spoke.deposit(
+        _params.raw
+          ? {
+              ...coreParams,
+              raw: true,
+            }
+          : {
+              ...coreParams,
+              raw: false,
+              walletProvider: _params.walletProvider as GetWalletProviderType<K>,
+            },
+      );
 
       return {
         ok: true,
         value: [
-          txResult satisfies TxReturnType<K, true> as TxReturnType<K, true>,
+          txResult satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
           {
             address: hubWalletAddress,
             payload: migrationData,
@@ -1281,10 +1131,10 @@ export class MigrationService {
    *   // Handle error
    * }
    */
-  async createMigrateIcxToSodaIntent(
-    _params: IcxMigrateAction,
-  ): Promise<Result<TxReturnType<IconChainKey, false>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
-    const { params, skipSimulation, walletProvider } = _params;
+  async createMigrateIcxToSodaIntent<Raw extends boolean>(
+    _params: IcxMigrateAction<Raw>,
+  ): Promise<Result<TxReturnType<IconChainKey, Raw>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
+    const { params, skipSimulation } = _params;
     try {
       invariant(params.amount > 0, 'Amount must be greater than 0');
       invariant(isAddress(params.dstAddress), 'Recipient address is required');
@@ -1313,8 +1163,7 @@ export class MigrationService {
         this.hubProvider,
       );
 
-      // Execute the migration transaction
-      const txResult = await this.spoke.deposit({
+      const coreParams = {
         srcChainKey: ChainKeys.ICON_MAINNET,
         srcAddress: params.srcAddress,
         to: hubWalletAddress,
@@ -1322,74 +1171,24 @@ export class MigrationService {
         amount: params.amount,
         data: this.icxMigration.migrateData(params),
         skipSimulation,
-        raw: false,
-        walletProvider,
-      } satisfies DepositParams<IconChainKey, false>);
+      } as const;
+
+      const txResult = await this.spoke.deposit(
+        _params.raw
+          ? {
+              ...coreParams,
+              raw: true,
+            }
+          : {
+              ...coreParams,
+              raw: false,
+              walletProvider: _params.walletProvider,
+            },
+      );
 
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<IconChainKey, false>,
-      };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'CREATE_MIGRATION_INTENT_FAILED',
-          data: {
-            payload: params,
-            error: error,
-          },
-        },
-      };
-    }
-  }
-
-  async createMigrateIcxToSodaIntentRaw(
-    _params: IcxMigrateActionRaw,
-  ): Promise<Result<TxReturnType<IconChainKey, true>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
-    const { params, skipSimulation } = _params;
-    try {
-      invariant(params.amount > 0, 'Amount must be greater than 0');
-      invariant(isAddress(params.dstAddress), 'Recipient address is required');
-      invariant(
-        params.address.toLowerCase() ===
-          this.config.sodaxConfig.chains[ChainKeys.ICON_MAINNET].addresses.wICX.toLowerCase() ||
-          params.address.toLowerCase() ===
-            this.config.sodaxConfig.chains[ChainKeys.ICON_MAINNET].nativeToken.toLowerCase(),
-        'Token must be wICX or native ICX token',
-      );
-
-      // Get the available amount for migration
-      const availableAmount = await this.icxMigration.getAvailableAmount();
-
-      // Check if there's enough liquidity for migration
-      if (availableAmount < params.amount) {
-        throw new Error(
-          `Insufficient liquidity. Available: ${availableAmount.toString()}, Requested: ${params.amount.toString()}`,
-        );
-      }
-
-      const hubWalletAddress = await HubService.getUserHubWalletAddress(
-        params.srcAddress,
-        ChainKeys.SONIC_MAINNET,
-        this.hubProvider,
-      );
-
-      // Execute the migration transaction
-      const txResult = await this.spoke.deposit({
-        srcChainKey: ChainKeys.ICON_MAINNET,
-        srcAddress: params.srcAddress,
-        to: hubWalletAddress,
-        token: params.address,
-        amount: params.amount,
-        data: this.icxMigration.migrateData(params),
-        skipSimulation,
-        raw: true,
-      } satisfies DepositParams<IconChainKey, true>);
-
-      return {
-        ok: true,
-        value: txResult satisfies TxReturnType<IconChainKey, true>,
+        value: txResult satisfies TxReturnType<IconChainKey, boolean> as TxReturnType<IconChainKey, Raw>,
       };
     } catch (error) {
       return {
@@ -1423,10 +1222,10 @@ export class MigrationService {
    *     action: 'revert',
    *   },
    */
-  async createRevertSodaToIcxMigrationIntent(
-    _params: IcxRevertMigrationAction,
-  ): Promise<Result<TxReturnType<SonicChainKey, false>, MigrationError<'CREATE_REVERT_MIGRATION_INTENT_FAILED'>>> {
-    const { params, walletProvider, skipSimulation } = _params;
+  async createRevertSodaToIcxMigrationIntent<Raw extends boolean>(
+    _params: IcxRevertMigrationAction<Raw>,
+  ): Promise<Result<TxReturnType<SonicChainKey, Raw>, MigrationError<'CREATE_REVERT_MIGRATION_INTENT_FAILED'>>> {
+    const { params, skipSimulation } = _params;
     try {
       const userRouter = await HubService.getUserHubWalletAddress(
         params.srcAddress,
@@ -1442,7 +1241,7 @@ export class MigrationService {
         userWallet: userRouter,
       });
 
-      const txResult = await SonicSpokeService.deposit({
+      const coreParams = {
         srcChainKey: ChainKeys.SONIC_MAINNET,
         srcAddress: params.srcAddress,
         to: userRouter,
@@ -1450,13 +1249,24 @@ export class MigrationService {
         amount: params.amount,
         data,
         skipSimulation,
-        raw: false,
-        walletProvider,
-      } satisfies DepositParams<SonicChainKey, false>);
+      } as const;
+
+      const txResult = await this.spoke.deposit(
+        _params.raw
+          ? {
+              ...coreParams,
+              raw: true,
+            }
+          : {
+              ...coreParams,
+              raw: false,
+              walletProvider: _params.walletProvider,
+            },
+      );
 
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<SonicChainKey, false>,
+        value: txResult satisfies TxReturnType<SonicChainKey, boolean> as TxReturnType<SonicChainKey, Raw>,
       };
     } catch (error) {
       return {

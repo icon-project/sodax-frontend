@@ -178,6 +178,9 @@ export class BitcoinSpokeService {
    * @returns {Promise<bigint>} Estimated fee in satoshis
    */
   public async estimateGas(params: EstimateGasParams<BitcoinChainKey>): Promise<bigint> {
+    if (typeof params.tx === 'string') {
+      throw new Error('[BitcoinSpokeService.estimateGas] string tx not supported');
+    }
     const txBytes = Buffer.from(params.tx.data, 'hex');
     const vsize = Math.ceil(txBytes.length);
     const feeRate = await this.getFeeRateEstimate();
@@ -228,10 +231,10 @@ export class BitcoinSpokeService {
    * @param {boolean} raw - Whether to return raw PSBT or transaction hash
    * @returns {Promise<TxReturnType<BitcoinSpokeProviderType, R>>} Transaction hash or raw PSBT
    */
-  public async sendMessage<R extends boolean = false>(
-    params: SendMessageParams<BitcoinChainKey, R> & { walletMode?: WalletMode },
-  ): Promise<TxReturnType<BitcoinChainKey, R>> {
-    return (await this.encodeWithdrawalData(params)) as TxReturnType<BitcoinChainKey, R>;
+  public async sendMessage<Raw extends boolean>(
+    params: SendMessageParams<BitcoinChainKey, Raw> & { walletMode?: WalletMode },
+  ): Promise<TxReturnType<BitcoinChainKey, Raw>> {
+    return (await this.encodeWithdrawalData(params)) satisfies TxReturnType<BitcoinChainKey, Raw>;
   }
 
   /**
@@ -533,9 +536,9 @@ export class BitcoinSpokeService {
     return await response.text();
   }
 
-  public async encodeWithdrawalData<Raw extends boolean = boolean>(
+  public async encodeWithdrawalData<Raw extends boolean>(
     params: SendMessageParams<BitcoinChainKey, Raw> & { walletMode?: WalletMode },
-  ): Promise<string> {
+  ): Promise<TxReturnType<BitcoinChainKey, Raw>> {
     const {
       srcAddress: from,
       srcChainKey: fromChainId,
@@ -569,15 +572,20 @@ export class BitcoinSpokeService {
     };
 
     if (params.raw === true) {
-      return JSON.stringify(onDemandWithdraw);
+      return JSON.stringify(onDemandWithdraw) satisfies TxReturnType<BitcoinChainKey, true> as TxReturnType<
+        BitcoinChainKey,
+        Raw
+      >;
     }
 
-    const signature = await (
-      params as SendMessageParams<BitcoinChainKey, false> & { walletProvider: IBitcoinWalletProvider }
-    ).walletProvider.signEcdsaMessage(orderedPayload);
+    const signature = await params.walletProvider.signEcdsaMessage(orderedPayload);
 
     onDemandWithdraw.signature = signature;
-    return JSON.stringify(onDemandWithdraw);
+
+    return JSON.stringify(onDemandWithdraw) satisfies TxReturnType<BitcoinChainKey, false> as TxReturnType<
+      BitcoinChainKey,
+      Raw
+    >;
   }
 
   /**

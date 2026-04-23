@@ -210,9 +210,9 @@ export class NearSpokeService {
    * @param {CWSpokeProvider} spokeProvider - The provider for the spoke chain.
    * @returns {Promise<TxReturnType<S, R>>} A promise that resolves to the transaction hash.
    */
-  public async sendMessage<R extends boolean = false>(
-    params: SendMessageParams<NearChainKey, R>,
-  ): Promise<TxReturnType<NearChainKey, R>> {
+  public async sendMessage<Raw extends boolean>(
+    params: SendMessageParams<NearChainKey, Raw>,
+  ): Promise<TxReturnType<NearChainKey, Raw>> {
     const dstChainId = getIntentRelayChainId(params.dstChainKey);
 
     const tx: NearRawTransaction = {
@@ -231,11 +231,11 @@ export class NearSpokeService {
     } satisfies NearRawTransaction;
 
     if (params.raw === true) {
-      return tx satisfies TxReturnType<NearChainKey, true> as TxReturnType<NearChainKey, R>;
+      return tx satisfies TxReturnType<NearChainKey, true> as TxReturnType<NearChainKey, Raw>;
     }
 
     return params.walletProvider.signAndSubmitTxn(tx) satisfies Promise<TxReturnType<NearChainKey, false>> as Promise<
-      TxReturnType<NearChainKey, R>
+      TxReturnType<NearChainKey, Raw>
     >;
   }
 

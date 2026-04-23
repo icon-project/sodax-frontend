@@ -23,6 +23,7 @@ import {
   type EvmContractCall,
   isSonicChainKey,
   type WalletProviderSlot,
+  type EvmReturnType,
 } from '@sodax/types';
 import invariant from 'tiny-invariant';
 import {
@@ -42,7 +43,7 @@ import {
   type EvmHubProvider,
   type GetDepositParams,
   type SendMessageParams,
-  ConfigService,
+  type ConfigService,
   type Erc20IsAllowanceParams,
   type DepositParams,
 } from '../../../index.js';
@@ -300,9 +301,9 @@ export class SonicSpokeService {
     > as Promise<TxReturnType<SonicChainKey, Raw>>;
   }
 
-  public static async createRawSwapIntent(
-    params: CreateSonicSwapIntentParams<true>,
-  ): Promise<[TxReturnType<SonicChainKey, true>, Intent, bigint, Hex]> {
+  public static async createSwapIntent<Raw extends boolean>(
+    params: CreateSonicSwapIntentParams<Raw>,
+  ): Promise<[TxReturnType<SonicChainKey, Raw>, Intent, bigint, Hex]> {
     const { createIntentParams, creatorHubWalletAddress, solverConfig, fee, hubProvider } = params;
     // On Sonic spoke, token/address fields are always EVM-shaped 0x addresses.
     const inputToken = createIntentParams.inputToken as Address;
@@ -353,69 +354,15 @@ export class SonicSpokeService {
           : 0n,
     } satisfies TxReturnType<SonicChainKey, true>;
 
-    return [
-      rawTx satisfies TxReturnType<SonicChainKey, true> as TxReturnType<SonicChainKey, true>,
-      intent,
-      feeAmount,
-      txData.data,
-    ];
-  }
-
-  public static async createAndExecuteSwapIntent(
-    params: CreateSonicSwapIntentParams<false>,
-  ): Promise<[TxReturnType<SonicChainKey, false>, Intent, bigint, Hex]> {
-    const { createIntentParams, creatorHubWalletAddress, solverConfig, fee, hubProvider, walletProvider } = params;
-    // On Sonic spoke, token/address fields are always EVM-shaped 0x addresses.
-    const inputToken = createIntentParams.inputToken as Address;
-    const srcAddress = createIntentParams.srcAddress as Address;
-
-    const outputToken = isSonicChainKey(createIntentParams.dstChain)
-      ? hubProvider.config.getSpokeTokenFromOriginalAssetAddress(
-          createIntentParams.dstChain,
-          createIntentParams.outputToken,
-        )?.hubAsset
-      : (createIntentParams.outputToken as `0x${string}`);
-
-    invariant(
-      inputToken,
-      `hub asset not found for spoke chain token (intent.inputToken): ${createIntentParams.inputToken}`,
-    );
-    invariant(
-      outputToken,
-      `hub asset not found for spoke chain token (intent.outputToken): ${createIntentParams.outputToken}`,
-    );
-
-    const [feeData, feeAmount] = EvmSolverService.createIntentFeeData(fee, createIntentParams.inputAmount);
-
-    const intentsContract = solverConfig.intentsContract;
-    const intent = {
-      ...createIntentParams,
-      inputToken,
-      outputToken,
-      inputAmount: createIntentParams.inputAmount - feeAmount,
-      srcChain: getIntentRelayChainId(createIntentParams.srcChain),
-      dstChain: getIntentRelayChainId(createIntentParams.dstChain),
-      srcAddress: encodeAddress(createIntentParams.srcChain, createIntentParams.srcAddress),
-      dstAddress: encodeAddress(createIntentParams.dstChain, createIntentParams.dstAddress),
-      intentId: randomUint256(),
-      creator: creatorHubWalletAddress,
-      data: feeData, // fee amount will be deducted from the input amount
-    } satisfies Intent;
-
-    const txData = EvmSolverService.encodeCreateIntent(intent, intentsContract);
-
-    const rawTx = {
-      from: srcAddress,
-      to: txData.address,
-      data: txData.data,
-      value:
-        inputToken.toLowerCase() === hubProvider.chainConfig.nativeToken.toLowerCase()
-          ? createIntentParams.inputAmount
-          : 0n,
-    } satisfies TxReturnType<SonicChainKey, true>;
+    if (params.raw) {
+      return [rawTx as TxReturnType<SonicChainKey, Raw>, intent, feeAmount, txData.data];
+    }
 
     return [
-      (await walletProvider.sendTransaction(rawTx)) satisfies TxReturnType<SonicChainKey, false>,
+      (await params.walletProvider.sendTransaction(rawTx)) satisfies TxReturnType<SonicChainKey, false> as TxReturnType<
+        SonicChainKey,
+        Raw
+      >,
       intent,
       feeAmount,
       txData.data,
@@ -474,7 +421,7 @@ export class SonicSpokeService {
       ],
     });
 
-    const rawTx: TxReturnType<SonicChainKey, true> = {
+    const rawTx: EvmReturnType<true> = {
       from: params.srcAddress,
       to: spokeChainConfig[params.srcChainKey].addresses.walletRouter,
       data: txData,
@@ -485,9 +432,8 @@ export class SonicSpokeService {
       return rawTx satisfies TxReturnType<SonicChainKey, true> as TxReturnType<SonicChainKey, Raw>;
     }
 
-    return (await params.walletProvider.sendTransaction(rawTx)) satisfies TxReturnType<
-      SonicChainKey,
-      false
-    > as TxReturnType<SonicChainKey, Raw>;
+    return params.walletProvider.sendTransaction(rawTx) satisfies Promise<
+      TxReturnType<SonicChainKey, false>
+    > as Promise<TxReturnType<SonicChainKey, Raw>>;
   }
 }

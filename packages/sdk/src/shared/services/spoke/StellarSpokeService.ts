@@ -105,12 +105,12 @@ export type StellarTransferToHubParams = {
   data: Hex;
 };
 
-export type RequestTrustlineParams<S extends StellarChainKey, R extends boolean> = {
+export type RequestTrustlineParams<S extends StellarChainKey, Raw extends boolean> = {
   srcAddress: string;
   srcChainKey: S;
   token: string;
   amount: bigint;
-} & WalletProviderSlot<S, R>;
+} & WalletProviderSlot<S, Raw>;
 
 export class StellarSpokeService {
   private readonly chainConfig: StellarSpokeChainConfig;
@@ -198,8 +198,8 @@ export class StellarSpokeService {
     return [priorityTransaction, simulation];
   }
 
-  public buildDepositCall<R extends boolean = false>(
-    params: DepositParams<StellarChainKey, R>,
+  public buildDepositCall<Raw extends boolean>(
+    params: DepositParams<StellarChainKey, Raw>,
   ): xdr.Operation<Operation.InvokeHostFunction> {
     const contract = new Contract(spokeChainConfig[params.srcChainKey].addresses.assetManager);
     return contract.call(
@@ -214,8 +214,8 @@ export class StellarSpokeService {
     );
   }
 
-  public buildSendMessageCall<R extends boolean>(
-    params: SendMessageParams<StellarChainKey, R>,
+  public buildSendMessageCall<Raw extends boolean>(
+    params: SendMessageParams<StellarChainKey, Raw>,
   ): xdr.Operation<Operation.InvokeHostFunction> {
     const connection = new Contract(this.chainConfig.addresses.connection);
 
@@ -228,9 +228,9 @@ export class StellarSpokeService {
     );
   }
 
-  public async sendMessage<R extends boolean = false>(
-    params: SendMessageParams<StellarChainKey, R>,
-  ): Promise<TxReturnType<StellarChainKey, R>> {
+  public async sendMessage<Raw extends boolean>(
+    params: SendMessageParams<StellarChainKey, Raw>,
+  ): Promise<TxReturnType<StellarChainKey, Raw>> {
     try {
       const { srcAddress: from, srcChainKey: fromChainId } = params;
       const [network, accountResponse] = await Promise.all([
@@ -257,7 +257,7 @@ export class StellarSpokeService {
           to: spokeChainConfig[fromChainId].addresses.assetManager,
           value: 0n,
           data: transactionXdr,
-        } satisfies TxReturnType<StellarChainKey, true> as TxReturnType<StellarChainKey, R>;
+        } satisfies TxReturnType<StellarChainKey, true> as TxReturnType<StellarChainKey, Raw>;
       }
 
       const walletProvider = params.walletProvider;
@@ -270,7 +270,7 @@ export class StellarSpokeService {
         simulation,
       );
 
-      return `${hash}` satisfies TxReturnType<StellarChainKey, false> as TxReturnType<StellarChainKey, R>;
+      return `${hash}` satisfies TxReturnType<StellarChainKey, false> as TxReturnType<StellarChainKey, Raw>;
     } catch (error) {
       console.error('Error during sendMessage:', error);
       throw error;
@@ -508,9 +508,9 @@ export class StellarSpokeService {
    * @param raw - Whether to return the raw transaction data.
    * @returns The transaction result.
    */
-  public async requestTrustline<R extends boolean>(
-    params: RequestTrustlineParams<StellarChainKey, R>,
-  ): Promise<TxReturnType<StellarChainKey, R>> {
+  public async requestTrustline<Raw extends boolean>(
+    params: RequestTrustlineParams<StellarChainKey, Raw>,
+  ): Promise<TxReturnType<StellarChainKey, Raw>> {
     try {
       const { srcAddress: from, srcChainKey: fromChainId, token, amount } = params;
       const asset = spokeChainConfig[fromChainId].trustlineConfigs.find(
@@ -548,13 +548,13 @@ export class StellarSpokeService {
           to: spokeChainConfig[fromChainId].addresses.assetManager,
           value: amount,
           data: transactionXdr,
-        } satisfies TxReturnType<StellarChainKey, true> as TxReturnType<StellarChainKey, R>;
+        } satisfies TxReturnType<StellarChainKey, true> as TxReturnType<StellarChainKey, Raw>;
       }
 
       const walletProvider = params.walletProvider;
       const hash = await this.signAndSendTransaction(walletProvider, transaction);
 
-      return `${hash}` satisfies TxReturnType<StellarChainKey, false> as TxReturnType<StellarChainKey, R>;
+      return `${hash}` satisfies TxReturnType<StellarChainKey, false> as TxReturnType<StellarChainKey, Raw>;
     } catch (error) {
       console.error('Error during requestTrustline:', error);
       throw error;

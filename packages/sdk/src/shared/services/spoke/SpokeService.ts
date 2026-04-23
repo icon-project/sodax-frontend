@@ -47,7 +47,6 @@ import {
   type ConfigService,
   type HubProvider,
   type GetSpokeServiceType,
-  type WalletMode,
   type DepositParams,
   type EstimateGasParams,
   type GetDepositParams,
@@ -60,11 +59,13 @@ import {
   type SpokeIsAllowanceValidParams,
   type SpokeApproveParams,
   Erc20Service,
-  type ApproveChainKeys,
   isValidWalletProviderForChainKey,
   isSpokeApproveParamsHub,
+  type Erc20ApproveParams,
   isSpokeApproveParamsEvmSpoke,
   isSpokeApproveParamsStellar,
+  type RequestTrustlineParams,
+  type WalletMode,
 } from '../../../index.js';
 import invariant from 'tiny-invariant';
 
@@ -200,9 +201,9 @@ export class SpokeService {
    * Approve ERC-20 spending on hub / EVM spoke or request a Stellar trustline using unified params.
    * Feature services map their action payloads into {@link SpokeApproveParams}.
    */
-  public async approve<K extends ApproveChainKeys, R extends boolean>(
-    params: SpokeApproveParams<K, R>,
-  ): Promise<Result<TxReturnType<K, R>>> {
+  public async approve<K extends SpokeChainKey, Raw extends boolean>(
+    params: SpokeApproveParams<K, Raw>,
+  ): Promise<Result<TxReturnType<K, Raw>>> {
     try {
       invariant(
         isValidWalletProviderForChainKey(params.srcChainKey, params.walletProvider),
@@ -210,46 +211,46 @@ export class SpokeService {
       );
 
       if (isSpokeApproveParamsHub(params)) {
-        const result = await Erc20Service.approve({
+        const result = await Erc20Service.approve<Raw>({
+          ...params,
           token: params.token,
           amount: params.amount,
           from: params.owner,
           spender: params.spender,
-          walletProvider: params.walletProvider,
-        });
+        } as Erc20ApproveParams<Raw>);
 
         return {
           ok: true,
-          value: result satisfies TxReturnType<HubChainKey, boolean> as TxReturnType<K, R>,
+          value: result satisfies TxReturnType<HubChainKey, Raw> as TxReturnType<K, Raw>,
         };
       }
 
       if (isSpokeApproveParamsEvmSpoke(params)) {
-        const result = await Erc20Service.approve({
+        const result = await Erc20Service.approve<Raw>({
+          ...params,
           token: params.token,
           amount: params.amount,
           from: params.owner,
           spender: params.spender,
-          walletProvider: params.walletProvider,
-        });
+        } as Erc20ApproveParams<Raw>);
         return {
           ok: true,
-          value: result satisfies TxReturnType<EvmChainKey, boolean> as TxReturnType<K, R>,
+          value: result satisfies TxReturnType<EvmChainKey, Raw> as TxReturnType<K, Raw>,
         };
       }
 
       if (isSpokeApproveParamsStellar(params)) {
-        const result = await this.stellarSpokeService.requestTrustline({
+        const result = await this.stellarSpokeService.requestTrustline<Raw>({
+          ...params,
           srcAddress: params.owner,
           srcChainKey: params.srcChainKey,
           token: params.token,
           amount: params.amount,
-          raw: false,
-          walletProvider: params.walletProvider,
-        });
+        } as RequestTrustlineParams<StellarChainKey, Raw>);
+
         return {
           ok: true,
-          value: result satisfies TxReturnType<StellarChainKey, boolean> as TxReturnType<K, R>,
+          value: result satisfies TxReturnType<StellarChainKey, Raw> as TxReturnType<K, Raw>,
         };
       }
 
@@ -448,13 +449,13 @@ export class SpokeService {
    * @param {boolean} skipSimulation - Whether to skip deposit simulation (optional, defaults to false).
    * @returns {Promise<TxReturnType<T, R>>} A promise that resolves to the transaction hash.
    */
-  public async deposit<C extends SpokeChainKey, R extends boolean = false>(
-    params: DepositParams<C, R>,
-  ): Promise<TxReturnType<C, R>> {
+  public async deposit<K extends SpokeChainKey, R extends boolean>(
+    params: DepositParams<K, R>,
+  ): Promise<TxReturnType<K, R>> {
     if (isHubChainKeyType(params.srcChainKey)) {
       return SonicSpokeService.deposit(params as DepositParams<SonicChainKey, R>) satisfies Promise<
         TxReturnType<SonicChainKey, R>
-      > as Promise<TxReturnType<C, R>>;
+      > as Promise<TxReturnType<K, R>>;
     }
 
     const chainType = getChainType(params.srcChainKey);
@@ -463,55 +464,55 @@ export class SpokeService {
         await this.verifyDepositSimulation(params);
         return this.evmSpokeService.deposit(params as DepositParams<EvmSpokeOnlyChainKey, R>) satisfies Promise<
           TxReturnType<EvmChainKey, R>
-        > as Promise<TxReturnType<C, R>>;
+        > as Promise<TxReturnType<K, R>>;
       }
       case 'INJECTIVE': {
         await this.verifyDepositSimulation(params);
         return this.injectiveSpokeService.deposit(params as DepositParams<InjectiveChainKey, R>) satisfies Promise<
           TxReturnType<InjectiveChainKey, R>
-        > as Promise<TxReturnType<C, R>>;
+        > as Promise<TxReturnType<K, R>>;
       }
       case 'STELLAR': {
         await this.verifyDepositSimulation(params);
         return this.stellarSpokeService.deposit(params as DepositParams<StellarChainKey, R>) satisfies Promise<
           TxReturnType<StellarChainKey, R>
-        > as Promise<TxReturnType<C, R>>;
+        > as Promise<TxReturnType<K, R>>;
       }
       case 'SUI': {
         await this.verifyDepositSimulation(params);
         return this.suiSpokeService.deposit(params as DepositParams<SuiChainKey, R>) satisfies Promise<
           TxReturnType<SuiChainKey, R>
-        > as Promise<TxReturnType<C, R>>;
+        > as Promise<TxReturnType<K, R>>;
       }
       case 'ICON': {
         await this.verifyDepositSimulation(params);
         return this.iconSpokeService.deposit(params as DepositParams<IconChainKey, R>) satisfies Promise<
           TxReturnType<IconChainKey, R>
-        > as Promise<TxReturnType<C, R>>;
+        > as Promise<TxReturnType<K, R>>;
       }
       case 'SOLANA': {
         await this.verifyDepositSimulation(params);
         return this.solanaSpokeService.deposit(params as DepositParams<SolanaChainKey, R>) satisfies Promise<
           TxReturnType<SolanaChainKey, R>
-        > as Promise<TxReturnType<C, R>>;
+        > as Promise<TxReturnType<K, R>>;
       }
       case 'STACKS': {
         await this.verifyDepositSimulation(params);
         return this.stacksSpokeService.deposit(params as DepositParams<StacksChainKey, R>) satisfies Promise<
           TxReturnType<StacksChainKey, R>
-        > as Promise<TxReturnType<C, R>>;
+        > as Promise<TxReturnType<K, R>>;
       }
       case 'BITCOIN': {
         await this.verifyDepositSimulation(params);
         return this.bitcoinSpokeService.deposit(
           params as DepositParams<BitcoinChainKey, R> & { accessToken?: string },
-        ) satisfies Promise<TxReturnType<BitcoinChainKey, R>> as Promise<TxReturnType<C, R>>;
+        ) satisfies Promise<TxReturnType<BitcoinChainKey, R>> as Promise<TxReturnType<K, R>>;
       }
       case 'NEAR': {
         await this.verifyDepositSimulation(params);
         return this.nearSpokeService.deposit(params as DepositParams<NearChainKey, R>) satisfies Promise<
           TxReturnType<NearChainKey, R>
-        > as Promise<TxReturnType<C, R>>;
+        > as Promise<TxReturnType<K, R>>;
       }
       default: {
         const exhaustiveCheck: never = chainType; // The never type is used to ensure that the default case is exhaustive
@@ -590,14 +591,14 @@ export class SpokeService {
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @returns {Promise<Hash>} A promise that resolves to the transaction hash.
    */
-  public async sendMessage<ChainKey extends SpokeChainKey = SpokeChainKey, Raw extends boolean = boolean>(
-    params: SendMessageParams<ChainKey, Raw>,
-  ): Promise<TxReturnType<ChainKey, Raw>> {
+  public async sendMessage<K extends SpokeChainKey, Raw extends boolean>(
+    params: SendMessageParams<K, Raw>,
+  ): Promise<TxReturnType<K, Raw>> {
     if (isHubChainKeyType(params.srcChainKey)) {
       // handle hub chain id first (since it is evm type, it is also included in evm chain id set)
       return (await this.sonicSpokeService.sendMessage(
         params as SendMessageParams<SonicChainKey, Raw>,
-      )) satisfies TxReturnType<SonicChainKey, Raw> as TxReturnType<ChainKey, Raw>;
+      )) as TxReturnType<K, Raw>;
     }
 
     // Bitcoin TRADING mode: srcAddress must match trading wallet (deposit origin)
@@ -624,55 +625,56 @@ export class SpokeService {
         await this.verifySimulation(params);
         return (await this.evmSpokeService.sendMessage(
           params as SendMessageParams<EvmSpokeOnlyChainKey, Raw>,
-        )) satisfies TxReturnType<EvmSpokeOnlyChainKey, Raw> as TxReturnType<ChainKey, Raw>;
+        )) as TxReturnType<EvmSpokeOnlyChainKey, Raw> as TxReturnType<K, Raw>;
       }
       case 'INJECTIVE': {
         await this.verifySimulation(params);
         return (await this.injectiveSpokeService.sendMessage(
           params as SendMessageParams<InjectiveChainKey, Raw>,
-        )) satisfies TxReturnType<InjectiveChainKey, Raw> as TxReturnType<ChainKey, Raw>;
+        )) as TxReturnType<InjectiveChainKey, Raw> as TxReturnType<K, Raw>;
       }
       case 'ICON': {
         await this.verifySimulation(params);
         return (await this.iconSpokeService.sendMessage(
           params as SendMessageParams<IconChainKey, Raw>,
-        )) satisfies TxReturnType<IconChainKey, Raw> as TxReturnType<ChainKey, Raw>;
+        )) as TxReturnType<IconChainKey, Raw> as TxReturnType<K, Raw>;
       }
       case 'SUI': {
         await this.verifySimulation(params);
-        return (await this.suiSpokeService.sendMessage(
-          params as SendMessageParams<SuiChainKey, Raw>,
-        )) satisfies TxReturnType<SuiChainKey, Raw> as TxReturnType<ChainKey, Raw>;
+        return (await this.suiSpokeService.sendMessage(params as SendMessageParams<SuiChainKey, Raw>)) as TxReturnType<
+          SuiChainKey,
+          Raw
+        > as TxReturnType<K, Raw>;
       }
       case 'SOLANA': {
         await this.verifySimulation(params);
         return (await this.solanaSpokeService.sendMessage(
           params as SendMessageParams<SolanaChainKey, Raw>,
-        )) satisfies TxReturnType<SolanaChainKey, Raw> as TxReturnType<ChainKey, Raw>;
+        )) as TxReturnType<SolanaChainKey, Raw> as TxReturnType<K, Raw>;
       }
       case 'STELLAR': {
         await this.verifySimulation(params);
         return (await this.stellarSpokeService.sendMessage(
           params as SendMessageParams<StellarChainKey, Raw>,
-        )) satisfies TxReturnType<StellarChainKey, Raw> as TxReturnType<ChainKey, Raw>;
+        )) as TxReturnType<StellarChainKey, Raw> as TxReturnType<K, Raw>;
       }
       case 'STACKS': {
         await this.verifySimulation(params);
         return (await this.stacksSpokeService.sendMessage(
           params as SendMessageParams<StacksChainKey, Raw>,
-        )) satisfies TxReturnType<StacksChainKey, Raw> as TxReturnType<ChainKey, Raw>;
+        )) as TxReturnType<StacksChainKey, Raw> as TxReturnType<K, Raw>;
       }
       case 'BITCOIN': {
         await this.verifySimulation(params);
         return (await this.bitcoinSpokeService.sendMessage(
           params as SendMessageParams<BitcoinChainKey, Raw> & { walletMode?: WalletMode },
-        )) satisfies TxReturnType<BitcoinChainKey, Raw> as TxReturnType<ChainKey, Raw>;
+        )) as TxReturnType<BitcoinChainKey, Raw> as TxReturnType<K, Raw>;
       }
       case 'NEAR': {
         await this.verifySimulation(params);
         return (await this.nearSpokeService.sendMessage(
           params as SendMessageParams<NearChainKey, Raw>,
-        )) satisfies TxReturnType<NearChainKey, Raw> as TxReturnType<ChainKey, Raw>;
+        )) as TxReturnType<NearChainKey, Raw> as TxReturnType<K, Raw>;
       }
       default: {
         const exhaustiveCheck: never = chainType; // The never type is used to ensure that the default case is exhaustive
@@ -682,7 +684,9 @@ export class SpokeService {
     }
   }
 
-  public async verifySimulation(params: VerifySimulationParams): Promise<void> {
+  public async verifySimulation<K extends SpokeChainKey, Raw extends boolean>(
+    params: VerifySimulationParams<K, Raw>,
+  ): Promise<void> {
     if (!params.skipSimulation) {
       // Bitcoin TRADING mode: srcAddress must match trading wallet (deposit origin)
       const effectiveAddr = isBitcoinChainKey(params.srcChainKey)

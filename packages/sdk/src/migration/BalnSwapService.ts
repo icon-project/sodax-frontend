@@ -1,7 +1,6 @@
 import {
   ChainKeys,
   type EvmContractCall,
-  type GetWalletProviderType,
   type IconAddress,
   type IconChainKey,
   type IconContractAddress,
@@ -74,17 +73,11 @@ export type DetailedLock = {
 /**
  * Parameters for BALN swap operations.
  */
-export type BalnMigrateAction = {
+export type BalnMigrateAction<Raw extends boolean> = {
   params: BalnMigrateParams;
-  walletProvider: GetWalletProviderType<IconChainKey>;
   skipSimulation?: boolean;
   timeout?: number;
-};
-
-export type BalnMigrateActionRaw = {
-  params: BalnMigrateParams;
-  skipSimulation?: boolean;
-};
+} & WalletProviderSlot<IconChainKey, Raw>;
 
 export type BalnMigrateParams = {
   srcChainKey: IconChainKey;

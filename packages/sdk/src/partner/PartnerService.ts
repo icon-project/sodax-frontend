@@ -1,8 +1,8 @@
 import type { ConfigService, HubProvider, SpokeService } from '../shared/index.js';
-import { PartnerFeeClaimService, type PartnerFeeClaimServiceConfig } from './PartnerFeeClaimService.js';
+import { PartnerFeeClaimService, type PartnerFeeClaimServiceConstructorParams } from './PartnerFeeClaimService.js';
 
 export type PartnerServiceConfig = {
-  feeClaim?: PartnerFeeClaimServiceConfig;
+  feeClaim?: PartnerFeeClaimServiceConstructorParams;
 };
 
 export type PartnerServiceConstructorParams = {
@@ -25,7 +25,7 @@ export class PartnerService {
     this.feeClaim = new PartnerFeeClaimService({
       config: config,
       hubProvider: hubProvider,
-      spoke: spoke
+      spoke: spoke,
     });
   }
 }

@@ -13,7 +13,6 @@ import type { EvmHubProvider } from '../entities/EvmHubProvider.js';
 import type { NearSpokeService } from '../services/spoke/NearSpokeService.js';
 import type {
   EvmSpokeOnlyChainKey,
-  GetWalletProviderType,
   Hex,
   BitcoinChainKey,
   IconChainKey,
@@ -88,7 +87,3 @@ export type RawDestinationParams = {
   dstAddress: string;
 };
 export type DestinationParamsType = RawDestinationParams;
-
-export type WalletProviderSlot<K extends SpokeChainKey, R extends boolean> = R extends true
-  ? { raw: R; walletProvider?: never }
-  : { raw: R; walletProvider: GetWalletProviderType<K> };

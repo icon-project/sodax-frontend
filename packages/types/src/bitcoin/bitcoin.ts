@@ -93,7 +93,7 @@ export type BitcoinRawTransaction = {
 };
 
 export type BitcoinReturnType<Raw extends boolean> = Raw extends true
-  ? BitcoinRawTransaction
+  ? BitcoinRawTransaction | string
   : Raw extends false
     ? string
     : BitcoinRawTransaction | string;

@@ -175,9 +175,9 @@ export class StacksSpokeService {
   /**
    * Sends a message to the hub chain.
    */
-  public async sendMessage<R extends boolean = false>(
-    params: SendMessageParams<StacksChainKey, R>,
-  ): Promise<TxReturnType<StacksChainKey, R>> {
+  public async sendMessage<Raw extends boolean>(
+    params: SendMessageParams<StacksChainKey, Raw>,
+  ): Promise<TxReturnType<StacksChainKey, Raw>> {
     const dstChainId = getIntentRelayChainId(params.dstChainKey);
     const [connectionAddress, connectionName] = parseContractId(
       spokeChainConfig[params.srcChainKey].addresses.connection as ContractIdString,
@@ -201,11 +201,12 @@ export class StacksSpokeService {
 
       return {
         payload: `0x${bytesToHex(serializePayloadBytes(tx.payload))}`,
-      } satisfies StacksReturnType<true> as StacksReturnType<R>;
+      } satisfies StacksReturnType<true> as StacksReturnType<Raw>;
     }
+
     const txId = await params.walletProvider.sendTransaction(reqData);
 
-    return txId as StacksReturnType<R>;
+    return txId satisfies StacksReturnType<false> as StacksReturnType<Raw>;
   }
 
   public async waitForTransactionReceipt(
