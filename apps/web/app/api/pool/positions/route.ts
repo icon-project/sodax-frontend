@@ -11,7 +11,16 @@ type PositionsApiItem = {
   owner: string;
   pool_id: string;
   is_burned: boolean;
+  liquidity: string;
 };
+
+function hasPositiveLiquidity(position: PositionsApiItem): boolean {
+  try {
+    return BigInt(position.liquidity ?? '0') > 0n;
+  } catch {
+    return false;
+  }
+}
 
 type PositionsApiError = {
   error: string;
@@ -64,7 +73,9 @@ export async function GET(request: NextRequest): Promise<NextResponse<PositionsA
       return NextResponse.json({ error: 'Invalid positions response from upstream service' }, { status: 502 });
     }
 
-    return NextResponse.json(data as PositionsApiItem[]);
+    const activePositions = (data as PositionsApiItem[]).filter(hasPositiveLiquidity);
+
+    return NextResponse.json(activePositions);
   } catch (error) {
     console.error('GET /api/pool/positions error:', error);
     return NextResponse.json({ error: 'Failed to fetch pool positions data' }, { status: 500 });

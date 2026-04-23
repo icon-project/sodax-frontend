@@ -145,7 +145,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
 
         {/* Bottom bar */}
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-clay-light leading-[1.4]">&copy; 2026 ICON Foundation. All rights reserved.</p>
+          <p className="text-xs text-clay-light leading-[1.4]">&copy; 2026 SODAX. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <FooterLink href={NEWS_ROUTE} className="text-clay-light hover:text-espresso">
               News

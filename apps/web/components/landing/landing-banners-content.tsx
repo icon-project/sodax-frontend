@@ -72,14 +72,14 @@ export const LANDING_SMALL_BANNERS = [
     subtitle: '1:1 exchange for ICX holders.',
     buttonLabel: 'Migrate',
     href: 'https://www.sodax.com/migrate',
-    imageSrc: '/test.png',
+    imageSrc: '/sodax-mockup.png',
   },
   {
     title: 'SODA Token',
     subtitle: 'Fees driving growth and token burns.',
     buttonLabel: 'Learn more',
     href: SODA_TOKEN_ROUTE,
-    imageSrc: '/banner3.png',
+    imageSrc: '/soda-burn.png',
   },
 ] as const satisfies readonly [
   LandingBannerContent,

@@ -25,6 +25,7 @@ export type PoolState = {
   sodaAmount: string;
   xSodaAmount: string;
   isNetworkPickerOpened: boolean;
+  isManagePositionDialogOpen: boolean;
   poolApyPercent: number | null;
   poolApyStatus: PoolApyStatus;
 };
@@ -36,6 +37,7 @@ export type PoolActions = {
   setSodaAmount: (amount: string) => void;
   setXSodaAmount: (amount: string) => void;
   setIsNetworkPickerOpened: (isOpened: boolean) => void;
+  setIsManagePositionDialogOpen: (isOpen: boolean) => void;
   fetchPoolApy: () => Promise<void>;
   resetPoolState: () => void;
 };
@@ -49,6 +51,7 @@ export const defaultPoolState: PoolState = {
   sodaAmount: '',
   xSodaAmount: '',
   isNetworkPickerOpened: false,
+  isManagePositionDialogOpen: false,
   poolApyPercent: null,
   poolApyStatus: 'idle',
 };
@@ -67,6 +70,7 @@ export const createPoolStore = (initState: PoolState = defaultPoolState) => {
         setSodaAmount: (amount: string) => set({ sodaAmount: amount }),
         setXSodaAmount: (amount: string) => set({ xSodaAmount: amount }),
         setIsNetworkPickerOpened: (isOpened: boolean) => set({ isNetworkPickerOpened: isOpened }),
+        setIsManagePositionDialogOpen: (isOpen: boolean) => set({ isManagePositionDialogOpen: isOpen }),
         fetchPoolApy: async (): Promise<void> => {
           const currentStatus = get().poolApyStatus;
           if (currentStatus === 'loading' || currentStatus === 'success') {
