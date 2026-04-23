@@ -9,7 +9,6 @@ import { getNetworkDocsUrl } from '@/lib/docToUrl';
 
 const SUPPORTED_NETWORKS = [
   'Stellar',
-  'Near',
   'Avalanche',
   'Polygon',
   'Base',
@@ -20,9 +19,7 @@ const SUPPORTED_NETWORKS = [
   'Ethereum',
   'Bitcoin',
   'BNB Chain',
-  'HyperEVM',
   'Arbitrum',
-  'Kaia',
   'LightLink',
 ];
 
