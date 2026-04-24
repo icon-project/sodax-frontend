@@ -1,28 +1,31 @@
-import type { ConfigService, EvmHubProvider } from '../shared/index.js';
-import { PartnerFeeClaimService, type PartnerFeeClaimServiceConfig } from './PartnerFeeClaimService.js';
+import type { ConfigService, HubProvider, SpokeService } from '../shared/index.js';
+import { PartnerFeeClaimService, type PartnerFeeClaimServiceConstructorParams } from './PartnerFeeClaimService.js';
 
 export type PartnerServiceConfig = {
-  feeClaim?: PartnerFeeClaimServiceConfig;
+  feeClaim?: PartnerFeeClaimServiceConstructorParams;
 };
 
 export type PartnerServiceConstructorParams = {
-  feeClaim?: PartnerFeeClaimServiceConfig;
-  configService: ConfigService;
-  hubProvider: EvmHubProvider;
+  config: ConfigService;
+  hubProvider: HubProvider;
+  spoke: SpokeService;
 };
 
 /**
  * PartnerService is a service that allows you to interact with the partner fee claim and other partner operations
  * @param {PartnerServiceConstructorParams} params - The constructor parameters
+ * @namespace SodaxFeatures
  */
 export class PartnerService {
   public readonly feeClaim: PartnerFeeClaimService; // Partner Fee Claim service for partner fee operations
+  public readonly config: ConfigService;
 
-  constructor(config: PartnerServiceConstructorParams) {
+  constructor({ config, hubProvider, spoke }: PartnerServiceConstructorParams) {
+    this.config = config;
     this.feeClaim = new PartnerFeeClaimService({
-      config: config?.feeClaim,
-      configService: config.configService,
-      hubProvider: config.hubProvider,
+      config: config,
+      hubProvider: hubProvider,
+      spoke: spoke,
     });
   }
 }

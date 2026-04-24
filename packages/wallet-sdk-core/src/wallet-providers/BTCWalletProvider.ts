@@ -1,11 +1,16 @@
-import { detectBitcoinAddressType, type AddressType, type Hex, type IBitcoinWalletProvider } from '@sodax/types';
+import {
+  detectBitcoinAddressType,
+  type BtcAddressType,
+  type Hex,
+  type IBitcoinWalletProvider,
+} from '@sodax/types';
 import * as bitcoin from 'bitcoinjs-lib';
 import type { ECPairInterface } from 'ecpair';
 import * as ecc from '@bitcoinerlab/secp256k1';
 import { ECPairFactory } from 'ecpair';
 import { keccak256 } from 'viem';
 import secp256k1 from 'secp256k1';
-import * as bip322 from "bip322-js"
+import * as bip322 from 'bip322-js';
 
 bitcoin.initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
@@ -26,7 +31,7 @@ export type PrivateKeyBitcoinWalletConfig = {
   type: 'PRIVATE_KEY';
   privateKey: Hex;
   network: BitcoinNetwork;
-  addressType?: AddressType;
+  addressType?: BtcAddressType;
 };
 
 export type BrowserExtensionBitcoinWalletConfig = {
@@ -35,14 +40,12 @@ export type BrowserExtensionBitcoinWalletConfig = {
   network: BitcoinNetwork;
 };
 
-export type BitcoinWalletConfig =
-  | PrivateKeyBitcoinWalletConfig
-  | BrowserExtensionBitcoinWalletConfig;
+export type BitcoinWalletConfig = PrivateKeyBitcoinWalletConfig | BrowserExtensionBitcoinWalletConfig;
 
 type BitcoinPkWallet = {
   type: 'PRIVATE_KEY';
   keyPair: ECPairInterface;
-  addressType: AddressType;
+  addressType: BtcAddressType;
 };
 
 type BitcoinBrowserWallet = {
@@ -59,9 +62,7 @@ export class BitcoinWalletError extends Error {
   }
 }
 
-function isPkConfig(
-  config: BitcoinWalletConfig,
-): config is PrivateKeyBitcoinWalletConfig {
+function isPkConfig(config: BitcoinWalletConfig): config is PrivateKeyBitcoinWalletConfig {
   return config.type === 'PRIVATE_KEY';
 }
 
@@ -74,8 +75,8 @@ const NETWORKS: Record<BitcoinNetwork, bitcoin.networks.Network> = {
   MAINNET: bitcoin.networks.bitcoin,
 };
 
-
 export class BitcoinWalletProvider implements IBitcoinWalletProvider {
+  public readonly chainType = 'BITCOIN' as const;
   private readonly wallet: BitcoinWallet;
   private readonly network: bitcoin.networks.Network;
 
@@ -83,9 +84,7 @@ export class BitcoinWalletProvider implements IBitcoinWalletProvider {
     this.network = NETWORKS[config.network];
 
     if (isPkConfig(config)) {
-      const keyHex = config.privateKey.startsWith('0x')
-        ? config.privateKey.slice(2)
-        : config.privateKey;
+      const keyHex = config.privateKey.startsWith('0x') ? config.privateKey.slice(2) : config.privateKey;
 
       const keyPair = ECPair.fromPrivateKey(Buffer.from(keyHex, 'hex'), {
         network: this.network,
@@ -128,7 +127,6 @@ export class BitcoinWalletProvider implements IBitcoinWalletProvider {
     return address;
   }
 
-
   async getPublicKey(): Promise<string> {
     if (isPkWallet(this.wallet)) {
       if (this.wallet.addressType === 'P2TR') {
@@ -141,10 +139,9 @@ export class BitcoinWalletProvider implements IBitcoinWalletProvider {
     return this.wallet.walletsKit.getPublicKey();
   }
 
-  async getAddressType(address: string): Promise<AddressType> {
+  async getAddressType(address: string): Promise<BtcAddressType> {
     return detectBitcoinAddressType(address);
   }
-
 
   /**
    * Sign PSBT and return fully signed transaction hex
@@ -155,9 +152,7 @@ export class BitcoinWalletProvider implements IBitcoinWalletProvider {
 
       if (this.wallet.addressType === 'P2TR' && finalize) {
         const xOnlyPubkey = this.wallet.keyPair.publicKey.slice(1, 33);
-        const tweakedKey = this.wallet.keyPair.tweak(
-          bitcoin.crypto.taggedHash('TapTweak', xOnlyPubkey),
-        );
+        const tweakedKey = this.wallet.keyPair.tweak(bitcoin.crypto.taggedHash('TapTweak', xOnlyPubkey));
         psbt.signAllInputs(tweakedKey);
       } else {
         psbt.signAllInputs(this.wallet.keyPair);
@@ -169,8 +164,7 @@ export class BitcoinWalletProvider implements IBitcoinWalletProvider {
       return psbt.extractTransaction().toHex();
     }
 
-    const { psbtHex: signedPsbt } =
-      await this.wallet.walletsKit.signPsbt(psbtBase64);
+    const { psbtHex: signedPsbt } = await this.wallet.walletsKit.signPsbt(psbtBase64);
     if (!finalize) {
       return signedPsbt;
     }
@@ -190,10 +184,7 @@ export class BitcoinWalletProvider implements IBitcoinWalletProvider {
       }
       const hash = Buffer.from(keccak256(Buffer.from(message)).slice(2), 'hex');
       const { signature, recid } = secp256k1.ecdsaSign(hash, Uint8Array.from(privateKey));
-      return Buffer.concat([
-        Buffer.from(signature),
-        Buffer.from([recid])
-      ]).toString("hex");
+      return Buffer.concat([Buffer.from(signature), Buffer.from([recid])]).toString('hex');
     }
     // Browser / extension wallet
     return this.wallet.walletsKit.signEcdsaMessage(message);
@@ -205,21 +196,14 @@ export class BitcoinWalletProvider implements IBitcoinWalletProvider {
       if (!privateKey) {
         throw new BitcoinWalletError('Private key not available');
       }
-      const signature = bip322.Signer.sign(
-        this.wallet.keyPair.toWIF(),
-        await this.getWalletAddress(),
-        message,
-      )
+      const signature = bip322.Signer.sign(this.wallet.keyPair.toWIF(), await this.getWalletAddress(), message);
       return signature;
     }
     // Browser / extension wallet
     return this.wallet.walletsKit.signBip322Message(message);
   }
 
-  public getPayment(
-    keyPair: ECPairInterface,
-    addressType: AddressType,
-  ): bitcoin.Payment {
+  public getPayment(keyPair: ECPairInterface, addressType: BtcAddressType): bitcoin.Payment {
     switch (addressType) {
       case 'P2PKH':
         return bitcoin.payments.p2pkh({
@@ -249,9 +233,7 @@ export class BitcoinWalletProvider implements IBitcoinWalletProvider {
         });
 
       default:
-        throw new BitcoinWalletError(
-          `Unsupported address type: ${addressType}`,
-        );
+        throw new BitcoinWalletError(`Unsupported address type: ${addressType}`);
     }
   }
 
@@ -266,4 +248,5 @@ export class BitcoinWalletProvider implements IBitcoinWalletProvider {
 
     return this.wallet.walletsKit.sendBitcoin(toAddress, Number(satoshis));
   }
+
 }

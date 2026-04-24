@@ -1,86 +1,75 @@
 import invariant from 'tiny-invariant';
 import {
-  type SpokeProvider,
-  type SpokeProviderType,
-  type Result,
-  type TxReturnType,
-  SpokeService,
-  type RelayErrorCode,
+  type SpokeService,
   Erc20Service,
-  type GetSpokeDepositParamsType,
-  SonicSpokeService,
-  type EvmHubProvider,
+  type HubProvider,
   relayTxAndWaitPacket,
-  SolanaSpokeProvider,
-  BitcoinSpokeProvider,
-  DEFAULT_RELAY_TX_TIMEOUT,
-  type HubTxHash,
-  type SpokeTxHash,
-  WalletAbstractionService,
-  type HubAssetInfo,
-  type EvmContractCall,
   EvmVaultTokenService,
   EvmAssetManagerService,
   encodeContractCalls,
   calculateFeeAmount,
-  type PartnerFee,
   encodeAddress,
-  type Prettify,
-  type OptionalFee,
-  type OptionalRaw,
-  type OptionalTimeout,
-  type GetAddressType,
-  type BridgeServiceConfig,
   wrappedSonicAbi,
-  type StellarSpokeProviderType,
-  type EvmSpokeProviderType,
-  type SonicSpokeProviderType,
+  isHubChainKeyType,
+  isStellarChainKeyType,
+  HubService,
+  type SpokeIsAllowanceValidParamsHub,
+  type SpokeIsAllowanceValidParamsEvmSpoke,
+  type SpokeIsAllowanceValidParamsStellar,
+  isEvmSpokeOnlyChainKeyType,
+  isSolanaChainKeyType,
+  isBitcoinChainKeyType,
+  isBitcoinWalletProviderType,
+  type RelayOptionalExtraData,
+  isOptionalEvmWalletProviderType,
+  isOptionalStellarWalletProviderType,
+} from '../shared/index.js';
+import {
+  type SpokeChainKey,
+  type XToken,
+  type Hex,
+  type BridgeLimit,
+  type GetAddressType,
+  type Result,
+  spokeChainConfig,
+  type HubChainKey,
+  type TxReturnType,
+  type EvmContractCall,
+  type HubTxHash,
+  type PartnerFee,
+  type SpokeTxHash,
   type VaultReserves,
-} from '../index.js';
-import { isEvmSpokeProviderType, isSonicSpokeProviderType, isStellarSpokeProviderType } from '../shared/guards.js';
-import type { SpokeChainId, XToken, Hex, HttpUrl, BridgeLimit } from '@sodax/types';
-import { encodeFunctionData, isAddress } from 'viem';
-import { StellarSpokeService } from '../shared/services/spoke/StellarSpokeService.js';
+  type StellarChainKey,
+  isHubChainKey,
+  type GetWalletProviderType,
+  type EvmSpokeOnlyChainKey,
+  type GetTokenAddressType,
+  type WalletProviderSlot,
+} from '@sodax/types';
+import { encodeFunctionData } from 'viem';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 import BigNumber from 'bignumber.js';
 
-export type CreateBridgeIntentParams = {
-  srcChainId: SpokeChainId;
-  srcAsset: string;
+export type CreateBridgeIntentParams<K extends SpokeChainKey = SpokeChainKey> = {
+  srcAddress: string;
+  srcChainKey: K;
+  srcToken: string;
   amount: bigint;
-  dstChainId: SpokeChainId;
-  dstAsset: string;
+  dstChainKey: SpokeChainKey;
+  dstToken: string;
   recipient: string; // non-encoded recipient address
 };
 
-export type BridgeParams<S extends SpokeProviderType> = Prettify<
-  {
-    params: CreateBridgeIntentParams;
-    spokeProvider: S;
-    skipSimulation?: boolean;
-  } & OptionalFee
->;
-
-export type BridgeErrorCode =
-  | 'ALLOWANCE_CHECK_FAILED'
-  | 'APPROVAL_FAILED'
-  | 'CREATE_BRIDGE_INTENT_FAILED'
-  | 'BRIDGE_FAILED'
-  | RelayErrorCode;
-
-export type BridgeError<T extends BridgeErrorCode> = {
-  code: T;
-  error: unknown;
-};
-
-export type BridgeExtraData = { address: Hex; payload: Hex };
-export type BridgeOptionalExtraData = { data?: BridgeExtraData };
+export type BridgeParams<ChainKey extends SpokeChainKey, Raw extends boolean> = {
+  params: CreateBridgeIntentParams<ChainKey>;
+  skipSimulation?: boolean;
+  timeout?: number;
+} & WalletProviderSlot<ChainKey, Raw>;
 
 export type BridgeServiceConstructorParams = {
-  hubProvider: EvmHubProvider;
-  relayerApiEndpoint: HttpUrl;
-  config: BridgeServiceConfig | undefined;
-  configService: ConfigService;
+  hubProvider: HubProvider;
+  config: ConfigService;
+  spoke: SpokeService;
 };
 
 /**
@@ -89,18 +78,18 @@ export type BridgeServiceConstructorParams = {
  * By using soda tokens as src or destinatin address.
  * @param hubProvider - The hub provider
  * @param relayerApiEndpoint - The relayer API endpoint
+ *
+ * @namespace SodaxFeatures
  */
 export class BridgeService {
-  public readonly hubProvider: EvmHubProvider;
-  public readonly relayerApiEndpoint: HttpUrl;
-  public readonly config: BridgeServiceConfig;
-  public readonly configService: ConfigService;
+  public readonly hubProvider: HubProvider;
+  public readonly config: ConfigService;
+  public readonly spoke: SpokeService;
 
-  constructor({ hubProvider, relayerApiEndpoint, config, configService }: BridgeServiceConstructorParams) {
-    this.config = config ?? { partnerFee: undefined };
+  constructor({ hubProvider, config, spoke }: BridgeServiceConstructorParams) {
+    this.config = config;
     this.hubProvider = hubProvider;
-    this.relayerApiEndpoint = relayerApiEndpoint;
-    this.configService = configService;
+    this.spoke = spoke;
   }
 
   /**
@@ -113,123 +102,64 @@ export class BridgeService {
    * console.log('Fee:', fee);
    */
   public getFee(inputAmount: bigint): bigint {
-    if (!this.config.partnerFee) {
+    if (!this.config.bridge.partnerFee) {
       return 0n;
     }
 
-    return calculateFeeAmount(inputAmount, this.config.partnerFee);
+    return calculateFeeAmount(inputAmount, this.config.bridge.partnerFee);
   }
 
   /**
    * Check if allowance is valid for the bridge transaction
    * @param params - The bridge parameters
    * @param spokeProvider - The spoke provider
-   * @returns {Promise<Result<boolean, BridgeError<'ALLOWANCE_CHECK_FAILED'>>>}
+   * @returns {Promise<Result<boolean>>}
    */
-  public async isAllowanceValid<S extends SpokeProviderType>({
-    params,
-    spokeProvider,
-  }: BridgeParams<S>): Promise<Result<boolean, BridgeError<'ALLOWANCE_CHECK_FAILED'>>> {
+  public async isAllowanceValid<S extends SpokeChainKey, Raw extends boolean>(
+    _params: BridgeParams<S, Raw>,
+  ): Promise<Result<boolean>> {
+    const { params } = _params;
     try {
       invariant(params.amount > 0n, 'Amount must be greater than 0');
-      invariant(params.srcAsset.length > 0, 'Source asset is required');
+      invariant(params.srcToken.length > 0, 'Source asset is required');
 
-      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-
-      // For regular EVM chains (non-Sonic), check ERC20 allowance against assetManager
-      if (isEvmSpokeProviderType(spokeProvider)) {
-        invariant(isAddress(params.srcAsset), 'Invalid source asset address for EVM chain');
-
-        const allowanceResult = await Erc20Service.isAllowanceValid(
-          params.srcAsset,
-          params.amount,
-          walletAddress as GetAddressType<EvmSpokeProviderType>,
-          spokeProvider.chainConfig.addresses.assetManager,
-          spokeProvider,
-        );
-
-        if (!allowanceResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: 'ALLOWANCE_CHECK_FAILED',
-              error: allowanceResult.error,
-            },
-          };
-        }
-
-        return {
-          ok: true,
-          value: allowanceResult.value,
-        };
+      if (isHubChainKeyType(params.srcChainKey)) {
+        return await this.spoke.isAllowanceValid({
+          srcChainKey: params.srcChainKey,
+          token: params.srcToken,
+          amount: params.amount,
+          owner: params.srcAddress,
+          spender: await this.hubProvider.service.getUserRouter({
+            address: params.srcAddress as GetAddressType<HubChainKey>,
+            chainId: params.srcChainKey,
+          }),
+        } satisfies SpokeIsAllowanceValidParamsHub);
       }
 
-      if (isStellarSpokeProviderType(spokeProvider)) {
-        const allowanceResult = await StellarSpokeService.hasSufficientTrustline(
-          params.srcAsset,
-          params.amount,
-          spokeProvider,
-        );
-        if (!allowanceResult) {
-          return {
-            ok: false,
-            error: {
-              code: 'ALLOWANCE_CHECK_FAILED',
-              error: allowanceResult,
-            },
-          };
-        }
-        return {
-          ok: true,
-          value: allowanceResult,
-        };
+      if (isEvmSpokeOnlyChainKeyType(params.srcChainKey)) {
+        return await this.spoke.isAllowanceValid({
+          srcChainKey: params.srcChainKey,
+          token: params.srcToken,
+          amount: params.amount,
+          owner: params.srcAddress,
+          spender: spokeChainConfig[params.srcChainKey].addresses.assetManager,
+        } satisfies SpokeIsAllowanceValidParamsEvmSpoke);
       }
 
-      // For Sonic chain, check ERC20 allowance against userRouter
-      if (isSonicSpokeProviderType(spokeProvider)) {
-        invariant(isAddress(params.srcAsset), 'Invalid source asset address for Sonic chain');
-
-        const userRouter = await SonicSpokeService.getUserRouter(
-          walletAddress as GetAddressType<SonicSpokeProviderType>,
-          spokeProvider,
-        );
-
-        const allowanceResult = await Erc20Service.isAllowanceValid(
-          params.srcAsset,
-          params.amount,
-          walletAddress as GetAddressType<SonicSpokeProviderType>,
-          userRouter,
-          spokeProvider,
-        );
-
-        if (!allowanceResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: 'ALLOWANCE_CHECK_FAILED',
-              error: allowanceResult.error,
-            },
-          };
-        }
-
-        return {
-          ok: true,
-          value: allowanceResult.value,
-        };
+      if (isStellarChainKeyType(params.srcChainKey)) {
+        return await this.spoke.isAllowanceValid({
+          srcChainKey: params.srcChainKey,
+          token: params.srcToken,
+          amount: params.amount,
+          owner: params.srcAddress,
+        } satisfies SpokeIsAllowanceValidParamsStellar);
       }
 
-      // For non-EVM chains (Icon, Sui, Stellar, etc.), no allowance check needed
-      return {
-        ok: true,
-        value: true,
-      };
+      return { ok: true, value: true };
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'ALLOWANCE_CHECK_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -241,77 +171,87 @@ export class BridgeService {
    * @param raw - Whether to return raw transaction data
    * @returns Promise<Result<TxReturnType<S, R>, BridgeError<'APPROVAL_FAILED'>>>
    */
-  public async approve<S extends SpokeProviderType, R extends boolean = false>({
-    params,
-    spokeProvider,
-    raw,
-  }: Prettify<BridgeParams<S> & OptionalRaw<R>>): Promise<Result<TxReturnType<S, R>, BridgeError<'APPROVAL_FAILED'>>> {
+  public async approve<K extends SpokeChainKey, Raw extends boolean>(
+    _params: BridgeParams<K, Raw>,
+  ): Promise<Result<TxReturnType<K, Raw>>> {
+    const { params } = _params;
     try {
       invariant(params.amount > 0n, 'Amount must be greater than 0');
-      invariant(params.srcAsset.length > 0, 'Source asset is required');
+      invariant(params.srcToken.length > 0, 'Source asset is required');
 
-      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      if (isHubChainKeyType(params.srcChainKey) || isEvmSpokeOnlyChainKeyType(params.srcChainKey)) {
+        invariant(
+          isOptionalEvmWalletProviderType(_params.walletProvider),
+          'Invalid wallet provider. Expected Evm wallet provider.',
+        );
+        const spender = isHubChainKeyType(params.srcChainKey)
+          ? await HubService.getUserHubWalletAddress(params.srcAddress, params.srcChainKey, this.hubProvider)
+          : this.config.sodaxConfig.chains[params.srcChainKey].addresses.assetManager;
 
-      // For regular EVM chains (non-Sonic), approve against assetManager
-      if (isEvmSpokeProviderType(spokeProvider)) {
-        invariant(isAddress(params.srcAsset), 'Invalid source asset address for EVM chain');
+        const coreParams = {
+          srcChainKey: params.srcChainKey,
+          owner: params.srcAddress as GetAddressType<HubChainKey | EvmSpokeOnlyChainKey>,
+          token: params.srcToken as GetTokenAddressType<HubChainKey | EvmSpokeOnlyChainKey>,
+          amount: params.amount,
+          spender,
+        } as const;
 
-        const result = await Erc20Service.approve(
-          params.srcAsset,
-          params.amount,
-          spokeProvider.chainConfig.addresses.assetManager,
-          spokeProvider,
-          raw,
+        const result = await this.spoke.approve<HubChainKey | EvmSpokeOnlyChainKey, Raw>({
+          ...coreParams,
+          raw: _params.raw,
+          walletProvider: _params.walletProvider,
+        });
+
+        if (!result.ok) {
+          return result;
+        }
+
+        return {
+          ok: true,
+          value: result.value satisfies TxReturnType<EvmSpokeOnlyChainKey, Raw> as TxReturnType<K, Raw>,
+        };
+      }
+
+      if (isStellarChainKeyType(params.srcChainKey)) {
+        invariant(
+          isOptionalStellarWalletProviderType(_params.walletProvider),
+          'Invalid wallet provider. Expected Stellar wallet provider.',
+        );
+        const coreParams = {
+          srcChainKey: params.srcChainKey,
+          token: params.srcToken,
+          amount: params.amount,
+          owner: params.srcAddress as GetAddressType<StellarChainKey>,
+        } as const;
+
+        const result = await this.spoke.approve<StellarChainKey, boolean>(
+          _params.raw
+            ? {
+                ...coreParams,
+                raw: true,
+              }
+            : {
+                ...coreParams,
+                raw: false,
+                walletProvider: _params.walletProvider,
+              },
         );
 
-        return {
-          ok: true,
-          value: result satisfies TxReturnType<EvmSpokeProviderType, R> as TxReturnType<S, R>,
-        };
-      }
-
-      if (isStellarSpokeProviderType(spokeProvider)) {
-        const result = await StellarSpokeService.requestTrustline(params.srcAsset, params.amount, spokeProvider, raw);
-        return {
-          ok: true,
-          value: result satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<S, R>,
-        };
-      }
-
-      // For Sonic chain, approve against userRouter
-      if (isSonicSpokeProviderType(spokeProvider)) {
-        invariant(isAddress(params.srcAsset), 'Invalid source asset address for Sonic chain');
-
-        const userRouter = await SonicSpokeService.getUserRouter(
-          walletAddress as GetAddressType<SonicSpokeProviderType>,
-          spokeProvider,
-        );
-
-        const result = await Erc20Service.approve(params.srcAsset, params.amount, userRouter, spokeProvider, raw);
+        if (!result.ok) return result;
 
         return {
           ok: true,
-          value: result satisfies TxReturnType<SonicSpokeProviderType, R> as TxReturnType<S, R>,
+          value: result.value satisfies TxReturnType<StellarChainKey, boolean> as TxReturnType<K, Raw>,
         };
       }
 
-      // For non-EVM chains, approval is not needed
       return {
         ok: false,
-        error: {
-          code: 'APPROVAL_FAILED',
-          error: new Error('Approval only supported for EVM spoke chains'),
-        },
+        error: new Error('Approval only supported for EVM spoke chains and Stellar'),
       };
     } catch (error) {
       console.error(error);
-      return {
-        ok: false,
-        error: {
-          code: 'APPROVAL_FAILED',
-          error: error,
-        },
-      };
+      return { ok: false, error };
     }
   }
 
@@ -320,7 +260,7 @@ export class BridgeService {
    * @param params - The bridge parameters including source/destination chains, assets, and recipient
    * @param spokeProvider - The spoke provider for the source chain
    * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
-   * @returns {Promise<Result<[SpokeTxHash, HubTxHash], BridgeError<BridgeErrorCode>>>} - Returns the transaction hashes for both spoke and hub chains or error
+   * @returns {Promise<Result<[SpokeTxHash, HubTxHash]>>} - Returns the transaction hashes for both spoke and hub chains or error
    *
    * @example
    * const result = await sodax.bridge.bridge(
@@ -347,63 +287,34 @@ export class BridgeService {
    * ] = result.value;
    * console.log('Bridge transaction hashes:', { spokeTxHash, hubTxHash });
    */
-  public async bridge<S extends SpokeProvider>({
-    params,
-    spokeProvider,
-    fee = this.config.partnerFee,
-    timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  }: Prettify<BridgeParams<S> & OptionalTimeout>): Promise<
-    Result<[SpokeTxHash, HubTxHash], BridgeError<BridgeErrorCode>>
-  > {
+  public async bridge<K extends SpokeChainKey>(
+    _params: BridgeParams<K, false>,
+  ): Promise<Result<[SpokeTxHash, HubTxHash]>> {
+    const { params, timeout } = _params;
     try {
-      const txResult = await this.createBridgeIntent({ params, spokeProvider, fee, raw: false });
+      const txResult = await this.createBridgeIntent(_params);
+      if (!txResult.ok) return txResult;
 
-      if (!txResult.ok) {
-        return txResult;
-      }
-
-      // verify the spoke tx hash exists on chain
-      const verifyTxHashResult = await SpokeService.verifyTxHash(txResult.value, spokeProvider);
-
-      if (!verifyTxHashResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_BRIDGE_INTENT_FAILED',
-            error: verifyTxHashResult.error,
-          },
-        };
-      }
+      const verifyTxHashResult = await this.spoke.verifyTxHash({
+        txHash: txResult.value,
+        chainKey: params.srcChainKey,
+      });
+      if (!verifyTxHashResult.ok) return verifyTxHashResult;
 
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
-        spokeProvider instanceof SolanaSpokeProvider || spokeProvider instanceof BitcoinSpokeProvider
+        isSolanaChainKeyType(params.srcChainKey) || isBitcoinChainKeyType(params.srcChainKey)
           ? txResult.data
           : undefined,
-        spokeProvider,
-        this.relayerApiEndpoint,
+        params.srcChainKey,
+        this.config.relay.relayerApiEndpoint,
         timeout,
       );
-
-      if (!packetResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: packetResult.error.code,
-            error: packetResult.error,
-          },
-        };
-      }
+      if (!packetResult.ok) return packetResult;
 
       return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
     } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'BRIDGE_FAILED',
-          error: error,
-        },
-      };
+      return { ok: false, error };
     }
   }
 
@@ -443,58 +354,72 @@ export class BridgeService {
    *   console.error('Bridge intent creation failed:', result.error);
    * }
    */
-  async createBridgeIntent<S extends SpokeProviderType = SpokeProviderType, R extends boolean = false>({
-    params,
-    spokeProvider,
-    fee = this.config.partnerFee,
-    raw,
-  }: Prettify<BridgeParams<S> & OptionalRaw<R>>): Promise<
-    Result<TxReturnType<S, R>, BridgeError<'CREATE_BRIDGE_INTENT_FAILED'>> & BridgeOptionalExtraData
-  > {
+  async createBridgeIntent<K extends SpokeChainKey, Raw extends boolean>(
+    _params: BridgeParams<K, Raw>,
+  ): Promise<Result<TxReturnType<K, Raw>> & RelayOptionalExtraData> {
+    const { params, skipSimulation } = _params;
     try {
       invariant(params.amount > 0n, 'Amount must be greater than 0');
-      const srcAssetInfo = this.configService.getHubAssetInfo(params.srcChainId, params.srcAsset);
-      const dstAssetInfo = this.configService.getHubAssetInfo(params.dstChainId, params.dstAsset);
+      const srcToken = this.config.getSpokeTokenFromOriginalAssetAddress(params.srcChainKey, params.srcToken);
+      const dstToken = this.config.getSpokeTokenFromOriginalAssetAddress(params.dstChainKey, params.dstToken);
 
       // Vault can only be used on Sonic
-      invariant(srcAssetInfo, `Unsupported spoke chain (${params.srcChainId}) token: ${params.srcAsset}`);
+      invariant(srcToken, `Unsupported spoke chain (${params.srcChainKey}) token: ${params.srcToken}`);
       // destination
-      invariant(dstAssetInfo, `Unsupported spoke chain (${params.dstChainId}) token: ${params.dstAsset}`);
+      invariant(dstToken, `Unsupported spoke chain (${params.dstChainKey}) token: ${params.dstToken}`);
 
-      // Bitcoin TRADING mode: must use trading wallet address for hub wallet derivation,
-      // since BTC is deposited from trading wallet — hub wallet is derived via CREATE3(chainId + address).
-      if (spokeProvider instanceof BitcoinSpokeProvider) {
-        await spokeProvider.ensureRadfiAccessToken();
+      const personalAddress = params.srcAddress;
+      // Bitcoin TRADING mode: use trading wallet for hub wallet derivation (see getEffectiveWalletAddress)
+      // NOTE: bitcoin is only enabled in non-raw execution mode == walletProvider is required
+      let walletAddress: string = personalAddress;
+      if (isBitcoinChainKeyType(params.srcChainKey) && _params.raw === false) {
+        invariant(
+          isBitcoinWalletProviderType(_params.walletProvider),
+          `Invalid wallet provider for chain key: ${params.srcChainKey}. Expected bitcoin wallet provider.`,
+        );
+        walletAddress = await this.spoke.bitcoinSpokeService.getEffectiveWalletAddress(personalAddress);
+        await this.spoke.bitcoinSpokeService.radfi.ensureRadfiAccessToken(_params.walletProvider);
       }
-      const walletAddress =
-        spokeProvider instanceof BitcoinSpokeProvider
-          ? await spokeProvider.getEffectiveWalletAddress()
-          : await spokeProvider.walletProvider.getWalletAddress();
 
-      const hubWallet = await WalletAbstractionService.getUserAbstractedWalletAddress(
-        walletAddress,
-        spokeProvider,
+      const hubWallet = await HubService.getUserHubWalletAddress(
+        params.srcAddress,
+        params.srcChainKey,
         this.hubProvider,
       );
 
-      const data: Hex = this.buildBridgeData(params, srcAssetInfo, dstAssetInfo, fee);
+      const data: Hex = this.buildBridgeData(params, srcToken, dstToken, this.config.bridge.partnerFee);
 
-      const txResult = await SpokeService.deposit(
-        {
-          from: walletAddress,
-          to: hubWallet,
-          token: params.srcAsset,
-          amount: params.amount,
-          data,
-        } as unknown as GetSpokeDepositParamsType<S>,
-        spokeProvider,
-        this.hubProvider,
-        raw,
+      const coreParams = {
+        srcChainKey: params.srcChainKey,
+        srcAddress: walletAddress as GetAddressType<K>,
+        to: hubWallet,
+        token: params.srcToken as GetTokenAddressType<K>,
+        amount: params.amount,
+        data,
+        skipSimulation,
+      } as const;
+
+      const txResult = await this.spoke.deposit(
+        _params.raw
+          ? {
+              ...coreParams,
+              raw: true,
+            }
+          : {
+              ...coreParams,
+              raw: false,
+              walletProvider: _params.walletProvider as GetWalletProviderType<K>,
+            },
       );
+
+      if (!txResult.ok) {
+        console.error(txResult.error);
+        return txResult;
+      }
 
       return {
         ok: true,
-        value: txResult as TxReturnType<S, R>,
+        value: txResult.value satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
         data: {
           address: hubWallet,
           payload: data,
@@ -502,13 +427,7 @@ export class BridgeService {
       };
     } catch (error) {
       console.error(error);
-      return {
-        ok: false,
-        error: {
-          code: 'CREATE_BRIDGE_INTENT_FAILED',
-          error: error,
-        },
-      };
+      return { ok: false, error };
     }
   }
 
@@ -521,19 +440,19 @@ export class BridgeService {
    */
   buildBridgeData(
     params: CreateBridgeIntentParams,
-    srcAssetInfo: HubAssetInfo,
-    dstAssetInfo: HubAssetInfo,
+    srcToken: XToken,
+    dstToken: XToken,
     partnerFee: PartnerFee | undefined,
   ): Hex {
     const calls: EvmContractCall[] = [];
     let translatedAmount = params.amount;
-    let srcVault = params.srcAsset as `0x${string}`;
+    let srcVault = params.srcToken as `0x${string}`;
     // if src asset is not a vault token, we need to approve and deposit into the vault
-    if (!this.configService.isValidVault(srcAssetInfo.asset)) {
-      calls.push(Erc20Service.encodeApprove(srcAssetInfo.asset, srcAssetInfo.vault, params.amount));
-      calls.push(EvmVaultTokenService.encodeDeposit(srcAssetInfo.vault, srcAssetInfo.asset, params.amount));
-      translatedAmount = EvmVaultTokenService.translateIncomingDecimals(srcAssetInfo.decimal, params.amount);
-      srcVault = srcAssetInfo.vault;
+    if (!this.config.isValidVault(srcToken.hubAsset)) {
+      calls.push(Erc20Service.encodeApprove(srcToken.hubAsset, srcToken.vault, params.amount));
+      calls.push(EvmVaultTokenService.encodeDeposit(srcToken.vault, srcToken.hubAsset, params.amount));
+      translatedAmount = EvmVaultTokenService.translateIncomingDecimals(srcToken.decimals, params.amount);
+      srcVault = srcToken.vault;
     }
     const feeAmount = calculateFeeAmount(translatedAmount, partnerFee);
 
@@ -545,18 +464,18 @@ export class BridgeService {
     let translatedWithdrawAmount = withdrawAmount;
 
     // if dst asset is not a vault token, we need to withdraw from the vault
-    if (!this.configService.isValidVault(dstAssetInfo.asset)) {
-      calls.push(EvmVaultTokenService.encodeWithdraw(dstAssetInfo.vault, dstAssetInfo.asset, withdrawAmount));
-      translatedWithdrawAmount = EvmVaultTokenService.translateOutgoingDecimals(dstAssetInfo.decimal, withdrawAmount);
+    if (!this.config.isValidVault(dstToken.hubAsset)) {
+      calls.push(EvmVaultTokenService.encodeWithdraw(dstToken.vault, dstToken.hubAsset, withdrawAmount));
+      translatedWithdrawAmount = EvmVaultTokenService.translateOutgoingDecimals(dstToken.decimals, withdrawAmount);
     }
 
-    const encodedRecipientAddress = encodeAddress(params.dstChainId, params.recipient);
+    const encodedRecipientAddress = encodeAddress(params.dstChainKey, params.recipient);
     // If the destination chain is Sonic, we can directly transfer the tokens to the recipient
-    if (params.dstChainId === this.hubProvider.chainConfig.chain.id) {
+    if (isHubChainKey(params.dstChainKey)) {
       // If destination token is S, then unwrap and send S to the recipient
-      if (params.dstAsset.toLowerCase() === this.hubProvider.chainConfig.nativeToken.toLowerCase()) {
+      if (params.dstToken.toLowerCase() === this.hubProvider.chainConfig.nativeToken.toLowerCase()) {
         calls.push({
-          address: dstAssetInfo.asset,
+          address: dstToken.hubAsset,
           value: 0n,
           data: encodeFunctionData({
             abi: wrappedSonicAbi,
@@ -565,13 +484,13 @@ export class BridgeService {
           }),
         });
       } else {
-        calls.push(Erc20Service.encodeTransfer(dstAssetInfo.asset, encodedRecipientAddress, translatedWithdrawAmount));
+        calls.push(Erc20Service.encodeTransfer(dstToken.hubAsset, encodedRecipientAddress, translatedWithdrawAmount));
       }
     } else {
-      invariant(dstAssetInfo, `Unsupported hub chain (${params.dstChainId}) token: ${params.dstAsset}`);
+      invariant(dstToken, `Unsupported hub chain (${params.dstChainKey}) token: ${params.dstToken}`);
       calls.push(
         EvmAssetManagerService.encodeTransfer(
-          dstAssetInfo.asset,
+          dstToken.hubAsset,
           encodedRecipientAddress,
           translatedWithdrawAmount,
           this.hubProvider.chainConfig.addresses.assetManager,
@@ -592,20 +511,21 @@ export class BridgeService {
    */
   public async getBridgeableAmount(from: XToken, to: XToken): Promise<Result<BridgeLimit>> {
     try {
-      const fromHubAsset = this.configService.getHubAssetInfo(from.xChainId, from.address);
-      const toHubAsset = this.configService.getHubAssetInfo(to.xChainId, to.address);
-      invariant(fromHubAsset, `Hub asset not found for token ${from.address} on chain ${from.xChainId}`);
-      invariant(toHubAsset, `Hub asset not found for token ${to.address} on chain ${to.xChainId}`);
+      const fromToken = this.config.getSpokeTokenFromOriginalAssetAddress(from.chainKey, from.address);
+      const toToken = this.config.getSpokeTokenFromOriginalAssetAddress(to.chainKey, to.address);
+
+      invariant(fromToken, `Token not found for token ${from.address} on chain ${from.chainKey}`);
+      invariant(toToken, `Token not found for token ${to.address} on chain ${to.chainKey}`);
       invariant(this.isBridgeable({ from, to }), `Tokens ${from.address} and ${to.address} are not bridgeable`);
 
       // we need to check the max deposit of the token on the from chain and the asset manager balance on the to chain
       const [tokenInfos, reserves] = await Promise.all([
         EvmVaultTokenService.getTokenInfos(
-          fromHubAsset.vault,
-          [fromHubAsset.asset, toHubAsset.asset],
+          fromToken.vault,
+          [fromToken.hubAsset, toToken.hubAsset],
           this.hubProvider.publicClient,
         ),
-        EvmVaultTokenService.getVaultReserves(toHubAsset.vault, this.hubProvider.publicClient),
+        EvmVaultTokenService.getVaultReserves(toToken.vault, this.hubProvider.publicClient),
       ]);
 
       invariant(tokenInfos.length === 2, `Expected 2 token infos, got ${tokenInfos.length}`);
@@ -614,7 +534,7 @@ export class BridgeService {
       invariant(toTokenInfo, 'To token info not found');
 
       // if the from token to be deposited is not supported, we return 0
-      if (from.xChainId !== this.hubProvider.chainConfig.chain.id && !fromTokenInfo.isSupported) {
+      if (from.chainKey !== this.hubProvider.chainConfig.chain.key && !fromTokenInfo.isSupported) {
         return {
           ok: true,
           value: {
@@ -626,10 +546,7 @@ export class BridgeService {
       }
 
       // spoke -> hub, we need to check the max deposit of the token on the from chain
-      if (
-        from.xChainId !== this.hubProvider.chainConfig.chain.id &&
-        to.xChainId === this.hubProvider.chainConfig.chain.id
-      ) {
+      if (!isHubChainKey(from.chainKey) && isHubChainKey(to.chainKey)) {
         const fromTokenDepositedAmount = this.findTokenBalanceInReserves(reserves, from);
         const availableDeposit = fromTokenInfo.maxDeposit - fromTokenDepositedAmount;
 
@@ -644,10 +561,7 @@ export class BridgeService {
       }
 
       // hub -> spoke, we need to check the asset manager balance on the to chain
-      if (
-        from.xChainId === this.hubProvider.chainConfig.chain.id &&
-        to.xChainId !== this.hubProvider.chainConfig.chain.id
-      ) {
+      if (isHubChainKey(from.chainKey) && !isHubChainKey(to.chainKey)) {
         return {
           ok: true,
           value: {
@@ -700,20 +614,20 @@ export class BridgeService {
   }): boolean {
     try {
       if (!unchecked) {
-        invariant(this.configService.isValidSpokeChainId(from.xChainId), `Invalid spoke chain (${from.xChainId})`);
-        invariant(this.configService.isValidSpokeChainId(to.xChainId), `Invalid spoke chain (${to.xChainId})`);
+        invariant(this.config.isValidSpokeChainKey(from.chainKey), `Invalid spoke chain (${from.chainKey})`);
+        invariant(this.config.isValidSpokeChainKey(to.chainKey), `Invalid spoke chain (${to.chainKey})`);
       }
 
       // Get hub asset info for both source and destination assets
-      const srcAssetInfo = this.configService.getHubAssetInfo(from.xChainId, from.address);
-      const dstAssetInfo = this.configService.getHubAssetInfo(to.xChainId, to.address);
+      const srcToken = this.config.getSpokeTokenFromOriginalAssetAddress(from.chainKey, from.address);
+      const dstToken = this.config.getSpokeTokenFromOriginalAssetAddress(to.chainKey, to.address);
 
       // Check if both assets are supported and have vault information
-      invariant(srcAssetInfo, `Hub asset not found for token ${from.address} on chain ${from.xChainId}`);
-      invariant(dstAssetInfo, `Hub asset not found for token ${to.address} on chain ${to.xChainId}`);
+      invariant(srcToken, `Token not found for token ${from.address} on chain ${from.chainKey}`);
+      invariant(dstToken, `Token not found for token ${to.address} on chain ${to.chainKey}`);
 
       // Check if the vault addresses are the same (case-insensitive comparison)
-      return srcAssetInfo.vault.toLowerCase() === dstAssetInfo.vault.toLowerCase();
+      return srcToken.vault.toLowerCase() === dstToken.vault.toLowerCase();
     } catch (error) {
       console.error(error);
 
@@ -729,18 +643,14 @@ export class BridgeService {
    * @param token - The source token address
    * @returns XToken[] - Array of bridgeable tokens on the destination chain
    */
-  public getBridgeableTokens(from: SpokeChainId, to: SpokeChainId, token: string): Result<XToken[]> {
+  public getBridgeableTokens(from: SpokeChainKey, to: SpokeChainKey, token: string): Result<XToken[]> {
     try {
-      const srcAssetInfo = this.configService.getHubAssetInfo(from, token);
-      invariant(srcAssetInfo, `Hub asset not found for token ${token} on chain ${from}`);
+      const srcToken = this.config.getSpokeTokenFromOriginalAssetAddress(from, token);
+      invariant(srcToken, `Token not found for token ${token} on chain ${from}`);
 
       return {
         ok: true,
-        value: this.filterTokensWithSameVault(
-          this.configService.spokeChainConfig[to].supportedTokens,
-          to,
-          srcAssetInfo,
-        ),
+        value: this.filterTokensWithSameVault(this.config.spokeChainConfig[to].supportedTokens, to, srcToken),
       };
     } catch (error) {
       return {
@@ -752,19 +662,19 @@ export class BridgeService {
 
   public filterTokensWithSameVault(
     tokens: Record<string, XToken>,
-    to: SpokeChainId,
-    srcAssetInfo: HubAssetInfo | undefined,
+    to: SpokeChainKey,
+    srcToken: XToken | undefined,
   ): XToken[] {
     // Filter tokens that share the same vault as the source asset
     const bridgeableTokens: XToken[] = [];
 
     for (const token of Object.values(tokens)) {
-      const dstAssetInfo = this.configService.getHubAssetInfo(to, token.address);
+      const dstToken = this.config.getSpokeTokenFromOriginalAssetAddress(to, token.address);
 
-      if (dstAssetInfo && srcAssetInfo && dstAssetInfo.vault.toLowerCase() === srcAssetInfo.vault.toLowerCase()) {
+      if (dstToken && srcToken && dstToken.vault.toLowerCase() === srcToken.vault.toLowerCase()) {
         bridgeableTokens.push({
           ...token,
-          xChainId: to,
+          chainKey: to,
         });
       }
     }
@@ -773,10 +683,13 @@ export class BridgeService {
   }
 
   public findTokenBalanceInReserves(reserves: VaultReserves, token: XToken): bigint {
-    const hubAsset = this.configService.getHubAssetInfo(token.xChainId, token.address);
-    invariant(hubAsset, `Hub asset not found for token ${token.address} on chain ${token.xChainId}`);
-    const tokenIndex = reserves.tokens.findIndex(t => t.toLowerCase() === hubAsset.asset.toLowerCase());
-    invariant(tokenIndex !== -1, `Token ${hubAsset.asset} not found in the vault reserves for chain ${token.xChainId}`);
+    const hubAsset = this.config.getSpokeTokenFromOriginalAssetAddress(token.chainKey, token.address);
+    invariant(hubAsset, `Token not found for token ${token.address} on chain ${token.chainKey}`);
+    const tokenIndex = reserves.tokens.findIndex(t => t.toLowerCase() === hubAsset.hubAsset.toLowerCase());
+    invariant(
+      tokenIndex !== -1,
+      `Token ${hubAsset.hubAsset} not found in the vault reserves for chain ${token.chainKey}`,
+    );
     return reserves.balances[tokenIndex] ?? 0n;
   }
 }

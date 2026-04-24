@@ -1,10 +1,4 @@
-import type { RadfiDepositTxResponse } from '@sodax/types';
-
-export type RadfiConfig = {
-  url: string;
-  apiKey: string;
-  umsUrl?: string;
-};
+import { detectBitcoinAddressType, type IBitcoinWalletProvider, type RadfiConfig, type RadfiDepositTxResponse } from '@sodax/types';
 
 export type RadfiTradingWallet = {
   tradingAddress: string;
@@ -69,7 +63,88 @@ export type RadfiMaxSpentResponse = {
 };
 
 export class RadfiProvider {
-  constructor(private readonly config: RadfiConfig) {}
+  private readonly config: RadfiConfig;
+  public accessToken = '';
+  public refreshToken = '';
+
+  constructor(config: RadfiConfig) {
+    this.config = config;
+    if (config.apiUrl.endsWith('/')) {
+      // Remove trailing slash from baseUrl
+      this.config.apiUrl = config.apiUrl.slice(0, -1);
+    }
+    if (config.umsUrl?.endsWith('/')) {
+      // Remove trailing slash from umsUrl
+      this.config.umsUrl = config.umsUrl.slice(0, -1);
+    }
+  }
+
+  /**
+   * Authenticate with Radfi: BIP322-sign a login message, then call the Radfi API.
+   * Returns accessToken, refreshToken, and tradingAddress.
+   */
+  public async authenticateWithWallet(
+    walletProvider: IBitcoinWalletProvider,
+    cachedPublicKey?: string,
+  ): Promise<{ accessToken: string; refreshToken: string; tradingAddress: string; publicKey: string }> {
+    const address = await walletProvider.getWalletAddress();
+
+    let publicKey = cachedPublicKey;
+    if (!publicKey) {
+      if (!walletProvider.getPublicKey) {
+        throw new Error('Wallet provider does not support getPublicKey');
+      }
+      publicKey = await walletProvider.getPublicKey();
+    }
+    if (!publicKey) {
+      throw new Error('Failed to retrieve public key from wallet. Please unlock your wallet and try again.');
+    }
+
+    const message = `Login to Radfi via Sodax: ${Date.now()}`;
+    const addressType = detectBitcoinAddressType(address);
+    // BIP322 signing is supported for P2WPKH and P2TR; P2SH and P2PKH use ECDSA
+    const signature =
+      addressType === 'P2WPKH' || addressType === 'P2TR'
+        ? await walletProvider.signBip322Message(message)
+        : await walletProvider.signEcdsaMessage(message);
+
+    const result = await this.authenticate({ message, signature, address, publicKey });
+    this.setRadfiAccessToken(result.accessToken, result.refreshToken);
+    return { ...result, publicKey };
+  }
+
+  /**
+   * Ensure a valid Radfi access token is set on this provider.
+   * If a token exists, validates it via the Radfi API.
+   * If invalid, tries refreshing with the refresh token first.
+   * If refresh also fails, falls back to full re-authentication (BIP322 sign).
+   */
+  public async ensureRadfiAccessToken(walletProvider: IBitcoinWalletProvider): Promise<void> {
+    // Try refreshing with refresh token to get a fresh access token
+    if (this.refreshToken) {
+      try {
+        const { accessToken, refreshToken } = await this.refreshAccessToken(this.refreshToken);
+        this.setRadfiAccessToken(accessToken, refreshToken);
+        console.log('[ensureRadfiAccessToken] token refreshed successfully');
+        return;
+      } catch (error) {
+        console.warn('[ensureRadfiAccessToken] refresh failed, falling back to full re-auth', error);
+      }
+    }
+
+    // Full re-authentication (requires user wallet signature)
+    console.log('[ensureRadfiAccessToken] performing full re-authentication (BIP322 sign)');
+    this.accessToken = '';
+    this.refreshToken = '';
+    await this.authenticateWithWallet(walletProvider);
+  }
+
+  public setRadfiAccessToken(token: string, refreshToken?: string) {
+    this.accessToken = token;
+    if (refreshToken !== undefined) {
+      this.refreshToken = refreshToken;
+    }
+  }
 
   public async authenticate(params: {
     message: string;
@@ -111,10 +186,13 @@ export class RadfiProvider {
     }));
   }
 
-  public async createTradingWallet(params: {
-    walletAddress: string;
-    publicKey: string;
-  }, accessToken: string): Promise<RadfiTradingWallet> {
+  public async createTradingWallet(
+    params: {
+      walletAddress: string;
+      publicKey: string;
+    },
+    accessToken: string,
+  ): Promise<RadfiTradingWallet> {
     const res = await this.request('/wallets', {
       method: 'POST',
       headers: {
@@ -131,15 +209,10 @@ export class RadfiProvider {
     return res.json().then(r => r.data);
   }
 
-  public async getTradingWallet(
-    userAddress: string,
-    accessToken?: string,
-  ): Promise<RadfiTradingWallet> {
+  public async getTradingWallet(userAddress: string, accessToken?: string): Promise<RadfiTradingWallet> {
     const res = await this.request(`/wallets/details/${userAddress}`, {
       method: 'GET',
-      headers: accessToken
-        ? { Authorization: `Bearer ${accessToken}` }
-        : {},
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
     });
 
     if (!res.ok) {
@@ -179,17 +252,21 @@ export class RadfiProvider {
       await this.getTradingWallet(userAddress);
       return true;
     } catch (error) {
+      console.error(error);
       return false;
     }
   }
 
-  public async createWithdrawTransaction(params: {
-    token: string;
-    amount: bigint;
-    recipient: string;
-    userAddress: string;
-    data: string;
-  }, accessToken: string): Promise<RadfiDepositTxResponse> {
+  public async createWithdrawTransaction(
+    params: {
+      token: string;
+      amount: bigint;
+      recipient: string;
+      userAddress: string;
+      data: string;
+    },
+    accessToken: string,
+  ): Promise<RadfiDepositTxResponse> {
     const res = await this.request('/sodax/transaction', {
       method: 'POST',
       headers: {
@@ -200,7 +277,7 @@ export class RadfiProvider {
         params: {
           amount: params.amount.toString(),
           tokenId: params.token,
-          sodaxData: params.data
+          sodaxData: params.data,
         },
       }),
     });
@@ -213,10 +290,13 @@ export class RadfiProvider {
     return res.json().then(r => r.data);
   }
 
-  public async requestRadfiSignature(params: {
-    userAddress: string;
-    signedBase64Tx: string;
-  }, accessToken: string): Promise<string> {
+  public async requestRadfiSignature(
+    params: {
+      userAddress: string;
+      signedBase64Tx: string;
+    },
+    accessToken: string,
+  ): Promise<string> {
     const res = await this.request('/sodax/transaction/sign', {
       method: 'POST',
       headers: {
@@ -232,7 +312,6 @@ export class RadfiProvider {
       const err = await res.json();
       throw new Error(err.message || 'Radfi signature request failed');
     }
-
 
     return res.json().then(r => r.data.txId);
   }
@@ -324,12 +403,15 @@ export class RadfiProvider {
    * Withdraw BTC from trading wallet to user's personal wallet.
    * Returns an unsigned PSBT for the user to sign.
    */
-  public async withdrawToUser(params: {
-    userAddress: string;
-    amount: string;
-    tokenId: string;
-    withdrawTo: string;
-  }, accessToken: string): Promise<RadfiBuildTxResponse> {
+  public async withdrawToUser(
+    params: {
+      userAddress: string;
+      amount: string;
+      tokenId: string;
+      withdrawTo: string;
+    },
+    accessToken: string,
+  ): Promise<RadfiBuildTxResponse> {
     const res = await this.request('/transactions', {
       method: 'POST',
       headers: {
@@ -382,12 +464,15 @@ export class RadfiProvider {
   /**
    * Get max spendable amount for a withdraw transaction (amount after fee).
    */
-  public async getMaxWithdrawable(params: {
-    userAddress: string;
-    amount: string;
-    tokenId: string;
-    withdrawTo: string;
-  }, accessToken: string): Promise<RadfiMaxSpentResponse> {
+  public async getMaxWithdrawable(
+    params: {
+      userAddress: string;
+      amount: string;
+      tokenId: string;
+      withdrawTo: string;
+    },
+    accessToken: string,
+  ): Promise<RadfiMaxSpentResponse> {
     const res = await this.request('/transactions/max-spent', {
       method: 'POST',
       headers: {
@@ -407,11 +492,8 @@ export class RadfiProvider {
     return res.json().then(r => r.data);
   }
 
-  private async request(
-    endpoint: string,
-    options?: RequestInit,
-  ): Promise<Response> {
-    return fetch(`${this.config.url}${endpoint}`, {
+  private async request(endpoint: string, options?: RequestInit): Promise<Response> {
+    return fetch(`${this.config.apiUrl}${endpoint}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',

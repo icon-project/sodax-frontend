@@ -38,6 +38,7 @@ export function isBrowserExtensionNearWalletConfig(
  * Supports both private key and browser extension wallet configurations
  */
 export class NearWalletProvider implements INearWalletProvider {
+  public readonly chainType = 'NEAR' as const;
   public readonly account?: Account;
   public readonly rpcProvider?: JsonRpcProvider;
   private readonly wallet?: NearConnector;
@@ -127,4 +128,5 @@ export class NearWalletProvider implements INearWalletProvider {
 
     throw new Error('Wallet not initialized');
   }
+
 }

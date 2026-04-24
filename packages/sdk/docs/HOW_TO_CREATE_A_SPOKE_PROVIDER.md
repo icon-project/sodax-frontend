@@ -53,7 +53,7 @@ When you have a generic config object (e.g. from API or runtime) and want a sing
 function constructRawSpokeProvider(config: RawSpokeProviderConfig): RawSpokeProvider
 ```
 
-- **Parameter**: `config` — A chain-specific raw spoke provider config (`EvmRawSpokeProviderConfig`, `SonicRawSpokeProviderConfig`, `StellarRawSpokeProviderConfig`, `SolanaRawSpokeProviderConfig`, `IconRawSpokeProviderConfig`, `InjectiveRawSpokeProviderConfig`, or `SuiRawSpokeProviderConfig`). The config must include `chainConfig` with `chain.type` set to one of: `EVM`, `STELLAR`, `SOLANA`, `ICON`, `INJECTIVE`, `SUI`. For Sonic, use EVM config with `chain.id === SONIC_MAINNET_CHAIN_ID`.
+- **Parameter**: `config` — A chain-specific raw spoke provider config (`EvmRawSpokeProviderConfig`, `SonicRawSpokeProviderConfig`, `StellarRawSpokeProviderConfig`, `SolanaRawSpokeProviderConfig`, `IconRawSpokeProviderConfig`, `InjectiveRawSpokeProviderConfig`, or `SuiRawSpokeProviderConfig`). The config must include `chainConfig` with `chain.type` set to one of: `EVM`, `STELLAR`, `SOLANA`, `ICON`, `INJECTIVE`, `SUI`. For Sonic, use EVM config with `chain.id === ChainKeys.SONIC_MAINNET`.
 - **Returns**: A `RawSpokeProvider` instance (e.g. `EvmRawSpokeProvider`, `StellarRawSpokeProvider`, `SolanaRawSpokeProvider`, etc.).
 - **Throws**: `Error` with message `Unsupported chain type: ${chainType}` if `chain.type` is not supported.
 
@@ -63,7 +63,7 @@ function constructRawSpokeProvider(config: RawSpokeProviderConfig): RawSpokeProv
 import {
   constructRawSpokeProvider,
   spokeChainConfig,
-  ARBITRUM_MAINNET_CHAIN_ID,
+  ChainKeys,
   type RawSpokeProviderConfig,
   type EvmRawSpokeProviderConfig,
 } from "@sodax/sdk";
@@ -71,7 +71,7 @@ import {
 // Config might come from API or be built at runtime
 const config: EvmRawSpokeProviderConfig = {
   walletAddress: "0x...",
-  chainConfig: spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID],
+  chainConfig: spokeChainConfig[ChainKeys.ARBITRUM_MAINNET],
   rpcUrl: "https://arb1.arbitrum.io/rpc",
 };
 
@@ -95,10 +95,10 @@ Before creating a spoke provider, ensure you have:
 Chain configurations are available through the `spokeChainConfig` object exported from `@sodax/sdk`. This object contains pre-configured settings for all supported chains.
 
 ```typescript
-import { spokeChainConfig, ARBITRUM_MAINNET_CHAIN_ID, type EvmSpokeChainConfig } from "@sodax/sdk";
+import { spokeChainConfig, ChainKeys, type EvmSpokeChainConfig } from "@sodax/sdk";
 
 // Get chain configuration for a specific chain
-const arbChainConfig = spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID] as EvmSpokeChainConfig;
+const arbChainConfig = spokeChainConfig[ChainKeys.ARBITRUM_MAINNET] as EvmSpokeChainConfig;
 ```
 
 **Note**: It's recommended to initialize Sodax before creating spoke providers to ensure you have the latest chain configurations:
@@ -116,18 +116,18 @@ EVM chains include Arbitrum, Avalanche, Base, BSC, Optimism, Polygon, Sonic, Lig
 
 **Supported EVM Chains**:
 
-- Arbitrum (`ARBITRUM_MAINNET_CHAIN_ID`)
-- Avalanche (`AVALANCHE_MAINNET_CHAIN_ID`)
-- Base (`BASE_MAINNET_CHAIN_ID`)
-- BSC (`BSC_MAINNET_CHAIN_ID`)
-- Optimism (`OPTIMISM_MAINNET_CHAIN_ID`)
-- Polygon (`POLYGON_MAINNET_CHAIN_ID`)
-- Sonic (`SONIC_MAINNET_CHAIN_ID`)
-- Lightlink (`LIGHTLINK_MAINNET_CHAIN_ID`)
-- HyperEVM (`HYPEREVM_MAINNET_CHAIN_ID`)
-- Ethereum (`ETHEREUM_MAINNET_CHAIN_ID`)
-- Redbelly (`REDBELLY_MAINNET_CHAIN_ID`)
-- Kaia (`KAIA_MAINNET_CHAIN_ID`)
+- Arbitrum (`ChainKeys.ARBITRUM_MAINNET`)
+- Avalanche (`ChainKeys.AVALANCHE_MAINNET`)
+- Base (`ChainKeys.BASE_MAINNET`)
+- BSC (`ChainKeys.BSC_MAINNET`)
+- Optimism (`ChainKeys.OPTIMISM_MAINNET`)
+- Polygon (`ChainKeys.POLYGON_MAINNET`)
+- Sonic (`ChainKeys.SONIC_MAINNET`)
+- Lightlink (`ChainKeys.LIGHTLINK_MAINNET`)
+- HyperEVM (`ChainKeys.HYPEREVM_MAINNET`)
+- Ethereum (`ChainKeys.ETHEREUM_MAINNET`)
+- Redbelly (`ChainKeys.REDBELLY_MAINNET`)
+- Kaia (`ChainKeys.KAIA_MAINNET`)
 
 ### Constructor Signature
 
@@ -144,7 +144,7 @@ new EvmSpokeProvider(
 ```typescript
 import {
   EvmSpokeProvider,
-  ARBITRUM_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type EvmSpokeChainConfig,
   type Hex
@@ -154,12 +154,12 @@ import { EvmWalletProvider } from "@sodax/wallet-sdk-core";
 // Create wallet provider with private key and RPC URL
 const evmWalletProvider = new EvmWalletProvider({
   privateKey: '0x...' as Hex, // Your private key
-  chainId: ARBITRUM_MAINNET_CHAIN_ID,
+  chainId: ChainKeys.ARBITRUM_MAINNET,
   rpcUrl: 'https://arb1.arbitrum.io/rpc', // Arbitrum RPC URL
 });
 
 // Get chain configuration
-const arbChainConfig = spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID] as EvmSpokeChainConfig;
+const arbChainConfig = spokeChainConfig[ChainKeys.ARBITRUM_MAINNET] as EvmSpokeChainConfig;
 
 // Create Arbitrum spoke provider
 const arbSpokeProvider = new EvmSpokeProvider(
@@ -180,7 +180,7 @@ const arbSpokeProviderWithCustomRpc = new EvmSpokeProvider(
 ```typescript
 import {
   EvmSpokeProvider,
-  POLYGON_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type EvmSpokeChainConfig,
   type IEvmWalletProvider
@@ -191,7 +191,7 @@ import {
 const evmWalletProvider: IEvmWalletProvider = /* injected by wallet */;
 
 // Get chain configuration
-const polygonChainConfig = spokeChainConfig[POLYGON_MAINNET_CHAIN_ID] as EvmSpokeChainConfig;
+const polygonChainConfig = spokeChainConfig[ChainKeys.POLYGON_MAINNET] as EvmSpokeChainConfig;
 
 // Create Polygon spoke provider
 const polygonSpokeProvider = new EvmSpokeProvider(
@@ -219,7 +219,7 @@ new EvmRawSpokeProvider(
 ```typescript
 import {
   EvmRawSpokeProvider,
-  ARBITRUM_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type EvmSpokeChainConfig,
   type Address
@@ -229,7 +229,7 @@ import {
 const userWalletAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' as Address;
 
 // Get chain configuration
-const arbChainConfig = spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID] as EvmSpokeChainConfig;
+const arbChainConfig = spokeChainConfig[ChainKeys.ARBITRUM_MAINNET] as EvmSpokeChainConfig;
 
 // Create raw Arbitrum spoke provider (no wallet provider needed)
 const arbRawSpokeProvider = new EvmRawSpokeProvider(
@@ -266,7 +266,7 @@ new SonicSpokeProvider(
 ```typescript
 import {
   SonicSpokeProvider,
-  SONIC_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type SonicSpokeChainConfig,
   type IEvmWalletProvider,
@@ -277,12 +277,12 @@ import { EvmWalletProvider } from "@sodax/wallet-sdk-core";
 // Create wallet provider
 const sonicWalletProvider = new EvmWalletProvider({
   privateKey: '0x...' as Hex,
-  chainId: SONIC_MAINNET_CHAIN_ID,
+  chainId: ChainKeys.SONIC_MAINNET,
   rpcUrl: 'https://rpc.soniclabs.com',
 });
 
 // Get chain configuration
-const sonicChainConfig = spokeChainConfig[SONIC_MAINNET_CHAIN_ID] as SonicSpokeChainConfig;
+const sonicChainConfig = spokeChainConfig[ChainKeys.SONIC_MAINNET] as SonicSpokeChainConfig;
 
 // Create Sonic spoke provider (NOT EvmSpokeProvider!)
 const sonicSpokeProvider = new SonicSpokeProvider(
@@ -310,7 +310,7 @@ new SonicRawSpokeProvider(
 ```typescript
 import {
   SonicRawSpokeProvider,
-  SONIC_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type SonicSpokeChainConfig,
   type Address
@@ -320,7 +320,7 @@ import {
 const userWalletAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' as Address;
 
 // Get chain configuration
-const sonicChainConfig = spokeChainConfig[SONIC_MAINNET_CHAIN_ID] as SonicSpokeChainConfig;
+const sonicChainConfig = spokeChainConfig[ChainKeys.SONIC_MAINNET] as SonicSpokeChainConfig;
 
 // Create raw Sonic spoke provider
 const sonicRawSpokeProvider = new SonicRawSpokeProvider(
@@ -349,7 +349,7 @@ new SuiSpokeProvider(
 ```typescript
 import {
   SuiSpokeProvider,
-  SUI_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type SuiSpokeChainConfig
 } from "@sodax/sdk";
@@ -362,7 +362,7 @@ const suiWalletProvider = new SuiWalletProvider({
 });
 
 // Get chain configuration
-const suiChainConfig = spokeChainConfig[SUI_MAINNET_CHAIN_ID] as SuiSpokeChainConfig;
+const suiChainConfig = spokeChainConfig[ChainKeys.SUI_MAINNET] as SuiSpokeChainConfig;
 
 // Create Sui spoke provider (note: chainConfig first, then walletProvider)
 const suiSpokeProvider = new SuiSpokeProvider(
@@ -376,7 +376,7 @@ const suiSpokeProvider = new SuiSpokeProvider(
 ```typescript
 import {
   SuiSpokeProvider,
-  SUI_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type SuiSpokeChainConfig,
   type ISuiWalletProvider
@@ -386,7 +386,7 @@ import {
 const suiWalletProvider: ISuiWalletProvider = /* injected by wallet */;
 
 // Get chain configuration
-const suiChainConfig = spokeChainConfig[SUI_MAINNET_CHAIN_ID] as SuiSpokeChainConfig;
+const suiChainConfig = spokeChainConfig[ChainKeys.SUI_MAINNET] as SuiSpokeChainConfig;
 
 // Create Sui spoke provider
 const suiSpokeProvider = new SuiSpokeProvider(
@@ -415,7 +415,7 @@ new SuiRawSpokeProvider(
 ```typescript
 import {
   SuiRawSpokeProvider,
-  SUI_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type SuiSpokeChainConfig
 } from "@sodax/sdk";
@@ -424,7 +424,7 @@ import {
 const userWalletAddress = '0x1234567890abcdef1234567890abcdef12345678';
 
 // Get chain configuration
-const suiChainConfig = spokeChainConfig[SUI_MAINNET_CHAIN_ID] as SuiSpokeChainConfig;
+const suiChainConfig = spokeChainConfig[ChainKeys.SUI_MAINNET] as SuiSpokeChainConfig;
 
 // Create raw Sui spoke provider (note: chainConfig first, then walletAddress)
 const suiRawSpokeProvider = new SuiRawSpokeProvider(
@@ -465,7 +465,7 @@ If not provided, the RPC URLs from `chainConfig` will be used.
 ```typescript
 import {
   StellarSpokeProvider,
-  STELLAR_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type StellarSpokeChainConfig,
   type StellarRpcConfig,
@@ -484,7 +484,7 @@ const stellarWalletConfig: StellarWalletConfig = {
 const stellarWalletProvider = new StellarWalletProvider(stellarWalletConfig);
 
 // Get chain configuration
-const stellarChainConfig = spokeChainConfig[STELLAR_MAINNET_CHAIN_ID] as StellarSpokeChainConfig;
+const stellarChainConfig = spokeChainConfig[ChainKeys.STELLAR_MAINNET] as StellarSpokeChainConfig;
 
 // Create Stellar spoke provider with default RPC URLs
 const stellarSpokeProvider = new StellarSpokeProvider(
@@ -510,7 +510,7 @@ const stellarSpokeProviderWithCustomRpc = new StellarSpokeProvider(
 ```typescript
 import {
   StellarSpokeProvider,
-  STELLAR_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type StellarSpokeChainConfig,
   type IStellarWalletProvider
@@ -520,7 +520,7 @@ import {
 const stellarWalletProvider: IStellarWalletProvider = /* injected by wallet */;
 
 // Get chain configuration
-const stellarChainConfig = spokeChainConfig[STELLAR_MAINNET_CHAIN_ID] as StellarSpokeChainConfig;
+const stellarChainConfig = spokeChainConfig[ChainKeys.STELLAR_MAINNET] as StellarSpokeChainConfig;
 
 // Create Stellar spoke provider
 const stellarSpokeProvider = new StellarSpokeProvider(
@@ -548,7 +548,7 @@ new StellarRawSpokeProvider(
 ```typescript
 import {
   StellarRawSpokeProvider,
-  STELLAR_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type StellarSpokeChainConfig,
   type StellarRpcConfig
@@ -558,7 +558,7 @@ import {
 const userWalletAddress = 'GABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
 
 // Get chain configuration
-const stellarChainConfig = spokeChainConfig[STELLAR_MAINNET_CHAIN_ID] as StellarSpokeChainConfig;
+const stellarChainConfig = spokeChainConfig[ChainKeys.STELLAR_MAINNET] as StellarSpokeChainConfig;
 
 // Create raw Stellar spoke provider with default RPC URLs
 const stellarRawSpokeProvider = new StellarRawSpokeProvider(
@@ -599,7 +599,7 @@ new InjectiveSpokeProvider(
 ```typescript
 import {
   InjectiveSpokeProvider,
-  INJECTIVE_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type InjectiveSpokeChainConfig
 } from "@sodax/sdk";
@@ -613,7 +613,7 @@ const injectiveWalletProvider = new InjectiveWalletProvider({
 });
 
 // Get chain configuration
-const injectiveChainConfig = spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID] as InjectiveSpokeChainConfig;
+const injectiveChainConfig = spokeChainConfig[ChainKeys.INJECTIVE_MAINNET] as InjectiveSpokeChainConfig;
 
 // Create Injective spoke provider (note: chainConfig first, then walletProvider)
 const injectiveSpokeProvider = new InjectiveSpokeProvider(
@@ -627,7 +627,7 @@ const injectiveSpokeProvider = new InjectiveSpokeProvider(
 ```typescript
 import {
   InjectiveSpokeProvider,
-  INJECTIVE_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type InjectiveSpokeChainConfig,
   type IInjectiveWalletProvider
@@ -637,7 +637,7 @@ import {
 const injectiveWalletProvider: IInjectiveWalletProvider = /* injected by wallet */;
 
 // Get chain configuration
-const injectiveChainConfig = spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID] as InjectiveSpokeChainConfig;
+const injectiveChainConfig = spokeChainConfig[ChainKeys.INJECTIVE_MAINNET] as InjectiveSpokeChainConfig;
 
 // Create Injective spoke provider
 const injectiveSpokeProvider = new InjectiveSpokeProvider(
@@ -666,7 +666,7 @@ new InjectiveRawSpokeProvider(
 ```typescript
 import {
   InjectiveRawSpokeProvider,
-  INJECTIVE_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type InjectiveSpokeChainConfig
 } from "@sodax/sdk";
@@ -675,7 +675,7 @@ import {
 const userWalletAddress = 'inj1abcdefghijklmnopqrstuvwxyz1234567890';
 
 // Get chain configuration
-const injectiveChainConfig = spokeChainConfig[INJECTIVE_MAINNET_CHAIN_ID] as InjectiveSpokeChainConfig;
+const injectiveChainConfig = spokeChainConfig[ChainKeys.INJECTIVE_MAINNET] as InjectiveSpokeChainConfig;
 
 // Create raw Injective spoke provider (note: chainConfig first, then walletAddress)
 const injectiveRawSpokeProvider = new InjectiveRawSpokeProvider(
@@ -704,7 +704,7 @@ new IconSpokeProvider(
 ```typescript
 import {
   IconSpokeProvider,
-  ICON_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type IconSpokeChainConfig,
   type Hex
@@ -718,7 +718,7 @@ const iconWalletProvider = new IconWalletProvider({
 });
 
 // Get chain configuration
-const iconChainConfig = spokeChainConfig[ICON_MAINNET_CHAIN_ID] as IconSpokeChainConfig;
+const iconChainConfig = spokeChainConfig[ChainKeys.ICON_MAINNET] as IconSpokeChainConfig;
 
 // Create ICON spoke provider with default RPC URLs
 const iconSpokeProvider = new IconSpokeProvider(
@@ -740,7 +740,7 @@ const iconSpokeProviderWithCustomRpc = new IconSpokeProvider(
 ```typescript
 import {
   IconSpokeProvider,
-  ICON_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type IconSpokeChainConfig,
   type IIconWalletProvider
@@ -750,7 +750,7 @@ import {
 const iconWalletProvider: IIconWalletProvider = /* injected by wallet */;
 
 // Get chain configuration
-const iconChainConfig = spokeChainConfig[ICON_MAINNET_CHAIN_ID] as IconSpokeChainConfig;
+const iconChainConfig = spokeChainConfig[ChainKeys.ICON_MAINNET] as IconSpokeChainConfig;
 
 // Create ICON spoke provider
 const iconSpokeProvider = new IconSpokeProvider(
@@ -779,7 +779,7 @@ new IconRawSpokeProvider(
 ```typescript
 import {
   IconRawSpokeProvider,
-  ICON_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type IconSpokeChainConfig
 } from "@sodax/sdk";
@@ -788,7 +788,7 @@ import {
 const userWalletAddress = 'hx1234567890abcdef1234567890abcdef12345678';
 
 // Get chain configuration
-const iconChainConfig = spokeChainConfig[ICON_MAINNET_CHAIN_ID] as IconSpokeChainConfig;
+const iconChainConfig = spokeChainConfig[ChainKeys.ICON_MAINNET] as IconSpokeChainConfig;
 
 // Create raw ICON spoke provider (note: chainConfig first, then walletAddress)
 const iconRawSpokeProvider = new IconRawSpokeProvider(
@@ -815,7 +815,7 @@ new SolanaSpokeProvider(
 ```typescript
 import {
   SolanaSpokeProvider,
-  SOLANA_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type SolanaChainConfig
 } from "@sodax/sdk";
@@ -832,7 +832,7 @@ const solanaWalletProvider = new SolanaWalletProvider({
 });
 
 // Get chain configuration
-const solanaChainConfig = spokeChainConfig[SOLANA_MAINNET_CHAIN_ID] as SolanaChainConfig;
+const solanaChainConfig = spokeChainConfig[ChainKeys.SOLANA_MAINNET] as SolanaChainConfig;
 
 // Create Solana spoke provider
 const solanaSpokeProvider = new SolanaSpokeProvider(
@@ -846,7 +846,7 @@ const solanaSpokeProvider = new SolanaSpokeProvider(
 ```typescript
 import {
   SolanaSpokeProvider,
-  SOLANA_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type SolanaChainConfig,
   type ISolanaWalletProvider
@@ -856,7 +856,7 @@ import {
 const solanaWalletProvider: ISolanaWalletProvider = /* injected by wallet */;
 
 // Get chain configuration
-const solanaChainConfig = spokeChainConfig[SOLANA_MAINNET_CHAIN_ID] as SolanaChainConfig;
+const solanaChainConfig = spokeChainConfig[ChainKeys.SOLANA_MAINNET] as SolanaChainConfig;
 
 // Create Solana spoke provider
 const solanaSpokeProvider = new SolanaSpokeProvider(
@@ -884,7 +884,7 @@ new SolanaRawSpokeProvider({
 ```typescript
 import {
   SolanaRawSpokeProvider,
-  SOLANA_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type SolanaChainConfig
 } from "@sodax/sdk";
@@ -893,7 +893,7 @@ import {
 const userWalletAddress = 'EuenpE24dc6ve6STi8enwgXJ6yuR7fgUrFa3KSYHmFTv';
 
 // Get chain configuration
-const solanaChainConfig = spokeChainConfig[SOLANA_MAINNET_CHAIN_ID] as SolanaChainConfig;
+const solanaChainConfig = spokeChainConfig[ChainKeys.SOLANA_MAINNET] as SolanaChainConfig;
 
 // Create raw Solana spoke provider with RPC URL
 const solanaRawSpokeProvider = new SolanaRawSpokeProvider({
@@ -952,7 +952,7 @@ let arbSpokeProvider: EvmSpokeProvider | null = null;
 
 // When wallet reconnects
 function onWalletConnect(walletProvider: IEvmWalletProvider) {
-  const arbChainConfig = spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID] as EvmSpokeChainConfig;
+  const arbChainConfig = spokeChainConfig[ChainKeys.ARBITRUM_MAINNET] as EvmSpokeChainConfig;
   arbSpokeProvider = new EvmSpokeProvider(walletProvider, arbChainConfig);
 }
 ```
@@ -972,7 +972,7 @@ import type {
 } from "@sodax/sdk";
 
 // Type-safe chain configuration access
-const arbChainConfig = spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID] as EvmSpokeChainConfig;
+const arbChainConfig = spokeChainConfig[ChainKeys.ARBITRUM_MAINNET] as EvmSpokeChainConfig;
 ```
 
 ## Usage Examples
@@ -1004,14 +1004,14 @@ For detailed swap documentation, see [HOW_TO_MAKE_A_SWAP.md](https://github.com/
 When using raw spoke providers, you must pass the `raw: true` flag to get raw transaction data instead of executing transactions:
 
 ```typescript
-import { Sodax, EvmRawSpokeProvider, ARBITRUM_MAINNET_CHAIN_ID, spokeChainConfig, type Address } from "@sodax/sdk";
+import { Sodax, EvmRawSpokeProvider, ChainKeys, spokeChainConfig, type Address } from "@sodax/sdk";
 
 const sodax = new Sodax();
 await sodax.initialize();
 
 // Create raw spoke provider (only wallet address needed)
 const userWalletAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' as Address;
-const arbChainConfig = spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID];
+const arbChainConfig = spokeChainConfig[ChainKeys.ARBITRUM_MAINNET];
 const arbRawSpokeProvider = new EvmRawSpokeProvider(userWalletAddress, arbChainConfig);
 
 // Use raw spoke provider with raw: true flag
@@ -1024,7 +1024,7 @@ const createIntentResult = await sodax.swaps.createIntent(
       minOutputAmount: 0n,
       deadline: 0n,
       allowPartialFill: false,
-      srcChain: ARBITRUM_MAINNET_CHAIN_ID,
+      srcChain: ChainKeys.ARBITRUM_MAINNET,
       dstChain: '...', // Destination chain ID
       srcAddress: userWalletAddress,
       dstAddress: userWalletAddress,

@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useAccount, useSwitchChain } from 'wagmi';
-import { baseChainInfo, type ChainId } from '@sodax/types';
+import { baseChainInfo, type SpokeChainKey } from '@sodax/types';
 import { getXChainType } from '@/actions/index.js';
 import { InjectiveXService } from '@/xchains/injective/index.js';
 import { useXService } from '@/hooks/useXService.js';
@@ -68,7 +68,7 @@ export const switchEthereumChain = async (): Promise<unknown> => {
  * because `evmEnabled` is derived from config which is immutable after mount —
  * the branch never changes during the component's lifetime.
  */
-export const useEvmSwitchChain = (expectedXChainId: ChainId): UseEvmSwitchChainReturn => {
+export const useEvmSwitchChain = (expectedXChainId: SpokeChainKey): UseEvmSwitchChainReturn => {
   const evmEnabled = useIsChainEnabled('EVM');
 
   if (!evmEnabled) {
@@ -78,7 +78,7 @@ export const useEvmSwitchChain = (expectedXChainId: ChainId): UseEvmSwitchChainR
   return useEvmSwitchChainInner(expectedXChainId);
 };
 
-const useEvmSwitchChainInner = (expectedXChainId: ChainId): UseEvmSwitchChainReturn => {
+const useEvmSwitchChainInner = (expectedXChainId: SpokeChainKey): UseEvmSwitchChainReturn => {
   const xChainType = getXChainType(expectedXChainId);
   const expectedChainId = baseChainInfo[expectedXChainId].chainId;
   assert(typeof expectedChainId === 'number', '[useEvmSwitchChain] expected numeric EVM chainId');

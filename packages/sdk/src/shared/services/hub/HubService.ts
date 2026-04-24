@@ -1,8 +1,9 @@
 import { sonicWalletFactoryAbi } from '../../abis/sonicWalletFactory.abi.js';
-import type { Address, ChainId, HubAddress } from '@sodax/types';
+import { type Address, type SpokeChainKey, type HubAddress, getIntentRelayChainId } from '@sodax/types';
 import type { EvmHubProvider } from '../../entities/index.js';
 import { encodeAddress } from '../../utils/shared-utils.js';
-import { EvmWalletAbstraction } from './EvmWalletAbstraction.js';
+import { walletFactoryAbi } from '../../abis/index.js';
+
 /**
  * HubService is a main class that provides functionalities for dealing with hub chains.
  */
@@ -27,26 +28,27 @@ export class HubService {
   /**
    * Gets the hub wallet address for a user based on their spoke chain address.
    * @param address - The user's address on the spoke chain
-   * @param chainId - spoke chain id
+   * @param chainKey - spoke chain id
    * @param hubProvider - The provider for interacting with the hub chain
    * @returns The user's hub wallet address
    */
   public static async getUserHubWalletAddress(
     address: string,
-    chainId: ChainId,
+    chainKey: SpokeChainKey,
     hubProvider: EvmHubProvider,
   ): Promise<Address> {
-    const encodedAddress = encodeAddress(chainId, address);
+    const encodedAddress = encodeAddress(chainKey, address);
 
     // for hub chain, use the user router instead of CREATE3
-    if (chainId === hubProvider.chainConfig.chain.id) {
+    if (chainKey === hubProvider.chainConfig.chain.key) {
       return HubService.getUserRouter(encodedAddress, hubProvider);
     }
 
-    return EvmWalletAbstraction.getUserHubWalletAddress(
-      chainId,
-      encodedAddress,
-      hubProvider,
-    );
+    return hubProvider.publicClient.readContract({
+      address: hubProvider.chainConfig.addresses.hubWallet,
+      abi: walletFactoryAbi,
+      functionName: 'getDeployedAddress',
+      args: [BigInt(getIntentRelayChainId(chainKey)), encodedAddress],
+    });
   }
 }

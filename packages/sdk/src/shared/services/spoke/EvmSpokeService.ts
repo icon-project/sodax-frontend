@@ -1,38 +1,63 @@
-import { type Address, createPublicClient, encodeFunctionData, http } from 'viem';
-import { erc20Abi, spokeAssetManagerAbi } from '../../abis/index.js';
-import type { EvmHubProvider } from '../../entities/index.js';
-import { connectionAbi, getEvmViemChain, isEvmRawSpokeProvider } from '../../../index.js';
-import type {
-  DepositSimulationParams,
-  EvmReturnType,
-  EvmSpokeProviderType,
-  EvmTransferToHubParams,
-  GetAddressType,
-  Result,
-  TxReturnType,
-  VerifyTxHashRawEvmConfig,
-} from '../../types.js';
 import {
-  type EvmRawTransaction,
-  type EvmRawTransactionReceipt,
-  type Hex,
-  type HubAddress,
-  type HubChainId,
+  type Address,
+  createPublicClient,
+  encodeFunctionData,
+  http,
+  type HttpTransport,
+  type PublicClient,
+} from 'viem';
+import { connectionAbi, erc20Abi, spokeAssetManagerAbi } from '../../abis/index.js';
+import { getEvmViemChain } from '../../utils/constant-utils.js';
+import type {
+  DepositParams,
+  GetDepositParams,
+  SendMessageParams,
+  EstimateGasParams,
+  WaitForTxReceiptParams,
+  WaitForTxReceiptReturnType,
+} from '../../types/spoke-types.js';
+import { Erc20Service, type Erc20IsAllowanceParams } from '../erc-20/Erc20Service.js';
+import {
+  type EvmSpokeOnlyChainKey,
+  type Result,
+  type TxReturnType,
   getIntentRelayChainId,
+  spokeChainConfig,
+  type EvmReturnType,
+  type HttpUrl,
 } from '@sodax/types';
-import { EvmWalletAbstraction } from '../hub/index.js';
-import { encodeAddress } from '../../utils/shared-utils.js';
 
-export type EvmSpokeDepositParams = {
-  from: Address; // The address of the user on the spoke chain
-  to?: HubAddress; // The address of the user on the hub chain (wallet abstraction address)
-  token: Hex; // The address of the token to deposit
-  amount: bigint; // The amount of tokens to deposit
-  data: Hex; // The data to send with the deposit
+export type CreateViemPublicClientParams = {
+  chainId: EvmSpokeOnlyChainKey;
+  rpcUrl?: HttpUrl;
 };
 
 export class EvmSpokeService {
-  private constructor() {}
+  // map containing the public clients for each evm spoke chain, lazy loaded on demand
+  private readonly publicClients: Map<EvmSpokeOnlyChainKey, PublicClient<HttpTransport>> = new Map();
+
+  getPublicClient(chainId: EvmSpokeOnlyChainKey): PublicClient<HttpTransport> {
+    return (
+      this.publicClients.get(chainId) ??
+      this.constructPublicClient({ chainId, rpcUrl: spokeChainConfig[chainId].rpcUrl })
+    );
+  }
+
+  public constructPublicClient({ chainId, rpcUrl }: CreateViemPublicClientParams): PublicClient<HttpTransport> {
+    let publicClient: PublicClient<HttpTransport>;
+    if (rpcUrl) {
+      publicClient = createPublicClient({
+        transport: http(rpcUrl),
+        chain: getEvmViemChain(chainId),
+      });
+    }
+    publicClient = createPublicClient({
+      transport: http(getEvmViemChain(chainId).rpcUrls.default.http[0]),
+      chain: getEvmViemChain(chainId),
+    });
+    this.publicClients.set(chainId, publicClient);
+    return publicClient;
+  }
 
   /**
    * Estimates the gas necessary to complete a transaction without submitting it to the network.
@@ -40,8 +65,7 @@ export class EvmSpokeService {
    * - Docs: https://viem.sh/docs/actions/public/estimateGas
    * - JSON-RPC Methods: [`eth_estimateGas`](https://ethereum.org/en/developers/docs/apis/json-rpc/#eth_estimategas)
    *
-   * @param {EvmRawTransaction} rawTx - The raw transaction to estimate the gas for.
-   * @param {EvmSpokeProviderType} spokeProvider - The EVM spoke provider.
+   * @param {EstimateGasParams<EvmSpokeOnlyChainKey>} params - The parameters for the gas estimation, including the from, to, value, and data.
    * @returns {Promise<bigint>} Estimated gas for the transaction.
    *
    * @example
@@ -57,154 +81,86 @@ export class EvmSpokeService {
    * const estimatedGas = await EvmSpokeService.estimateGas(rawTx, spokeProvider);
    * console.log(`Estimated gas: ${estimatedGas}`);
    */
-  public static async estimateGas(rawTx: EvmRawTransaction, spokeProvider: EvmSpokeProviderType): Promise<bigint> {
+  public async estimateGas({ tx, chainKey: chainId }: EstimateGasParams<EvmSpokeOnlyChainKey>): Promise<bigint> {
     // Use viem's estimateGas with explicit parameter types
-    return spokeProvider.publicClient.estimateGas({
-      account: rawTx.from,
-      to: rawTx.to,
-      value: rawTx.value,
-      data: rawTx.data,
+    return this.getPublicClient(chainId).estimateGas({
+      account: tx.from,
+      to: tx.to,
+      value: tx.value,
+      data: tx.data,
     });
   }
 
   /**
-   * Deposit tokens to the spoke chain.
-   * @param {EvmSpokeDepositParams} params - The parameters for the deposit, including the user's address, token address, amount, and additional data.
-   * @param {EvmSpokeProviderType} spokeProvider - The provider for the spoke chain.
-   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
-   * @returns {Promise<TxReturnType<EvmSpokeProviderType, R>>} A promise that resolves to the transaction hash.
+   * Check if spender has enough ERC20 allowance for given amount
+   * @param token - ERC20 token address
+   * @param amount - Amount to check allowance for
+   * @param owner - User wallet address
+   * @param spender - Spender address
+   * @param chainId - Chain ID
+   * @param configService - Config service
+   * @return - True if spender is allowed to spend amount on behalf of owner
    */
-  public static async deposit<R extends boolean = false>(
-    params: EvmSpokeDepositParams,
-    spokeProvider: EvmSpokeProviderType,
-    hubProvider: EvmHubProvider,
-    raw?: R,
-  ): Promise<TxReturnType<EvmSpokeProviderType, R>> {
-    const to =
-      params.to ??
-      (await EvmWalletAbstraction.getUserHubWalletAddress(
-        spokeProvider.chainConfig.chain.id,
-        params.from,
-        hubProvider,
-      ));
-
-    return EvmSpokeService.transfer(
-      {
-        token: params.token,
-        recipient: to,
-        amount: params.amount,
-        data: params.data,
-      },
-      spokeProvider,
-      raw,
-    );
+  public async isAllowanceValid(
+    params: Omit<Erc20IsAllowanceParams<EvmSpokeOnlyChainKey>, 'publicClient'>,
+  ): Promise<Result<boolean>> {
+    try {
+      return await Erc20Service.isAllowanceValid({ ...params, publicClient: this.getPublicClient(params.chainKey) });
+    } catch (e) {
+      return {
+        ok: false,
+        error: e,
+      };
+    }
   }
 
   /**
-   * Get the balance of the token in the spoke chain.
-   * @param {Address} token - The address of the token to get the balance of.
-   * @param {EvmSpokeProviderType} spokeProvider - The spoke provider.
-   * @returns {Promise<bigint>} The balance of the token.
+   * Transfers tokens to the hub chain by depositing into spoke chain asset maanger.
+   * @param {DepositParams<EvmSpokeOnlyChainKey, Raw>} params - The parameters for the transfer, including:
+   *   - {FromParams<EvmSpokeOnlyChainKey>} fromParams: The parameters for the from chain.
+   *   - {Address} token: The original spoke chain address of the token to deposit.
+   *   - {Address} to: The recipient address on the hub chain.
+   *   - {bigint} amount: The amount to deposit.
+   *   - {Hex} [data="0x"]: Additional data for the deposit.
+   *   - {boolean} raw: The return type raw or just transaction hash.
+   * @returns {Promise<TxReturnType<EvmSpokeOnlyChainKey, Raw>>} A promise that resolves to the transaction hash.
    */
-  public static async getDeposit(token: Address, spokeProvider: EvmSpokeProviderType): Promise<bigint> {
-    return spokeProvider.publicClient.readContract({
-      address: token,
-      abi: erc20Abi,
-      functionName: 'balanceOf',
-      args: [spokeProvider.chainConfig.addresses.assetManager],
-    });
-  }
-
-  /**
-   * Generate simulation parameters for deposit from EvmSpokeDepositParams.
-   * @param {EvmSpokeDepositParams} params - The deposit parameters.
-   * @param {EvmSpokeProviderType} spokeProvider - The provider for the spoke chain.
-   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
-   * @returns {Promise<DepositSimulationParams>} The simulation parameters.
-   */
-  public static async getSimulateDepositParams(
-    params: EvmSpokeDepositParams,
-    spokeProvider: EvmSpokeProviderType,
-    hubProvider: EvmHubProvider,
-  ): Promise<DepositSimulationParams> {
-    const to =
-      params.to ??
-      (await EvmWalletAbstraction.getUserHubWalletAddress(
-        spokeProvider.chainConfig.chain.id,
-        params.from,
-        hubProvider,
-      ));
-
-    return {
-      spokeChainID: spokeProvider.chainConfig.chain.id,
-      token: encodeAddress(spokeProvider.chainConfig.chain.id, params.token),
-      from: encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
-      to,
-      amount: params.amount,
-      data: params.data,
-      srcAddress: encodeAddress(
-        spokeProvider.chainConfig.chain.id,
-        spokeProvider.chainConfig.addresses.assetManager as `0x${string}`,
-      ),
-    };
-  }
-
-  /**
-   * Calls a contract on the spoke chain using the user's wallet.
-   * @param {HubAddress} from - The address of the user on the hub chain.
-   * @param {Hex} payload - The payload to send to the contract.
-   * @param {EvmSpokeProviderType} spokeProvider - The provider for the spoke chain.
-   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
-   * @param {boolean} raw - The return type raw or just transaction hash
-   * @returns {Promise<TxReturnType<EvmSpokeProviderType, R>>} A promise that resolves to the transaction hash.
-   */
-  public static async callWallet<R extends boolean = false>(
-    from: HubAddress,
-    payload: Hex,
-    spokeProvider: EvmSpokeProviderType,
-    hubProvider: EvmHubProvider,
-    raw?: R,
-  ): Promise<TxReturnType<EvmSpokeProviderType, R>> {
-    return EvmSpokeService.call(hubProvider.chainConfig.chain.id, from, payload, spokeProvider, raw) satisfies Promise<
-      TxReturnType<EvmSpokeProviderType, R>
-    > as Promise<TxReturnType<EvmSpokeProviderType, R>>;
-  }
-
-  /**
-   * Transfers tokens to the hub chain.
-   * @param {EvmTransferToHubParams} params - The parameters for the transfer, including:
-   *   - {Address} token: The address of the token to transfer (use address(0) for native token).
-   *   - {Address} recipient: The recipient address on the hub chain.
-   *   - {bigint} amount: The amount to transfer.
-   *   - {Hex} [data="0x"]: Additional data for the transfer.
-   * @param {EvmSpokeProviderType} spokeProvider - The provider for the spoke chain.
-   * @param {boolean} raw - The return type raw or just transaction hash
-   * @returns {Promise<TxReturnType<EvmSpokeProviderType, R>>} A promise that resolves to the transaction hash.
-   */
-  private static async transfer<R extends boolean = false>(
-    { token, recipient, amount, data = '0x' }: EvmTransferToHubParams,
-    spokeProvider: EvmSpokeProviderType,
-    raw?: R,
-  ): Promise<TxReturnType<EvmSpokeProviderType, R>> {
-    const from = await spokeProvider.walletProvider.getWalletAddress();
-    const rawTx = {
-      from: from as GetAddressType<EvmSpokeProviderType>,
-      to: spokeProvider.chainConfig.addresses.assetManager,
-      value: token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase() ? amount : 0n,
+  public async deposit<Raw extends boolean = false>(
+    params: DepositParams<EvmSpokeOnlyChainKey, Raw>,
+  ): Promise<TxReturnType<EvmSpokeOnlyChainKey, Raw>> {
+    const { srcChainKey: fromChainId, srcAddress: from, token, to, amount, data = '0x' } = params;
+    const rawTx: EvmReturnType<true> = {
+      from: from,
+      to: spokeChainConfig[fromChainId].addresses.assetManager,
+      value: token.toLowerCase() === spokeChainConfig[fromChainId].nativeToken.toLowerCase() ? amount : 0n,
       data: encodeFunctionData({
         abi: spokeAssetManagerAbi,
         functionName: 'transfer',
-        args: [token, recipient, amount, data],
+        args: [token, to, amount, data],
       }),
-    } satisfies EvmReturnType<true>;
+    };
 
-    if (raw || isEvmRawSpokeProvider(spokeProvider)) {
-      return rawTx as EvmReturnType<R>;
+    if (params.raw === true) {
+      return rawTx satisfies TxReturnType<EvmSpokeOnlyChainKey, true> as TxReturnType<EvmSpokeOnlyChainKey, Raw>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(rawTx) satisfies Promise<
-      TxReturnType<EvmSpokeProviderType, false>
-    > as Promise<TxReturnType<EvmSpokeProviderType, R>>;
+    return params.walletProvider.sendTransaction(rawTx) satisfies Promise<
+      TxReturnType<EvmSpokeOnlyChainKey, false>
+    > as Promise<TxReturnType<EvmSpokeOnlyChainKey, Raw>>;
+  }
+
+  /**
+   * Get the balance of the token deposited in the spoke chain asset manager.
+   * @param {GetDepositParams<EvmSpokeOnlyChainKey>} params - The parameters for the deposit, including the token and chain id.
+   * @returns {Promise<bigint>} The balance of the token deposited in the spoke chain asset manager.
+   */
+  public async getDeposit(params: GetDepositParams<EvmSpokeOnlyChainKey>): Promise<bigint> {
+    return this.getPublicClient(params.srcChainKey).readContract({
+      address: params.token,
+      abi: erc20Abi,
+      functionName: 'balanceOf',
+      args: [spokeChainConfig[params.srcChainKey].addresses.assetManager],
+    });
   }
 
   /**
@@ -216,54 +172,46 @@ export class EvmSpokeService {
    * @param {boolean} raw - The return type raw or just transaction hash
    * @returns {Promise<TxReturnType<EvmSpokeProviderType, R>>} A promise that resolves to the transaction hash.
    */
-  private static async call<R extends boolean = false>(
-    dstChainId: HubChainId,
-    dstAddress: HubAddress,
-    payload: Hex,
-    spokeProvider: EvmSpokeProviderType,
-    raw?: R,
-  ): Promise<TxReturnType<EvmSpokeProviderType, R>> {
+  public async sendMessage<Raw extends boolean>(
+    params: SendMessageParams<EvmSpokeOnlyChainKey, Raw>,
+  ): Promise<TxReturnType<EvmSpokeOnlyChainKey, Raw>> {
+    const { srcAddress: from, srcChainKey: fromChainId, dstChainKey: dstChainId, dstAddress, payload } = params;
     const relayId = getIntentRelayChainId(dstChainId);
-    const from = await spokeProvider.walletProvider.getWalletAddress();
-    const rawTx = {
-      from: from as GetAddressType<EvmSpokeProviderType>,
-      to: spokeProvider.chainConfig.addresses.connection,
+    const rawTx: EvmReturnType<true> = {
+      from: from,
+      to: spokeChainConfig[fromChainId].addresses.connection satisfies Address,
       value: 0n,
       data: encodeFunctionData({
         abi: connectionAbi,
         functionName: 'sendMessage',
         args: [relayId, dstAddress, payload],
       }),
-    } satisfies EvmReturnType<true>;
+    };
 
-    if (raw || isEvmRawSpokeProvider(spokeProvider)) {
-      return rawTx satisfies TxReturnType<EvmSpokeProviderType, true> as EvmReturnType<R>;
+    if (params.raw) {
+      return rawTx satisfies TxReturnType<EvmSpokeOnlyChainKey, true> as TxReturnType<EvmSpokeOnlyChainKey, Raw>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(rawTx) satisfies Promise<
-      TxReturnType<EvmSpokeProviderType, false>
-    > as Promise<TxReturnType<EvmSpokeProviderType, R>>;
+    return params.walletProvider.sendTransaction(rawTx) satisfies Promise<
+      TxReturnType<EvmSpokeOnlyChainKey, false>
+    > as Promise<TxReturnType<EvmSpokeOnlyChainKey, Raw>>;
   }
 
-  public static async waitForTransactionReceipt(
-    params: VerifyTxHashRawEvmConfig,
-  ): Promise<Result<EvmRawTransactionReceipt, Error>> {
+  public async waitForTransactionReceipt(
+    params: WaitForTxReceiptParams<EvmSpokeOnlyChainKey>,
+  ): Promise<Result<WaitForTxReceiptReturnType<EvmSpokeOnlyChainKey>>> {
     try {
-      const { txHash, chainId, rpcUrl, confirmations, pollingInterval, retryCount, retryDelay, timeout } = params;
-      const evmChain = getEvmViemChain(chainId);
-      const publicClient = createPublicClient({
-        chain: evmChain,
-        transport: http(rpcUrl ?? evmChain.rpcUrls.default.http[0]),
-      });
+      const publicClient = this.getPublicClient(params.chainKey);
 
       const receipt = await publicClient.waitForTransactionReceipt({
-        hash: txHash,
-        confirmations,
-        pollingInterval,
-        retryCount,
-        retryDelay,
-        timeout,
+        hash: params.txHash as `0x${string}`,
+        pollingInterval: params.pollingIntervalMs,
+        timeout: params.maxTimeoutMs,
       });
+
+      if (receipt.status === 'reverted') {
+        return { ok: true, value: { status: 'failure', error: new Error('Transaction reverted') } };
+      }
 
       const response = {
         ...receipt,
@@ -281,9 +229,16 @@ export class EvmSpokeService {
         effectiveGasPrice: receipt.effectiveGasPrice?.toString(),
       };
 
-      return { ok: true, value: response };
+      return { ok: true, value: { status: 'success', receipt: response } };
     } catch (error) {
-      return { ok: false, error: new Error(`Failed to get transaction receipt: ${JSON.stringify(error)}`) };
+      const isTimeout = error instanceof Error && error.message.includes('timed out');
+      return {
+        ok: true,
+        value: {
+          status: isTimeout ? 'timeout' : 'failure',
+          error: error instanceof Error ? error : new Error(String(error)),
+        },
+      };
     }
   }
 }

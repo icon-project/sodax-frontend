@@ -4,30 +4,48 @@ import {
   Connection,
   PublicKey,
   SystemProgram,
+  TransactionInstruction,
+  TransactionMessage,
   VersionedTransaction,
-  type Finality,
-  type TransactionInstruction,
 } from '@solana/web3.js';
-import { keccak256, type Address, type Hex } from 'viem';
-import type { EvmHubProvider } from '../../entities/index.js';
-import { getAssetManagerProgram, getConnectionProgram } from '../../entities/solana/Configs.js';
-import { SolanaBaseSpokeProvider, type SolanaSpokeProvider } from '../../entities/solana/SolanaSpokeProvider.js';
+import { keccak256, type Hex } from 'viem';
 import { AssetManagerPDA, ConnectionConfigPDA } from '../../entities/solana/pda/pda.js';
-import { convertTransactionInstructionToRaw, isSolanaNativeToken } from '../../entities/solana/utils/utils.js';
+import {
+  convertTransactionInstructionToRaw,
+  getAssetManagerProgram,
+  getConnectionProgram,
+  isSolanaNativeToken,
+} from '../../entities/solana/utils/utils.js';
 import type {
-  DepositSimulationParams,
-  Result,
-  SolanaGasEstimate,
-  SolanaRawTransaction,
-  SolanaSpokeProviderType,
-  TxReturnType,
-  VerifyTxHashRawSolanaConfig,
-} from '../../types.js';
-import { getIntentRelayChainId, type HubAddress, type SolanaBase58PublicKey } from '@sodax/types';
-import { EvmWalletAbstraction } from '../hub/index.js';
+  DepositParams,
+  EstimateGasParams,
+  GetDepositParams,
+  SendMessageParams,
+  WaitForTxReceiptParams,
+  WaitForTxReceiptReturnType,
+} from '../../types/spoke-types.js';
+import type { ConfigService } from '../../config/ConfigService.js';
+import { sleep } from '../../utils/shared-utils.js';
+import {
+  getIntentRelayChainId,
+  ChainKeys,
+  spokeChainConfig,
+  type HttpUrl,
+  type HubAddress,
+  type SolanaAccountMeta,
+  type SolanaBase58PublicKey,
+  type SolanaChainKey,
+  type SolanaRawTransactionInstruction,
+  type SolanaRawTransactionReceipt,
+  type SolanaRpcResponseAndContext,
+  type SolanaSerializedTransaction,
+  type SolanaTokenAmount,
+  type SolanaGasEstimate,
+  type TxReturnType,
+  type Result,
+} from '@sodax/types';
 import BN from 'bn.js';
-import { encodeAddress } from '../../utils/shared-utils.js';
-import { isSolanaRawSpokeProvider } from '../../guards.js';
+import { getAssociatedTokenAddress } from '@solana/spl-token';
 
 export type SolanaSpokeDepositParams = {
   from: SolanaBase58PublicKey;
@@ -45,7 +63,18 @@ export type SolanaTransferToHubParams = {
 };
 
 export class SolanaSpokeService {
-  private constructor() {}
+  private readonly rpcUrl: HttpUrl;
+  public readonly connection: Connection;
+  private readonly pollingIntervalMs: number;
+  private readonly maxTimeoutMs: number;
+
+  public constructor(config: ConfigService) {
+    const chainConfig = config.sodaxConfig.chains[ChainKeys.SOLANA_MAINNET];
+    this.rpcUrl = chainConfig.rpcUrl;
+    this.connection = new Connection(this.rpcUrl, 'confirmed');
+    this.pollingIntervalMs = chainConfig.pollingConfig.pollingIntervalMs;
+    this.maxTimeoutMs = chainConfig.pollingConfig.maxTimeoutMs;
+  }
 
   /**
    * Estimate the gas for a transaction.
@@ -53,13 +82,10 @@ export class SolanaSpokeService {
    * @param {SolanaSpokeProviderType} spokeProvider - The provider for the spoke chain.
    * @returns {Promise<number | undefined>} The units consumed for the transaction.
    */
-  public static async estimateGas(
-    rawTx: SolanaRawTransaction,
-    spokeProvider: SolanaSpokeProviderType,
-  ): Promise<SolanaGasEstimate> {
-    const connection = new Connection(spokeProvider.chainConfig.rpcUrl, 'confirmed');
+  public async estimateGas(params: EstimateGasParams<SolanaChainKey>): Promise<SolanaGasEstimate> {
+    const connection = new Connection(this.rpcUrl, 'confirmed');
 
-    const serializedTxBytes = Buffer.from(rawTx.data, 'base64');
+    const serializedTxBytes = Buffer.from(params.tx.data, 'base64');
     const versionedTx = VersionedTransaction.deserialize(serializedTxBytes);
 
     const { value } = await connection.simulateTransaction(versionedTx);
@@ -71,116 +97,27 @@ export class SolanaSpokeService {
     return value.unitsConsumed;
   }
 
-  public static async deposit<R extends boolean = false>(
-    params: SolanaSpokeDepositParams,
-    spokeProvider: SolanaSpokeProviderType,
-    hubProvider: EvmHubProvider,
-    raw?: R,
-  ): Promise<TxReturnType<SolanaSpokeProviderType, R>> {
-    const userWallet: Address =
-      params.to ??
-      (await EvmWalletAbstraction.getUserHubWalletAddress(
-        spokeProvider.chainConfig.chain.id,
-        encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
-        hubProvider,
-      ));
-
-    return SolanaSpokeService.transfer(
-      {
-        token: new PublicKey(params.token),
-        recipient: userWallet,
-        amount: params.amount.toString(),
-        data: keccak256(params.data),
-      },
-      spokeProvider,
-      raw,
-    );
-  }
-
-  public static async getDeposit(token: string, spokeProvider: SolanaSpokeProviderType): Promise<bigint> {
-    const assetManagerProgramId = new PublicKey(spokeProvider.chainConfig.addresses.assetManager);
-    const solToken = new PublicKey(token);
-
-    if (isSolanaNativeToken(new PublicKey(solToken))) {
-      const vaultNative = AssetManagerPDA.vault_native(assetManagerProgramId);
-      const balance = await spokeProvider.walletProvider.getBalance(vaultNative.pda.toBase58());
-      return BigInt(balance);
-    }
-
-    const vaultToken = AssetManagerPDA.vault_token(assetManagerProgramId, new PublicKey(solToken));
-    const tokenAccount = await spokeProvider.walletProvider.getTokenAccountBalance(vaultToken.pda.toBase58());
-
-    return BigInt(tokenAccount.value.amount);
-  }
-
   /**
-   * Calls a contract on the spoke chain using the user's wallet.
-   * @param from - The address of the user on the hub chain.
-   * @param payload - The payload to send to the contract.
-   * @param spokeProvider - The spoke provider.
-   * @param hubProvider - The hub provider.
-   * @param raw - Whether to return the raw transaction data.
-   * @returns The transaction result.
+   * Transfers tokens to the hub chain by depositing into spoke chain asset maanger.
+   * @param {DepositParams<SolanaChainKey, R>} params - The parameters for the transfer, including:
+   * @returns {Promise<TxReturnType<SolanaChainKey, R>>} A promise that resolves to the transaction hash.
    */
-  public static async callWallet<R extends boolean = false>(
-    from: HubAddress,
-    payload: Hex,
-    spokeProvider: SolanaSpokeProviderType,
-    hubProvider: EvmHubProvider,
-    raw?: R,
-  ): Promise<TxReturnType<SolanaSpokeProviderType, R>> {
-    const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
-    return SolanaSpokeService.call(BigInt(relayId), from, keccak256(payload), spokeProvider, raw);
-  }
+  public async deposit<R extends boolean = false>(
+    params: DepositParams<SolanaChainKey, R>,
+  ): Promise<TxReturnType<SolanaChainKey, R>> {
+    const token = new PublicKey(params.token);
+    const recipient = params.to;
+    const amount = params.amount.toString();
+    const data = keccak256(params.data);
 
-  /**
-   * Generate simulation parameters for deposit from SolanaSpokeDepositParams.
-   * @param {SolanaSpokeDepositParams} params - The deposit parameters.
-   * @param {SolanaSpokeProviderType} spokeProvider - The provider for the spoke chain.
-   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
-   * @returns {Promise<DepositSimulationParams>} The simulation parameters.
-   */
-  public static async getSimulateDepositParams(
-    params: SolanaSpokeDepositParams,
-    spokeProvider: SolanaSpokeProviderType,
-    hubProvider: EvmHubProvider,
-  ): Promise<DepositSimulationParams> {
-    const to =
-      params.to ??
-      (await EvmWalletAbstraction.getUserHubWalletAddress(
-        spokeProvider.chainConfig.chain.id,
-        encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
-        hubProvider,
-      ));
-
-    return {
-      spokeChainID: spokeProvider.chainConfig.chain.id,
-      token: encodeAddress(spokeProvider.chainConfig.chain.id, params.token),
-      from: encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
-      to,
-      amount: params.amount,
-      data: params.data,
-      srcAddress: encodeAddress(
-        spokeProvider.chainConfig.chain.id,
-        spokeProvider.chainConfig.addresses.assetManager as `0x${string}`,
-      ),
-    };
-  }
-
-  private static async transfer<S extends SolanaSpokeProviderType, R extends boolean = false>(
-    { token, recipient, amount, data }: SolanaTransferToHubParams,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
     let depositInstruction: TransactionInstruction;
     const amountBN = new BN(amount);
-    const { chainConfig } = spokeProvider;
+    const chainConfig = spokeChainConfig[params.srcChainKey];
     const { rpcUrl, addresses } = chainConfig;
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+    const walletAddress = params.srcAddress;
     const walletPublicKey = new PublicKey(walletAddress);
 
     const assetManagerProgram = await getAssetManagerProgram(walletAddress, rpcUrl, addresses.assetManager);
-
     const connectionProgram = await getConnectionProgram(walletAddress, rpcUrl, addresses.connection);
 
     if (isSolanaNativeToken(token)) {
@@ -207,10 +144,7 @@ export class SolanaSpokeService {
         ])
         .instruction();
     } else {
-      const signerTokenAccount = await SolanaBaseSpokeProvider.getAssociatedTokenAddress(
-        token.toBase58(),
-        walletAddress,
-      );
+      const signerTokenAccount = await SolanaSpokeService.getAssociatedTokenAddress(token.toBase58(), walletAddress);
       depositInstruction = await assetManagerProgram.methods
         .transfer(amountBN, Buffer.from(recipient.slice(2), 'hex'), Buffer.from(data.slice(2), 'hex'))
         .accountsStrict({
@@ -243,24 +177,40 @@ export class SolanaSpokeService {
       microLamports: 0,
     });
 
-    const serializedTransaction = await spokeProvider.walletProvider.buildV0Txn([
+    const serializedTransaction = await this.buildV0Txn(walletAddress, [
       convertTransactionInstructionToRaw(modifyComputeUnits),
       convertTransactionInstructionToRaw(addPriorityFee),
       convertTransactionInstructionToRaw(depositInstruction),
     ]);
 
-    if (raw || isSolanaRawSpokeProvider(spokeProvider)) {
+    if (params.raw === true) {
       return {
         from: walletPublicKey.toBase58(),
         to: assetManagerProgram.programId.toBase58(),
         value: BigInt(amountBN.toString()),
         data: Buffer.from(serializedTransaction).toString('base64'),
-      } satisfies TxReturnType<SolanaSpokeProviderType, true> as TxReturnType<S, R>;
+      } satisfies TxReturnType<SolanaChainKey, true> as TxReturnType<SolanaChainKey, R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(serializedTransaction) satisfies Promise<
-      TxReturnType<SolanaSpokeProviderType, false>
-    > as Promise<TxReturnType<S, R>>;
+    return params.walletProvider.sendTransaction(serializedTransaction) satisfies Promise<
+      TxReturnType<SolanaChainKey, false>
+    > as Promise<TxReturnType<SolanaChainKey, R>>;
+  }
+
+  public async getDeposit(params: GetDepositParams<SolanaChainKey>): Promise<bigint> {
+    const assetManagerProgramId = new PublicKey(spokeChainConfig[params.srcChainKey].addresses.assetManager);
+    const solToken = new PublicKey(params.token);
+
+    if (isSolanaNativeToken(new PublicKey(solToken))) {
+      const vaultNative = AssetManagerPDA.vault_native(assetManagerProgramId);
+      const balance = await SolanaSpokeService.getBalance(this.connection, vaultNative.pda.toBase58());
+      return BigInt(balance);
+    }
+
+    const vaultToken = AssetManagerPDA.vault_token(assetManagerProgramId, new PublicKey(solToken));
+    const tokenAccount = await SolanaSpokeService.getTokenAccountBalance(this.connection, vaultToken.pda.toBase58());
+
+    return BigInt(tokenAccount.value.amount);
   }
 
   /**
@@ -272,28 +222,22 @@ export class SolanaSpokeService {
    * @param raw - Whether to return the raw transaction data.
    * @returns The transaction result.
    */
-  private static async call<S extends SolanaSpokeProviderType, R extends boolean = false>(
-    dstChainId: bigint,
-    dstAddress: HubAddress,
-    payload: Hex,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
-    const { walletProvider, chainConfig } = spokeProvider;
+  public async sendMessage<Raw extends boolean>(
+    params: SendMessageParams<SolanaChainKey, Raw>,
+  ): Promise<TxReturnType<SolanaChainKey, Raw>> {
+    const dstChainId = getIntentRelayChainId(params.dstChainKey);
+    const payload = keccak256(params.payload);
+    const chainConfig = spokeChainConfig[params.srcChainKey];
     const { rpcUrl, addresses } = chainConfig;
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+    const walletAddress = params.srcAddress;
     const walletPublicKey = new PublicKey(walletAddress);
 
-    const connectionProgram = await getConnectionProgram(
-      await walletProvider.getWalletAddress(),
-      rpcUrl,
-      addresses.connection,
-    );
+    const connectionProgram = await getConnectionProgram(params.srcAddress, rpcUrl, addresses.connection);
 
     const sendMessageInstruction = await connectionProgram.methods
       .sendMessage(
         new BN(dstChainId.toString()),
-        Buffer.from(dstAddress.slice(2), 'hex'),
+        Buffer.from(params.dstAddress.slice(2), 'hex'),
         Buffer.from(payload.slice(2), 'hex'),
       )
       .accountsStrict({
@@ -312,92 +256,108 @@ export class SolanaSpokeService {
       microLamports: 0,
     });
 
-    const serializedTransaction = await spokeProvider.walletProvider.buildV0Txn([
+    const serializedTransaction = await this.buildV0Txn(walletAddress, [
       convertTransactionInstructionToRaw(modifyComputeUnits),
       convertTransactionInstructionToRaw(addPriorityFee),
       convertTransactionInstructionToRaw(sendMessageInstruction),
     ]);
 
-    if (raw || isSolanaRawSpokeProvider(spokeProvider)) {
+    if (params.raw === true) {
       return {
         from: walletPublicKey.toBase58(),
         to: connectionProgram.programId.toBase58(),
         value: 0n,
         data: Buffer.from(serializedTransaction).toString('base64'),
-      } satisfies TxReturnType<SolanaSpokeProviderType, true> as TxReturnType<S, R>;
+      } satisfies TxReturnType<SolanaChainKey, true> as TxReturnType<SolanaChainKey, Raw>;
     }
-    return spokeProvider.walletProvider.sendTransaction(serializedTransaction) satisfies Promise<
-      TxReturnType<SolanaSpokeProviderType, false>
-    > as Promise<TxReturnType<S, R>>;
+    return params.walletProvider.sendTransaction(serializedTransaction) satisfies Promise<
+      TxReturnType<SolanaChainKey, false>
+    > as Promise<TxReturnType<SolanaChainKey, Raw>>;
   }
 
-  public static async waitForConfirmationRaw(params: VerifyTxHashRawSolanaConfig): Promise<Result<boolean>> {
-    try {
-      const defaultParams = {
-        commitment: 'finalized',
-        timeoutMs: 60_000, // total time to wait
-        pollingTimeout: 750, // 750ms retry interval
-      } as const;
-      const { rpcUrl, signature, commitment, timeoutMs, pollingTimeout } = { ...defaultParams, ...params };
-      const connection = new Connection(rpcUrl, commitment);
-      const deadline = Date.now() + timeoutMs;
+  // NOTE: this is method returns unsigned transaction data
+  public async buildV0Txn(
+    from: SolanaBase58PublicKey,
+    rawInstructions: SolanaRawTransactionInstruction[],
+  ): Promise<SolanaSerializedTransaction> {
+    const instructions = SolanaSpokeService.buildTransactionInstruction(rawInstructions);
 
-      while (Date.now() < deadline) {
-        try {
-          const tx = await connection.getTransaction(signature, { commitment, maxSupportedTransactionVersion: 0 });
-          if (tx) {
-            if (tx.meta?.err) {
-              return { ok: false, error: new Error(JSON.stringify(tx.meta.err)) };
-            }
-            return { ok: true, value: true };
-          }
-        } catch {
-          // ignore transient RPC errors and keep polling
-        }
-        await new Promise(r => setTimeout(r, pollingTimeout)); // linear retry interval
-      }
+    const messageV0 = new TransactionMessage({
+      payerKey: new PublicKey(from),
+      recentBlockhash: (await this.connection.getLatestBlockhash()).blockhash,
+      instructions,
+    }).compileToV0Message();
 
-      return {
-        ok: false,
-        error: new Error(`Timed out after ${timeoutMs}ms waiting for ${commitment} confirmation for ${signature}`),
-      };
-    } catch (error) {
-      return { ok: false, error: new Error(`Failed to get transaction confirmation: ${JSON.stringify(error)}`) };
-    }
+    const tx = new VersionedTransaction(messageV0);
+
+    return tx.serialize();
   }
 
-  public static async waitForConfirmation(
-    spokeProvider: SolanaSpokeProvider,
-    signature: string,
-    commitment: Finality = 'finalized',
-    timeoutMs = 60_000, // total time to wait
-    pollingTimeout = 750,
-  ): Promise<Result<boolean>> {
-    try {
-      const connection = new Connection(spokeProvider.chainConfig.rpcUrl, commitment);
-      const deadline = Date.now() + timeoutMs;
+  public async waitForTransactionReceipt(
+    params: WaitForTxReceiptParams<SolanaChainKey>,
+  ): Promise<Result<WaitForTxReceiptReturnType<SolanaChainKey>>> {
+    const { txHash, pollingIntervalMs = this.pollingIntervalMs, maxTimeoutMs = this.maxTimeoutMs } = params;
+    const deadline = Date.now() + maxTimeoutMs;
 
-      while (Date.now() < deadline) {
-        try {
-          const tx = await connection.getTransaction(signature, { commitment, maxSupportedTransactionVersion: 0 });
-          if (tx) {
-            if (tx.meta?.err) {
-              return { ok: false, error: new Error(JSON.stringify(tx.meta.err)) };
-            }
-            return { ok: true, value: true };
+    while (Date.now() < deadline) {
+      try {
+        const tx = await this.connection.getTransaction(txHash, {
+          commitment: 'finalized',
+          maxSupportedTransactionVersion: 0,
+        });
+        if (tx) {
+          if (tx.meta?.err) {
+            return { ok: true, value: { status: 'failure', error: new Error(JSON.stringify(tx.meta.err)) } };
           }
-        } catch {
-          // ignore transient RPC errors and keep polling
+          return { ok: true, value: { status: 'success', receipt: tx satisfies SolanaRawTransactionReceipt } };
         }
-        await new Promise(r => setTimeout(r, pollingTimeout)); // linear 750ms retry
+      } catch {
+        // ignore transient RPC errors and keep polling
       }
-
-      return {
-        ok: false,
-        error: new Error(`Timed out after ${timeoutMs}ms waiting for ${commitment} confirmation for ${signature}`),
-      };
-    } catch (error) {
-      return { ok: false, error: new Error(`Failed to get transaction confirmation: ${JSON.stringify(error)}`) };
+      await sleep(pollingIntervalMs);
     }
+
+    return {
+      ok: true,
+      value: {
+        status: 'timeout',
+        error: new Error(`Timed out after ${maxTimeoutMs}ms waiting for finalized confirmation for ${txHash}`),
+      },
+    };
+  }
+
+  public static async getBalance(connection: Connection, publicKey: SolanaBase58PublicKey): Promise<number> {
+    return await connection.getBalance(new PublicKey(publicKey));
+  }
+
+  public static async getTokenAccountBalance(
+    connection: Connection,
+    publicKey: SolanaBase58PublicKey,
+  ): Promise<SolanaRpcResponseAndContext<SolanaTokenAmount>> {
+    return await connection.getTokenAccountBalance(new PublicKey(publicKey));
+  }
+
+  public static async getAssociatedTokenAddress(
+    mint: SolanaBase58PublicKey,
+    walletAddress: SolanaBase58PublicKey,
+  ): Promise<SolanaBase58PublicKey> {
+    return (await getAssociatedTokenAddress(new PublicKey(mint), new PublicKey(walletAddress), true)).toBase58();
+  }
+
+  public static buildTransactionInstruction(
+    rawInstructions: SolanaRawTransactionInstruction[],
+  ): TransactionInstruction[] {
+    return rawInstructions.map(
+      rawInstruction =>
+        new TransactionInstruction({
+          keys: rawInstruction.keys.map((key: SolanaAccountMeta) => ({
+            pubkey: new PublicKey(key.pubkey),
+            isSigner: key.isSigner,
+            isWritable: key.isWritable,
+          })),
+          programId: new PublicKey(rawInstruction.programId),
+          data: Buffer.from(rawInstruction.data),
+        }),
+    );
   }
 }

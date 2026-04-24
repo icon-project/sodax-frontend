@@ -1,5 +1,5 @@
 import type { XAccount } from '@/types/index.js';
-import { detectBitcoinAddressType, type IBitcoinWalletProvider, type AddressType } from '@sodax/types';
+import { detectBitcoinAddressType, type IBitcoinWalletProvider, type BtcAddressType } from '@sodax/types';
 import { BitcoinXConnector } from './BitcoinXConnector.js';
 
 // OKX Bitcoin wallet window API types
@@ -21,6 +21,7 @@ declare global {
 }
 
 class OKXWalletProvider implements IBitcoinWalletProvider {
+  readonly chainType = 'BITCOIN' as const;
   private okx: OKXBitcoinWallet;
   private cachedAddress: string;
 
@@ -43,7 +44,7 @@ class OKXWalletProvider implements IBitcoinWalletProvider {
     return this.okx.getPublicKey();
   }
 
-  async getAddressType(_address: string): Promise<AddressType> {
+  async getAddressType(_address: string): Promise<BtcAddressType> {
     const address = await this.getWalletAddress();
     return detectBitcoinAddressType(address);
   }

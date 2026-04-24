@@ -1,5 +1,7 @@
-import { isJsonRpcPayloadResponse, isResponseAddressType, isResponseSigningType, type Result } from '../../../index.js';
-import type { IconAddress } from '@sodax/types';
+import { isJsonRpcPayloadResponse, isResponseAddressType, isResponseSigningType } from '../../guards.js';
+import type { IconAddress, Result } from '@sodax/types';
+export type { ResponseAddressType, ResponseSigningType, JsonRpcPayloadResponse } from './icon-wallet-types.js';
+import type { JsonRpcPayloadResponse } from './icon-wallet-types.js';
 
 export type IconJsonRpcVersion = '2.0';
 
@@ -19,16 +21,6 @@ export type HanaWalletResponseEvent =
   | 'CANCEL_SIGNING'
   | 'CANCEL_JSON-RPC';
 
-export type ResponseAddressType = {
-  type: 'RESPONSE_ADDRESS';
-  payload: IconAddress;
-};
-
-export type ResponseSigningType = {
-  type: 'RESPONSE_SIGNING';
-  payload: string;
-};
-
 export type RelayRequestDetail = {
   type: HanaWalletRequestEvent;
   payload?: {
@@ -47,10 +39,6 @@ export type RelayRequestSigning = {
   };
 };
 
-export type JsonRpcPayloadResponse = {
-  id: number;
-  result: string; // txHash
-};
 
 interface RelayResponseEventDetail {
   type: HanaWalletResponseEvent;

@@ -1,7 +1,7 @@
 import { type BigNumberValue, normalize } from '../../bignumber.js';
 import type { FormatReserveUSDResponse } from '../reserve/index.js';
 import type { UserReserveSummaryResponse } from './generate-user-reserve-summary.js';
-import type { ComputedUserReserve } from './index.js';
+import type { ComputedUserReserve } from './user-types.js';
 
 export interface FormatUserReserveRequest<T extends FormatReserveUSDResponse = FormatReserveUSDResponse> {
   reserve: UserReserveSummaryResponse<T>;

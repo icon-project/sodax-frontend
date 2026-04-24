@@ -60,6 +60,7 @@ export function isSuiWallet(wallet: SuiWallet): wallet is SuiWallet {
 }
 
 export class SuiWalletProvider implements ISuiWalletProvider {
+  public readonly chainType = 'SUI' as const;
   private readonly client: SuiClient;
   private readonly wallet: SuiWallet;
 

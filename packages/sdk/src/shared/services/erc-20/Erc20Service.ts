@@ -1,15 +1,36 @@
 import { encodeFunctionData, erc20Abi, type Address, type PublicClient } from 'viem';
-import type {
-  EvmContractCall,
-  EvmReturnType,
-  EvmSpokeProviderType,
-  GetAddressType,
-  Result,
-  SonicSpokeProviderType,
-  TxReturnType,
-} from '../../types.js';
-import type { Erc20Token } from '@sodax/types';
-import { isEvmRawSpokeProvider, isSonicRawSpokeProvider } from '../../guards.js';
+import {
+  spokeChainConfig,
+  type EvmChainKey,
+  type EvmContractCall,
+  type EvmReturnType,
+  type Result,
+  type TxReturnType,
+  type WalletProviderSlot,
+} from '@sodax/types';
+
+export type Erc20ApproveParams<Raw extends boolean> = {
+  token: Address;
+  amount: bigint;
+  from: Address;
+  spender: Address;
+} & WalletProviderSlot<EvmChainKey, Raw>;
+
+export type Erc20IsAllowanceParams<ChainKey extends EvmChainKey> = {
+  token: Address;
+  amount: bigint;
+  owner: Address;
+  spender: Address;
+  chainKey: ChainKey;
+  publicClient: PublicClient;
+};
+
+export type Erc20Token = {
+  name: string;
+  symbol: string;
+  decimals: number;
+  address: Address;
+};
 
 export class Erc20Service {
   private constructor() {}
@@ -46,39 +67,31 @@ export class Erc20Service {
   }
 
   /**
-   * Check if spender has enough ERC20 allowance for given amount
-   * @param token - ERC20 token address
-   * @param amount - Amount to check allowance for
-   * @param owner - User wallet address
-   * @param spender - Spender address
-   * @param spokeProvider - EVM Spoke provider
-   * @return - True if spender is allowed to spend amount on behalf of owner
+   * Check if spender has enough ERC20 allowance for given amount.
+   * @param params - Token, amount, owner, spender, chainKey, and publicClient for the chain.
+   * @returns Whether allowance is sufficient for the amount.
    */
-  static async isAllowanceValid(
-    token: Address,
-    amount: bigint,
-    owner: Address,
-    spender: Address,
-    spokeProvider: EvmSpokeProviderType | SonicSpokeProviderType,
+  static async isAllowanceValid<ChainKey extends EvmChainKey>(
+    params: Erc20IsAllowanceParams<ChainKey>,
   ): Promise<Result<boolean>> {
     try {
-      if (token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase()) {
+      if (params.token.toLowerCase() === spokeChainConfig[params.chainKey].nativeToken.toLowerCase()) {
         return {
           ok: true,
           value: true,
         };
       }
 
-      const allowedAmount = await spokeProvider.publicClient.readContract({
-        address: token,
+      const allowedAmount = await params.publicClient.readContract({
+        address: params.token,
         abi: erc20Abi,
         functionName: 'allowance',
-        args: [owner, spender],
+        args: [params.owner, params.spender],
       });
 
       return {
         ok: true,
-        value: allowedAmount >= amount,
+        value: allowedAmount >= params.amount,
       };
     } catch (e) {
       return {
@@ -95,33 +108,28 @@ export class Erc20Service {
    * @param spender - Spender address
    * @param provider - EVM Provider
    */
-  static async approve<R extends boolean = false>(
-    token: Address,
-    amount: bigint,
-    spender: Address,
-    spokeProvider: EvmSpokeProviderType | SonicSpokeProviderType,
-    raw?: R,
-  ): Promise<TxReturnType<EvmSpokeProviderType | SonicSpokeProviderType, R>> {
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-
+  static async approve<Raw extends boolean>(
+    params: Erc20ApproveParams<Raw>,
+  ): Promise<TxReturnType<EvmChainKey, Raw>> {
     const rawTx = {
-      from: walletAddress as GetAddressType<EvmSpokeProviderType | SonicSpokeProviderType>,
-      to: token,
+      from: params.from,
+      to: params.token,
       value: 0n,
       data: encodeFunctionData({
         abi: erc20Abi,
         functionName: 'approve',
-        args: [spender, amount],
+        args: [params.spender, params.amount],
       }),
     } satisfies EvmReturnType<true>;
 
-    if (raw || isEvmRawSpokeProvider(spokeProvider) || isSonicRawSpokeProvider(spokeProvider)) {
-      return rawTx as EvmReturnType<R>;
+    if (params.raw) {
+      return rawTx satisfies TxReturnType<EvmChainKey, true> as TxReturnType<EvmChainKey, Raw>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(rawTx) satisfies Promise<
-      TxReturnType<EvmSpokeProviderType | SonicSpokeProviderType, false>
-    > as Promise<TxReturnType<EvmSpokeProviderType | SonicSpokeProviderType, R>>;
+    return (await params.walletProvider.sendTransaction(rawTx)) satisfies TxReturnType<
+      EvmChainKey,
+      false
+    > as TxReturnType<EvmChainKey, Raw>;
   }
 
   /**

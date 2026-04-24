@@ -1,16 +1,18 @@
-import { ICON_MAINNET_CHAIN_ID } from '@sodax/types';
+import {
+  ChainKeys,
+  type EvmContractCall,
+  type IconAddress,
+  type IconChainKey,
+  type IconContractAddress,
+  type SonicChainKey,
+  type TxReturnType,
+  type WalletProviderSlot,
+} from '@sodax/types';
 // packages/sdk/src/services/hub/BalnSwapService.ts
 import { type Address, type Hex, type HttpTransport, type PublicClient, encodeFunctionData } from 'viem';
 import { balnSwapAbi } from '../shared/abis/balnSwap.abi.js';
-import type {
-  EvmContractCall,
-  GetAddressType,
-  IconContractAddress,
-  SonicSpokeProviderType,
-  TxReturnType,
-} from '../shared/types.js';
-import { encodeContractCalls, Erc20Service, isSonicRawSpokeProvider } from '../index.js';
-import type { EvmHubProvider } from '../shared/entities/index.js';
+import type { HubProvider } from '../shared/types/types.js';
+import { encodeContractCalls, Erc20Service } from '../shared/index.js';
 import invariant from 'tiny-invariant';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 
@@ -71,13 +73,22 @@ export type DetailedLock = {
 /**
  * Parameters for BALN swap operations.
  */
+export type BalnMigrateAction<Raw extends boolean> = {
+  params: BalnMigrateParams;
+  skipSimulation?: boolean;
+  timeout?: number;
+} & WalletProviderSlot<IconChainKey, Raw>;
+
 export type BalnMigrateParams = {
+  srcChainKey: IconChainKey;
+  /** The source address of the BALN tokens */
+  srcAddress: IconAddress;
   /** The amount of BALN tokens to swap */
   amount: bigint;
   /** The lockup period for the swap */
   lockupPeriod: LockupPeriod;
   /** The address that will receive the swapped SODA tokens */
-  to: Address;
+  dstAddress: Address;
   /** Whether to stake the SODA tokens */
   stake: boolean;
 };
@@ -91,7 +102,7 @@ export type BalnLockParams = {
 };
 
 export type BalnSwapServiceConstructorParams = {
-  hubProvider: EvmHubProvider;
+  hubProvider: HubProvider;
 };
 
 /**
@@ -99,7 +110,7 @@ export type BalnSwapServiceConstructorParams = {
  * Provides functionality to interact directly with the BALN swap contract.
  */
 export class BalnSwapService {
-  private readonly hubProvider: EvmHubProvider;
+  private readonly hubProvider: HubProvider;
 
   constructor({ hubProvider }: BalnSwapServiceConstructorParams) {
     this.hubProvider = hubProvider;
@@ -153,16 +164,16 @@ export class BalnSwapService {
    * @returns Encoded transaction data for the BALN swap operation
    */
   swapData(balnToken: IconContractAddress, params: BalnMigrateParams, configService: ConfigService): Hex {
-    const assetConfig = configService.getHubAssetInfo(ICON_MAINNET_CHAIN_ID, balnToken);
+    const assetConfig = configService.getSpokeTokenFromOriginalAssetAddress(ChainKeys.ICON_MAINNET, balnToken);
     invariant(assetConfig, `hub asset not found for baln token: ${balnToken}`);
 
     const calls: EvmContractCall[] = [];
 
     // Approve BALN tokens for the swap contract
     calls.push(
-      Erc20Service.encodeApprove(assetConfig.asset, this.hubProvider.chainConfig.addresses.balnSwap, params.amount),
+      Erc20Service.encodeApprove(assetConfig.hubAsset, this.hubProvider.chainConfig.addresses.balnSwap, params.amount),
     );
-    calls.push(this.encodeSwap(params.amount, params.lockupPeriod, params.to, params.stake));
+    calls.push(this.encodeSwap(params.amount, params.lockupPeriod, params.dstAddress, params.stake));
 
     return encodeContractCalls(calls);
   }
@@ -174,13 +185,13 @@ export class BalnSwapService {
    * @param raw - Whether to return raw transaction data
    * @returns The transaction hash or raw transaction data
    */
-  async claim<S extends SonicSpokeProviderType, R extends boolean = false>(
+  async claim<R extends boolean = false>(
+    user: Address,
     params: BalnLockParams,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
+    walletProviderSlot: WalletProviderSlot<SonicChainKey, R>,
+  ): Promise<TxReturnType<SonicChainKey, R>> {
     const claimTx = this.encodeClaim(params.lockId);
-    return await this.call(spokeProvider, claimTx, raw);
+    return await this.call(user, claimTx, walletProviderSlot);
   }
 
   /**
@@ -190,13 +201,13 @@ export class BalnSwapService {
    * @param raw - Whether to return raw transaction data
    * @returns The transaction hash or raw transaction data
    */
-  async claimUnstaked<S extends SonicSpokeProviderType, R extends boolean = false>(
+  async claimUnstaked<R extends boolean = false>(
+    user: Address,
     params: BalnLockParams,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
+    walletProviderSlot: WalletProviderSlot<SonicChainKey, R>,
+  ): Promise<TxReturnType<SonicChainKey, R>> {
     const claimUnstakedTx = this.encodeClaimUnstaked(params.lockId);
-    return await this.call(spokeProvider, claimUnstakedTx, raw);
+    return await this.call(user, claimUnstakedTx, walletProviderSlot);
   }
 
   /**
@@ -206,13 +217,13 @@ export class BalnSwapService {
    * @param raw - Whether to return raw transaction data
    * @returns The transaction hash or raw transaction data
    */
-  async stake<S extends SonicSpokeProviderType, R extends boolean = false>(
+  async stake<R extends boolean = false>(
+    user: Address,
     params: BalnLockParams,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
+    walletProviderSlot: WalletProviderSlot<SonicChainKey, R>,
+  ): Promise<TxReturnType<SonicChainKey, R>> {
     const stakeTx = this.encodeStake(params.lockId);
-    return await this.call(spokeProvider, stakeTx, raw);
+    return await this.call(user, stakeTx, walletProviderSlot);
   }
 
   /**
@@ -222,13 +233,13 @@ export class BalnSwapService {
    * @param raw - Whether to return raw transaction data
    * @returns The transaction hash or raw transaction data
    */
-  async unstake<S extends SonicSpokeProviderType, R extends boolean = false>(
+  async unstake<R extends boolean = false>(
+    user: Address,
     params: BalnLockParams,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
+    walletProviderSlot: WalletProviderSlot<SonicChainKey, R>,
+  ): Promise<TxReturnType<SonicChainKey, R>> {
     const unstakeTx = this.encodeUnstake(params.lockId);
-    return await this.call(spokeProvider, unstakeTx, raw);
+    return await this.call(user, unstakeTx, walletProviderSlot);
   }
 
   /**
@@ -238,13 +249,13 @@ export class BalnSwapService {
    * @param raw - Whether to return raw transaction data
    * @returns The transaction hash or raw transaction data
    */
-  async cancelUnstake<S extends SonicSpokeProviderType, R extends boolean = false>(
+  async cancelUnstake<R extends boolean = false>(
+    user: Address,
     params: BalnLockParams,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
+    walletProviderSlot: WalletProviderSlot<SonicChainKey, R>,
+  ): Promise<TxReturnType<SonicChainKey, R>> {
     const cancelUnstakeTx = this.encodeCancelUnstake(params.lockId);
-    return await this.call(spokeProvider, cancelUnstakeTx, raw);
+    return await this.call(user, cancelUnstakeTx, walletProviderSlot);
   }
 
   /**
@@ -388,26 +399,24 @@ export class BalnSwapService {
    * @param raw - Whether to return raw transaction data
    * @returns The transaction hash or raw transaction data
    */
-  async call<S extends SonicSpokeProviderType, R extends boolean = false>(
-    spokeProvider: S,
+  async call<R extends boolean = false>(
+    srcAddress: Address,
     rawTx: EvmContractCall,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
-    const from = await spokeProvider.walletProvider.getWalletAddress();
-
+    walletProviderSlot: WalletProviderSlot<SonicChainKey, R>,
+  ): Promise<TxReturnType<SonicChainKey, R>> {
     const tx = {
-      from: from as GetAddressType<SonicSpokeProviderType>,
+      from: srcAddress,
       to: rawTx.address,
       value: rawTx.value,
       data: rawTx.data,
-    } satisfies TxReturnType<SonicSpokeProviderType, true>;
+    } satisfies TxReturnType<SonicChainKey, true>;
 
-    if (raw || isSonicRawSpokeProvider(spokeProvider)) {
-      return tx satisfies TxReturnType<SonicSpokeProviderType, true> as TxReturnType<S, R>;
+    if (walletProviderSlot.raw) {
+      return tx satisfies TxReturnType<SonicChainKey, true> as TxReturnType<SonicChainKey, R>;
     }
 
-    return spokeProvider.walletProvider.sendTransaction(tx) satisfies Promise<
-      TxReturnType<SonicSpokeProviderType, false>
-    > as Promise<TxReturnType<S, R>>;
+    return walletProviderSlot.walletProvider.sendTransaction(tx) satisfies Promise<
+      TxReturnType<SonicChainKey, false>
+    > as Promise<TxReturnType<SonicChainKey, R>>;
   }
 }

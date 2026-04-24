@@ -1,5 +1,4 @@
-import type { HttpUrl } from '@sodax/types';
-import type { IconRawTransaction } from '../types.js';
+import type { HttpUrl, IconRawTransaction } from '@sodax/types';
 import { hexToBigInt } from './shared-utils.js';
 
 export async function estimateStepCost(rawTx: IconRawTransaction, debugRpcUrl: HttpUrl): Promise<bigint> {

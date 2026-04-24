@@ -7,8 +7,15 @@ import {
   getInjectiveSignerAddress,
   type TxResponse,
 } from '@injectivelabs/sdk-ts';
-import type { Hex, JsonObject, InjectiveCoin, IInjectiveWalletProvider, InjectiveEoaAddress } from '@sodax/types';
-import { InjectiveExecuteResponse, type InjectiveRawTransaction } from '@sodax/types';
+import type {
+  Hex,
+  JsonObject,
+  InjectiveCoin,
+  IInjectiveWalletProvider,
+  InjectiveEoaAddress,
+  InjectiveExecuteResponse,
+  InjectiveRawTransaction,
+} from '@sodax/types';
 import type { MsgBroadcaster } from '@injectivelabs/wallet-core';
 import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts';
 import type { ChainId, EvmChainId } from '@injectivelabs/ts-types';
@@ -64,7 +71,15 @@ export type InjectiveWallet = {
   msgBroadcaster: MsgBroadcaster | MsgBroadcasterWithPk;
 };
 
+function txResponseToExecuteResponse(txResult: TxResponse): InjectiveExecuteResponse {
+  return {
+    height: txResult.height === undefined ? undefined : Number(txResult.height),
+    transactionHash: txResult.txHash,
+  };
+}
+
 export class InjectiveWalletProvider implements IInjectiveWalletProvider {
+  public readonly chainType = 'INJECTIVE' as const;
   public wallet: InjectiveWallet;
 
   constructor(config: InjectiveWalletConfig) {
@@ -176,6 +191,7 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
       });
     }
 
-    return InjectiveExecuteResponse.fromTxResponse(txResult);
+    return txResponseToExecuteResponse(txResult);
   }
+
 }
