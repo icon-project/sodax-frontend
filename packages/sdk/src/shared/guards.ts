@@ -1,116 +1,69 @@
+import type { JsonRpcPayloadResponse, ResponseAddressType, ResponseSigningType } from './entities/icon/icon-wallet-types.js';
 import type {
-  JsonRpcPayloadResponse,
-  ResponseAddressType,
-  ResponseSigningType,
-} from './entities/icon/HanaWalletConnector.js';
-import {
-  type EvmUninitializedConfig,
-  type EvmInitializedConfig,
-  type EvmUninitializedPrivateKeyConfig,
-  type EvmUninitializedBrowserConfig,
-  EvmSpokeProvider,
-  SonicSpokeProvider,
-  type EvmRawSpokeProvider,
-  type SonicRawSpokeProvider,
-  type RawSpokeProvider,
-  type SpokeProviderType,
-  type SpokeProvider,
-    type EvmRawSpokeProviderConfig,
-    type SonicRawSpokeProviderConfig,
-    type RawSpokeProviderConfig,
-} from './entities/Providers.js';
-import { InjectiveSpokeProvider, type InjectiveRawSpokeProvider } from './entities/injective/InjectiveSpokeProvider.js';
-import { IconSpokeProvider, type IconRawSpokeProvider } from './entities/icon/IconSpokeProvider.js';
-import {
-  SolanaSpokeProvider,
-  type SolanaRawSpokeProvider,
-  type SolanaRawSpokeProviderConfig,
-} from './entities/solana/SolanaSpokeProvider.js';
-import { SuiSpokeProvider, type SuiRawSpokeProvider } from './entities/sui/SuiSpokeProvider.js';
-import {
-  StellarSpokeProvider,
-  type StellarRawSpokeProvider,
-  type StellarRawSpokeProviderConfig,
-} from './entities/stellar/StellarSpokeProvider.js';
-import { StacksSpokeProvider, type StacksRawSpokeProvider, type StacksRawSpokeProviderConfig } from './entities/stacks/StacksSpokeProvider.js';
-import type {
-  BitcoinSpokeProviderType,
-  EvmSpokeProviderType,
-  IconSpokeProviderType,
-  InjectiveSpokeProviderType,
-  MoneyMarketConfigParams,
-  NearSpokeProviderType,
-  Optional,
-  PartnerFeeAmount,
-  PartnerFeeConfig,
-  PartnerFeePercentage,
-  Prettify,
-  RawDestinationParams,
-  SolanaSpokeProviderType,
+  BitcoinChainKey,
+  EvmChainKey,
+  IconChainKey,
+  InjectiveChainKey,
+  NearChainKey,
+  SolanaChainKey,
+  SpokeChainKey,
+  StacksChainKey,
+  StellarChainKey,
+  SuiChainKey,
+  SonicChainKey,
+  HubChainKey,
   SolverConfigParams,
-  SonicSpokeProviderType,
-  StacksSpokeProviderType,
-  SpokeProviderObjectType,
-  StellarSpokeProviderType,
-  SuiSpokeProviderType,
-} from './types.js';
-import type { EvmHubChainConfig, HubChainConfig } from '@sodax/types';
-import type { IntentError } from '../swap/SwapService.js';
-import type { MoneyMarketError, MoneyMarketUnknownError } from '../moneyMarket/MoneyMarketService.js';
-import type { IcxMigrateParams, IcxCreateRevertMigrationParams } from '../migration/IcxMigrationService.js';
-import type { UnifiedBnUSDMigrateParams } from '../migration/BnUSDMigrationService.js';
-import type { BalnMigrateParams } from '../migration/BalnSwapService.js';
+  Prettify,
+  Optional,
+  PartnerFeeConfig,
+  PartnerFeeAmount,
+  PartnerFeePercentage,
+  EvmSpokeOnlyChainKey,
+  IWalletProvider,
+  IBitcoinWalletProvider,
+  GetWalletProviderType,
+  IEvmWalletProvider,
+  IStellarWalletProvider,
+} from '@sodax/types';
 import {
   type EvmSpokeChainConfig,
   type SpokeChainConfig,
   type SolverConfig,
   type MoneyMarketConfig,
   type IconAddress,
-  type IntentRelayChainId,
-  SONIC_MAINNET_CHAIN_ID,
-  ChainIdToIntentRelayChainId,
   type SubmitSwapTxResponse,
   type SubmitSwapTxStatusResponse,
+  isSonicChainKey,
+  isBitcoinChainKey,
+  isSolanaChainKey,
+  isNearChainKey,
+  isStellarChainKey,
+  isInjectiveChainKey,
+  isIconChainKey,
+  isSuiChainKey,
+  isStacksChainKey,
+  isHubChainKey,
+  isEvmChainKey,
+  isEvmSpokeOnlyChainKey,
+  getChainType,
 } from '@sodax/types';
-import { BitcoinSpokeProvider, type BitcoinRawSpokeProvider } from './entities/btc/BitcoinSpokeProvider.js';
-import {
-    type NearRawSpokeProvider,
-    type NearRawSpokeProviderConfig,
-    NearSpokeProvider,
-} from './entities/near/NearSpokeProvider.js';
-export function isEvmHubChainConfig(value: HubChainConfig): value is EvmHubChainConfig {
-  return typeof value === 'object' && value.chain.type === 'EVM';
-}
+import type {
+  SpokeApproveParams,
+  SpokeIsAllowanceValidParams,
+  SpokeIsAllowanceValidParamsEvmSpoke,
+  SpokeIsAllowanceValidParamsHub,
+  SpokeIsAllowanceValidParamsStellar,
+  RawDestinationParams,
+} from './types/spoke-types.js';
 
 export function isEvmSpokeChainConfig(value: SpokeChainConfig): value is EvmSpokeChainConfig {
   return typeof value === 'object' && value.chain.type === 'EVM';
 }
 
-export function isEvmUninitializedConfig(
-  value: EvmUninitializedConfig | EvmInitializedConfig,
-): value is EvmUninitializedConfig {
-  return typeof value === 'object' && 'chain' in value;
-}
-
-export function isEvmInitializedConfig(
-  value: EvmUninitializedConfig | EvmInitializedConfig,
-): value is EvmInitializedConfig {
-  return typeof value === 'object' && 'walletClient' in value && 'publicClient' in value;
-}
-
-export function isEvmUninitializedBrowserConfig(value: EvmUninitializedConfig): value is EvmUninitializedBrowserConfig {
-  return typeof value === 'object' && 'userAddress' in value && 'chain' in value && 'provider' in value;
-}
-
-export function isEvmUninitializedPrivateKeyConfig(
-  value: EvmUninitializedConfig,
-): value is EvmUninitializedPrivateKeyConfig {
-  return typeof value === 'object' && 'chain' in value && 'privateKey' in value;
-}
-
 export function isIconAddress(value: unknown): value is IconAddress {
   return typeof value === 'string' && /^hx[a-f0-9]{40}$|^cx[a-f0-9]{40}$/.test(value);
 }
+
 export function isResponseAddressType(value: unknown): value is ResponseAddressType {
   return (
     typeof value === 'object' &&
@@ -143,14 +96,6 @@ export function isJsonRpcPayloadResponse(value: unknown): value is JsonRpcPayloa
   );
 }
 
-export function isIntentRelayChainId(value: bigint): value is IntentRelayChainId {
-  return (
-    typeof value === 'bigint' &&
-    value >= 0n &&
-    Object.values(ChainIdToIntentRelayChainId).includes(value as IntentRelayChainId)
-  );
-}
-
 export function isPartnerFeeAmount(value: unknown): value is PartnerFeeAmount {
   return typeof value === 'object' && value !== null && 'address' in value && 'amount' in value;
 }
@@ -159,161 +104,100 @@ export function isPartnerFeePercentage(value: unknown): value is PartnerFeePerce
   return typeof value === 'object' && value !== null && 'address' in value && 'percentage' in value;
 }
 
-export function isEvmSpokeProviderType(value: SpokeProviderType): value is EvmSpokeProviderType {
-  return typeof value === 'object' && value !== null && (isEvmSpokeProvider(value) || isEvmRawSpokeProvider(value));
+export function isEvmChainKeyType(value: SpokeChainKey): value is EvmChainKey {
+  return isEvmChainKey(value);
 }
 
-export function isEvmSpokeProvider(value: SpokeProviderType): value is EvmSpokeProvider {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    value instanceof EvmSpokeProvider &&
-    !('raw' in value) &&
-    value.chainConfig.chain.type === 'EVM'
-  );
+export function isEvmSpokeOnlyChainKeyType(value: SpokeChainKey): value is EvmSpokeOnlyChainKey {
+  return isEvmSpokeOnlyChainKey(value);
 }
 
-export function isSonicSpokeProviderType(value: SpokeProviderType): value is SonicSpokeProviderType {
-  return typeof value === 'object' && value !== null && (isSonicSpokeProvider(value) || isSonicRawSpokeProvider(value));
+export function isSonicChainKeyType(value: SpokeChainKey): value is SonicChainKey {
+  return isSonicChainKey(value);
 }
 
-export function isSonicSpokeProvider(value: SpokeProviderType): value is SonicSpokeProvider {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    value instanceof SonicSpokeProvider &&
-    value.chainConfig.chain.type === 'EVM' &&
-    !('raw' in value) &&
-    value.chainConfig.chain.id === SONIC_MAINNET_CHAIN_ID
-  );
+export function isHubChainKeyType(value: SpokeChainKey): value is HubChainKey {
+  return isHubChainKey(value);
 }
 
-export function isSolanaSpokeProviderType(value: SpokeProviderType): value is SolanaSpokeProviderType {
-  return (
-    typeof value === 'object' && value !== null && (isSolanaSpokeProvider(value) || isSolanaRawSpokeProvider(value))
-  );
+export function isSolanaChainKeyType(value: SpokeChainKey): value is SolanaChainKey {
+  return isSolanaChainKey(value);
 }
 
-export function isSolanaSpokeProvider(value: SpokeProviderType): value is SolanaSpokeProvider {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    value instanceof SolanaSpokeProvider &&
-    !('raw' in value) &&
-    value.chainConfig.chain.type === 'SOLANA'
-  );
+export function isNearChainKeyType(value: SpokeChainKey): value is NearChainKey {
+  return isNearChainKey(value);
 }
 
-export function isNearSpokeProvider(value: SpokeProviderType): value is NearSpokeProvider {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    value instanceof NearSpokeProvider &&
-    !('raw' in value) &&
-    value.chainConfig.chain.type === 'NEAR'
-  );
+export function isStellarChainKeyType(value: SpokeChainKey): value is StellarChainKey {
+  return isStellarChainKey(value);
 }
 
-export function isStellarSpokeProviderType(value: SpokeProviderType): value is StellarSpokeProviderType {
-  return (
-    typeof value === 'object' && value !== null && (isStellarSpokeProvider(value) || isStellarRawSpokeProvider(value))
-  );
+export function isBitcoinChainKeyType(value: SpokeChainKey): value is BitcoinChainKey {
+  return isBitcoinChainKey(value);
 }
 
-export function isBitcoinSpokeProviderType(value: SpokeProviderType): value is BitcoinSpokeProviderType {
-  return (
-    typeof value === 'object' && value !== null && (isBitcoinSpokeProvider(value) || isBitcoinRawSpokeProvider(value))
-  );
+export function isInjectiveChainKeyType(value: SpokeChainKey): value is InjectiveChainKey {
+  return isInjectiveChainKey(value);
 }
 
-export function isStellarSpokeProvider(value: SpokeProviderType): value is StellarSpokeProvider {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    value instanceof StellarSpokeProvider &&
-    !('raw' in value) &&
-    value.chainConfig.chain.type === 'STELLAR'
-  );
+export function isIconChainKeyType(value: SpokeChainKey): value is IconChainKey {
+  return isIconChainKey(value);
 }
 
-export function isBitcoinSpokeProvider(value: SpokeProviderType): value is BitcoinSpokeProvider {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    value instanceof BitcoinSpokeProvider &&
-    !('raw' in value) &&
-    value.chainConfig.chain.type === 'BITCOIN'
-  );
+export function isSuiChainKeyType(value: SpokeChainKey): value is SuiChainKey {
+  return isSuiChainKey(value);
 }
 
-export function isNearSpokeProviderType(value: SpokeProviderType): value is NearSpokeProviderType {
-  return typeof value === 'object' && value !== null && (isNearSpokeProvider(value) || isNearRawSpokeProvider(value));
+export function isStacksChainKeyType(value: SpokeChainKey): value is StacksChainKey {
+  return isStacksChainKey(value);
 }
 
-export function isInjectiveSpokeProviderType(value: SpokeProviderType): value is InjectiveSpokeProviderType {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    (isInjectiveSpokeProvider(value) || isInjectiveRawSpokeProvider(value))
-  );
+/** Same runtime check as `isHubChainKeyType(params.srcChainKey)`; narrows the full `params` object. */
+export function isSpokeIsAllowanceValidParamsHub(
+  params: SpokeIsAllowanceValidParams,
+): params is SpokeIsAllowanceValidParamsHub {
+  return isHubChainKeyType(params.srcChainKey);
 }
 
-export function isInjectiveSpokeProvider(value: SpokeProviderType): value is InjectiveSpokeProvider {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    value instanceof InjectiveSpokeProvider &&
-    !('raw' in value) &&
-    value.chainConfig.chain.type === 'INJECTIVE'
-  );
+/** Same runtime check as `isEvmSpokeOnlyChainKeyType(params.srcChainKey)`; narrows the full `params` object. */
+export function isSpokeIsAllowanceValidParamsEvmSpoke(
+  params: SpokeIsAllowanceValidParams,
+): params is SpokeIsAllowanceValidParamsEvmSpoke {
+  return isEvmSpokeOnlyChainKeyType(params.srcChainKey);
 }
 
-export function isIconSpokeProviderType(value: SpokeProviderType): value is IconSpokeProviderType {
-  return typeof value === 'object' && value !== null && (isIconSpokeProvider(value) || isIconRawSpokeProvider(value));
+/** Same runtime check as `isStellarChainKeyType(params.srcChainKey)`; narrows the full `params` object. */
+export function isSpokeIsAllowanceValidParamsStellar(
+  params: SpokeIsAllowanceValidParams,
+): params is SpokeIsAllowanceValidParamsStellar {
+  return isStellarChainKeyType(params.srcChainKey);
 }
 
-export function isIconSpokeProvider(value: SpokeProviderType): value is IconSpokeProvider {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    value instanceof IconSpokeProvider &&
-    !('raw' in value) &&
-    value.chainConfig.chain.type === 'ICON'
-  );
+export function isSpokeApproveParamsHub<K extends SpokeChainKey, Raw extends boolean>(
+  params: SpokeApproveParams<K, Raw>,
+): params is Extract<SpokeApproveParams<K, Raw>, { srcChainKey: HubChainKey }> {
+  return isHubChainKeyType(params.srcChainKey);
 }
 
-export function isSuiSpokeProviderType(value: SpokeProviderType): value is SuiSpokeProviderType {
-  return typeof value === 'object' && value !== null && (isSuiSpokeProvider(value) || isSuiRawSpokeProvider(value));
+export function isSpokeApproveParamsEvmSpoke<K extends SpokeChainKey, Raw extends boolean>(
+  params: SpokeApproveParams<K, Raw>,
+): params is Extract<SpokeApproveParams<K, Raw>, { srcChainKey: EvmSpokeOnlyChainKey }> {
+  return isEvmSpokeOnlyChainKeyType(params.srcChainKey);
 }
 
-export function isSuiSpokeProvider(value: SpokeProviderType): value is SuiSpokeProvider {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    value instanceof SuiSpokeProvider &&
-    !('raw' in value) &&
-    value.chainConfig.chain.type === 'SUI'
-  );
+export function isSpokeApproveParamsStellar<K extends SpokeChainKey, Raw extends boolean>(
+  params: SpokeApproveParams<K, Raw>,
+): params is Extract<SpokeApproveParams<K, Raw>, { srcChainKey: StellarChainKey }> {
+  return isStellarChainKeyType(params.srcChainKey);
 }
 
-export function isStacksSpokeProviderType(value: SpokeProviderType): value is StacksSpokeProviderType {
-  return typeof value === 'object' && value !== null && (isStacksSpokeProvider(value) || isStacksRawSpokeProvider(value));
-}
+// export function isSpokeApproveParamsEvmSpoke(params: SpokeApproveParams<K, Raw>, K extends SpokeChainKey, Raw extends boolean): params is SpokeApproveParamsEvmSpoke<K, Raw> {
+//   return isEvmSpokeOnlyChainKeyType(params.srcChainKey);
+// }
 
-export function isStacksSpokeProvider(value: SpokeProviderType): value is StacksSpokeProvider {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    value instanceof StacksSpokeProvider &&
-    !('raw' in value) &&
-    value.chainConfig.chain.type === 'STACKS'
-  );
-}
-
-export function isStacksRawSpokeProvider(value: unknown): value is StacksRawSpokeProvider {
-  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'STACKS';
-}
-
+// export function isSpokeApproveParamsStellar(params: SpokeApproveParams<K, Raw>, K extends SpokeChainKey, Raw extends boolean): params is SpokeApproveParamsStellar<K, Raw> {
+//   return isStellarChainKeyType(params.srcChainKey);
+// }
 export function isConfiguredSolverConfig(
   value: SolverConfigParams,
 ): value is Prettify<SolverConfig & Optional<PartnerFeeConfig, 'partnerFee'>> {
@@ -321,7 +205,7 @@ export function isConfiguredSolverConfig(
 }
 
 export function isConfiguredMoneyMarketConfig(
-  value: MoneyMarketConfigParams,
+  value: MoneyMarketConfig,
 ): value is Prettify<MoneyMarketConfig & Optional<PartnerFeeConfig, 'partnerFee'>> {
   return (
     typeof value === 'object' &&
@@ -334,308 +218,12 @@ export function isConfiguredMoneyMarketConfig(
   );
 }
 
-export function isIntentCreationFailedError(error: unknown): error is IntentError<'CREATION_FAILED'> {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === 'CREATION_FAILED' &&
-    'data' in error &&
-    typeof error.data === 'object' &&
-    error.data !== null &&
-    'payload' in error.data &&
-    'error' in error.data
-  );
-}
-
-export function isIntentSubmitTxFailedError(error: unknown): error is IntentError<'SUBMIT_TX_FAILED'> {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === 'SUBMIT_TX_FAILED' &&
-    'data' in error &&
-    typeof error.data === 'object' &&
-    error.data !== null &&
-    'payload' in error.data &&
-    'error' in error.data
-  );
-}
-
-export function isIntentPostExecutionFailedError(error: unknown): error is IntentError<'POST_EXECUTION_FAILED'> {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === 'POST_EXECUTION_FAILED' &&
-    'data' in error &&
-    typeof error.data === 'object' &&
-    error.data !== null &&
-    'detail' in error.data
-  );
-}
-
-export function isWaitUntilIntentExecutedFailed(error: unknown): error is IntentError<'RELAY_TIMEOUT'> {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === 'RELAY_TIMEOUT' &&
-    'data' in error &&
-    typeof error.data === 'object' &&
-    error.data !== null &&
-    'payload' in error.data &&
-    'error' in error.data
-  );
-}
-
-export function isIntentCreationUnknownError(error: unknown): error is IntentError<'UNKNOWN'> {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    'code' in error &&
-    error.code === 'UNKNOWN' &&
-    'data' in error &&
-    typeof error.data === 'object' &&
-    error.data !== null &&
-    'payload' in error.data &&
-    'error' in error.data
-  );
-}
-
-export function isMoneyMarketSubmitTxFailedError(error: unknown): error is MoneyMarketError<'SUBMIT_TX_FAILED'> {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'SUBMIT_TX_FAILED';
-}
-
-export function isMoneyMarketRelayTimeoutError(error: unknown): error is MoneyMarketError<'RELAY_TIMEOUT'> {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'RELAY_TIMEOUT';
-}
-
-export function isMoneyMarketCreateSupplyIntentFailedError(
-  error: unknown,
-): error is MoneyMarketError<'CREATE_SUPPLY_INTENT_FAILED'> {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'CREATE_SUPPLY_INTENT_FAILED';
-}
-
-export function isMoneyMarketCreateBorrowIntentFailedError(
-  error: unknown,
-): error is MoneyMarketError<'CREATE_BORROW_INTENT_FAILED'> {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'CREATE_BORROW_INTENT_FAILED';
-}
-
-export function isMoneyMarketCreateWithdrawIntentFailedError(
-  error: unknown,
-): error is MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED'> {
-  return (
-    typeof error === 'object' && error !== null && 'code' in error && error.code === 'CREATE_WITHDRAW_INTENT_FAILED'
-  );
-}
-
-export function isMoneyMarketCreateRepayIntentFailedError(
-  error: unknown,
-): error is MoneyMarketError<'CREATE_REPAY_INTENT_FAILED'> {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'CREATE_REPAY_INTENT_FAILED';
-}
-
-export function isMoneyMarketSupplyUnknownError(
-  error: unknown,
-): error is MoneyMarketUnknownError<'SUPPLY_UNKNOWN_ERROR'> {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'SUPPLY_UNKNOWN_ERROR';
-}
-
-export function isMoneyMarketBorrowUnknownError(
-  error: unknown,
-): error is MoneyMarketUnknownError<'BORROW_UNKNOWN_ERROR'> {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'BORROW_UNKNOWN_ERROR';
-}
-
-export function isMoneyMarketWithdrawUnknownError(
-  error: unknown,
-): error is MoneyMarketUnknownError<'WITHDRAW_UNKNOWN_ERROR'> {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'WITHDRAW_UNKNOWN_ERROR';
-}
-
-export function isMoneyMarketRepayUnknownError(
-  error: unknown,
-): error is MoneyMarketUnknownError<'REPAY_UNKNOWN_ERROR'> {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'REPAY_UNKNOWN_ERROR';
-}
-
-export function isIcxMigrateParams(value: unknown): value is IcxMigrateParams {
-  return typeof value === 'object' && value !== null && 'address' in value && 'amount' in value && 'to' in value;
-}
-
-export function isUnifiedBnUSDMigrateParams(value: unknown): value is UnifiedBnUSDMigrateParams {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'srcChainId' in value &&
-    'srcbnUSD' in value &&
-    'dstChainId' in value &&
-    'dstbnUSD' in value &&
-    'amount' in value &&
-    'to' in value
-  );
-}
-
-export function isBalnMigrateParams(value: unknown): value is BalnMigrateParams {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'amount' in value &&
-    'lockupPeriod' in value &&
-    'to' in value &&
-    'stake' in value
-  );
-}
-
-export function isIcxCreateRevertMigrationParams(value: unknown): value is IcxCreateRevertMigrationParams {
-  return typeof value === 'object' && value !== null && 'amount' in value && 'to' in value;
-}
-
-export function isRawSpokeProvider(value: unknown): value is RawSpokeProvider {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'walletProvider' in value &&
-    'chainConfig' in value &&
-    'raw' in value &&
-    value.raw === true
-  );
-}
-
-export function isSpokeProvider(value: unknown): value is SpokeProvider {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'walletProvider' in value &&
-    'chainConfig' in value &&
-    (!('raw' in value) || value.raw === false)
-  );
-}
-
-export function isSpokeProviderType(value: unknown): value is SpokeProviderType {
-  return isSpokeProvider(value) || isRawSpokeProvider(value);
-}
-
-export function isEvmRawSpokeProvider(value: unknown): value is EvmRawSpokeProvider {
-  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'EVM';
-}
-
-export function isSolanaRawSpokeProvider(value: unknown): value is SolanaRawSpokeProvider {
-  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'SOLANA';
-}
-
-export function isStellarRawSpokeProvider(value: unknown): value is StellarRawSpokeProvider {
-  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'STELLAR';
-}
-
-export function isBitcoinRawSpokeProvider(value: unknown): value is BitcoinRawSpokeProvider {
-  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'BITCOIN';
-}
-
-export function isIconRawSpokeProvider(value: unknown): value is IconRawSpokeProvider {
-  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'ICON';
-}
-
-export function isSuiRawSpokeProvider(value: unknown): value is SuiRawSpokeProvider {
-  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'SUI';
-}
-
-export function isInjectiveRawSpokeProvider(value: unknown): value is InjectiveRawSpokeProvider {
-  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'INJECTIVE';
-}
-
-export function isSonicRawSpokeProvider(value: unknown): value is SonicRawSpokeProvider {
-  return (
-    isRawSpokeProvider(value) &&
-    value.chainConfig.chain.type === 'EVM' &&
-    value.chainConfig.chain.id === SONIC_MAINNET_CHAIN_ID
-  );
-}
-
-export function isNearRawSpokeProvider(value: unknown): value is NearRawSpokeProvider {
-  return isRawSpokeProvider(value) && value.chainConfig.chain.type === 'NEAR';
-}
-
 export function isAddressString(value: unknown): value is string {
   return typeof value === 'string';
 }
 
-export function isSpokeProviderObjectType(value: unknown): value is SpokeProviderObjectType {
-    return (
-        typeof value === 'object' &&
-        value !== null &&
-        'spokeProvider' in value &&
-        value.spokeProvider !== undefined &&
-        isSpokeProviderType(value.spokeProvider)
-    );
-}
-
 export function isRawDestinationParams(value: unknown): value is RawDestinationParams {
-    return typeof value === 'object' && value !== null && 'toChainId' in value && 'toAddress' in value;
-}
-
-export function isEvmRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is EvmRawSpokeProviderConfig {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'walletAddress' in value &&
-    'chainConfig' in value &&
-    value.chainConfig.chain.type === 'EVM'
-  );
-}
-
-export function isSonicRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is SonicRawSpokeProviderConfig {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'walletAddress' in value &&
-    'chainConfig' in value &&
-    value.chainConfig.chain.type === 'EVM' &&
-    value.chainConfig.chain.id === SONIC_MAINNET_CHAIN_ID
-  );
-}
-
-export function isStellarRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is StellarRawSpokeProviderConfig {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'walletAddress' in value &&
-    'chainConfig' in value &&
-    value.chainConfig.chain.type === 'STELLAR'
-  );
-}
-
-export function isSolanaRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is SolanaRawSpokeProviderConfig {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'walletAddress' in value &&
-    'chainConfig' in value &&
-    'connection' in value &&
-    value.chainConfig.chain.type === 'SOLANA'
-  );
-}
-
-export function isNearRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is NearRawSpokeProviderConfig {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'walletAddress' in value &&
-    'chainConfig' in value &&
-    value.chainConfig.chain.type === 'NEAR'
-  );
-}
-
-export function isStacksRawSpokeProviderConfig(value: RawSpokeProviderConfig): value is StacksRawSpokeProviderConfig {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'walletAddress' in value &&
-    'chainConfig' in value &&
-    value.chainConfig.chain.type === 'STACKS'
-  );
+  return typeof value === 'object' && value !== null && 'toChainId' in value && 'toAddress' in value;
 }
 
 // Backend API response guards
@@ -665,3 +253,45 @@ export function isSubmitSwapTxStatusResponse(value: unknown): value is SubmitSwa
   }
   return true;
 }
+
+// Concrete-typed discriminant guards refine `IWalletProvider` to its specific variant via the
+// `chainType` discriminator. Prefer these inside generic method bodies where
+// `isValidWalletProviderForChainKey<K>` can't refine past `GetWalletProviderType<K>`.
+export function isBitcoinWalletProviderType(wp: IWalletProvider): wp is IBitcoinWalletProvider {
+  return wp.chainType === 'BITCOIN';
+}
+
+export function isEvmWalletProviderType(walletProvider: IWalletProvider): walletProvider is IEvmWalletProvider {
+  return walletProvider.chainType === 'EVM';
+}
+
+export function isStellarWalletProviderType(walletProvider: IWalletProvider): walletProvider is IStellarWalletProvider {
+  return walletProvider.chainType === 'STELLAR';
+}
+
+export function isOptionalEvmWalletProviderType(
+  walletProvider: IWalletProvider | undefined,
+): walletProvider is IEvmWalletProvider | undefined {
+  return walletProvider === undefined || isEvmWalletProviderType(walletProvider);
+}
+
+export function isOptionalStellarWalletProviderType(
+  walletProvider: IWalletProvider | undefined,
+): walletProvider is IStellarWalletProvider | undefined {
+  return walletProvider === undefined || isStellarWalletProviderType(walletProvider);
+}
+
+export function isValidWalletProviderTypeForChainKey<K extends SpokeChainKey>(
+  chainKey: K,
+  walletProvider: IWalletProvider | undefined,
+): walletProvider is GetWalletProviderType<K> {
+  return walletProvider === undefined || getChainType(chainKey) === walletProvider.chainType;
+}
+
+export function isOptionalBitcoinWalletProviderType(
+  walletProvider: IWalletProvider | undefined,
+): walletProvider is IBitcoinWalletProvider | undefined {
+  return walletProvider === undefined || isBitcoinWalletProviderType(walletProvider);
+}
+
+// TODO re-check all guards after core types and ask check to ensure correct property checks after refactoring

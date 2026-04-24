@@ -3,10 +3,7 @@ import {
   type RpcConfig,
   type BitcoinRpcConfig,
   type StellarRpcConfig,
-  ICON_MAINNET_CHAIN_ID,
-  INJECTIVE_MAINNET_CHAIN_ID,
-  NEAR_MAINNET_CHAIN_ID,
-  STACKS_MAINNET_CHAIN_ID,
+  ChainKeys,
   detectBitcoinAddressType,
 } from '@sodax/types';
 import {
@@ -130,7 +127,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
   }),
   BITCOIN: defineChain({
     createService: rpcConfig =>
-      BitcoinXService.getInstance((rpcConfig?.bitcoin as BitcoinRpcConfig | undefined)?.rpcUrl),
+      BitcoinXService.getInstance((rpcConfig?.[ChainKeys.BITCOIN_MAINNET] as BitcoinRpcConfig | undefined)?.rpcUrl),
     defaultConnectors: () => [new UnisatXConnector(), new XverseXConnector(), new OKXXConnector()],
     providerManaged: false,
     createActions: (service, getStore) => ({
@@ -183,7 +180,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
   }),
   INJECTIVE: defineChain({
     createService: rpcConfig =>
-      InjectiveXService.getInstance(rpcConfig?.[INJECTIVE_MAINNET_CHAIN_ID]),
+      InjectiveXService.getInstance(rpcConfig?.[ChainKeys.INJECTIVE_MAINNET]),
     defaultConnectors: () => [
       new InjectiveXConnector('MetaMask', Wallet.Metamask),
       new InjectiveXConnector('Keplr', Wallet.Keplr),
@@ -214,7 +211,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
   }),
   STELLAR: defineChain({
     createService: rpcConfig => {
-      const stellarRpc = rpcConfig?.stellar as StellarRpcConfig | undefined;
+      const stellarRpc = rpcConfig?.[ChainKeys.STELLAR_MAINNET] as StellarRpcConfig | undefined;
       return StellarXService.getInstance(stellarRpc?.horizonRpcUrl, stellarRpc?.sorobanRpcUrl);
     },
     defaultConnectors: () => [],
@@ -246,7 +243,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
   // ICON: signMessage not implemented — Hana wallet does not expose a signing API.
   // connect/disconnect use createDefaultActions (no createActions override needed).
   ICON: defineChain({
-    createService: rpcConfig => IconXService.getInstance(rpcConfig?.[ICON_MAINNET_CHAIN_ID]),
+    createService: rpcConfig => IconXService.getInstance(rpcConfig?.[ChainKeys.ICON_MAINNET] as string | undefined),
     defaultConnectors: () => [new IconHanaXConnector()],
     providerManaged: false,
     createWalletProvider: (_service, getStore) => {
@@ -284,7 +281,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
     },
   }),
   STACKS: defineChain({
-    createService: rpcConfig => StacksXService.getInstance(rpcConfig?.[STACKS_MAINNET_CHAIN_ID]),
+    createService: rpcConfig => StacksXService.getInstance(rpcConfig?.[ChainKeys.STACKS_MAINNET]),
     defaultConnectors: () => STACKS_PROVIDERS.map(c => new StacksXConnector(c)),
     providerManaged: false,
     createWalletProvider: (service, getStore) => {

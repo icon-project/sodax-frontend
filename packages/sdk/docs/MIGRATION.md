@@ -8,15 +8,14 @@ SDK includes predefined configurations of supported chains, tokens and other rel
 
 ```typescript
 import { 
-  ICON_MAINNET_CHAIN_ID, 
-  SONIC_MAINNET_CHAIN_ID,
+  ChainKeys,
   type HubChainId,
   type SpokeChainId 
 } from "@sodax/sdk"
 
 // Supported migration chains
-const hubChainId: HubChainId = SONIC_MAINNET_CHAIN_ID;
-const iconChainId: SpokeChainId = ICON_MAINNET_CHAIN_ID;
+const hubChainId: HubChainId = ChainKeys.SONIC_MAINNET;
+const iconChainId: SpokeChainId = ChainKeys.ICON_MAINNET;
 
 // Migration tokens
 const migrationTokens = ['ICX', 'bnUSD', 'BALN'] as const;

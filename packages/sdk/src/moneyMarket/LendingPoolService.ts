@@ -1,15 +1,21 @@
-import { getMoneyMarketConfig, type Address } from '@sodax/types';
-import type { EvmHubProvider } from '../shared/entities/Providers.js';
+import type { Address } from '@sodax/types';
 import { poolAbi } from '../shared/abis/pool.abi.js';
 import type { ReserveDataLegacy } from './MoneyMarketTypes.js';
+import type { HubProvider } from '../shared/types/types.js';
+import type { ConfigService } from '../shared/index.js';
+
+export type LendingPoolServiceConstructorParams = {
+  hubProvider: HubProvider;
+  config: ConfigService;
+};
 
 export class LendingPoolService {
-  private readonly hubProvider: EvmHubProvider;
+  private readonly hubProvider: HubProvider;
   private readonly lendingPool: Address;
 
-  constructor(hubProvider: EvmHubProvider) {
+  constructor({ hubProvider, config }: LendingPoolServiceConstructorParams) {
     this.hubProvider = hubProvider;
-    this.lendingPool = getMoneyMarketConfig(this.hubProvider.chainConfig.chain.id).lendingPool;
+    this.lendingPool = config.moneyMarket.lendingPool;
   }
 
   /**

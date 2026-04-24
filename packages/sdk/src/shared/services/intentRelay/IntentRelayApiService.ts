@@ -1,53 +1,39 @@
-import { type HttpUrl, type SpokeChainId, getIntentRelayChainId } from '@sodax/types';
-import type { Result } from '../../types.js';
+import {
+  DEFAULT_RELAY_TX_TIMEOUT,
+  type HttpUrl,
+  type Result,
+  type SpokeChainKey,
+  getIntentRelayChainId,
+} from '@sodax/types';
 import invariant from 'tiny-invariant';
 import { retry } from '../../utils/shared-utils.js';
-import type { IntentError } from '../../../swap/SwapService.js';
-import { DEFAULT_RELAY_TX_TIMEOUT } from '../../constants.js';
-import type { SpokeProvider } from '../../entities/Providers.js';
-import type { Hex } from 'viem';
+import type {
+  RelayAction,
+  RelayExtraData,
+  IntentDeliveryInfo,
+  IntentRelayRequest,
+  WaitUntilIntentExecutedPayload,
+} from '../../types/relay-types.js';
 
-/**
- * The action type for the intent relay service.
- * submit - submit a transaction to the intent relay service
- * get_transaction_packets - get transaction packets from the intent relay service
- * get_packet - get a packet from the intent relay service
- */
-export type RelayAction = 'submit' | 'get_transaction_packets' | 'get_packet';
+export type { RelayAction, RelayExtraData, IntentDeliveryInfo, IntentRelayRequest, WaitUntilIntentExecutedPayload };
 
-/**
- * The status of the relay transaction.
- * pending - no signatures
- * validating - not enough signatures
- * executing - enough signatures,no confirmed txn-hash
- * executed - has confirmed transaction-hash
- */
 export type RelayTxStatus = 'pending' | 'validating' | 'executing' | 'executed';
 
-export type RelayErrorCode = 'SUBMIT_TX_FAILED' | 'RELAY_TIMEOUT';
-
-export type RelayError = {
-  code: RelayErrorCode;
-  error: unknown;
-};
-
-export type SubmitTxExtraData = { address: Hex; payload: Hex };
-
 export type SubmitTxParams = {
-  chain_id: string; // The ID of the chain where the transaction was submitted
-  tx_hash: string; // The transaction hash of the submitted transaction
-  data?: SubmitTxExtraData;
+  chain_id: string;
+  tx_hash: string;
+  data?: RelayExtraData;
 };
 
 export type GetTransactionPacketsParams = {
-  chain_id: string; // The ID of the chain where the transaction was submitted
-  tx_hash: string; // The transaction hash of the submitted transaction
+  chain_id: string;
+  tx_hash: string;
 };
 
 export type GetPacketParams = {
-  chain_id: string; // The ID of the chain where the transaction was submitted
-  tx_hash: string; // The transaction hash of the submitted transaction
-  conn_sn: string; // The connection sequence number of the submitted transaction
+  chain_id: string;
+  tx_hash: string;
+  conn_sn: string;
 };
 
 export type SubmitTxResponse = {
@@ -66,15 +52,6 @@ export type PacketData = {
   dst_tx_hash: string;
   signatures: string[];
   payload: string;
-};
-
-export type IntentDeliveryInfo = {
-  srcChainId: SpokeChainId; // The chain ID where the transaction was submitted
-  srcTxHash: string; // The transaction hash of the submitted transaction
-  srcAddress: string; // The wallet address which submitted the transaction
-  dstChainId: SpokeChainId; // The destination chain ID
-  dstTxHash: string; // The transaction hash of the submitted transaction on the destination chain
-  dstAddress: string; // The destination wallet address on the destination chain
 };
 
 export type GetTransactionPacketsResponse = {
@@ -109,22 +86,6 @@ export type GetRelayResponse<T extends RelayAction> = T extends 'submit'
       : never;
 
 export type IntentRelayRequestParams = SubmitTxParams | GetTransactionPacketsParams | GetPacketParams;
-
-export type WaitUntilIntentExecutedPayload = {
-  intentRelayChainId: string;
-  spokeTxHash: string;
-  timeout: number;
-  apiUrl: HttpUrl;
-};
-
-/**
- * Represents the request payload for submitting a transaction to the intent relay service.
- * Contains the action type and parameters including chain ID and transaction hash.
- */
-export type IntentRelayRequest<T extends RelayAction> = {
-  action: T;
-  params: GetRelayRequestParamType<T>;
-};
 
 async function postRequest<T extends RelayAction>(
   payload: IntentRelayRequest<T>,
@@ -194,11 +155,12 @@ export async function getPacket(
 
 export async function waitUntilIntentExecuted(
   payload: WaitUntilIntentExecutedPayload,
-): Promise<Result<PacketData, IntentError<'RELAY_TIMEOUT'>>> {
+): Promise<Result<PacketData>> {
   try {
+    const timeout = payload.timeout ?? DEFAULT_RELAY_TX_TIMEOUT;
     const startTime = Date.now();
 
-    while (Date.now() - startTime < payload.timeout) {
+    while (Date.now() - startTime < timeout) {
       try {
         const txPackets = await getTransactionPackets(
           {
@@ -217,43 +179,18 @@ export async function waitUntilIntentExecuted(
           );
 
           if (txPackets.success && txPackets.data.length > 0 && packet && packet.status === 'executed') {
-            return {
-              ok: true,
-              value: packet,
-            };
+            return { ok: true, value: packet };
           }
         }
       } catch (e) {
         console.error('Error getting transaction packets', e);
       }
-      // wait two seconds before retrying
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
-    return {
-      ok: false,
-      error: {
-        code: 'RELAY_TIMEOUT',
-        data: {
-          payload: payload,
-          error: {
-            payload: payload,
-            error: undefined,
-          },
-        },
-      },
-    };
-  } catch (e) {
-    return {
-      ok: false,
-      error: {
-        code: 'RELAY_TIMEOUT',
-        data: {
-          payload: payload,
-          error: e,
-        },
-      },
-    };
+    return { ok: false, error: new Error('RELAY_TIMEOUT') };
+  } catch (error) {
+    return { ok: false, error };
   }
 }
 
@@ -263,19 +200,19 @@ export async function waitUntilIntentExecuted(
  * @param data - The additional data to submit when relaying the transaction on Solana. Due to Solana's 1232 byte transaction
  *               size limit, Solana transactions are split: the on-chain tx contains only a verification hash, while the full
  *               data is submitted off-chain via the relayer. Contains the to address on Hub chain and instruction data.
- * @param spokeProvider - The spoke provider.
+ * @param chainkey - The chain ID of the transaction.
  * @param timeout - The timeout in milliseconds for the transaction. Default is 20 seconds.
  * @returns The transaction hash.
  */
-export async function relayTxAndWaitPacket<S extends SpokeProvider>(
+export async function relayTxAndWaitPacket(
   spokeTxHash: string,
-  data: { address: Hex; payload: Hex } | undefined,
-  spokeProvider: S,
+  data: RelayExtraData | undefined,
+  chainkey: SpokeChainKey,
   relayerApiEndpoint: HttpUrl,
   timeout = DEFAULT_RELAY_TX_TIMEOUT,
-): Promise<Result<PacketData, RelayError>> {
+): Promise<Result<PacketData>> {
   try {
-    const intentRelayChainId = getIntentRelayChainId(spokeProvider.chainConfig.chain.id).toString();
+    const intentRelayChainId = getIntentRelayChainId(chainkey).toString();
 
     const submitPayload: IntentRelayRequest<'submit'> = {
       action: 'submit',
@@ -294,43 +231,16 @@ export async function relayTxAndWaitPacket<S extends SpokeProvider>(
     const submitResult = await submitTransaction(submitPayload, relayerApiEndpoint);
 
     if (!submitResult.success) {
-      return {
-        ok: false,
-        error: {
-          code: 'SUBMIT_TX_FAILED',
-          error: submitResult.message,
-        },
-      };
+      return { ok: false, error: new Error('SUBMIT_TX_FAILED', { cause: new Error(submitResult.message) }) };
     }
 
-    const packet = await waitUntilIntentExecuted({
+    return await waitUntilIntentExecuted({
       intentRelayChainId,
       spokeTxHash,
       timeout,
       apiUrl: relayerApiEndpoint,
     });
-
-    if (!packet.ok) {
-      return {
-        ok: false,
-        error: {
-          code: 'RELAY_TIMEOUT',
-          error: packet.error,
-        },
-      };
-    }
-
-    return {
-      ok: true,
-      value: packet.value,
-    };
   } catch (error) {
-    return {
-      ok: false,
-      error: {
-        code: 'SUBMIT_TX_FAILED',
-        error: error,
-      },
-    };
+    return { ok: false, error };
   }
 }

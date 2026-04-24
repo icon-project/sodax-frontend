@@ -1,87 +1,254 @@
-import { type Address, type Hex, fromHex, toHex } from 'viem';
-import type { EvmHubProvider } from '../../entities/index.js';
-import type { SuiBaseSpokeProvider } from '../../entities/sui/SuiSpokeProvider.js';
+import { bcs } from '@mysten/sui/bcs';
+import { fromHex, toHex } from 'viem';
+import { Transaction, type TransactionResult, type TransactionArgument } from '@mysten/sui/transactions';
 import {
-  type DepositSimulationParams,
-  type SuiGasEstimate,
-  encodeAddress,
-  type SuiRawTransaction,
-  type SuiSpokeProviderType,
+  getIntentRelayChainId,
+  type Hex,
+  type Result,
+  type SuiPaginatedCoins,
+  type SuiExecutionResult,
+  type SuiRawTransactionReceipt,
+  type SuiChainKey,
+  spokeChainConfig,
+  ChainKeys,
+  isNativeToken,
   type TxReturnType,
-} from '../../../index.js';
-import { EvmWalletAbstraction } from '../hub/index.js';
-import { Transaction } from '@mysten/sui/transactions';
-import { getIntentRelayChainId, type HubAddress } from '@sodax/types';
+  type SuiGasEstimate,
+} from '@sodax/types';
+import { SuiClient } from '@mysten/sui/client';
+import type {
+  DepositParams,
+  EstimateGasParams,
+  GetDepositParams,
+  SendMessageParams,
+  WaitForTxReceiptParams,
+  WaitForTxReceiptReturnType,
+} from '../../types/spoke-types.js';
+import type { ConfigService } from '../../config/ConfigService.js';
 
-export type SuiSpokeDepositParams = {
-  from: Hex; // The address of the user on the spoke chain
-  to?: HubAddress; // The address of the user on the hub chain (wallet abstraction address)
-  token: string; // The address of the token to deposit
-  amount: bigint; // The amount of tokens to deposit
-  data: Hex; // The data to send with the deposit
-};
-
-export type SuiTransferToHubParams = {
-  token: string;
-  recipient: Address;
-  amount: bigint;
-  data: Hex;
-};
+export type SuiNativeCoinResult = { $kind: 'NestedResult'; NestedResult: [number, number] };
+export type SuiTxObject = { $kind: 'Input'; Input: number; type?: 'object' | undefined };
 
 export class SuiSpokeService {
-  private constructor() {}
+  public readonly publicClient: SuiClient;
+  public assetManagerAddress: string | undefined;
+  private readonly pollingIntervalMs: number;
+  private readonly maxTimeoutMs: number;
 
-  /**
-   * Estimate the gas for a transaction.
-   * @param {SuiRawTransaction} rawTx - The raw transaction to estimate the gas for.
-   * @param {SuiSpokeProvider} spokeProvider - The spoke provider.
-   * @returns {Promise<bigint>} The estimated computation cost.
-   */
-  public static async estimateGas(
-    rawTx: SuiRawTransaction,
-    spokeProvider: SuiSpokeProviderType,
-  ): Promise<SuiGasEstimate> {
-    const txb = Transaction.fromKind(rawTx.data);
-    const result = await spokeProvider.publicClient.devInspectTransactionBlock({
-      sender: rawTx.from,
-      transactionBlock: txb,
+  public constructor(config: ConfigService) {
+    // since we only support mainnet for now, we can hardcode the single sui chain config
+    const chainConfig = config.sodaxConfig.chains[ChainKeys.SUI_MAINNET];
+    this.publicClient = new SuiClient({ url: chainConfig.rpc_url });
+    this.pollingIntervalMs = chainConfig.pollingConfig.pollingIntervalMs;
+    this.maxTimeoutMs = chainConfig.pollingConfig.maxTimeoutMs;
+  }
+
+  async getCoins(address: string, token: string): Promise<SuiPaginatedCoins> {
+    return this.publicClient.getCoins({ owner: address, coinType: token, limit: 10 });
+  }
+
+  public async getCoin(
+    tx: Transaction,
+    coin: string,
+    amount: bigint,
+    address: string,
+  ): Promise<TransactionResult | SuiTxObject> {
+    const coins = await this.getCoins(address, coin);
+
+    const objects: string[] = [];
+    let totalAmount = BigInt(0);
+
+    for (const coin of coins.data) {
+      totalAmount += BigInt(coin.balance);
+      objects.push(coin.coinObjectId);
+
+      if (totalAmount >= amount) {
+        break;
+      }
+    }
+
+    const firstObject = objects[0];
+
+    if (!firstObject) {
+      throw new Error(`[SuiIntentService.getCoin] Coin=${coin} not found for address=${address} and amount=${amount}`);
+    }
+
+    if (objects.length > 1) {
+      tx.mergeCoins(firstObject, objects.slice(1));
+    }
+
+    if (totalAmount === amount) {
+      return tx.object(firstObject);
+    }
+
+    return tx.splitCoins(firstObject, [amount]);
+  }
+
+  splitAddress(address: string): { packageId: string; moduleId: string; stateId: string } {
+    const parts = address.split('::');
+    if (parts.length === 3) {
+      if (parts[0] && parts[1] && parts[2]) {
+        return { packageId: parts[0], moduleId: parts[1], stateId: parts[2] };
+      }
+      throw new Error('Invalid package address');
+    }
+    throw new Error('Invalid package address');
+  }
+
+  public async getNativeCoin(tx: Transaction, amount: bigint): Promise<SuiNativeCoinResult> {
+    const coin = tx.splitCoins(tx.gas, [tx.pure.u64(amount)])[0];
+
+    if (coin === undefined) {
+      return Promise.reject(Error('[SuiIntentService.getNativeCoin] coin undefined'));
+    }
+
+    return coin;
+  }
+
+  static getAddressBCSBytes(suiaddress: string): Hex {
+    return toHex(bcs.Address.serialize(suiaddress).toBytes());
+  }
+
+  async getAssetManagerAddress(chainId: SuiChainKey): Promise<string> {
+    if (!this.assetManagerAddress) {
+      this.assetManagerAddress = await this.fetchAssetManagerAddress(chainId);
+    }
+    return this.assetManagerAddress.toString();
+  }
+
+  public async viewContract(
+    tx: Transaction,
+    packageId: string,
+    module: string,
+    functionName: string,
+    args: unknown[],
+    typeArgs: string[] = [],
+    sender: string,
+  ): Promise<SuiExecutionResult> {
+    tx.moveCall({
+      target: `${packageId}::${module}::${functionName}`,
+      arguments: args as TransactionArgument[],
+      typeArguments: typeArgs,
     });
 
-    return result.effects.gasUsed;
+    const txResults = await this.publicClient.devInspectTransactionBlock({
+      transactionBlock: tx,
+      sender,
+    });
+
+    if (txResults.results && txResults.results[0] !== undefined) {
+      return txResults.results[0] as SuiExecutionResult;
+    }
+    throw Error(`transaction didn't return any values: ${JSON.stringify(txResults, null, 2)}`);
   }
 
   /**
    * Deposit tokens to the spoke chain.
-   * @param {InjectiveSpokeDepositParams} params - The parameters for the deposit, including the user's address, token address, amount, and additional data.
-   * @param {SuiSpokeProviderType} spokeProvider - The provider for the spoke chain.
-   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
+   * @param {DepositParams<SuiChainKey, R>} params - The parameters for the deposit, including the user's address, token address, amount, and additional data.
    * @param {boolean} raw - The return type raw or just transaction hash
-   * @returns {Promise<TxReturnType<SuiSpokeProviderType, R>>} A promise that resolves to the transaction hash or raw transaction base64 string.
+   * @returns {Promise<TxReturnType<SuiChainKey, R>>} A promise that resolves to the transaction hash or raw transaction base64 string.
    */
-  public static async deposit<R extends boolean = false>(
-    params: SuiSpokeDepositParams,
-    spokeProvider: SuiSpokeProviderType,
-    hubProvider: EvmHubProvider,
-    raw?: R,
-  ): Promise<TxReturnType<SuiSpokeProviderType, R>> {
-    const userWallet: Address =
-      params.to ??
-      (await EvmWalletAbstraction.getUserHubWalletAddress(
-        spokeProvider.chainConfig.chain.id,
-        params.from,
-        hubProvider,
-      ));
+  async deposit<R extends boolean = false>(
+    params: DepositParams<SuiChainKey, R>,
+  ): Promise<TxReturnType<SuiChainKey, R>> {
+    const { srcAddress: from, srcChainKey: fromChainId, token, to, amount, data = '0x' } = params;
+    const isNative = isNativeToken(fromChainId, token);
+    const tx = new Transaction();
+    const coin: TransactionResult | SuiNativeCoinResult | SuiTxObject = isNative
+      ? await this.getNativeCoin(tx, amount)
+      : await this.getCoin(tx, token, amount, from);
+    const connection = this.splitAddress(spokeChainConfig[fromChainId].addresses.connection);
+    const assetManager = this.splitAddress(await this.getAssetManagerAddress(fromChainId));
 
-    return SuiSpokeService.transfer(
-      {
-        token: params.token,
-        recipient: userWallet,
-        amount: params.amount,
-        data: params.data,
-      },
-      spokeProvider,
-      raw,
-    );
+    // Call transfer function
+    tx.moveCall({
+      target: `${assetManager.packageId}::${assetManager.moduleId}::transfer`,
+      typeArguments: [token],
+      arguments: [
+        tx.object(assetManager.stateId),
+        tx.object(connection.stateId), // Connection state object
+        coin,
+        tx.pure(bcs.vector(bcs.u8()).serialize(fromHex(to, 'bytes'))),
+        tx.pure(bcs.vector(bcs.u8()).serialize(fromHex(data, 'bytes'))),
+      ],
+    });
+
+    if (params.raw === true) {
+      tx.setSender(from);
+      const transactionRaw = await tx.build({
+        client: this.publicClient,
+        onlyTransactionKind: true,
+      });
+
+      const transactionRawBase64String = Buffer.from(transactionRaw).toString('base64');
+
+      return {
+        from: from,
+        to: `${assetManager.packageId}::${assetManager.moduleId}::transfer`,
+        value: amount,
+        data: transactionRawBase64String,
+      } satisfies TxReturnType<SuiChainKey, true> as TxReturnType<SuiChainKey, R>;
+    }
+
+    return params.walletProvider.signAndExecuteTxn(tx) satisfies Promise<TxReturnType<SuiChainKey, false>> as Promise<
+      TxReturnType<SuiChainKey, R>
+    >;
+  }
+
+  public async sendMessage<Raw extends boolean>(
+    params: SendMessageParams<SuiChainKey, Raw>,
+  ): Promise<TxReturnType<SuiChainKey, Raw>> {
+    const { srcAddress: from, srcChainKey: fromChainId, dstChainKey: dstChainId, dstAddress, payload } = params;
+
+    const txb = new Transaction();
+    const connection = this.splitAddress(spokeChainConfig[fromChainId].addresses.connection);
+
+    const relayId = getIntentRelayChainId(dstChainId);
+    // Perform send message transaction
+    txb.moveCall({
+      target: `${connection.packageId}::${connection.moduleId}::send_message_ua`,
+      arguments: [
+        txb.object(connection.stateId),
+        txb.pure.u256(relayId),
+        txb.pure(bcs.vector(bcs.u8()).serialize(fromHex(dstAddress, 'bytes'))),
+        txb.pure(bcs.vector(bcs.u8()).serialize(fromHex(payload, 'bytes'))),
+      ],
+    });
+
+    if (params.raw === true) {
+      txb.setSender(from);
+      const transactionRaw = await txb.build({
+        client: this.publicClient,
+        onlyTransactionKind: true,
+      });
+      const transactionRawBase64String = Buffer.from(transactionRaw).toString('base64');
+
+      return {
+        from: from,
+        to: `${connection.packageId}::${connection.moduleId}::send_message_ua`,
+        value: 0n,
+        data: transactionRawBase64String,
+      } satisfies TxReturnType<SuiChainKey, true> as TxReturnType<SuiChainKey, Raw>;
+    }
+
+    return params.walletProvider.signAndExecuteTxn(txb) satisfies Promise<TxReturnType<SuiChainKey, false>> as Promise<
+      TxReturnType<SuiChainKey, Raw>
+    >;
+  }
+
+  /**
+   * Estimate the gas for a transaction.
+   * @param {EstimateGasParams<SuiChainKey>} params - The parameters for the gas estimation, including the from, to, value, and data.
+   * @returns {Promise<bigint>} The estimated computation cost.
+   */
+  public async estimateGas({ tx }: EstimateGasParams<SuiChainKey>): Promise<SuiGasEstimate> {
+    const txb = Transaction.fromKind(tx.data);
+    const result = await this.publicClient.devInspectTransactionBlock({
+      sender: tx.from,
+      transactionBlock: txb,
+    });
+
+    return result.effects.gasUsed;
   }
 
   /**
@@ -90,61 +257,28 @@ export class SuiSpokeService {
    * @param {SuiSpokeProvider} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The balance of the token.
    */
-  public static async getDeposit(token: string, spokeProvider: SuiSpokeProviderType): Promise<bigint> {
-    return spokeProvider.getBalance(await spokeProvider.walletProvider.getWalletAddress(), token);
-  }
-
-  /**
-   * Generate simulation parameters for deposit from SuiSpokeDepositParams.
-   * @param {SuiSpokeDepositParams} params - The deposit parameters.
-   * @param {SuiSpokeProviderType} spokeProvider - The provider for the spoke chain.
-   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
-   * @returns {Promise<DepositSimulationParams>} The simulation parameters.
-   */
-  public static async getSimulateDepositParams(
-    params: SuiSpokeDepositParams,
-    spokeProvider: SuiSpokeProviderType,
-    hubProvider: EvmHubProvider,
-  ): Promise<DepositSimulationParams> {
-    const to =
-      params.to ??
-      (await EvmWalletAbstraction.getUserHubWalletAddress(
-        spokeProvider.chainConfig.chain.id,
-        params.from,
-        hubProvider,
-      ));
-    const encoder = new TextEncoder();
-    return {
-      spokeChainID: spokeProvider.chainConfig.chain.id,
-      token: toHex(encoder.encode(params.token)),
-      from: encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
-      to,
-      amount: params.amount,
-      data: params.data,
-      srcAddress: toHex(encoder.encode(spokeProvider.chainConfig.addresses.originalAssetManager)),
-    };
-  }
-
-  /**
-   * Calls a contract on the spoke chain using the user's wallet.
-   * @param {HubAddress} from - The address of the user on the spoke chain.
-   * @param {Hex} payload - The payload to send to the contract.
-   * @param {SuiSpokeProviderType} spokeProvider - The provider for the spoke chain.
-   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
-   * @param {boolean} raw - The return type raw or just transaction hash
-   * @returns {Promise<TxReturnType<SuiSpokeProviderType, R>>} A promise that resolves to the transaction hash or raw transaction base64 string.
-   */
-  public static async callWallet<S extends SuiSpokeProviderType, R extends boolean = false>(
-    from: HubAddress,
-    payload: Hex,
-    spokeProvider: S,
-    hubProvider: EvmHubProvider,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
-    const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
-    return SuiSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw) satisfies Promise<
-      TxReturnType<SuiSpokeProviderType, R>
-    > as Promise<TxReturnType<S, R>>;
+  public async getDeposit(params: GetDepositParams<SuiChainKey>): Promise<bigint> {
+    const assetmanager = this.splitAddress(await this.getAssetManagerAddress(params.srcChainKey));
+    const tx = new Transaction();
+    const result = await this.viewContract(
+      tx,
+      assetmanager.packageId,
+      assetmanager.moduleId,
+      'get_token_balance',
+      [tx.object(assetmanager.stateId)],
+      [params.token],
+      params.srcAddress,
+    );
+    if (
+      !Array.isArray(result?.returnValues) ||
+      !Array.isArray(result.returnValues[0]) ||
+      result.returnValues[0][0] === undefined
+    ) {
+      throw new Error('Failed to get Balance');
+    }
+    const val: number[] = result.returnValues[0][0];
+    const str_u64 = bcs.U64.parse(Uint8Array.from(val));
+    return BigInt(str_u64);
   }
 
   /**
@@ -152,10 +286,10 @@ export class SuiSpokeService {
    * @param {SuiBaseSpokeProvider} suiSpokeProvider - The spoke provider.
    * @returns {Promise<string>} The asset manager config.
    */
-  public static async fetchAssetManagerAddress(suiSpokeProvider: SuiBaseSpokeProvider): Promise<string> {
-    const latestPackageId = await SuiSpokeService.fetchLatestAssetManagerPackageId(suiSpokeProvider);
+  public async fetchAssetManagerAddress(chainId: SuiChainKey): Promise<string> {
+    const latestPackageId = await this.fetchLatestAssetManagerPackageId(chainId);
 
-    return `${latestPackageId}::asset_manager::${suiSpokeProvider.chainConfig.addresses.assetManagerConfigId}`;
+    return `${latestPackageId}::asset_manager::${spokeChainConfig[chainId].addresses.assetManagerConfigId}`;
   }
 
   /**
@@ -163,9 +297,9 @@ export class SuiSpokeService {
    * @param {SuiBaseSpokeProvider} suiSpokeProvider - The spoke provider.
    * @returns {Promise<string>} The latest asset manager package id.
    */
-  public static async fetchLatestAssetManagerPackageId(provider: SuiBaseSpokeProvider): Promise<string> {
-    const configData = await provider.publicClient.getObject({
-      id: provider.chainConfig.addresses.assetManagerConfigId,
+  public async fetchLatestAssetManagerPackageId(chainId: SuiChainKey): Promise<string> {
+    const configData = await this.publicClient.getObject({
+      id: spokeChainConfig[chainId].addresses.assetManagerConfigId,
       options: {
         showContent: true,
       },
@@ -200,54 +334,33 @@ export class SuiSpokeService {
     return latestPackageId.toString();
   }
 
-  /**
-   * Transfers tokens to the hub chain.
-   * @param {SuiTransferToHubParams} params - The parameters for the transfer, including:
-   *   - {string} token: The address of the token to transfer (use address(0) for native token).
-   *   - {Uint8Array} recipient: The recipient address on the hub chain.
-   *   - {string} amount: The amount to transfer.
-   *   - {Uint8Array} [data=new Uint8Array([])]: Additional data for the transfer.
-   * @param {SuiSpokeProviderType} spokeProvider - The provider for the spoke chain.
-   * @param {boolean} raw - The return type raw or just transaction hash
-   * @returns {Promise<TxReturnType<SuiSpokeProviderType, R>>} A promise that resolves to the transaction hash or raw transaction base64 string.
-   */
-  private static async transfer<R extends boolean = false>(
-    { token, recipient, amount, data = '0x' }: SuiTransferToHubParams,
-    spokeProvider: SuiSpokeProviderType,
-    raw?: R,
-  ): Promise<TxReturnType<SuiSpokeProviderType, R>> {
-    return spokeProvider.transfer(
-      token,
-      amount,
-      fromHex(recipient, 'bytes'),
-      fromHex(data, 'bytes'),
-      spokeProvider,
-      raw,
-    );
-  }
+  public async waitForTransactionReceipt(
+    params: WaitForTxReceiptParams<SuiChainKey>,
+  ): Promise<Result<WaitForTxReceiptReturnType<SuiChainKey>>> {
+    try {
+      const result = await this.publicClient.waitForTransaction({
+        digest: params.txHash,
+        timeout: params.maxTimeoutMs ?? this.maxTimeoutMs,
+        pollInterval: params.pollingIntervalMs ?? this.pollingIntervalMs,
+      });
 
-  /**
-   * Sends a message to the hub chain.
-   * @param {bigint} dstChainId - The chain ID of the hub chain.
-   * @param {HubAddress} dstAddress - The address on the hub chain.
-   * @param {Hex} payload - The payload to send.
-   * @param {SuiSpokeProviderType} spokeProvider - The provider for the spoke chain.
-   * @param {boolean} raw - The return type raw or just transaction hash
-   * @returns {Promise<TxReturnType<SuiSpokeProviderType, R>>} A promise that resolves to the transaction hash or raw transaction base64 string.
-   */
-  private static async call<S extends SuiSpokeProviderType, R extends boolean = false>(
-    dstChainId: bigint,
-    dstAddress: HubAddress,
-    payload: Hex,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
-    return spokeProvider.sendMessage(
-      dstChainId,
-      fromHex(dstAddress, 'bytes'),
-      fromHex(payload, 'bytes'),
-      spokeProvider,
-      raw,
-    ) satisfies Promise<TxReturnType<S, R>> as Promise<TxReturnType<S, R>>;
+      if (result.effects?.status?.status === 'failure') {
+        return {
+          ok: true,
+          value: { status: 'failure', error: new Error(`Transaction failed: ${result.effects.status.error}`) },
+        };
+      }
+
+      return { ok: true, value: { status: 'success', receipt: result satisfies SuiRawTransactionReceipt } };
+    } catch (error) {
+      const isTimeout = error instanceof Error && error.message.includes('timeout');
+      return {
+        ok: true,
+        value: {
+          status: isTimeout ? 'timeout' : 'failure',
+          error: error instanceof Error ? error : new Error(String(error)),
+        },
+      };
+    }
   }
 }

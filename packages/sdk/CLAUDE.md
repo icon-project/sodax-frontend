@@ -110,9 +110,56 @@ When adding a new chain, follow an existing implementation (e.g., `SolanaSpokePr
 
 ### Error Handling
 
-- `Result<T>` wrapper for operation outcomes
-- Error discriminators: `isIntentSubmitTxFailedError()`, `isIntentCreationFailedError()`, etc.
-- Custom error codes per module (e.g., `SolverIntentErrorCode`, `MigrationErrorCode`)
+All async public methods on services return `Result<T>` (= `{ ok: true; value: T } | { ok: false; error: Error | unknown }`) and wrap their bodies in `try/catch`. The `Result` type is defined in `@sodax/types`.
+
+#### Result<T> propagation pattern
+
+Match the SpokeService pattern exactly:
+
+```ts
+// Inner sub-Result: forward as-is
+const sub = await this.subOperation();
+if (!sub.ok) return sub;
+
+// Outer catch: propagate raw
+try {
+  // ...
+} catch (error) {
+  return { ok: false, error };
+}
+```
+
+Do not re-wrap with module-specific error codes. There is no `MoneyMarketError<Code>` / `SwapError<Code>` taxonomy — callers branch on the error message or `.cause`, not a typed discriminator.
+
+#### Error message convention
+
+Two forms coexist, each with a specific use. **The rule of thumb: if the error comes from a `catch` block, it's CODE form. If it comes from an `invariant`-style guard before any async call, it's prose.**
+
+**CODE form — `new Error('<CODE>_FAILED', { cause?: underlying })`**
+
+Use for **phase tags**: errors that tag a specific stage of a multi-step operation (submit / wait / post-execution / simulation / relay / HTTP request). `<CODE>` is `SCREAMING_SNAKE_CASE`, ending in `_FAILED` or `_TIMEOUT`. Attach `{ cause }` whenever an underlying error exists (standard ES2022 `Error.cause`). Omit `cause` only when there is nothing lower-level to attach (e.g., a boolean simulation returned `false` without a wrapped throw).
+
+```ts
+// With cause (a lower-level error was caught and re-wrapped)
+return { ok: false, error: new Error('POST_EXECUTION_FAILED', { cause: result.error }) };
+return { ok: false, error: new Error('HTTP_REQUEST_FAILED', { cause: new Error(`HTTP ${status}: ${text}`) }) };
+
+// Without cause (the operation itself reported failure via a boolean/status, not via an exception)
+return { ok: false, error: new Error('SIMULATION_FAILED') };
+return { ok: false, error: new Error('RELAY_TIMEOUT') };
+```
+
+**Prose form — `new Error('<human sentence>')`**
+
+Use for **preconditions / invariants**: input validation, unsupported chain type, "not found" on config lookup, bad params, missing address. These have no underlying error to wrap — the prose *is* the information. Typically paired with `invariant()` or guarding an early-return inside a service method.
+
+```ts
+invariant(params.amount > 0n, 'Amount must be greater than 0');
+return { ok: false, error: new Error('Approve only supported for EVM/Stellar spoke chains') };
+return { ok: false, error: new Error('Pool has no hook configured') };
+```
+
+**Invariants via `invariant()`** from `tiny-invariant` stay prose — those throw inside the outer `try/catch` which catches them and forwards as-is via `return { ok: false, error }`.
 
 ## Module-Specific Notes
 

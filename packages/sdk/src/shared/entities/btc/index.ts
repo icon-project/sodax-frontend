@@ -1,2 +1,2 @@
-export * from './BitcoinSpokeProvider.js';
-export * from './RadfiProvider.js'
+export * from './RadfiProvider.js';
+export * from './btc-utils.js';

@@ -6,6 +6,8 @@ import {
   getAddressFromPrivateKey,
   makeContractCall,
   PostConditionMode,
+  privateKeyToPublic,
+  publicKeyToHex,
   type ClarityValue,
   type PostConditionModeName,
 } from '@stacks/transactions';
@@ -65,6 +67,7 @@ function toPostConditionModeName(mode?: PostConditionMode): PostConditionModeNam
 }
 
 export class StacksWalletProvider implements IStacksWalletProvider {
+  public readonly chainType = 'STACKS' as const;
   private readonly network: StacksNetwork;
   private readonly wallet: StacksWallet;
 
@@ -150,6 +153,13 @@ export class StacksWalletProvider implements IStacksWalletProvider {
     return this.wallet.address;
   }
 
+  async getPublicKey(): Promise<string> {
+    if (isStacksPkWallet(this.wallet)) {
+      return publicKeyToHex(privateKeyToPublic(this.wallet.privateKey));
+    }
+    throw new Error('getPublicKey is only supported for private key wallet configuration');
+  }
+
   async getBalance(address: string): Promise<bigint> {
     const url = `${this.network.client.baseUrl}/extended/v1/address/${address}/balances`;
     try {
@@ -164,4 +174,5 @@ export class StacksWalletProvider implements IStacksWalletProvider {
       return 0n;
     }
   }
+
 }

@@ -102,8 +102,7 @@ Quoting API supports different types of quotes:
 ```typescript
 import {
   Sodax,
-  BSC_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID,
+  ChainKeys,
   type SolverIntentQuoteRequest,
   type SolverErrorResponse
 } from "@sodax/sdk";
@@ -116,8 +115,8 @@ const arbWbtcToken = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f'; // Address of
 const quoteRequest = {
   token_src: bscEthToken,
   token_dst: arbWbtcToken,
-  token_src_blockchain_id: BSC_MAINNET_CHAIN_ID,
-  token_dst_blockchain_id: ARBITRUM_MAINNET_CHAIN_ID,
+  token_src_blockchain_id: ChainKeys.BSC_MAINNET,
+  token_dst_blockchain_id: ChainKeys.ARBITRUM_MAINNET,
   amount: 1000000000000000n, // 1 WETH (18 decimals)
   quote_type: 'exact_input',
 } satisfies SolverIntentQuoteRequest;
@@ -143,8 +142,8 @@ const createIntentParams = {
   minOutputAmount: BigInt(900000), // min amount you are expecting to receive
   deadline: BigInt(0), // Optional timestamp after which intent expires (0 = no deadline)
   allowPartialFill: false, // Whether the intent can be partially filled
-  srcChain: BSC_MAINNET_CHAIN_ID, // Chain ID where input tokens originate
-  dstChain: ARBITRUM_MAINNET_CHAIN_ID, // Chain ID where output tokens should be delivered
+  srcChain: ChainKeys.BSC_MAINNET, // Chain ID where input tokens originate
+  dstChain: ChainKeys.ARBITRUM_MAINNET, // Chain ID where output tokens should be delivered
   srcAddress: '0x..', // Source address (original address on spoke chain)
   dstAddress: '0x..', // Destination address (original address on spoke chain)
   solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
@@ -230,8 +229,7 @@ Before creating an intent, you need to ensure that the Asset Manager contract ha
 
 ```typescript
 import {
-  BSC_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID
+  ChainKeys
 } from "@sodax/sdk";
 
 const evmWalletAddress = await evmWalletProvider.getWalletAddress();
@@ -273,7 +271,7 @@ When using raw spoke providers, you can get raw approval transaction data:
 ```typescript
 import {
   EvmRawSpokeProvider,
-  BSC_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type Address
 } from "@sodax/sdk";
@@ -282,7 +280,7 @@ import {
 const userWalletAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' as Address;
 
 // Create raw spoke provider
-const bscChainConfig = spokeChainConfig[BSC_MAINNET_CHAIN_ID];
+const bscChainConfig = spokeChainConfig[ChainKeys.BSC_MAINNET];
 const bscRawSpokeProvider = new EvmRawSpokeProvider(userWalletAddress, bscChainConfig);
 
 // Get raw approval transaction
@@ -323,8 +321,7 @@ The `estimateGas` static method allows you to estimate the gas cost for raw tran
 import {
   SwapService,
   EvmRawSpokeProvider,
-  BSC_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type Address
 } from "@sodax/sdk";
@@ -353,7 +350,7 @@ if (createIntentResult.ok) {
 
 // Example: Estimate gas using raw spoke provider (backend scenario)
 const userWalletAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' as Address;
-const bscChainConfig = spokeChainConfig[BSC_MAINNET_CHAIN_ID];
+const bscChainConfig = spokeChainConfig[ChainKeys.BSC_MAINNET];
 const bscRawSpokeProvider = new EvmRawSpokeProvider(userWalletAddress, bscChainConfig);
 
 const createIntentResultWithRaw = await sodax.swaps.createIntent({
@@ -417,8 +414,7 @@ The `swap` method is the recommended way to perform a complete swap operation. I
 
 ```typescript
 import {
-  BSC_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID
+  ChainKeys
 } from "@sodax/sdk";
 
 /**
@@ -462,8 +458,8 @@ const limitOrderParams = {
   minOutputAmount: BigInt(900000), // min amount you are expecting to receive
   // deadline is omitted - will be automatically set to 0n
   allowPartialFill: false, // Whether the intent can be partially filled
-  srcChain: BSC_MAINNET_CHAIN_ID, // Chain ID where input tokens originate
-  dstChain: ARBITRUM_MAINNET_CHAIN_ID, // Chain ID where output tokens should be delivered
+  srcChain: ChainKeys.BSC_MAINNET, // Chain ID where input tokens originate
+  dstChain: ChainKeys.ARBITRUM_MAINNET, // Chain ID where output tokens should be delivered
   srcAddress: '0x..', // Source address (original address on spoke chain)
   dstAddress: '0x..', // Destination address (original address on spoke chain)
   solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
@@ -573,7 +569,7 @@ When using raw spoke providers (e.g., `EvmRawSpokeProvider`), you must pass `raw
 ```typescript
 import {
   EvmRawSpokeProvider,
-  ARBITRUM_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type Address
 } from "@sodax/sdk";
@@ -582,7 +578,7 @@ import {
 const userWalletAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' as Address;
 
 // Create raw spoke provider
-const arbChainConfig = spokeChainConfig[ARBITRUM_MAINNET_CHAIN_ID];
+const arbChainConfig = spokeChainConfig[ChainKeys.ARBITRUM_MAINNET];
 const arbRawSpokeProvider = new EvmRawSpokeProvider(userWalletAddress, arbChainConfig);
 
 // Create intent with raw spoke provider
@@ -772,7 +768,7 @@ When using raw spoke providers, you can get raw cancel transaction data:
 ```typescript
 import {
   EvmRawSpokeProvider,
-  BSC_MAINNET_CHAIN_ID,
+  ChainKeys,
   spokeChainConfig,
   type Address,
   type Intent
@@ -782,7 +778,7 @@ import {
 const userWalletAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb' as Address;
 
 // Create raw spoke provider
-const bscChainConfig = spokeChainConfig[BSC_MAINNET_CHAIN_ID];
+const bscChainConfig = spokeChainConfig[ChainKeys.BSC_MAINNET];
 const bscRawSpokeProvider = new EvmRawSpokeProvider(userWalletAddress, bscChainConfig);
 
 // Get intent (or use from previous createIntent response)
@@ -836,7 +832,7 @@ Get the intent delivery info about solved intent from the Relayer API. Packet da
 
 ```typescript
 import {
-  SONIC_MAINNET_CHAIN_ID,
+  ChainKeys,
   SolverIntentStatusCode,
   type SolverIntentStatusRequest,
   type PacketData,
@@ -856,7 +852,7 @@ if (statusResult.ok && statusResult.value.status === SolverIntentStatusCode.SOLV
   if (fill_tx_hash) {
     // Get the packet data for the solved intent on hub chain
     const packetResult = await sodax.swaps.getSolvedIntentPacket({
-      chainId: sodax.config.getHubChainConfig().chain.id // or SONIC_MAINNET_CHAIN_ID which represents hub chain used in Sodax
+      chainId: sodax.config.getHubChainConfig().chain.id // or ChainKeys.SONIC_MAINNET which represents hub chain used in Sodax
       fillTxHash: fill_tx_hash, // Fill transaction hash from getStatus
       timeout: 120000, // Optional: timeout in milliseconds (default: 120 seconds)
     });

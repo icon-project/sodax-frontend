@@ -1,4 +1,5 @@
 export * from './shared/index.js';
+export * from './shared/entities/Sodax.js';
 export * from './moneyMarket/index.js';
 export * from './swap/index.js';
 export * from './backendApi/index.js';

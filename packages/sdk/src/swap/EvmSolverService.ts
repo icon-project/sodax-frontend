@@ -3,6 +3,8 @@ import invariant from 'tiny-invariant';
 import {
   type Address,
   type GetLogsReturnType,
+  type HttpTransport,
+  type PublicClient,
   encodeAbiParameters,
   encodeFunctionData,
   encodePacked,
@@ -11,22 +13,21 @@ import {
   parseEventLogs,
 } from 'viem';
 import { Erc20Service } from '../shared/services/erc-20/Erc20Service.js';
-import type { EvmContractCall, PartnerFee } from '../shared/types.js';
-import { FEE_PERCENTAGE_SCALE } from '../shared/constants.js';
 import { calculatePercentageFeeAmount, encodeAddress, randomUint256 } from '../shared/utils/shared-utils.js';
 import { encodeContractCalls } from '../shared/utils/evm-utils.js';
-import { isPartnerFeeAmount, isPartnerFeePercentage, isIntentRelayChainId } from '../shared/guards.js';
+import { isPartnerFeeAmount, isPartnerFeePercentage } from '../shared/guards.js';
+import { IntentDataType, type CreateIntentParams, type FeeData, type Intent, type IntentData, type IntentState } from '../shared/types/intent-types.js';
 import {
-  type CreateIntentParams,
-  type FeeData,
-  type Intent,
-  type IntentData,
-  type IntentState,
-  IntentDataType,
-} from './index.js';
-import { SONIC_MAINNET_CHAIN_ID, getIntentRelayChainId, type Hash, type Hex, type SolverConfig } from '@sodax/types';
+  getIntentRelayChainId,
+  isHubChainKey,
+  type Hash,
+  type Hex,
+  type SolverConfig,
+  type EvmContractCall,
+  type PartnerFee,
+  FEE_PERCENTAGE_SCALE,
+} from '@sodax/types';
 import type { ConfigService } from '../shared/config/ConfigService.js';
-import type { EvmHubProvider } from '../shared/entities/Providers.js';
 import { CLPositionManagerAbi } from '@pancakeswap/infinity-sdk';
 export const IntentCreatedEventAbi = getAbiItem({ abi: IntentsAbi, name: 'IntentCreated' });
 export type IntentCreatedEventLog = GetLogsReturnType<typeof IntentCreatedEventAbi>[number];
@@ -49,19 +50,18 @@ export class EvmSolverService {
   public static constructCreateIntentData(
     createIntentParams: CreateIntentParams,
     creatorHubWalletAddress: Address,
-    solverConfig: SolverConfig,
-    configService: ConfigService,
+    config: ConfigService,
     fee: PartnerFee | undefined,
   ): [Hex, Intent, bigint] {
-    const inputToken =
-      createIntentParams.srcChain !== SONIC_MAINNET_CHAIN_ID
-        ? configService.getHubAssetInfo(createIntentParams.srcChain, createIntentParams.inputToken)?.asset
-        : (createIntentParams.inputToken as `0x${string}`);
+    const inputToken = !isHubChainKey(createIntentParams.srcChain)
+      ? config.getSpokeTokenFromOriginalAssetAddress(createIntentParams.srcChain, createIntentParams.inputToken)
+          ?.hubAsset
+      : (createIntentParams.inputToken as `0x${string}`);
 
-    const outputToken =
-      createIntentParams.dstChain !== SONIC_MAINNET_CHAIN_ID
-        ? configService.getHubAssetInfo(createIntentParams.dstChain, createIntentParams.outputToken)?.asset
-        : (createIntentParams.outputToken as `0x${string}`);
+    const outputToken = !isHubChainKey(createIntentParams.dstChain)
+      ? config.getSpokeTokenFromOriginalAssetAddress(createIntentParams.dstChain, createIntentParams.outputToken)
+          ?.hubAsset
+      : (createIntentParams.outputToken as `0x${string}`);
 
     invariant(
       inputToken,
@@ -75,7 +75,7 @@ export class EvmSolverService {
     const [feeData, feeAmount] = EvmSolverService.createIntentFeeData(fee, createIntentParams.inputAmount);
 
     const calls: EvmContractCall[] = [];
-    const intentsContract = solverConfig.intentsContract;
+    const intentsContract = config.solver.intentsContract;
     const intent = {
       ...createIntentParams,
       inputToken,
@@ -150,15 +150,11 @@ export class EvmSolverService {
    * Gets an intent from a transaction hash
    * @param {Hash} txHash - The transaction hash
    * @param {SolverConfig} solverConfig - The solver configuration
-   * @param {EvmHubProvider} hubProvider - The EVM hub provider
+   * @param {PublicClient} publicClient - The hub chain public client
    * @returns {Promise<Intent>} The intent
    */
-  public static async getIntent(
-    txHash: Hash,
-    solverConfig: SolverConfig,
-    hubProvider: EvmHubProvider,
-  ): Promise<Intent> {
-    const receipt = await hubProvider.publicClient.waitForTransactionReceipt({ hash: txHash });
+  public static async getIntent(txHash: Hash, config: ConfigService, publicClient: PublicClient<HttpTransport>): Promise<Intent> {
+    const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
     const logs: IntentCreatedEventLog[] = parseEventLogs({
       abi: IntentsAbi,
       eventName: 'IntentCreated',
@@ -167,12 +163,15 @@ export class EvmSolverService {
     });
 
     for (const log of logs) {
-      if (log.address.toLowerCase() === solverConfig.intentsContract.toLowerCase()) {
+      if (log.address.toLowerCase() === config.solver.intentsContract.toLowerCase()) {
         if (!log.args.intent) {
           continue;
         }
 
-        if (!isIntentRelayChainId(log.args.intent.srcChain) || !isIntentRelayChainId(log.args.intent.dstChain)) {
+        if (
+          !config.isValidIntentRelayChainId(log.args.intent.srcChain) ||
+          !config.isValidIntentRelayChainId(log.args.intent.dstChain)
+        ) {
           throw new Error(`Invalid intent relay chain id: ${log.args.intent.srcChain} or ${log.args.intent.dstChain}`);
         }
 
@@ -202,15 +201,15 @@ export class EvmSolverService {
    * Gets a filled intent from a transaction hash
    * @param {Hash} txHash - The transaction hash
    * @param {SolverConfig} solverConfig - The solver configuration
-   * @param {EvmHubProvider} hubProvider - The EVM hub provider
+   * @param {PublicClient} publicClient - The hub chain public client
    * @returns {Promise<IntentState>} The intent state
    */
   public static async getFilledIntent(
     txHash: Hash,
     solverConfig: SolverConfig,
-    hubProvider: EvmHubProvider,
+    publicClient: PublicClient<HttpTransport>,
   ): Promise<IntentState> {
-    const receipt = await hubProvider.publicClient.waitForTransactionReceipt({ hash: txHash });
+    const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
     const logs: IntentFilledEventLog[] = parseEventLogs({
       abi: IntentsAbi,
       eventName: 'IntentFilled',

@@ -1,41 +1,93 @@
-import { type Address, type Hex, fromHex } from 'viem';
-import type { EvmHubProvider } from '../../entities/index.js';
-import type { StellarSpokeProvider } from '../../entities/stellar/StellarSpokeProvider.js';
+import { fromHex, toHex, type Hex } from 'viem';
+import type {
+  EstimateGasParams,
+  GetDepositParams,
+  DepositParams,
+  SendMessageParams,
+  WaitForTxReceiptParams,
+  WaitForTxReceiptReturnType,
+} from '../../types/spoke-types.js';
+import type { ConfigService } from '../../config/ConfigService.js';
+import { CustomSorobanServer } from '../../entities/stellar/CustomSorobanServer.js';
+import { parseToStroops, sleep } from '../../utils/shared-utils.js';
 import {
-  CustomSorobanServer,
-  CustomStellarAccount,
-  type DepositSimulationParams,
-  type Result,
-  STELLAR_DEFAULT_TX_TIMEOUT_SECONDS,
-  StellarBaseSpokeProvider,
-  type StellarGasEstimate,
-  type StellarSpokeProviderType,
-  type TxReturnType,
-  type VerifyTxHashRawStellarConfig,
-  encodeAddress,
-  isStellarRawSpokeProvider,
-  parseToStroops,
-  sleep,
-} from '../../../index.js';
-import { EvmWalletAbstraction } from '../hub/index.js';
-import {
+  rpc,
+  Asset,
+  Contract,
+  Address,
   FeeBumpTransaction,
+  rpc as StellarRpc,
+  nativeToScVal,
+  TimeoutInfinite,
+  scValToBigInt,
   Horizon,
+  Account,
+  Operation,
+  SorobanRpc,
+  type xdr,
   type Transaction,
   TransactionBuilder,
-  rpc,
-  Operation,
-  Asset,
-  BASE_FEE,
 } from '@stellar/stellar-sdk';
 import {
-  STELLAR_MAINNET_CHAIN_ID,
+  ChainKeys,
   getIntentRelayChainId,
   spokeChainConfig,
-  type HttpUrl,
   type HubAddress,
-  type StellarRawTransaction,
+  type IStellarWalletProvider,
+  type Result,
+  type StellarChainKey,
+  type StellarGasEstimate,
+  type StellarSorobanTransactionReceipt,
+  type StellarSpokeChainConfig,
+  type TxReturnType,
+  type WalletProviderSlot,
 } from '@sodax/types';
+
+export class CustomStellarAccount {
+  private readonly accountId: string;
+  private sequenceNumber: bigint;
+  private readonly startingSequenceNumber: bigint;
+
+  constructor({ account_id, sequence }: { account_id: string; sequence: string }) {
+    this.accountId = account_id;
+    this.sequenceNumber = BigInt(sequence);
+    this.startingSequenceNumber = BigInt(sequence);
+  }
+
+  getSequenceNumber(): bigint {
+    return this.sequenceNumber;
+  }
+
+  getStartingSequenceNumber(): bigint {
+    return this.startingSequenceNumber;
+  }
+
+  getAccountId(): string {
+    return this.accountId;
+  }
+
+  getAccountClone(): Account {
+    return new Account(this.accountId, this.sequenceNumber.toString());
+  }
+
+  incrementSequenceNumber(): void {
+    this.sequenceNumber++;
+  }
+
+  decrementSequenceNumber(): void {
+    if (this.sequenceNumber > this.startingSequenceNumber) {
+      this.sequenceNumber--;
+    }
+
+    throw new Error(
+      `Sequence number cannot be decremented below the starting sequence number: ${this.startingSequenceNumber}`,
+    );
+  }
+
+  resetSequenceNumber(): void {
+    this.sequenceNumber = this.startingSequenceNumber;
+  }
+}
 
 export type StellarSpokeDepositParams = {
   from: Hex; // The address of the user on the spoke chain
@@ -52,77 +104,361 @@ export type StellarTransferToHubParams = {
   data: Hex;
 };
 
-export class StellarSpokeService {
-  private constructor() {}
+export type RequestTrustlineParams<S extends StellarChainKey, Raw extends boolean> = {
+  srcAddress: string;
+  srcChainKey: S;
+  token: string;
+  amount: bigint;
+} & WalletProviderSlot<S, Raw>;
 
-  /**
-   * Check if the user has sufficent trustline established for the token.
-   * @param token - The token address to check the trustline for.
-   * @param amount - The amount of tokens to check the trustline for.
-   * @param spokeProvider - The Stellar spoke provider.
-   * @returns True if the user has sufficent trustline established for the token, false otherwise.
-   */
-  public static async hasSufficientTrustline(
-    token: string,
-    amount: bigint,
-    spokeProvider: StellarSpokeProviderType,
-  ): Promise<boolean> {
-    // native token and legacy bnUSD do not require trustline
-    if (
-      token.toLowerCase() === spokeProvider.chainConfig.nativeToken.toLowerCase() ||
-      token.toLowerCase() ===
-        spokeChainConfig[STELLAR_MAINNET_CHAIN_ID].supportedTokens.legacybnUSD.address.toLowerCase()
-    ) {
-      return true;
+export class StellarSpokeService {
+  private readonly chainConfig: StellarSpokeChainConfig;
+  public readonly server: Horizon.Server;
+  public readonly sorobanServer: CustomSorobanServer;
+  private readonly pollingIntervalMs: number;
+  private readonly maxTimeoutMs: number;
+  private readonly priorityFee: string;
+  private readonly baseFee: string;
+
+  constructor(config: ConfigService) {
+    this.chainConfig = config.sodaxConfig.chains[ChainKeys.STELLAR_MAINNET];
+
+    // since we only support mainnet for now, we can hardcode the single stellar chain config
+    this.server = new Horizon.Server(this.chainConfig.horizonRpcUrl, {
+      allowHttp: true,
+    });
+    this.sorobanServer = new CustomSorobanServer(this.chainConfig.sorobanRpcUrl, {});
+    this.pollingIntervalMs = this.chainConfig.pollingConfig.pollingIntervalMs;
+    this.maxTimeoutMs = this.chainConfig.pollingConfig.maxTimeoutMs;
+    this.priorityFee = this.chainConfig.priorityFee;
+    this.baseFee = this.chainConfig.baseFee;
+  }
+
+  public async getBalance(params: GetDepositParams<StellarChainKey>): Promise<number> {
+    const contract = new Contract(spokeChainConfig[params.srcChainKey].addresses.assetManager);
+    const [network, sourceAccount] = await Promise.all([
+      this.sorobanServer.getNetwork(),
+      this.sorobanServer.getAccount(params.srcAddress),
+    ]);
+
+    const tx = new TransactionBuilder(sourceAccount, {
+      fee: this.baseFee,
+      networkPassphrase: network.passphrase,
+    })
+      .addOperation(contract.call('get_token_balance', nativeToScVal(params.srcAddress, { type: 'address' })))
+      .setTimeout(TimeoutInfinite)
+      .build();
+
+    const result = await this.sorobanServer.simulateTransaction(tx);
+
+    if (StellarRpc.Api.isSimulationError(result)) {
+      throw new Error('Failed to simulate transaction');
     }
 
-    const trustlineConfig = spokeProvider.chainConfig.trustlineConfigs.find(
-      config => config.contractId.toLowerCase() === token.toLowerCase(),
+    const resultValue = result.result;
+
+    if (resultValue) {
+      return Number(scValToBigInt(resultValue.retval));
+    }
+
+    throw new Error('result undefined');
+  }
+
+  public async buildPriorityStellarTransaction(
+    account: CustomStellarAccount,
+    network: StellarRpc.Api.GetNetworkResponse,
+    operation: xdr.Operation<Operation.InvokeHostFunction>,
+  ): Promise<[Transaction, StellarRpc.Api.SimulateTransactionResponse]> {
+    const simulationForFee = await this.sorobanServer.simulateTransaction(
+      new TransactionBuilder(account.getAccountClone(), {
+        fee: this.baseFee,
+        networkPassphrase: network.passphrase,
+      })
+        .addOperation(operation)
+        .setTimeout(this.maxTimeoutMs)
+        .build(),
     );
 
-    if (!trustlineConfig) {
-      throw new Error(`Trustline config not found for token: ${token}`);
+    if (!StellarRpc.Api.isSimulationSuccess(simulationForFee)) {
+      throw new Error(`Simulation error: ${JSON.stringify(simulationForFee)}`);
     }
 
-    const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
-    const { balances } = await spokeProvider.server.accounts().accountId(walletAddress).call();
+    // note new account info must be loaded because local account sequence increments for every created tx
+    const priorityTransaction = new TransactionBuilder(account.getAccountClone(), {
+      fee: (BigInt(simulationForFee.minResourceFee) + BigInt(this.priorityFee) + BigInt(this.baseFee)).toString(),
+      networkPassphrase: network.passphrase,
+    })
+      .addOperation(operation)
+      .setTimeout(this.maxTimeoutMs)
+      .build();
 
-    const tokenBalance = balances.find(
-      balance =>
-        'limit' in balance &&
-        'balance' in balance &&
-        'asset_code' in balance &&
-        trustlineConfig.assetCode.toLowerCase() === balance.asset_code?.toLowerCase() &&
-        'asset_issuer' in balance &&
-        trustlineConfig.assetIssuer.toLowerCase() === balance.asset_issuer?.toLowerCase(),
-    ) as Horizon.HorizonApi.BalanceLineAsset<'credit_alphanum4' | 'credit_alphanum12'> | undefined;
+    const simulation = await this.sorobanServer.simulateTransaction(priorityTransaction);
 
-    if (!tokenBalance) {
-      console.error(`No token balances found for token: ${token}`);
-      return false;
+    return [priorityTransaction, simulation];
+  }
+
+  public buildDepositCall<Raw extends boolean>(
+    params: DepositParams<StellarChainKey, Raw>,
+  ): xdr.Operation<Operation.InvokeHostFunction> {
+    const contract = new Contract(spokeChainConfig[params.srcChainKey].addresses.assetManager);
+    return contract.call(
+      'transfer',
+      nativeToScVal(Address.fromString(params.srcAddress), { type: 'address' }),
+      nativeToScVal(Address.fromString(params.token), {
+        type: 'address',
+      }),
+      nativeToScVal(BigInt(params.amount), { type: 'u128' }),
+      nativeToScVal(Buffer.from(fromHex(params.to, 'bytes')), { type: 'bytes' }),
+      nativeToScVal(Buffer.from(fromHex(params.data, 'bytes')), { type: 'bytes' }),
+    );
+  }
+
+  public buildSendMessageCall<Raw extends boolean>(
+    params: SendMessageParams<StellarChainKey, Raw>,
+  ): xdr.Operation<Operation.InvokeHostFunction> {
+    const connection = new Contract(this.chainConfig.addresses.connection);
+
+    return connection.call(
+      'send_message',
+      nativeToScVal(Address.fromString(params.srcAddress), { type: 'address' }),
+      nativeToScVal(BigInt(getIntentRelayChainId(params.dstChainKey)), { type: 'u128' }),
+      nativeToScVal(Buffer.from(fromHex(params.dstAddress, 'bytes')), { type: 'bytes' }),
+      nativeToScVal(Buffer.from(fromHex(params.payload, 'bytes')), { type: 'bytes' }),
+    );
+  }
+
+  public async sendMessage<Raw extends boolean>(
+    params: SendMessageParams<StellarChainKey, Raw>,
+  ): Promise<TxReturnType<StellarChainKey, Raw>> {
+    try {
+      const { srcAddress: from, srcChainKey: fromChainId } = params;
+      const [network, accountResponse] = await Promise.all([
+        this.sorobanServer.getNetwork(),
+        this.server.loadAccount(from),
+      ]);
+      const stellarAccount = new CustomStellarAccount(accountResponse);
+
+      const sendMessageCall = this.buildSendMessageCall(params);
+
+      const [rawPriorityTx, simulation] = await this.buildPriorityStellarTransaction(
+        stellarAccount,
+        network,
+        sendMessageCall,
+      );
+
+      const assembledPriorityTx = SorobanRpc.assembleTransaction(rawPriorityTx, simulation).build();
+
+      if (params.raw) {
+        const transactionXdr = rawPriorityTx.toXDR();
+
+        return {
+          from: from,
+          to: spokeChainConfig[fromChainId].addresses.assetManager,
+          value: 0n,
+          data: transactionXdr,
+        } satisfies TxReturnType<StellarChainKey, true> as TxReturnType<StellarChainKey, Raw>;
+      }
+
+      const walletProvider = params.walletProvider;
+      const hash = await this.submitOrRestoreAndRetry(
+        walletProvider,
+        stellarAccount,
+        network,
+        assembledPriorityTx,
+        sendMessageCall,
+        simulation,
+      );
+
+      return `${hash}` satisfies TxReturnType<StellarChainKey, false> as TxReturnType<StellarChainKey, Raw>;
+    } catch (error) {
+      console.error('Error during sendMessage:', error);
+      throw error;
+    }
+  }
+
+  private handleSendTransactionError(
+    response: SorobanRpc.Api.SendTransactionResponse,
+  ): SorobanRpc.Api.SendTransactionResponse {
+    if (response.status === 'ERROR') {
+      console.error(JSON.stringify(response, null, 2));
+      throw new Error(JSON.stringify(response, null, 2));
     }
 
-    const limit = parseToStroops(tokenBalance.limit);
-    const balance = parseToStroops(tokenBalance.balance);
-    const availableTrustAmount: bigint = limit - balance;
+    return response;
+  }
 
-    return availableTrustAmount >= amount;
+  public async signAndSendTransaction(
+    walletProvider: IStellarWalletProvider,
+    tx: Transaction | FeeBumpTransaction,
+    waitForTransaction = true,
+  ): Promise<string> {
+    const signedTransaction = await walletProvider.signTransaction(tx.toXDR());
+    const signedTx = TransactionBuilder.fromXDR(signedTransaction, tx.networkPassphrase) as Transaction;
+
+    const response = this.handleSendTransactionError(await this.sorobanServer.sendTransaction(signedTx));
+
+    if (waitForTransaction) {
+      const result = await this.waitForTransactionReceipt({
+        txHash: response.hash,
+        chainKey: ChainKeys.STELLAR_MAINNET,
+      });
+      if (result.ok && result.value.status === 'success') {
+        return response.hash;
+      }
+      const error = result.ok && 'error' in result.value ? result.value.error : new Error('Transaction failed');
+      throw error;
+    }
+
+    return response.hash;
+  }
+
+  public async submitOrRestoreAndRetry(
+    walletProvider: IStellarWalletProvider,
+    account: CustomStellarAccount,
+    network: StellarRpc.Api.GetNetworkResponse,
+    tx: Transaction,
+    operation: xdr.Operation<Operation.InvokeHostFunction>,
+    simulation?: StellarRpc.Api.SimulateTransactionResponse,
+  ): Promise<string> {
+    const initialSimulation = simulation ?? (await this.sorobanServer.simulateTransaction(tx));
+
+    if (!StellarRpc.Api.isSimulationSuccess(initialSimulation)) {
+      throw new Error(
+        `[StellarSpokeProvider.submitOrRestoreAndRetry] Simulation Failed: ${JSON.stringify(initialSimulation)}`,
+      );
+    }
+
+    // check if restore is needed
+    let restored = false;
+    if (StellarRpc.Api.isSimulationRestore(initialSimulation)) {
+      try {
+        await this.handleSimulationRestore(
+          walletProvider,
+          initialSimulation.restorePreamble.minResourceFee,
+          initialSimulation.restorePreamble.transactionData.build(),
+          account,
+          network,
+        );
+        restored = true;
+      } catch (error) {
+        throw new Error(
+          `[StellarSpokeProvider.submitOrRestoreAndRetry] Simulation Restore Failed: ${JSON.stringify(error)}`,
+        );
+      }
+    }
+
+    // if restore is not needed, submit the tx and return the response
+    if (!restored) {
+      return await this.signAndSendTransaction(walletProvider, tx);
+    }
+
+    // increment sequence number because restore tx used current sequence number
+    const newAccount = account.getAccountClone();
+    newAccount.incrementSequenceNumber();
+
+    return await this.signAndSendTransaction(
+      walletProvider,
+      new TransactionBuilder(newAccount, {
+        fee: this.baseFee,
+        networkPassphrase: network.passphrase,
+      })
+        .addOperation(operation)
+        .setTimeout(this.maxTimeoutMs)
+        .build(),
+    );
+  }
+
+  private async handleSimulationRestore(
+    walletProvider: IStellarWalletProvider,
+    minResourceFee: string,
+    transactionData: xdr.SorobanTransactionData,
+    account: CustomStellarAccount,
+    network: StellarRpc.Api.GetNetworkResponse,
+  ): Promise<string> {
+    // Build the restoration operation using the RPC server's hints.
+    const totalFee = (BigInt(this.baseFee) + BigInt(this.priorityFee) + BigInt(minResourceFee)).toString();
+
+    return this.signAndSendTransaction(
+      walletProvider,
+      new TransactionBuilder(account.getAccountClone(), { fee: totalFee })
+        .setNetworkPassphrase(network.passphrase)
+        .setSorobanData(transactionData)
+        .addOperation(Operation.restoreFootprint({}))
+        .setTimeout(this.maxTimeoutMs)
+        .build(),
+    );
+  }
+
+  static getAddressBCSBytes(stellaraddress: string): Hex {
+    return `0x${Address.fromString(stellaraddress).toScVal().toXDR('hex')}`;
+  }
+
+  static getTsWalletBytes(stellaraddress: string): Hex {
+    return toHex(Buffer.from(stellaraddress, 'hex'));
   }
 
   /**
-   * Check if the user has sufficent trustline established for the token.
+   * Deposit tokens to the spoke chain.
+   * @param {DepositParams<StellarChainKey, R>} params - The parameters for the deposit, including the user's address, token address, amount, and additional data.
+   * @param {boolean} raw - The return type raw or just transaction hash
+   * @returns {Promise<TxReturnType<StellarChainKey, R>>} A promise that resolves to the transaction hash or raw transaction.
+   */
+  public async deposit<R extends boolean = false>(
+    params: DepositParams<StellarChainKey, R>,
+  ): Promise<TxReturnType<StellarChainKey, R>> {
+    try {
+      const { srcAddress: from, srcChainKey: fromChainId, amount } = params;
+      const network = await this.sorobanServer.getNetwork();
+
+      const accountResponse = await this.server.loadAccount(from);
+      const stellarAccount = new CustomStellarAccount(accountResponse);
+
+      const depositCall = this.buildDepositCall(params);
+      const [rawPriorityTx, simulation] = await this.buildPriorityStellarTransaction(
+        stellarAccount,
+        network,
+        depositCall,
+      );
+
+      const assembledPriorityTx = SorobanRpc.assembleTransaction(rawPriorityTx, simulation).build();
+
+      if (params.raw) {
+        const transactionXdr = rawPriorityTx.toXDR();
+
+        return {
+          from: from,
+          to: spokeChainConfig[fromChainId].addresses.assetManager,
+          value: BigInt(amount),
+          data: transactionXdr,
+        } satisfies TxReturnType<StellarChainKey, true> as TxReturnType<StellarChainKey, R>;
+      }
+
+      const walletProvider = params.walletProvider;
+      const hash = await this.submitOrRestoreAndRetry(
+        walletProvider,
+        stellarAccount,
+        network,
+        assembledPriorityTx,
+        depositCall,
+        simulation,
+      );
+
+      return `${hash}` satisfies TxReturnType<StellarChainKey, false> as TxReturnType<StellarChainKey, R>;
+    } catch (error) {
+      console.error('Error during deposit:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if the user has sufficient trustline established for the token.
    * @param token - The token address to check the trustline for.
    * @param amount - The amount of tokens to check the trustline for.
-   * @param spokeProvider - The Stellar spoke provider.
-   * @returns True if the user has sufficent trustline established for the token, false otherwise.
+   * @param walletAddress - The Stellar wallet address.
+   * @returns True if the user has sufficient trustline established for the token, false otherwise.
    */
-  public static async walletHasSufficientTrustline(
-    token: string,
-    amount: bigint,
-    walletAddress: string,
-    horizonRpcUrl: HttpUrl,
-  ): Promise<boolean> {
-    const stellarChainConfig = spokeChainConfig[STELLAR_MAINNET_CHAIN_ID];
+  public async hasSufficientTrustline(token: string, amount: bigint, walletAddress: string): Promise<boolean> {
+    const stellarChainConfig = spokeChainConfig[ChainKeys.STELLAR_MAINNET];
     // native token and legacy bnUSD do not require trustline
     if (
       token.toLowerCase() === stellarChainConfig.nativeToken.toLowerCase() ||
@@ -139,8 +475,7 @@ export class StellarSpokeService {
       throw new Error(`Trustline config not found for token: ${token}`);
     }
 
-    const server = new Horizon.Server(horizonRpcUrl, { allowHttp: true });
-    const { balances } = await server.accounts().accountId(walletAddress).call();
+    const { balances } = await this.server.accounts().accountId(walletAddress).call();
 
     const tokenBalance = balances.find(
       balance =>
@@ -172,14 +507,12 @@ export class StellarSpokeService {
    * @param raw - Whether to return the raw transaction data.
    * @returns The transaction result.
    */
-  public static async requestTrustline<S extends StellarSpokeProviderType, R extends boolean = false>(
-    token: string,
-    amount: bigint,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
+  public async requestTrustline<Raw extends boolean>(
+    params: RequestTrustlineParams<StellarChainKey, Raw>,
+  ): Promise<TxReturnType<StellarChainKey, Raw>> {
     try {
-      const asset = spokeProvider.chainConfig.trustlineConfigs.find(
+      const { srcAddress: from, srcChainKey: fromChainId, token, amount } = params;
+      const asset = spokeChainConfig[fromChainId].trustlineConfigs.find(
         t => t.contractId.toLowerCase() === token.toLowerCase(),
       );
 
@@ -187,16 +520,15 @@ export class StellarSpokeService {
         throw new Error(`Asset ${token} not found. Cannot proceed with trustline.`);
       }
 
-      const [network, walletAddress] = await Promise.all([
-        spokeProvider.sorobanServer.getNetwork(),
-        spokeProvider.walletProvider.getWalletAddress(),
+      const [network, accountResponse] = await Promise.all([
+        this.sorobanServer.getNetwork(),
+        this.server.loadAccount(from),
       ]);
 
-      const accountResponse = await spokeProvider.server.loadAccount(walletAddress);
       const stellarAccount = new CustomStellarAccount(accountResponse);
 
       const transaction = new TransactionBuilder(stellarAccount.getAccountClone(), {
-        fee: BASE_FEE,
+        fee: this.baseFee,
         networkPassphrase: network.passphrase,
       })
         .addOperation(
@@ -204,23 +536,24 @@ export class StellarSpokeService {
             asset: new Asset(asset?.assetCode, asset?.assetIssuer),
           }),
         )
-        .setTimeout(STELLAR_DEFAULT_TX_TIMEOUT_SECONDS)
+        .setTimeout(this.maxTimeoutMs)
         .build();
 
-      if (raw || isStellarRawSpokeProvider(spokeProvider)) {
+      if (params.raw) {
         const transactionXdr = transaction.toXDR();
 
         return {
-          from: walletAddress,
-          to: spokeProvider.chainConfig.addresses.assetManager,
+          from: from,
+          to: spokeChainConfig[fromChainId].addresses.assetManager,
           value: amount,
           data: transactionXdr,
-        } satisfies TxReturnType<StellarSpokeProviderType, true> as TxReturnType<S, R>;
+        } satisfies TxReturnType<StellarChainKey, true> as TxReturnType<StellarChainKey, Raw>;
       }
 
-      const hash = await spokeProvider.signAndSendTransaction(transaction);
+      const walletProvider = params.walletProvider;
+      const hash = await this.signAndSendTransaction(walletProvider, transaction);
 
-      return `${hash}` satisfies TxReturnType<StellarSpokeProviderType, false> as TxReturnType<S, R>;
+      return `${hash}` satisfies TxReturnType<StellarChainKey, false> as TxReturnType<StellarChainKey, Raw>;
     } catch (error) {
       console.error('Error during requestTrustline:', error);
       throw error;
@@ -233,18 +566,15 @@ export class StellarSpokeService {
    * @param spokeProvider - The spoke provider.
    * @returns The estimated gas (minResourceFee) for the transaction.
    */
-  public static async estimateGas(
-    rawTx: StellarRawTransaction,
-    spokeProvider: StellarSpokeProviderType,
-  ): Promise<StellarGasEstimate> {
-    const network = await spokeProvider.sorobanServer.getNetwork();
-    let tx: Transaction | FeeBumpTransaction = TransactionBuilder.fromXDR(rawTx.data, network.passphrase);
+  public async estimateGas(params: EstimateGasParams<StellarChainKey>): Promise<StellarGasEstimate> {
+    const network = await this.sorobanServer.getNetwork();
+    let tx: Transaction | FeeBumpTransaction = TransactionBuilder.fromXDR(params.tx.data, network.passphrase);
 
     if (tx instanceof FeeBumpTransaction) {
       tx = tx.innerTransaction;
     }
 
-    const simulationForFee = await spokeProvider.sorobanServer.simulateTransaction(tx);
+    const simulationForFee = await this.sorobanServer.simulateTransaction(tx);
 
     if (!rpc.Api.isSimulationSuccess(simulationForFee)) {
       throw new Error(`Simulation error: ${JSON.stringify(simulationForFee)}`);
@@ -253,196 +583,51 @@ export class StellarSpokeService {
     return BigInt(simulationForFee.minResourceFee);
   }
 
-  public static async deposit<S extends StellarSpokeProviderType, R extends boolean = false>(
-    params: StellarSpokeDepositParams,
-    spokeProvider: S,
-    hubProvider: EvmHubProvider,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
-    const userWallet: Address =
-      params.to ??
-      (await EvmWalletAbstraction.getUserHubWalletAddress(
-        spokeProvider.chainConfig.chain.id,
-        encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
-        hubProvider,
-      ));
-
-    return StellarSpokeService.transfer(
-      {
-        token: params.token,
-        recipient: userWallet,
-        amount: params.amount,
-        data: params.data,
-      },
-      spokeProvider,
-      raw,
-    );
-  }
-
   /**
    * Get the balance of the token in the spoke chain asset manager.
    * @param token - The address of the token to get the balance of.
    * @param spokeProvider - The spoke provider.
    * @returns The balance of the token.
    */
-  public static async getDeposit(token: string, spokeProvider: StellarSpokeProviderType): Promise<bigint> {
-    return BigInt(await StellarBaseSpokeProvider.getBalance(token, spokeProvider));
+  public async getDeposit(params: GetDepositParams<StellarChainKey>): Promise<bigint> {
+    return BigInt(await this.getBalance(params));
   }
 
-  /**
-   * Generate simulation parameters for deposit from StellarSpokeDepositParams.
-   * @param {StellarSpokeDepositParams} params - The deposit parameters.
-   * @param {StellarSpokeProviderType} spokeProvider - The provider for the spoke chain.
-   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
-   * @returns {Promise<DepositSimulationParams>} The simulation parameters.
-   */
-  public static async getSimulateDepositParams(
-    params: StellarSpokeDepositParams,
-    spokeProvider: StellarSpokeProviderType,
-    hubProvider: EvmHubProvider,
-  ): Promise<DepositSimulationParams> {
-    const to =
-      params.to ??
-      (await EvmWalletAbstraction.getUserHubWalletAddress(
-        spokeProvider.chainConfig.chain.id,
-        encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
-        hubProvider,
-      ));
+  public async waitForTransactionReceipt(
+    params: WaitForTxReceiptParams<StellarChainKey>,
+  ): Promise<Result<WaitForTxReceiptReturnType<StellarChainKey>>> {
+    const { txHash, pollingIntervalMs = this.pollingIntervalMs, maxTimeoutMs = this.maxTimeoutMs } = params;
+    const maxAttempts = Math.round(maxTimeoutMs / pollingIntervalMs);
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const tx = await this.sorobanServer.getTransaction(txHash);
+
+        if (tx && tx.status === 'SUCCESS') {
+          return { ok: true, value: { status: 'success', receipt: tx satisfies StellarSorobanTransactionReceipt } };
+        }
+
+        if (tx && tx.status === 'FAILED') {
+          return {
+            ok: true,
+            value: { status: 'failure', error: new Error(`Transaction failed: ${JSON.stringify(tx)}`) },
+          };
+        }
+
+        if (tx && tx.status === 'NOT_FOUND') {
+          await sleep(pollingIntervalMs);
+          continue;
+        }
+
+        await sleep(pollingIntervalMs);
+      } catch {
+        await sleep(pollingIntervalMs);
+      }
+    }
 
     return {
-      spokeChainID: spokeProvider.chainConfig.chain.id,
-      token: encodeAddress(spokeProvider.chainConfig.chain.id, params.token),
-      from: encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
-      to,
-      amount: params.amount,
-      data: params.data,
-      srcAddress: encodeAddress(
-        spokeProvider.chainConfig.chain.id,
-        spokeProvider.chainConfig.addresses.assetManager as `0x${string}`,
-      ),
+      ok: true,
+      value: { status: 'timeout', error: new Error(`Transaction was not confirmed within ${maxAttempts} attempts`) },
     };
-  }
-
-  /**
-   * Calls a contract on the spoke chain using the user's wallet.
-   * @param from - The address of the user on the hub chain.
-   * @param payload - The payload to send to the contract.
-   * @param spokeProvider - The spoke provider.
-   * @param hubProvider - The hub provider.
-   * @param raw - Whether to return the raw transaction data.
-   * @returns The transaction result.
-   */
-  public static async callWallet<R extends boolean = false>(
-    from: HubAddress,
-    payload: Hex,
-    spokeProvider: StellarSpokeProviderType,
-    hubProvider: EvmHubProvider,
-    raw?: R,
-  ): Promise<TxReturnType<StellarSpokeProviderType, R>> {
-    const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
-    return StellarSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
-  }
-
-  private static async transfer<S extends StellarSpokeProviderType, R extends boolean = false>(
-    { token, recipient, amount, data = '0x' }: StellarTransferToHubParams,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
-    return await StellarBaseSpokeProvider.deposit(
-      token,
-      amount.toString(),
-      fromHex(recipient, 'bytes'),
-      fromHex(data, 'bytes'),
-      spokeProvider,
-      raw,
-    );
-  }
-
-  private static async call<S extends StellarSpokeProviderType, R extends boolean = false>(
-    dstChainId: bigint,
-    dstAddress: HubAddress,
-    payload: Hex,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
-    return await StellarBaseSpokeProvider.sendMessage(
-      dstChainId.toString(),
-      fromHex(dstAddress, 'bytes'),
-      fromHex(payload, 'bytes'),
-      spokeProvider,
-      raw,
-    );
-  }
-
-  public static async waitForTransactionRaw(params: VerifyTxHashRawStellarConfig): Promise<Result<boolean, Error>> {
-    const defaultParams = {
-      pollingTimeout: 750,
-      maxAttempts: 40,
-    } as const;
-    const { pollingTimeout, maxAttempts, sorobanRpcConfig, txHash } = { ...defaultParams, ...params };
-
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      try {
-        const sorobanServer = new CustomSorobanServer(sorobanRpcConfig.sorobanRpcUrl, sorobanRpcConfig.customHeaders);
-        const tx = await sorobanServer.getTransaction(txHash);
-
-        if (tx && tx.status === 'SUCCESS') {
-          return { ok: true, value: true }; // confirmed
-        }
-
-        if (tx && tx.status === 'FAILED') {
-          return { ok: false, error: new Error(`Transaction failed: ${JSON.stringify(tx)}`) };
-        }
-
-        if (tx && tx.status === 'NOT_FOUND') {
-          // not in a closed ledger yet → poll again
-          await sleep(pollingTimeout);
-          continue;
-        }
-
-        // unknown status or tx undefined -> poll again
-        await sleep(pollingTimeout);
-      } catch (err) {
-        // Network/transient error → back off and retry
-        await sleep(pollingTimeout);
-      }
-    }
-
-    return { ok: false, error: new Error('Transaction was not confirmed within the max attempts') };
-  }
-
-  public static async waitForTransaction(
-    spokeProvider: StellarSpokeProvider,
-    txHash: string,
-    pollingTimeout = 750,
-    maxAttempts = 40,
-  ): Promise<Result<boolean, Error>> {
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      try {
-        const tx = await spokeProvider.sorobanServer.getTransaction(txHash);
-
-        if (tx && tx.status === 'SUCCESS') {
-          return { ok: true, value: true }; // confirmed
-        }
-
-        if (tx && tx.status === 'FAILED') {
-          return { ok: false, error: new Error(`Transaction failed: ${JSON.stringify(tx)}`) };
-        }
-
-        if (tx && tx.status === 'NOT_FOUND') {
-          // not in a closed ledger yet → poll again
-          await sleep(pollingTimeout);
-          continue;
-        }
-
-        // unknown status or tx undefined -> poll again
-        await sleep(pollingTimeout);
-      } catch (err) {
-        // Network/transient error → back off and retry
-        await sleep(pollingTimeout);
-      }
-    }
-
-    return { ok: false, error: new Error('Transaction was not confirmed within the max attempts') };
   }
 }

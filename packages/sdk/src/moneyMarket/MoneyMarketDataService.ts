@@ -1,4 +1,3 @@
-import type { EvmHubProvider } from '../shared/entities/Providers.js';
 import type {
   AggregatedReserveData,
   BaseCurrencyInfo,
@@ -24,19 +23,27 @@ import {
 } from './math-utils/index.js';
 import { UiPoolDataProviderService } from './UiPoolDataProviderService.js';
 import { LendingPoolService } from './LendingPoolService.js';
-import type { Address, Erc20Token, SpokeChainId } from '@sodax/types';
-import { Erc20Service, HubService } from '../shared/index.js';
+import type { Address, SpokeChainKey } from '@sodax/types';
+import { Erc20Service, HubService, type Erc20Token, type HubProvider } from '../shared/index.js';
+import type { ConfigService } from '../shared/config/ConfigService.js';
 import { erc20Abi } from 'viem';
+
+export type MoneyMarketDataServiceConstructorParams = {
+  hubProvider: HubProvider;
+  config: ConfigService;
+};
 
 export class MoneyMarketDataService {
   public readonly uiPoolDataProviderService: UiPoolDataProviderService;
   public readonly lendingPoolService: LendingPoolService;
-  public readonly hubProvider: EvmHubProvider;
+  public readonly hubProvider: HubProvider;
+  public readonly config: ConfigService;
 
-  constructor(hubProvider: EvmHubProvider) {
+  constructor({ hubProvider, config }: MoneyMarketDataServiceConstructorParams) {
+    this.config = config;
     this.hubProvider = hubProvider;
-    this.uiPoolDataProviderService = new UiPoolDataProviderService(hubProvider);
-    this.lendingPoolService = new LendingPoolService(hubProvider);
+    this.uiPoolDataProviderService = new UiPoolDataProviderService({ hubProvider, config });
+    this.lendingPoolService = new LendingPoolService({ hubProvider, config });
   }
 
   public async getATokenData(aToken: Address): Promise<Erc20Token> {
@@ -48,6 +55,8 @@ export class MoneyMarketDataService {
    * @param aTokens - Array of aToken addresses
    * @param userAddress - User's hub wallet address to fetch balances for
    * @returns Promise<Map<Address, bigint>> - Map of aToken address to balance
+   *
+   * @namespace SodaxPublicUtils
    */
   public async getATokensBalances(aTokens: readonly Address[], userAddress: Address): Promise<Map<Address, bigint>> {
     const contracts = aTokens.map((aToken: Address) => ({
@@ -125,7 +134,7 @@ export class MoneyMarketDataService {
    * @returns {Promise<readonly [readonly UserReserveData[], number]>} - The user reserves data
    */
   public async getUserReservesData(
-    spokeChainId: SpokeChainId,
+    spokeChainId: SpokeChainKey,
     userAddress: string,
   ): Promise<readonly [readonly UserReserveData[], number]> {
     const hubWalletAddress = await HubService.getUserHubWalletAddress(userAddress, spokeChainId, this.hubProvider);
@@ -164,7 +173,7 @@ export class MoneyMarketDataService {
    * @returns {Promise<{userReserves: UserReserveDataHumanized[], userEmodeCategoryId: number}>} - The user reserves humanized
    */
   public async getUserReservesHumanized(
-    spokeChainId: SpokeChainId,
+    spokeChainId: SpokeChainKey,
     userAddress: string,
   ): Promise<{
     userReserves: UserReserveDataHumanized[];

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { ChainTypeArr, type ChainId, type ChainType } from '@sodax/types';
+import { ChainTypeArr, type SpokeChainKey, type ChainType } from '@sodax/types';
 
 import type { XAccount } from '../types/index.js';
 import { useXConnection } from './useXConnection.js';
@@ -17,21 +17,21 @@ import { getXChainType } from '../actions/index.js';
  * // Using ChainType (preferred)
  * const { address } = useXAccount('EVM');
  *
- * // Using ChainId
+ * // Using SpokeChainKey
  * const { address } = useXAccount('0xa86a.avax');
  *
  * // Returns: { address: string | undefined, xChainType: ChainType | undefined }
  * ```
  */
-function isChainType(chainIdentifier: ChainType | ChainId): chainIdentifier is ChainType {
+function isChainType(chainIdentifier: ChainType | SpokeChainKey): chainIdentifier is ChainType {
   return ChainTypeArr.includes(chainIdentifier as ChainType);
 }
 
-export function useXAccount(chainIdentifier?: ChainType | ChainId): XAccount {
+export function useXAccount(chainIdentifier?: ChainType | SpokeChainKey): XAccount {
   const resolvedChainType: ChainType | undefined = chainIdentifier
     ? isChainType(chainIdentifier)
       ? chainIdentifier
-      : getXChainType(chainIdentifier as ChainId)
+      : getXChainType(chainIdentifier as SpokeChainKey)
     : undefined;
 
   const xConnection = useXConnection(resolvedChainType);
