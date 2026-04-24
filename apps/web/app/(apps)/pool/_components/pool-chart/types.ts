@@ -34,13 +34,3 @@ export type PoolChartProps = {
   onMinPriceChange?: (price: number) => void;
   onMaxPriceChange?: (price: number) => void;
 };
-
-export type DragTarget = 'min' | 'max' | 'band';
-
-export type BandDragAnchor = {
-  anchorY: number;
-  anchorMin: number;
-  anchorMax: number;
-  span: number;
-  pxPerPrice: number;
-};

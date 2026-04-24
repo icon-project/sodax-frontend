@@ -5,7 +5,7 @@ import { MinusCircleIcon, PlusCircleIcon, Scan } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import type { BandDragAnchor, DragTarget, PoolChartProps, PricePoint, TickPoint } from './types';
+import type { PoolChartProps, PricePoint, TickPoint } from './types';
 import {
   C,
   DEFAULT_CURRENT_PRICE,
@@ -25,6 +25,7 @@ import { generatePairData, getInitialPriceBand } from './mock-data';
 import { parseLiquidityTickPoints, parseOhlcPricePoints } from './parsers';
 import { formatPairPrice, normalizeExternalPrice, roundPrice } from './price-utils';
 import { useChartZoomPan } from './hooks/use-chart-zoom-pan';
+import { useHandleDrag } from './hooks/use-handle-drag';
 
 const ALL_DATA = generatePairData(730);
 const LATEST_POINT: PricePoint = ALL_DATA[ALL_DATA.length - 1] ?? { time: Date.now(), price: DEFAULT_CURRENT_PRICE };
@@ -77,9 +78,6 @@ export function PoolChart({
   const [currentPrice, setCurrentPrice] = useState<number>(externalPairPrice ?? CURRENT_PRICE);
   const [tickData, setTickData] = useState<TickPoint[]>(TICK_DATA);
   const [loading, setLoading] = useState<boolean>(true);
-
-  const draggingRef = useRef<DragTarget | null>(null);
-  const dragDataRef = useRef<BandDragAnchor | null>(null);
 
   const INNER_W = width - ML.left - ML.right;
   const INNER_H = HEIGHT - ML.top - ML.bottom;
@@ -255,6 +253,21 @@ export function PoolChart({
   const clamp = useCallback((v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v)), []);
   const priceToY = useCallback((p: number) => clamp(yScale(p), 0, INNER_H), [yScale, INNER_H, clamp]);
 
+  const dragBehaviors = useHandleDrag({
+    enabled: INTERACTIVE,
+    svgRef: mainSvgRef,
+    deps: {
+      yScale,
+      currentPrice,
+      minPrice,
+      maxPrice,
+      innerH: INNER_H,
+      marginTop: ML.top,
+    },
+    setMinPrice,
+    setMaxPrice,
+  });
+
   useEffect(() => {
     void activeRange;
     if (INTERACTIVE) {
@@ -311,7 +324,8 @@ export function PoolChart({
 
     const g = svg.append('g').attr('class', 'chart-content').attr('transform', `translate(${ML.left},${ML.top})`);
 
-    g.append('rect')
+    const bandRect = g
+      .append<SVGRectElement>('rect')
       .attr('class', 'band-hit')
       .attr('x', 0)
       .attr('y', maxY)
@@ -320,6 +334,9 @@ export function PoolChart({
       .attr('fill', 'url(#g-band)')
       .attr('pointer-events', INTERACTIVE ? 'all' : 'none')
       .style('cursor', INTERACTIVE ? 'ns-resize' : 'default');
+    if (dragBehaviors) {
+      bandRect.call(dragBehaviors.bandDrag);
+    }
 
     const line = d3
       .line<PricePoint>()
@@ -443,8 +460,8 @@ export function PoolChart({
         const iconY = -iconH / 2;
 
         if (SHOW_MIN_MAX_HANDLES) {
-          grp
-            .append('rect')
+          const hitRect = grp
+            .append<SVGRectElement>('rect')
             .attr('x', iconX)
             .attr('y', iconY)
             .attr('width', iconW)
@@ -452,6 +469,9 @@ export function PoolChart({
             .attr('fill', 'transparent')
             .attr('class', label === 'MAX' ? 'hit-max' : 'hit-min')
             .style('cursor', 'ns-resize');
+          if (dragBehaviors) {
+            hitRect.call(label === 'MAX' ? dragBehaviors.maxDrag : dragBehaviors.minDrag);
+          }
         }
 
         if (SHOW_MIN_MAX_HANDLES) {
@@ -538,7 +558,7 @@ export function PoolChart({
     drawHLine({ y: maxY, color: C.minMaxLine, label: 'MAX', price: maxPrice });
     drawHLine({ y: cpY, color: C.nowLine, label: 'NOW', price: currentPrice, dashed: true });
     drawHLine({ y: minY, color: C.minMaxLine, label: 'MIN', price: minPrice });
-  }, [minPrice, maxPrice, currentPrice, INNER_W, INNER_H, xScale, yScale, visibleData, activeRange, priceToY]);
+  }, [minPrice, maxPrice, currentPrice, INNER_W, INNER_H, xScale, yScale, visibleData, activeRange, priceToY, dragBehaviors]);
 
   useEffect(() => {
     if (!tickSvgRef.current || TICK_IH <= 0) {
@@ -648,111 +668,6 @@ export function PoolChart({
       .attr('opacity', 0.95)
       .attr('clip-path', 'url(#clip-tick-in)');
   }, [minPrice, maxPrice, tickData, TICK_IW, TICK_IH, priceToY]);
-
-  useEffect(() => {
-    if (!INTERACTIVE) {
-      return;
-    }
-    const svgEl = mainSvgRef.current;
-    if (!svgEl) {
-      return;
-    }
-
-    const getHit = (event: Event): DragTarget | null => {
-      const target = event.target;
-      if (!(target instanceof SVGElement)) {
-        return null;
-      }
-      if (SHOW_MIN_MAX_HANDLES && target.classList.contains('hit-max')) {
-        return 'max';
-      }
-      if (SHOW_MIN_MAX_HANDLES && target.classList.contains('hit-min')) {
-        return 'min';
-      }
-      if (target.classList.contains('band-hit')) {
-        return 'band';
-      }
-      return null;
-    };
-
-    const getY = (event: MouseEvent | TouchEvent): number => {
-      const rect = svgEl.getBoundingClientRect();
-      const cy = 'touches' in event ? (event.touches[0]?.clientY ?? 0) : event.clientY;
-      return cy - rect.top - ML.top;
-    };
-
-    const onDown = (event: MouseEvent | TouchEvent): void => {
-      const hit = getHit(event);
-      if (!hit) {
-        return;
-      }
-
-      event.stopPropagation();
-      event.preventDefault();
-      draggingRef.current = hit;
-
-      if (hit === 'band') {
-        const [zoomedDomainMin, zoomedDomainMax] = yScale.domain();
-        dragDataRef.current = {
-          anchorY: getY(event),
-          anchorMin: minPrice,
-          anchorMax: maxPrice,
-          span: maxPrice - minPrice,
-          pxPerPrice: INNER_H / ((zoomedDomainMax ?? 0) - (zoomedDomainMin ?? 0)),
-        };
-      }
-    };
-
-    const onMove = (event: MouseEvent | TouchEvent): void => {
-      if (!draggingRef.current) {
-        return;
-      }
-
-      event.preventDefault();
-      const rect = svgEl.getBoundingClientRect();
-      const cy = 'touches' in event ? (event.touches[0]?.clientY ?? 0) : event.clientY;
-      const y = cy - rect.top - ML.top;
-      const p = yScale.invert(Math.max(0, Math.min(INNER_H, y)));
-
-      const dynamicPriceGap = Math.max(Math.abs(currentPrice) * 0.02, 0.000001);
-      const clampedPrice = Math.max(p, 0);
-      const minCap = Math.max(currentPrice - dynamicPriceGap, 0);
-
-      if (draggingRef.current === 'min') {
-        setMinPrice(roundPrice(Math.min(clampedPrice, minCap)));
-      } else if (draggingRef.current === 'max') {
-        setMaxPrice(roundPrice(Math.max(clampedPrice, currentPrice + dynamicPriceGap)));
-      } else if (draggingRef.current === 'band' && dragDataRef.current) {
-        const dd = dragDataRef.current;
-        const priceDelta = (y - dd.anchorY) / dd.pxPerPrice;
-        const newMin = Math.max(dd.anchorMin - priceDelta, 0);
-        setMinPrice(roundPrice(newMin));
-        setMaxPrice(roundPrice(newMin + dd.span));
-      }
-    };
-
-    const onUp = (): void => {
-      draggingRef.current = null;
-      dragDataRef.current = null;
-    };
-
-    svgEl.addEventListener('mousedown', onDown, { capture: true });
-    svgEl.addEventListener('mousemove', onMove, { capture: true, passive: false });
-    svgEl.addEventListener('mouseup', onUp, { capture: true });
-    svgEl.addEventListener('touchstart', onDown, { capture: true, passive: false });
-    svgEl.addEventListener('touchmove', onMove, { capture: true, passive: false });
-    svgEl.addEventListener('touchend', onUp, { capture: true });
-
-    return () => {
-      svgEl.removeEventListener('mousedown', onDown, { capture: true });
-      svgEl.removeEventListener('mousemove', onMove, { capture: true });
-      svgEl.removeEventListener('mouseup', onUp, { capture: true });
-      svgEl.removeEventListener('touchstart', onDown, { capture: true });
-      svgEl.removeEventListener('touchmove', onMove, { capture: true });
-      svgEl.removeEventListener('touchend', onUp, { capture: true });
-    };
-  }, [yScale, minPrice, maxPrice, currentPrice, INNER_H, setMinPrice, setMaxPrice]);
-
 
   return (
     <div className="w-full">
