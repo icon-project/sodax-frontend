@@ -40,40 +40,31 @@ export function WalletList({ chainType, onPick, onBack }: WalletListProps) {
 
       <ul className="divide-y divide-gray-200">
         {sorted.map(connector => (
-          <li key={connector.id}>
-            <button
-              type="button"
-              onClick={() => onPick(connector)}
-              disabled={!connector.isInstalled}
-              className="flex w-full items-center justify-between px-2 py-3 text-left hover:bg-gray-50 disabled:hover:bg-transparent"
-            >
-              <div className="flex items-center gap-3">
-                {connector.icon ? (
-                  <img src={connector.icon} alt="" className="h-6 w-6" />
-                ) : (
-                  <div className="h-6 w-6 rounded bg-gray-200" />
-                )}
-                <div>
-                  <div className="font-medium">{connector.name}</div>
-                  <div className="text-xs text-gray-500">id: {connector.id}</div>
-                </div>
-              </div>
-              {connector.isInstalled ? (
-                <span className="text-xs text-green-600">Installed</span>
-              ) : connector.installUrl ? (
-                <a
-                  href={connector.installUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:underline"
-                  onClick={e => e.stopPropagation()}
-                >
-                  Install →
-                </a>
-              ) : (
-                <span className="text-xs text-gray-400">Not installed</span>
-              )}
-            </button>
+          <li key={connector.id} className="flex items-center justify-between px-2 py-3">
+            <ConnectorInfo connector={connector} />
+            {connector.isInstalled ? (
+              <button
+                type="button"
+                onClick={() => onPick(connector)}
+                className="rounded bg-blue-600 px-3 py-1 text-xs font-medium text-white hover:bg-blue-700"
+              >
+                Connect
+              </button>
+            ) : connector.installUrl ? (
+              // Install link must live outside the row-level button — nested
+              // interactive content (<a href> inside <button>) violates HTML5
+              // and breaks some screen reader / browser combos.
+              <a
+                href={connector.installUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-blue-600 hover:underline"
+              >
+                Install →
+              </a>
+            ) : (
+              <span className="text-xs text-gray-400">Not installed</span>
+            )}
           </li>
         ))}
       </ul>
@@ -81,6 +72,22 @@ export function WalletList({ chainType, onPick, onBack }: WalletListProps) {
       <button type="button" onClick={onBack} className="text-sm text-blue-600 hover:underline">
         ← Back to chains
       </button>
+    </div>
+  );
+}
+
+function ConnectorInfo({ connector }: { connector: XConnector }) {
+  return (
+    <div className="flex items-center gap-3">
+      {connector.icon ? (
+        <img src={connector.icon} alt="" className="h-6 w-6" />
+      ) : (
+        <div className="h-6 w-6 rounded bg-gray-200" />
+      )}
+      <div>
+        <div className="font-medium">{connector.name}</div>
+        <div className="text-xs text-gray-500">id: {connector.id}</div>
+      </div>
     </div>
   );
 }

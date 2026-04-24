@@ -3,6 +3,7 @@ import type { ChainType } from '@sodax/types';
 import type { XAccount, XConnection } from '@/types/index.js';
 import type { XConnector } from '@/core/index.js';
 import { useXWalletStore } from '@/useXWalletStore.js';
+import { compareChainByOrder } from '@/utils/chainOrder.js';
 
 export type ConnectedChain = {
   chainType: ChainType;
@@ -11,16 +12,6 @@ export type ConnectedChain = {
   connectorName: string | undefined;
   connectorIcon: string | undefined;
 };
-
-function compareByOrder(a: ChainType, b: ChainType, order: readonly ChainType[]): number {
-  const ia = order.indexOf(a);
-  const ib = order.indexOf(b);
-  // Chains not in the supplied order fall to the bottom, alphabetical amongst themselves.
-  if (ia === -1 && ib === -1) return a.localeCompare(b);
-  if (ia === -1) return 1;
-  if (ib === -1) return -1;
-  return ia - ib;
-}
 
 export type UseConnectedChainsResult = {
   /** One entry per chain currently holding a connected account. */
@@ -71,7 +62,7 @@ export function buildConnectedChains(
   }
 
   if (order) {
-    chains.sort((a, b) => compareByOrder(a.chainType, b.chainType, order));
+    chains.sort((a, b) => compareChainByOrder(a.chainType, b.chainType, order));
   }
 
   return {

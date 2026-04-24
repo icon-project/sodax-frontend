@@ -1,4 +1,4 @@
-import { useWalletModal } from '@sodax/wallet-sdk-react';
+import { useWalletModal, type WalletModalState } from '@sodax/wallet-sdk-react';
 import { ChainList } from './ChainList';
 import { WalletList } from './WalletList';
 import { ConnectingView } from './ConnectingView';
@@ -79,7 +79,10 @@ export function WalletModal() {
   );
 }
 
-function titleFor(kind: string): string {
+// Typed against the union — adding a new `WalletModalState` variant
+// surfaces a compile-time switch-exhaustiveness error instead of
+// silently falling through to the default branch.
+function titleFor(kind: WalletModalState['kind']): string {
   switch (kind) {
     case 'chainSelect':
       return 'Select chain';
@@ -91,7 +94,7 @@ function titleFor(kind: string): string {
       return 'Connection failed';
     case 'success':
       return 'Connected';
-    default:
+    case 'closed':
       return '';
   }
 }

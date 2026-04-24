@@ -29,6 +29,13 @@ export class SolanaXConnector extends XConnector {
   public override get isInstalled(): boolean {
     // WalletReadyState string values from @solana/wallet-adapter-base.
     // Imported as string literals to avoid adding -base as an explicit dep.
+    //  - 'Installed'  — browser extension is injected (Phantom, Solflare, …).
+    //  - 'Loadable'   — adapter can bootstrap the wallet on demand (e.g. mobile
+    //                   deep-link adapters). The wallet isn't physically
+    //                   present, but `connect()` will load it on first use,
+    //                   so treat it as installed — otherwise the modal would
+    //                   show a spurious "Install" CTA for a wallet the user
+    //                   can actually connect to.
     const state = this.wallet?.readyState as string | undefined;
     return state === 'Installed' || state === 'Loadable';
   }

@@ -50,6 +50,13 @@ export type UseBatchDisconnectResult = {
   run: () => Promise<BatchDisconnectResult>;
   status: 'idle' | 'running' | 'done';
   result: BatchDisconnectResult | null;
+  /**
+   * Clears `status` and `result`. Calling `reset()` while `status === 'running'`
+   * only clears the observable state — the in-flight batch is NOT aborted
+   * (there is no cancellation signal). When the batch eventually resolves,
+   * `status` flips to `'done'` and `result` populates again. Typical usage
+   * is to call `reset()` only after `status === 'done'`.
+   */
   reset: () => void;
 };
 

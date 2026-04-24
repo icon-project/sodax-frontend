@@ -3,6 +3,7 @@ import { baseChainInfo, type ChainId, type ChainType } from '@sodax/types';
 import type { XAccount, XConnection } from '@/types/index.js';
 import { useXWalletStore } from '@/useXWalletStore.js';
 import { chainRegistry, type ChainServiceFactory } from '@/chainRegistry.js';
+import { compareChainByOrder } from '@/utils/chainOrder.js';
 
 export type ChainGroup = {
   chainType: ChainType;
@@ -33,15 +34,6 @@ function getChainIdsByType(chainType: ChainType): readonly ChainId[] {
   return ids;
 }
 
-function compareByOrder(a: ChainType, b: ChainType, order: readonly ChainType[]): number {
-  const ia = order.indexOf(a);
-  const ib = order.indexOf(b);
-  if (ia === -1 && ib === -1) return a.localeCompare(b);
-  if (ia === -1) return 1;
-  if (ib === -1) return -1;
-  return ia - ib;
-}
-
 /**
  * Pure helper — extracted for testability. Same logic as `useChainGroups` but
  * without React hook bindings.
@@ -53,7 +45,7 @@ export function buildChainGroups(
   order?: readonly ChainType[],
 ): ChainGroup[] {
   const chains = order
-    ? [...enabledChains].sort((a, b) => compareByOrder(a, b, order))
+    ? [...enabledChains].sort((a, b) => compareChainByOrder(a, b, order))
     : enabledChains;
 
   return chains.map(chainType => {
