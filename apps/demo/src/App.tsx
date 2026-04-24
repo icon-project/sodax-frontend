@@ -2,15 +2,8 @@ import React from 'react';
 import './App.css';
 
 import { createBrowserRouter, Outlet, RouterProvider, Navigate } from 'react-router';
-import MoneyMarketPage from './pages/money-market/page';
 import Header from './components/shared/header';
 import SolverPage from './pages/solver/page';
-import BridgePage from './pages/bridge/page';
-import StakingPage from './pages/staking/page';
-import PartnerFeeClaimPage from './pages/partner-fee-claim/page';
-import DexPage from './pages/dex/page';
-import RecoveryPage from './pages/recovery/page';
-
 
 const router = createBrowserRouter([
   {
@@ -24,35 +17,11 @@ const router = createBrowserRouter([
     children: [
       {
         path: '/',
-        element: <Navigate to="/money-market" />,
-      },
-      {
-        path: '/money-market/:chainId?',
-        element: <MoneyMarketPage />,
+        element: <Navigate to="/solver" />,
       },
       {
         path: '/solver',
         element: <SolverPage />,
-      },
-      {
-        path: '/bridge',
-        element: <BridgePage />,
-      },
-      {
-        path: '/staking',
-        element: <StakingPage />,
-      },
-      {
-        path: '/partner-fee-claim',
-        element: <PartnerFeeClaimPage />,
-      },
-      {
-        path: '/dex',
-        element: <DexPage />,
-      },
-      {
-        path: '/recovery',
-        element: <RecoveryPage />,
       },
     ],
   },

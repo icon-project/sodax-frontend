@@ -1,3 +1,4 @@
+/*
 // apps/demo/src/components/dex/UserPositions.tsx
 import React, { type JSX, useEffect, useState } from 'react';
 import type { Hash, PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
@@ -367,3 +368,4 @@ export function UserPositions({ userAddress, poolKey, poolData, spokeProvider }:
     </Card>
   );
 }
+*/

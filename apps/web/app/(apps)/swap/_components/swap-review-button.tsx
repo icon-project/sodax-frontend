@@ -8,13 +8,13 @@ import { MODAL_ID } from '@/stores/modal-store';
 import { useModalStore } from '@/stores/modal-store-provider';
 import { validateChainAddress } from '@/lib/utils';
 import type { UseQueryResult } from '@tanstack/react-query';
-import type { Result, SpokeProvider } from '@sodax/sdk';
+import type { Result } from '@sodax/sdk';
 import type { SolverIntentQuoteResponse, SolverErrorResponse } from '@sodax/sdk';
 import { useValidateStellarAccount } from '@/hooks/useValidateStellarAccount';
-import { STELLAR_MAINNET_CHAIN_ID } from '@sodax/types';
+import { STELLAR_MAINNET_CHAIN_ID, type IStellarWalletProvider } from '@sodax/types';
 import { useActivateStellarAccount } from '@/hooks/useActivateStellarAccount';
 import { Loader2 } from 'lucide-react';
-import { useRequestTrustline, useSpokeProvider } from '@sodax/dapp-kit';
+import { useRequestTrustline } from '@sodax/dapp-kit';
 import { useValidateStellarTrustline } from '@/hooks/useValidateStellarTrustline';
 import { getChainName } from '@/constants/chains';
 
@@ -66,7 +66,6 @@ export default function SwapReviewButton({
   );
 
   const destinationWalletProvider = useWalletProvider(outputToken.xChainId);
-  const destinationSpokeProvider = useSpokeProvider(outputToken.xChainId, destinationWalletProvider);
 
   const {
     requestTrustline,
@@ -80,7 +79,8 @@ export default function SwapReviewButton({
     await requestTrustline({
       token: outputToken.address,
       amount: quoteQuery.data.value.quoted_amount,
-      spokeProvider: destinationSpokeProvider as SpokeProvider,
+      srcChainKey: STELLAR_MAINNET_CHAIN_ID,
+      walletProvider: destinationWalletProvider as IStellarWalletProvider,
     });
   };
 

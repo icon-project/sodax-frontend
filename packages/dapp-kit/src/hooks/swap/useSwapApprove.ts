@@ -1,6 +1,7 @@
 import { useSodaxContext } from '../shared/useSodaxContext.js';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { CreateIntentParams, CreateLimitOrderParams, SpokeProvider } from '@sodax/sdk';
+import type { CreateIntentParams, CreateLimitOrderParams } from '@sodax/sdk';
+import type { GetWalletProviderType, SpokeChainKey } from '@sodax/types';
 
 interface UseApproveReturn {
   approve: ({ params }: { params: CreateIntentParams | CreateLimitOrderParams }) => Promise<boolean>;
@@ -9,23 +10,10 @@ interface UseApproveReturn {
   resetError: () => void;
 }
 
-/**
- * Hook for approving token spending for swap actions
- * @param params The parameters for the intent to approve spending for
- * @param spokeProvider The spoke provider instance for the chain
- * @returns Object containing approve function, loading state, error state and reset function
- * @example
- * ```tsx
- * const { approve, isLoading, error } = useApprove(token, spokeProvider);
- *
- * // Approve tokens for supply action
- * await approve({ amount: "100", action: "supply" });
- * ```
- */
-
-export function useSwapApprove(
+export function useSwapApprove<K extends SpokeChainKey>(
   params: CreateIntentParams | CreateLimitOrderParams | undefined,
-  spokeProvider: SpokeProvider | undefined,
+  srcChainKey: K | undefined,
+  walletProvider: GetWalletProviderType<K> | undefined,
 ): UseApproveReturn {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
@@ -37,16 +25,17 @@ export function useSwapApprove(
     reset: resetError,
   } = useMutation({
     mutationFn: async ({ params }: { params: CreateIntentParams | CreateLimitOrderParams | undefined }) => {
-      if (!spokeProvider) {
-        throw new Error('Spoke provider not found');
+      if (!srcChainKey || !walletProvider) {
+        throw new Error('Source chain key and wallet provider are required');
       }
       if (!params) {
         throw new Error('Swap Params not found');
       }
 
       const allowance = await sodax.swaps.approve({
-        intentParams: params,
-        spokeProvider,
+        params: params as CreateIntentParams,
+        raw: false,
+        walletProvider,
       });
       if (!allowance.ok) {
         throw new Error('Failed to approve input token');
@@ -54,15 +43,9 @@ export function useSwapApprove(
       return allowance.ok;
     },
     onSuccess: () => {
-      // Invalidate allowance query to refetch the new allowance
       queryClient.invalidateQueries({ queryKey: ['allowance', params] });
     },
   });
 
-  return {
-    approve,
-    isLoading: isPending,
-    error: error,
-    resetError,
-  };
+  return { approve, isLoading: isPending, error, resetError };
 }

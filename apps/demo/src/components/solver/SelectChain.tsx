@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { SpokeChainId } from '@sodax/types';
+import type { SpokeChainKey } from '@sodax/types';
 import { Label } from '@/components/ui/label';
 import { chainIdToChainName } from '@/constants';
 
@@ -14,9 +14,9 @@ export function SelectChain({
   id,
   label,
 }: {
-  chainList: SpokeChainId[];
-  value: SpokeChainId;
-  setChain: (value: SpokeChainId) => void;
+  chainList: SpokeChainKey[];
+  value: SpokeChainKey;
+  setChain: (value: SpokeChainKey) => void;
   placeholder?: string;
   id?: string;
   label?: string;
@@ -24,7 +24,7 @@ export function SelectChain({
   return (
     <div className="space-y-2">
       {label && <Label htmlFor={id}>{label}</Label>}
-      <Select value={value.toString()} onValueChange={v => setChain(v as SpokeChainId)}>
+      <Select value={value.toString()} onValueChange={v => setChain(v as SpokeChainKey)}>
         <SelectTrigger id={id}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>

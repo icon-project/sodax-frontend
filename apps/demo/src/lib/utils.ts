@@ -2,14 +2,12 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import BigNumber from 'bignumber.js';
 import {
-  hubAssets,
   moneyMarketSupportedTokens,
   SolverIntentStatusCode,
   supportedSpokeChains,
   spokeChainConfig,
   type XToken,
-  type SpokeChainId,
-  type ChainId,
+  type SpokeChainKey,
 } from '@sodax/sdk';
 import { getChainUI } from './chains';
 
@@ -198,19 +196,6 @@ export function formatCompactNumber(value: string | number | bigint): string {
   return num.toFixed(4);
 }
 
-export function getSpokeTokenAddressByVault(chainId: SpokeChainId, vaultAddress: string): string | undefined {
-  const chainAssets = hubAssets[chainId];
-  if (!chainAssets) return undefined;
-
-  // The KEY in hubAssets is the spoke token address!
-  for (const [spokeTokenAddress, info] of Object.entries(chainAssets)) {
-    if (info.vault.toLowerCase() === vaultAddress.toLowerCase()) {
-      return spokeTokenAddress;
-    }
-  }
-  return undefined;
-}
-
 export function getReadableTxError(error: unknown): string {
   if (!error || typeof error !== 'object') {
     return 'Something went wrong. Please try again.';
@@ -229,11 +214,11 @@ export function getReadableTxError(error: unknown): string {
   return 'Transaction failed. Please try again.';
 }
 
-export function createDexTokenIdsStorageKey(chainId: SpokeChainId, userAddress: string): string {
+export function createDexTokenIdsStorageKey(chainId: SpokeChainKey, userAddress: string): string {
   return `sodax-dex-positions-${chainId}-${userAddress}`;
 }
 
-export function saveTokenIdToLocalStorage(userAddress: string, chainId: SpokeChainId, tokenId: string): void {
+export function saveTokenIdToLocalStorage(userAddress: string, chainId: SpokeChainKey, tokenId: string): void {
   const cleanId = tokenId.trim().toLowerCase();
   const positions = getTokenIdsFromLocalStorage(chainId, userAddress);
 
@@ -247,7 +232,7 @@ export function saveTokenIdToLocalStorage(userAddress: string, chainId: SpokeCha
   }
 }
 
-export function getTokenIdsFromLocalStorage(chainId: SpokeChainId, userAddress: string): string[] {
+export function getTokenIdsFromLocalStorage(chainId: SpokeChainKey, userAddress: string): string[] {
   const positions = localStorage.getItem(createDexTokenIdsStorageKey(chainId, userAddress));
   if (!positions) {
     return [];
@@ -255,7 +240,7 @@ export function getTokenIdsFromLocalStorage(chainId: SpokeChainId, userAddress: 
   return positions.split(',').map(v => v.trim());
 }
 
-export function removeTokenIdFromLocalStorage(chainId: SpokeChainId, userAddress: string, tokenId: string): void {
+export function removeTokenIdFromLocalStorage(chainId: SpokeChainKey, userAddress: string, tokenId: string): void {
   const positions = getTokenIdsFromLocalStorage(chainId, userAddress);
   if (!positions) {
     return;
@@ -288,12 +273,12 @@ export function getChainsWithThisToken(token: XToken) {
   );
 }
 
-export function getTokenOnChain(symbol: string, chainId: ChainId): XToken | undefined {
+export function getTokenOnChain(symbol: string, chainId: SpokeChainKey): XToken | undefined {
   const normalizedChainId = String(chainId).toLowerCase();
 
   return Object.values(moneyMarketSupportedTokens)
     .flat()
-    .find(t => t.symbol === symbol && t.xChainId === normalizedChainId);
+    .find(t => t.symbol === symbol && t.chainKey === normalizedChainId);
 }
 
 export const getChainExplorerTxUrl = (chainId: string, txHash: string): string | undefined => {
@@ -504,8 +489,8 @@ export function getMmErrorText(error: unknown): string {
  * Gets the native token symbol for a given chain ID (e.g., ETH for Arbitrum, AVAX for Avalanche).
  * Used for displaying gas fee requirements to users.
  */
-export function getNativeTokenSymbol(chainId: ChainId): string {
-  const config = spokeChainConfig[chainId as SpokeChainId];
+export function getNativeTokenSymbol(chainId: SpokeChainKey): string {
+  const config = spokeChainConfig[chainId as SpokeChainKey];
   if (!config) return 'native token';
 
   // Find the token with address matching nativeToken (0x0000... for EVM chains)

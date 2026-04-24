@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import type { StateCreator } from 'zustand';
-import type { ChainId } from '@sodax/types';
+import { ChainKeys, type SpokeChainKey } from '@sodax/types';
 
 export enum SolverEnv {
   Production = 'Production',
@@ -10,8 +10,8 @@ export enum SolverEnv {
 }
 
 type AppStore = {
-  selectedChainId: ChainId;
-  selectChainId: (chainId: ChainId) => void;
+  selectedChainId: SpokeChainKey;
+  selectChainId: (chainId: SpokeChainKey) => void;
   isWalletModalOpen: boolean;
   openWalletModal: () => void;
   closeWalletModal: () => void;
@@ -21,8 +21,8 @@ type AppStore = {
 
 export const useAppStore = create<AppStore>()(
   immer((set, get) => ({
-    selectedChainId: 'stacks',
-    selectChainId: (chainId: ChainId) => set({ selectedChainId: chainId }),
+    selectedChainId: ChainKeys.STACKS_MAINNET,
+    selectChainId: (chainId: SpokeChainKey) => set({ selectedChainId: chainId }),
     isWalletModalOpen: false,
     openWalletModal: () => set({ isWalletModalOpen: true }),
     closeWalletModal: () => set({ isWalletModalOpen: false }),

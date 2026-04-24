@@ -19,7 +19,6 @@ import {
   type CreateIntentParams,
   getSupportedSolverTokens,
   type SolverIntentQuoteRequest,
-  StellarSpokeProvider,
 } from '@sodax/sdk';
 import type { SubmitSwapTxRequest, SwapIntentData } from '@sodax/types';
 import BigNumber from 'bignumber.js';
@@ -27,7 +26,6 @@ import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
 import {
   useQuote,
-  useSpokeProvider,
   useSwapAllowance,
   useSwapApprove,
   useSwap,
@@ -49,20 +47,17 @@ import {
   useXService,
 } from '@sodax/wallet-sdk-react';
 import {
-  type ChainId,
-  POLYGON_MAINNET_CHAIN_ID,
-  type Token,
-  type SpokeChainId,
-  type ChainType,
-  ICON_MAINNET_CHAIN_ID,
-  STELLAR_MAINNET_CHAIN_ID,
-  BITCOIN_MAINNET_CHAIN_ID,
+  type SpokeChainKey,
   type XToken,
+  type ChainType,
+  type IBitcoinWalletProvider,
+  type IStellarWalletProvider,
+  type StellarChainKey,
+  ChainKeys,
 } from '@sodax/types';
 import type { Order } from '@/components/solver/OrderStatus';
 import { useAppStore } from '@/zustand/useAppStore';
 import { BitcoinSetupPanel } from '@/components/bitcoin/BitcoinSetupPanel';
-import { isBitcoinSpokeProvider, type BitcoinSpokeProvider } from '@sodax/sdk';
 
 const SUBMIT_TX_API_CONFIG = { baseURL: 'https://canary-api.sodax.com/v1/bes' } as const;
 
@@ -73,22 +68,21 @@ export default function SwapCard({
 }) {
   const { sodax } = useSodaxContext();
   //chain and account states
-  const [sourceChain, setSourceChain] = useState<SpokeChainId>(ICON_MAINNET_CHAIN_ID);
+  const [sourceChain, setSourceChain] = useState<SpokeChainKey>(ChainKeys.ICON_MAINNET);
   const sourceAccount = useXAccount(sourceChain);
   const sourceWalletProvider = useWalletProvider(sourceChain);
-  const sourceProvider = useSpokeProvider(sourceChain, sourceWalletProvider);
-  const [destChain, setDestChain] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
+  const [destChain, setDestChain] = useState<SpokeChainKey>(ChainKeys.POLYGON_MAINNET);
   const destAccount = useXAccount(destChain);
+  const destWalletProvider = useWalletProvider(destChain);
   const { openWalletModal } = useAppStore();
-  const { mutateAsync: swap } = useSwap(sourceProvider);
-  const [sourceToken, setSourceToken] = useState<Token | undefined>(getSupportedSolverTokens(ICON_MAINNET_CHAIN_ID)[0]);
-  const [destToken, setDestToken] = useState<Token | undefined>(getSupportedSolverTokens(POLYGON_MAINNET_CHAIN_ID)[0]);
+  const { mutateAsync: swap } = useSwap(sourceChain, sourceWalletProvider);
+  const [sourceToken, setSourceToken] = useState<XToken | undefined>(getSupportedSolverTokens(ChainKeys.ICON_MAINNET)[0]);
+  const [destToken, setDestToken] = useState<XToken | undefined>(getSupportedSolverTokens(ChainKeys.POLYGON_MAINNET)[0]);
   const [sourceAmount, setSourceAmount] = useState<string>('');
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(intentOrderPayload, sourceProvider);
-  const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, sourceProvider);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(intentOrderPayload, sourceChain, sourceWalletProvider);
+  const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, sourceChain, sourceWalletProvider);
   const supportedSpokeChains = sodax.config.getSupportedSpokeChains();
-  const destProvider = useSpokeProvider(destChain, useWalletProvider(destChain));
   const {
     data: hasSufficientTrustline,
     isPending: isTrustlineLoading,
@@ -96,8 +90,8 @@ export default function SwapCard({
   } = useStellarTrustlineCheck(
     intentOrderPayload?.outputToken,
     BigInt(intentOrderPayload?.minOutputAmount ?? 0n),
-    destProvider,
-    intentOrderPayload?.dstChain,
+    intentOrderPayload?.dstChainKey,
+    destChain === ChainKeys.STELLAR_MAINNET ? (destWalletProvider as IStellarWalletProvider | undefined) : undefined,
   );
   if (trustlineError) {
     console.error('trustlineError', trustlineError);
@@ -135,12 +129,12 @@ export default function SwapCard({
     setDestToken(sourceToken);
   };
 
-  const onSrcChainChange = (chainId: SpokeChainId) => {
+  const onSrcChainChange = (chainId: SpokeChainKey) => {
     setSourceChain(chainId);
     setSourceToken(getSupportedSolverTokens(chainId)[0]);
   };
 
-  const onDestChainChange = (chainId: SpokeChainId) => {
+  const onDestChainChange = (chainId: SpokeChainKey) => {
     setDestChain(chainId);
     setDestToken(getSupportedSolverTokens(chainId)[0]);
   };
@@ -166,18 +160,16 @@ export default function SwapCard({
   const destTokenBalance = destBalances?.[destToken?.address ?? ''] ?? 0n;
 
   // Bitcoin trading wallet balances
-  const sourceTradingAddress = sourceChain === BITCOIN_MAINNET_CHAIN_ID && sourceAccount.address
+  const sourceTradingAddress = sourceChain === ChainKeys.BITCOIN_MAINNET && sourceAccount.address
     ? loadRadfiSession(sourceAccount.address)?.tradingAddress : undefined;
-  const destTradingAddress = destChain === BITCOIN_MAINNET_CHAIN_ID && destAccount.address
+  const destTradingAddress = destChain === ChainKeys.BITCOIN_MAINNET && destAccount.address
     ? loadRadfiSession(destAccount.address)?.tradingAddress : undefined;
-  const { data: srcTradingBal } = useTradingWalletBalance(
-    sourceChain === BITCOIN_MAINNET_CHAIN_ID && sourceProvider && isBitcoinSpokeProvider(sourceProvider) ? sourceProvider : undefined,
-    sourceTradingAddress,
-  );
-  const { data: destTradingBal } = useTradingWalletBalance(
-    destChain === BITCOIN_MAINNET_CHAIN_ID && destProvider && isBitcoinSpokeProvider(destProvider) ? destProvider : undefined,
-    destTradingAddress,
-  );
+  const sourceBitcoinWallet =
+    sourceChain === ChainKeys.BITCOIN_MAINNET ? (sourceWalletProvider as IBitcoinWalletProvider | undefined) : undefined;
+  const destBitcoinWallet =
+    destChain === ChainKeys.BITCOIN_MAINNET ? (destWalletProvider as IBitcoinWalletProvider | undefined) : undefined;
+  const { data: srcTradingBal } = useTradingWalletBalance(sourceBitcoinWallet, sourceTradingAddress);
+  const { data: destTradingBal } = useTradingWalletBalance(destBitcoinWallet, destTradingAddress);
 
   const payload = useMemo(() => {
     if (!sourceToken || !destToken) {
@@ -251,8 +243,8 @@ export default function SwapCard({
       return;
     }
 
-    if (!sourceProvider) {
-      console.error('sourceProvider or destProvider undefined');
+    if (!sourceWalletProvider) {
+      console.error('sourceWalletProvider undefined');
       return;
     }
 
@@ -263,10 +255,10 @@ export default function SwapCard({
       minOutputAmount: BigInt(minOutputAmount.toFixed(0)), // The minimum amount of output tokens to accept
       deadline: BigInt(Math.floor(Date.now() / 1000) + 60 * 5), // Optional timestamp after which intent expires (0 = no deadline)
       allowPartialFill: false, // Whether the intent can be partially filled
-      srcChain: sourceChain, // Chain ID where input tokens originate
-      dstChain: destChain, // Chain ID where output tokens should be delivered
-      srcAddress: await sourceProvider.walletProvider.getWalletAddress(), // Source address (original address on spoke chain)
-      dstAddress: destChain === BITCOIN_MAINNET_CHAIN_ID && destAccount.address
+      srcChainKey: sourceChain, // Chain ID where input tokens originate
+      dstChainKey: destChain, // Chain ID where output tokens should be delivered
+      srcAddress: await sourceWalletProvider.getWalletAddress(), // Source address (original address on spoke chain)
+      dstAddress: destChain === ChainKeys.BITCOIN_MAINNET && destAccount.address
         ? (loadRadfiSession(destAccount.address)?.tradingAddress || destAccount.address)
         : destAccount.address, // Bitcoin: prefer trading wallet, others: personal wallet
       solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
@@ -276,19 +268,20 @@ export default function SwapCard({
     setIntentOrderPayload(createIntentParams);
   };
 
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceChain as ChainId);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceChain as SpokeChainKey);
 
   const handleSubmitTxSwap = async (intentOrderPayload: CreateIntentParams) => {
-    if (!sourceProvider) {
-      console.error('sourceProvider undefined');
+    if (!sourceWalletProvider) {
+      console.error('sourceWalletProvider undefined');
       return;
     }
 
     setOpen(false);
 
     const createIntentResult = await sodax.swaps.createIntent({
-      intentParams: intentOrderPayload,
-      spokeProvider: sourceProvider,
+      params: intentOrderPayload,
+      raw: false,
+      walletProvider: sourceWalletProvider,
     });
 
     if (!createIntentResult.ok) {
@@ -317,8 +310,8 @@ export default function SwapCard({
     };
 
     const request: SubmitSwapTxRequest = {
-      txHash: spokeTxHash,
-      srcChainId: sourceChain,
+      txHash: spokeTxHash as string,
+      srcChainKey: sourceChain,
       walletAddress: sourceAccount.address ?? '',
       intent: swapIntentData,
       relayData,
@@ -329,7 +322,7 @@ export default function SwapCard({
 
     setOrders(prev => [
       ...prev,
-      { mode: 'submit-tx', txHash: spokeTxHash, srcChainId: sourceChain, apiBaseURL: SUBMIT_TX_API_CONFIG.baseURL },
+      { mode: 'submit-tx', txHash: spokeTxHash as string, srcChainId: sourceChain, apiBaseURL: SUBMIT_TX_API_CONFIG.baseURL },
     ]);
   };
 
@@ -376,15 +369,16 @@ export default function SwapCard({
       return;
     }
 
-    if (!destProvider || !(destProvider instanceof StellarSpokeProvider)) {
-      console.error('destProvider undefined or not a StellarSpokeProvider');
+    if (destChain !== ChainKeys.STELLAR_MAINNET || !destWalletProvider) {
+      console.error('destChain is not Stellar or destWalletProvider undefined');
       return;
     }
 
     await requestTrustline({
       token: intentOrderPayload.outputToken,
       amount: intentOrderPayload.minOutputAmount,
-      spokeProvider: destProvider,
+      srcChainKey: destChain as StellarChainKey,
+      walletProvider: destWalletProvider as IStellarWalletProvider,
     });
   };
 
@@ -433,7 +427,7 @@ export default function SwapCard({
           <span className="hidden sm:inline">Balance:</span>
           <span className="inline">
             {Number(formatUnits(
-              sourceChain === BITCOIN_MAINNET_CHAIN_ID && srcTradingBal
+              sourceChain === ChainKeys.BITCOIN_MAINNET && srcTradingBal
                 ? srcTradingBal.btcSatoshi
                 : sourceTokenBalance,
               sourceToken?.decimals ?? 0,
@@ -452,9 +446,9 @@ export default function SwapCard({
           </div>
         </div>
 
-        {sourceChain === BITCOIN_MAINNET_CHAIN_ID && sourceProvider && isBitcoinSpokeProvider(sourceProvider) && (
+        {sourceBitcoinWallet && (
           <BitcoinSetupPanel
-            spokeProvider={sourceProvider}
+            walletProvider={sourceBitcoinWallet}
             onReadyChange={setIsBitcoinReady}
             nativeBalance={sourceTokenBalance}
             connectorName={sourceBtcConnector?.name}
@@ -505,7 +499,7 @@ export default function SwapCard({
         <div className="mix-blend-multiply text-black text-(length:--body-comfortable) font-medium font-['InterRegular'] flex gap-1">
           <span className="hidden sm:inline">Balance:</span>
           <span className="inline">{Number(formatUnits(
-            destChain === BITCOIN_MAINNET_CHAIN_ID && destTradingBal
+            destChain === ChainKeys.BITCOIN_MAINNET && destTradingBal
               ? destTradingBal.btcSatoshi
               : destTokenBalance,
             destToken?.decimals ?? 0,
@@ -515,7 +509,7 @@ export default function SwapCard({
           <Label htmlFor="toAddress">Destination address</Label>
           <div className="flex items-center gap-2">
             <Input id="toAddress" type="text" value={
-              destChain === BITCOIN_MAINNET_CHAIN_ID && destAccount.address
+              destChain === ChainKeys.BITCOIN_MAINNET && destAccount.address
                 ? (loadRadfiSession(destAccount.address)?.tradingAddress || destAccount.address)
                 : (destAccount.address || '')
             } placeholder="" disabled={true} />
@@ -527,9 +521,9 @@ export default function SwapCard({
           </div>
         </div>
 
-        {destChain === BITCOIN_MAINNET_CHAIN_ID && destProvider && isBitcoinSpokeProvider(destProvider) && (
+        {destBitcoinWallet && (
           <BitcoinSetupPanel
-            spokeProvider={destProvider}
+            walletProvider={destBitcoinWallet}
             onReadyChange={setIsDestBitcoinReady}
             nativeBalance={destTokenBalance}
             connectorName={destBtcConnector?.name}
@@ -594,10 +588,10 @@ export default function SwapCard({
             <div className="">
               <div className="flex flex-col">
                 <div>
-                  inputToken: {intentOrderPayload?.inputToken} on {intentOrderPayload?.srcChain}
+                  inputToken: {intentOrderPayload?.inputToken} on {intentOrderPayload?.srcChainKey}
                 </div>
                 <div>
-                  outputToken: {intentOrderPayload?.outputToken} on {intentOrderPayload?.dstChain}
+                  outputToken: {intentOrderPayload?.outputToken} on {intentOrderPayload?.dstChainKey}
                 </div>
                 <div>inputAmount: {formatUnits(intentOrderPayload?.inputAmount ?? 0n, sourceToken?.decimals ?? 0)}</div>
                 <div>deadline: {new Date(Number(intentOrderPayload?.deadline) * 1000).toLocaleString()}</div>
@@ -610,13 +604,13 @@ export default function SwapCard({
                 <div>
                   outputAmount: {formatUnits(intentOrderPayload?.minOutputAmount ?? 0n, destToken?.decimals ?? 0)}
                 </div>
-                {destChain === STELLAR_MAINNET_CHAIN_ID && !isTrustlineLoading && !hasSufficientTrustline && (
+                {destChain === ChainKeys.STELLAR_MAINNET && !isTrustlineLoading && !hasSufficientTrustline && (
                   <div className="text-red-500">Insufficient Stellar trustline (request trustline to proceed)</div>
                 )}
               </div>
             </div>
             <DialogFooter>
-              {sourceChain !== BITCOIN_MAINNET_CHAIN_ID && (
+              {sourceChain !== ChainKeys.BITCOIN_MAINNET && (
                 <Button
                   className="w-full"
                   type="button"
@@ -640,9 +634,9 @@ export default function SwapCard({
                     className="w-full"
                     onClick={() => handleSwap(intentOrderPayload)}
                     disabled={
-                      (sourceChain !== BITCOIN_MAINNET_CHAIN_ID && !hasAllowed) || isSubmitting ||
-                      (sourceChain === BITCOIN_MAINNET_CHAIN_ID && !isBitcoinReady) ||
-                      (destChain === BITCOIN_MAINNET_CHAIN_ID && !isDestBitcoinReady)
+                      (sourceChain !== ChainKeys.BITCOIN_MAINNET && !hasAllowed) || isSubmitting ||
+                      (sourceChain === ChainKeys.BITCOIN_MAINNET && !isBitcoinReady) ||
+                      (destChain === ChainKeys.BITCOIN_MAINNET && !isDestBitcoinReady)
                     }
                   >
                     <ArrowLeftRight className="mr-2 h-4 w-4" /> Swap
@@ -650,8 +644,8 @@ export default function SwapCard({
                 ) : (
                   <span>Intent Order undefined</span>
                 ))}
-              {isTrustlineLoading && destChain === STELLAR_MAINNET_CHAIN_ID && <span>Checking trustline...</span>}
-              {destChain === STELLAR_MAINNET_CHAIN_ID && !isTrustlineLoading && !hasSufficientTrustline && (
+              {isTrustlineLoading && destChain === ChainKeys.STELLAR_MAINNET && <span>Checking trustline...</span>}
+              {destChain === ChainKeys.STELLAR_MAINNET && !isTrustlineLoading && !hasSufficientTrustline && (
                 <Button
                   className="w-full"
                   onClick={() => handleRequestTrustline(intentOrderPayload)}

@@ -919,9 +919,6 @@ importers:
       '@mysten/sui':
         specifier: 'catalog:'
         version: 1.21.2(typescript@5.5.4)
-      '@sodax/sdk':
-        specifier: workspace:*
-        version: link:../sdk
       '@sodax/types':
         specifier: workspace:*
         version: link:../types
