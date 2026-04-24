@@ -1,6 +1,6 @@
 # SODAX - llms.txt
 # https://sodax.com/llms.txt
-# Last updated: 2026-02-06
+# Last updated: 2026-04-21
 
 ## About SODAX
 SODAX is a DeFi execution layer that enables seamless swapping, lending, and borrowing across multiple blockchain networks. The platform provides coordinated liquidity, smart yield optimization, and a frictionless trading experience with minimal slippage.
@@ -40,3 +40,9 @@ For a complete list of pages, see: https://sodax.com/sitemap.xml
 
 ## RSS Feed
 News updates available at: https://sodax.com/news/feed.xml
+
+## Agent Discovery (machine-readable)
+- API Catalog:        https://sodax.com/.well-known/api-catalog
+- MCP Server Card:    https://sodax.com/.well-known/mcp/server-card.json
+- Agent Skills Index: https://sodax.com/.well-known/agent-skills/index.json
+- Content-Signal policy (search, ai-input, ai-train) is declared in https://sodax.com/robots.txt

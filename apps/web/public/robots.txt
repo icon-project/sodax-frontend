@@ -8,6 +8,23 @@ Disallow: /_next/
 Disallow: /api/
 Disallow: /cms/
 Disallow: /*.json$
+# Explicit allows — agent-readiness discovery files end in .json but must
+# remain crawlable. Only needed in this User-agent: * block, because the
+# wildcard Disallow: /*.json$ is scoped here (the named bot blocks below
+# don't disallow .json). Exact paths win over the wildcard under Google's
+# longest-match convention; strict alternative parsers may differ, so this
+# belt-and-suspenders listing errs on safety.
+Allow: /.well-known/mcp/server-card.json
+Allow: /.well-known/agent-skills/index.json
+# Content Signals — Cloudflare-proposed robots.txt extension
+# (blog.cloudflare.com/content-signals). Not part of RFC 9309; most existing
+# parsers silently ignore unknown directives, so this is a forward-looking
+# declaration of intent. Cloudflare Bot Management honors it at the edge and
+# adoption may grow. OWASP least-privilege default (ai-train=no) applied.
+# search=yes      — search indexing allowed
+# ai-input=yes    — runtime agent input / RAG grounding allowed
+# ai-train=no     — training / fine-tuning NOT allowed
+Content-Signal: search=yes, ai-input=yes, ai-train=no
 
 # Google Search
 User-agent: Googlebot
@@ -34,6 +51,11 @@ Disallow: /cms/
 Disallow: /api/
 
 User-agent: Claude-Web
+Allow: /
+Disallow: /cms/
+Disallow: /api/
+
+User-agent: ClaudeBot
 Allow: /
 Disallow: /cms/
 Disallow: /api/
@@ -77,8 +99,15 @@ Allow: /
 Disallow: /cms/
 Disallow: /api/
 
+# ByteDance / Doubao
+User-agent: Bytespider
+Allow: /
+Disallow: /cms/
+Disallow: /api/
+
 # Reference to sitemap and llms.txt
 Sitemap: https://sodax.com/sitemap.xml
 
 # AI/LLM context file
 # llms.txt: https://sodax.com/llms.txt
+# (llms-full.txt will be added in a follow-up alongside the llms.txt rewrite)
