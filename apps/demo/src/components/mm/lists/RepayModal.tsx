@@ -1,5 +1,5 @@
 import { useAppStore } from '@/zustand/useAppStore';
-import { useMMAllowance, useMMApprove, useRepay, useSpokeProvider } from '@sodax/dapp-kit';
+import { useMMAllowance, useMMApprove, useRepay, useSpokeProvider, useXBalances } from '@sodax/dapp-kit';
 import type { ChainId, MoneyMarketRepayParams, XToken } from '@sodax/sdk';
 import { baseChainInfo } from '@sodax/types';
 import { useEvmSwitchChain, useWalletProvider } from '@sodax/wallet-sdk-react';
@@ -28,7 +28,7 @@ import {
 } from '@/lib/utils';
 import { AMOUNT_DISPLAY_DECIMALS } from '../constants';
 import { logger } from '@/lib/logger';
-import { useXBalances, useXAccount } from '@sodax/wallet-sdk-react';
+import { getXChainType, useXAccount, useXService } from '@sodax/wallet-sdk-react';
 import { getChainName } from '@/constants';
 import { invalidateMmQueries } from '@/lib/invalidateMmQueries';
 import { extractTxHash } from '@/lib/extractTxHash';
@@ -149,7 +149,9 @@ export function RepayModal({
   });
 
   // Check user balance on source chain
+  const xService = useXService(getXChainType(fromChainId));
   const { data: balances, isLoading: isBalancesLoading } = useXBalances({
+    xService,
     xChainId: fromChainId,
     xTokens: sourceToken ? [sourceToken] : [],
     address: fromAddress,

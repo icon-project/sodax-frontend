@@ -179,7 +179,8 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
     },
   }),
   INJECTIVE: defineChain({
-    createService: () => InjectiveXService.getInstance(),
+    createService: rpcConfig =>
+      InjectiveXService.getInstance(rpcConfig?.[ChainKeys.INJECTIVE_MAINNET]),
     defaultConnectors: () => [
       new InjectiveXConnector('MetaMask', Wallet.Metamask),
       new InjectiveXConnector('Keplr', Wallet.Keplr),
@@ -257,7 +258,8 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
     },
   }),
   NEAR: defineChain({
-    createService: () => NearXService.getInstance(),
+    createService: rpcConfig =>
+      NearXService.getInstance(rpcConfig?.[ChainKeys.NEAR_MAINNET]),
     defaultConnectors: () => [],
     providerManaged: false,
     discoverConnectors: async (service, getStore) => {
@@ -279,7 +281,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
     },
   }),
   STACKS: defineChain({
-    createService: () => StacksXService.getInstance(),
+    createService: rpcConfig => StacksXService.getInstance(rpcConfig?.[ChainKeys.STACKS_MAINNET]),
     defaultConnectors: () => STACKS_PROVIDERS.map(c => new StacksXConnector(c)),
     providerManaged: false,
     createWalletProvider: (service, getStore) => {

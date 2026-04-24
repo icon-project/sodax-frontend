@@ -36,7 +36,8 @@ import {
   useSodaxContext,
   loadRadfiSession,
   useTradingWalletBalance,
-    useBackendSubmitSwapTx,
+  useBackendSubmitSwapTx,
+  useXBalances,
 } from '@sodax/dapp-kit';
 import {
   getXChainType,
@@ -44,7 +45,6 @@ import {
   useXAccount,
   useXDisconnect,
   useWalletProvider,
-  useXBalances,
   useXConnection,
   useXService,
 } from '@sodax/wallet-sdk-react';
@@ -146,7 +146,9 @@ export default function SwapCard({
   };
 
   // Balance fetching- Fetch source token balance for the connected wallet
+  const sourceXService = useXService(getXChainType(sourceChain));
   const { data: sourceBalances } = useXBalances({
+    xService: sourceXService,
     xChainId: sourceChain,
     xTokens: sourceToken ? [sourceToken as XToken] : [],
     address: sourceAccount.address,
@@ -154,7 +156,9 @@ export default function SwapCard({
   const sourceTokenBalance = sourceBalances?.[sourceToken?.address ?? ''] ?? 0n;
 
   // Fetch destination token balance for the connected wallet
+  const destXService = useXService(getXChainType(destChain));
   const { data: destBalances } = useXBalances({
+    xService: destXService,
     xChainId: destChain,
     xTokens: destToken ? [destToken as XToken] : [],
     address: destAccount.address,
