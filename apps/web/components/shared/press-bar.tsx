@@ -14,39 +14,44 @@ const COPY_COUNT = 6;
 type PressLogo = {
   name: string;
   href: string;
-  render: () => ReactElement;
+  src: string;
 };
-
-const CoindeskLogo = (): ReactElement => (
-  <img src="/landing/press/coindesk.svg" alt="" className="h-6 w-[126.72px] shrink-0" draggable={false} />
-);
-
-const CointelegraphLogo = (): ReactElement => (
-  <img src="/landing/press/cointelegraph.svg" alt="" className="h-8 w-[137px] shrink-0" draggable={false} />
-);
-
-const DecryptLogo = (): ReactElement => (
-  <img src="/landing/press/decrypt.svg" alt="" className="h-10 w-[120.228px] shrink-0" draggable={false} />
-);
-
-// TODO: marketing — confirm Decrypt article URL. Placeholder for now.
-const DECRYPT_ARTICLE_URL = '#';
 
 const PRESS_LOGOS: PressLogo[] = [
   {
-    name: 'Coindesk',
+    name: 'CoinDesk',
     href: 'https://www.coindesk.com/markets/2025/05/12/here-s-why-icon-rebranded-to-sodax-and-abandoned-its-layer-1',
-    render: CoindeskLogo,
+    src: '/landing/press/coindesk.svg',
   },
   {
-    name: 'Cointelegraph',
-    href: 'https://cointelegraph.com/press-releases/sodax-lightlink-partner-to-expand-defi-liquidity-across-ethereum-layer-2-ecosystem',
-    render: CointelegraphLogo,
+    name: 'The Defiant',
+    href: 'https://thedefiant.io/news/defi/sodax-launches-intent-based-cross-chain-swaps-undercutting-competitors-by-over-1-on-execution',
+    src: '/landing/press/the-defiant.svg',
   },
   {
-    name: 'Decrypt',
-    href: DECRYPT_ARTICLE_URL,
-    render: DecryptLogo,
+    name: 'DL News',
+    href: 'https://www.dlnews.com/research/internal/ship-in-days-not-months-how-builders-are-scaling-defi-with-the-sodax-sdk/',
+    src: '/landing/press/dl-news.svg',
+  },
+  {
+    name: 'CoinGape',
+    href: 'https://coingape.com/press-releases/sodax-and-radfi-add-native-bitcoin-trading-pairs-across-major-assets/',
+    src: '/landing/press/coingape.svg',
+  },
+  {
+    name: 'Coin Republic',
+    href: 'https://www.thecoinrepublic.com/2026/03/21/sodax-and-radfi-make-native-bitcoin-tradable-against-ethereum-solana-and-usdc/',
+    src: '/landing/press/coin-republic.svg',
+  },
+  {
+    name: 'MEXC',
+    href: 'https://www.mexc.com/news/971475',
+    src: '/landing/press/mexc.svg',
+  },
+  {
+    name: 'Bitwire',
+    href: 'https://www.bitwire.com/feed/icon-project-rebrands-as-sodax-migrating-defi-infrastructure-to-sonic',
+    src: '/landing/press/bitwire.svg',
   },
 ];
 
@@ -167,7 +172,6 @@ export const PressBar = (): ReactElement => {
             className="flex items-center gap-[120px] pr-[120px] shrink-0"
           >
             {PRESS_LOGOS.map((logo, logoIndex) => {
-              const LogoAsset = logo.render;
               return (
                 <Tooltip key={`${copyIndex}-${logo.name}-${logoIndex}`}>
                   <TooltipTrigger asChild>
@@ -180,7 +184,7 @@ export const PressBar = (): ReactElement => {
                       className="shrink-0 opacity-60 hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                       onClick={handleLogoClick}
                     >
-                      <LogoAsset />
+                      <img src={logo.src} alt="" className="h-8 w-[128px] shrink-0" draggable={false} />
                     </a>
                   </TooltipTrigger>
                   <TooltipContent

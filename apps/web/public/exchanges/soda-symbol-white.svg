@@ -1,8 +1,25 @@
-<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 14.6667 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g id="Soda">
-<path id="Vector" d="M5.93222 5.70468L1.22905 2.90299L0 5.09709L3.4905 7.17303L5.93222 5.70468Z" fill="var(--fill-0, white)"/>
-<path id="Vector_2" d="M11.1761 7.17303L14.6667 5.09709L13.4376 2.90299L8.71805 5.70468L11.1761 7.17303Z" fill="var(--fill-0, white)"/>
-<path id="Vector_3" d="M7.3251 4.87764L8.55415 4.1519V0H6.09605V4.1519L7.3251 4.87764Z" fill="var(--fill-0, white)"/>
-<path id="Vector_4" d="M14.6667 10.9029L8.55419 7.27424L7.32514 6.5485L0 10.9029L1.22905 13.097L4.88343 10.9198C4.99814 10.8523 5.12924 10.8017 5.27672 10.8017C5.73557 10.8017 6.09609 11.173 6.09609 11.6455V16H8.55419V11.6455C8.55419 11.173 8.91471 10.8017 9.37356 10.8017C9.52104 10.8017 9.65214 10.8523 9.76685 10.9198L13.4376 13.0801L14.6667 10.9029Z" fill="var(--fill-0, white)"/>
-</g>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Camada_2" data-name="Camada 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <g id="Camada_1-2" data-name="Camada 1">
+    <g id="SODA_White">
+      <rect id="_24x24_square_to_size_them" data-name="24x24 square to size them" class="cls-2" width="24" height="24"/>
+      <g>
+        <path class="cls-1" d="M9.9,8.56L2.84,4.35l-1.84,3.29,5.24,3.11,3.66-2.2Z"/>
+        <path class="cls-1" d="M17.76,10.76l5.24-3.11-1.84-3.29-7.08,4.2,3.69,2.2Z"/>
+        <path class="cls-1" d="M11.99,7.32l1.84-1.09V0h-3.69v6.23l1.84,1.09Z"/>
+        <path class="cls-1" d="M23,16.35l-9.17-5.44-1.84-1.09L1,16.35l1.84,3.29,5.48-3.27c.17-.1.37-.18.59-.18.69,0,1.23.56,1.23,1.27v6.53h3.69v-6.53c0-.71.54-1.27,1.23-1.27.22,0,.42.08.59.18l5.51,3.24,1.84-3.27Z"/>
+      </g>
+    </g>
+  </g>
 </svg>

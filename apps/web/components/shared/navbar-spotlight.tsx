@@ -30,20 +30,17 @@ export function NavbarSpotlight({ className = '' }: { className?: string }) {
   const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    let holdTimeout: ReturnType<typeof setTimeout>;
     const initialTimeout = setTimeout(() => {
-      if (cancelled) return;
       setPhase('revealed');
-      const holdTimeout = setTimeout(() => {
-        if (cancelled) return;
+      holdTimeout = setTimeout(() => {
         setPhase(currentPhase => (currentPhase === 'revealed' ? 'idle' : currentPhase));
       }, AUTOPLAY_HOLD_MS);
-      return () => clearTimeout(holdTimeout);
     }, AUTOPLAY_INITIAL_DELAY_MS);
 
     return () => {
-      cancelled = true;
       clearTimeout(initialTimeout);
+      clearTimeout(holdTimeout);
     };
   }, []);
 

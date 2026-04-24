@@ -9,12 +9,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 type Backer = {
   name: string;
   src: string;
+  href: string;
 };
 
 const BACKERS: Backer[] = [
-  { name: 'Spoon Finance', src: '/backers/spoon-finance-white.svg' },
-  { name: 'Binance', src: '/backers/binance-white.svg' },
-  { name: 'Hana', src: '/backers/hana-white.svg' },
+  { name: 'Pantera Capital', src: '/backers/pantera-white.svg', href: 'https://panteracapital.com/' },
+  { name: 'Kenetic Capital', src: '/backers/kenetic-white.svg', href: 'https://www.kenetic.capital/' },
+  { name: 'Blockchange Ventures', src: '/backers/blockchange-white.svg', href: 'https://blockchange.vc/' },
+  { name: 'Coinsilium Group', src: '/backers/coinsilium-white.svg', href: 'https://coinsilium.com/' },
+  { name: 'Mind Fund Group', src: '/backers/mindfund-white.svg', href: 'https://www.mindfund.com/' },
 ];
 
 const MARQUEE_REPEATS = 8;
@@ -38,19 +41,22 @@ export const BackedBy = (): ReactElement => {
   return (
     <div className="flex flex-col items-center gap-4">
       <span className="text-white font-[InterRegular] text-(length:--body-small) leading-[1.4] text-center">
-        Backed by
+        BACKED BY
       </span>
       <div ref={touchBoundaryRef} className="max-w-[480px] overflow-x-clip group/marquee relative">
         <div className="pointer-events-none absolute inset-y-0 left-0 w-[20%] z-10 bg-linear-to-r from-cherry-soda to-transparent" />
         <div className="pointer-events-none absolute inset-y-0 right-0 w-[20%] z-10 bg-linear-to-l from-cherry-soda to-transparent" />
         <div
-          className="flex w-max animate-marquee"
+          className="flex w-max animate-marquee [animation-duration:1400s]"
           style={activeTouchIndex !== null ? { animationPlayState: 'paused' } : undefined}
         >
           {[...MARQUEE_SEQUENCE, ...MARQUEE_SEQUENCE].map((backer, i) => (
             <Tooltip key={`${backer.name}-${i}`} open={activeTouchIndex === i ? true : undefined}>
               <TooltipTrigger asChild>
-                <span
+                <a
+                  href={backer.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="mx-3 shrink-0 opacity-25 hover:opacity-100 transition-opacity duration-300"
                   aria-label={backer.name}
                   onTouchStart={event => {
@@ -58,8 +64,10 @@ export const BackedBy = (): ReactElement => {
                     setActiveTouchIndex(prev => (prev === i ? null : i));
                   }}
                 >
-                  <Image src={backer.src} alt="" width={24} height={24} aria-hidden="true" />
-                </span>
+                  <span className="relative block h-6 w-24">
+                    <Image src={backer.src} alt="" fill className="object-contain" aria-hidden="true" sizes="96px" />
+                  </span>
+                </a>
               </TooltipTrigger>
               <TooltipContent
                 variant="bubble"
