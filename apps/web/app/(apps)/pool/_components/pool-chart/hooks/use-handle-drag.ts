@@ -4,7 +4,6 @@ import * as d3 from 'd3';
 import type { ScaleLinear } from 'd3';
 import { roundPrice } from '../price-utils';
 
-const CURRENT_PRICE_GAP_FRACTION = 0.02;
 const MIN_PRICE_GAP = 0.000001;
 const BAND_DRAGGING_CLASS = 'is-band-dragging';
 
@@ -120,11 +119,11 @@ export function useHandleDrag({
         minHandleOffsetRef.current = toChartY(event.y) - renderedLineY;
       })
       .on('drag', event => {
-        const { yScale, currentPrice, innerH } = depsRef.current;
+        const { yScale, maxPrice, innerH } = depsRef.current;
         const lineY = clampToChart(toChartY(event.y) - minHandleOffsetRef.current, innerH);
         const price = Math.max(yScale.invert(lineY), 0);
-        const gap = Math.max(Math.abs(currentPrice) * CURRENT_PRICE_GAP_FRACTION, MIN_PRICE_GAP);
-        const cap = Math.max(currentPrice - gap, 0);
+        // Only constraint: min must stay strictly below max.
+        const cap = Math.max(maxPrice - MIN_PRICE_GAP, 0);
         settersRef.current.setMinPrice(roundPrice(Math.min(price, cap)));
       });
 
@@ -137,11 +136,11 @@ export function useHandleDrag({
         maxHandleOffsetRef.current = toChartY(event.y) - renderedLineY;
       })
       .on('drag', event => {
-        const { yScale, currentPrice, innerH } = depsRef.current;
+        const { yScale, minPrice, innerH } = depsRef.current;
         const lineY = clampToChart(toChartY(event.y) - maxHandleOffsetRef.current, innerH);
         const price = Math.max(yScale.invert(lineY), 0);
-        const gap = Math.max(Math.abs(currentPrice) * CURRENT_PRICE_GAP_FRACTION, MIN_PRICE_GAP);
-        const floor = currentPrice + gap;
+        // Only constraint: max must stay strictly above min.
+        const floor = minPrice + MIN_PRICE_GAP;
         settersRef.current.setMaxPrice(roundPrice(Math.max(price, floor)));
       });
 
