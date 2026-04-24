@@ -1,3 +1,4 @@
+/*
 import type { XToken } from '@sodax/types';
 
 export const MIGRATION_MODE_ICX_SODA = 'icxsoda';
@@ -13,3 +14,5 @@ export interface MigrationIntentParams {
   toToken?: XToken;
   destinationAddress?: string;
 }
+
+*/
