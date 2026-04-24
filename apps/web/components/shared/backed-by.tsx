@@ -40,7 +40,7 @@ export const BackedBy = (): ReactElement => {
       <span className="text-white font-[InterRegular] text-(length:--body-small) leading-[1.4] text-center">
         Backed by
       </span>
-      <div ref={touchBoundaryRef} className="max-w-[480px] overflow-x-clip group/marquee opacity-60 relative">
+      <div ref={touchBoundaryRef} className="max-w-[480px] overflow-x-clip group/marquee relative">
         <div className="pointer-events-none absolute inset-y-0 left-0 w-[20%] z-10 bg-linear-to-r from-cherry-soda to-transparent" />
         <div className="pointer-events-none absolute inset-y-0 right-0 w-[20%] z-10 bg-linear-to-l from-cherry-soda to-transparent" />
         <div
@@ -51,7 +51,7 @@ export const BackedBy = (): ReactElement => {
             <Tooltip key={`${backer.name}-${i}`} open={activeTouchIndex === i ? true : undefined}>
               <TooltipTrigger asChild>
                 <span
-                  className="mx-3 shrink-0 opacity-40 hover:opacity-100 transition-opacity duration-300"
+                  className="mx-3 shrink-0 opacity-25 hover:opacity-100 transition-opacity duration-300"
                   aria-label={backer.name}
                   onTouchStart={event => {
                     event.preventDefault();

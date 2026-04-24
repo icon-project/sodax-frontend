@@ -61,28 +61,34 @@ type ExchangesBarProps = {
 
 export const ExchangesBar = ({ onHoverChange }: ExchangesBarProps): ReactElement => {
   return (
-    <div className="flex gap-1.5 sm:gap-2 items-center justify-center">
+    <div
+      className="flex items-center justify-center"
+      onMouseLeave={() => onHoverChange?.(null)}
+    >
       {EXCHANGES.map((exchange, i) => (
-        <a
+        <div
           key={`${exchange.name}-${i}`}
-          href={exchange.tradeUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`Trade on ${exchange.name}`}
-          onMouseEnter={() => onHoverChange?.(exchange.showStatusDot ? exchange : null)}
-          onMouseLeave={() => onHoverChange?.(null)}
-          onFocus={() => onHoverChange?.(exchange.showStatusDot ? exchange : null)}
-          onBlur={() => onHoverChange?.(null)}
-          className="relative size-10 sm:size-12 rounded-lg bg-cherry-on-cherry flex items-center justify-center transition-transform hover:scale-105"
+          onMouseEnter={() => onHoverChange?.(exchange)}
+          className="group/exchange px-[3px] sm:px-1 flex items-center justify-center"
         >
-          <Image src={exchange.iconSrc} alt="" width={16} height={16} aria-hidden="true" />
-          {exchange.showStatusDot && (
-            <span
-              className="absolute right-1 top-1 size-2 rounded-full bg-cherry-bright"
-              aria-hidden="true"
-            />
-          )}
-        </a>
+          <a
+            href={exchange.tradeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`Trade on ${exchange.name}`}
+            onFocus={() => onHoverChange?.(exchange)}
+            onBlur={() => onHoverChange?.(null)}
+            className="relative size-10 sm:size-12 rounded-lg bg-cherry-on-cherry flex items-center justify-center transition-transform group-hover/exchange:scale-105"
+          >
+            <Image src={exchange.iconSrc} alt="" width={16} height={16} aria-hidden="true" />
+            {exchange.showStatusDot && (
+              <span
+                className="absolute right-1 top-1 size-2 rounded-full bg-cherry-bright"
+                aria-hidden="true"
+              />
+            )}
+          </a>
+        </div>
       ))}
     </div>
   );
