@@ -259,7 +259,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
   }),
   NEAR: defineChain({
     createService: rpcConfig =>
-      NearXService.getInstance(rpcConfig?.[NEAR_MAINNET_CHAIN_ID]),
+      NearXService.getInstance(rpcConfig?.[ChainKeys.NEAR_MAINNET]),
     defaultConnectors: () => [],
     providerManaged: false,
     discoverConnectors: async (service, getStore) => {

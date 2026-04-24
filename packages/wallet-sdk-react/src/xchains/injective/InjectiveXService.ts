@@ -19,6 +19,9 @@ export class InjectiveXService extends XService {
     super('INJECTIVE');
 
     const defaults = getNetworkEndpoints(Network.Mainnet);
+    // Only `indexer` + `grpc` are overridable — the rest of the endpoints object
+    // (rest, rpc, explorer, …) keeps the @injectivelabs/networks mainnet defaults.
+    // Extend `InjectiveRpcConfig` if more endpoints need to be consumer-configurable.
     const endpoints = {
       ...defaults,
       indexer: rpcConfig?.indexer || defaults.indexer,
