@@ -1,6 +1,6 @@
 import { getXChainType } from '@/actions/index.js';
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
-import type { ChainId, XToken } from '@sodax/types';
+import type { SpokeChainKey, XToken } from '@sodax/types';
 import { useXService } from './useXService.js';
 
 /**
@@ -44,7 +44,7 @@ export function useXBalances({
   xChainId,
   xTokens,
   address,
-}: { xChainId: ChainId; xTokens: readonly XToken[]; address: string | undefined }): UseQueryResult<{
+}: { xChainId: SpokeChainKey; xTokens: readonly XToken[]; address: string | undefined }): UseQueryResult<{
   [key: string]: bigint;
 }> {
   const xService = useXService(getXChainType(xChainId));

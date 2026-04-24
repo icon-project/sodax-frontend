@@ -1,6 +1,6 @@
-import { baseChainInfo, type ChainId, type ChainType } from '@sodax/types';
+import { baseChainInfo, type SpokeChainKey, type ChainType } from '@sodax/types';
 
-export function getXChainType(xChainId: ChainId | undefined): ChainType | undefined {
+export function getXChainType(xChainId: SpokeChainKey | undefined): ChainType | undefined {
   if (!xChainId) {
     return undefined;
   }

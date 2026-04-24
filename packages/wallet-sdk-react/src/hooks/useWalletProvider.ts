@@ -1,4 +1,4 @@
-import type { ChainId, ChainType } from '@sodax/types';
+import type { SpokeChainKey, ChainType } from '@sodax/types';
 import { getXChainType } from '../actions/index.js';
 import { useXWalletStore } from '../useXWalletStore.js';
 import type { WalletProvider } from '../types/index.js';
@@ -14,7 +14,7 @@ const warnedChains = new Set<ChainType>();
  * SodaxWalletProvider config.chains. Returns undefined silently if the chain
  * is enabled but no wallet is connected yet (normal pre-connect state).
  */
-export function useWalletProvider(spokeChainId: ChainId | undefined): WalletProvider | undefined {
+export function useWalletProvider(spokeChainId: SpokeChainKey | undefined): WalletProvider | undefined {
   const xChainType = getXChainType(spokeChainId);
   return useXWalletStore(state => {
     if (!xChainType) return undefined;

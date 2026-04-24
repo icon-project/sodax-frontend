@@ -1,5 +1,5 @@
 import type { Address, Hex, HttpUrl } from '../shared/shared.js';
-import type { ChainKeys, ChainType } from '../chains/chain-keys.js';
+import type { ChainKey, ChainKeys, ChainType } from '../chains/chain-keys.js';
 import type { GetChainType, SpokeChainConfig, spokeChainConfig, SpokeChainKey, IconAddress } from '../chains/chains.js';
 import type { XToken } from '../chains/tokens.js';
 import type { EvmRawTransaction, EvmReturnType } from '../evm/evm.js';
@@ -333,15 +333,15 @@ export type BitcoinRpcConfig = {
   radfiUmsUrl?: string;
 };
 
-// Mapped type that uses ChainId as keys and assigns appropriate value types
-// Stellar uses StellarRpcConfig, Bitcoin uses BitcoinRpcConfig, all other chains use string
+// Mapped type keyed by ChainKey values. Stellar uses StellarRpcConfig, Bitcoin uses BitcoinRpcConfig,
+// all other chains use string (the RPC URL).
 export type RpcConfig = Partial<{
-  [K in keyof typeof ChainKeys]: K extends typeof ChainKeys.STELLAR_MAINNET
+  [K in ChainKey]: K extends typeof ChainKeys.STELLAR_MAINNET
     ? StellarRpcConfig
     : K extends typeof ChainKeys.BITCOIN_MAINNET
       ? BitcoinRpcConfig
       : string;
-}> & { [ChainKeys.ETHEREUM_MAINNET]?: string | undefined };
+}>;
 
 export type AssetInfo = {
   chainId: bigint;
