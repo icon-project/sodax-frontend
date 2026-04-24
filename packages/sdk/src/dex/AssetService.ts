@@ -1,8 +1,6 @@
 import type { DestinationParamsType, RelayOptionalExtraData } from '../shared/types/types.js';
 import type { Address, Hex } from 'viem';
 import {
-  type RelayErrorCode,
-  type RelayError,
   EvmAssetManagerService,
   type SpokeService,
   encodeAddress,
@@ -80,73 +78,6 @@ export type AssetDepositAction<K extends SpokeChainKey, Raw extends boolean> = {
   timeout?: number;
 } & WalletProviderSlot<K, Raw>;
 
-export type AssetServiceUnknownErrorCode = 'DEPOSIT_UNKNOWN_ERROR' | 'ALLOWANCE_CHECK_FAILED' | 'APPROVAL_FAILED';
-
-export type GetAssetServiceParams<T extends AssetServiceUnknownErrorCode> = T extends 'DEPOSIT_UNKNOWN_ERROR'
-  ? CreateAssetDepositParams<SpokeChainKey>
-  : T extends 'ALLOWANCE_CHECK_FAILED'
-    ? CreateAssetDepositParams<SpokeChainKey>
-    : T extends 'APPROVAL_FAILED'
-      ? CreateAssetDepositParams<SpokeChainKey>
-      : CreateAssetDepositParams<SpokeChainKey>;
-
-export type AssetServiceErrorCode =
-  | AssetServiceUnknownErrorCode
-  | RelayErrorCode
-  | 'CREATE_DEPOSIT_INTENT_FAILED'
-  | 'CREATE_WITHDRAW_LIQUIDITY_INTENT_FAILED';
-
-export type AssetServiceUnknownError<T extends AssetServiceUnknownErrorCode> = {
-  error: unknown;
-  payload: GetAssetServiceParams<T>;
-};
-
-export type AssetServiceSubmitTxFailedError = {
-  error: RelayError;
-  payload: string;
-};
-
-export type AssetServiceDepositFailedError = {
-  error: unknown;
-  payload: CreateAssetDepositParams<SpokeChainKey>;
-};
-
-export type AssetServiceWithdrawFailedError = {
-  error: unknown;
-  payload: CreateAssetWithdrawParams<SpokeChainKey>;
-};
-
-export type AssetServiceAllowanceCheckFailedError = {
-  error: unknown;
-  payload: CreateAssetDepositParams<SpokeChainKey>;
-};
-
-export type AssetServiceApprovalFailedError = {
-  error: unknown;
-  payload: CreateAssetDepositParams<SpokeChainKey>;
-};
-
-export type GetAssetServiceError<T extends AssetServiceErrorCode> = T extends 'SUBMIT_TX_FAILED'
-  ? AssetServiceSubmitTxFailedError
-  : T extends 'RELAY_TIMEOUT'
-    ? AssetServiceSubmitTxFailedError
-    : T extends 'CREATE_DEPOSIT_INTENT_FAILED'
-      ? AssetServiceDepositFailedError
-      : T extends 'CREATE_WITHDRAW_LIQUIDITY_INTENT_FAILED'
-        ? AssetServiceWithdrawFailedError
-        : T extends 'ALLOWANCE_CHECK_FAILED'
-          ? AssetServiceAllowanceCheckFailedError
-          : T extends 'APPROVAL_FAILED'
-            ? AssetServiceApprovalFailedError
-            : T extends AssetServiceUnknownErrorCode
-              ? AssetServiceUnknownError<T>
-              : never;
-
-export type AssetServiceError<T extends AssetServiceErrorCode> = {
-  code: T;
-  data: GetAssetServiceError<T>;
-};
-
 export type AssetServiceConstructorParams = {
   hubProvider: HubProvider;
   spoke: SpokeService;
@@ -185,7 +116,7 @@ export class AssetService {
    * @param {AssetDepositParams<S>} params - Object containing:
    *   - depositParams: Deposit input parameters (asset address, amount, etc.)
    *   - spokeProvider: The provider instance for the originating chain
-   * @returns {Promise<Result<boolean, AssetServiceError<'ALLOWANCE_CHECK_FAILED'>>>}
+   * @returns {Promise<Result<boolean>>}
    *   Resolves with Result.ok(true) if allowance/trustline is sufficient, or Result.ok(false) if not,
    *   or Result.error if allowance/trustline check failed.
    *
@@ -247,13 +178,7 @@ export class AssetService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'ALLOWANCE_CHECK_FAILED',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -354,24 +279,12 @@ export class AssetService {
 
       return {
         ok: false,
-        error: {
-          code: 'APPROVAL_FAILED',
-          data: {
-            error: new Error('Approve only supported for EVM/Stellar spoke chains'),
-            payload: params,
-          },
-        },
+        error: new Error('Approve only supported for EVM/Stellar spoke chains'),
       };
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'APPROVAL_FAILED',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -381,27 +294,21 @@ export class AssetService {
    */
   public async executeDeposit<K extends SpokeChainKey, Raw extends boolean>(
     _params: AssetDepositAction<K, Raw>,
-  ): Promise<Result<TxReturnType<K, Raw>, AssetServiceError<'CREATE_DEPOSIT_INTENT_FAILED'>> & RelayOptionalExtraData> {
+  ): Promise<Result<TxReturnType<K, Raw>> & RelayOptionalExtraData> {
     const { params, skipSimulation } = _params;
     try {
       invariant(params.amount > 0n, 'Amount must be greater than 0');
       invariant(params.asset.length > 0, 'Source asset is required');
       invariant(params.poolToken.length > 0, 'Pool token is required');
 
-      const fromHubWallet = await HubService.getUserHubWalletAddress(
-        params.srcAddress,
-        params.srcChainKey,
-        this.hubProvider,
-      );
-      let recipient = fromHubWallet;
-
-      if (params.dst) {
-        recipient = await HubService.getUserHubWalletAddress(
-          params.dst.dstAddress,
-          params.dst.dstChainKey,
-          this.hubProvider,
-        );
-      }
+      const [fromHubWallet, recipient] = params.dst
+        ? await Promise.all([
+            HubService.getUserHubWalletAddress(params.srcAddress, params.srcChainKey, this.hubProvider),
+            HubService.getUserHubWalletAddress(params.dst.dstAddress, params.dst.dstChainKey, this.hubProvider),
+          ])
+        : await HubService.getUserHubWalletAddress(params.srcAddress, params.srcChainKey, this.hubProvider).then(
+            w => [w, w] as const,
+          );
 
       const calls = await this.getTokenWrapAction(
         params.asset,
@@ -438,13 +345,7 @@ export class AssetService {
       if (!txResult.ok) {
         return {
           ok: false,
-          error: {
-            code: 'CREATE_DEPOSIT_INTENT_FAILED',
-            data: {
-              error: txResult.error,
-              payload: params,
-            },
-          },
+          error: txResult.error,
         };
       }
 
@@ -459,13 +360,7 @@ export class AssetService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'CREATE_DEPOSIT_INTENT_FAILED',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -476,7 +371,7 @@ export class AssetService {
   public async executeWithdraw<K extends SpokeChainKey, Raw extends boolean>(
     _params: AssetWithdrawAction<K, Raw>,
   ): Promise<
-    Result<TxReturnType<K, Raw>, AssetServiceError<'CREATE_WITHDRAW_LIQUIDITY_INTENT_FAILED'>> & RelayOptionalExtraData
+    Result<TxReturnType<K, Raw>> & RelayOptionalExtraData
   > {
     const { params, skipSimulation } = _params;
     try {
@@ -484,22 +379,16 @@ export class AssetService {
       invariant(params.asset.length > 0, 'Source asset is required');
       invariant(params.poolToken.length > 0, 'Pool token is required');
 
-      const fromHubWallet = await HubService.getUserHubWalletAddress(
-        params.srcAddress,
-        params.srcChainKey,
-        this.hubProvider,
-      );
-      let recipient: string = params.srcAddress;
-      let dstChainKey: SpokeChainKey = params.srcChainKey;
-
-      if (params.dst) {
-        recipient = await HubService.getUserHubWalletAddress(
-          params.dst.dstAddress,
-          params.dst.dstChainKey,
-          this.hubProvider,
-        );
-        dstChainKey = params.dst.dstChainKey;
-      }
+      const [fromHubWallet, recipient] = params.dst
+        ? await Promise.all([
+            HubService.getUserHubWalletAddress(params.srcAddress, params.srcChainKey, this.hubProvider),
+            HubService.getUserHubWalletAddress(params.dst.dstAddress, params.dst.dstChainKey, this.hubProvider),
+          ])
+        : [
+            await HubService.getUserHubWalletAddress(params.srcAddress, params.srcChainKey, this.hubProvider),
+            params.srcAddress,
+          ];
+      const dstChainKey: SpokeChainKey = params.dst?.dstChainKey ?? params.srcChainKey;
 
       const calls = await this.getTokenUnwrapAction(
         dstChainKey,
@@ -535,13 +424,7 @@ export class AssetService {
       if (!txResult.ok) {
         return {
           ok: false,
-          error: {
-            code: 'CREATE_WITHDRAW_LIQUIDITY_INTENT_FAILED',
-            data: {
-              error: txResult.error,
-              payload: params,
-            },
-          },
+          error: txResult.error,
         };
       }
 
@@ -556,13 +439,7 @@ export class AssetService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'CREATE_WITHDRAW_LIQUIDITY_INTENT_FAILED',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -631,17 +508,11 @@ export class AssetService {
    */
   public async deposit<K extends SpokeChainKey>(
     _params: AssetDepositAction<K, false>,
-  ): Promise<Result<[SpokeTxHash, HubTxHash], AssetServiceError<AssetServiceErrorCode>>> {
+  ): Promise<Result<[SpokeTxHash, HubTxHash]>> {
     const { params, timeout } = _params;
     try {
       const txResult = await this.executeDeposit(_params);
-
-      if (!txResult.ok) {
-        return txResult satisfies Result<[SpokeTxHash, HubTxHash], AssetServiceError<AssetServiceErrorCode>> as Result<
-          [SpokeTxHash, HubTxHash],
-          AssetServiceError<AssetServiceErrorCode>
-        >;
-      }
+      if (!txResult.ok) return txResult;
 
       let intentTxHash: string | null = null;
       if (!isHubChainKeyType(params.srcChainKey)) {
@@ -654,19 +525,7 @@ export class AssetService {
           this.relayerApiEndpoint,
           timeout,
         );
-
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              data: {
-                error: packetResult.error,
-                payload: txResult.value,
-              } as GetAssetServiceError<'SUBMIT_TX_FAILED'>,
-            },
-          };
-        }
+        if (!packetResult.ok) return packetResult;
 
         intentTxHash = packetResult.value.dst_tx_hash;
       } else {
@@ -675,16 +534,7 @@ export class AssetService {
 
       return { ok: true, value: [txResult.value, intentTxHash] };
     } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'DEPOSIT_UNKNOWN_ERROR',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
-      };
+      return { ok: false, error };
     }
   }
 
@@ -712,14 +562,11 @@ export class AssetService {
    */
   public async withdraw<K extends SpokeChainKey>(
     _params: AssetWithdrawAction<K, false>,
-  ): Promise<Result<[SpokeTxHash, HubTxHash], AssetServiceError<AssetServiceErrorCode>>> {
+  ): Promise<Result<[SpokeTxHash, HubTxHash]>> {
     const { params, timeout } = _params;
     try {
       const txResult = await this.executeWithdraw(_params);
-
-      if (!txResult.ok) {
-        return txResult as Result<[SpokeTxHash, HubTxHash], AssetServiceError<AssetServiceErrorCode>>;
-      }
+      if (!txResult.ok) return txResult;
 
       let intentTxHash: string | null = null;
       if (!isHubChainKeyType(params.srcChainKey)) {
@@ -732,19 +579,7 @@ export class AssetService {
           this.relayerApiEndpoint,
           timeout,
         );
-
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              data: {
-                error: packetResult.error,
-                payload: txResult.value,
-              } as GetAssetServiceError<'SUBMIT_TX_FAILED'>,
-            },
-          };
-        }
+        if (!packetResult.ok) return packetResult;
 
         intentTxHash = packetResult.value.dst_tx_hash;
       } else {
@@ -753,16 +588,7 @@ export class AssetService {
 
       return { ok: true, value: [txResult.value, intentTxHash] };
     } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'DEPOSIT_UNKNOWN_ERROR',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
-      };
+      return { ok: false, error };
     }
   }
 
@@ -843,7 +669,9 @@ export class AssetService {
       SodaTokens.bnUSD.address.toLowerCase() !== assetConfig.vault.toLowerCase() &&
       dexToken.toLowerCase() !== '0x0000000000000000000000000000000000000000'
     ) {
-      vaultAmount = await this.getUnwrappedAmount(dexToken, amount);
+      const unwrapped = await this.getUnwrappedAmount(dexToken, amount);
+      if (!unwrapped.ok) throw unwrapped.error;
+      vaultAmount = unwrapped.value;
       calls.push(Erc4626Service.encodeRedeem(dexToken, amount, userAddress, userAddress));
     }
 
@@ -890,12 +718,14 @@ export class AssetService {
    * @param assetAmount - The amount of underlying assets
    * @returns The equivalent amount of shares
    */
-  public async getWrappedAmount(dexToken: Address, assetAmount: bigint): Promise<bigint> {
-    const shares = await Erc4626Service.convertToShares(dexToken, assetAmount, this.hubProvider.publicClient);
-    if (!shares.ok) {
-      throw new Error('[getWrappedAmount] Failed to convert amount to shares');
+  public async getWrappedAmount(dexToken: Address, assetAmount: bigint): Promise<Result<bigint>> {
+    try {
+      const shares = await Erc4626Service.convertToShares(dexToken, assetAmount, this.hubProvider.publicClient);
+      if (!shares.ok) return shares;
+      return { ok: true, value: shares.value };
+    } catch (error) {
+      return { ok: false, error };
     }
-    return shares.value;
   }
 
   /**
@@ -905,22 +735,32 @@ export class AssetService {
    * @param shareAmount - The amount of shares
    * @returns The equivalent amount of underlying assets
    */
-  public async getUnwrappedAmount(dexToken: Address, shareAmount: bigint): Promise<bigint> {
-    const assetAmount = await Erc4626Service.convertToAssets(dexToken, shareAmount, this.hubProvider.publicClient);
-    if (!assetAmount.ok) {
-      throw new Error('[getUnwrappedAmount] Failed to convert amount to assets');
+  public async getUnwrappedAmount(dexToken: Address, shareAmount: bigint): Promise<Result<bigint>> {
+    try {
+      const assetAmount = await Erc4626Service.convertToAssets(dexToken, shareAmount, this.hubProvider.publicClient);
+      if (!assetAmount.ok) return assetAmount;
+      return { ok: true, value: assetAmount.value };
+    } catch (error) {
+      return { ok: false, error };
     }
-    return assetAmount.value;
   }
 
-  public async getDeposit(poolToken: Address, walletAddress: Address, chainKey: SpokeChainKey): Promise<bigint> {
-    const hubwallet = await HubService.getUserHubWalletAddress(walletAddress, chainKey, this.hubProvider);
-
-    return await this.hubProvider.publicClient.readContract({
-      address: poolToken,
-      abi: erc20Abi,
-      functionName: 'balanceOf',
-      args: [hubwallet],
-    });
+  public async getDeposit(
+    poolToken: Address,
+    walletAddress: Address,
+    chainKey: SpokeChainKey,
+  ): Promise<Result<bigint>> {
+    try {
+      const hubwallet = await HubService.getUserHubWalletAddress(walletAddress, chainKey, this.hubProvider);
+      const value = await this.hubProvider.publicClient.readContract({
+        address: poolToken,
+        abi: erc20Abi,
+        functionName: 'balanceOf',
+        args: [hubwallet],
+      });
+      return { ok: true, value };
+    } catch (error) {
+      return { ok: false, error };
+    }
   }
 }

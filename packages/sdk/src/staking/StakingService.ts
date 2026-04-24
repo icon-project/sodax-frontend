@@ -12,7 +12,6 @@ import {
   type EvmHubProvider,
   encodeAddress,
   EvmAssetManagerService,
-  type RelayError,
   HubService,
   type ConfigService,
   isHubChainKeyType,
@@ -150,21 +149,6 @@ export type StakingConfig = {
   maxPenalty: bigint; // percentage (1-100)
 };
 
-export type StakingErrorCode =
-  | 'STAKE_FAILED'
-  | 'UNSTAKE_FAILED'
-  | 'INSTANT_UNSTAKE_FAILED'
-  | 'CLAIM_FAILED'
-  | 'CANCEL_UNSTAKE_FAILED'
-  | 'INFO_FETCH_FAILED'
-  | 'ALLOWANCE_CHECK_FAILED'
-  | 'APPROVAL_FAILED';
-
-export type StakingError<T extends StakingErrorCode> = {
-  code: T;
-  error: unknown;
-};
-
 export type StakingServiceConstructorParams = {
   hubProvider: EvmHubProvider;
   config: ConfigService;
@@ -194,7 +178,7 @@ export class StakingService {
    * Check if allowance is valid for the staking operations
    * @param params - The staking parameters
    * @param spokeProvider - The spoke provider
-   * @returns {Promise<Result<boolean, StakingError<'ALLOWANCE_CHECK_FAILED'>>>}
+   * @returns {Promise<Result<boolean>>}
    */
   public async isAllowanceValid<K extends SpokeChainKey, Raw extends boolean>(
     _params: StakingParamsUnion<K, Raw>,
@@ -254,18 +238,12 @@ export class StakingService {
       // Return false by default
       return {
         ok: false,
-        error: {
-          code: 'ALLOWANCE_CHECK_FAILED',
-          error: new Error('Invalid staking action'),
-        },
+        error: new Error('Invalid staking action'),
       };
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'ALLOWANCE_CHECK_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -275,7 +253,7 @@ export class StakingService {
    * @param params - The staking parameters
    * @param spokeProvider - The spoke provider
    * @param raw - Whether to return raw transaction data
-   * @returns Promise<Result<TxReturnType<S, R>, StakingError<'APPROVAL_FAILED'>>>
+   * @returns Promise<Result<TxReturnType<S, R>>>
    */
   public async approve<K extends SpokeChainKey, Raw extends boolean>(
     _params: StakingParamsUnion<K, Raw>,
@@ -353,24 +331,15 @@ export class StakingService {
         }
       }
 
-      // For non-EVM chains, approval is not needed
       return {
         ok: false,
-        error: {
-          code: 'APPROVAL_FAILED',
-          error: new Error(
-            'Approval only supported for EVM spoke chains and [stake, unstake, instantUnstake] operations',
-          ),
-        },
+        error: new Error('Approval only supported for EVM spoke chains and [stake, unstake, instantUnstake] operations'),
       };
     } catch (error) {
       console.error(error);
       return {
         ok: false,
-        error: {
-          code: 'APPROVAL_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -381,25 +350,17 @@ export class StakingService {
    * @param params - The staking parameters
    * @param spokeProvider - The spoke provider
    * @param timeout - The timeout in milliseconds for the transaction (default: DEFAULT_RELAY_TX_TIMEOUT)
-   * @returns Promise<Result<[SpokeTxHash, HubTxHash], StakingError<'STAKE_FAILED'> | RelayError>>
+   * @returns Promise<Result<[SpokeTxHash, HubTxHash] | RelayError>>
    */
   public async stake<K extends SpokeChainKey>(
     _params: StakeAction<K, false>,
-  ): Promise<Result<[string, string], StakingError<'STAKE_FAILED'> | RelayError>> {
+  ): Promise<Result<[string, string]>> {
     const { params, timeout } = _params;
 
     try {
       const txResult = await this.createStakeIntent(_params);
 
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'STAKE_FAILED',
-            error: txResult.error,
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       // verify the spoke tx hash exists on chain
       const verifyTxHashResult = await this.spoke.verifyTxHash({
@@ -407,15 +368,7 @@ export class StakingService {
         chainKey: params.srcChainKey,
       });
 
-      if (!verifyTxHashResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'STAKE_FAILED',
-            error: verifyTxHashResult.error,
-          },
-        };
-      }
+      if (!verifyTxHashResult.ok) return verifyTxHashResult;
 
       let hubTxHash: string | null = null;
       if (!isHubChainKeyType(params.srcChainKey)) {
@@ -429,15 +382,7 @@ export class StakingService {
           timeout,
         );
 
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              error: packetResult.error,
-            },
-          };
-        }
+        if (!packetResult.ok) return packetResult;
         hubTxHash = packetResult.value.dst_tx_hash;
       } else {
         hubTxHash = txResult.value;
@@ -447,10 +392,7 @@ export class StakingService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'STAKE_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -467,11 +409,11 @@ export class StakingService {
    * @param params - The stake parameters including amount and account
    * @param spokeProvider - The spoke provider for the source chain
    * @param raw - Whether to return the raw transaction data (default: false)
-   * @returns Promise<Result<TxReturnType<S, R>, StakingError<'STAKE_FAILED'>> & { data?: { address: string; payload: Hex } }>
+   * @returns Promise<Result<TxReturnType<S, R>> & { data?: { address: string; payload: Hex } }>
    */
   async createStakeIntent<K extends SpokeChainKey, Raw extends boolean>(
     _params: StakeAction<K, Raw>,
-  ): Promise<Result<TxReturnType<K, Raw>, StakingError<'STAKE_FAILED'>> & RelayOptionalExtraData> {
+  ): Promise<Result<TxReturnType<K, Raw>> & RelayOptionalExtraData> {
     const { params, skipSimulation } = _params;
     try {
       const sodaToken = this.config.sodaxConfig.chains[params.srcChainKey].supportedTokens.SODA as XToken;
@@ -510,16 +452,7 @@ export class StakingService {
             },
       );
 
-      if (!txResult.ok) {
-        console.error(txResult.error);
-        return {
-          ok: false,
-          error: {
-            code: 'STAKE_FAILED',
-            error: txResult.error,
-          },
-        };
-      }
+      if (!txResult.ok) { console.error(txResult.error); return txResult; }
 
       return {
         ok: true,
@@ -533,10 +466,7 @@ export class StakingService {
       console.error(error);
       return {
         ok: false,
-        error: {
-          code: 'STAKE_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -567,24 +497,16 @@ export class StakingService {
    * @param params - The unstaking parameters
    * @param spokeProvider - The spoke provider
    * @param timeout - The timeout in milliseconds for the transaction (default: DEFAULT_RELAY_TX_TIMEOUT)
-   * @returns Promise<Result<[SpokeTxHash, HubTxHash], StakingError<'UNSTAKE_FAILED'> | RelayError>>
+   * @returns Promise<Result<[SpokeTxHash, HubTxHash] | RelayError>>
    */
   public async unstake<K extends SpokeChainKey>(
     _params: UnstakeAction<K, false>,
-  ): Promise<Result<[string, string], StakingError<'UNSTAKE_FAILED'> | RelayError>> {
+  ): Promise<Result<[string, string]>> {
     const { params, timeout } = _params;
     try {
       const txResult = await this.createUnstakeIntent(_params);
 
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'UNSTAKE_FAILED',
-            error: txResult.error,
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       let hubTxHash: string | null = null;
       if (!isHubChainKeyType(params.srcChainKey)) {
@@ -597,15 +519,7 @@ export class StakingService {
           this.relayerApiEndpoint,
           timeout,
         );
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              error: packetResult.error,
-            },
-          };
-        }
+        if (!packetResult.ok) return packetResult;
         hubTxHash = packetResult.value.dst_tx_hash;
       } else {
         hubTxHash = txResult.value;
@@ -615,10 +529,7 @@ export class StakingService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'UNSTAKE_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -635,25 +546,18 @@ export class StakingService {
    * @param params - The unstake parameters including amount and account
    * @param spokeProvider - The spoke provider for the source chain
    * @param raw - Whether to return the raw transaction data (default: false)
-   * @returns Promise<Result<TxReturnType<S, R>, StakingError<'UNSTAKE_FAILED'>> & { data?: { address: string; payload: Hex } }>
+   * @returns Promise<Result<TxReturnType<S, R>> & { data?: { address: string; payload: Hex } }>
    */
   async createUnstakeIntent<K extends SpokeChainKey, Raw extends boolean>(
     _params: UnstakeAction<K, Raw>,
-  ): Promise<Result<TxReturnType<K, Raw>, StakingError<'UNSTAKE_FAILED'>> & RelayOptionalExtraData> {
+  ): Promise<Result<TxReturnType<K, Raw>> & RelayOptionalExtraData> {
     const { params } = _params;
     try {
-      const hubWallet = await HubService.getUserHubWalletAddress(
-        params.srcAddress,
-        params.srcChainKey,
-        this.hubProvider,
-      );
-
       const xSoda = this.hubProvider.chainConfig.addresses.xSoda;
-      const underlyingSodaAmount = await StakingLogic.convertXSodaSharesToSoda(
-        xSoda,
-        params.amount,
-        this.hubProvider.publicClient,
-      );
+      const [hubWallet, underlyingSodaAmount] = await Promise.all([
+        HubService.getUserHubWalletAddress(params.srcAddress, params.srcChainKey, this.hubProvider),
+        StakingLogic.convertXSodaSharesToSoda(xSoda, params.amount, this.hubProvider.publicClient),
+      ]);
       const data: Hex = this.buildUnstakeData(hubWallet, params, xSoda, underlyingSodaAmount);
 
       const coreParams = {
@@ -677,16 +581,7 @@ export class StakingService {
             } satisfies SendMessageParams<K, false>),
       );
 
-      if (!txResult.ok) {
-        console.error(txResult.error);
-        return {
-          ok: false,
-          error: {
-            code: 'UNSTAKE_FAILED',
-            error: txResult.error,
-          },
-        };
-      }
+      if (!txResult.ok) { console.error(txResult.error); return txResult; }
 
       return {
         ok: true,
@@ -700,10 +595,7 @@ export class StakingService {
       console.error(error);
       return {
         ok: false,
-        error: {
-          code: 'UNSTAKE_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -733,24 +625,16 @@ export class StakingService {
    * @param params - The instant unstaking parameters
    * @param spokeProvider - The spoke provider
    * @param timeout - The timeout in milliseconds for the transaction (default: DEFAULT_RELAY_TX_TIMEOUT)
-   * @returns Promise<Result<[SpokeTxHash, HubTxHash], StakingError<'INSTANT_UNSTAKE_FAILED'> | RelayError>>
+   * @returns Promise<Result<[SpokeTxHash, HubTxHash] | RelayError>>
    */
   public async instantUnstake<K extends SpokeChainKey>(
     _params: InstantUnstakeAction<K, false>,
-  ): Promise<Result<[string, string], StakingError<'INSTANT_UNSTAKE_FAILED'> | RelayError>> {
+  ): Promise<Result<[string, string]>> {
     const { params, timeout } = _params;
     try {
       const txResult = await this.createInstantUnstakeIntent(_params);
 
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'INSTANT_UNSTAKE_FAILED',
-            error: txResult.error,
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       let hubTxHash: string | null = null;
       if (!isHubChainKeyType(params.srcChainKey)) {
@@ -763,15 +647,7 @@ export class StakingService {
           this.relayerApiEndpoint,
           timeout,
         );
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              error: packetResult.error,
-            },
-          };
-        }
+        if (!packetResult.ok) return packetResult;
         hubTxHash = packetResult.value.dst_tx_hash;
       } else {
         hubTxHash = txResult.value;
@@ -781,10 +657,7 @@ export class StakingService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'INSTANT_UNSTAKE_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -799,11 +672,11 @@ export class StakingService {
    * @param params - The instant unstake parameters including amount, minAmount and account
    * @param spokeProvider - The spoke provider for the source chain
    * @param raw - Whether to return the raw transaction data (default: false)
-   * @returns Promise<Result<TxReturnType<S, R>, StakingError<'INSTANT_UNSTAKE_FAILED'>> & { data?: { address: string; payload: Hex } }>
+   * @returns Promise<Result<TxReturnType<S, R>> & { data?: { address: string; payload: Hex } }>
    */
   async createInstantUnstakeIntent<K extends SpokeChainKey, Raw extends boolean>(
     _params: InstantUnstakeAction<K, Raw>,
-  ): Promise<Result<TxReturnType<K, Raw>, StakingError<'INSTANT_UNSTAKE_FAILED'>> & RelayOptionalExtraData> {
+  ): Promise<Result<TxReturnType<K, Raw>> & RelayOptionalExtraData> {
     const { params } = _params;
     try {
       const hubWallet = await HubService.getUserHubWalletAddress(
@@ -845,16 +718,7 @@ export class StakingService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
-      if (!txResult.ok) {
-        console.error(txResult.error);
-        return {
-          ok: false,
-          error: {
-            code: 'INSTANT_UNSTAKE_FAILED',
-            error: txResult.error,
-          },
-        };
-      }
+      if (!txResult.ok) { console.error(txResult.error); return txResult; }
 
       return {
         ok: true,
@@ -868,10 +732,7 @@ export class StakingService {
       console.error(error);
       return {
         ok: false,
-        error: {
-          code: 'INSTANT_UNSTAKE_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -915,24 +776,16 @@ export class StakingService {
    * @param params - The claim parameters
    * @param spokeProvider - The spoke provider
    * @param timeout - The timeout in milliseconds for the transaction (default: DEFAULT_RELAY_TX_TIMEOUT)
-   * @returns Promise<Result<[SpokeTxHash, HubTxHash], StakingError<'CLAIM_FAILED'> | RelayError>>
+   * @returns Promise<Result<[SpokeTxHash, HubTxHash] | RelayError>>
    */
   public async claim<K extends SpokeChainKey>(
     _params: ClaimAction<K, false>,
-  ): Promise<Result<[string, string], StakingError<'CLAIM_FAILED'> | RelayError>> {
+  ): Promise<Result<[string, string]>> {
     const { params, timeout } = _params;
     try {
       const txResult = await this.createClaimIntent(_params);
 
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CLAIM_FAILED',
-            error: txResult.error,
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       let hubTxHash: string;
       if (!isHubChainKeyType(params.srcChainKey)) {
@@ -945,15 +798,7 @@ export class StakingService {
           this.relayerApiEndpoint,
           timeout,
         );
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              error: packetResult.error,
-            },
-          };
-        }
+        if (!packetResult.ok) return packetResult;
         hubTxHash = packetResult.value.dst_tx_hash;
       } else {
         hubTxHash = txResult.value;
@@ -963,10 +808,7 @@ export class StakingService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'CLAIM_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -981,11 +823,11 @@ export class StakingService {
    * @param params - The claim parameters including requestId
    * @param spokeProvider - The spoke provider for the source chain
    * @param raw - Whether to return the raw transaction data (default: false)
-   * @returns Promise<Result<TxReturnType<S, R>, StakingError<'CLAIM_FAILED'>> & { data?: { address: string; payload: Hex } }>
+   * @returns Promise<Result<TxReturnType<S, R>> & { data?: { address: string; payload: Hex } }>
    */
   async createClaimIntent<K extends SpokeChainKey, Raw extends boolean>(
     _params: ClaimAction<K, Raw>,
-  ): Promise<Result<TxReturnType<K, Raw>, StakingError<'CLAIM_FAILED'>> & RelayOptionalExtraData> {
+  ): Promise<Result<TxReturnType<K, Raw>> & RelayOptionalExtraData> {
     const { params } = _params;
     try {
       const hubWallet = await HubService.getUserHubWalletAddress(
@@ -1027,16 +869,7 @@ export class StakingService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
-      if (!txResult.ok) {
-        console.error(txResult.error);
-        return {
-          ok: false,
-          error: {
-            code: 'CLAIM_FAILED',
-            error: txResult.error,
-          },
-        };
-      }
+      if (!txResult.ok) { console.error(txResult.error); return txResult; }
 
       return {
         ok: true,
@@ -1050,10 +883,7 @@ export class StakingService {
       console.error(error);
       return {
         ok: false,
-        error: {
-          code: 'CLAIM_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -1102,24 +932,16 @@ export class StakingService {
    * @param params - The cancel unstake parameters
    * @param spokeProvider - The spoke provider
    * @param timeout - The timeout in milliseconds for the transaction (default: DEFAULT_RELAY_TX_TIMEOUT)
-   * @returns Promise<Result<[SpokeTxHash, HubTxHash], StakingError<'CANCEL_UNSTAKE_FAILED'> | RelayError>>
+   * @returns Promise<Result<[SpokeTxHash, HubTxHash] | RelayError>>
    */
   public async cancelUnstake<K extends SpokeChainKey>(
     _params: CancelUnstakeAction<K, false>,
-  ): Promise<Result<[string, string], StakingError<'CANCEL_UNSTAKE_FAILED'> | RelayError>> {
+  ): Promise<Result<[string, string]>> {
     const { params, timeout } = _params;
     try {
       const txResult = await this.createCancelUnstakeIntent(_params);
 
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CANCEL_UNSTAKE_FAILED',
-            error: txResult.error,
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       let hubTxHash: string | null = null;
       if (!isHubChainKeyType(params.srcChainKey)) {
@@ -1132,15 +954,7 @@ export class StakingService {
           this.relayerApiEndpoint,
           timeout,
         );
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              error: packetResult.error,
-            },
-          };
-        }
+        if (!packetResult.ok) return packetResult;
         hubTxHash = packetResult.value.dst_tx_hash;
       } else {
         hubTxHash = txResult.value;
@@ -1150,10 +964,7 @@ export class StakingService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'CANCEL_UNSTAKE_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -1168,11 +979,11 @@ export class StakingService {
    * @param params - The cancel unstake parameters including requestId
    * @param spokeProvider - The spoke provider for the source chain
    * @param raw - Whether to return the raw transaction data (default: false)
-   * @returns Promise<Result<TxReturnType<S, R>, StakingError<'CANCEL_UNSTAKE_FAILED'>> & { data?: { address: string; payload: Hex } }>
+   * @returns Promise<Result<TxReturnType<S, R>> & { data?: { address: string; payload: Hex } }>
    */
   async createCancelUnstakeIntent<K extends SpokeChainKey, Raw extends boolean>(
     _params: CancelUnstakeAction<K, Raw>,
-  ): Promise<Result<TxReturnType<K, Raw>, StakingError<'CANCEL_UNSTAKE_FAILED'>> & RelayOptionalExtraData> {
+  ): Promise<Result<TxReturnType<K, Raw>> & RelayOptionalExtraData> {
     const { params } = _params;
     try {
       const hubWallet = await HubService.getUserHubWalletAddress(
@@ -1204,16 +1015,7 @@ export class StakingService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
-      if (!txResult.ok) {
-        console.error(txResult.error);
-        return {
-          ok: false,
-          error: {
-            code: 'CANCEL_UNSTAKE_FAILED',
-            error: txResult.error,
-          },
-        };
-      }
+      if (!txResult.ok) { console.error(txResult.error); return txResult; }
 
       return {
         ok: true,
@@ -1227,10 +1029,7 @@ export class StakingService {
       console.error(error);
       return {
         ok: false,
-        error: {
-          code: 'CANCEL_UNSTAKE_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -1273,12 +1072,12 @@ export class StakingService {
   /**
    * Get comprehensive staking information for a user using spoke provider
    * @param spokeProvider - The spoke provider
-   * @returns Promise<Result<StakingInfo, StakingError<'INFO_FETCH_FAILED'>>>
+   * @returns Promise<Result<StakingInfo>>
    */
   public async getStakingInfoFromSpoke<K extends SpokeChainKey>(
     srcAddress: Address,
     srcChainKey: K,
-  ): Promise<Result<StakingInfo, StakingError<'INFO_FETCH_FAILED'>>> {
+  ): Promise<Result<StakingInfo>> {
     try {
       const hubWallet = await HubService.getUserHubWalletAddress(srcAddress, srcChainKey, this.hubProvider);
 
@@ -1286,10 +1085,7 @@ export class StakingService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'INFO_FETCH_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -1297,9 +1093,9 @@ export class StakingService {
   /**
    * Get comprehensive staking information for a user
    * @param userAddress - The user's address
-   * @returns Promise<Result<StakingInfo, StakingError<'INFO_FETCH_FAILED'>>>
+   * @returns Promise<Result<StakingInfo>>
    */
-  public async getStakingInfo(userAddress: Address): Promise<Result<StakingInfo, StakingError<'INFO_FETCH_FAILED'>>> {
+  public async getStakingInfo(userAddress: Address): Promise<Result<StakingInfo>> {
     try {
       invariant(userAddress, 'User address is required');
 
@@ -1331,10 +1127,7 @@ export class StakingService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'INFO_FETCH_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -1342,12 +1135,12 @@ export class StakingService {
   /**
    * Get unstaking information for a user
    * @param param - The user's address or spoke provider
-   * @returns Promise<Result<UnstakingInfo, StakingError<'INFO_FETCH_FAILED'>>>
+   * @returns Promise<Result<UnstakingInfo>>
    */
   public async getUnstakingInfo<K extends SpokeChainKey>(
     srcAddress: Address,
     srcChainKey: K,
-  ): Promise<Result<UnstakingInfo, StakingError<'INFO_FETCH_FAILED'>>> {
+  ): Promise<Result<UnstakingInfo>> {
     try {
       const userAddress = await HubService.getUserHubWalletAddress(srcAddress, srcChainKey, this.hubProvider);
 
@@ -1374,19 +1167,16 @@ export class StakingService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'INFO_FETCH_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
 
   /**
    * Get staking configuration from the stakedSoda contract
-   * @returns Promise<Result<StakingConfig, StakingError<'INFO_FETCH_FAILED'>>>
+   * @returns Promise<Result<StakingConfig>>
    */
-  public async getStakingConfig(): Promise<Result<StakingConfig, StakingError<'INFO_FETCH_FAILED'>>> {
+  public async getStakingConfig(): Promise<Result<StakingConfig>> {
     try {
       const hubConfig = this.config.getHubChainConfig();
       const stakedSoda = hubConfig.addresses.stakedSoda;
@@ -1409,10 +1199,7 @@ export class StakingService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'INFO_FETCH_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -1460,13 +1247,13 @@ export class StakingService {
   /**
    * Get unstaking information with penalty calculations
    * @param param - The user's address or spoke provider
-   * @returns Promise<Result<UnstakingInfo & { requestsWithPenalty: UnstakeRequestWithPenalty[] }, StakingError<'INFO_FETCH_FAILED'>>>
+   * @returns Promise<Result<UnstakingInfo & { requestsWithPenalty: UnstakeRequestWithPenalty[] }>>
    */
   public async getUnstakingInfoWithPenalty<K extends SpokeChainKey>(
     srcAddress: Address,
     srcChainKey: K,
   ): Promise<
-    Result<UnstakingInfo & { requestsWithPenalty: UnstakeRequestWithPenalty[] }, StakingError<'INFO_FETCH_FAILED'>>
+    Result<UnstakingInfo & { requestsWithPenalty: UnstakeRequestWithPenalty[] }>
   > {
     try {
       const [unstakingResult, configResult] = await Promise.all([
@@ -1478,15 +1265,7 @@ export class StakingService {
         return unstakingResult;
       }
 
-      if (!configResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'INFO_FETCH_FAILED',
-            error: configResult.error,
-          },
-        };
-      }
+      if (!configResult.ok) return configResult;
 
       const config = configResult.value;
       const requestsWithPenalty: UnstakeRequestWithPenalty[] = unstakingResult.value.userUnstakeSodaRequests.map(
@@ -1514,10 +1293,7 @@ export class StakingService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'INFO_FETCH_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -1525,9 +1301,9 @@ export class StakingService {
   /**
    * Get instant unstake ratio for a given amount
    * @param amount - The amount of xSoda to estimate instant unstake for
-   * @returns Promise<Result<bigint, StakingError<'INFO_FETCH_FAILED'>>>
+   * @returns Promise<Result<bigint>>
    */
-  public async getInstantUnstakeRatio(amount: bigint): Promise<Result<bigint, StakingError<'INFO_FETCH_FAILED'>>> {
+  public async getInstantUnstakeRatio(amount: bigint): Promise<Result<bigint>> {
     try {
       const hubConfig = this.config.getHubChainConfig();
       const stakingRouter = hubConfig.addresses.stakingRouter;
@@ -1541,10 +1317,7 @@ export class StakingService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'INFO_FETCH_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -1552,9 +1325,9 @@ export class StakingService {
   /**
    * Get converted assets amount for xSODA shares
    * @param amount - The amount of xSoda shares to convert
-   * @returns Promise<Result<bigint, StakingError<'INFO_FETCH_FAILED'>>>
+   * @returns Promise<Result<bigint>>
    */
-  public async getConvertedAssets(amount: bigint): Promise<Result<bigint, StakingError<'INFO_FETCH_FAILED'>>> {
+  public async getConvertedAssets(amount: bigint): Promise<Result<bigint>> {
     try {
       const hubConfig = this.config.getHubChainConfig();
       const xSoda = hubConfig.addresses.xSoda;
@@ -1568,10 +1341,7 @@ export class StakingService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'INFO_FETCH_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }
@@ -1579,9 +1349,9 @@ export class StakingService {
   /**
    * Get stake ratio for a given amount (xSoda amount and preview deposit)
    * @param amount - The amount of SODA to estimate stake for
-   * @returns Promise<Result<[bigint, bigint], StakingError<'INFO_FETCH_FAILED'>>>
+   * @returns Promise<Result<[bigint, bigint]>>
    */
-  public async getStakeRatio(amount: bigint): Promise<Result<[bigint, bigint], StakingError<'INFO_FETCH_FAILED'>>> {
+  public async getStakeRatio(amount: bigint): Promise<Result<[bigint, bigint]>> {
     try {
       const hubConfig = this.config.getHubChainConfig();
       const stakingRouter = hubConfig.addresses.stakingRouter;
@@ -1599,10 +1369,7 @@ export class StakingService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'INFO_FETCH_FAILED',
-          error: error,
-        },
+        error,
       };
     }
   }

@@ -44,14 +44,6 @@ export type {
   FeeData,
   IntentData,
   IntentState,
-  IntentCreationFailedErrorData,
-  IntentSubmitTxFailedErrorData,
-  IntentWaitUntilIntentExecutedFailedErrorData,
-  IntentPostExecutionFailedErrorData,
-  IntentCancelFailedErrorData,
-  IntentErrorCode,
-  IntentErrorData,
-  IntentError,
 } from '../shared/types/intent-types.js';
 export { IntentDataType } from '../shared/types/intent-types.js';
 import type {
@@ -59,8 +51,6 @@ import type {
   CreateLimitOrderParams,
   Intent,
   IntentState,
-  IntentErrorCode,
-  IntentError,
 } from '../shared/types/intent-types.js';
 import {
   type SpokeChainKey,
@@ -317,38 +307,15 @@ export class SwapService {
    */
   public async submitIntent(
     submitPayload: IntentRelayRequest<'submit'>,
-  ): Promise<Result<GetRelayResponse<'submit'>, IntentError<'SUBMIT_TX_FAILED'>>> {
+  ): Promise<Result<GetRelayResponse<'submit'>>> {
     try {
       const submitResult = await submitTransaction(submitPayload, this.relayerApiEndpoint);
-
       if (!submitResult.success) {
-        return {
-          ok: false,
-          error: {
-            code: 'SUBMIT_TX_FAILED',
-            data: {
-              payload: submitPayload,
-              error: new Error(submitResult.message),
-            },
-          },
-        };
+        return { ok: false, error: new Error('SUBMIT_TX_FAILED', { cause: new Error(submitResult.message) }) };
       }
-
-      return {
-        ok: true,
-        value: submitResult,
-      };
+      return { ok: true, value: submitResult };
     } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'SUBMIT_TX_FAILED',
-          data: {
-            payload: submitPayload,
-            error: error,
-          },
-        },
-      };
+      return { ok: false, error };
     }
   }
 
@@ -360,9 +327,10 @@ export class SwapService {
    *   - fee: (Optional) Partner fee configuration.
    *   - timeout: (Optional) Timeout in milliseconds for the transaction (default: 60 seconds).
    *   - skipSimulation: (Optional) Whether to skip transaction simulation (default: false).
-   * @returns {Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>>}
-   *   A promise resolving to a Result containing a tuple of SolverExecutionResponse, Intent, and intent delivery info,
-   *   or an IntentError if the operation fails.
+   * @returns {Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo]>>}
+   *   A promise resolving to a Result containing a tuple of SolverExecutionResponse, Intent, and intent delivery info.
+   *   On failure, the `.error` is an `Error` tagged with a CODE such as `CREATION_FAILED`, `SUBMIT_TX_FAILED`,
+   *   `POST_EXECUTION_FAILED`, or `RELAY_TIMEOUT`; the underlying error is on `.cause`.
    *
    * @example
    * const createAndSubmitIntentResult = await swapService.createAndSubmitIntent({
@@ -397,42 +365,24 @@ export class SwapService {
    */
   public async swap<K extends SpokeChainKey>(
     _params: SwapActionParams<K, false>,
-  ): Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>> {
+  ): Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo]>> {
     const { params } = _params;
     const srcChainKey = params.srcChain;
     try {
       const timeout = _params.timeout;
-      // first create the deposit with intent data on spoke chain
       const createIntentResult = await this.createIntent(_params);
-
-      if (!createIntentResult.ok) {
-        return createIntentResult;
-      }
+      if (!createIntentResult.ok) return createIntentResult;
 
       const [spokeTxHash, intent, data] = createIntentResult.value;
 
-      // then verify the spoke tx hash exists on chain
       const verifyTxHashResult = await this.spoke.verifyTxHash({
         txHash: spokeTxHash,
         chainKey: srcChainKey,
       });
-
-      if (!verifyTxHashResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATION_FAILED',
-            data: {
-              payload: params,
-              error: verifyTxHashResult.error,
-            },
-          },
-        };
-      }
+      if (!verifyTxHashResult.ok) return verifyTxHashResult;
 
       let dstIntentTxHash: string;
       if (isHubChainKeyType(srcChainKey)) {
-        // on hub chain, the spoke tx hash is the same as the intent tx hash
         dstIntentTxHash = spokeTxHash;
       } else {
         const packet = await relayTxAndWaitPacket(
@@ -447,47 +397,15 @@ export class SwapService {
           this.relayerApiEndpoint,
           timeout,
         );
-
-        if (!packet.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packet.error.code,
-              data: {
-                payload: params,
-                error: packet.error,
-              },
-            },
-          };
-        }
-
+        if (!packet.ok) return packet;
         dstIntentTxHash = packet.value.dst_tx_hash;
       }
 
-      // then post execution of intent order transaction executed on hub chain to Solver API
       const result = await this.postExecution({
         intent_tx_hash: dstIntentTxHash as `0x${string}`,
       });
-
       if (!result.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'POST_EXECUTION_FAILED',
-            data: {
-              ...result.error,
-              intent,
-              intentDeliveryInfo: {
-                srcChainId: srcChainKey,
-                srcTxHash: spokeTxHash,
-                srcAddress: params.srcAddress,
-                dstChainId: params.dstChain,
-                dstTxHash: dstIntentTxHash,
-                dstAddress: params.dstAddress,
-              } satisfies IntentDeliveryInfo,
-            },
-          },
-        };
+        return { ok: false, error: new Error('POST_EXECUTION_FAILED', { cause: result.error }) };
       }
 
       return {
@@ -506,16 +424,7 @@ export class SwapService {
         ],
       };
     } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'UNKNOWN',
-          data: {
-            payload: params,
-            error: error,
-          },
-        } satisfies IntentError<'UNKNOWN'>,
-      };
+      return { ok: false, error };
     }
   }
 
@@ -717,7 +626,7 @@ export class SwapService {
    */
   public async createIntent<K extends SpokeChainKey, Raw extends boolean>(
     _params: SwapActionParams<K, Raw>,
-  ): Promise<Result<[TxReturnType<K, Raw>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>> {
+  ): Promise<Result<[TxReturnType<K, Raw>, Intent & FeeAmount, Hex]>> {
     const { params, skipSimulation } = _params;
 
     invariant(
@@ -836,16 +745,7 @@ export class SwapService {
 
       if (!txResult.ok) {
         console.error('[SwapService.createIntent] FAILED', txResult.error);
-        return {
-          ok: false,
-          error: {
-            code: 'CREATION_FAILED',
-            data: {
-              payload: params,
-              error: txResult.error,
-            },
-          },
-        };
+        return txResult;
       }
 
       return {
@@ -858,16 +758,7 @@ export class SwapService {
       };
     } catch (error) {
       console.error('[SwapService.createIntent] FAILED', error);
-      return {
-        ok: false,
-        error: {
-          code: 'CREATION_FAILED',
-          data: {
-            payload: params,
-            error: error,
-          },
-        },
-      };
+      return { ok: false, error };
     }
   }
 
@@ -882,7 +773,7 @@ export class SwapService {
    *   - fee: (Optional) Partner fee configuration.
    *   - timeout: (Optional) Timeout in milliseconds for the transaction (default: 60 seconds).
    *   - skipSimulation: (Optional) Whether to skip transaction simulation (default: false).
-   * @returns {Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>>} A promise resolving to a Result containing a tuple of SolverExecutionResponse, Intent, and intent delivery info, or an IntentError if the operation fails.
+   * @returns {Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo]>>} A promise resolving to a Result containing a tuple of SolverExecutionResponse, Intent, and intent delivery info.
    *
    * @example
    * const payload = {
@@ -919,7 +810,7 @@ export class SwapService {
    */
   public async createLimitOrder<K extends SpokeChainKey>(
     _params: LimitOrderActionParams<K, false>,
-  ): Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo], IntentError<IntentErrorCode>>> {
+  ): Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo]>> {
     const { fee = this.config.swaps.partnerFee, timeout = DEFAULT_RELAY_TX_TIMEOUT, skipSimulation = false } = _params;
     // Force deadline to 0n (no deadline) for limit orders. K is preserved on the resulting
     // CreateIntentParams<K> so swap() infers the same chain narrowing.
@@ -985,7 +876,7 @@ export class SwapService {
    */
   public async createLimitOrderIntent<K extends SpokeChainKey, Raw extends boolean>(
     _params: LimitOrderActionParams<K, Raw>,
-  ): Promise<Result<[TxReturnType<K, Raw>, Intent & FeeAmount, Hex], IntentError<'CREATION_FAILED'>>> {
+  ): Promise<Result<[TxReturnType<K, Raw>, Intent & FeeAmount, Hex]>> {
     // Force deadline to 0n for limit orders. srcChain is preserved on params so K narrowing
     // flows through to createIntent unchanged.
     const limitOrderParams: CreateIntentParams<K> = {
@@ -1041,7 +932,7 @@ export class SwapService {
     intent: Intent;
     walletProvider: GetWalletProviderType<K>;
     timeout?: number;
-  }): Promise<Result<[string, string], IntentError<IntentErrorCode>>> {
+  }): Promise<Result<[string, string]>> {
     return this.cancelIntent<K>({
       srcChainKey,
       intent,
@@ -1060,7 +951,7 @@ export class SwapService {
    */
   public async createCancelIntent<K extends SpokeChainKey, Raw extends boolean>(
     params: CancelIntentParams<K, Raw>,
-  ): Promise<Result<TxReturnType<K, Raw>, IntentError<'CANCEL_FAILED'>>> {
+  ): Promise<Result<TxReturnType<K, Raw>>> {
     const { intent } = params;
 
     try {
@@ -1094,35 +985,14 @@ export class SwapService {
           } satisfies SendMessageParams<K, false>);
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
-
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CANCEL_FAILED',
-            data: {
-              payload: intent,
-              error: txResult.error,
-            },
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       return {
         ok: true,
         value: txResult.value satisfies TxReturnType<K, boolean> as TxReturnType<K, Raw>,
       };
     } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'CANCEL_FAILED',
-          data: {
-            payload: intent,
-            error,
-          },
-        },
-      };
+      return { ok: false, error };
     }
   }
 
@@ -1146,45 +1016,26 @@ export class SwapService {
     intent: Intent;
     walletProvider: GetWalletProviderType<K>;
     timeout?: number;
-  }): Promise<Result<[string, string], IntentError<IntentErrorCode>>> {
+  }): Promise<Result<[string, string]>> {
     try {
-      // 1. Cancel the intent on the spoke chain
       const cancelResult = await this.createCancelIntent<K, false>({
         srcChainKey,
         intent,
         raw: false,
         walletProvider,
       } as CancelIntentParams<K, false>);
-
-      if (!cancelResult.ok) {
-        return cancelResult;
-      }
+      if (!cancelResult.ok) return cancelResult;
 
       const cancelTxHash = cancelResult.value;
 
-      // 2. Verify the cancel tx hash exists on chain
       const verifyTxHashResult = await this.spoke.verifyTxHash({
         txHash: cancelTxHash,
         chainKey: srcChainKey,
       });
+      if (!verifyTxHashResult.ok) return verifyTxHashResult;
 
-      if (!verifyTxHashResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CANCEL_FAILED',
-            data: {
-              payload: intent,
-              error: verifyTxHashResult.error,
-            },
-          },
-        };
-      }
-
-      // then submit the deposit tx hash of spoke chain to the intent relay
       let dstIntentTxHash: string;
 
-      // 3. Submit the cancel tx hash of spoke chain to the intent relay
       if (!isHubChainKey(srcChainKey)) {
         const intentRelayChainId = intent.srcChain.toString();
         const submitPayload: IntentRelayRequest<'submit'> = {
@@ -1196,45 +1047,23 @@ export class SwapService {
         };
 
         const submitResult = await this.submitIntent(submitPayload);
+        if (!submitResult.ok) return submitResult;
 
-        if (!submitResult.ok) {
-          return submitResult;
-        }
-
-        // then wait until the intent is executed on the intent relay
         const packet = await waitUntilIntentExecuted({
           intentRelayChainId,
           spokeTxHash: cancelTxHash,
           timeout,
           apiUrl: this.relayerApiEndpoint,
         });
-
-        if (!packet.ok) {
-          return {
-            ok: false,
-            error: packet.error,
-          };
-        }
+        if (!packet.ok) return packet;
         dstIntentTxHash = packet.value.dst_tx_hash;
       } else {
         dstIntentTxHash = cancelTxHash;
       }
 
-      return {
-        ok: true,
-        value: [cancelTxHash, dstIntentTxHash],
-      };
+      return { ok: true, value: [cancelTxHash, dstIntentTxHash] };
     } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'CANCEL_FAILED',
-          data: {
-            payload: intent,
-            error,
-          },
-        },
-      };
+      return { ok: false, error };
     }
   }
 
@@ -1246,38 +1075,57 @@ export class SwapService {
    * @param {Intent} params.intent - The intent
    * @returns {Promise<SubmitTxExtraData>} The submit tx extra data
    */
-  public async getIntentSubmitTxExtraData(params: GetIntentSubmitTxExtraDataParams): Promise<RelayExtraData> {
-    let intent: Intent;
-    if ('txHash' in params) {
-      intent = await this.getIntent(params.txHash);
-    } else {
-      intent = params.intent;
+  public async getIntentSubmitTxExtraData(params: GetIntentSubmitTxExtraDataParams): Promise<Result<RelayExtraData>> {
+    try {
+      let intent: Intent;
+      if ('txHash' in params) {
+        const intentResult = await this.getIntent(params.txHash);
+        if (!intentResult.ok) return intentResult;
+        intent = intentResult.value;
+      } else {
+        intent = params.intent;
+      }
+
+      const txData = EvmSolverService.encodeCreateIntent(intent, this.solver.intentsContract);
+
+      return {
+        ok: true,
+        value: {
+          address: intent.creator,
+          payload: txData.data,
+        },
+      };
+    } catch (error) {
+      return { ok: false, error };
     }
-
-    const txData = EvmSolverService.encodeCreateIntent(intent, this.solver.intentsContract);
-
-    return {
-      address: intent.creator,
-      payload: txData.data,
-    };
   }
 
   /**
    * Gets an intent from a transaction hash (on Hub chain)
    * @param {Hash} txHash - The transaction hash on Hub chain
-   * @returns {Promise<Intent>} The intent
+   * @returns {Promise<Result<Intent>>} The intent
    */
-  public getIntent(txHash: Hash): Promise<Intent> {
-    return EvmSolverService.getIntent(txHash, this.config, this.hubProvider.publicClient);
+  public async getIntent(txHash: Hash): Promise<Result<Intent>> {
+    try {
+      const value = await EvmSolverService.getIntent(txHash, this.config, this.hubProvider.publicClient);
+      return { ok: true, value };
+    } catch (error) {
+      return { ok: false, error };
+    }
   }
 
   /**
    * Gets the intent state from a transaction hash (on Hub chain)
    * @param {Hash} txHash - The transaction hash on Hub chain
-   * @returns {Promise<IntentState>} The intent state
+   * @returns {Promise<Result<IntentState>>} The intent state
    */
-  public getFilledIntent(txHash: Hash): Promise<IntentState> {
-    return EvmSolverService.getFilledIntent(txHash, this.solver, this.hubProvider.publicClient);
+  public async getFilledIntent(txHash: Hash): Promise<Result<IntentState>> {
+    try {
+      const value = await EvmSolverService.getFilledIntent(txHash, this.solver, this.hubProvider.publicClient);
+      return { ok: true, value };
+    } catch (error) {
+      return { ok: false, error };
+    }
   }
 
   /**
@@ -1286,15 +1134,13 @@ export class SwapService {
    * @param {SpokeChainKey} chainId - The destination spoke chain ID
    * @param {string} fillTxHash - The fill transaction hash (received from getStatus when status is 3 - SOLVED)
    * @param {number} timeout - The timeout in milliseconds (default: 120 seconds)
-   * @returns {Promise<Result<PacketData, IntentError<'RELAY_TIMEOUT'>>>} A Result containing either the packet data or an IntentError with code 'RELAY_TIMEOUT'
+   * @returns {Promise<Result<PacketData>>} A Result containing either the packet data or an Error tagged `'RELAY_TIMEOUT'`.
    */
   public async getSolvedIntentPacket({
     chainId,
     fillTxHash,
     timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  }: { chainId: SpokeChainKey; fillTxHash: string; timeout?: number }): Promise<
-    Result<PacketData, IntentError<'RELAY_TIMEOUT'>>
-  > {
+  }: { chainId: SpokeChainKey; fillTxHash: string; timeout?: number }): Promise<Result<PacketData>> {
     return waitUntilIntentExecuted({
       intentRelayChainId: getIntentRelayChainId(chainId).toString(),
       spokeTxHash: fillTxHash,
@@ -1317,14 +1163,18 @@ export class SwapService {
    * @param {bigint} deadline (default: 5 minutes) - The deadline offset in seconds for the swap to be cancelled
    * @returns {Promise<bigint>} The deadline for the swap as a sum of hub chain block timestamp and deadline offset
    */
-  public async getSwapDeadline(deadline: bigint = DEFAULT_DEADLINE_OFFSET): Promise<bigint> {
-    invariant(deadline > 0n, 'Deadline must be greater than 0');
+  public async getSwapDeadline(deadline: bigint = DEFAULT_DEADLINE_OFFSET): Promise<Result<bigint>> {
+    try {
+      invariant(deadline > 0n, 'Deadline must be greater than 0');
 
-    const block = await this.hubProvider.publicClient.getBlock({
-      includeTransactions: false,
-      blockTag: 'latest',
-    });
-    return block.timestamp + deadline;
+      const block = await this.hubProvider.publicClient.getBlock({
+        includeTransactions: false,
+        blockTag: 'latest',
+      });
+      return { ok: true, value: block.timestamp + deadline };
+    } catch (error) {
+      return { ok: false, error };
+    }
   }
 
   /**

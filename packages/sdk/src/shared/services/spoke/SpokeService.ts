@@ -602,7 +602,7 @@ export class SpokeService {
         const result = await this.simulateDeposit(params);
         if (!result.ok) return result;
         if (!result.value) {
-          return { ok: false, error: new Error('Simulation failed') };
+          return { ok: false, error: new Error('SIMULATION_FAILED') };
         }
       }
       return { ok: true, value: undefined };
@@ -709,7 +709,7 @@ export class SpokeService {
         });
         if (!result.ok) return result;
         if (!result.value) {
-          return { ok: false, error: new Error('Simulation failed') };
+          return { ok: false, error: new Error('SIMULATION_FAILED') };
         }
       }
 
@@ -819,7 +819,7 @@ export class SpokeService {
         });
         if (!result.ok) return result;
         if (!result.value) {
-          return { ok: false, error: new Error('Simulation failed') };
+          return { ok: false, error: new Error('SIMULATION_FAILED') };
         }
       }
       return { ok: true, value: undefined };
@@ -891,14 +891,14 @@ export class SpokeService {
         if (result.ok && result.value.status === 'success') {
           return { ok: true, value: true };
         }
-        return { ok: false, error: new Error('Transaction failed') };
+        return { ok: false, error: new Error('TRANSACTION_VERIFICATION_FAILED') };
       }
       if (isStellarChainKeyType(chainKey)) {
         const result = await this.stellarSpokeService.waitForTransactionReceipt({ txHash, chainKey });
         if (result.ok && result.value.status === 'success') {
           return { ok: true, value: true };
         }
-        return { ok: false, error: new Error('Transaction failed') };
+        return { ok: false, error: new Error('TRANSACTION_VERIFICATION_FAILED') };
       }
 
       return { ok: true, value: true };

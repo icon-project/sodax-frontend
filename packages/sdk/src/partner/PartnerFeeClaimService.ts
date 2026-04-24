@@ -12,7 +12,6 @@ import {
   type OriginalAssetAddress,
   type XToken,
   type IntentRelayChainId,
-  type SolverErrorResponse,
   type SolverExecutionResponse,
   type Result,
   type GetAddressType,
@@ -96,40 +95,6 @@ export type PartnerFeeClaimServiceConstructorParams = {
   spoke: SpokeService;
 };
 
-export type SetSwapPreferenceError = {
-  code: 'SET_SWAP_PREFERENCE_FAILED';
-  data: {
-    payload: SetSwapPreferenceParams;
-    error: unknown;
-  };
-};
-
-export type IntentAutoSwapErrorData = {
-  payload: PartnerFeeClaimSwapParams;
-  error: unknown;
-};
-
-export type CreateIntentAutoSwapError = {
-  code: 'CREATE_INTENT_AUTO_SWAP_FAILED';
-  data: IntentAutoSwapErrorData;
-};
-
-export type WaitIntentAutoSwapError = {
-  code: 'WAIT_INTENT_AUTO_SWAP_FAILED';
-  data: IntentAutoSwapErrorData;
-};
-
-export type UnknownIntentAutoSwapError = {
-  code: 'UNKNOWN';
-  data: IntentAutoSwapErrorData;
-};
-
-export type ExecuteIntentAutoSwapError =
-  | CreateIntentAutoSwapError
-  | WaitIntentAutoSwapError
-  | SolverErrorResponse
-  | UnknownIntentAutoSwapError;
-
 export type IntentAutoSwapResult = {
   srcTxHash: Hex; // The transaction hash of the source transaction on the source chain (Sonic chain)
   solverExecutionResponse: SolverExecutionResponse; // The solver execution response
@@ -181,30 +146,18 @@ export class PartnerFeeClaimService {
     queryAddress: string,
   ): Promise<Result<Map<string, PartnerFeeClaimAssetBalance>, Error>> {
     try {
-      // Collect all assets from all chains
-      const allAssetEntries: Array<AssetEntry> = [];
-
-      // Iterate through all chains' supported tokens
+      // Deduplicate by hubAsset address (same wrapped token can appear on multiple spoke chains).
+      const uniqueAssets = new Map<Address, AssetEntry>();
       for (const [chainId, chainConfig] of Object.entries(this.config.spokeChainConfig)) {
         for (const token of Object.values(chainConfig.supportedTokens)) {
-          allAssetEntries.push({
-            assetAddress: token.hubAsset.toLowerCase() as Address,
+          const assetAddress = token.hubAsset.toLowerCase() as Address;
+          if (uniqueAssets.has(assetAddress)) continue;
+          uniqueAssets.set(assetAddress, {
+            assetAddress,
             originalChain: chainId as SpokeChainKey,
             originalAddress: token.address.toLowerCase() as Address,
-            hubAsset: {
-              symbol: token.symbol,
-              name: token.name,
-              decimal: token.decimals,
-            },
+            hubAsset: { symbol: token.symbol, name: token.name, decimal: token.decimals },
           });
-        }
-      }
-
-      // Remove duplicates based on asset address (same wrapped token might appear in multiple chains)
-      const uniqueAssets = new Map<Address, (typeof allAssetEntries)[0]>();
-      for (const entry of allAssetEntries) {
-        if (!uniqueAssets.has(entry.assetAddress)) {
-          uniqueAssets.set(entry.assetAddress, entry);
         }
       }
 
@@ -263,7 +216,7 @@ export class PartnerFeeClaimService {
     } catch (error) {
       return {
         ok: false,
-        error: error instanceof Error ? error : new Error(String(error)),
+        error: new Error('FETCH_ASSETS_BALANCES_FAILED', { cause: error }),
       };
     }
   }
@@ -305,7 +258,7 @@ export class PartnerFeeClaimService {
     } catch (error) {
       return {
         ok: false,
-        error: error instanceof Error ? error : new Error(String(error)),
+        error: new Error('GET_AUTO_SWAP_PREFERENCES_FAILED', { cause: error }),
       };
     }
   }
@@ -319,14 +272,14 @@ export class PartnerFeeClaimService {
    * @param {SetSwapPreferenceParams} args.params - The swap preference parameters
    * @param {S} args.spokeProvider - The Sonic spoke provider
    * @param {Raw} [args.raw] - If true, the raw transaction data will be returned
-   * @returns {Promise<Result<TxReturnType<S, Raw>, SetSwapPreferenceError>>}
+   * @returns {Promise<Result<TxReturnType<S, Raw>>>}
    *   - If `raw` is true or the provider is a raw provider, returns the raw transaction object.
    *   - Otherwise, returns the transaction hash of the submitted transaction.
    *   - If failed, returns an error object with code 'SET_SWAP_PREFERENCE_FAILED'.
    */
   public async setSwapPreference<K extends SpokeChainKey, Raw extends boolean>(
     _params: SetSwapPreferenceAction<K, Raw>,
-  ): Promise<Result<TxReturnType<K, Raw>, SetSwapPreferenceError>> {
+  ): Promise<Result<TxReturnType<K, Raw>>> {
     const { params, walletProvider, raw } = _params;
     try {
       invariant(isHubChainKeyType(params.srcChainKey), 'PartnerFeeClaimService only supports Sonic spoke provider');
@@ -378,13 +331,7 @@ export class PartnerFeeClaimService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'SET_SWAP_PREFERENCE_FAILED',
-          data: {
-            payload: params,
-            error: error,
-          },
-        },
+        error,
       };
     }
   }
@@ -427,7 +374,7 @@ export class PartnerFeeClaimService {
     } catch (error) {
       return {
         ok: false,
-        error: error instanceof Error ? error : new Error(String(error)),
+        error: new Error('IS_TOKEN_APPROVED_FAILED', { cause: error }),
       };
     }
   }
@@ -487,7 +434,7 @@ export class PartnerFeeClaimService {
     } catch (error) {
       return {
         ok: false,
-        error: error instanceof Error ? error : new Error(String(error)),
+        error: new Error('APPROVE_TOKEN_FAILED', { cause: error }),
       };
     }
   }
@@ -501,7 +448,7 @@ export class PartnerFeeClaimService {
    */
   public async createIntentAutoSwap<Raw extends boolean>(
     _params: PartnerFeeClaimSwapAction<HubChainKey, Raw>,
-  ): Promise<Result<TxReturnType<HubChainKey, Raw>, CreateIntentAutoSwapError>> {
+  ): Promise<Result<TxReturnType<HubChainKey, Raw>>> {
     const { params } = _params;
     try {
       invariant(isHubChainKeyType(params.srcChainKey), 'PartnerFeeClaimService only supports Hub srcChainKey');
@@ -546,13 +493,7 @@ export class PartnerFeeClaimService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'CREATE_INTENT_AUTO_SWAP_FAILED',
-          data: {
-            payload: params,
-            error: error,
-          },
-        },
+        error,
       };
     }
   }
@@ -561,12 +502,11 @@ export class PartnerFeeClaimService {
    * Creates an intent auto swap and handles post-execution
    * @param {PartnerFeeClaimSwapParams} params - The swap parameters
    * @param {SonicSpokeProviderType} spokeProvider - The Sonic spoke provider
-   * @returns {Promise<Result<SolverExecutionResponse, IntentError<IntentErrorCode>>>} Solver execution response
+   * @returns {Promise<Result<IntentAutoSwapResult>>} Intent auto-swap result. On failure, the `.error` is an `Error` tagged with a CODE (`WAIT_INTENT_AUTO_SWAP_FAILED`, `CREATE_INTENT_AUTO_SWAP_FAILED`); the underlying cause is on `.cause`.
    */
   public async swap(
     _params: PartnerFeeClaimSwapAction<HubChainKey, false>,
-  ): Promise<Result<IntentAutoSwapResult, ExecuteIntentAutoSwapError>> {
-    const { params } = _params;
+  ): Promise<Result<IntentAutoSwapResult>> {
     try {
       const txHash = await this.createIntentAutoSwap(_params);
 
@@ -577,27 +517,13 @@ export class PartnerFeeClaimService {
       let intentTxHash: Hex;
       try {
         const receipt = await this.hubProvider.publicClient.waitForTransactionReceipt({ hash: txHash.value });
-        // Extract intent_tx_hash from transaction receipt
-        // The intent_tx_hash should be the transaction hash itself for auto-swap
         intentTxHash = receipt.transactionHash;
       } catch (error) {
-        return {
-          ok: false,
-          error: {
-            code: 'WAIT_INTENT_AUTO_SWAP_FAILED',
-            data: {
-              payload: _params.params,
-              error: error,
-            },
-          },
-        };
+        return { ok: false, error: new Error('WAIT_INTENT_AUTO_SWAP_FAILED', { cause: error }) };
       }
 
-      // Post execution to solver API
       const solverExecutionResponse = await SolverApiService.postExecution(
-        {
-          intent_tx_hash: intentTxHash,
-        },
+        { intent_tx_hash: intentTxHash },
         this.config.solver,
       );
 
@@ -614,41 +540,8 @@ export class PartnerFeeClaimService {
         },
       };
     } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'UNKNOWN',
-          data: { payload: params, error: error },
-        },
-      };
+      return { ok: false, error };
     }
   }
 }
 
-/**
- * Error type guards for error handling
- */
-
-export function isSetSwapPreferenceError(error: unknown): error is SetSwapPreferenceError {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'SET_SWAP_PREFERENCE_FAILED';
-}
-
-export function isCreateIntentAutoSwapError(error: unknown): error is CreateIntentAutoSwapError {
-  return (
-    typeof error === 'object' && error !== null && 'code' in error && error.code === 'CREATE_INTENT_AUTO_SWAP_FAILED'
-  );
-}
-
-export function isWaitIntentAutoSwapError(error: unknown): error is WaitIntentAutoSwapError {
-  return (
-    typeof error === 'object' && error !== null && 'code' in error && error.code === 'WAIT_INTENT_AUTO_SWAP_FAILED'
-  );
-}
-
-export function isSolverErrorResponse(error: unknown): error is SolverErrorResponse {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'SOLVER_ERROR';
-}
-
-export function isUnknownIntentAutoSwapError(error: unknown): error is UnknownIntentAutoSwapError {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === 'UNKNOWN';
-}

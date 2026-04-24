@@ -17,6 +17,7 @@ import type {
   GetSwapTokensApiResponse,
   GetSwapTokensByChainIdApiResponse,
   IConfigApi,
+  Result,
   SpokeChainKey,
   SubmitSwapTxRequest,
   SubmitSwapTxResponse,
@@ -201,7 +202,7 @@ export class BackendApiService implements IConfigApi {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
+        throw new Error('HTTP_REQUEST_FAILED', { cause: new Error(`HTTP ${response.status}: ${errorText}`) });
       }
 
       const data = await response.json();
@@ -211,14 +212,26 @@ export class BackendApiService implements IConfigApi {
 
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          throw new Error(`Request timeout after ${timeout}ms`);
+          throw new Error('REQUEST_TIMEOUT', { cause: new Error(`Request timeout after ${timeout}ms`) });
         }
         console.error('[BackendApiService] Request error:', error.message);
         throw error;
       }
 
       console.error('[BackendApiService] Unknown error:', error);
-      throw new Error('Unknown error occurred');
+      throw new Error('UNKNOWN_REQUEST_ERROR', { cause: error });
+    }
+  }
+
+  /**
+   * Wraps {@link makeRequest} in a Result<T>. All public endpoint methods delegate to this.
+   */
+  private async request<T>(endpoint: string, config: RequestConfig): Promise<Result<T>> {
+    try {
+      const value = await this.makeRequest<T>(endpoint, config);
+      return { ok: true, value };
+    } catch (error) {
+      return { ok: false, error };
     }
   }
 
@@ -229,8 +242,8 @@ export class BackendApiService implements IConfigApi {
    * @param txHash - The intent created transaction hash from the hub chain
    * @returns Promise<IntentResponse>
    */
-  public async getIntentByTxHash(txHash: string, config?: RequestOverrideConfig): Promise<IntentResponse> {
-    return this.makeRequest<IntentResponse>(`/intent/tx/${txHash}`, { ...config, method: 'GET' });
+  public async getIntentByTxHash(txHash: string, config?: RequestOverrideConfig): Promise<Result<IntentResponse>> {
+    return this.request<IntentResponse>(`/intent/tx/${txHash}`, { ...config, method: 'GET' });
   }
 
   /**
@@ -238,8 +251,8 @@ export class BackendApiService implements IConfigApi {
    * @param intentHash - Intent hash
    * @returns Promise<IntentResponse>
    */
-  public async getIntentByHash(intentHash: string, config?: RequestOverrideConfig): Promise<IntentResponse> {
-    return this.makeRequest<IntentResponse>(`/intent/${intentHash}`, { ...config, method: 'GET' });
+  public async getIntentByHash(intentHash: string, config?: RequestOverrideConfig): Promise<Result<IntentResponse>> {
+    return this.request<IntentResponse>(`/intent/${intentHash}`, { ...config, method: 'GET' });
   }
 
   // Swap submit-tx endpoints
@@ -251,40 +264,39 @@ export class BackendApiService implements IConfigApi {
   public async submitSwapTx(
     params: SubmitSwapTxRequest,
     config?: RequestOverrideConfig,
-  ): Promise<SubmitSwapTxResponse> {
-    const data = await this.makeRequest<unknown>('/swaps/submit-tx', {
+  ): Promise<Result<SubmitSwapTxResponse>> {
+    const result = await this.request<unknown>('/swaps/submit-tx', {
       ...config,
       method: 'POST',
       body: JSON.stringify(params),
     });
-    if (!isSubmitSwapTxResponse(data)) {
-      throw new Error('Invalid submitSwapTx response: unexpected response shape');
+    if (!result.ok) return result;
+    if (!isSubmitSwapTxResponse(result.value)) {
+      return { ok: false, error: new Error('Invalid submitSwapTx response: unexpected response shape') };
     }
-    return data;
+    return { ok: true, value: result.value };
   }
 
   /**
    * Get the processing status of a submitted swap transaction
    * @param params - Query parameters containing txHash and optional srcChain
-   * @returns Promise<SubmitSwapTxStatusResponse>
+   * @returns Promise<Result<SubmitSwapTxStatusResponse>>
    */
   public async getSubmitSwapTxStatus(
     params: GetSubmitSwapTxStatusParams,
     config?: RequestOverrideConfig,
-  ): Promise<SubmitSwapTxStatusResponse> {
+  ): Promise<Result<SubmitSwapTxStatusResponse>> {
     const queryParams = new URLSearchParams();
     queryParams.append('txHash', params.txHash);
     if (params.srcChainKey) queryParams.append('srcChainKey', params.srcChainKey);
 
-    const queryString = queryParams.toString();
-    const endpoint = `/swaps/submit-tx/status?${queryString}`;
-
-    const data = await this.makeRequest<unknown>(endpoint, { ...config, method: 'GET' });
-
-    if (!isSubmitSwapTxStatusResponse(data)) {
-      throw new Error('Invalid submitSwapTxStatus response: unexpected response shape');
+    const endpoint = `/swaps/submit-tx/status?${queryParams.toString()}`;
+    const result = await this.request<unknown>(endpoint, { ...config, method: 'GET' });
+    if (!result.ok) return result;
+    if (!isSubmitSwapTxStatusResponse(result.value)) {
+      return { ok: false, error: new Error('Invalid submitSwapTxStatus response: unexpected response shape') };
     }
-    return data;
+    return { ok: true, value: result.value };
   }
 
   // Solver endpoints
@@ -352,16 +364,16 @@ export class BackendApiService implements IConfigApi {
   public async getMoneyMarketPosition(
     userAddress: string,
     config?: RequestOverrideConfig,
-  ): Promise<MoneyMarketPosition> {
-    return this.makeRequest<MoneyMarketPosition>(`/moneymarket/position/${userAddress}`, { ...config, method: 'GET' });
+  ): Promise<Result<MoneyMarketPosition>> {
+    return this.request<MoneyMarketPosition>(`/moneymarket/position/${userAddress}`, { ...config, method: 'GET' });
   }
 
   /**
    * Get all money market assets
    * @returns Promise<MoneyMarketAsset[]>
    */
-  public async getAllMoneyMarketAssets(config?: RequestOverrideConfig): Promise<MoneyMarketAsset[]> {
-    return this.makeRequest<MoneyMarketAsset[]>('/moneymarket/asset/all', { ...config, method: 'GET' });
+  public async getAllMoneyMarketAssets(config?: RequestOverrideConfig): Promise<Result<MoneyMarketAsset[]>> {
+    return this.request<MoneyMarketAsset[]>('/moneymarket/asset/all', { ...config, method: 'GET' });
   }
 
   /**
@@ -369,8 +381,8 @@ export class BackendApiService implements IConfigApi {
    * @param reserveAddress - Reserve contract address
    * @returns Promise<MoneyMarketAsset>
    */
-  public async getMoneyMarketAsset(reserveAddress: string, config?: RequestOverrideConfig): Promise<MoneyMarketAsset> {
-    return this.makeRequest<MoneyMarketAsset>(`/moneymarket/asset/${reserveAddress}`, { ...config, method: 'GET' });
+  public async getMoneyMarketAsset(reserveAddress: string, config?: RequestOverrideConfig): Promise<Result<MoneyMarketAsset>> {
+    return this.request<MoneyMarketAsset>(`/moneymarket/asset/${reserveAddress}`, { ...config, method: 'GET' });
   }
 
   /**
@@ -438,24 +450,24 @@ export class BackendApiService implements IConfigApi {
    * Get all supported config
    * @returns Promise<GetAllConfigApiResponse>
    */
-  public async getAllConfig(config?: RequestOverrideConfig): Promise<GetAllConfigApiResponse> {
-    return this.makeRequest<GetAllConfigApiResponse>('/config/all', { ...config, method: 'GET' });
+  public async getAllConfig(config?: RequestOverrideConfig): Promise<Result<GetAllConfigApiResponse>> {
+    return this.request<GetAllConfigApiResponse>('/config/all', { ...config, method: 'GET' });
   }
 
   /**
    * Get all supported spoke chains
    * @returns Promise<GetChainsApiResponse>
    */
-  public async getChains(config?: RequestOverrideConfig): Promise<GetChainsApiResponse> {
-    return this.makeRequest<GetChainsApiResponse>('/config/spoke/chains', { ...config, method: 'GET' });
+  public async getChains(config?: RequestOverrideConfig): Promise<Result<GetChainsApiResponse>> {
+    return this.request<GetChainsApiResponse>('/config/spoke/chains', { ...config, method: 'GET' });
   }
 
   /**
    * Get all supported swap tokens
    * @returns Promise<GetSwapTokensApiResponse>
    */
-  public async getSwapTokens(config?: RequestOverrideConfig): Promise<GetSwapTokensApiResponse> {
-    return this.makeRequest<GetSwapTokensApiResponse>('/config/swap/tokens', { ...config, method: 'GET' });
+  public async getSwapTokens(config?: RequestOverrideConfig): Promise<Result<GetSwapTokensApiResponse>> {
+    return this.request<GetSwapTokensApiResponse>('/config/swap/tokens', { ...config, method: 'GET' });
   }
 
   /**
@@ -466,72 +478,72 @@ export class BackendApiService implements IConfigApi {
   public async getSwapTokensByChainId(
     chainId: SpokeChainKey,
     config?: RequestOverrideConfig,
-  ): Promise<GetSwapTokensByChainIdApiResponse> {
-    return this.makeRequest<GetSwapTokensByChainIdApiResponse>(`/config/swap/${chainId}/tokens`, {
-      ...config,
-      method: 'GET',
-    });
+  ): Promise<Result<GetSwapTokensByChainIdApiResponse>> {
+    return this.request<GetSwapTokensByChainIdApiResponse>(`/config/swap/${chainId}/tokens`, {
+        ...config,
+        method: 'GET',
+      });
   }
 
   /**
    * Get all supported money market tokens
-   * @returns Promise<GetMoneyMarketTokensApiResponse>
+   * @returns Promise<Result<GetMoneyMarketTokensApiResponse>>
    */
-  public async getMoneyMarketTokens(config?: RequestOverrideConfig): Promise<GetMoneyMarketTokensApiResponse> {
-    return this.makeRequest<GetMoneyMarketTokensApiResponse>('/config/money-market/tokens', {
-      ...config,
-      method: 'GET',
-    });
+  public async getMoneyMarketTokens(config?: RequestOverrideConfig): Promise<Result<GetMoneyMarketTokensApiResponse>> {
+    return this.request<GetMoneyMarketTokensApiResponse>('/config/money-market/tokens', {
+        ...config,
+        method: 'GET',
+      });
   }
 
   /**
    * Get all supported money market tokens
-   * @returns Promise<GetMoneyMarketTokensApiResponse>
+   * @returns Promise<Result<GetMoneyMarketReserveAssetsApiResponse>>
    */
   public async getMoneyMarketReserveAssets(
     config?: RequestOverrideConfig,
-  ): Promise<GetMoneyMarketReserveAssetsApiResponse> {
-    return this.makeRequest<GetMoneyMarketReserveAssetsApiResponse>('/config/money-market/reserve-assets', {
-      ...config,
-      method: 'GET',
-    });
+  ): Promise<Result<GetMoneyMarketReserveAssetsApiResponse>> {
+    return this.request<GetMoneyMarketReserveAssetsApiResponse>('/config/money-market/reserve-assets', {
+        ...config,
+        method: 'GET',
+      });
   }
 
   /**
    * Get supported money market tokens for a specific spoke chain
    * @param chainId - Spoke chain id
-   * @returns Promise<GetMoneyMarketTokensByChainIdApiResponse>
+   * @returns Promise<Result<GetMoneyMarketTokensByChainIdApiResponse>>
    */
   public async getMoneyMarketTokensByChainId(
     chainId: SpokeChainKey,
     config?: RequestOverrideConfig,
-  ): Promise<GetMoneyMarketTokensByChainIdApiResponse> {
-    return this.makeRequest<GetMoneyMarketTokensByChainIdApiResponse>(`/config/money-market/${chainId}/tokens`, {
-      ...config,
-      method: 'GET',
-    });
+  ): Promise<Result<GetMoneyMarketTokensByChainIdApiResponse>> {
+    return this.request<GetMoneyMarketTokensByChainIdApiResponse>(
+        `/config/money-market/${chainId}/tokens`,
+        { ...config, method: 'GET' },
+      );
   }
 
   /**
    * Get the intent relay chain id map
-   * @returns Promise<GetRelayChainIdMapApiResponse>
+   * @returns Promise<Result<GetRelayChainIdMapApiResponse>>
    */
-  public async getRelayChainIdMap(config?: RequestOverrideConfig): Promise<GetRelayChainIdMapApiResponse> {
-    return this.makeRequest<GetRelayChainIdMapApiResponse>('/config/relay/chain-id-map', {
-      ...config,
-      method: 'GET',
-    });
+  public async getRelayChainIdMap(config?: RequestOverrideConfig): Promise<Result<GetRelayChainIdMapApiResponse>> {
+    return this.request<GetRelayChainIdMapApiResponse>('/config/relay/chain-id-map', {
+        ...config,
+        method: 'GET',
+      });
   }
 
   /**
    * Get the spoke chain config
-   * @returns Promise<GetSpokeChainConfigApiResponse>
+   * @returns Promise<Result<GetSpokeChainConfigApiResponse>>
    */
-  public async getSpokeChainConfig(config?: RequestOverrideConfig): Promise<GetSpokeChainConfigApiResponse> {
-    return this.makeRequest<GetSpokeChainConfigApiResponse>('/config/spoke/all-chains-configs', {
-      ...config,
-      method: 'GET',
-    });
+  public async getSpokeChainConfig(config?: RequestOverrideConfig): Promise<Result<GetSpokeChainConfigApiResponse>> {
+    return this.request<GetSpokeChainConfigApiResponse>('/config/spoke/all-chains-configs', {
+        ...config,
+        method: 'GET',
+      });
   }
 
   /**

@@ -7,24 +7,17 @@ import {
 } from '@sodax/types';
 import invariant from 'tiny-invariant';
 import { retry } from '../../utils/shared-utils.js';
-import type { IntentError } from '../../types/intent-types.js';
 import {
   type RelayAction,
-  type RelayErrorCode,
   type RelayExtraData,
   type IntentDeliveryInfo,
   type IntentRelayRequest,
   type WaitUntilIntentExecutedPayload,
 } from '../../types/relay-types.js';
 
-export type { RelayAction, RelayErrorCode, RelayExtraData, IntentDeliveryInfo, IntentRelayRequest, WaitUntilIntentExecutedPayload };
+export type { RelayAction, RelayExtraData, IntentDeliveryInfo, IntentRelayRequest, WaitUntilIntentExecutedPayload };
 
 export type RelayTxStatus = 'pending' | 'validating' | 'executing' | 'executed';
-
-export type RelayError = {
-  code: RelayErrorCode;
-  error: unknown;
-};
 
 export type SubmitTxParams = {
   chain_id: string;
@@ -162,7 +155,7 @@ export async function getPacket(
 
 export async function waitUntilIntentExecuted(
   payload: WaitUntilIntentExecutedPayload,
-): Promise<Result<PacketData, IntentError<'RELAY_TIMEOUT'>>> {
+): Promise<Result<PacketData>> {
   try {
     const timeout = payload.timeout ?? DEFAULT_RELAY_TX_TIMEOUT;
     const startTime = Date.now();
@@ -186,43 +179,18 @@ export async function waitUntilIntentExecuted(
           );
 
           if (txPackets.success && txPackets.data.length > 0 && packet && packet.status === 'executed') {
-            return {
-              ok: true,
-              value: packet,
-            };
+            return { ok: true, value: packet };
           }
         }
       } catch (e) {
         console.error('Error getting transaction packets', e);
       }
-      // wait two seconds before retrying
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
-    return {
-      ok: false,
-      error: {
-        code: 'RELAY_TIMEOUT',
-        data: {
-          payload: payload,
-          error: {
-            payload: payload,
-            error: undefined,
-          },
-        },
-      },
-    };
-  } catch (e) {
-    return {
-      ok: false,
-      error: {
-        code: 'RELAY_TIMEOUT',
-        data: {
-          payload: payload,
-          error: e,
-        },
-      },
-    };
+    return { ok: false, error: new Error('RELAY_TIMEOUT') };
+  } catch (error) {
+    return { ok: false, error };
   }
 }
 
@@ -242,7 +210,7 @@ export async function relayTxAndWaitPacket(
   chainkey: SpokeChainKey,
   relayerApiEndpoint: HttpUrl,
   timeout = DEFAULT_RELAY_TX_TIMEOUT,
-): Promise<Result<PacketData, RelayError>> {
+): Promise<Result<PacketData>> {
   try {
     const intentRelayChainId = getIntentRelayChainId(chainkey).toString();
 
@@ -263,43 +231,16 @@ export async function relayTxAndWaitPacket(
     const submitResult = await submitTransaction(submitPayload, relayerApiEndpoint);
 
     if (!submitResult.success) {
-      return {
-        ok: false,
-        error: {
-          code: 'SUBMIT_TX_FAILED',
-          error: submitResult.message,
-        },
-      };
+      return { ok: false, error: new Error('SUBMIT_TX_FAILED', { cause: new Error(submitResult.message) }) };
     }
 
-    const packet = await waitUntilIntentExecuted({
+    return await waitUntilIntentExecuted({
       intentRelayChainId,
       spokeTxHash,
       timeout,
       apiUrl: relayerApiEndpoint,
     });
-
-    if (!packet.ok) {
-      return {
-        ok: false,
-        error: {
-          code: 'RELAY_TIMEOUT',
-          error: packet.error,
-        },
-      };
-    }
-
-    return {
-      ok: true,
-      value: packet.value,
-    };
   } catch (error) {
-    return {
-      ok: false,
-      error: {
-        code: 'SUBMIT_TX_FAILED',
-        error: error,
-      },
-    };
+    return { ok: false, error };
   }
 }

@@ -1,7 +1,5 @@
 import type { Hex, PublicClient, HttpTransport } from 'viem';
 import {
-  type RelayErrorCode,
-  type RelayError,
   type SpokeService,
   encodeContractCalls,
   relayTxAndWaitPacket,
@@ -279,108 +277,6 @@ export interface PoolData {
 
 export type PoolSpokeAssets = { token0: XToken; token1: XToken };
 
-export type ConcentratedLiquidityUnknownErrorCode =
-  | 'SUPPLY_LIQUIDITY_UNKNOWN_ERROR'
-  | 'GET_POOL_DATA_UNKNOWN_ERROR'
-  | 'WITHDRAW_LIQUIDITY_UNKNOWN_ERROR'
-  | 'INCREASE_LIQUIDITY_UNKNOWN_ERROR'
-  | 'DECREASE_LIQUIDITY_UNKNOWN_ERROR'
-  | 'CLAIM_REWARDS_UNKNOWN_ERROR'
-  | 'GET_POOL_REWARD_CONFIG_UNKNOWN_ERROR';
-
-export type GetConcentratedLiquidityParams<T extends ConcentratedLiquidityUnknownErrorCode> =
-  T extends 'SUPPLY_LIQUIDITY_UNKNOWN_ERROR'
-    ? ClSupplyParams<SpokeChainKey>
-    : T extends 'GET_POOL_DATA_UNKNOWN_ERROR'
-      ? ClGetPoolDataParams
-      : T extends 'WITHDRAW_LIQUIDITY_UNKNOWN_ERROR'
-        ? ClWithdrawParams<SpokeChainKey>
-        : T extends 'INCREASE_LIQUIDITY_UNKNOWN_ERROR'
-          ? ClIncreaseLiquidityParams<SpokeChainKey>
-          : T extends 'DECREASE_LIQUIDITY_UNKNOWN_ERROR'
-            ? ClDecreaseLiquidityParams<SpokeChainKey>
-            : T extends 'CLAIM_REWARDS_UNKNOWN_ERROR'
-              ? ClClaimRewardsParams<SpokeChainKey>
-              : T extends 'GET_POOL_REWARD_CONFIG_UNKNOWN_ERROR'
-                ? PoolKey
-                : never;
-
-export type ConcentratedLiquidityErrorCode =
-  | ConcentratedLiquidityUnknownErrorCode
-  | RelayErrorCode
-  | 'CREATE_SUPPLY_LIQUIDITY_INTENT_FAILED'
-  | 'GET_POOL_DATA_FAILED'
-  | 'CREATE_WITHDRAW_LIQUIDITY_INTENT_FAILED'
-  | 'CREATE_INCREASE_LIQUIDITY_INTENT_FAILED'
-  | 'CREATE_DECREASE_LIQUIDITY_INTENT_FAILED'
-  | 'CREATE_CLAIM_REWARDS_INTENT_FAILED'
-  | 'GET_POOL_REWARD_CONFIG_FAILED';
-
-export type ConcentratedLiquidityUnknownError<T extends ConcentratedLiquidityUnknownErrorCode> = {
-  error: unknown;
-  payload: GetConcentratedLiquidityParams<T>;
-};
-
-export type ConcentratedLiquiditySubmitTxFailedError = {
-  error: RelayError;
-  payload: SpokeTxHash;
-};
-
-export type ConcentratedLiquiditySupplyFailedError = {
-  error: unknown;
-  payload: ClSupplyParams<SpokeChainKey>;
-};
-
-export type ConcentratedLiquidityWithdrawFailedError = {
-  error: unknown;
-  payload: ClWithdrawParams<SpokeChainKey>;
-};
-
-export type ConcentratedLiquidityIncreaseLiquidityFailedError = {
-  error: unknown;
-  payload: ClIncreaseLiquidityParams<SpokeChainKey>;
-};
-
-export type ConcentratedLiquidityDecreaseLiquidityFailedError = {
-  error: unknown;
-  payload: ClDecreaseLiquidityParams<SpokeChainKey>;
-};
-
-export type ConcentratedLiquidityClaimRewardsFailedError = {
-  error: unknown;
-  payload: ClClaimRewardsParams<SpokeChainKey>;
-};
-
-export type ConcentratedLiquidityGetPoolRewardConfigFailedError = {
-  error: unknown;
-  payload: PoolKey;
-};
-
-export type GetConcentratedLiquidityError<T extends ConcentratedLiquidityErrorCode> = T extends 'SUBMIT_TX_FAILED'
-  ? ConcentratedLiquiditySubmitTxFailedError
-  : T extends 'RELAY_TIMEOUT'
-    ? ConcentratedLiquiditySubmitTxFailedError
-    : T extends 'CREATE_SUPPLY_LIQUIDITY_INTENT_FAILED'
-      ? ConcentratedLiquiditySupplyFailedError
-      : T extends 'CREATE_WITHDRAW_LIQUIDITY_INTENT_FAILED'
-        ? ConcentratedLiquidityWithdrawFailedError
-        : T extends 'CREATE_INCREASE_LIQUIDITY_INTENT_FAILED'
-          ? ConcentratedLiquidityIncreaseLiquidityFailedError
-          : T extends 'CREATE_DECREASE_LIQUIDITY_INTENT_FAILED'
-            ? ConcentratedLiquidityDecreaseLiquidityFailedError
-            : T extends 'CREATE_CLAIM_REWARDS_INTENT_FAILED'
-              ? ConcentratedLiquidityClaimRewardsFailedError
-              : T extends 'GET_POOL_REWARD_CONFIG_FAILED'
-                ? ConcentratedLiquidityGetPoolRewardConfigFailedError
-                : T extends ConcentratedLiquidityUnknownErrorCode
-                  ? ConcentratedLiquidityUnknownError<T>
-                  : never;
-
-export type ConcentratedLiquidityError<T extends ConcentratedLiquidityErrorCode> = {
-  code: T;
-  data: GetConcentratedLiquidityError<T>;
-};
-
 export type ClServiceConstructorParams = {
   hubProvider: HubProvider;
   config: ConfigService;
@@ -435,7 +331,7 @@ export class ClService {
   public async executeSupplyLiquidity<K extends SpokeChainKey, Raw extends boolean>(
     _params: ClSupplyAction<K, Raw>,
   ): Promise<
-    Result<TxReturnType<K, Raw>, ConcentratedLiquidityError<'CREATE_SUPPLY_LIQUIDITY_INTENT_FAILED'>> &
+    Result<TxReturnType<K, Raw>> &
       RelayOptionalExtraData
   > {
     const { params, skipSimulation } = _params;
@@ -510,13 +406,7 @@ export class ClService {
         console.error('executeSupplyLiquidity error:', txResult.error);
         return {
           ok: false,
-          error: {
-            code: 'CREATE_SUPPLY_LIQUIDITY_INTENT_FAILED',
-            data: {
-              error: txResult.error,
-              payload: params,
-            },
-          },
+          error: txResult.error,
         };
       }
 
@@ -532,13 +422,7 @@ export class ClService {
       console.error('executeSupplyLiquidity error:', error);
       return {
         ok: false,
-        error: {
-          code: 'CREATE_SUPPLY_LIQUIDITY_INTENT_FAILED',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -574,7 +458,7 @@ export class ClService {
   public async executeIncreaseLiquidity<K extends SpokeChainKey, Raw extends boolean>(
     _params: ClLiquidityIncreaseLiquidityAction<K, Raw>,
   ): Promise<
-    Result<TxReturnType<K, Raw>, ConcentratedLiquidityError<'CREATE_INCREASE_LIQUIDITY_INTENT_FAILED'>> &
+    Result<TxReturnType<K, Raw>> &
       RelayOptionalExtraData
   > {
     const { params, skipSimulation } = _params;
@@ -640,13 +524,7 @@ export class ClService {
       if (!txResult.ok) {
         return {
           ok: false,
-          error: {
-            code: 'CREATE_INCREASE_LIQUIDITY_INTENT_FAILED',
-            data: {
-              error: txResult.error,
-              payload: params,
-            },
-          },
+          error: txResult.error,
         };
       }
 
@@ -661,13 +539,7 @@ export class ClService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'CREATE_INCREASE_LIQUIDITY_INTENT_FAILED',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -675,7 +547,7 @@ export class ClService {
   public async executeDecreaseLiquidity<K extends SpokeChainKey, Raw extends boolean>(
     _params: ClLiquidityDecreaseLiquidityAction<K, Raw>,
   ): Promise<
-    Result<TxReturnType<K, Raw>, ConcentratedLiquidityError<'CREATE_DECREASE_LIQUIDITY_INTENT_FAILED'>> &
+    Result<TxReturnType<K, Raw>> &
       RelayOptionalExtraData
   > {
     const { params, skipSimulation } = _params;
@@ -733,13 +605,7 @@ export class ClService {
       if (!txResult.ok) {
         return {
           ok: false,
-          error: {
-            code: 'CREATE_DECREASE_LIQUIDITY_INTENT_FAILED',
-            data: {
-              error: txResult.error,
-              payload: params,
-            },
-          },
+          error: txResult.error,
         };
       }
 
@@ -754,13 +620,7 @@ export class ClService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'CREATE_DECREASE_LIQUIDITY_INTENT_FAILED',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -793,7 +653,7 @@ export class ClService {
    */
   public async supplyLiquidity<K extends SpokeChainKey>(
     _params: ClSupplyAction<K, false>,
-  ): Promise<Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>> {
+  ): Promise<Result<[SpokeTxHash, HubTxHash]>> {
     const { params, timeout } = _params;
     try {
       const txResult = await this.executeSupplyLiquidity(_params);
@@ -814,18 +674,7 @@ export class ClService {
           timeout,
         );
 
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              data: {
-                error: packetResult.error,
-                payload: txResult.value,
-              } satisfies GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
-            },
-          };
-        }
+        if (!packetResult.ok) return packetResult;
 
         intentTxHash = packetResult.value.dst_tx_hash;
       } else {
@@ -837,13 +686,7 @@ export class ClService {
       console.error('supplyLiquidity error:', error);
       return {
         ok: false,
-        error: {
-          code: 'SUPPLY_LIQUIDITY_UNKNOWN_ERROR',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -854,16 +697,13 @@ export class ClService {
    */
   public async increaseLiquidity<K extends SpokeChainKey>(
     _params: ClLiquidityIncreaseLiquidityAction<K, false>,
-  ): Promise<Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>> {
+  ): Promise<Result<[SpokeTxHash, HubTxHash]>> {
     const { params, timeout } = _params;
     try {
       const txResult = await this.executeIncreaseLiquidity(_params);
 
       if (!txResult.ok) {
-        return txResult satisfies Result<
-          [SpokeTxHash, HubTxHash],
-          ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>
-        >;
+        return txResult;
       }
 
       let intentTxHash: string | null = null;
@@ -878,18 +718,7 @@ export class ClService {
           timeout,
         );
 
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              data: {
-                error: packetResult.error,
-                payload: txResult.value,
-              } satisfies GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
-            },
-          };
-        }
+        if (!packetResult.ok) return packetResult;
 
         intentTxHash = packetResult.value.dst_tx_hash;
       } else {
@@ -900,13 +729,7 @@ export class ClService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'INCREASE_LIQUIDITY_UNKNOWN_ERROR',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -917,16 +740,13 @@ export class ClService {
    */
   public async decreaseLiquidity<K extends SpokeChainKey>(
     _params: ClLiquidityDecreaseLiquidityAction<K, false>,
-  ): Promise<Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>> {
+  ): Promise<Result<[SpokeTxHash, HubTxHash]>> {
     const { params, timeout } = _params;
     try {
       const txResult = await this.executeDecreaseLiquidity(_params);
 
       if (!txResult.ok) {
-        return txResult satisfies Result<
-          [SpokeTxHash, HubTxHash],
-          ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>
-        >;
+        return txResult;
       }
 
       let intentTxHash: string | null = null;
@@ -941,18 +761,7 @@ export class ClService {
           timeout,
         );
 
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              data: {
-                error: packetResult.error,
-                payload: txResult.value,
-              } satisfies GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
-            },
-          };
-        }
+        if (!packetResult.ok) return packetResult;
 
         intentTxHash = packetResult.value.dst_tx_hash;
       } else {
@@ -963,13 +772,7 @@ export class ClService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'DECREASE_LIQUIDITY_UNKNOWN_ERROR',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -983,21 +786,12 @@ export class ClService {
   public async getPoolRewardConfig(
     poolKey: PoolKey,
     publicClient: PublicClient<HttpTransport>,
-  ): Promise<Result<PoolRewardConfig, ConcentratedLiquidityError<'GET_POOL_REWARD_CONFIG_FAILED'>>> {
+  ): Promise<Result<PoolRewardConfig>> {
     try {
       const hookAddress = poolKey.hooks;
 
       if (!hookAddress || hookAddress === '0x' || hookAddress === '0x0000000000000000000000000000000000000000') {
-        return {
-          ok: false,
-          error: {
-            code: 'GET_POOL_REWARD_CONFIG_FAILED',
-            data: {
-              error: new Error('Pool has no hook configured'),
-              payload: poolKey,
-            },
-          },
-        };
+        return { ok: false, error: new Error('Pool has no hook configured') };
       }
 
       const poolId = getPoolId(poolKey);
@@ -1036,16 +830,7 @@ export class ClService {
       };
     } catch (error) {
       console.error('getPoolRewardConfig error:', error);
-      return {
-        ok: false,
-        error: {
-          code: 'GET_POOL_REWARD_CONFIG_FAILED',
-          data: {
-            error: error,
-            payload: poolKey,
-          },
-        },
-      };
+      return { ok: false, error: new Error('GET_POOL_REWARD_CONFIG_FAILED', { cause: error }) };
     }
   }
 
@@ -1055,7 +840,7 @@ export class ClService {
   public async executeClaimRewards<K extends SpokeChainKey, Raw extends boolean>(
     _params: ClLiquidityClaimRewardsAction<K, Raw>,
   ): Promise<
-    Result<TxReturnType<K, Raw>, ConcentratedLiquidityError<'CREATE_CLAIM_REWARDS_INTENT_FAILED'>> &
+    Result<TxReturnType<K, Raw>> &
       RelayOptionalExtraData
   > {
     const { params, skipSimulation } = _params;
@@ -1115,13 +900,7 @@ export class ClService {
         console.error('executeClaimRewards error:', txResult.error);
         return {
           ok: false,
-          error: {
-            code: 'CREATE_CLAIM_REWARDS_INTENT_FAILED',
-            data: {
-              error: txResult.error,
-              payload: params,
-            },
-          },
+          error: txResult.error,
         };
       }
 
@@ -1137,13 +916,7 @@ export class ClService {
       console.error('executeClaimRewards error:', error);
       return {
         ok: false,
-        error: {
-          code: 'CREATE_CLAIM_REWARDS_INTENT_FAILED',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -1154,7 +927,7 @@ export class ClService {
    */
   public async claimRewards<K extends SpokeChainKey>(
     _params: ClLiquidityClaimRewardsAction<K, false>,
-  ): Promise<Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>> {
+  ): Promise<Result<[SpokeTxHash, HubTxHash]>> {
     const { params, timeout } = _params;
     try {
       const txResult = await this.executeClaimRewards(_params);
@@ -1175,18 +948,7 @@ export class ClService {
           timeout,
         );
 
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              data: {
-                error: packetResult.error,
-                payload: txResult.value,
-              } satisfies GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
-            },
-          };
-        }
+        if (!packetResult.ok) return packetResult;
 
         intentTxHash = packetResult.value.dst_tx_hash;
       } else {
@@ -1198,13 +960,7 @@ export class ClService {
       console.error('claimRewards error:', error);
       return {
         ok: false,
-        error: {
-          code: 'CLAIM_REWARDS_UNKNOWN_ERROR',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -1303,18 +1059,16 @@ export class ClService {
     }
 
     try {
-      // Get conversion rate
-      const conversionRate = await this.getStatATokenConversionRate(token.address);
-
-      // Get underlying token info
       const normalizedAddress =
         token.address.toLowerCase() as keyof typeof this.config.sodaxConfig.dex.statATokenAddresses;
       const underlyingVaultAddress = this.config.sodaxConfig.dex.statATokenAddresses[normalizedAddress];
 
       invariant(underlyingVaultAddress, `Underlying vault address is undefined for ${normalizedAddress}`);
 
-      // Fetch underlying token details
-      const underlyingInfo = await this.getTokenInfo(underlyingVaultAddress, publicClient);
+      const [conversionRate, underlyingInfo] = await Promise.all([
+        this.getStatATokenConversionRate(token.address),
+        this.getTokenInfo(underlyingVaultAddress, publicClient),
+      ]);
       const underlyingToken = new Token(
         146,
         underlyingVaultAddress,
@@ -1457,7 +1211,7 @@ export class ClService {
       };
     } catch (error) {
       console.error('Failed to fetch pool data:', error);
-      throw new Error(`Failed to fetch pool data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error('GET_POOL_DATA_FAILED', { cause: error });
     }
   }
 

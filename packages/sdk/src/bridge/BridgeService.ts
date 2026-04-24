@@ -1,7 +1,6 @@
 import invariant from 'tiny-invariant';
 import {
   type SpokeService,
-  type RelayErrorCode,
   Erc20Service,
   type HubProvider,
   relayTxAndWaitPacket,
@@ -67,18 +66,6 @@ export type BridgeParams<ChainKey extends SpokeChainKey, Raw extends boolean> = 
   timeout?: number;
 } & WalletProviderSlot<ChainKey, Raw>;
 
-export type BridgeErrorCode =
-  | 'ALLOWANCE_CHECK_FAILED'
-  | 'APPROVAL_FAILED'
-  | 'CREATE_BRIDGE_INTENT_FAILED'
-  | 'BRIDGE_FAILED'
-  | RelayErrorCode;
-
-export type BridgeError<T extends BridgeErrorCode> = {
-  code: T;
-  error: unknown;
-};
-
 export type BridgeServiceConstructorParams = {
   hubProvider: HubProvider;
   config: ConfigService;
@@ -126,7 +113,7 @@ export class BridgeService {
    * Check if allowance is valid for the bridge transaction
    * @param params - The bridge parameters
    * @param spokeProvider - The spoke provider
-   * @returns {Promise<Result<boolean, BridgeError<'ALLOWANCE_CHECK_FAILED'>>>}
+   * @returns {Promise<Result<boolean>>}
    */
   public async isAllowanceValid<S extends SpokeChainKey, Raw extends boolean>(
     _params: BridgeParams<S, Raw>,
@@ -258,23 +245,13 @@ export class BridgeService {
         };
       }
 
-      // For non-EVM chains, approval is not needed
       return {
         ok: false,
-        error: {
-          code: 'APPROVAL_FAILED',
-          error: new Error('Approval only supported for EVM spoke chains'),
-        },
+        error: new Error('Approval only supported for EVM spoke chains and Stellar'),
       };
     } catch (error) {
       console.error(error);
-      return {
-        ok: false,
-        error: {
-          code: 'APPROVAL_FAILED',
-          error: error,
-        },
-      };
+      return { ok: false, error };
     }
   }
 
@@ -283,7 +260,7 @@ export class BridgeService {
    * @param params - The bridge parameters including source/destination chains, assets, and recipient
    * @param spokeProvider - The spoke provider for the source chain
    * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
-   * @returns {Promise<Result<[SpokeTxHash, HubTxHash], BridgeError<BridgeErrorCode>>>} - Returns the transaction hashes for both spoke and hub chains or error
+   * @returns {Promise<Result<[SpokeTxHash, HubTxHash]>>} - Returns the transaction hashes for both spoke and hub chains or error
    *
    * @example
    * const result = await sodax.bridge.bridge(
@@ -312,30 +289,17 @@ export class BridgeService {
    */
   public async bridge<K extends SpokeChainKey>(
     _params: BridgeParams<K, false>,
-  ): Promise<Result<[SpokeTxHash, HubTxHash], BridgeError<BridgeErrorCode>>> {
+  ): Promise<Result<[SpokeTxHash, HubTxHash]>> {
     const { params, timeout } = _params;
     try {
       const txResult = await this.createBridgeIntent(_params);
+      if (!txResult.ok) return txResult;
 
-      if (!txResult.ok) {
-        return txResult;
-      }
-
-      // verify the spoke tx hash exists on chain
       const verifyTxHashResult = await this.spoke.verifyTxHash({
         txHash: txResult.value,
         chainKey: params.srcChainKey,
       });
-
-      if (!verifyTxHashResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_BRIDGE_INTENT_FAILED',
-            error: verifyTxHashResult.error,
-          },
-        };
-      }
+      if (!verifyTxHashResult.ok) return verifyTxHashResult;
 
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
@@ -346,26 +310,11 @@ export class BridgeService {
         this.config.relay.relayerApiEndpoint,
         timeout,
       );
-
-      if (!packetResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: packetResult.error.code,
-            error: packetResult.error,
-          },
-        };
-      }
+      if (!packetResult.ok) return packetResult;
 
       return { ok: true, value: [txResult.value, packetResult.value.dst_tx_hash] };
     } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'BRIDGE_FAILED',
-          error: error,
-        },
-      };
+      return { ok: false, error };
     }
   }
 
@@ -407,7 +356,7 @@ export class BridgeService {
    */
   async createBridgeIntent<K extends SpokeChainKey, Raw extends boolean>(
     _params: BridgeParams<K, Raw>,
-  ): Promise<Result<TxReturnType<K, Raw>, BridgeError<'CREATE_BRIDGE_INTENT_FAILED'>> & RelayOptionalExtraData> {
+  ): Promise<Result<TxReturnType<K, Raw>> & RelayOptionalExtraData> {
     const { params, skipSimulation } = _params;
     try {
       invariant(params.amount > 0n, 'Amount must be greater than 0');
@@ -465,13 +414,7 @@ export class BridgeService {
 
       if (!txResult.ok) {
         console.error(txResult.error);
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_BRIDGE_INTENT_FAILED',
-            error: txResult.error,
-          },
-        };
+        return txResult;
       }
 
       return {
@@ -484,13 +427,7 @@ export class BridgeService {
       };
     } catch (error) {
       console.error(error);
-      return {
-        ok: false,
-        error: {
-          code: 'CREATE_BRIDGE_INTENT_FAILED',
-          error: error,
-        },
-      };
+      return { ok: false, error };
     }
   }
 

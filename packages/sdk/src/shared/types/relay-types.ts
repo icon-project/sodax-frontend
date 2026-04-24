@@ -1,8 +1,6 @@
 import type { HttpUrl, SpokeChainKey } from '@sodax/types';
 import type { Hex } from '@sodax/types';
 
-export type RelayErrorCode = 'SUBMIT_TX_FAILED' | 'RELAY_TIMEOUT';
-
 export type RelayExtraData = { address: Hex; payload: Hex };
 
 export type IntentDeliveryInfo = {

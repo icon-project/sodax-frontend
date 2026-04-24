@@ -48,7 +48,6 @@ export const HubVaultSymbols = [
   'sodaKAIA',
   'sodaSTX',
   'sodaUSDS',
-  'sodaUSDat',
 ] as const;
 
 export type HubVaultSymbol = (typeof HubVaultSymbols)[number];
@@ -269,16 +268,7 @@ export const SodaTokens = {
     chainKey: ChainKeys.SONIC_MAINNET,
     hubAsset: '0x243b0c26c8b38793908d7C64e8510f21B19B4613',
     vault: '0x243b0c26c8b38793908d7C64e8510f21B19B4613',
-  },
-  sodaUSDat: {
-    symbol: 'sodaUSDat',
-    name: 'Soda USDat',
-    decimals: 18,
-    address: '0x67f45e9815c17ec690950d0fd7f6a7cdcceb46d0',
-    chainKey: ChainKeys.SONIC_MAINNET,
-    hubAsset: '0x67f45e9815c17ec690950d0fd7f6a7cdcceb46d0',
-    vault: '0x67f45e9815c17ec690950d0fd7f6a7cdcceb46d0',
-  },
+  }
 } as const satisfies Record<HubVaultSymbol, XToken>;
 
 // --- Per-chain supported tokens ---
@@ -1596,7 +1586,7 @@ export const ethereumSupportedTokens = {
     address: '0xD166337499E176bbC38a1FBd113Ab144e5bd2Df7',
     chainKey: ChainKeys.ETHEREUM_MAINNET,
     hubAsset: '0x67f45e9815c17ec690950d0fd7f6a7cdcceb46d0',
-    vault: SodaTokens.sodaUSDat.address,
+    vault: '0x',
   }
 } as const satisfies Record<string, XToken>;
 

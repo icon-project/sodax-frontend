@@ -60,9 +60,10 @@ export class ConfigService {
 
   public async initialize(): Promise<Result<void>> {
     try {
-      const response = await this.api.getAllConfig();
+      const result = await this.api.getAllConfig();
+      if (!result.ok) return result;
+      const response = result.value;
 
-      // if the config version is not set or is less than the current version, log a warning and fall back to default config
       if (!response.version || response.version < CONFIG_VERSION) {
         console.warn(
           `Dynamic config version is less than the current version, resorting to the default one. Current version: ${CONFIG_VERSION}, response version: ${response.version}`,
@@ -73,15 +74,9 @@ export class ConfigService {
         this.initialized = true;
       }
 
-      return {
-        ok: true,
-        value: undefined,
-      };
+      return { ok: true, value: undefined };
     } catch (error) {
-      return {
-        ok: false,
-        error,
-      };
+      return { ok: false, error };
     }
   }
 

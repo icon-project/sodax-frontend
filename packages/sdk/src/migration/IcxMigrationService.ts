@@ -10,6 +10,7 @@ import {
   type EvmContractCall,
   type IcxTokenType,
   type IconChainKey,
+  type Result,
   type SonicChainKey,
   type WalletProviderSlot,
 } from '@sodax/types';
@@ -73,15 +74,18 @@ export class IcxMigrationService {
    *
    * @returns The available balance of SODA tokens in the migration contract
    */
-  public async getAvailableAmount(): Promise<bigint> {
-    const balance = await this.hubProvider.publicClient.readContract({
-      address: this.hubProvider.chainConfig.addresses.sodaToken,
-      abi: erc20Abi,
-      functionName: 'balanceOf',
-      args: [this.hubProvider.chainConfig.addresses.icxMigration],
-    });
-
-    return balance;
+  public async getAvailableAmount(): Promise<Result<bigint>> {
+    try {
+      const value = await this.hubProvider.publicClient.readContract({
+        address: this.hubProvider.chainConfig.addresses.sodaToken,
+        abi: erc20Abi,
+        functionName: 'balanceOf',
+        args: [this.hubProvider.chainConfig.addresses.icxMigration],
+      });
+      return { ok: true, value };
+    } catch (error) {
+      return { ok: false, error };
+    }
   }
 
   /**

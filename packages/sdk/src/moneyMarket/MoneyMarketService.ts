@@ -4,8 +4,6 @@ import { poolAbi } from '../shared/abis/pool.abi.js';
 import {
   type SpokeService,
   relayTxAndWaitPacket,
-  type RelayErrorCode,
-  type RelayError,
   type ConfigService,
   type DepositParams,
   type SendMessageParams,
@@ -210,81 +208,6 @@ export type MoneyMarketApproveActionParams<K extends SpokeChainKey> = {
 
 export type MoneyMarketApproveActionParamsRaw<K extends SpokeChainKey> = {
   params: MoneyMarketParams<K>;
-};
-
-export type MoneyMarketUnknownErrorCode =
-  | 'SUPPLY_UNKNOWN_ERROR'
-  | 'BORROW_UNKNOWN_ERROR'
-  | 'WITHDRAW_UNKNOWN_ERROR'
-  | 'REPAY_UNKNOWN_ERROR';
-
-export type GetMoneyMarketParams<T extends MoneyMarketUnknownErrorCode> = T extends 'SUPPLY_UNKNOWN_ERROR'
-  ? MoneyMarketSupplyParams
-  : T extends 'BORROW_UNKNOWN_ERROR'
-    ? MoneyMarketBorrowParams
-    : T extends 'WITHDRAW_UNKNOWN_ERROR'
-      ? MoneyMarketWithdrawParams
-      : T extends 'REPAY_UNKNOWN_ERROR'
-        ? MoneyMarketRepayParams
-        : never;
-
-export type MoneyMarketErrorCode =
-  | MoneyMarketUnknownErrorCode
-  | RelayErrorCode
-  | 'CREATE_SUPPLY_INTENT_FAILED'
-  | 'CREATE_BORROW_INTENT_FAILED'
-  | 'CREATE_WITHDRAW_INTENT_FAILED'
-  | 'CREATE_REPAY_INTENT_FAILED';
-
-export type MoneyMarketUnknownError<T extends MoneyMarketUnknownErrorCode> = {
-  error: unknown;
-  payload: GetMoneyMarketParams<T>;
-};
-
-export type MoneyMarketSubmitTxFailedError = {
-  error: RelayError;
-  payload: SpokeTxHash;
-};
-
-export type MoneyMarketSupplyFailedError = {
-  error: unknown;
-  payload: MoneyMarketSupplyParams;
-};
-
-export type MoneyMarketBorrowFailedError = {
-  error: unknown;
-  payload: MoneyMarketBorrowParams;
-};
-
-export type MoneyMarketWithdrawFailedError = {
-  error: unknown;
-  payload: MoneyMarketWithdrawParams;
-};
-
-export type MoneyMarketRepayFailedError = {
-  error: unknown;
-  payload: MoneyMarketRepayParams;
-};
-
-export type GetMoneyMarketError<T extends MoneyMarketErrorCode> = T extends 'SUBMIT_TX_FAILED'
-  ? MoneyMarketSubmitTxFailedError
-  : T extends 'RELAY_TIMEOUT'
-    ? MoneyMarketSubmitTxFailedError
-    : T extends 'CREATE_SUPPLY_INTENT_FAILED'
-      ? MoneyMarketSupplyFailedError
-      : T extends 'CREATE_BORROW_INTENT_FAILED'
-        ? MoneyMarketBorrowFailedError
-        : T extends 'CREATE_WITHDRAW_INTENT_FAILED'
-          ? MoneyMarketWithdrawFailedError
-          : T extends 'CREATE_REPAY_INTENT_FAILED'
-            ? MoneyMarketRepayFailedError
-            : T extends MoneyMarketUnknownErrorCode
-              ? MoneyMarketUnknownError<T>
-              : never;
-
-export type MoneyMarketError<T extends MoneyMarketErrorCode> = {
-  code: T;
-  data: GetMoneyMarketError<T>;
 };
 
 export type MoneyMarketServiceConstructorParams = {
@@ -606,10 +529,7 @@ export class MoneyMarketService {
   public async supply<K extends SpokeChainKey>(
     _params: MoneyMarketSupplyActionParams<K>,
   ): Promise<
-    Result<
-      [SpokeTxHash, HubTxHash],
-      MoneyMarketError<'CREATE_SUPPLY_INTENT_FAILED' | 'SUPPLY_UNKNOWN_ERROR' | RelayErrorCode>
-    >
+    Result<[SpokeTxHash, HubTxHash]>
   > {
     const { params, timeout = DEFAULT_RELAY_TX_TIMEOUT } = _params;
     const srcChainKey = params.srcChainKey;
@@ -619,15 +539,7 @@ export class MoneyMarketService {
       if (!txResult.ok) return txResult;
 
       const verify = await this.spokeService.verifyTxHash({ txHash: txResult.value, chainKey: srcChainKey });
-      if (!verify.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_SUPPLY_INTENT_FAILED',
-            data: { payload: params, error: verify.error },
-          },
-        };
-      }
+      if (!verify.ok) return verify;
 
       // Relay skipped only when source chain is the hub.
       if (isHubChainKeyType(srcChainKey)) {
@@ -642,31 +554,15 @@ export class MoneyMarketService {
         timeout,
       );
 
-      if (!packet.ok) {
-        return {
-          ok: false,
-          error: {
-            code: packet.error.code,
-            data: { error: packet.error, payload: txResult.value },
-          },
-        };
-      }
+      if (!packet.ok) return packet;
 
       return { ok: true, value: [txResult.value, packet.value.dst_tx_hash] };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'SUPPLY_UNKNOWN_ERROR',
-          data: { error, payload: params },
-        },
-      };
-    }
+    } catch (error) { return { ok: false, error }; }
   }
 
   public async createSupplyIntent<K extends SpokeChainKey>(
     _params: MoneyMarketSupplyActionParams<K>,
-  ): Promise<Result<TxReturnType<K, false>, MoneyMarketError<'CREATE_SUPPLY_INTENT_FAILED'>> & RelayOptionalExtraData> {
+  ): Promise<Result<TxReturnType<K, false>> & RelayOptionalExtraData> {
     const { params, walletProvider } = _params;
     const srcChainKey = params.srcChainKey;
     const skipSimulation = _params.skipSimulation ?? false;
@@ -706,35 +602,19 @@ export class MoneyMarketService {
         walletProvider,
       } satisfies DepositParams<K, false>);
 
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_SUPPLY_INTENT_FAILED',
-            data: { error: txResult.error, payload: params },
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       return {
         ok: true,
         value: txResult.value as TxReturnType<K, false>,
         data: { address: fromHubWallet, payload: data },
       };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'CREATE_SUPPLY_INTENT_FAILED',
-          data: { error, payload: params },
-        },
-      };
-    }
+    } catch (error) { return { ok: false, error }; }
   }
 
   public async createSupplyIntentRaw<K extends SpokeChainKey>(
     _params: MoneyMarketSupplyActionParamsRaw<K>,
-  ): Promise<Result<TxReturnType<K, true>, MoneyMarketError<'CREATE_SUPPLY_INTENT_FAILED'>> & RelayOptionalExtraData> {
+  ): Promise<Result<TxReturnType<K, true>> & RelayOptionalExtraData> {
     const { params } = _params;
     const srcChainKey = params.srcChainKey;
     const skipSimulation = _params.skipSimulation ?? false;
@@ -769,30 +649,14 @@ export class MoneyMarketService {
         raw: true,
       } satisfies DepositParams<K, true>);
 
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_SUPPLY_INTENT_FAILED',
-            data: { error: txResult.error, payload: params },
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       return {
         ok: true,
         value: txResult.value as TxReturnType<K, true>,
         data: { address: fromHubWallet, payload: data },
       };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'CREATE_SUPPLY_INTENT_FAILED',
-          data: { error, payload: params },
-        },
-      };
-    }
+    } catch (error) { return { ok: false, error }; }
   }
 
   // ==== borrow ==========================================================================
@@ -800,10 +664,7 @@ export class MoneyMarketService {
   public async borrow<K extends SpokeChainKey>(
     _params: MoneyMarketBorrowActionParams<K>,
   ): Promise<
-    Result<
-      [SpokeTxHash, HubTxHash],
-      MoneyMarketError<'CREATE_BORROW_INTENT_FAILED' | 'BORROW_UNKNOWN_ERROR' | RelayErrorCode>
-    >
+    Result<[SpokeTxHash, HubTxHash]>
   > {
     const { params, timeout = DEFAULT_RELAY_TX_TIMEOUT } = _params;
     const srcChainKey = params.srcChainKey;
@@ -814,15 +675,7 @@ export class MoneyMarketService {
       if (!txResult.ok) return txResult;
 
       const verify = await this.spokeService.verifyTxHash({ txHash: txResult.value, chainKey: srcChainKey });
-      if (!verify.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_BORROW_INTENT_FAILED',
-            data: { payload: params, error: verify.error },
-          },
-        };
-      }
+      if (!verify.ok) return verify;
 
       // Relay is not required when the borrow is executed on hub AND the target is also hub.
       // (Borrow from hub to a different target chain still needs the relay to deliver tokens.)
@@ -842,31 +695,15 @@ export class MoneyMarketService {
         timeout,
       );
 
-      if (!packet.ok) {
-        return {
-          ok: false,
-          error: {
-            code: packet.error.code,
-            data: { error: packet.error, payload: txResult.value },
-          },
-        };
-      }
+      if (!packet.ok) return packet;
 
       return { ok: true, value: [txResult.value, packet.value.dst_tx_hash] };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'BORROW_UNKNOWN_ERROR',
-          data: { error, payload: params },
-        },
-      };
-    }
+    } catch (error) { return { ok: false, error }; }
   }
 
   public async createBorrowIntent<K extends SpokeChainKey>(
     _params: MoneyMarketBorrowActionParams<K>,
-  ): Promise<Result<TxReturnType<K, false>, MoneyMarketError<'CREATE_BORROW_INTENT_FAILED'>> & RelayOptionalExtraData> {
+  ): Promise<Result<TxReturnType<K, false>> & RelayOptionalExtraData> {
     const { params, walletProvider } = _params;
     const srcChainKey = params.srcChainKey;
     const skipSimulation = _params.skipSimulation ?? false;
@@ -912,35 +749,19 @@ export class MoneyMarketService {
 
       const txResult = await this.spokeService.sendMessage<K, false>(sendMessageParams);
 
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_BORROW_INTENT_FAILED',
-            data: { error: txResult.error, payload: params },
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       return {
         ok: true,
         value: txResult.value satisfies TxReturnType<K, false>,
         data: { address: fromHubWallet, payload },
       };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'CREATE_BORROW_INTENT_FAILED',
-          data: { error, payload: params },
-        },
-      };
-    }
+    } catch (error) { return { ok: false, error }; }
   }
 
   public async createBorrowIntentRaw<K extends SpokeChainKey>(
     _params: MoneyMarketBorrowActionParamsRaw<K>,
-  ): Promise<Result<TxReturnType<K, true>, MoneyMarketError<'CREATE_BORROW_INTENT_FAILED'>> & RelayOptionalExtraData> {
+  ): Promise<Result<TxReturnType<K, true>> & RelayOptionalExtraData> {
     const { params } = _params;
     const srcChainKey = params.srcChainKey;
     const skipSimulation = _params.skipSimulation ?? false;
@@ -981,30 +802,14 @@ export class MoneyMarketService {
 
       const txResult = await this.spokeService.sendMessage<K, true>(sendMessageParams);
 
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_BORROW_INTENT_FAILED',
-            data: { error: txResult.error, payload: params },
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       return {
         ok: true,
         value: txResult.value satisfies TxReturnType<K, true>,
         data: { address: fromHubWallet, payload },
       };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'CREATE_BORROW_INTENT_FAILED',
-          data: { error, payload: params },
-        },
-      };
-    }
+    } catch (error) { return { ok: false, error }; }
   }
 
   // ==== withdraw ========================================================================
@@ -1012,10 +817,7 @@ export class MoneyMarketService {
   public async withdraw<K extends SpokeChainKey>(
     _params: MoneyMarketWithdrawActionParams<K>,
   ): Promise<
-    Result<
-      [SpokeTxHash, HubTxHash],
-      MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED' | 'WITHDRAW_UNKNOWN_ERROR' | RelayErrorCode>
-    >
+    Result<[SpokeTxHash, HubTxHash]>
   > {
     const { params, timeout = DEFAULT_RELAY_TX_TIMEOUT } = _params;
     const srcChainKey = params.srcChainKey;
@@ -1027,15 +829,7 @@ export class MoneyMarketService {
       if (!txResult.ok) return txResult;
 
       const verify = await this.spokeService.verifyTxHash({ txHash: txResult.value, chainKey: srcChainKey });
-      if (!verify.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_WITHDRAW_INTENT_FAILED',
-            data: { payload: params, error: verify.error },
-          },
-        };
-      }
+      if (!verify.ok) return verify;
 
       // Relay is not required only when: source is hub AND target is hub AND target is not the walletRouter.
       const needsRelay =
@@ -1057,32 +851,16 @@ export class MoneyMarketService {
         timeout,
       );
 
-      if (!packet.ok) {
-        return {
-          ok: false,
-          error: {
-            code: packet.error.code,
-            data: { error: packet.error, payload: txResult.value },
-          },
-        };
-      }
+      if (!packet.ok) return packet;
 
       return { ok: true, value: [txResult.value, packet.value.dst_tx_hash] };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'WITHDRAW_UNKNOWN_ERROR',
-          data: { error, payload: params },
-        },
-      };
-    }
+    } catch (error) { return { ok: false, error }; }
   }
 
   public async createWithdrawIntent<K extends SpokeChainKey>(
     _params: MoneyMarketWithdrawActionParams<K>,
   ): Promise<
-    Result<TxReturnType<K, false>, MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED'>> & RelayOptionalExtraData
+    Result<TxReturnType<K, false>> & RelayOptionalExtraData
   > {
     const { params, walletProvider } = _params;
     const srcChainKey = params.srcChainKey;
@@ -1129,36 +907,20 @@ export class MoneyMarketService {
 
       const txResult = await this.spokeService.sendMessage<K, false>(sendMessageParams);
 
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_WITHDRAW_INTENT_FAILED',
-            data: { error: txResult.error, payload: params },
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       return {
         ok: true,
         value: txResult.value satisfies TxReturnType<K, false>,
         data: { address: fromHubWallet, payload },
       };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'CREATE_WITHDRAW_INTENT_FAILED',
-          data: { error, payload: params },
-        },
-      };
-    }
+    } catch (error) { return { ok: false, error }; }
   }
 
   public async createWithdrawIntentRaw<K extends SpokeChainKey>(
     _params: MoneyMarketWithdrawActionParamsRaw<K>,
   ): Promise<
-    Result<TxReturnType<K, true>, MoneyMarketError<'CREATE_WITHDRAW_INTENT_FAILED'>> & RelayOptionalExtraData
+    Result<TxReturnType<K, true>> & RelayOptionalExtraData
   > {
     const { params } = _params;
     const srcChainKey = params.srcChainKey;
@@ -1200,30 +962,14 @@ export class MoneyMarketService {
 
       const txResult = await this.spokeService.sendMessage<K, true>(sendMessageParams);
 
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_WITHDRAW_INTENT_FAILED',
-            data: { error: txResult.error, payload: params },
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       return {
         ok: true,
         value: txResult.value satisfies TxReturnType<K, true>,
         data: { address: fromHubWallet, payload },
       };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'CREATE_WITHDRAW_INTENT_FAILED',
-          data: { error, payload: params },
-        },
-      };
-    }
+    } catch (error) { return { ok: false, error }; }
   }
 
   // ==== repay ===========================================================================
@@ -1231,10 +977,7 @@ export class MoneyMarketService {
   public async repay<K extends SpokeChainKey>(
     _params: MoneyMarketRepayActionParams<K>,
   ): Promise<
-    Result<
-      [SpokeTxHash, HubTxHash],
-      MoneyMarketError<'CREATE_REPAY_INTENT_FAILED' | 'REPAY_UNKNOWN_ERROR' | RelayErrorCode>
-    >
+    Result<[SpokeTxHash, HubTxHash]>
   > {
     const { params, timeout = DEFAULT_RELAY_TX_TIMEOUT } = _params;
     const srcChainKey = params.srcChainKey;
@@ -1244,15 +987,7 @@ export class MoneyMarketService {
       if (!txResult.ok) return txResult;
 
       const verify = await this.spokeService.verifyTxHash({ txHash: txResult.value, chainKey: srcChainKey });
-      if (!verify.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_REPAY_INTENT_FAILED',
-            data: { payload: params, error: verify.error },
-          },
-        };
-      }
+      if (!verify.ok) return verify;
 
       // Relay skipped only when source chain is the hub.
       if (isHubChainKeyType(srcChainKey)) {
@@ -1267,51 +1002,17 @@ export class MoneyMarketService {
         timeout,
       );
 
-      if (!packet.ok) {
-        return {
-          ok: false,
-          error: {
-            code: packet.error.code,
-            data: { error: packet.error, payload: txResult.value },
-          },
-        };
-      }
+      if (!packet.ok) return packet;
 
       return { ok: true, value: [txResult.value, packet.value.dst_tx_hash] };
-    } catch (error: unknown) {
-      // Simulation failure (e.g. hub revert "External call failed") is a known intent failure, not unknown.
-      const isSimulationFailure =
-        error instanceof Error &&
-        error.message === 'Simulation failed' &&
-        error.cause != null &&
-        typeof error.cause === 'object' &&
-        'success' in error.cause &&
-        (error.cause as { success?: boolean }).success === false;
-
-      if (isSimulationFailure) {
-        const cause = error.cause as { error?: string };
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_REPAY_INTENT_FAILED',
-            data: { payload: params, error: cause?.error ?? error },
-          },
-        };
-      }
-
-      return {
-        ok: false,
-        error: {
-          code: 'REPAY_UNKNOWN_ERROR',
-          data: { error, payload: params },
-        },
-      };
+    } catch (error) {
+      return { ok: false, error };
     }
   }
 
   public async createRepayIntent<K extends SpokeChainKey>(
     _params: MoneyMarketRepayActionParams<K>,
-  ): Promise<Result<TxReturnType<K, false>, MoneyMarketError<'CREATE_REPAY_INTENT_FAILED'>> & RelayOptionalExtraData> {
+  ): Promise<Result<TxReturnType<K, false>> & RelayOptionalExtraData> {
     const { params, walletProvider } = _params;
     const srcChainKey = params.srcChainKey;
     const skipSimulation = _params.skipSimulation ?? false;
@@ -1351,35 +1052,19 @@ export class MoneyMarketService {
         walletProvider,
       } satisfies DepositParams<K, false>);
 
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_REPAY_INTENT_FAILED',
-            data: { error: txResult.error, payload: params },
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       return {
         ok: true,
         value: txResult.value as TxReturnType<K, false>,
         data: { address: fromHubWallet, payload: data },
       };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'CREATE_REPAY_INTENT_FAILED',
-          data: { error, payload: params },
-        },
-      };
-    }
+    } catch (error) { return { ok: false, error }; }
   }
 
   public async createRepayIntentRaw<K extends SpokeChainKey>(
     _params: MoneyMarketRepayActionParamsRaw<K>,
-  ): Promise<Result<TxReturnType<K, true>, MoneyMarketError<'CREATE_REPAY_INTENT_FAILED'>> & RelayOptionalExtraData> {
+  ): Promise<Result<TxReturnType<K, true>> & RelayOptionalExtraData> {
     const { params } = _params;
     const srcChainKey = params.srcChainKey;
     const skipSimulation = _params.skipSimulation ?? false;
@@ -1414,30 +1099,14 @@ export class MoneyMarketService {
         raw: true,
       } satisfies DepositParams<K, true>);
 
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_REPAY_INTENT_FAILED',
-            data: { error: txResult.error, payload: params },
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       return {
         ok: true,
         value: txResult.value as TxReturnType<K, true>,
         data: { address: fromHubWallet, payload: data },
       };
-    } catch (error) {
-      return {
-        ok: false,
-        error: {
-          code: 'CREATE_REPAY_INTENT_FAILED',
-          data: { error, payload: params },
-        },
-      };
-    }
+    } catch (error) { return { ok: false, error }; }
   }
 
   // ==== build helpers (hub-side call encoding) ==========================================

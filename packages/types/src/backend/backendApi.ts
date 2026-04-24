@@ -1,6 +1,6 @@
 import type { SpokeChainKey, IntentRelayChainIdMap } from '../chains/chains.js';
 import type { XToken } from '../chains/tokens.js';
-import type { SpokeChainConfigMap } from '../common/common.js';
+import type { Result, SpokeChainConfigMap } from '../common/common.js';
 import type { Address } from '../shared/shared.js';
 import type { SodaxConfig } from '../sodax-config/sodax-config.js';
 
@@ -19,11 +19,11 @@ export type GetAllConfigApiResponse = {
 };
 
 export interface IConfigApi {
-  getChains(): Promise<GetChainsApiResponse>;
-  getSwapTokens(): Promise<GetSwapTokensApiResponse>;
-  getSwapTokensByChainId(chainId: SpokeChainKey): Promise<GetSwapTokensByChainIdApiResponse>;
-  getMoneyMarketTokens(): Promise<GetMoneyMarketTokensApiResponse>;
-  getMoneyMarketTokensByChainId(chainId: SpokeChainKey): Promise<GetMoneyMarketTokensByChainIdApiResponse>;
+  getChains(): Promise<Result<GetChainsApiResponse>>;
+  getSwapTokens(): Promise<Result<GetSwapTokensApiResponse>>;
+  getSwapTokensByChainId(chainId: SpokeChainKey): Promise<Result<GetSwapTokensByChainIdApiResponse>>;
+  getMoneyMarketTokens(): Promise<Result<GetMoneyMarketTokensApiResponse>>;
+  getMoneyMarketTokensByChainId(chainId: SpokeChainKey): Promise<Result<GetMoneyMarketTokensByChainIdApiResponse>>;
 }
 
 // Swap submit-tx types

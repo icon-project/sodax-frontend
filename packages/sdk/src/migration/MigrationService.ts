@@ -7,7 +7,6 @@ import {
   type SpokeService,
   relayTxAndWaitPacket,
   encodeAddress,
-  type RelayError,
   isIconAddress,
   type RelayExtraData,
   waitUntilIntentExecuted,
@@ -53,42 +52,6 @@ import {
 } from '@sodax/types';
 import { isAddress } from 'viem';
 import type { ConfigService } from '../shared/config/ConfigService.js';
-
-export type GetMigrationFailedPayload<T extends MigrationErrorCode> = T extends 'CREATE_MIGRATION_INTENT_FAILED'
-  ? IcxMigrateParams | UnifiedBnUSDMigrateParams<SpokeChainKey> | BalnMigrateParams
-  : T extends 'CREATE_REVERT_MIGRATION_INTENT_FAILED'
-    ? IcxCreateRevertMigrationParams
-    : T extends 'REVERT_MIGRATION_FAILED'
-      ? IcxCreateRevertMigrationParams | UnifiedBnUSDMigrateParams<SpokeChainKey>
-      : T extends 'MIGRATION_FAILED'
-        ? IcxMigrateParams | UnifiedBnUSDMigrateParams<SpokeChainKey> | BalnMigrateParams
-        : never;
-
-export type MigrationFailedErrorData<T extends MigrationErrorCode> = {
-  payload: GetMigrationFailedPayload<T>;
-  error: unknown;
-};
-
-export type MigrationErrorCode =
-  | 'MIGRATION_FAILED'
-  | 'CREATE_MIGRATION_INTENT_FAILED'
-  | 'CREATE_REVERT_MIGRATION_INTENT_FAILED'
-  | 'REVERT_MIGRATION_FAILED';
-
-export type MigrationErrorData<T extends MigrationErrorCode> = T extends 'CREATE_MIGRATION_INTENT_FAILED'
-  ? MigrationFailedErrorData<T>
-  : T extends 'CREATE_REVERT_MIGRATION_INTENT_FAILED'
-    ? MigrationFailedErrorData<T>
-    : T extends 'REVERT_MIGRATION_FAILED'
-      ? MigrationFailedErrorData<T>
-      : T extends 'MIGRATION_FAILED'
-        ? MigrationFailedErrorData<T>
-        : never;
-
-export type MigrationError<T extends MigrationErrorCode> = {
-  code: T;
-  data: MigrationErrorData<T>;
-};
 
 export type MigrationAction = 'migrate' | 'revert';
 
@@ -508,7 +471,7 @@ export class MigrationService {
    * @param spokeProvider - The SpokeProvider instance for the source chain.
    * @param timeout - Optional timeout in milliseconds for the relay operation (default: 60 seconds).
    * @param unchecked - Optional flag to skip validation checks (default: false).
-   * @returns {Promise<Result<[string, Hex], MigrationError<'MIGRATION_FAILED'> | MigrationError<'CREATE_MIGRATION_INTENT_FAILED'> | RelayError>>}
+   * @returns {Promise<Result<[string, Hex] | MigrationError<'CREATE_MIGRATION_INTENT_FAILED'> | RelayError>>}
    *   Result containing a tuple: [spokeTxHash, hubTxHash] if successful, or an error describing the failure.
    *
    * @example
@@ -545,10 +508,7 @@ export class MigrationService {
   async migratebnUSD<K extends SpokeChainKey>(
     _params: UnifiedBnUSDMigrateAction<K, false>,
   ): Promise<
-    Result<
-      [string, Hex],
-      MigrationError<'MIGRATION_FAILED'> | MigrationError<'CREATE_MIGRATION_INTENT_FAILED'> | RelayError
-    >
+    Result<[string, Hex]>
   > {
     const { params, timeout } = _params;
     try {
@@ -569,18 +529,7 @@ export class MigrationService {
         chainKey: params.srcChainKey,
       });
 
-      if (!verifyTxHashResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_MIGRATION_INTENT_FAILED',
-            data: {
-              payload: params,
-              error: verifyTxHashResult.error,
-            },
-          },
-        };
-      }
+      if (!verifyTxHashResult.ok) return verifyTxHashResult;
 
       const packetResult = await relayTxAndWaitPacket(
         spokeTxHash,
@@ -607,13 +556,7 @@ export class MigrationService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'MIGRATION_FAILED',
-          data: {
-            payload: params,
-            error: error,
-          },
-        },
+        error,
       };
     }
   }
@@ -625,7 +568,7 @@ export class MigrationService {
    * @param params - The parameters for the migration transaction.
    * @param spokeProvider - The spoke provider.
    * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
-   * @returns {Promise<Result<[Hex, Hex], MigrationError<'MIGRATION_FAILED'> | MigrationError<'CREATE_MIGRATION_INTENT_FAILED'> | RelayError>>}
+   * @returns {Promise<Result<[Hex, Hex] | MigrationError<'CREATE_MIGRATION_INTENT_FAILED'> | RelayError>>}
    * Returns a Result containing a tuple of [spokeTxHash, hubTxHash] if successful,
    * or an error describing why the migration or relay failed.
    *
@@ -652,27 +595,16 @@ export class MigrationService {
    */
   async migrateIcxToSoda(
     _params: IcxMigrateAction<false>,
-  ): Promise<
-    Result<
-      [Hex, Hex],
-      MigrationError<'MIGRATION_FAILED'> | MigrationError<'CREATE_MIGRATION_INTENT_FAILED'> | RelayError
-    >
-  > {
-    const { params, timeout } = _params;
+  ): Promise<Result<[Hex, Hex]>> {
+    const { timeout } = _params;
     try {
       const txResult = await this.createMigrateIcxToSodaIntent(_params);
-
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: txResult.error,
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       const packetResult = await relayTxAndWaitPacket(
         txResult.value,
         undefined,
-        params.srcChainKey,
+        _params.params.srcChainKey,
         this.relayerApiEndpoint,
         timeout,
       );
@@ -685,13 +617,7 @@ export class MigrationService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'MIGRATION_FAILED',
-          data: {
-            payload: params,
-            error: error,
-          },
-        },
+        error,
       };
     }
   }
@@ -702,7 +628,7 @@ export class MigrationService {
    * @param spokeProvider - The SonicSpokeProvider instance.
    * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
    *
-   * @returns {Promise<Result<[Hex, Hex], MigrationError<'REVERT_MIGRATION_FAILED'> | MigrationError<'CREATE_REVERT_MIGRATION_INTENT_FAILED'> | RelayError>>}
+   * @returns {Promise<Result<[Hex, Hex] | MigrationError<'CREATE_REVERT_MIGRATION_INTENT_FAILED'> | RelayError>>}
    * Returns a Result containing a tuple of [hubTxHash, spokeTxHash] if successful,
    * or an error describing why the revert migration or relay failed.
    *
@@ -730,12 +656,9 @@ export class MigrationService {
   async revertMigrateSodaToIcx(
     _params: IcxRevertMigrationAction<false>,
   ): Promise<
-    Result<
-      [Hex, Hex],
-      MigrationError<'REVERT_MIGRATION_FAILED'> | MigrationError<'CREATE_REVERT_MIGRATION_INTENT_FAILED'> | RelayError
-    >
+    Result<[Hex, Hex]>
   > {
-    const { timeout, params } = _params;
+    const { timeout } = _params;
     try {
       const txResult = await this.createRevertSodaToIcxMigrationIntent(_params);
 
@@ -759,13 +682,7 @@ export class MigrationService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'REVERT_MIGRATION_FAILED',
-          data: {
-            payload: params,
-            error: error,
-          },
-        },
+        error,
       };
     }
   }
@@ -777,7 +694,7 @@ export class MigrationService {
    * @param params - The parameters for the migration transaction.
    * @param spokeProvider - The spoke provider.
    * @param timeout - The timeout in milliseconds for the transaction. Default is 60 seconds.
-   * @returns {Promise<Result<[Hex, Hex], MigrationError<'MIGRATION_FAILED'> | MigrationError<'CREATE_MIGRATION_INTENT_FAILED'> | RelayError>>}
+   * @returns {Promise<Result<[Hex, Hex] | MigrationError<'CREATE_MIGRATION_INTENT_FAILED'> | RelayError>>}
    * Returns a Result containing a tuple of [spokeTxHash, hubTxHash] if successful,
    * or an error describing why the migration or relay failed.
    *
@@ -806,12 +723,9 @@ export class MigrationService {
   async migrateBaln(
     _params: BalnMigrateAction<false>,
   ): Promise<
-    Result<
-      [Hex, Hex],
-      MigrationError<'MIGRATION_FAILED'> | MigrationError<'CREATE_MIGRATION_INTENT_FAILED'> | RelayError
-    >
+    Result<[Hex, Hex]>
   > {
-    const { params, timeout } = _params;
+    const { timeout } = _params;
     try {
       const txResult = await this.createMigrateBalnIntent(_params);
 
@@ -838,13 +752,7 @@ export class MigrationService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'MIGRATION_FAILED',
-          data: {
-            payload: params,
-            error: error,
-          },
-        },
+        error,
       };
     }
   }
@@ -855,7 +763,7 @@ export class MigrationService {
    * @param params - The parameters for the BALN migration transaction.
    * @param spokeProvider - The spoke provider.
    * @param raw - Whether to return the raw transaction hash instead of the transaction receipt
-   * @returns {Promise<Result<TxReturnType<IconSpokeProvider, R>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> } - Returns the raw transaction payload or transaction hash
+   * @returns {Promise<Result<TxReturnType<IconSpokeProvider, R>>> } - Returns the raw transaction payload or transaction hash
    *
    * @example
    * const result = await migrationService.createMigrateBalnIntent(
@@ -872,7 +780,7 @@ export class MigrationService {
    */
   async createMigrateBalnIntent<Raw extends boolean>(
     _params: BalnMigrateAction<Raw>,
-  ): Promise<Result<TxReturnType<IconChainKey, Raw>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
+  ): Promise<Result<TxReturnType<IconChainKey, Raw>>> {
     const { params, skipSimulation } = _params;
 
     try {
@@ -910,18 +818,7 @@ export class MigrationService {
             },
       );
 
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_MIGRATION_INTENT_FAILED',
-            data: {
-              payload: params,
-              error: txResult.error,
-            },
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       return {
         ok: true,
@@ -930,13 +827,7 @@ export class MigrationService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'CREATE_MIGRATION_INTENT_FAILED',
-          data: {
-            payload: params,
-            error: error,
-          },
-        },
+        error,
       };
     }
   }
@@ -952,7 +843,7 @@ export class MigrationService {
    * @param spokeProvider - The spoke provider instance for the source chain.
    * @param unchecked - If true, skips input validation (use with caution).
    * @param raw - If true, returns the raw transaction hash instead of the transaction receipt.
-   * @returns {Promise<Result<TxReturnType<S, R>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>>}
+   * @returns {Promise<Result<TxReturnType<S, R>>>}
    *   Returns a Result containing the transaction payload or hash, or an error if creation failed.
    *
    * @example
@@ -986,7 +877,7 @@ export class MigrationService {
    */
   async createMigratebnUSDIntent<K extends SpokeChainKey, Raw extends boolean>(
     _params: UnifiedBnUSDMigrateAction<K, Raw>,
-  ): Promise<Result<[TxReturnType<K, Raw>, RelayExtraData], MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
+  ): Promise<Result<[TxReturnType<K, Raw>, RelayExtraData]>> {
     const { params, unchecked, skipSimulation } = _params;
     try {
       if (!unchecked) {
@@ -1082,18 +973,7 @@ export class MigrationService {
             },
       );
 
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_MIGRATION_INTENT_FAILED',
-            data: {
-              payload: params,
-              error: txResult.error,
-            },
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       return {
         ok: true,
@@ -1108,13 +988,7 @@ export class MigrationService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'CREATE_MIGRATION_INTENT_FAILED',
-          data: {
-            payload: params,
-            error: error,
-          },
-        },
+        error,
       };
     }
   }
@@ -1129,7 +1003,7 @@ export class MigrationService {
    * @param {MigrationParams} params - The parameters for the migration transaction.
    * @param {IconSpokeProvider} spokeProvider - The spoke provider.
    * @param {boolean} raw - Whether to return the raw transaction hash instead of the transaction receipt
-   * @returns {Promise<Result<TxReturnType<IconSpokeProvider, R>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>>} - Returns the raw transaction payload or transaction hash
+   * @returns {Promise<Result<TxReturnType<IconSpokeProvider, R>>>} - Returns the raw transaction payload or transaction hash
    *
    * @example
    * const result = await migrationService.createMigrateIcxToSodaIntent(
@@ -1148,7 +1022,7 @@ export class MigrationService {
    */
   async createMigrateIcxToSodaIntent<Raw extends boolean>(
     _params: IcxMigrateAction<Raw>,
-  ): Promise<Result<TxReturnType<IconChainKey, Raw>, MigrationError<'CREATE_MIGRATION_INTENT_FAILED'>>> {
+  ): Promise<Result<TxReturnType<IconChainKey, Raw>>> {
     const { params, skipSimulation } = _params;
     try {
       invariant(params.amount > 0, 'Amount must be greater than 0');
@@ -1162,13 +1036,12 @@ export class MigrationService {
       );
       invariant(isIconChainKeyType(params.srcChainKey), 'Source chain key must be an Icon chain');
 
-      // Get the available amount for migration
       const availableAmount = await this.icxMigration.getAvailableAmount();
+      if (!availableAmount.ok) return availableAmount;
 
-      // Check if there's enough liquidity for migration
-      if (availableAmount < params.amount) {
+      if (availableAmount.value < params.amount) {
         throw new Error(
-          `Insufficient liquidity. Available: ${availableAmount.toString()}, Requested: ${params.amount.toString()}`,
+          `Insufficient liquidity. Available: ${availableAmount.value.toString()}, Requested: ${params.amount.toString()}`,
         );
       }
 
@@ -1201,18 +1074,7 @@ export class MigrationService {
             },
       );
 
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_MIGRATION_INTENT_FAILED',
-            data: {
-              payload: params,
-              error: txResult.error,
-            },
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       return {
         ok: true,
@@ -1221,13 +1083,7 @@ export class MigrationService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'CREATE_MIGRATION_INTENT_FAILED',
-          data: {
-            payload: params,
-            error: error,
-          },
-        },
+        error,
       };
     }
   }
@@ -1240,7 +1096,7 @@ export class MigrationService {
    * @param {IcxCreateRevertMigrationParams} - The parameters for the revert migration transaction.
    * @param {SonicSpokeProvider} spokeProvider - The spoke provider.
    * @param {boolean} raw - Whether to return the raw transaction hash instead of the transaction receipt
-   * @returns {Promise<Result<TxReturnType<SonicSpokeProvider, R>, MigrationError<'CREATE_REVERT_MIGRATION_INTENT_FAILED'>>>} - Returns the transaction hash or error
+   * @returns {Promise<Result<TxReturnType<SonicSpokeProvider, R>>>} - Returns the transaction hash or error
    *
    * @example
    * const result = await migrationService.createRevertSodaToIcxMigrationIntent(
@@ -1252,7 +1108,7 @@ export class MigrationService {
    */
   async createRevertSodaToIcxMigrationIntent<Raw extends boolean>(
     _params: IcxRevertMigrationAction<Raw>,
-  ): Promise<Result<TxReturnType<SonicChainKey, Raw>, MigrationError<'CREATE_REVERT_MIGRATION_INTENT_FAILED'>>> {
+  ): Promise<Result<TxReturnType<SonicChainKey, Raw>>> {
     const { params, skipSimulation } = _params;
     try {
       const userRouter = await HubService.getUserHubWalletAddress(
@@ -1292,18 +1148,7 @@ export class MigrationService {
             },
       );
 
-      if (!txResult.ok) {
-        return {
-          ok: false,
-          error: {
-            code: 'CREATE_REVERT_MIGRATION_INTENT_FAILED',
-            data: {
-              payload: params,
-              error: txResult.error,
-            },
-          },
-        };
-      }
+      if (!txResult.ok) return txResult;
 
       return {
         ok: true,
@@ -1312,13 +1157,7 @@ export class MigrationService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'CREATE_REVERT_MIGRATION_INTENT_FAILED',
-          data: {
-            payload: params,
-            error: error,
-          },
-        },
+        error,
       };
     }
   }
