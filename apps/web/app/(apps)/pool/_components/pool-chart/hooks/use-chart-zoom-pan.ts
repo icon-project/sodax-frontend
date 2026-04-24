@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type React from 'react';
 import * as d3 from 'd3';
 
-const ZOOM_WHEEL_SENSITIVITY = 0.0015;
 const ZOOM_BUTTON_FACTOR = 1.5;
 
 type UseChartZoomPanArgs = {
@@ -26,24 +25,16 @@ function clampZoom(zoom: number, minZoom: number, maxZoom: number): number {
   return Math.max(minZoom, Math.min(maxZoom, zoom));
 }
 
-function getPanBound(viewportHeight: number, zoomLevel: number): number {
-  return Math.max(0, (viewportHeight * (zoomLevel - 1)) / 2);
-}
-
-function clampPan(pan: number, viewportHeight: number, zoomLevel: number): number {
-  const bound = getPanBound(viewportHeight, zoomLevel);
-  return Math.max(-bound, Math.min(bound, pan));
-}
-
 /**
- * Zooms and pans the chart's Y (price) axis only.
+ * Zoom and pan state for the chart's Y (price) axis.
  *
- * Unlike d3.zoom (which couples X and Y via a shared scale factor), this hook
- * tracks zoomLevel and panY as explicit numbers so the price axis can zoom
- * independently of the time axis. Wheel events zoom around the cursor.
- * Drag-on-background pans within the zoomed viewport.
+ * Input mapping (Uniswap-style):
+ * - Wheel / trackpad scroll  → PANS the chart up/down
+ * - Drag on the background    → PANS
+ * - zoomIn/zoomOut/reset fns  → exposed for the on-screen +/-/⎋ buttons
  *
- * The returned `transform` is a d3.ZoomTransform for easy use with `rescaleY`.
+ * The returned `transform` is a `d3.ZoomTransform` so consumers can feed it
+ * straight into `rescaleY(yScaleBase)`.
  */
 export function useChartZoomPan({
   svgRef,
@@ -60,11 +51,6 @@ export function useChartZoomPan({
 
   const panStartRef = useRef<{ pointerY: number; startPan: number } | null>(null);
 
-  // Re-clamp pan when zoom changes so we don't leave the content bounds.
-  useEffect(() => {
-    setPanY(prev => clampPan(prev, viewportHeight, zoomLevel));
-  }, [zoomLevel, viewportHeight]);
-
   useEffect(() => {
     if (!enabled) {
       return;
@@ -76,19 +62,8 @@ export function useChartZoomPan({
 
     const handleWheel = (event: WheelEvent): void => {
       event.preventDefault();
-      const rect = el.getBoundingClientRect();
-      const cursorY = event.clientY - rect.top;
-
-      const { zoomLevel: currentZoom, panY: currentPan } = stateRef.current;
-      const zoomFactor = Math.exp(-event.deltaY * ZOOM_WHEEL_SENSITIVITY);
-      const nextZoom = clampZoom(currentZoom * zoomFactor, minZoom, maxZoom);
-
-      // Keep the pixel under the cursor at the same pre-zoom coordinate.
-      const basePixelAtCursor = (cursorY - currentPan) / currentZoom;
-      const nextPan = clampPan(cursorY - basePixelAtCursor * nextZoom, viewportHeight, nextZoom);
-
-      setZoomLevel(nextZoom);
-      setPanY(nextPan);
+      // Subtract deltaY so scrolling DOWN reveals content below (natural direction).
+      setPanY(prev => prev - event.deltaY);
     };
 
     const handleMouseDown = (event: MouseEvent): void => {
@@ -110,7 +85,7 @@ export function useChartZoomPan({
         return;
       }
       const delta = event.clientY - panStart.pointerY;
-      setPanY(clampPan(panStart.startPan + delta, viewportHeight, stateRef.current.zoomLevel));
+      setPanY(panStart.startPan + delta);
     };
 
     const handleMouseUp = (): void => {
@@ -129,20 +104,38 @@ export function useChartZoomPan({
       window.removeEventListener('mouseup', handleMouseUp);
       panStartRef.current = null;
     };
-  }, [enabled, svgRef, viewportHeight, minZoom, maxZoom]);
+  }, [enabled, svgRef]);
 
   const transform = useMemo(
     () => d3.zoomIdentity.translate(0, panY).scale(zoomLevel),
     [zoomLevel, panY],
   );
 
+  const zoomBy = useCallback(
+    (factor: number): void => {
+      const { zoomLevel: currentZoom, panY: currentPan } = stateRef.current;
+      const nextZoom = clampZoom(currentZoom * factor, minZoom, maxZoom);
+      if (nextZoom === currentZoom) {
+        return;
+      }
+      // Keep the viewport center anchored at the same base pixel so the zoom
+      // appears to scale about the chart's middle rather than the top edge.
+      const viewportCenter = viewportHeight / 2;
+      const baseCenter = (viewportCenter - currentPan) / currentZoom;
+      const nextPan = viewportCenter - baseCenter * nextZoom;
+      setZoomLevel(nextZoom);
+      setPanY(nextPan);
+    },
+    [minZoom, maxZoom, viewportHeight],
+  );
+
   const zoomIn = useCallback((): void => {
-    setZoomLevel(prev => clampZoom(prev * ZOOM_BUTTON_FACTOR, minZoom, maxZoom));
-  }, [minZoom, maxZoom]);
+    zoomBy(ZOOM_BUTTON_FACTOR);
+  }, [zoomBy]);
 
   const zoomOut = useCallback((): void => {
-    setZoomLevel(prev => clampZoom(prev / ZOOM_BUTTON_FACTOR, minZoom, maxZoom));
-  }, [minZoom, maxZoom]);
+    zoomBy(1 / ZOOM_BUTTON_FACTOR);
+  }, [zoomBy]);
 
   const reset = useCallback((): void => {
     setZoomLevel(1);
