@@ -59,10 +59,7 @@ type ExchangesBarProps = {
 
 export const ExchangesBar = ({ onHoverChange }: ExchangesBarProps): ReactElement => {
   return (
-    <div
-      className="group/exchanges flex items-center justify-center"
-      onMouseLeave={() => onHoverChange?.(null)}
-    >
+    <div className="group/exchanges flex items-center justify-center" onMouseLeave={() => onHoverChange?.(null)}>
       {EXCHANGES.map((exchange, i) => (
         <div
           key={`${exchange.name}-${i}`}
@@ -89,10 +86,7 @@ export const ExchangesBar = ({ onHoverChange }: ExchangesBarProps): ReactElement
               />
             </span>
             {exchange.showStatusDot && (
-              <span
-                className="absolute right-1 top-1 size-2 rounded-full bg-cherry-bright"
-                aria-hidden="true"
-              />
+              <span className="absolute right-1 top-1 size-2 rounded-full bg-cherry-bright" aria-hidden="true" />
             )}
           </a>
         </div>

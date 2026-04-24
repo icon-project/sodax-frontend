@@ -19,12 +19,26 @@ const HoldersHeroSection = (): ReactElement => {
   return (
     <div className="hero-section">
       <div className="min-h-dvh flex flex-col items-center bg-cherry-soda relative overflow-hidden">
-        {/* Background flame/coin art — hidden below lg, fade-masked on both edges, blend into cherry-soda */}
-        <div className="absolute hidden lg:block left-[calc(-816px+31.25vw)] top-0 w-[1080px] h-full mix-blend-lighten pointer-events-none mask-[linear-gradient(to_right,transparent,black_360px,black_calc(100%-360px),transparent)]">
-          <Image src="/holders/hero-bg-left.webp" alt="" fill className="object-cover" />
+        {/* Background flame/coin art — hidden below lg, anchored to edges, blend into cherry-soda */}
+        <div className="absolute hidden lg:block left-0 bottom-0 w-[55vw] max-w-[1080px] h-[70dvh] max-h-[780px] mix-blend-lighten pointer-events-none">
+          <Image
+            src="/holders/hero-bg-left.webp"
+            alt=""
+            fill
+            className="object-contain object-bottom-left"
+            sizes="(min-width: 1024px) 55vw, 0px"
+            quality={100}
+          />
         </div>
-        <div className="absolute hidden lg:block right-[calc(-816px+31.25vw)] top-0 w-[1080px] h-full mix-blend-lighten pointer-events-none mask-[linear-gradient(to_right,transparent,black_360px,black_calc(100%-360px),transparent)]">
-          <Image src="/holders/hero-bg-right.webp" alt="" fill className="object-cover" />
+        <div className="absolute hidden lg:block right-0 bottom-0 w-[55vw] max-w-[1080px] h-[70dvh] max-h-[780px] mix-blend-lighten pointer-events-none">
+          <Image
+            src="/holders/hero-bg-right.webp"
+            alt=""
+            fill
+            className="object-contain object-bottom-right"
+            sizes="(min-width: 1024px) 55vw, 0px"
+            quality={100}
+          />
         </div>
         {/* Edge fade overlays */}
         <div className="absolute left-0 top-0 hidden lg:block w-[360px] h-full bg-linear-to-r from-cherry-soda to-transparent pointer-events-none z-10" />
@@ -52,24 +66,7 @@ const HoldersHeroSection = (): ReactElement => {
             <Image src="/landing/brace-right.svg" alt="" width={32} height={120} />
           </div>
 
-          <p className="text-white font-[InterRegular] text-(length:--body-super-comfortable) leading-[1.4] text-center z-20 inline-flex items-center gap-2 px-4">
-            {hoveredExchange?.hoverMessage ? (
-              <span className="isolate inline-flex items-center pr-2">
-                <Image
-                  src="/soda-yellow-on-cherry.svg"
-                  alt=""
-                  width={16}
-                  height={16}
-                  className="relative z-2 mr-[-8px]"
-                  aria-hidden="true"
-                />
-                <span className="relative z-1 size-4 rounded-full bg-[#698f93] mr-[-8px] flex items-center justify-center overflow-hidden">
-                  <Image src="/exchanges/icx-white.svg" alt="" width={9} height={9} aria-hidden="true" />
-                </span>
-              </span>
-            ) : (
-              <Image src="/soda-yellow-on-cherry.svg" alt="" width={16} height={16} />
-            )}
+          <p className="text-white font-[InterRegular] text-(length:--body-super-comfortable) leading-[1.4] text-center z-20 px-4">
             {subtitle}
           </p>
 
