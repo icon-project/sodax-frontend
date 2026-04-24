@@ -31,10 +31,6 @@ export const STELLAR_DEFAULT_SOROBAN_RPC_URL = 'https://rpc.ankr.com/stellar_sor
 // ─── NEAR ───────────────────────────────────────────────────────────────────
 export const NEAR_DEFAULT_RPC_URL = 'https://1rpc.io/near';
 
-// ─── Wallet modal ──────────────────────────────────────────────────────────
-/** Max wait for the Hydrator to populate `xConnections` after a provider-managed connect. */
-export const WALLET_MODAL_HYDRATION_TIMEOUT_MS = 5_000;
-
 // ─── Wallet metadata (install URLs + icons for extension-based wallets) ────
 // Keys are wallet-level, not per-connector: one OKX extension serves both
 // Bitcoin and EVM connectors, so metadata is shared.

@@ -1,25 +1,36 @@
 import type { ChainType } from '@sodax/types';
 import type { XConnector } from '@/core/XConnector.js';
-import { assert } from '@/shared/guards.js';
 import { useXWalletStore } from '@/useXWalletStore.js';
 import { matchesConnectorIdentifier } from '@/utils/matchConnectorIdentifier.js';
 
-export type UseIsWalletInstalledOptions = {
-  /**
-   * Wallet identifiers to match. Each entry is compared case-insensitively
-   * against `connector.id` and `connector.name` (substring). Returns `true`
-   * if ANY identifier matches an installed connector. Mirrors the
-   * `connectors` parameter of `useBatchConnect` / `useBatchDisconnect`.
-   */
-  connectors?: readonly string[];
-  /** Restrict the scan to a single chain. */
-  chainType?: ChainType;
-};
+/**
+ * Either `connectors`, `chainType`, or both. The union prevents an empty
+ * `{}` at the type level — the hook must narrow at least one axis so the
+ * return value has a meaningful interpretation (not "is any wallet installed
+ * anywhere", which is rarely the intent).
+ */
+export type UseIsWalletInstalledOptions =
+  | {
+      /**
+       * Wallet brand identifiers (e.g. `'hana'`, `'phantom'`). Matched via
+       * case-insensitive substring against `connector.id` and `connector.name` —
+       * see {@link matchesConnectorIdentifier}. Returns `true` if ANY identifier
+       * matches an installed connector. Mirrors the `connectors` parameter of
+       * `useBatchConnect` / `useBatchDisconnect`.
+       */
+      connectors: readonly string[];
+      chainType?: ChainType;
+    }
+  | {
+      connectors?: readonly string[];
+      /** Restrict the scan to a single chain. */
+      chainType: ChainType;
+    };
 
 /**
  * True when at least one connector across the configured chains is installed
  * AND matches the supplied filters. `connectors` and `chainType` AND together;
- * omitting both returns `true` if any installed connector exists anywhere.
+ * at least one of them must be supplied (enforced at the type level).
  *
  * @example
  * // Single wallet across every chain
@@ -45,24 +56,33 @@ export function useIsWalletInstalled(options: UseIsWalletInstalledOptions): bool
 /**
  * Pure helper backing `useIsWalletInstalled`. Extracted for testability
  * without mounting React.
+ *
+ * Runtime safety: callers that bypass the compile-time union (e.g. an `as`
+ * cast to `{}`) get `false` plus a dev-time warning instead of a thrown
+ * error — a hook crashing the render tree over a type-level misuse is
+ * worse than returning a conservative default.
  */
 export function isAnyConnectorInstalled(
   options: UseIsWalletInstalledOptions,
   xConnectorsByChain: Partial<Record<ChainType, XConnector[]>>,
 ): boolean {
-  assert(
-    options.connectors !== undefined || options.chainType !== undefined,
-    'useIsWalletInstalled: requires at least one of `connectors` or `chainType`',
-  );
+  const { connectors: identifiers, chainType } = options as {
+    connectors?: readonly string[];
+    chainType?: ChainType;
+  };
 
-  const identifiers = options.connectors;
+  if (identifiers === undefined && chainType === undefined) {
+    console.warn(
+      '[useIsWalletInstalled] called without `connectors` or `chainType` — returning `false`. ' +
+        'Supply at least one filter.',
+    );
+    return false;
+  }
 
   // Empty identifier list = explicit "match nothing".
   if (identifiers && identifiers.length === 0) return false;
 
-  const chainsToScan = options.chainType
-    ? [xConnectorsByChain[options.chainType]]
-    : Object.values(xConnectorsByChain);
+  const chainsToScan = chainType ? [xConnectorsByChain[chainType]] : Object.values(xConnectorsByChain);
 
   for (const chainConnectors of chainsToScan) {
     if (!chainConnectors) continue;

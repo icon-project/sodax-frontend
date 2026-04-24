@@ -64,7 +64,7 @@ export function WalletList({ chainType, onPick, onBack }: WalletListProps) {
                 <a
                   href={connector.installUrl}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   className="text-xs text-blue-600 hover:underline"
                   onClick={e => e.stopPropagation()}
                 >

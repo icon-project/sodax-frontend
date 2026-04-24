@@ -19,12 +19,15 @@ export {
 export {
   useBatchConnect,
   type BatchConnectResult,
+  type BatchConnectProgressEvent,
   type UseBatchConnectOptions,
   type UseBatchConnectResult,
 } from './useBatchConnect.js';
 export {
   useBatchDisconnect,
   type BatchDisconnectResult,
+  type BatchDisconnectProgressEvent,
+  type UseBatchDisconnectOptions,
   type UseBatchDisconnectResult,
 } from './useBatchDisconnect.js';
 export {

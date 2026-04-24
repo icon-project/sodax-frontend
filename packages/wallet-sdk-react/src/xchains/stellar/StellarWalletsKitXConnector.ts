@@ -32,7 +32,7 @@ export class StellarWalletsKitXConnector extends XConnector {
     }
 
     if (!this._wallet.isAvailable && this._wallet.url) {
-      window.open(this._wallet.url, '_blank');
+      window.open(this._wallet.url, '_blank', 'noopener,noreferrer');
       return;
     }
 

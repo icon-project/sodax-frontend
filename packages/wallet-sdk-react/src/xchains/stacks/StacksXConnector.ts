@@ -31,7 +31,7 @@ export class StacksXConnector extends XConnector {
 
     if (!provider) {
       if (this.config.installUrl) {
-        window.open(this.config.installUrl, '_blank');
+        window.open(this.config.installUrl, '_blank', 'noopener,noreferrer');
       }
       return undefined;
     }

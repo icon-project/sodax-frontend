@@ -29,7 +29,7 @@ export class IconHanaXConnector extends XConnector {
     assert(isHanaWallet(hanaWallet) || hanaWallet === undefined, '[IconHanaXConnector] invalid window.hanaWallet type');
 
     if (!hanaWallet || !hanaWallet.isAvailable) {
-      window.open(WALLET_METADATA.hana.installUrl, '_blank');
+      window.open(WALLET_METADATA.hana.installUrl, '_blank', 'noopener,noreferrer');
       return;
     }
 
