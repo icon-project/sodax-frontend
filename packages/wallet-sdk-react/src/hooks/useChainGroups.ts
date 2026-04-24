@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { baseChainInfo, type ChainId, type ChainType } from '@sodax/types';
+import { baseChainInfo, type SpokeChainKey, type ChainType } from '@sodax/types';
 import type { XAccount, XConnection } from '@/types/index.js';
 import { useXWalletStore } from '@/useXWalletStore.js';
 import { chainRegistry, type ChainServiceFactory } from '@/chainRegistry.js';
@@ -7,8 +7,8 @@ import { compareChainByOrder } from '@/utils/chainOrder.js';
 
 export type ChainGroup = {
   chainType: ChainType;
-  /** All ChainIds that share this ChainType — e.g. every EVM network for `chainType: 'EVM'`. */
-  chainIds: readonly ChainId[];
+  /** All SpokeChainKeys that share this ChainType — e.g. every EVM network for `chainType: 'EVM'`. */
+  chainIds: readonly SpokeChainKey[];
   displayName: string;
   /** Icon URL from chainRegistry. `undefined` when SDK doesn't ship a default — consumer provides. */
   iconUrl: string | undefined;
@@ -26,10 +26,10 @@ export type UseChainGroupsOptions = {
   order?: readonly ChainType[];
 };
 
-function getChainIdsByType(chainType: ChainType): readonly ChainId[] {
-  const ids: ChainId[] = [];
+function getSpokeChainKeysByType(chainType: ChainType): readonly SpokeChainKey[] {
+  const ids: SpokeChainKey[] = [];
   for (const [id, info] of Object.entries(baseChainInfo)) {
-    if (info.type === chainType) ids.push(id as ChainId);
+    if (info.type === chainType) ids.push(id as SpokeChainKey);
   }
   return ids;
 }
@@ -53,7 +53,7 @@ export function buildChainGroups(
     const connection = xConnections[chainType];
     return {
       chainType,
-      chainIds: getChainIdsByType(chainType),
+      chainIds: getSpokeChainKeysByType(chainType),
       displayName: factory?.displayName ?? chainType,
       iconUrl: factory?.iconUrl,
       isConnected: !!connection?.xAccount.address,
