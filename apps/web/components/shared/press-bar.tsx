@@ -1,5 +1,6 @@
 'use client';
 
+import { ArrowUpRight } from 'lucide-react';
 import type { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent, ReactElement } from 'react';
 import { useEffect, useRef } from 'react';
 
@@ -190,7 +191,7 @@ export const PressBar = (): ReactElement => {
                   >
                     <span className="flex items-center gap-1">
                       {TOOLTIP_LABEL}
-                      <span aria-hidden="true">→</span>
+                      <ArrowUpRight width={16} height={16} className="text-clay-light" aria-hidden="true" />
                     </span>
                   </TooltipContent>
                 </Tooltip>
