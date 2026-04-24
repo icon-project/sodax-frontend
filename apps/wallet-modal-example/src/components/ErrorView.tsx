@@ -19,12 +19,14 @@ export function ErrorView({ chainType, connectorName, error, onRetry, onBack }: 
       </div>
       <div className="flex gap-2">
         <button
+          type="button"
           onClick={onRetry}
           className="flex-1 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
         >
           Retry
         </button>
         <button
+          type="button"
           onClick={onBack}
           className="flex-1 rounded border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-50"
         >

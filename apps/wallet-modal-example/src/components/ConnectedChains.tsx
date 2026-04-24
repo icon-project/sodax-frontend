@@ -42,6 +42,7 @@ export function ConnectedChains() {
                 {shortAddress(c.account.address)}
               </code>
               <button
+                type="button"
                 onClick={() => handleDisconnect(c.chainType)}
                 disabled={pending === c.chainType}
                 className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-50"

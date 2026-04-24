@@ -13,6 +13,7 @@ export function ChainList({ onPick }: ChainListProps) {
       {groups.map(group => (
         <li key={group.chainType}>
           <button
+            type="button"
             onClick={() => onPick(group.chainType)}
             className="flex w-full items-center justify-between px-2 py-3 text-left hover:bg-gray-50"
           >

@@ -23,7 +23,7 @@ export function WalletList({ chainType, onPick, onBack }: WalletListProps) {
     return (
       <div className="space-y-3 text-center text-sm text-gray-600">
         <p>No connectors registered for {chainType}.</p>
-        <button onClick={onBack} className="text-blue-600 hover:underline">
+        <button type="button" onClick={onBack} className="text-blue-600 hover:underline">
           ← Back
         </button>
       </div>
@@ -42,6 +42,7 @@ export function WalletList({ chainType, onPick, onBack }: WalletListProps) {
         {sorted.map(connector => (
           <li key={connector.id}>
             <button
+              type="button"
               onClick={() => onPick(connector)}
               disabled={!connector.isInstalled}
               className="flex w-full items-center justify-between px-2 py-3 text-left hover:bg-gray-50 disabled:hover:bg-transparent"
@@ -77,7 +78,7 @@ export function WalletList({ chainType, onPick, onBack }: WalletListProps) {
         ))}
       </ul>
 
-      <button onClick={onBack} className="text-sm text-blue-600 hover:underline">
+      <button type="button" onClick={onBack} className="text-sm text-blue-600 hover:underline">
         ← Back to chains
       </button>
     </div>

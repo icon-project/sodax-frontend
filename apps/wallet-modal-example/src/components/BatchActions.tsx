@@ -37,6 +37,7 @@ export function BatchActions() {
       {isHanaInstalled ? (
         <div className="grid gap-2 sm:grid-cols-3">
           <button
+            type="button"
             disabled={isAnyRunning}
             onClick={async () => setLast({ label: 'Connect All Hana', result: await connectAllHana.run() })}
             className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
@@ -45,6 +46,7 @@ export function BatchActions() {
           </button>
 
           <button
+            type="button"
             disabled={isAnyRunning || total === 0}
             onClick={async () => setLast({ label: 'Connect Rest with Hana', result: await connectRestHana.run() })}
             className="rounded border border-blue-600 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-50"
@@ -54,6 +56,7 @@ export function BatchActions() {
           </button>
 
           <button
+            type="button"
             disabled={isAnyRunning || total === 0}
             onClick={async () => setLast({ label: 'Disconnect Hana', result: await disconnectHana.run() })}
             className="rounded border border-gray-400 px-3 py-2 text-sm font-medium hover:bg-gray-50"
@@ -68,6 +71,7 @@ export function BatchActions() {
       )}
 
       <button
+        type="button"
         disabled={isAnyRunning || total === 0}
         onClick={async () => setLast({ label: 'Disconnect All', result: await disconnectAll.run() })}
         className="w-full rounded bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"

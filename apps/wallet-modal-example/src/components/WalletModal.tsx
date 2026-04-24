@@ -20,6 +20,7 @@ export function WalletModal() {
         <header className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">{titleFor(modal.state.kind)}</h2>
           <button
+            type="button"
             onClick={modal.close}
             className="text-gray-500 hover:text-gray-900"
             aria-label="Close"
@@ -65,6 +66,7 @@ export function WalletModal() {
               {modal.state.account.address}
             </code>
             <button
+              type="button"
               onClick={modal.close}
               className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
             >

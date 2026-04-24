@@ -19,6 +19,7 @@ export function ConnectionFlowDemo() {
 
       <div className="flex flex-wrap items-center gap-2">
         <button
+          type="button"
           disabled={!target || flow.status === 'connecting'}
           onClick={() => target && flow.connect(target)}
           className="rounded bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
@@ -30,6 +31,7 @@ export function ConnectionFlowDemo() {
 
         {flow.status === 'error' && (
           <button
+            type="button"
             onClick={flow.retry}
             className="rounded border border-indigo-600 px-3 py-2 text-sm text-indigo-700 hover:bg-indigo-50"
           >
@@ -38,6 +40,7 @@ export function ConnectionFlowDemo() {
         )}
 
         <button
+          type="button"
           onClick={flow.reset}
           disabled={flow.status === 'idle'}
           className="rounded border border-gray-300 px-3 py-2 text-sm hover:bg-gray-50"

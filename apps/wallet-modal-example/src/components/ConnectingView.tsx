@@ -16,6 +16,7 @@ export function ConnectingView({ chainType, connectorName, onCancel }: Connectin
       </p>
       <p className="text-xs text-gray-500">Approve the request in your wallet popup.</p>
       <button
+        type="button"
         onClick={onCancel}
         className="text-sm text-gray-600 hover:underline"
       >
