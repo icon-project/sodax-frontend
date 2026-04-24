@@ -24,6 +24,7 @@ import {
 import { generatePairData, getInitialPriceBand } from './mock-data';
 import { parseLiquidityTickPoints, parseOhlcPricePoints } from './parsers';
 import { formatPairPrice, normalizeExternalPrice, roundPrice } from './price-utils';
+import { useChartZoomPan } from './hooks/use-chart-zoom-pan';
 
 const ALL_DATA = generatePairData(730);
 const LATEST_POINT: PricePoint = ALL_DATA[ALL_DATA.length - 1] ?? { time: Date.now(), price: DEFAULT_CURRENT_PRICE };
@@ -41,8 +42,6 @@ export function PoolChart({
   const mainSvgRef = useRef<SVGSVGElement | null>(null);
   const tickSvgRef = useRef<SVGSVGElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
-  const zoomBehRef = useRef<d3.Selection<SVGRectElement, unknown, null, undefined> | null>(null);
-  const zoomObjRef = useRef<d3.ZoomBehavior<SVGRectElement, unknown> | null>(null);
 
   const [internalMinPrice, setInternalMinPrice] = useState<number>(roundPrice(CURRENT_PRICE * 0.85));
   const [internalMaxPrice, setInternalMaxPrice] = useState<number>(roundPrice(CURRENT_PRICE * 1.15));
@@ -72,7 +71,6 @@ export function PoolChart({
     [onMaxPriceChange],
   );
   const [activeRange, setActiveRange] = useState<(typeof RANGES)[number]['label']>('1M');
-  const [zoomTransform, setZoomTransform] = useState<d3.ZoomTransform>(d3.zoomIdentity);
   const [width, setWidth] = useState<number>(700);
   const [allData, setAllData] = useState<PricePoint[]>(ALL_DATA);
   const externalPairPrice = useMemo(() => normalizeExternalPrice(pairPrice), [pairPrice]);
@@ -87,6 +85,17 @@ export function PoolChart({
   const INNER_H = HEIGHT - ML.top - ML.bottom;
   const TICK_IH = HEIGHT - TM.top - TM.bottom;
   const TICK_IW = TICK_W - TM.left - TM.right;
+
+  const {
+    transform: zoomTransform,
+    zoomIn,
+    zoomOut,
+    reset: resetZoom,
+  } = useChartZoomPan({
+    svgRef: mainSvgRef,
+    enabled: INTERACTIVE,
+    viewportHeight: INNER_H,
+  });
 
   useEffect(() => {
     if (externalPairPrice === null) {
@@ -213,7 +222,7 @@ export function PoolChart({
     [visibleData, INNER_W],
   );
 
-  const xScale = useMemo(() => zoomTransform.rescaleX(xScaleBase), [zoomTransform, xScaleBase]);
+  const xScale = xScaleBase;
 
   const [yDomainMin, yDomainMax] = useMemo((): [number, number] => {
     const defaultMin = MOCK_CHART_MIN_PRICE;
@@ -248,34 +257,10 @@ export function PoolChart({
 
   useEffect(() => {
     void activeRange;
-    if (INTERACTIVE && zoomBehRef.current && zoomObjRef.current) {
-      zoomBehRef.current.call(zoomObjRef.current.transform, d3.zoomIdentity);
+    if (INTERACTIVE) {
+      resetZoom();
     }
-  }, [activeRange]);
-
-  useEffect(() => {
-    if (!INTERACTIVE || !mainSvgRef.current || INNER_W <= 0) {
-      return;
-    }
-
-    const zoom = d3
-      .zoom<SVGRectElement, unknown>()
-      .scaleExtent([0.5, 20])
-      .translateExtent([
-        [0, 0],
-        [INNER_W, INNER_H],
-      ])
-      .extent([
-        [0, 0],
-        [INNER_W, INNER_H],
-      ])
-      .on('zoom', event => setZoomTransform(event.transform));
-
-    zoomObjRef.current = zoom;
-    const bg = d3.select(mainSvgRef.current).select<SVGRectElement>('.zoom-bg');
-    bg.call(zoom).on('dblclick.zoom', null);
-    zoomBehRef.current = bg;
-  }, [INNER_W, INNER_H]);
+  }, [activeRange, resetZoom]);
 
   useEffect(() => {
     if (!mainSvgRef.current || INNER_W <= 0) {
@@ -768,17 +753,6 @@ export function PoolChart({
     };
   }, [yScale, minPrice, maxPrice, currentPrice, INNER_H, setMinPrice, setMaxPrice]);
 
-  const doZoom = useCallback((factor: number) => {
-    if (INTERACTIVE && zoomBehRef.current && zoomObjRef.current) {
-      zoomBehRef.current.transition().duration(300).call(zoomObjRef.current.scaleBy, factor);
-    }
-  }, []);
-
-  const doResetZoom = useCallback(() => {
-    if (INTERACTIVE && zoomBehRef.current && zoomObjRef.current) {
-      zoomBehRef.current.transition().duration(300).call(zoomObjRef.current.transform, d3.zoomIdentity);
-    }
-  }, []);
 
   return (
     <div className="w-full">
@@ -893,15 +867,15 @@ export function PoolChart({
           <div className="flex gap-2">
             <MinusCircleIcon
               className="w-4 h-4 text-clay cursor-pointer hover:text-espresso"
-              onClick={INTERACTIVE ? () => doZoom(1 / 1.5) : undefined}
+              onClick={INTERACTIVE ? zoomOut : undefined}
             />
             <Scan
               className="w-4 h-4 text-clay cursor-pointer hover:text-espresso"
-              onClick={INTERACTIVE ? doResetZoom : undefined}
+              onClick={INTERACTIVE ? resetZoom : undefined}
             />
             <PlusCircleIcon
               className="w-4 h-4 text-clay cursor-pointer hover:text-espresso"
-              onClick={INTERACTIVE ? () => doZoom(1.5) : undefined}
+              onClick={INTERACTIVE ? zoomIn : undefined}
             />
           </div>
         </div>
