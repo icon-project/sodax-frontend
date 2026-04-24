@@ -1,5 +1,5 @@
 import { useMemo, useSyncExternalStore } from 'react';
-import type { ChainType } from '@sodax/types';
+import { ChainTypeArr, type ChainType } from '@sodax/types';
 import type { XAccount, XConnection } from '@/types/index.js';
 import type { XConnector } from '@/core/index.js';
 import { useXWalletStore } from '@/useXWalletStore.js';
@@ -47,9 +47,9 @@ export function buildConnectedChains(
   order?: readonly ChainType[],
 ): UseConnectedChainsResult {
   const chains: ConnectedChain[] = [];
-  for (const [key, connection] of Object.entries(xConnections)) {
+  for (const chainType of ChainTypeArr) {
+    const connection = xConnections[chainType];
     if (!connection?.xAccount.address) continue;
-    const chainType = key as ChainType;
     const connectors = xConnectorsByChain[chainType] ?? [];
     const connector = connectors.find(c => c.id === connection.xConnectorId);
     chains.push({

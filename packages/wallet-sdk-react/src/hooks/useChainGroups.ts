@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { baseChainInfo, type SpokeChainKey, type ChainType } from '@sodax/types';
+import { baseChainInfo, CHAIN_KEYS, type SpokeChainKey, type ChainType } from '@sodax/types';
 import type { XAccount, XConnection } from '@/types/index.js';
 import { useXWalletStore } from '@/useXWalletStore.js';
 import { chainRegistry, type ChainServiceFactory } from '@/chainRegistry.js';
@@ -28,8 +28,8 @@ export type UseChainGroupsOptions = {
 
 function getSpokeChainKeysByType(chainType: ChainType): readonly SpokeChainKey[] {
   const ids: SpokeChainKey[] = [];
-  for (const [id, info] of Object.entries(baseChainInfo)) {
-    if (info.type === chainType) ids.push(id as SpokeChainKey);
+  for (const chainKey of CHAIN_KEYS) {
+    if (baseChainInfo[chainKey].type === chainType) ids.push(chainKey);
   }
   return ids;
 }

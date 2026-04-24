@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import type { ChainType } from '@sodax/types';
+import { ChainTypeArr, type ChainType } from '@sodax/types';
 import type { XConnector } from '@/core/XConnector.js';
 import type { XAccount } from '@/types/index.js';
 import { assert } from '@/shared/guards.js';
@@ -82,12 +82,13 @@ export function resolveBatchTargets(
   connectorsByChain: Partial<Record<ChainType, XConnector[]>>,
 ): BatchConnectTarget[] {
   const targets: BatchConnectTarget[] = [];
-  for (const [chainType, chainConnectors] of Object.entries(connectorsByChain)) {
+  for (const chainType of ChainTypeArr) {
+    const chainConnectors = connectorsByChain[chainType];
     if (!chainConnectors?.length) continue;
     for (const identifier of connectors) {
       const match = chainConnectors.find(c => matchesConnectorIdentifier(c, identifier));
       if (match) {
-        targets.push({ chainType: chainType as ChainType, connector: match });
+        targets.push({ chainType, connector: match });
         break;
       }
     }

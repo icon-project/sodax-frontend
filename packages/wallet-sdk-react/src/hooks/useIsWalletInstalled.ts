@@ -66,10 +66,7 @@ export function isAnyConnectorInstalled(
   options: UseIsWalletInstalledOptions,
   xConnectorsByChain: Partial<Record<ChainType, XConnector[]>>,
 ): boolean {
-  const { connectors: identifiers, chainType } = options as {
-    connectors?: readonly string[];
-    chainType?: ChainType;
-  };
+  const { connectors: identifiers, chainType } = options;
 
   if (identifiers === undefined && chainType === undefined) {
     console.warn(

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import type { ChainType } from '@sodax/types';
+import { ChainTypeArr, type ChainType } from '@sodax/types';
 import type { XConnector } from '@/core/XConnector.js';
 import type { XConnection } from '@/types/index.js';
 import { matchesConnectorIdentifier } from '@/utils/matchConnectorIdentifier.js';
@@ -72,18 +72,17 @@ export function resolveDisconnectTargets(
   xConnectorsByChain: Partial<Record<ChainType, XConnector[]>>,
 ): ChainType[] {
   const targets: ChainType[] = [];
-  for (const [chainType, connection] of Object.entries(xConnections)) {
+  for (const chainType of ChainTypeArr) {
+    const connection = xConnections[chainType];
     if (!connection?.xAccount.address) continue;
     if (!connectors) {
-      targets.push(chainType as ChainType);
+      targets.push(chainType);
       continue;
     }
-    const activeConnector = xConnectorsByChain[chainType as ChainType]?.find(
-      c => c.id === connection.xConnectorId,
-    );
+    const activeConnector = xConnectorsByChain[chainType]?.find(c => c.id === connection.xConnectorId);
     if (!activeConnector) continue;
     if (connectors.some(identifier => matchesConnectorIdentifier(activeConnector, identifier))) {
-      targets.push(chainType as ChainType);
+      targets.push(chainType);
     }
   }
   return targets;
