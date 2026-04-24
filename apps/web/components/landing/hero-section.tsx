@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Navbar } from '@/components/shared/navbar';
 import { NetworkLogosScroller } from '@/components/shared/network-logos-scroller';
 import { LeadMagnetCTA } from './lead-magnet-cta';
+import { PressBar } from '../shared/press-bar';
 
 const HeroSection = (): React.ReactElement => {
   return (
@@ -51,10 +52,10 @@ const HeroSection = (): React.ReactElement => {
             </div>
             <LeadMagnetCTA />
           </div>
-
-          {/* Network logos scroller */}
           <NetworkLogosScroller />
         </div>
+
+        <PressBar />
       </div>
     </div>
   );

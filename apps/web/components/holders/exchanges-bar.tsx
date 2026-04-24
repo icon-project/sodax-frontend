@@ -12,29 +12,48 @@ export type Exchange = {
   showStatusDot?: boolean;
 };
 
-const KRAKEN: Exchange = {
-  name: 'Kraken',
-  iconSrc: '/exchanges/kraken-white.svg',
-  tradeUrl: '#',
-  hoverMessage: 'Buy and migrate on Kraken',
-  showStatusDot: true,
-};
-
-const BINANCE: Exchange = {
-  name: 'Binance',
-  iconSrc: '/exchanges/binance-white.svg',
-  tradeUrl: '#',
-  hoverMessage: 'Trade ICX ahead of Binance migration',
-  showStatusDot: true,
-};
-
-const SODAX: Exchange = {
-  name: 'SODAX',
-  iconSrc: '/exchanges/soda-symbol-white.svg',
-  tradeUrl: '#',
-};
-
-export const EXCHANGES: Exchange[] = [KRAKEN, BINANCE, KRAKEN, BINANCE, KRAKEN, SODAX];
+// Only the first (Kraken) and last (SODA Exchange) are real; the 4 middle entries
+// are placeholders awaiting final exchange logos and URLs from marketing.
+const EXCHANGES: Exchange[] = [
+  {
+    name: 'Kraken',
+    iconSrc: '/exchanges/kraken-white.svg',
+    tradeUrl: '#',
+    hoverMessage: 'Buy and migrate on Kraken',
+    showStatusDot: true,
+  },
+  {
+    name: 'Binance',
+    iconSrc: '/exchanges/binance-white.svg',
+    tradeUrl: '#',
+    hoverMessage: 'Trade ICX ahead of Binance migration',
+  },
+  {
+    name: 'Kraken',
+    iconSrc: '/exchanges/kraken-white.svg',
+    tradeUrl: '#',
+    hoverMessage: 'Trade ICX ahead of Kraken migration',
+  },
+  {
+    name: 'Binance',
+    iconSrc: '/exchanges/binance-white.svg',
+    tradeUrl: '#',
+    hoverMessage: 'Trade ICX ahead of Binance migration',
+  },
+  {
+    name: 'Kraken',
+    iconSrc: '/exchanges/kraken-white.svg',
+    tradeUrl: '#',
+    hoverMessage: 'Trade ICX ahead of Kraken migration',
+  },
+  {
+    name: 'SODA Exchange',
+    iconSrc: '/exchanges/soda-symbol-white.svg',
+    tradeUrl: '#',
+    hoverMessage: 'Buy and migrate on SODA Exchange',
+    showStatusDot: true,
+  },
+];
 
 type ExchangesBarProps = {
   onHoverChange?: (exchange: Exchange | null) => void;
@@ -50,9 +69,9 @@ export const ExchangesBar = ({ onHoverChange }: ExchangesBarProps): ReactElement
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Trade on ${exchange.name}`}
-          onMouseEnter={() => onHoverChange?.(exchange)}
+          onMouseEnter={() => onHoverChange?.(exchange.showStatusDot ? exchange : null)}
           onMouseLeave={() => onHoverChange?.(null)}
-          onFocus={() => onHoverChange?.(exchange)}
+          onFocus={() => onHoverChange?.(exchange.showStatusDot ? exchange : null)}
           onBlur={() => onHoverChange?.(null)}
           className="relative size-10 sm:size-12 rounded-lg bg-cherry-on-cherry flex items-center justify-center transition-transform hover:scale-105"
         >

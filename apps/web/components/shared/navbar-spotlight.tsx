@@ -74,7 +74,7 @@ export function NavbarSpotlight({ className = '' }: { className?: string }) {
           transition={TEXT_COLOR_TRANSITION}
           style={{ color: TEXT_COLOR_IDLE }}
         >
-          Now on Kraken!
+          Soon on Kraken!
           <motion.span
             aria-hidden
             className="absolute left-0 top-0"
@@ -93,9 +93,7 @@ export function NavbarSpotlight({ className = '' }: { className?: string }) {
                 filter: 'drop-shadow(0 0 10px rgba(255,255,255,1))',
               }}
               animate={
-                isShimmerLooping
-                  ? { backgroundPosition: ['200% 0%', '0% 0%'] }
-                  : { backgroundPosition: '200% 0%' }
+                isShimmerLooping ? { backgroundPosition: ['200% 0%', '0% 0%'] } : { backgroundPosition: '200% 0%' }
               }
               transition={{
                 duration: SHIMMER_SWEEP_S,
@@ -104,7 +102,7 @@ export function NavbarSpotlight({ className = '' }: { className?: string }) {
                 ease: 'easeInOut',
               }}
             >
-              Now on Kraken!
+              Soon on Kraken!
             </motion.span>
           </motion.span>
         </motion.p>
@@ -138,9 +136,7 @@ export function NavbarSpotlight({ className = '' }: { className?: string }) {
           opacity: isRevealed ? 1 : 0,
           x: isRevealed ? REVEALED_OFFSET_X : HIDDEN_OFFSET_X,
         }}
-        transition={
-          isRevealed ? { ...REVEAL_SPRING, ...(isHovering ? { delay: TOKEN_STAGGER_S } : {}) } : EXIT_TWEEN
-        }
+        transition={isRevealed ? { ...REVEAL_SPRING, ...(isHovering ? { delay: TOKEN_STAGGER_S } : {}) } : EXIT_TWEEN}
       >
         <Image src="/soda-yellow.png" alt="" width={13} height={13} />
       </motion.div>
@@ -156,7 +152,7 @@ export function NavbarSpotlightStatic({ className = '' }: { className?: string }
         className="font-[InterRegular] text-sm leading-[1.4] text-white whitespace-nowrap"
         onClick={() => trackKrakenSpotlightClicked()}
       >
-        → Now on Kraken!
+        → Soon on Kraken!
       </Link>
       <KrakenIcon width={16} height={13} fill="white" />
     </div>

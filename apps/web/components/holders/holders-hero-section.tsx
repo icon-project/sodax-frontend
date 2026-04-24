@@ -6,6 +6,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { BackedBy } from '@/components/shared/backed-by';
 import { Navbar } from '@/components/shared/navbar';
+import { PressBar } from '@/components/shared/press-bar';
 import type { Exchange } from '@/components/holders/exchanges-bar';
 import { ExchangesBar } from '@/components/holders/exchanges-bar';
 
@@ -53,7 +54,7 @@ const HoldersHeroSection = (): ReactElement => {
             <Image src="/landing/brace-right.svg" alt="" width={32} height={120} />
           </div>
 
-          <p className="text-white font-[InterRegular] text-(length:--body-super-comfortable) leading-[1.4] text-center z-20 inline-flex items-center gap-2">
+          <p className="text-white font-[InterRegular] text-(length:--body-super-comfortable) leading-[1.4] text-center z-20 inline-flex items-center gap-2 px-4">
             {hoveredExchange?.hoverMessage ? (
               <span className="isolate inline-flex items-center pr-2">
                 <Image
@@ -65,13 +66,7 @@ const HoldersHeroSection = (): ReactElement => {
                   aria-hidden="true"
                 />
                 <span className="relative z-1 size-4 rounded-full bg-[#698f93] mr-[-8px] flex items-center justify-center overflow-hidden">
-                  <Image
-                    src="/exchanges/icx-white.svg"
-                    alt=""
-                    width={9}
-                    height={9}
-                    aria-hidden="true"
-                  />
+                  <Image src="/exchanges/icx-white.svg" alt="" width={9} height={9} aria-hidden="true" />
                 </span>
               </span>
             ) : (
@@ -80,7 +75,7 @@ const HoldersHeroSection = (): ReactElement => {
             {subtitle}
           </p>
 
-          <div className="mt-4 z-20 flex flex-col items-center gap-2">
+          <div className="z-20 flex flex-col items-center gap-2">
             <ExchangesBar onHoverChange={setHoveredExchange} />
             {!hoveredExchange?.hoverMessage && (
               <p className="sm:hidden text-white font-[InterRegular] text-(length:--body-small) leading-[1.4] text-center">
@@ -93,6 +88,8 @@ const HoldersHeroSection = (): ReactElement => {
             <BackedBy />
           </div>
         </div>
+
+        <PressBar />
       </div>
     </div>
   );
