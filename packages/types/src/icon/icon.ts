@@ -1,6 +1,6 @@
 import type { Hex, Hash } from '../shared/shared.js';
 import type { ICoreWallet } from '../wallet/wallet.js';
-import { spokeChainConfig, ChainKeys } from '../chains/chains.js';
+import type { spokeChainConfig, ChainKeys } from '../chains/chains.js';
 
 export type IcxTokenType =
   | (typeof spokeChainConfig)[typeof ChainKeys.ICON_MAINNET]['addresses']['wICX']

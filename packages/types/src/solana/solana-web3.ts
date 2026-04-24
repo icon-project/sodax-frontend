@@ -1,6 +1,6 @@
-import { Buffer } from 'buffer';
-import { Agent } from 'http';
-import { Agent as Agent$1 } from 'https';
+import type { Buffer } from 'buffer';
+import type { Agent } from 'http';
+import type { Agent as Agent$1 } from 'https';
 
 declare class Struct {
     constructor(properties: any);
@@ -1470,7 +1470,7 @@ type MessageCompiledInstruction = {
  * Transaction signature as base-58 encoded string
  */
 type TransactionSignature = string;
-declare const enum TransactionStatus {
+declare enum TransactionStatus {
     BLOCKHEIGHT_EXCEEDED = 0,
     PROCESSED = 1,
     TIMED_OUT = 2,

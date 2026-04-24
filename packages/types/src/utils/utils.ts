@@ -33,10 +33,10 @@ import {
   type IntentRelayChainId,
   IntentRelayChainIdToChainKey,
   EVM_SPOKE_ONLY_CHAIN_KEYS_SET,
-  EVM_SPOKE_ONLY_CHAIN_KEYS,
+  type EVM_SPOKE_ONLY_CHAIN_KEYS,
 } from '../chains/chains.js';
 import { spokeChainKeysSet, type ChainKey, type ChainType } from '../chains/chain-keys.js';
-import { type XToken } from '../chains/tokens.js';
+import type { XToken } from '../chains/tokens.js';
 import { type ConcentratedLiquidityConfig, concentratedLiquidityConfig } from '../dex/dex.js';
 import { type SolverConfig, solverConfig } from '../common/constants.js';
 import type { IWalletProvider } from '../wallet/providers.js';
