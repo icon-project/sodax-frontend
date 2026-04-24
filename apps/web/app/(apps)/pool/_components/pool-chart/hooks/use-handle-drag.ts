@@ -67,6 +67,8 @@ export function useHandleDrag({
   settersRef.current = { setMinPrice, setMaxPrice };
 
   const bandAnchorRef = useRef<BandAnchor | null>(null);
+  const minHandleOffsetRef = useRef<number>(0);
+  const maxHandleOffsetRef = useRef<number>(0);
 
   // Safety net: if the 'end' event is missed (e.g., window blur, pointercancel,
   // or the tab loses visibility mid-gesture) the body cursor and SVG class
@@ -107,13 +109,20 @@ export function useHandleDrag({
 
     const toChartY = (svgY: number): number => svgY - depsRef.current.marginTop;
 
+    const clampToChart = (y: number, innerH: number): number => Math.max(0, Math.min(innerH, y));
+
     const minDrag = d3
       .drag<SVGRectElement, unknown>()
       .container(resolveContainer)
+      .on('start', event => {
+        const { yScale, minPrice, innerH } = depsRef.current;
+        const renderedLineY = clampToChart(yScale(minPrice), innerH);
+        minHandleOffsetRef.current = toChartY(event.y) - renderedLineY;
+      })
       .on('drag', event => {
         const { yScale, currentPrice, innerH } = depsRef.current;
-        const chartY = Math.max(0, Math.min(innerH, toChartY(event.y)));
-        const price = Math.max(yScale.invert(chartY), 0);
+        const lineY = clampToChart(toChartY(event.y) - minHandleOffsetRef.current, innerH);
+        const price = Math.max(yScale.invert(lineY), 0);
         const gap = Math.max(Math.abs(currentPrice) * CURRENT_PRICE_GAP_FRACTION, MIN_PRICE_GAP);
         const cap = Math.max(currentPrice - gap, 0);
         settersRef.current.setMinPrice(roundPrice(Math.min(price, cap)));
@@ -122,10 +131,15 @@ export function useHandleDrag({
     const maxDrag = d3
       .drag<SVGRectElement, unknown>()
       .container(resolveContainer)
+      .on('start', event => {
+        const { yScale, maxPrice, innerH } = depsRef.current;
+        const renderedLineY = clampToChart(yScale(maxPrice), innerH);
+        maxHandleOffsetRef.current = toChartY(event.y) - renderedLineY;
+      })
       .on('drag', event => {
         const { yScale, currentPrice, innerH } = depsRef.current;
-        const chartY = Math.max(0, Math.min(innerH, toChartY(event.y)));
-        const price = Math.max(yScale.invert(chartY), 0);
+        const lineY = clampToChart(toChartY(event.y) - maxHandleOffsetRef.current, innerH);
+        const price = Math.max(yScale.invert(lineY), 0);
         const gap = Math.max(Math.abs(currentPrice) * CURRENT_PRICE_GAP_FRACTION, MIN_PRICE_GAP);
         const floor = currentPrice + gap;
         settersRef.current.setMaxPrice(roundPrice(Math.max(price, floor)));
