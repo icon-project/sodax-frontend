@@ -46,12 +46,7 @@ export type {
   IntentState,
 } from '../shared/types/intent-types.js';
 export { IntentDataType } from '../shared/types/intent-types.js';
-import type {
-  CreateIntentParams,
-  CreateLimitOrderParams,
-  Intent,
-  IntentState,
-} from '../shared/types/intent-types.js';
+import type { CreateIntentParams, CreateLimitOrderParams, Intent, IntentState } from '../shared/types/intent-types.js';
 import {
   type SpokeChainKey,
   type Hex,
@@ -87,7 +82,6 @@ import {
   type WalletProviderSlot,
   type SonicChainKey,
 } from '@sodax/types';
-
 
 export type GetIntentSubmitTxExtraDataParams = { txHash: Hash } | { intent: Intent };
 
@@ -305,9 +299,7 @@ export class SwapService {
    *   // handle error
    * }
    */
-  public async submitIntent(
-    submitPayload: IntentRelayRequest<'submit'>,
-  ): Promise<Result<GetRelayResponse<'submit'>>> {
+  public async submitIntent(submitPayload: IntentRelayRequest<'submit'>): Promise<Result<GetRelayResponse<'submit'>>> {
     try {
       const submitResult = await submitTransaction(submitPayload, this.relayerApiEndpoint);
       if (!submitResult.success) {
@@ -367,7 +359,7 @@ export class SwapService {
     _params: SwapActionParams<K, false>,
   ): Promise<Result<[SolverExecutionResponse, Intent, IntentDeliveryInfo]>> {
     const { params } = _params;
-    const srcChainKey = params.srcChain;
+    const srcChainKey = params.srcChainKey;
     try {
       const timeout = _params.timeout;
       const createIntentResult = await this.createIntent(_params);
@@ -417,7 +409,7 @@ export class SwapService {
             srcChainId: srcChainKey,
             srcTxHash: spokeTxHash,
             srcAddress: params.srcAddress,
-            dstChainId: params.dstChain,
+            dstChainId: params.dstChainKey,
             dstTxHash: dstIntentTxHash,
             dstAddress: params.dstAddress,
           } satisfies IntentDeliveryInfo,
@@ -452,7 +444,7 @@ export class SwapService {
   ): Promise<Result<boolean>> {
     try {
       const { params } = _params;
-      const srcChainKey = params.srcChain;
+      const srcChainKey = params.srcChainKey;
 
       if (isHubChainKeyType(srcChainKey)) {
         return await this.spoke.isAllowanceValid({
@@ -495,16 +487,16 @@ export class SwapService {
     const { params } = _params;
 
     try {
-      if (isHubChainKeyType(params.srcChain) || isEvmSpokeOnlyChainKeyType(params.srcChain)) {
+      if (isHubChainKeyType(params.srcChainKey) || isEvmSpokeOnlyChainKeyType(params.srcChainKey)) {
         invariant(
           isOptionalEvmWalletProviderType(_params.walletProvider),
           'Invalid wallet provider. Expected Evm wallet provider.',
         );
-        const spender = isHubChainKeyType(params.srcChain)
+        const spender = isHubChainKeyType(params.srcChainKey)
           ? this.solver.intentsContract
-          : spokeChainConfig[params.srcChain].addresses.assetManager;
+          : spokeChainConfig[params.srcChainKey].addresses.assetManager;
         const coreParams = {
-          srcChainKey: params.srcChain,
+          srcChainKey: params.srcChainKey,
           owner: params.srcAddress as GetAddressType<HubChainKey | EvmSpokeOnlyChainKey>,
           token: params.inputToken as GetTokenAddressType<HubChainKey | EvmSpokeOnlyChainKey>,
           amount: params.inputAmount,
@@ -527,13 +519,13 @@ export class SwapService {
         };
       }
 
-      if (isStellarChainKeyType(params.srcChain)) {
+      if (isStellarChainKeyType(params.srcChainKey)) {
         invariant(
           isOptionalStellarWalletProviderType(_params.walletProvider),
           'Invalid wallet provider. Expected Stellar wallet provider.',
         );
         const coreParams = {
-          srcChainKey: params.srcChain,
+          srcChainKey: params.srcChainKey,
           token: params.inputToken,
           amount: params.inputAmount,
           owner: params.srcAddress as GetAddressType<StellarChainKey>,
@@ -630,27 +622,27 @@ export class SwapService {
     const { params, skipSimulation } = _params;
 
     invariant(
-      isValidWalletProviderTypeForChainKey(params.srcChain, _params.walletProvider),
-      `Invalid wallet provider for chain key: ${params.srcChain}`,
+      isValidWalletProviderTypeForChainKey(params.srcChainKey, _params.walletProvider),
+      `Invalid wallet provider for chain key: ${params.srcChainKey}`,
     );
     invariant(
-      this.config.isValidOriginalAssetAddress(params.srcChain, params.inputToken),
-      `Unsupported spoke chain token (srcChainKey): ${params.srcChain}, params.inputToken): ${params.inputToken}`,
+      this.config.isValidOriginalAssetAddress(params.srcChainKey, params.inputToken),
+      `Unsupported spoke chain token (srcChainKey): ${params.srcChainKey}, params.inputToken): ${params.inputToken}`,
     );
     invariant(
-      this.config.isValidOriginalAssetAddress(params.dstChain, params.outputToken),
-      `Unsupported spoke chain token (params.dstChain): ${params.dstChain}, params.outputToken): ${params.outputToken}`,
+      this.config.isValidOriginalAssetAddress(params.dstChainKey, params.outputToken),
+      `Unsupported spoke chain token (params.dstChain): ${params.dstChainKey}, params.outputToken): ${params.outputToken}`,
     );
     invariant(
-      this.config.isValidSpokeChainKey(params.srcChain),
-      `Invalid spoke chain (srcChainKey): ${params.srcChain}`,
+      this.config.isValidSpokeChainKey(params.srcChainKey),
+      `Invalid spoke chain (srcChainKey): ${params.srcChainKey}`,
     );
     invariant(
-      this.config.isValidSpokeChainKey(params.dstChain),
-      `Invalid spoke chain (params.dstChain): ${params.dstChain}`,
+      this.config.isValidSpokeChainKey(params.dstChainKey),
+      `Invalid spoke chain (params.dstChain): ${params.dstChainKey}`,
     );
     //if dstChain is Bitcoin and token is BTC, check minOutputToken should be higher than 546 sats
-    if (isBitcoinChainKey(params.dstChain) && params.outputToken === 'BTC') {
+    if (isBitcoinChainKey(params.dstChainKey) && params.outputToken === 'BTC') {
       invariant(
         params.minOutputAmount >= 546n,
         `Invalid minOutputAmount (params.minOutputAmount): ${params.minOutputAmount}`,
@@ -663,10 +655,10 @@ export class SwapService {
       // Bitcoin TRADING mode: use trading wallet for hub wallet derivation (see getEffectiveWalletAddress)
       // NOTE: bitcoin is only enabled in non-raw execution mode == walletProvider is required
       let walletAddress: string = personalAddress;
-      if (isBitcoinChainKeyType(params.srcChain) && _params.raw === false) {
+      if (isBitcoinChainKeyType(params.srcChainKey) && _params.raw === false) {
         invariant(
           isBitcoinWalletProviderType(_params.walletProvider),
-          `Invalid wallet provider for chain key: ${params.srcChain}`,
+          `Invalid wallet provider for chain key: ${params.srcChainKey}`,
         );
         walletAddress = await this.spoke.bitcoinSpokeService.getEffectiveWalletAddress(personalAddress);
         await this.spoke.bitcoinSpokeService.radfi.ensureRadfiAccessToken(_params.walletProvider);
@@ -675,11 +667,11 @@ export class SwapService {
       // derive users hub wallet address
       const creatorHubWalletAddress = await HubService.getUserHubWalletAddress(
         walletAddress,
-        params.srcChain,
+        params.srcChainKey,
         this.hubProvider,
       );
 
-      if (isHubChainKeyType(params.srcChain) && isSonicChainKeyType(params.srcChain)) {
+      if (isHubChainKeyType(params.srcChainKey) && isSonicChainKeyType(params.srcChainKey)) {
         const coreSonicParams = {
           createIntentParams: params,
           creatorHubWalletAddress,
@@ -721,7 +713,7 @@ export class SwapService {
       );
 
       const coreDepositParams = {
-        srcChainKey: params.srcChain,
+        srcChainKey: params.srcChainKey,
         srcAddress: walletAddress as GetAddressType<K>,
         to: creatorHubWalletAddress,
         token: params.inputToken as GetTokenAddressType<K>,

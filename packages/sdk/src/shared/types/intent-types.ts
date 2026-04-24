@@ -7,8 +7,8 @@ export type CreateIntentParams<K extends SpokeChainKey = SpokeChainKey> = {
   minOutputAmount: bigint;
   deadline: bigint;
   allowPartialFill: boolean;
-  srcChain: K;
-  dstChain: SpokeChainKey;
+  srcChainKey: K;
+  dstChainKey: SpokeChainKey;
   srcAddress: string;
   dstAddress: string;
   solver: Address;
