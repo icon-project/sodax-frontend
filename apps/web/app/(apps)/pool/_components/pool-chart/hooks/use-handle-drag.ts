@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type React from 'react';
 import * as d3 from 'd3';
 import type { ScaleLinear } from 'd3';
@@ -6,6 +6,7 @@ import { roundPrice } from '../price-utils';
 
 const CURRENT_PRICE_GAP_FRACTION = 0.02;
 const MIN_PRICE_GAP = 0.000001;
+const BAND_DRAGGING_CLASS = 'is-band-dragging';
 
 type DragDeps = {
   yScale: ScaleLinear<number, number>;
@@ -40,11 +41,14 @@ type BandAnchor = {
 /**
  * Returns d3.drag behaviors for the min handle, max handle, and shaded band.
  *
- * Unlike addEventListener on the SVG root, d3.drag attaches directly to the
- * target element, correctly dispatches on both pointer and touch, and stops
- * propagation so the chart's zoom-pan handler doesn't also fire. Callbacks
- * read live state via refs, so the behaviors don't need to be recreated on
- * every state change.
+ * The draw effect removes and recreates the hit rects on every min/max change,
+ * so we anchor the drag `container` to the SVG root (a stable element) rather
+ * than letting it default to the target's parentNode. With a stable container,
+ * d3.pointer() keeps returning correct coordinates even when the target rect
+ * is replaced mid-gesture.
+ *
+ * Callbacks read live state via refs, so the behaviors only need to be built
+ * once per mount.
  */
 export function useHandleDrag({
   enabled,
@@ -64,37 +68,52 @@ export function useHandleDrag({
 
   const bandAnchorRef = useRef<BandAnchor | null>(null);
 
+  // Safety net: if the 'end' event is missed (e.g., window blur, pointercancel,
+  // or the tab loses visibility mid-gesture) the body cursor and SVG class
+  // could stay stuck. Clear them on any global drag-ending signal.
+  useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+    const clearDragState = (): void => {
+      if (bandAnchorRef.current === null && document.body.style.cursor !== 'grabbing') {
+        return;
+      }
+      bandAnchorRef.current = null;
+      svgRef.current?.classList.remove(BAND_DRAGGING_CLASS);
+      document.body.style.cursor = '';
+    };
+
+    window.addEventListener('blur', clearDragState);
+    window.addEventListener('pointercancel', clearDragState);
+    document.addEventListener('visibilitychange', clearDragState);
+
+    return () => {
+      window.removeEventListener('blur', clearDragState);
+      window.removeEventListener('pointercancel', clearDragState);
+      document.removeEventListener('visibilitychange', clearDragState);
+      clearDragState();
+    };
+  }, [enabled, svgRef]);
+
   return useMemo<HandleDragBehaviors>(() => {
     if (!enabled) {
       return null;
     }
 
-    const getChartY = (event: d3.D3DragEvent<SVGRectElement, unknown, unknown>): number => {
-      const svg = svgRef.current;
-      if (!svg) {
-        return 0;
-      }
-      const rect = svg.getBoundingClientRect();
-      const sourceEvent = event.sourceEvent as MouseEvent | TouchEvent | undefined;
-      if (!sourceEvent) {
-        return 0;
-      }
-      const clientY =
-        'touches' in sourceEvent
-          ? (sourceEvent.touches[0]?.clientY ?? sourceEvent.changedTouches?.[0]?.clientY ?? 0)
-          : (sourceEvent as MouseEvent).clientY;
-      return clientY - rect.top - depsRef.current.marginTop;
-    };
+    // All three drags use the SVG root as the container so d3.pointer returns
+    // SVG-local coords even after the hit rect is removed and recreated.
+    const resolveContainer = (): SVGSVGElement => svgRef.current as SVGSVGElement;
+
+    const toChartY = (svgY: number): number => svgY - depsRef.current.marginTop;
 
     const minDrag = d3
       .drag<SVGRectElement, unknown>()
-      .on('start', event => {
-        event.sourceEvent?.stopPropagation?.();
-      })
+      .container(resolveContainer)
       .on('drag', event => {
         const { yScale, currentPrice, innerH } = depsRef.current;
-        const clampedY = Math.max(0, Math.min(innerH, getChartY(event)));
-        const price = Math.max(yScale.invert(clampedY), 0);
+        const chartY = Math.max(0, Math.min(innerH, toChartY(event.y)));
+        const price = Math.max(yScale.invert(chartY), 0);
         const gap = Math.max(Math.abs(currentPrice) * CURRENT_PRICE_GAP_FRACTION, MIN_PRICE_GAP);
         const cap = Math.max(currentPrice - gap, 0);
         settersRef.current.setMinPrice(roundPrice(Math.min(price, cap)));
@@ -102,13 +121,11 @@ export function useHandleDrag({
 
     const maxDrag = d3
       .drag<SVGRectElement, unknown>()
-      .on('start', event => {
-        event.sourceEvent?.stopPropagation?.();
-      })
+      .container(resolveContainer)
       .on('drag', event => {
         const { yScale, currentPrice, innerH } = depsRef.current;
-        const clampedY = Math.max(0, Math.min(innerH, getChartY(event)));
-        const price = Math.max(yScale.invert(clampedY), 0);
+        const chartY = Math.max(0, Math.min(innerH, toChartY(event.y)));
+        const price = Math.max(yScale.invert(chartY), 0);
         const gap = Math.max(Math.abs(currentPrice) * CURRENT_PRICE_GAP_FRACTION, MIN_PRICE_GAP);
         const floor = currentPrice + gap;
         settersRef.current.setMaxPrice(roundPrice(Math.max(price, floor)));
@@ -116,31 +133,35 @@ export function useHandleDrag({
 
     const bandDrag = d3
       .drag<SVGRectElement, unknown>()
+      .container(resolveContainer)
       .on('start', event => {
-        event.sourceEvent?.stopPropagation?.();
         const { yScale, innerH, minPrice, maxPrice } = depsRef.current;
         const [domainStart, domainEnd] = yScale.domain();
         const domainSpan = (domainEnd ?? 0) - (domainStart ?? 0);
         bandAnchorRef.current = {
-          anchorY: getChartY(event),
+          anchorY: toChartY(event.y),
           anchorMin: minPrice,
           span: maxPrice - minPrice,
           pxPerPrice: domainSpan === 0 ? 0 : innerH / domainSpan,
         };
+        svgRef.current?.classList.add(BAND_DRAGGING_CLASS);
+        document.body.style.cursor = 'grabbing';
       })
       .on('drag', event => {
         const anchor = bandAnchorRef.current;
         if (!anchor || anchor.pxPerPrice === 0) {
           return;
         }
-        const y = getChartY(event);
-        const priceDelta = (y - anchor.anchorY) / anchor.pxPerPrice;
+        const chartY = toChartY(event.y);
+        const priceDelta = (chartY - anchor.anchorY) / anchor.pxPerPrice;
         const nextMin = Math.max(anchor.anchorMin - priceDelta, 0);
         settersRef.current.setMinPrice(roundPrice(nextMin));
         settersRef.current.setMaxPrice(roundPrice(nextMin + anchor.span));
       })
       .on('end', () => {
         bandAnchorRef.current = null;
+        svgRef.current?.classList.remove(BAND_DRAGGING_CLASS);
+        document.body.style.cursor = '';
       });
 
     return { minDrag, maxDrag, bandDrag };

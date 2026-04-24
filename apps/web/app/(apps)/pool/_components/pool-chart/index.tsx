@@ -333,7 +333,7 @@ export function PoolChart({
       .attr('height', Math.max(0, minY - maxY))
       .attr('fill', 'url(#g-band)')
       .attr('pointer-events', INTERACTIVE ? 'all' : 'none')
-      .style('cursor', INTERACTIVE ? 'ns-resize' : 'default');
+      .style('cursor', INTERACTIVE ? 'grab' : 'default');
     if (dragBehaviors) {
       bandRect.call(dragBehaviors.bandDrag);
     }
@@ -693,6 +693,9 @@ export function PoolChart({
           width: 100%;
           overflow: visible;
           touch-action: none;
+        }
+        .lri-main-chart svg.is-band-dragging .band-hit {
+          cursor: grabbing !important;
         }
         .lri-tick-panel {
           position: absolute;
