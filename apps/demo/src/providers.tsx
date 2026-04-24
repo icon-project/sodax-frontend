@@ -44,6 +44,30 @@ const rpcConfig: RpcConfig = {
     radfiUmsUrl: 'https://ums.radfi.co/api',
     rpcUrl: 'https://mempool.space/api',
   },
+
+  // near — single RPC URL
+  // near: 'https://free.rpc.fastnear.com',
+
+  // injective — indexer + grpc (fallback to @injectivelabs/networks mainnet defaults)
+  // 'injective-1': {
+  //   indexer: 'https://your-custom-indexer.injective',
+  //   grpc: 'https://your-custom-grpc.injective',
+  // },
+
+  // stacks — preset name OR custom StacksNetwork object
+  // Option 1: preset name
+  // stacks: 'mainnet',
+  // Option 2: custom StacksNetwork with baseUrl override (rest from mainnet defaults)
+  // stacks: {
+  //   ...networkFrom('mainnet'),
+  //   client: { baseUrl: 'https://api.hiro.so' },
+  // },
+
+  // icon — single RPC URL
+  // '0x1.icon': 'https://ctz.solidwallet.io/api/v3',
+
+  // sui — single RPC URL
+  // sui: 'https://fullnode.mainnet.sui.io:443',
 };
 
 const configMap: Record<SolverEnv, SolverConfigParams> = {

@@ -9,7 +9,7 @@ export interface InjTokenInfo {
   total_supply: string;
 }
 
-export interface Balance {
+export interface InjectiveBalance {
   balance: string;
 }
 
@@ -43,13 +43,13 @@ export class Injective20Token {
     ) as unknown as Promise<InjTokenInfo>;
   }
 
-  async getBalance(address: string): Promise<Balance> {
+  async getBalance(address: string): Promise<InjectiveBalance> {
     return this.chainGrpcWasmApi.fetchSmartContractState(
       this.contractAddress,
       toBase64({
         balance: { address },
       }),
-    ) as unknown as Promise<Balance>;
+    ) as unknown as Promise<InjectiveBalance>;
   }
 
   async getAllowance(owner: string, spender: string): Promise<AllowanceResponse> {

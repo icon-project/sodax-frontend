@@ -1,20 +1,5 @@
 import { XService } from '@/core/XService.js';
-import {
-  ARBITRUM_MAINNET_CHAIN_ID,
-  AVALANCHE_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  ETHEREUM_MAINNET_CHAIN_ID,
-  HYPEREVM_MAINNET_CHAIN_ID,
-  KAIA_MAINNET_CHAIN_ID,
-  LIGHTLINK_MAINNET_CHAIN_ID,
-  OPTIMISM_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
-  REDBELLY_MAINNET_CHAIN_ID,
-  SONIC_MAINNET_CHAIN_ID,
-  type RpcConfig,
-  type XToken,
-} from '@sodax/types';
+import { ChainKeys, type RpcConfig, type XToken } from '@sodax/types';
 import { getWagmiChainId, isNativeToken } from '@/utils/index.js';
 
 import { type Address, type Chain, defineChain, erc20Abi } from 'viem';
@@ -83,18 +68,18 @@ export const createWagmiConfig = (config: RpcConfig, options?: WagmiOptions & { 
     connectors: options?.connectors ?? [],
     ssr: options?.ssr,
     transports: {
-      [mainnet.id]: http(config[ETHEREUM_MAINNET_CHAIN_ID]),
-      [avalanche.id]: http(config[AVALANCHE_MAINNET_CHAIN_ID]),
-      [arbitrum.id]: http(config[ARBITRUM_MAINNET_CHAIN_ID]),
-      [base.id]: http(config[BASE_MAINNET_CHAIN_ID]),
-      [bsc.id]: http(config[BSC_MAINNET_CHAIN_ID]),
-      [sonic.id]: http(config[SONIC_MAINNET_CHAIN_ID]),
-      [optimism.id]: http(config[OPTIMISM_MAINNET_CHAIN_ID]),
-      [polygon.id]: http(config[POLYGON_MAINNET_CHAIN_ID]),
-      [hyper.id]: http(config[HYPEREVM_MAINNET_CHAIN_ID]),
-      [lightlinkPhoenix.id]: http(config[LIGHTLINK_MAINNET_CHAIN_ID]),
-      [redbellyMainnet.id]: http(config[REDBELLY_MAINNET_CHAIN_ID]),
-      [kaia.id]: http(config[KAIA_MAINNET_CHAIN_ID]),
+      [mainnet.id]: http(config[ChainKeys.ETHEREUM_MAINNET]),
+      [avalanche.id]: http(config[ChainKeys.AVALANCHE_MAINNET]),
+      [arbitrum.id]: http(config[ChainKeys.ARBITRUM_MAINNET]),
+      [base.id]: http(config[ChainKeys.BASE_MAINNET]),
+      [bsc.id]: http(config[ChainKeys.BSC_MAINNET]),
+      [sonic.id]: http(config[ChainKeys.SONIC_MAINNET]),
+      [optimism.id]: http(config[ChainKeys.OPTIMISM_MAINNET]),
+      [polygon.id]: http(config[ChainKeys.POLYGON_MAINNET]),
+      [hyper.id]: http(config[ChainKeys.HYPEREVM_MAINNET]),
+      [lightlinkPhoenix.id]: http(config[ChainKeys.LIGHTLINK_MAINNET]),
+      [redbellyMainnet.id]: http(config[ChainKeys.REDBELLY_MAINNET]),
+      [kaia.id]: http(config[ChainKeys.KAIA_MAINNET]),
     },
     storage: createStorage({
       storage: cookieStorage,
@@ -152,7 +137,7 @@ export class EvmXService extends XService {
     if (!address) return 0n;
     if (!this.wagmiConfig) return 0n;
 
-    const chainId = getWagmiChainId(xToken.xChainId);
+    const chainId = getWagmiChainId(xToken.chainKey);
 
     if (isNativeToken(xToken)) {
       return this._getChainBalance(address, chainId);
@@ -184,9 +169,9 @@ export class EvmXService extends XService {
     const nonNativeXTokens = xTokens.filter(xToken => !isNativeToken(xToken));
     const firstToken = xTokens[0];
     if (!firstToken) return tokenMap;
-    const xChainId = firstToken.xChainId;
-    const viemChain: Chain = this.wagmiConfig.chains.find(chain => chain.id === getWagmiChainId(xChainId)) as Chain;
-    const chainId = getWagmiChainId(xChainId);
+    const chainKey = firstToken.chainKey;
+    const viemChain: Chain = this.wagmiConfig.chains.find(chain => chain.id === getWagmiChainId(chainKey)) as Chain;
+    const chainId = getWagmiChainId(chainKey);
 
     const publicClient = getPublicClient(this.wagmiConfig, { chainId: chainId });
     if (!publicClient) throw new Error('Public client not found');

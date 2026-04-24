@@ -1,39 +1,124 @@
-import { type Address, fromHex, type Hex, toHex } from 'viem';
+import { fromHex } from 'viem';
 
-import type { EvmHubProvider } from '../../entities/index.js';
+import type {
+  DepositParams,
+  EstimateGasParams,
+  GetDepositParams,
+  SendMessageParams,
+  WaitForTxReceiptParams,
+  WaitForTxReceiptReturnType,
+} from '../../types/spoke-types.js';
+import type { RateLimitConfig } from '../../types/types.js';
+import type { ConfigService } from '../../config/ConfigService.js';
+import { sleep } from '../../utils/shared-utils.js';
 import {
-  encodeAddress,
-  isNearRawSpokeProvider,
-  type DepositSimulationParams,
-  type NearReturnType,
-  type NearSpokeProviderType,
-  type PromiseNearTxReturnType,
+  getIntentRelayChainId,
+  ChainKeys,
+  type FillData,
+  type FillIntent,
+  type NearRawTransaction,
+  type NearChainKey,
+  type NearRawTransactionReceipt,
   type Result,
   type TxReturnType,
-  type VerifyTxHashRawNearConfig,
-} from '../../index.js';
-import { EvmWalletAbstraction } from '../hub/index.js';
-import { NearSpokeProvider } from '../../entities/near/NearSpokeProvider.js';
-import { getIntentRelayChainId, type HubAddress } from '@sodax/types';
+  spokeChainConfig,
+  isNativeToken,
+} from '@sodax/types';
 import { JsonRpcProvider } from 'near-api-js';
 
-export type NearSpokeDepositParams = {
-  from: string; // The address of the user on the spoke chain
-  to?: HubAddress; // The address of the user on the hub chain (wallet abstraction address)
-  token: string; // The address of the token to deposit
-  amount: bigint; // The amount of tokens to deposit
-  data: Hex; // The data to send with the deposit
-};
+export type QueryResponse = string | number | boolean | object | undefined;
+export type CallResponse = string | number | object | bigint | boolean;
 
-export type TransferToHubParams = {
-  token: string;
-  recipient: Address;
-  amount: string;
-  data: Hex;
-};
+export const NEAR_DEFAULT_GAS = BigInt('300000000000000'); // 30 TGas derived from near documentation as max limit
 
 export class NearSpokeService {
-  private constructor() {}
+  public readonly rpcProvider: JsonRpcProvider;
+  private readonly pollingIntervalMs: number;
+  private readonly maxTimeoutMs: number;
+
+  public constructor(config: ConfigService) {
+    // since we only support mainnet for now, we can hardcode the single near chain config
+    const chainConfig = config.sodaxConfig.chains[ChainKeys.NEAR_MAINNET];
+    this.rpcProvider = new JsonRpcProvider({ url: chainConfig.rpcUrl });
+    this.pollingIntervalMs = chainConfig.pollingConfig.pollingIntervalMs;
+    this.maxTimeoutMs = chainConfig.pollingConfig.maxTimeoutMs;
+  }
+
+  public async estimateGas(_: EstimateGasParams<NearChainKey>): Promise<bigint> {
+    return NEAR_DEFAULT_GAS;
+  }
+
+  queryContract(contractId: string, method: string, args: {}): Promise<QueryResponse> {
+    return this.rpcProvider.callFunction({ contractId, method, args });
+  }
+
+  public async getRateLimit(token: string, fromChainId: NearChainKey): Promise<RateLimitConfig> {
+    const res = (await this.queryContract(spokeChainConfig[fromChainId].addresses.rateLimit, 'get_rate_limit', {
+      token: token,
+    })) as { max_available: number; available: number; rate_per_second: number } | undefined;
+    if (res == null || res === undefined) {
+      return {
+        maxAvailable: 0,
+        available: 0,
+        ratePerSecond: 0,
+      };
+    }
+    return {
+      maxAvailable: res.max_available,
+      available: res.available,
+      ratePerSecond: res.rate_per_second,
+    } as RateLimitConfig;
+  }
+
+  private toFillIntent(fillData: FillData): FillIntent {
+    return {
+      amount: fillData.amount.toString(),
+      fill_id: fillData.fill_id.toString(),
+      intent_hash: Array.from(fromHex(fillData.intent_hash, 'bytes')),
+      receiver: Array.from(Buffer.from(fillData.receiver, 'utf-8')),
+      solver: Array.from(fromHex(fillData.solver, 'bytes')),
+      token: Array.from(Buffer.from(fillData.token, 'utf-8')),
+    } as FillIntent;
+  }
+
+  async fillIntent(
+    fromInfo: {
+      srcAddress: string;
+      srcChainKey: NearChainKey;
+    },
+    fillData: FillData,
+    deposit: bigint = BigInt('0'),
+    gas: bigint = BigInt('300000000000000'),
+  ): Promise<NearRawTransaction> {
+    if (isNativeToken(fromInfo.srcChainKey, fillData.token)) {
+      deposit = BigInt(fillData.amount);
+      return {
+        signerId: fromInfo.srcAddress,
+        params: {
+          contractId: spokeChainConfig[fromInfo.srcChainKey].addresses.intentFiller,
+          method: 'fill_intent',
+          args: { fill: this.toFillIntent(fillData) },
+          deposit: deposit,
+          gas: gas,
+        },
+      };
+    }
+    return {
+      signerId: fromInfo.srcAddress,
+      params: {
+        contractId: fillData.token,
+        method: 'ft_transfer_call',
+        args: {
+          receiver_id: spokeChainConfig[fromInfo.srcChainKey].addresses.intentFiller,
+          amount: fillData.amount.toString(),
+          memo: '',
+          msg: JSON.stringify(this.toFillIntent(fillData)),
+        },
+        deposit: deposit,
+        gas: gas,
+      },
+    };
+  }
 
   /**
    * Deposit tokens to the spoke chain.
@@ -43,31 +128,55 @@ export class NearSpokeService {
    * @param {boolean} raw - The return type raw or just transaction hash
    * @returns {PromiseNearTxReturnType<R>} A promise that resolves to the transaction hash.
    */
-  public static async deposit<R extends boolean = false>(
-    params: NearSpokeDepositParams,
-    spokeProvider: NearSpokeProviderType,
-    hubProvider: EvmHubProvider,
-    raw?: R,
-  ): PromiseNearTxReturnType<R> {
-    const userWallet: Address =
-      params.to ??
-      (await EvmWalletAbstraction.getUserHubWalletAddress(
-        spokeProvider.chainConfig.chain.id,
-        toHex(Buffer.from(params.from, 'utf-8')),
-        hubProvider,
-      ));
-
-    const txn = await spokeProvider.transfer({
+  public async deposit<R extends boolean = false>(
+    params: DepositParams<NearChainKey, R>,
+  ): Promise<TxReturnType<NearChainKey, R>> {
+    const inputParams = {
       token: params.token,
-      to: Array.from(fromHex(userWallet, 'bytes')),
+      to: Array.from(fromHex(params.to, 'bytes')),
       amount: params.amount.toString(),
       data: Array.from(fromHex(params.data, 'bytes')),
-    });
-    if (raw || isNearRawSpokeProvider(spokeProvider)) {
-      return txn as NearReturnType<R>;
+    };
+
+    let tx: NearRawTransaction;
+    if (isNativeToken(params.srcChainKey, params.token)) {
+      tx = {
+        signerId: params.srcAddress,
+        params: {
+          contractId: spokeChainConfig[params.srcChainKey].addresses.assetManager,
+          method: 'transfer',
+          args: { to: inputParams.to, amount: inputParams.amount, data: inputParams.data },
+          deposit: BigInt(inputParams.amount),
+          gas: NEAR_DEFAULT_GAS,
+        },
+      };
+    } else {
+      tx = {
+        signerId: params.srcAddress,
+        params: {
+          contractId: inputParams.token,
+          method: 'ft_transfer_call',
+          args: {
+            receiver_id: spokeChainConfig[params.srcChainKey].addresses.assetManager,
+            amount: inputParams.amount.toString(),
+            memo: '',
+            msg: JSON.stringify({
+              to: inputParams.to,
+              data: inputParams.data,
+            }),
+          },
+          deposit: BigInt('0'),
+          gas: NEAR_DEFAULT_GAS,
+        },
+      };
     }
-    const hash = await spokeProvider.submit(txn);
-    return hash as NearReturnType<R>;
+
+    if (params.raw === true) {
+      return tx satisfies TxReturnType<NearChainKey, true> as TxReturnType<NearChainKey, R>;
+    }
+    return params.walletProvider.signAndSubmitTxn(tx) satisfies Promise<TxReturnType<NearChainKey, false>> as Promise<
+      TxReturnType<NearChainKey, R>
+    >;
   }
 
   /**
@@ -76,59 +185,21 @@ export class NearSpokeService {
    * @param {CWSpokeProvider} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The balance of the token.
    */
-  public static async getDeposit(token: string, spokeProvider: NearSpokeProviderType): Promise<bigint> {
-    const bal = await spokeProvider.getBalance(token);
-    return BigInt(bal as string);
-  }
+  public async getDeposit(params: GetDepositParams<NearChainKey>): Promise<bigint> {
+    let bal: unknown;
+    if (isNativeToken(params.srcChainKey, params.token)) {
+      bal = await this.queryContract(spokeChainConfig[params.srcChainKey].addresses.assetManager, 'get_balance', {});
+    } else {
+      bal = await this.queryContract(params.token, 'ft_balance_of', {
+        account_id: spokeChainConfig[params.srcChainKey].addresses.assetManager,
+      });
+    }
 
-  /**
-   * Generate simulation parameters for deposit from NearSpokeDepositParams.
-   * @param {NearSpokeDepositParams} params - The deposit parameters.
-   * @param {NearSpokeProviderType} spokeProvider - The provider for the spoke chain.
-   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
-   * @returns {Promise<DepositSimulationParams>} The simulation parameters.
-   */
-  public static async getSimulateDepositParams(
-    params: NearSpokeDepositParams,
-    spokeProvider: NearSpokeProviderType,
-    hubProvider: EvmHubProvider,
-  ): Promise<DepositSimulationParams> {
-    const to =
-      params.to ??
-      (await EvmWalletAbstraction.getUserHubWalletAddress(
-        spokeProvider.chainConfig.chain.id,
-        encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
-        hubProvider,
-      ));
+    if (typeof bal !== 'string') {
+      throw new Error('[NearSpokeService.getDeposit] Failed to get balance. Unexpected response type.');
+    }
 
-    return {
-      spokeChainID: spokeProvider.chainConfig.chain.id,
-      token: encodeAddress(spokeProvider.chainConfig.chain.id, params.token),
-      from: encodeAddress(spokeProvider.chainConfig.chain.id, params.from),
-      to,
-      amount: params.amount,
-      data: params.data,
-      srcAddress: encodeAddress(spokeProvider.chainConfig.chain.id, spokeProvider.chainConfig.addresses.assetManager),
-    };
-  }
-
-  /**
-   * Calls a contract on the spoke chain using the user's wallet.
-   * @param {HubAddress} from - The address of the user on the hub chain.
-   * @param {Hex} payload - The payload to send to the contract.
-   * @param {CWSpokeProvider} spokeProvider - The provider for the spoke chain.
-   * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
-   * @returns {Promise<TxReturnType<S, R>>} A promise that resolves to the transaction hash.
-   */
-  public static async callWallet<S extends NearSpokeProviderType, R extends boolean = false>(
-    from: HubAddress,
-    payload: Hex,
-    spokeProvider: S,
-    hubProvider: EvmHubProvider,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
-    const relayId = getIntentRelayChainId(hubProvider.chainConfig.chain.id);
-    return NearSpokeService.call(BigInt(relayId), from, payload, spokeProvider, raw);
+    return BigInt(bal);
   }
 
   /**
@@ -139,23 +210,33 @@ export class NearSpokeService {
    * @param {CWSpokeProvider} spokeProvider - The provider for the spoke chain.
    * @returns {Promise<TxReturnType<S, R>>} A promise that resolves to the transaction hash.
    */
-  private static async call<S extends NearSpokeProviderType, R extends boolean = false>(
-    dstChainId: bigint,
-    dstAddress: Hex,
-    payload: Hex,
-    spokeProvider: S,
-    raw?: R,
-  ): Promise<TxReturnType<S, R>> {
-    const txn = await spokeProvider.sendMessage({
-      dst_address: Array.from(fromHex(dstAddress, 'bytes')),
-      dst_chain_id: Number.parseInt(dstChainId.toString()),
-      payload: Array.from(fromHex(payload, 'bytes')),
-    });
-    if (raw || isNearRawSpokeProvider(spokeProvider)) {
-      return txn as TxReturnType<S, R>;
+  public async sendMessage<Raw extends boolean>(
+    params: SendMessageParams<NearChainKey, Raw>,
+  ): Promise<TxReturnType<NearChainKey, Raw>> {
+    const dstChainId = getIntentRelayChainId(params.dstChainKey);
+
+    const tx: NearRawTransaction = {
+      signerId: params.srcAddress,
+      params: {
+        contractId: spokeChainConfig[params.srcChainKey].addresses.connection,
+        method: 'send_message',
+        args: {
+          dst_address: Array.from(fromHex(params.dstAddress, 'bytes')),
+          dst_chain_id: Number.parseInt(dstChainId.toString()),
+          payload: Array.from(fromHex(params.payload, 'bytes')),
+        },
+        deposit: BigInt('0'),
+        gas: NEAR_DEFAULT_GAS, // TODO: estimate gas properly?
+      },
+    } satisfies NearRawTransaction;
+
+    if (params.raw === true) {
+      return tx satisfies TxReturnType<NearChainKey, true> as TxReturnType<NearChainKey, Raw>;
     }
-    const hash = await spokeProvider.submit(txn);
-    return hash as TxReturnType<S, R>;
+
+    return params.walletProvider.signAndSubmitTxn(tx) satisfies Promise<TxReturnType<NearChainKey, false>> as Promise<
+      TxReturnType<NearChainKey, Raw>
+    >;
   }
 
   /**
@@ -164,8 +245,8 @@ export class NearSpokeService {
    * @param {NearSpokeProvider} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The max limit of the token.
    */
-  public static async getLimit(token: string, spokeProvider: NearSpokeProvider): Promise<bigint> {
-    const rate_limit = await spokeProvider.getRateLimit(token);
+  public async getLimit(token: string, fromChainId: NearChainKey): Promise<bigint> {
+    const rate_limit = await this.getRateLimit(token, fromChainId);
     return BigInt(rate_limit.maxAvailable);
   }
 
@@ -175,51 +256,49 @@ export class NearSpokeService {
    * @param {NearSpokeProvider} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The available withdrawable amount of the token.
    */
-  public static async getAvailable(token: string, spokeProvider: NearSpokeProvider): Promise<bigint> {
-    const rate_limit = await spokeProvider.getRateLimit(token);
+  public async getAvailable(token: string, fromChainId: NearChainKey): Promise<bigint> {
+    const rate_limit = await this.getRateLimit(token, fromChainId);
     return BigInt(rate_limit.available);
   }
 
-  public static async waitForTransaction(
-    spokeProvider: NearSpokeProvider,
-    txHash: string,
-    maxRetries?: number,
-    retryDelay?: number,
-  ): Promise<Result<boolean, Error>> {
-    try {
-      const accountId = await spokeProvider.walletProvider.getWalletAddress();
-      const receipt = await NearSpokeProvider.waitForTransaction(
-        txHash,
-        accountId,
-        spokeProvider.rpcProvider,
-        maxRetries,
-        retryDelay,
-      );
-      if (receipt.status === 'success') {
-        return { ok: true, value: true };
-      }
-      return { ok: false, error: new Error(`NEAR transaction failed: ${txHash}`) };
-    } catch (err) {
-      return { ok: false, error: err instanceof Error ? err : new Error(String(err)) };
-    }
-  }
+  public async waitForTransactionReceipt(
+    params: WaitForTxReceiptParams<NearChainKey>,
+  ): Promise<Result<WaitForTxReceiptReturnType<NearChainKey>>> {
+    const { txHash, pollingIntervalMs = this.pollingIntervalMs, maxTimeoutMs = this.maxTimeoutMs } = params;
+    const accountId = spokeChainConfig[params.chainKey].addresses.assetManager;
+    const maxRetries = Math.round(maxTimeoutMs / pollingIntervalMs);
 
-  public static async waitForTransactionRaw(params: VerifyTxHashRawNearConfig): Promise<Result<boolean, Error>> {
-    try {
-      const { rpcUrl, txHash, accountId, maxRetries, retryDelay } = params;
-      const receipt = await NearSpokeProvider.waitForTransaction(
-        txHash,
-        accountId,
-        new JsonRpcProvider({ url: rpcUrl }),
-        maxRetries,
-        retryDelay,
-      );
-      if (receipt.status === 'success') {
-        return { ok: true, value: true };
+    for (let retry = 0; retry <= maxRetries; retry++) {
+      try {
+        const outcome = await this.rpcProvider.viewTransactionStatus({ txHash, accountId, waitUntil: 'FINAL' });
+
+        const status = outcome?.status as Record<string, unknown> | undefined;
+        if (status && ('SuccessValue' in status || 'SuccessReceiptId' in status)) {
+          return { ok: true, value: { status: 'success', receipt: outcome satisfies NearRawTransactionReceipt } };
+        }
+        if (status && 'Failure' in status) {
+          return {
+            ok: true,
+            value: { status: 'failure', error: new Error(`Transaction failed: ${JSON.stringify(status.Failure)}`) },
+          };
+        }
+
+        if (retry < maxRetries) {
+          await sleep(pollingIntervalMs);
+        }
+      } catch {
+        if (retry < maxRetries) {
+          await sleep(pollingIntervalMs);
+        }
       }
-      return { ok: false, error: new Error(`NEAR transaction failed: ${txHash}`) };
-    } catch (err) {
-      return { ok: false, error: err instanceof Error ? err : new Error(String(err)) };
     }
+
+    return {
+      ok: true,
+      value: {
+        status: 'timeout',
+        error: new Error(`NEAR transaction ${txHash} was not confirmed after ${maxRetries} retries`),
+      },
+    };
   }
 }

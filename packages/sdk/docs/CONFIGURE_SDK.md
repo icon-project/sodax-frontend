@@ -82,7 +82,7 @@ import {
   Sodax,
   SolverConfigParams,
   getSolverConfig,
-  SONIC_MAINNET_CHAIN_ID,
+  ChainKeys,
 } from '@sodax/sdk';
 
 // Custom solver config
@@ -93,7 +93,7 @@ const customSolverConfig: SolverConfigParams = {
 };
 
 // Pre-defined default solver config
-const solverConfig = getSolverConfig(SONIC_MAINNET_CHAIN_ID);
+const solverConfig = getSolverConfig(ChainKeys.SONIC_MAINNET);
 
 const sodax = new Sodax({
   swap: customSolverConfig
@@ -109,7 +109,7 @@ import {
   Sodax,
   MoneyMarketConfigParams,
   getMoneyMarketConfig,
-  SONIC_MAINNET_CHAIN_ID,
+  ChainKeys,
 } from '@sodax/sdk';
 
 // Custom money market config
@@ -122,7 +122,7 @@ const customMoneyMarketConfig: MoneyMarketConfigParams = {
 };
 
 // Pre-defined default money market config
-const moneyMarketConfig = getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID);
+const moneyMarketConfig = getMoneyMarketConfig(ChainKeys.SONIC_MAINNET);
 
 const sodax = new Sodax({
   moneyMarket: customMoneyMarketConfig
@@ -137,13 +137,13 @@ Configure the hub chain provider for cross-chain operations:
 import {
   EvmHubProviderConfig,
   getHubChainConfig,
-  SONIC_MAINNET_CHAIN_ID,
+  ChainKeys,
 } from '@sodax/sdk';
 
 const sodax = new Sodax({
   hubProviderConfig: {
     hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+    chainConfig: getHubChainConfig(ChainKeys.SONIC_MAINNET),
   }
 });
 ```
@@ -154,12 +154,12 @@ Configure SDK to use provided configuration when internally invoking things like
 
 ```typescript
 import {
-  STELLAR_MAINNET_CHAIN_ID,
+  ChainKeys,
 } from '@sodax/sdk';
 
 const sodax = new Sodax({
   sharedConfig: { // config used by internal services
-    [STELLAR_MAINNET_CHAIN_ID]: {
+    [ChainKeys.STELLAR_MAINNET]: {
       horizonRpcUrl: 'https://horizon.stellar.org',
       sorobanRpcUrl: 'https://rpc.ankr.com/stellar_soroban',
     }
@@ -178,19 +178,19 @@ import {
   getSolverConfig,
   getMoneyMarketConfig,
   getHubChainConfig,
-  SONIC_MAINNET_CHAIN_ID,
+  ChainKeys,
 } from '@sodax/sdk';
 
 const sodax = new Sodax({
-  swap: getSolverConfig(SONIC_MAINNET_CHAIN_ID),
-  moneyMarket: getMoneyMarketConfig(SONIC_MAINNET_CHAIN_ID),
+  swap: getSolverConfig(ChainKeys.SONIC_MAINNET),
+  moneyMarket: getMoneyMarketConfig(ChainKeys.SONIC_MAINNET),
   ...,
   hubProviderConfig: {
     hubRpcUrl: 'https://rpc.soniclabs.com',
-    chainConfig: getHubChainConfig(SONIC_MAINNET_CHAIN_ID),
+    chainConfig: getHubChainConfig(ChainKeys.SONIC_MAINNET),
   },
   sharedConfig: { // config used by internal services
-    [STELLAR_MAINNET_CHAIN_ID]: {
+    [ChainKeys.STELLAR_MAINNET]: {
       horizonRpcUrl: 'https://horizon.stellar.org',
       sorobanRpcUrl: 'https://rpc.ankr.com/stellar_soroban',
     }

@@ -57,6 +57,7 @@ function isBrowserExtensionSolanaWalletConfig(
 }
 
 export class SolanaWalletProvider implements ISolanaWalletProvider {
+  public readonly chainType = 'SOLANA' as const;
   private readonly wallet: Keypair | WalletContextState;
   public readonly connection: Connection;
   private readonly isAdapterMode: boolean;
@@ -212,4 +213,5 @@ export class SolanaWalletProvider implements ISolanaWalletProvider {
         }),
     );
   }
+
 }

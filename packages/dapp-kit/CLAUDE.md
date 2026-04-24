@@ -1,6 +1,6 @@
 # packages/dapp-kit
 
-High-level React hooks library for dApp developers. Combines `@sodax/sdk` + `@sodax/wallet-sdk-react` + React Query into feature-organized hooks.
+High-level React hooks library for dApp developers. Wraps `@sodax/sdk` with React Query into feature-organized hooks. Used side-by-side with `@sodax/wallet-sdk-react` (no direct dependency — contracts shared via `@sodax/types`).
 
 ## Architecture
 
@@ -19,7 +19,7 @@ Accessed via `useSodaxContext()` hook — all other hooks use this internally.
 
 ```
 hooks/
-├── shared/     # useSodaxContext, useEstimateGas, useDeriveUserWalletAddress, Stellar trustline hooks
+├── shared/     # useSodaxContext, useEstimateGas, useDeriveUserWalletAddress, useXBalances, Stellar trustline hooks
 ├── provider/   # useHubProvider, useSpokeProvider
 ├── swap/       # useQuote, useSwap, useStatus, useSwapAllowance, useSwapApprove, useCancelSwap, limit orders
 ├── mm/         # useSupply, useWithdraw, useBorrow, useRepay, useMMAllowance, useMMApprove, reserves data hooks
@@ -73,10 +73,26 @@ src/
 ## Dependencies
 
 - `@sodax/sdk` (workspace) — core business logic
-- `@sodax/types` (workspace) — shared types
+- `@sodax/types` (workspace) — shared types (including contract interfaces like `IXService`)
 - `@tanstack/react-query` (peer) — server state management
 - `react` (peer, >=18)
 - `viem` — Ethereum utilities
+
+## Decoupling from wallet-sdk-react
+
+dapp-kit does **not** depend on `@sodax/wallet-sdk-react`. When a hook needs wallet-layer state (e.g. `useXBalances` needs a balance reader), the consumer injects it as a param typed against a contract interface in `@sodax/types` (e.g. `IXService`).
+
+Consumer apps wire both packages side-by-side:
+
+```tsx
+import { useXService, getXChainType } from '@sodax/wallet-sdk-react';
+import { useXBalances } from '@sodax/dapp-kit';
+
+const xService = useXService(getXChainType(chainId));
+const { data } = useXBalances({ xService, xChainId, xTokens, address });
+```
+
+This mirrors the `wallet-sdk-core` ↔ `@sodax/sdk` pattern: both packages implement or consume contracts defined in `@sodax/types`, with no direct cross-package imports.
 
 ## AI Skills (Scaffolding Guides)
 

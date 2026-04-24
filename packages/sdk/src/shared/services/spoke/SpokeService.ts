@@ -1,75 +1,301 @@
-import type { InjectiveSpokeProvider } from '../../entities/injective/InjectiveSpokeProvider.js';
-import type { IconSpokeProvider } from '../../entities/icon/IconSpokeProvider.js';
-import type {
-  EvmHubProvider,
-  EvmSpokeProvider,
-  SolanaSpokeProvider,
-  SonicSpokeProvider,
-  SpokeProvider,
-  SpokeProviderType,
-  StellarSpokeProvider,
-  SuiSpokeProvider,
-} from '../../entities/index.js';
-import type {
-  GetEstimateGasReturnType,
-  GetSpokeDepositParamsType,
-  TxReturnType,
-  DepositSimulationParams,
-  WalletSimulationParams,
-  Result,
-  EvmSpokeProviderType,
-  SonicSpokeProviderType,
-  InjectiveSpokeProviderType,
-  IconSpokeProviderType,
-  SuiSpokeProviderType,
-  SolanaSpokeProviderType,
-  StacksSpokeProviderType,
-  StellarSpokeProviderType,
-  BitcoinSpokeProviderType,
-  NearSpokeProviderType,
-  VerifyTxHashRawConfig,
-} from '../../types.js';
-import { getIntentRelayChainId, type Address, type ChainType, type Hex, type HubAddress } from '@sodax/types';
-import { InjectiveSpokeService } from './InjectiveSpokeService.js';
-import { EvmSpokeService } from './EvmSpokeService.js';
-import { IconSpokeService } from './IconSpokeService.js';
-import { SolanaSpokeService } from './SolanaSpokeService.js';
-import { StellarSpokeService } from './StellarSpokeService.js';
-import { SuiSpokeService } from './SuiSpokeService.js';
-import { SonicSpokeService, type SonicSpokeDepositParams } from './SonicSpokeService.js';
-import {
-  isSolanaSpokeProvider,
-  isSonicSpokeProvider,
-  isStellarSpokeProvider,
-  isStacksSpokeProviderType,
-  isSonicRawSpokeProvider,
-  isSolanaSpokeProviderType,
-  isStellarSpokeProviderType,
-  isSuiSpokeProviderType,
-  isIconSpokeProviderType,
-  isInjectiveSpokeProviderType,
-  isEvmSpokeProviderType,
-  isSonicSpokeProviderType,
-  isBitcoinSpokeProviderType,
-  isBitcoinSpokeProvider,
-  isNearSpokeProviderType,
-  isNearSpokeProvider,
-} from '../../guards.js';
+// packages/sdk/src/shared/services/spoke/SpokeService.ts
 import * as rlp from 'rlp';
-import { encodeFunctionData } from 'viem';
+import { encodeFunctionData, type Address } from 'viem';
+import {
+  type Hex,
+  type BitcoinChainKey,
+  type HubChainKey,
+  type IconChainKey,
+  type InjectiveChainKey,
+  type NearChainKey,
+  type SolanaChainKey,
+  type SonicChainKey,
+  type SpokeChainKey,
+  type StellarChainKey,
+  type StacksChainKey,
+  type SuiChainKey,
+  getChainType,
+  type EvmSpokeOnlyChainKey,
+  ChainTypeArr,
+  type GetEstimateGasReturnType,
+  type EvmChainKey,
+  spokeChainConfig,
+  getIntentRelayChainId,
+  type TxReturnType,
+  isBitcoinChainKey,
+  type Result,
+} from '@sodax/types';
 import { encodeAddress } from '../../utils/shared-utils.js';
 import { StacksSpokeService } from './StacksSpokeService.js';
 import { BitcoinSpokeService } from './BitcoinSpokeService.js';
-import { NearSpokeProvider } from '../../entities/near/NearSpokeProvider.js';
 import { NearSpokeService } from './NearSpokeService.js';
+import { SonicSpokeService } from './SonicSpokeService.js';
+import { SuiSpokeService } from './SuiSpokeService.js';
+import { StellarSpokeService } from './StellarSpokeService.js';
+import { SolanaSpokeService } from './SolanaSpokeService.js';
+import { IconSpokeService } from './IconSpokeService.js';
+import { EvmSpokeService } from './EvmSpokeService.js';
+import { InjectiveSpokeService } from './InjectiveSpokeService.js';
+import {
+  isHubChainKeyType,
+  isNearChainKeyType,
+  isSolanaChainKeyType,
+  isSpokeIsAllowanceValidParamsEvmSpoke,
+  isSpokeIsAllowanceValidParamsHub,
+  isSpokeIsAllowanceValidParamsStellar,
+  isStellarChainKeyType,
+  isValidWalletProviderTypeForChainKey,
+  isSpokeApproveParamsHub,
+  isSpokeApproveParamsEvmSpoke,
+  isSpokeApproveParamsStellar,
+} from '../../guards.js';
+import type { ConfigService } from '../../config/ConfigService.js';
+import type { EvmHubProvider } from '../../entities/EvmHubProvider.js';
+import type {
+  DepositParams,
+  EstimateGasParams,
+  GetDepositParams,
+  SendMessageParams,
+  VerifySimulationParams,
+  WalletSimulationParams,
+  WaitForTxReceiptParams,
+  WaitForTxReceiptReturnType,
+  VerifyTxHashParams,
+  SpokeIsAllowanceValidParams,
+  SpokeApproveParams,
+} from '../../types/spoke-types.js';
+import { Erc20Service, type Erc20ApproveParams } from '../erc-20/Erc20Service.js';
+import type { RequestTrustlineParams } from './StellarSpokeService.js';
+import type { WalletMode } from './BitcoinSpokeService.js';
+import invariant from 'tiny-invariant';
+
+export type SpokeServiceType =
+  | EvmSpokeService
+  | SonicSpokeService
+  | SolanaSpokeService
+  | StellarSpokeService
+  | IconSpokeService
+  | SuiSpokeService
+  | InjectiveSpokeService
+  | StacksSpokeService
+  | NearSpokeService
+  | BitcoinSpokeService;
+
+export type GetSpokeServiceType<C extends SpokeChainKey> = C extends EvmSpokeOnlyChainKey
+  ? EvmSpokeService
+  : C extends SonicChainKey
+    ? SonicSpokeService
+    : C extends SolanaChainKey
+      ? SolanaSpokeService
+      : C extends StellarChainKey
+        ? StellarSpokeService
+        : C extends IconChainKey
+          ? IconSpokeService
+          : C extends SuiChainKey
+            ? SuiSpokeService
+            : C extends InjectiveChainKey
+              ? InjectiveSpokeService
+              : C extends StacksChainKey
+                ? StacksSpokeService
+                : C extends NearChainKey
+                  ? NearSpokeService
+                  : C extends BitcoinChainKey
+                    ? BitcoinSpokeService
+                    : SpokeServiceType;
+
+export type SpokeServiceConstructorParams = {
+  config: ConfigService;
+  hubProvider: EvmHubProvider;
+};
 
 /**
- * SpokeService is a main class that provides functionalities for dealing with spoke chains.
- * It uses command pattern to execute different spoke chain operations.
+ * SpokeService is a main class that provides functionalities for dealing with spoke chains (including hub chain).
+ * It uses command pattern to execute different spoke (including hub) chain operations.
+ * Important: you should always first handle hub chain id first (since it is evm type, it is also included in evm chain id set).
+ * @namespace SodaxPublicUtils
  */
 
 export class SpokeService {
-  private constructor() { }
+  private readonly hubProvider: EvmHubProvider;
+  private readonly config: ConfigService;
+
+  public readonly evmSpokeService: EvmSpokeService;
+  public readonly sonicSpokeService: SonicSpokeService;
+  public readonly injectiveSpokeService: InjectiveSpokeService;
+  public readonly iconSpokeService: IconSpokeService;
+  public readonly suiSpokeService: SuiSpokeService;
+  public readonly solanaSpokeService: SolanaSpokeService;
+  public readonly stellarSpokeService: StellarSpokeService;
+  public readonly bitcoinSpokeService: BitcoinSpokeService;
+  public readonly nearSpokeService: NearSpokeService;
+  public readonly stacksSpokeService: StacksSpokeService;
+
+  public constructor({ config, hubProvider }: SpokeServiceConstructorParams) {
+    this.config = config;
+    this.hubProvider = hubProvider;
+    this.evmSpokeService = new EvmSpokeService();
+    this.sonicSpokeService = new SonicSpokeService(this.config);
+    this.injectiveSpokeService = new InjectiveSpokeService(this.config);
+    this.iconSpokeService = new IconSpokeService(this.config);
+    this.suiSpokeService = new SuiSpokeService(this.config);
+    this.solanaSpokeService = new SolanaSpokeService(this.config);
+    this.stellarSpokeService = new StellarSpokeService(this.config);
+    this.bitcoinSpokeService = new BitcoinSpokeService(this.config);
+    this.nearSpokeService = new NearSpokeService(this.config);
+    this.stacksSpokeService = new StacksSpokeService(this.config);
+  }
+
+  public getSpokeService<C extends SpokeChainKey>(chainKey: C): GetSpokeServiceType<C> {
+    if (isHubChainKeyType(chainKey)) {
+      // handle hub chain id first (since it is evm type, it is also included in evm chain id set)
+      return this.sonicSpokeService satisfies GetSpokeServiceType<SonicChainKey> as GetSpokeServiceType<C>;
+    }
+
+    const chainType = getChainType(chainKey);
+    switch (chainType) {
+      case 'EVM': {
+        return this.evmSpokeService satisfies GetSpokeServiceType<EvmSpokeOnlyChainKey> as GetSpokeServiceType<C>;
+      }
+      case 'INJECTIVE': {
+        return this.injectiveSpokeService satisfies GetSpokeServiceType<InjectiveChainKey> as GetSpokeServiceType<C>;
+      }
+      case 'ICON': {
+        return this.iconSpokeService satisfies GetSpokeServiceType<IconChainKey> as GetSpokeServiceType<C>;
+      }
+      case 'SUI': {
+        return this.suiSpokeService satisfies GetSpokeServiceType<SuiChainKey> as GetSpokeServiceType<C>;
+      }
+      case 'SOLANA': {
+        return this.solanaSpokeService satisfies GetSpokeServiceType<SolanaChainKey> as GetSpokeServiceType<C>;
+      }
+      case 'STELLAR': {
+        return this.stellarSpokeService satisfies GetSpokeServiceType<StellarChainKey> as GetSpokeServiceType<C>;
+      }
+      case 'STACKS': {
+        return this.stacksSpokeService satisfies GetSpokeServiceType<StacksChainKey> as GetSpokeServiceType<C>;
+      }
+      case 'BITCOIN': {
+        return this.bitcoinSpokeService satisfies GetSpokeServiceType<BitcoinChainKey> as GetSpokeServiceType<C>;
+      }
+      case 'NEAR': {
+        return this.nearSpokeService satisfies GetSpokeServiceType<NearChainKey> as GetSpokeServiceType<C>;
+      }
+      default: {
+        const exhaustiveCheck: never = chainType; // The never type is used to ensure that the default case is exhaustive
+        console.log(exhaustiveCheck);
+        throw new Error(`[getSpokeService] Invalid chain type. Valid chain types: ${ChainTypeArr.join(', ')}`);
+      }
+    }
+  }
+
+  /**
+   * Check ERC-20 allowance (EVM / hub) or Stellar trustline sufficiency using unified params.
+   * Feature services map their action payloads into {@link SpokeIsAllowanceValidParams}.
+   */
+  public async isAllowanceValid(params: SpokeIsAllowanceValidParams): Promise<Result<boolean>> {
+    try {
+      if (isSpokeIsAllowanceValidParamsHub(params)) {
+        const { srcChainKey, token, amount, owner, spender } = params;
+        return await this.sonicSpokeService.isAllowanceValid({
+          token: token as Address,
+          amount,
+          owner: owner as Address,
+          spender,
+          chainKey: srcChainKey,
+        });
+      }
+
+      if (isSpokeIsAllowanceValidParamsEvmSpoke(params)) {
+        const { srcChainKey, token, amount, owner } = params;
+        const spender = params.spender ?? spokeChainConfig[srcChainKey].addresses.assetManager;
+        return await this.evmSpokeService.isAllowanceValid({
+          token: token as Address,
+          amount,
+          owner: owner as Address,
+          spender,
+          chainKey: srcChainKey,
+        });
+      }
+
+      if (isSpokeIsAllowanceValidParamsStellar(params)) {
+        const { token, amount, owner } = params;
+        return {
+          ok: true,
+          value: await this.stellarSpokeService.hasSufficientTrustline(token, amount, owner),
+        };
+      }
+
+      return { ok: true, value: true };
+    } catch (error) {
+      return { ok: false, error };
+    }
+  }
+
+  /**
+   * Approve ERC-20 spending on hub / EVM spoke or request a Stellar trustline using unified params.
+   * Feature services map their action payloads into {@link SpokeApproveParams}.
+   */
+  public async approve<K extends SpokeChainKey, Raw extends boolean>(
+    params: SpokeApproveParams<K, Raw>,
+  ): Promise<Result<TxReturnType<K, Raw>>> {
+    try {
+      invariant(
+        isValidWalletProviderTypeForChainKey(params.srcChainKey, params.walletProvider),
+        `Invalid wallet provider for chain key: ${params.srcChainKey}, walletProvider.chainType: ${params.walletProvider?.chainType}`,
+      );
+
+      if (isSpokeApproveParamsHub(params)) {
+        const result = await Erc20Service.approve<Raw>({
+          ...params,
+          token: params.token,
+          amount: params.amount,
+          from: params.owner,
+          spender: params.spender,
+        } as Erc20ApproveParams<Raw>);
+
+        return {
+          ok: true,
+          value: result satisfies TxReturnType<HubChainKey, Raw> as TxReturnType<K, Raw>,
+        };
+      }
+
+      if (isSpokeApproveParamsEvmSpoke(params)) {
+        const result = await Erc20Service.approve<Raw>({
+          ...params,
+          token: params.token,
+          amount: params.amount,
+          from: params.owner,
+          spender: params.spender,
+        } as Erc20ApproveParams<Raw>);
+        return {
+          ok: true,
+          value: result satisfies TxReturnType<EvmChainKey, Raw> as TxReturnType<K, Raw>,
+        };
+      }
+
+      if (isSpokeApproveParamsStellar(params)) {
+        const result = await this.stellarSpokeService.requestTrustline<Raw>({
+          ...params,
+          srcAddress: params.owner,
+          srcChainKey: params.srcChainKey,
+          token: params.token,
+          amount: params.amount,
+        } as RequestTrustlineParams<StellarChainKey, Raw>);
+
+        return {
+          ok: true,
+          value: result satisfies TxReturnType<StellarChainKey, Raw> as TxReturnType<K, Raw>,
+        };
+      }
+
+      return {
+        ok: false,
+        error: new Error('[SpokeService.approve] Only hub (Sonic), EVM spokes, and Stellar are supported'),
+      };
+    } catch (error) {
+      return { ok: false, error };
+    }
+  }
 
   /**
    * Estimate the gas for a raw transaction.
@@ -77,54 +303,86 @@ export class SpokeService {
    * @param {SpokeProvider} spokeProvider - The provider for the spoke chain.
    * @returns {Promise<GetEstimateGasReturnType<T>>} A promise that resolves to the gas.
    */
-  public static async estimateGas<T extends SpokeProviderType>(
-    params: TxReturnType<T, true>,
-    spokeProvider: T,
-  ): Promise<GetEstimateGasReturnType<T>> {
-    if (isEvmSpokeProviderType(spokeProvider)) {
-      return EvmSpokeService.estimateGas(
-        params as TxReturnType<EvmSpokeProviderType, true>,
-        spokeProvider,
-      ) satisfies Promise<GetEstimateGasReturnType<EvmSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
-    }
-    if (isSonicSpokeProviderType(spokeProvider)) {
-      return SonicSpokeService.estimateGas(
-        params as TxReturnType<SonicSpokeProviderType, true>,
-        spokeProvider,
-      ) satisfies Promise<GetEstimateGasReturnType<SonicSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
-    }
-    if (isInjectiveSpokeProviderType(spokeProvider)) {
-      return InjectiveSpokeService.estimateGas(
-        params as TxReturnType<InjectiveSpokeProviderType, true>,
-        spokeProvider,
-      ) satisfies Promise<GetEstimateGasReturnType<InjectiveSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
-    }
-    if (isIconSpokeProviderType(spokeProvider)) {
-      return IconSpokeService.estimateGas(
-        params as TxReturnType<IconSpokeProviderType, true>,
-        spokeProvider,
-      ) satisfies Promise<GetEstimateGasReturnType<IconSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
-    }
-    if (isSuiSpokeProviderType(spokeProvider)) {
-      return SuiSpokeService.estimateGas(
-        params as TxReturnType<SuiSpokeProviderType, true>,
-        spokeProvider,
-      ) satisfies Promise<GetEstimateGasReturnType<SuiSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
-    }
-    if (isSolanaSpokeProviderType(spokeProvider)) {
-      return SolanaSpokeService.estimateGas(
-        params as TxReturnType<SolanaSpokeProviderType, true>,
-        spokeProvider,
-      ) satisfies Promise<GetEstimateGasReturnType<SolanaSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
-    }
-    if (isStellarSpokeProviderType(spokeProvider)) {
-      return StellarSpokeService.estimateGas(
-        params as TxReturnType<StellarSpokeProviderType, true>,
-        spokeProvider,
-      ) satisfies Promise<GetEstimateGasReturnType<StellarSpokeProvider>> as Promise<GetEstimateGasReturnType<T>>;
-    }
+  public async estimateGas<C extends SpokeChainKey>(
+    params: EstimateGasParams<C>,
+  ): Promise<Result<GetEstimateGasReturnType<C>>> {
+    try {
+      if (isHubChainKeyType(params.chainKey)) {
+        const value = (await this.hubProvider.service.estimateGas(
+          params as EstimateGasParams<HubChainKey>,
+        )) satisfies GetEstimateGasReturnType<HubChainKey> as GetEstimateGasReturnType<C>;
+        return { ok: true, value };
+      }
 
-    throw new Error('Invalid spoke provider');
+      const chainType = getChainType(params.chainKey);
+
+      switch (chainType) {
+        case 'EVM': {
+          const value = (await this.evmSpokeService.estimateGas(
+            params as EstimateGasParams<EvmSpokeOnlyChainKey>,
+          )) satisfies GetEstimateGasReturnType<EvmChainKey> as GetEstimateGasReturnType<C>;
+          return { ok: true, value };
+        }
+        case 'INJECTIVE': {
+          const value = (await this.injectiveSpokeService.estimateGas(
+            params as EstimateGasParams<InjectiveChainKey>,
+          )) satisfies GetEstimateGasReturnType<InjectiveChainKey> as GetEstimateGasReturnType<C>;
+          return { ok: true, value };
+        }
+        case 'ICON': {
+          const value = (await this.iconSpokeService.estimateGas(
+            params as EstimateGasParams<IconChainKey>,
+          )) satisfies GetEstimateGasReturnType<IconChainKey> as GetEstimateGasReturnType<C>;
+          return { ok: true, value };
+        }
+        case 'SUI': {
+          const value = (await this.suiSpokeService.estimateGas(
+            params as EstimateGasParams<SuiChainKey>,
+          )) satisfies GetEstimateGasReturnType<SuiChainKey> as GetEstimateGasReturnType<C>;
+          return { ok: true, value };
+        }
+        case 'SOLANA': {
+          const value = (await this.solanaSpokeService.estimateGas(
+            params as EstimateGasParams<SolanaChainKey>,
+          )) satisfies GetEstimateGasReturnType<SolanaChainKey> as GetEstimateGasReturnType<C>;
+          return { ok: true, value };
+        }
+        case 'STELLAR': {
+          const value = (await this.stellarSpokeService.estimateGas(
+            params as EstimateGasParams<StellarChainKey>,
+          )) satisfies GetEstimateGasReturnType<StellarChainKey> as GetEstimateGasReturnType<C>;
+          return { ok: true, value };
+        }
+        case 'STACKS': {
+          const value = (await this.stacksSpokeService.estimateGas(
+            params as EstimateGasParams<StacksChainKey>,
+          )) satisfies GetEstimateGasReturnType<StacksChainKey> as GetEstimateGasReturnType<C>;
+          return { ok: true, value };
+        }
+        case 'BITCOIN': {
+          const value = (await this.bitcoinSpokeService.estimateGas(
+            params as EstimateGasParams<BitcoinChainKey>,
+          )) satisfies GetEstimateGasReturnType<BitcoinChainKey> as GetEstimateGasReturnType<C>;
+          return { ok: true, value };
+        }
+        case 'NEAR': {
+          const value = (await this.nearSpokeService.estimateGas(
+            params as EstimateGasParams<NearChainKey>,
+          )) satisfies GetEstimateGasReturnType<NearChainKey> as GetEstimateGasReturnType<C>;
+          return { ok: true, value };
+        }
+        default: {
+          const exhaustiveCheck: never = chainType;
+          console.log(exhaustiveCheck);
+          return {
+            ok: false,
+            error: new Error(`[estimateGas] Invalid chain type. Valid chain types: ${ChainTypeArr.join(', ')}`),
+          };
+        }
+      }
+    } catch (error) {
+      return { ok: false, error };
+    }
   }
 
   /**
@@ -153,18 +411,31 @@ export class SpokeService {
 
     return `0x${Buffer.from(rlpEncodedData).toString('hex')}`;
   }
-  public static async simulateDeposit(
-    params: DepositSimulationParams,
-    hubProvider: EvmHubProvider,
-  ): Promise<{ success: boolean; error?: string }> {
-    const chainId = getIntentRelayChainId(params.spokeChainID);
-    const hubAssetManager = hubProvider.chainConfig.addresses.assetManager;
-    const payload = SpokeService.encodeTransfer(params.token, params.from, params.to, params.amount, params.data);
+  public async simulateDeposit(params: DepositParams<SpokeChainKey, boolean>): Promise<Result<boolean>> {
+    try {
+      if (isHubChainKeyType(params.srcChainKey)) {
+        return { ok: false, error: new Error('Hub chain id is not supported for deposit simulation') };
+      }
 
-    return SpokeService.simulateRecvMessage(
-      { target: hubAssetManager, srcChainId: chainId, srcAddress: params.srcAddress, payload },
-      hubProvider,
-    );
+      const chainId = getIntentRelayChainId(params.srcChainKey);
+      const hubAssetManager = this.hubProvider.chainConfig.addresses.assetManager;
+      const payload = SpokeService.encodeTransfer(
+        encodeAddress(params.srcChainKey, params.token),
+        encodeAddress(params.srcChainKey, params.srcAddress),
+        params.to,
+        params.amount,
+        params.data,
+      );
+
+      return await this.simulateRecvMessage({
+        target: hubAssetManager,
+        srcChainId: chainId,
+        srcAddress: encodeAddress(params.srcChainKey, spokeChainConfig[params.srcChainKey].addresses.assetManager),
+        payload,
+      });
+    } catch (error) {
+      return { ok: false, error };
+    }
   }
 
   /**
@@ -176,13 +447,9 @@ export class SpokeService {
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @returns {Promise<{ success: boolean; error?: string }>} Result of the simulation.
    */
-  public static async simulateRecvMessage(
-    params: WalletSimulationParams,
-    hubProvider: EvmHubProvider,
-  ): Promise<{ success: boolean; error?: string }> {
+  public async simulateRecvMessage(params: WalletSimulationParams): Promise<Result<boolean>> {
     try {
-      // Call simulateRecvMessage using staticCall (read-only)
-      const result = await hubProvider.publicClient.call({
+      const result = await this.hubProvider.publicClient.call({
         to: params.target,
         data: encodeFunctionData({
           abi: [
@@ -203,25 +470,19 @@ export class SpokeService {
         }),
       });
 
-      // If we get here, the function didn't revert as expected
       console.warn('simulateRecvMessage did not revert as expected', { result });
       return {
-        success: false,
-        error: 'Function should have reverted with "Simulation completed"',
+        ok: false,
+        error: new Error('Function should have reverted with "Simulation completed"'),
       };
     } catch (error: unknown) {
-      // Check if it's the expected revert
       if (error instanceof Error && error.message?.includes('Simulation completed')) {
         console.warn('simulateRecvMessage completed successfully with expected revert');
-        return { success: true };
+        return { ok: true, value: true };
       }
 
-      // Handle other contract errors
       console.error('simulateRecvMessage failed with unexpected error:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message || 'Unknown simulation error' : 'Unknown simulation error',
-      };
+      return { ok: false, error };
     }
   }
 
@@ -234,232 +495,185 @@ export class SpokeService {
    * @param {boolean} skipSimulation - Whether to skip deposit simulation (optional, defaults to false).
    * @returns {Promise<TxReturnType<T, R>>} A promise that resolves to the transaction hash.
    */
-  public static async deposit<S extends SpokeProviderType, R extends boolean = false>(
-    params: GetSpokeDepositParamsType<S>,
-    spokeProvider: S,
-    hubProvider: EvmHubProvider,
-    raw?: R,
-    skipSimulation = false,
-  ): Promise<TxReturnType<S, R>> {
-    if (isSonicSpokeProvider(spokeProvider) || isSonicRawSpokeProvider(spokeProvider)) {
-      const _params: SonicSpokeDepositParams = params as GetSpokeDepositParamsType<SonicSpokeProviderType>;
-      return SonicSpokeService.deposit(_params, spokeProvider, raw) satisfies Promise<
-        TxReturnType<SonicSpokeProviderType, R>
-      > as Promise<TxReturnType<S, R>>;
-    }
-    if (isEvmSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
-      return EvmSpokeService.deposit(
-        params as GetSpokeDepositParamsType<EvmSpokeProviderType>,
-        spokeProvider,
-        hubProvider,
-        raw,
-      ) satisfies Promise<TxReturnType<EvmSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
-    }
-    if (isInjectiveSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
-      return InjectiveSpokeService.deposit(
-        params as GetSpokeDepositParamsType<InjectiveSpokeProviderType>,
-        spokeProvider,
-        hubProvider,
-        raw,
-      ) satisfies Promise<TxReturnType<InjectiveSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
-    }
-    if (isIconSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
-      return IconSpokeService.deposit(
-        params as GetSpokeDepositParamsType<IconSpokeProviderType>,
-        spokeProvider,
-        hubProvider,
-        raw,
-      ) satisfies Promise<TxReturnType<IconSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
-    }
-
-    if (isSuiSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
-      return SuiSpokeService.deposit(
-        params as GetSpokeDepositParamsType<SuiSpokeProviderType>,
-        spokeProvider,
-        hubProvider,
-        raw,
-      ) satisfies Promise<TxReturnType<SuiSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
-    }
-
-    if (isSolanaSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
-      return SolanaSpokeService.deposit(
-        params as GetSpokeDepositParamsType<SolanaSpokeProviderType>,
-        spokeProvider,
-        hubProvider,
-        raw,
-      ) satisfies Promise<TxReturnType<SolanaSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
-    }
-    if (isStellarSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
-      return StellarSpokeService.deposit(
-        params as GetSpokeDepositParamsType<StellarSpokeProviderType>,
-        spokeProvider,
-        hubProvider,
-        raw,
-      ) satisfies Promise<TxReturnType<StellarSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
-    }
-    if (isStacksSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
-      return StacksSpokeService.deposit(
-        params as GetSpokeDepositParamsType<StacksSpokeProviderType>,
-        spokeProvider as StacksSpokeProviderType,
-        hubProvider,
-        raw,
-      ) as Promise<TxReturnType<S, R>>;
-    }
-    if (isBitcoinSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
-      return BitcoinSpokeService.deposit(
-        params as GetSpokeDepositParamsType<BitcoinSpokeProviderType>,
-        spokeProvider,
-        raw,
-      ) satisfies Promise<TxReturnType<BitcoinSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
-    }
-    if (isNearSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifyDepositSimulation(params, spokeProvider, hubProvider, skipSimulation);
-      return NearSpokeService.deposit(
-        params as GetSpokeDepositParamsType<NearSpokeProviderType>,
-        spokeProvider,
-        hubProvider,
-        raw,
-      ) satisfies Promise<TxReturnType<NearSpokeProviderType, R>> as Promise<TxReturnType<S, R>>;
-    }
-
-    throw new Error('Invalid spoke provider');
-  }
-
-  public static getSimulateDepositParams<S extends SpokeProviderType>(
-    params: GetSpokeDepositParamsType<S>,
-    spokeProvider: S,
-    hubProvider: EvmHubProvider,
-  ): Promise<DepositSimulationParams> {
-    if (isEvmSpokeProviderType(spokeProvider)) {
-      return EvmSpokeService.getSimulateDepositParams(
-        params as GetSpokeDepositParamsType<EvmSpokeProviderType>,
-        spokeProvider,
-        hubProvider,
-      );
-    }
-    if (isInjectiveSpokeProviderType(spokeProvider)) {
-      return InjectiveSpokeService.getSimulateDepositParams(
-        params as GetSpokeDepositParamsType<InjectiveSpokeProviderType>,
-        spokeProvider,
-        hubProvider,
-      );
-    }
-    if (isIconSpokeProviderType(spokeProvider)) {
-      return IconSpokeService.getSimulateDepositParams(
-        params as GetSpokeDepositParamsType<IconSpokeProviderType>,
-        spokeProvider,
-        hubProvider,
-      );
-    }
-    if (isSuiSpokeProviderType(spokeProvider)) {
-      return SuiSpokeService.getSimulateDepositParams(
-        params as GetSpokeDepositParamsType<SuiSpokeProviderType>,
-        spokeProvider,
-        hubProvider,
-      );
-    }
-    if (isSolanaSpokeProviderType(spokeProvider)) {
-      return SolanaSpokeService.getSimulateDepositParams(
-        params as GetSpokeDepositParamsType<SolanaSpokeProviderType>,
-        spokeProvider,
-        hubProvider,
-      );
-    }
-    if (isStellarSpokeProviderType(spokeProvider)) {
-      return StellarSpokeService.getSimulateDepositParams(
-        params as GetSpokeDepositParamsType<StellarSpokeProviderType>,
-        spokeProvider,
-        hubProvider,
-      );
-    }
-    if (isBitcoinSpokeProviderType(spokeProvider)) {
-      return BitcoinSpokeService.getSimulateDepositParams(
-        params as GetSpokeDepositParamsType<BitcoinSpokeProviderType>,
-        spokeProvider,
-        hubProvider,
-      ) as Promise<DepositSimulationParams>;
-    }
-    if (isNearSpokeProviderType(spokeProvider)) {
-      return NearSpokeService.getSimulateDepositParams(
-        params as GetSpokeDepositParamsType<NearSpokeProviderType>,
-        spokeProvider,
-        hubProvider,
-      );
-    }
-    if (isStacksSpokeProviderType(spokeProvider)) {
-      return StacksSpokeService.getSimulateDepositParams(
-        params as GetSpokeDepositParamsType<StacksSpokeProviderType>,
-        spokeProvider as StacksSpokeProviderType,
-        hubProvider,
-      );
-    }
-
-    throw new Error('[getSimulateDepositParams] Invalid spoke provider');
-  }
-
-  public static async verifyDepositSimulation<S extends SpokeProviderType>(
-    params: GetSpokeDepositParamsType<S>,
-    spokeProvider: S,
-    hubProvider: EvmHubProvider,
-    skipSimulation: boolean,
-  ): Promise<void> {
-    if (!skipSimulation) {
-      const simulationParams = await SpokeService.getSimulateDepositParams(params, spokeProvider, hubProvider);
-      const result = await SpokeService.simulateDeposit(simulationParams, hubProvider);
-
-      if (!result.success) {
-        throw new Error('Simulation failed', { cause: result });
+  public async deposit<K extends SpokeChainKey, R extends boolean>(
+    params: DepositParams<K, R>,
+  ): Promise<Result<TxReturnType<K, R>>> {
+    try {
+      if (isHubChainKeyType(params.srcChainKey)) {
+        const value = (await SonicSpokeService.deposit(
+          params as DepositParams<SonicChainKey, R>,
+        )) satisfies TxReturnType<SonicChainKey, R> as TxReturnType<K, R>;
+        return { ok: true, value };
       }
+
+      const chainType = getChainType(params.srcChainKey);
+      switch (chainType) {
+        case 'EVM': {
+          const verify = await this.verifyDepositSimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.evmSpokeService.deposit(
+            params as DepositParams<EvmSpokeOnlyChainKey, R>,
+          )) satisfies TxReturnType<EvmChainKey, R> as TxReturnType<K, R>;
+          return { ok: true, value };
+        }
+        case 'INJECTIVE': {
+          const verify = await this.verifyDepositSimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.injectiveSpokeService.deposit(
+            params as DepositParams<InjectiveChainKey, R>,
+          )) satisfies TxReturnType<InjectiveChainKey, R> as TxReturnType<K, R>;
+          return { ok: true, value };
+        }
+        case 'STELLAR': {
+          const verify = await this.verifyDepositSimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.stellarSpokeService.deposit(
+            params as DepositParams<StellarChainKey, R>,
+          )) satisfies TxReturnType<StellarChainKey, R> as TxReturnType<K, R>;
+          return { ok: true, value };
+        }
+        case 'SUI': {
+          const verify = await this.verifyDepositSimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.suiSpokeService.deposit(
+            params as DepositParams<SuiChainKey, R>,
+          )) satisfies TxReturnType<SuiChainKey, R> as TxReturnType<K, R>;
+          return { ok: true, value };
+        }
+        case 'ICON': {
+          const verify = await this.verifyDepositSimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.iconSpokeService.deposit(
+            params as DepositParams<IconChainKey, R>,
+          )) satisfies TxReturnType<IconChainKey, R> as TxReturnType<K, R>;
+          return { ok: true, value };
+        }
+        case 'SOLANA': {
+          const verify = await this.verifyDepositSimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.solanaSpokeService.deposit(
+            params as DepositParams<SolanaChainKey, R>,
+          )) satisfies TxReturnType<SolanaChainKey, R> as TxReturnType<K, R>;
+          return { ok: true, value };
+        }
+        case 'STACKS': {
+          const verify = await this.verifyDepositSimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.stacksSpokeService.deposit(
+            params as DepositParams<StacksChainKey, R>,
+          )) satisfies TxReturnType<StacksChainKey, R> as TxReturnType<K, R>;
+          return { ok: true, value };
+        }
+        case 'BITCOIN': {
+          const verify = await this.verifyDepositSimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.bitcoinSpokeService.deposit(
+            params as DepositParams<BitcoinChainKey, R> & { accessToken?: string },
+          )) satisfies TxReturnType<BitcoinChainKey, R> as TxReturnType<K, R>;
+          return { ok: true, value };
+        }
+        case 'NEAR': {
+          const verify = await this.verifyDepositSimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.nearSpokeService.deposit(
+            params as DepositParams<NearChainKey, R>,
+          )) satisfies TxReturnType<NearChainKey, R> as TxReturnType<K, R>;
+          return { ok: true, value };
+        }
+        default: {
+          const exhaustiveCheck: never = chainType;
+          console.log(exhaustiveCheck);
+          return {
+            ok: false,
+            error: new Error(`[deposit] Invalid chain type. Valid chain types: ${ChainTypeArr.join(', ')}`),
+          };
+        }
+      }
+    } catch (error) {
+      return { ok: false, error };
+    }
+  }
+
+  public async verifyDepositSimulation<C extends SpokeChainKey, R extends boolean>(
+    params: DepositParams<C, R>,
+  ): Promise<Result<void>> {
+    try {
+      if (!params.skipSimulation) {
+        const result = await this.simulateDeposit(params);
+        if (!result.ok) return result;
+        if (!result.value) {
+          return { ok: false, error: new Error('SIMULATION_FAILED') };
+        }
+      }
+      return { ok: true, value: undefined };
+    } catch (error) {
+      return { ok: false, error };
     }
   }
 
   /**
-   * Get the balance of the token in the spoke chain.
+   * Get the balance of the token in the spoke chain asset manager.
    * @param {Address} token - The address of the token to get the balance of.
    * @param {SpokeProviderType} spokeProvider - The spoke provider.
    * @returns {Promise<bigint>} The balance of the token.
    */
-  public static getDeposit(token: Address, spokeProvider: SpokeProviderType): Promise<bigint> {
-    if (isEvmSpokeProviderType(spokeProvider)) {
-      return EvmSpokeService.getDeposit(token, spokeProvider);
-    }
-    if (isInjectiveSpokeProviderType(spokeProvider)) {
-      return InjectiveSpokeService.getDeposit(token, spokeProvider);
-    }
-    if (isStellarSpokeProviderType(spokeProvider)) {
-      return StellarSpokeService.getDeposit(token, spokeProvider);
-    }
-    if (isSuiSpokeProviderType(spokeProvider)) {
-      return SuiSpokeService.getDeposit(token, spokeProvider);
-    }
-    if (isIconSpokeProviderType(spokeProvider)) {
-      return IconSpokeService.getDeposit(token, spokeProvider);
-    }
-    if (isSolanaSpokeProviderType(spokeProvider)) {
-      return SolanaSpokeService.getDeposit(token, spokeProvider);
-    }
-    if (isSonicSpokeProviderType(spokeProvider)) {
-      return SonicSpokeService.getDeposit(token, spokeProvider);
-    }
-    if (isStacksSpokeProviderType(spokeProvider)) {
-      return StacksSpokeService.getDeposit(token, spokeProvider as StacksSpokeProviderType);
-    }
-    if (isBitcoinSpokeProviderType(spokeProvider)) {
-      return BitcoinSpokeService.getDeposit(token, spokeProvider);
-    }
-    if (isNearSpokeProviderType(spokeProvider)) {
-      return NearSpokeService.getDeposit(token, spokeProvider);
-    }
+  public async getDeposit<C extends SpokeChainKey>(params: GetDepositParams<C>): Promise<Result<bigint>> {
+    try {
+      if (isHubChainKeyType(params.srcChainKey)) {
+        const value = await this.sonicSpokeService.getDeposit(params as GetDepositParams<SonicChainKey>);
+        return { ok: true, value };
+      }
 
-    throw new Error('Invalid spoke provider');
+      const chainType = getChainType(params.srcChainKey);
+      switch (chainType) {
+        case 'EVM': {
+          const value = await this.evmSpokeService.getDeposit(params as GetDepositParams<EvmSpokeOnlyChainKey>);
+          return { ok: true, value };
+        }
+        case 'INJECTIVE': {
+          const value = await this.injectiveSpokeService.getDeposit(params as GetDepositParams<InjectiveChainKey>);
+          return { ok: true, value };
+        }
+        case 'STELLAR': {
+          const value = await this.stellarSpokeService.getDeposit(params as GetDepositParams<StellarChainKey>);
+          return { ok: true, value };
+        }
+        case 'SUI': {
+          const value = await this.suiSpokeService.getDeposit(params as GetDepositParams<SuiChainKey>);
+          return { ok: true, value };
+        }
+        case 'ICON': {
+          const value = await this.iconSpokeService.getDeposit(params as GetDepositParams<IconChainKey>);
+          return { ok: true, value };
+        }
+        case 'SOLANA': {
+          const value = await this.solanaSpokeService.getDeposit(params as GetDepositParams<SolanaChainKey>);
+          return { ok: true, value };
+        }
+        case 'STACKS': {
+          const value = await this.stacksSpokeService.getDeposit(params as GetDepositParams<StacksChainKey>);
+          return { ok: true, value };
+        }
+        case 'BITCOIN': {
+          const value = await this.bitcoinSpokeService.getDeposit(params as GetDepositParams<BitcoinChainKey>);
+          return { ok: true, value };
+        }
+        case 'NEAR': {
+          const value = await this.nearSpokeService.getDeposit(params as GetDepositParams<NearChainKey>);
+          return { ok: true, value };
+        }
+        default: {
+          const exhaustiveCheck: never = chainType;
+          console.log(exhaustiveCheck);
+          return {
+            ok: false,
+            error: new Error(`[getDeposit] Invalid chain type. Valid chain types: ${ChainTypeArr.join(', ')}`),
+          };
+        }
+      }
+    } catch (error) {
+      return { ok: false, error };
+    }
   }
 
   /**
@@ -470,180 +684,184 @@ export class SpokeService {
    * @param {EvmHubProvider} hubProvider - The provider for the hub chain.
    * @returns {Promise<Hash>} A promise that resolves to the transaction hash.
    */
-  public static async callWallet<T extends SpokeProviderType, R extends boolean = false>(
-    from: HubAddress,
-    payload: Hex,
-    spokeProvider: T,
-    hubProvider: EvmHubProvider,
-    raw?: R,
-    skipSimulation = false,
-  ): Promise<TxReturnType<T, R>> {
-    if (isSonicSpokeProviderType(spokeProvider)) {
-      return (await SonicSpokeService.callWallet(payload, spokeProvider, raw)) satisfies TxReturnType<
-        SonicSpokeProviderType,
-        R
-      > as TxReturnType<T, R>;
-    }
-
-    // Bitcoin TRADING mode: srcAddress must match trading wallet (deposit origin)
-    const effectiveAddress = isBitcoinSpokeProvider(spokeProvider)
-      ? await spokeProvider.getEffectiveWalletAddress()
-      : await spokeProvider.walletProvider.getWalletAddress();
-    const srcAddress = encodeAddress(spokeProvider.chainConfig.chain.id, effectiveAddress);
-
-    if (!skipSimulation) {
-      const result = await SpokeService.simulateRecvMessage(
-        {
-          target: from,
-          srcChainId: getIntentRelayChainId(spokeProvider.chainConfig.chain.id),
-          srcAddress,
-          payload,
-        },
-        hubProvider,
-      );
-      if (!result.success) {
-        throw new Error('Simulation failed', { cause: result });
+  public async sendMessage<K extends SpokeChainKey, Raw extends boolean>(
+    params: SendMessageParams<K, Raw>,
+  ): Promise<Result<TxReturnType<K, Raw>>> {
+    try {
+      if (isHubChainKeyType(params.srcChainKey)) {
+        const value = (await this.sonicSpokeService.sendMessage(
+          params as SendMessageParams<SonicChainKey, Raw>,
+        )) as TxReturnType<K, Raw>;
+        return { ok: true, value };
       }
-    }
-    if (isEvmSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
-      return (await EvmSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
-        EvmSpokeProviderType,
-        R
-      > as TxReturnType<T, R>;
-    }
-    if (isInjectiveSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
-      return (await InjectiveSpokeService.callWallet(
-        from,
-        payload,
-        spokeProvider,
-        hubProvider,
-        raw,
-      )) satisfies TxReturnType<InjectiveSpokeProviderType, R> as TxReturnType<T, R>;
-    }
-    if (isIconSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
-      return (await IconSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
-        IconSpokeProviderType,
-        R
-      > as TxReturnType<T, R>;
-    }
-    if (isSuiSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
-      return (await SuiSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
-        SuiSpokeProviderType,
-        R
-      > as TxReturnType<T, R>;
-    }
-    if (isSolanaSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
-      return (await SolanaSpokeService.callWallet(
-        from,
-        payload,
-        spokeProvider,
-        hubProvider,
-        raw,
-      )) satisfies TxReturnType<SolanaSpokeProviderType, R> as TxReturnType<T, R>;
-    }
-    if (isStellarSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
-      return (await StellarSpokeService.callWallet(
-        from,
-        payload,
-        spokeProvider,
-        hubProvider,
-        raw,
-      )) satisfies TxReturnType<StellarSpokeProviderType, R> as TxReturnType<T, R>;
-    }
-    if (isStacksSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
-      return (await StacksSpokeService.callWallet(
-        from,
-        payload,
-        spokeProvider,
-        hubProvider,
-        raw,
-      )) satisfies TxReturnType<StacksSpokeProviderType, R> as TxReturnType<T, R>;
-    }
-    if (isBitcoinSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
-      return (await BitcoinSpokeService.callWallet(
-        from,
-        payload,
-        spokeProvider,
-        hubProvider,
-        raw,
-      )) satisfies TxReturnType<BitcoinSpokeProviderType, R> as TxReturnType<T, R>;
-    }
 
-    if (isNearSpokeProviderType(spokeProvider)) {
-      await SpokeService.verifySimulation(from, payload, spokeProvider, hubProvider, skipSimulation);
-      return (await NearSpokeService.callWallet(from, payload, spokeProvider, hubProvider, raw)) satisfies TxReturnType<
-        NearSpokeProviderType,
-        R
-      > as TxReturnType<T, R>;
-    }
+      const effectiveAddress = isBitcoinChainKey(params.srcChainKey)
+        ? await this.bitcoinSpokeService.getEffectiveWalletAddress(params.srcAddress)
+        : params.srcAddress;
+      const srcAddress = encodeAddress(params.srcChainKey, effectiveAddress);
 
-    throw new Error('[callWallet] Invalid spoke provider');
+      if (!params.skipSimulation) {
+        const result = await this.simulateRecvMessage({
+          target: params.dstAddress,
+          srcChainId: getIntentRelayChainId(params.srcChainKey),
+          srcAddress,
+          payload: params.payload,
+        });
+        if (!result.ok) return result;
+        if (!result.value) {
+          return { ok: false, error: new Error('SIMULATION_FAILED') };
+        }
+      }
+
+      const chainType = getChainType(params.srcChainKey);
+      switch (chainType) {
+        case 'EVM': {
+          const verify = await this.verifySimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.evmSpokeService.sendMessage(
+            params as SendMessageParams<EvmSpokeOnlyChainKey, Raw>,
+          )) as TxReturnType<EvmSpokeOnlyChainKey, Raw> as TxReturnType<K, Raw>;
+          return { ok: true, value };
+        }
+        case 'INJECTIVE': {
+          const verify = await this.verifySimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.injectiveSpokeService.sendMessage(
+            params as SendMessageParams<InjectiveChainKey, Raw>,
+          )) as TxReturnType<InjectiveChainKey, Raw> as TxReturnType<K, Raw>;
+          return { ok: true, value };
+        }
+        case 'ICON': {
+          const verify = await this.verifySimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.iconSpokeService.sendMessage(
+            params as SendMessageParams<IconChainKey, Raw>,
+          )) as TxReturnType<IconChainKey, Raw> as TxReturnType<K, Raw>;
+          return { ok: true, value };
+        }
+        case 'SUI': {
+          const verify = await this.verifySimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.suiSpokeService.sendMessage(
+            params as SendMessageParams<SuiChainKey, Raw>,
+          )) as TxReturnType<SuiChainKey, Raw> as TxReturnType<K, Raw>;
+          return { ok: true, value };
+        }
+        case 'SOLANA': {
+          const verify = await this.verifySimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.solanaSpokeService.sendMessage(
+            params as SendMessageParams<SolanaChainKey, Raw>,
+          )) as TxReturnType<SolanaChainKey, Raw> as TxReturnType<K, Raw>;
+          return { ok: true, value };
+        }
+        case 'STELLAR': {
+          const verify = await this.verifySimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.stellarSpokeService.sendMessage(
+            params as SendMessageParams<StellarChainKey, Raw>,
+          )) as TxReturnType<StellarChainKey, Raw> as TxReturnType<K, Raw>;
+          return { ok: true, value };
+        }
+        case 'STACKS': {
+          const verify = await this.verifySimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.stacksSpokeService.sendMessage(
+            params as SendMessageParams<StacksChainKey, Raw>,
+          )) as TxReturnType<StacksChainKey, Raw> as TxReturnType<K, Raw>;
+          return { ok: true, value };
+        }
+        case 'BITCOIN': {
+          const verify = await this.verifySimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.bitcoinSpokeService.sendMessage(
+            params as SendMessageParams<BitcoinChainKey, Raw> & { walletMode?: WalletMode },
+          )) as TxReturnType<BitcoinChainKey, Raw> as TxReturnType<K, Raw>;
+          return { ok: true, value };
+        }
+        case 'NEAR': {
+          const verify = await this.verifySimulation(params);
+          if (!verify.ok) return verify;
+          const value = (await this.nearSpokeService.sendMessage(
+            params as SendMessageParams<NearChainKey, Raw>,
+          )) as TxReturnType<NearChainKey, Raw> as TxReturnType<K, Raw>;
+          return { ok: true, value };
+        }
+        default: {
+          const exhaustiveCheck: never = chainType;
+          console.log(exhaustiveCheck);
+          return {
+            ok: false,
+            error: new Error(`[sendMessage] Invalid chain type. Valid chain types: ${ChainTypeArr.join(', ')}`),
+          };
+        }
+      }
+    } catch (error) {
+      return { ok: false, error };
+    }
   }
 
-  public static async verifySimulation(
-    from: HubAddress,
-    payload: Hex,
-    spokeProvider: SpokeProviderType,
-    hubProvider: EvmHubProvider,
-    skipSimulation: boolean,
-  ): Promise<void> {
-    if (!skipSimulation) {
-      // Bitcoin TRADING mode: srcAddress must match trading wallet (deposit origin)
-      const effectiveAddr = isBitcoinSpokeProvider(spokeProvider)
-        ? await spokeProvider.getEffectiveWalletAddress()
-        : await spokeProvider.walletProvider.getWalletAddress();
-      const srcAddress = encodeAddress(spokeProvider.chainConfig.chain.id, effectiveAddr);
+  public async verifySimulation<K extends SpokeChainKey, Raw extends boolean>(
+    params: VerifySimulationParams<K, Raw>,
+  ): Promise<Result<void>> {
+    try {
+      if (!params.skipSimulation) {
+        const effectiveAddr = isBitcoinChainKey(params.srcChainKey)
+          ? await this.bitcoinSpokeService.getEffectiveWalletAddress(params.srcAddress)
+          : params.srcAddress;
+        const srcAddress = encodeAddress(params.srcChainKey, effectiveAddr);
 
-      const result = await SpokeService.simulateRecvMessage(
-        {
-          target: from,
-          srcChainId: getIntentRelayChainId(spokeProvider.chainConfig.chain.id),
+        const result = await this.simulateRecvMessage({
+          target: params.dstAddress,
+          srcChainId: getIntentRelayChainId(params.srcChainKey),
           srcAddress,
-          payload,
-        },
-        hubProvider,
-      );
-
-      if (!result.success) {
-        throw new Error('Simulation failed', { cause: result });
+          payload: params.payload,
+        });
+        if (!result.ok) return result;
+        if (!result.value) {
+          return { ok: false, error: new Error('SIMULATION_FAILED') };
+        }
       }
+      return { ok: true, value: undefined };
+    } catch (error) {
+      return { ok: false, error };
     }
   }
 
   /**
    * Get max withdrawable balance for token.
-   * @param {string| Address} token - The address of the token to get the balance of.
-   * @param {SpokeProvider} spokeProvider - The spoke provider.
+   * @param {string} token - The address of the token to get the balance of.
+   * @param {SpokeChainKey} chainId - The spoke chain id.
    * @returns {Promise<bigint>} The max limit allowed for token.
    */
-  public static getLimit(token: string | Address, spokeProvider: SpokeProvider): Promise<bigint> {
-    if (spokeProvider instanceof NearSpokeProvider) {
-      return NearSpokeService.getLimit(token as string, spokeProvider);
+  public async getLimit(token: string, chainId: SpokeChainKey): Promise<Result<bigint>> {
+    try {
+      if (isNearChainKeyType(chainId)) {
+        const value = await this.nearSpokeService.getLimit(token, chainId);
+        return { ok: true, value };
+      }
+      return { ok: false, error: new Error(`getLimit not supported for ${chainId} chain`) };
+    } catch (error) {
+      return { ok: false, error };
     }
-
-    throw new Error('Invalid spoke provider');
   }
 
   /**
    * Get available withdrawable amount.
-   * @param {string| Address} token - The address of the token to get the balance of.
-   * @param {SpokeProvider} spokeProvider - The spoke provider.
-   * @returns {Promise<bigint>} The available withdrawable amount for token.
+   * @param {string} token - The address of the token to get the balance of.
+   * @param {SpokeChainKey} chainId - The spoke chain id.
+   * @returns {Promise<Result<bigint>>} The available withdrawable amount for token.
    */
-  public static getAvailable(token: string | Address, spokeProvider: SpokeProvider): Promise<bigint> {
-    if (spokeProvider instanceof NearSpokeProvider) {
-      return NearSpokeService.getAvailable(token as string, spokeProvider);
+  public async getAvailable(token: string, chainId: SpokeChainKey): Promise<Result<bigint>> {
+    try {
+      if (isNearChainKeyType(chainId)) {
+        const value = await this.nearSpokeService.getAvailable(token, chainId);
+        return { ok: true, value };
+      }
+      return { ok: false, error: new Error(`getAvailable not supported for ${chainId} chain`) };
+    } catch (error) {
+      return { ok: false, error };
     }
-
-    throw new Error('Invalid spoke provider');
   }
   /**
    * Verifies the transaction hash for the spoke chain to exist on chain.
@@ -652,60 +870,116 @@ export class SpokeService {
    * @param spokeProvider - The spoke provider.
    * @returns {Promise<Result<boolean>>} A promise that resolves to the result of the verification.
    */
-  public static async verifyTxHash(txHash: string, spokeProvider: SpokeProvider): Promise<Result<boolean>> {
-    if (isSolanaSpokeProvider(spokeProvider)) {
-      const result = await SolanaSpokeService.waitForConfirmation(spokeProvider, txHash);
+  public async verifyTxHash(params: VerifyTxHashParams): Promise<Result<boolean>> {
+    try {
+      const { txHash, chainKey } = params;
+      if (isSolanaChainKeyType(chainKey)) {
+        const result = await this.solanaSpokeService.waitForTransactionReceipt({ txHash, chainKey });
 
-      if (!result.ok) {
-        console.warn(`Solana verifyTxHash failed: ${result.error}`);
-        console.warn('Returning true to assume transaction exists on chain in future ');
-        return {
-          ok: true,
-          value: true,
-        };
+        if (!result.ok || result.value.status !== 'success') {
+          console.warn(
+            `Solana verifyTxHash failed: ${!result.ok ? result.error : 'error' in result.value ? result.value.error : 'unknown'}`,
+          );
+          console.warn('Returning true to assume transaction exists on chain in future ');
+          return { ok: true, value: true };
+        }
+
+        return { ok: true, value: true };
+      }
+      if (isNearChainKeyType(chainKey)) {
+        const result = await this.nearSpokeService.waitForTransactionReceipt({ txHash, chainKey });
+        if (result.ok && result.value.status === 'success') {
+          return { ok: true, value: true };
+        }
+        return { ok: false, error: new Error('TRANSACTION_VERIFICATION_FAILED') };
+      }
+      if (isStellarChainKeyType(chainKey)) {
+        const result = await this.stellarSpokeService.waitForTransactionReceipt({ txHash, chainKey });
+        if (result.ok && result.value.status === 'success') {
+          return { ok: true, value: true };
+        }
+        return { ok: false, error: new Error('TRANSACTION_VERIFICATION_FAILED') };
       }
 
-      return result;
+      return { ok: true, value: true };
+    } catch (error) {
+      return { ok: false, error };
     }
-    if (isNearSpokeProvider(spokeProvider)) {
-      return NearSpokeService.waitForTransaction(spokeProvider, txHash);
-    }
-    if (isStellarSpokeProvider(spokeProvider)) {
-      return StellarSpokeService.waitForTransaction(spokeProvider, txHash);
-    }
-
-    // only stellar and solana need to be verified
-    return {
-      ok: true,
-      value: true,
-    };
   }
 
-  /**
-   * Verifies the transaction hash for the spoke chain to exist on chain.
-   * @param {VerifyTxHashRawConfig} params - The parameters for the verification.
-   * @returns {Promise<Result<boolean>>} A promise that resolves to the result of the verification.
-   */
-  public static async verifyTxHashRaw<T extends ChainType>(params: VerifyTxHashRawConfig<T>): Promise<Result<boolean>> {
-    switch (params.chainType) {
-      case 'SOLANA':
-        return SolanaSpokeService.waitForConfirmationRaw(params);
-      case 'STELLAR':
-        return StellarSpokeService.waitForTransactionRaw(params);
-      case 'NEAR':
-        return NearSpokeService.waitForTransactionRaw(params);
-      case 'EVM': {
-        const result = await EvmSpokeService.waitForTransactionReceipt(params);
-        if (!result.ok) {
-          return result;
-        }
-        if (result.value.status && result.value.status !== '0x1' && result.value.status !== 'success') {
-          return { ok: false, error: new Error('Transaction reverted') };
-        }
-        return { ok: true, value: true };
+  public async waitForTxReceipt<C extends SpokeChainKey = SpokeChainKey>(
+    params: WaitForTxReceiptParams<C>,
+  ): Promise<Result<WaitForTxReceiptReturnType<C>>> {
+    try {
+      const effectiveParams: WaitForTxReceiptParams<C> = {
+        pollingIntervalMs: this.config.sodaxConfig.chains[params.chainKey].pollingConfig.pollingIntervalMs,
+        maxTimeoutMs: this.config.sodaxConfig.chains[params.chainKey].pollingConfig.maxTimeoutMs,
+        ...params,
+      };
+
+      if (isHubChainKeyType(params.chainKey)) {
+        return (await this.sonicSpokeService.waitForTransactionReceipt(
+          effectiveParams as WaitForTxReceiptParams<SonicChainKey>,
+        )) satisfies Result<WaitForTxReceiptReturnType<SonicChainKey>> as Result<WaitForTxReceiptReturnType<C>>;
       }
-      default:
-        return { ok: true, value: true };
+
+      const chainType = getChainType(params.chainKey);
+      switch (chainType) {
+        case 'EVM': {
+          return (await this.evmSpokeService.waitForTransactionReceipt(
+            effectiveParams as WaitForTxReceiptParams<EvmSpokeOnlyChainKey>,
+          )) satisfies Result<WaitForTxReceiptReturnType<EvmSpokeOnlyChainKey>> as Result<
+            WaitForTxReceiptReturnType<C>
+          >;
+        }
+        case 'INJECTIVE': {
+          return (await this.injectiveSpokeService.waitForTransactionReceipt(
+            effectiveParams as WaitForTxReceiptParams<InjectiveChainKey>,
+          )) satisfies Result<WaitForTxReceiptReturnType<InjectiveChainKey>> as Result<WaitForTxReceiptReturnType<C>>;
+        }
+        case 'ICON': {
+          return (await this.iconSpokeService.waitForTransactionReceipt(
+            effectiveParams as WaitForTxReceiptParams<IconChainKey>,
+          )) satisfies Result<WaitForTxReceiptReturnType<IconChainKey>> as Result<WaitForTxReceiptReturnType<C>>;
+        }
+        case 'SUI': {
+          return (await this.suiSpokeService.waitForTransactionReceipt(
+            effectiveParams as WaitForTxReceiptParams<SuiChainKey>,
+          )) satisfies Result<WaitForTxReceiptReturnType<SuiChainKey>> as Result<WaitForTxReceiptReturnType<C>>;
+        }
+        case 'SOLANA': {
+          return (await this.solanaSpokeService.waitForTransactionReceipt(
+            effectiveParams as WaitForTxReceiptParams<SolanaChainKey>,
+          )) satisfies Result<WaitForTxReceiptReturnType<SolanaChainKey>> as Result<WaitForTxReceiptReturnType<C>>;
+        }
+        case 'STELLAR': {
+          return (await this.stellarSpokeService.waitForTransactionReceipt(
+            effectiveParams as WaitForTxReceiptParams<StellarChainKey>,
+          )) satisfies Result<WaitForTxReceiptReturnType<StellarChainKey>> as Result<WaitForTxReceiptReturnType<C>>;
+        }
+        case 'STACKS': {
+          return (await this.stacksSpokeService.waitForTransactionReceipt(
+            effectiveParams as WaitForTxReceiptParams<StacksChainKey>,
+          )) satisfies Result<WaitForTxReceiptReturnType<StacksChainKey>> as Result<WaitForTxReceiptReturnType<C>>;
+        }
+        case 'BITCOIN': {
+          return (await this.bitcoinSpokeService.waitForTransactionReceipt(
+            effectiveParams as WaitForTxReceiptParams<BitcoinChainKey>,
+          )) satisfies Result<WaitForTxReceiptReturnType<BitcoinChainKey>> as Result<WaitForTxReceiptReturnType<C>>;
+        }
+        case 'NEAR': {
+          return (await this.nearSpokeService.waitForTransactionReceipt(
+            effectiveParams as WaitForTxReceiptParams<NearChainKey>,
+          )) satisfies Result<WaitForTxReceiptReturnType<NearChainKey>> as Result<WaitForTxReceiptReturnType<C>>;
+        }
+        default: {
+          const exhaustiveCheck: never = chainType;
+          console.log(exhaustiveCheck);
+          return { ok: false, error: new Error(`waitForTransactionReceipt not supported for ${params.chainKey}`) };
+        }
+      }
+    } catch (error) {
+      return { ok: false, error };
     }
   }
 }

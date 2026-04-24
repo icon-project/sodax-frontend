@@ -38,7 +38,6 @@ export {
 } from './useWalletModal.js';
 export { useXDisconnect } from './useXDisconnect.js';
 export { useXService } from './useXService.js';
-export { useXBalances } from './useXBalances.js';
 export { useEvmSwitchChain } from './useEvmSwitchChain.js';
 export { useWalletProvider } from './useWalletProvider.js';
 export { useXSignMessage } from './useXSignMessage.js';

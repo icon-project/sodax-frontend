@@ -1,33 +1,58 @@
 import { type Address, type Hex, encodeFunctionData } from 'viem';
 import { erc20Abi } from '../shared/abis/index.js';
-import type { EvmContractCall, IcxTokenType } from '../shared/types.js';
-import { encodeContractCalls, Erc20Service, EvmAssetManagerService, type EvmHubProvider } from '../index.js';
+import { encodeContractCalls, Erc20Service, EvmAssetManagerService, type HubProvider } from '../shared/index.js';
 import { icxSwapAbi } from '../shared/abis/icxSwap.abi.js';
 import invariant from 'tiny-invariant';
-import { ICON_MAINNET_CHAIN_ID, type IconEoaAddress, type IconAddress } from '@sodax/types';
+import {
+  ChainKeys,
+  type IconEoaAddress,
+  type IconAddress,
+  type EvmContractCall,
+  type IcxTokenType,
+  type IconChainKey,
+  type Result,
+  type SonicChainKey,
+  type WalletProviderSlot,
+} from '@sodax/types';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 
+export type IcxMigrateAction<Raw extends boolean> = {
+  params: IcxMigrateParams;
+  skipSimulation?: boolean;
+  timeout?: number;
+} & WalletProviderSlot<IconChainKey, Raw>;
+
 export type IcxMigrateParams = {
+  srcAddress: IconAddress;
+  srcChainKey: IconChainKey; // should be ChainKeys.ICON_MAINNET
   address: IcxTokenType; // The ICON address of the ICX or wICX token to migrate
   amount: bigint; // The amount of ICX or wICX to migrate
-  to: Address; // The address that will receive the migrated assets
+  dstAddress: Address; // The address that will receive the migrated assets
 };
 
+export type IcxRevertMigrationAction<Raw extends boolean> = {
+  params: IcxCreateRevertMigrationParams;
+  timeout?: number;
+  skipSimulation?: boolean;
+} & WalletProviderSlot<SonicChainKey, Raw>;
+
 export type IcxCreateRevertMigrationParams = {
+  srcAddress: Address; // should be Sonic original address
+  srcChainKey: SonicChainKey; // should be ChainKeys.SONIC_MAINNET
   amount: bigint; // The amount of wICX to migrate
-  to: IconEoaAddress; // The address that will receive the migrated SODA tokens as ICX
+  dstAddress: IconEoaAddress; // The address that will receive the migrated SODA tokens as ICX
 };
 
 export type IcxRevertMigrationParams = {
   wICX: IconAddress; // The ICON address of the wICX token
   amount: bigint; // The amount of SODA tokens to migrate to ICX
   userWallet: Address; // The hub wallet address that will migrate assets
-  to: Hex; // The Icon address that will receive the migrated SODA tokens as ICX
+  dstAddress: Hex; // The Icon address that will receive the migrated SODA tokens as ICX
 };
 
 export type IcxMigrationServiceConstructorParams = {
-  hubProvider: EvmHubProvider;
-  configService: ConfigService;
+  hubProvider: HubProvider;
+  config: ConfigService;
 };
 
 /**
@@ -35,12 +60,12 @@ export type IcxMigrationServiceConstructorParams = {
  * Provides functionality to migrate wICX tokens from ICON to the hub chain.
  */
 export class IcxMigrationService {
-  private readonly hubProvider: EvmHubProvider;
-  private readonly configService: ConfigService;
+  private readonly hubProvider: HubProvider;
+  private readonly config: ConfigService;
 
-  constructor({ hubProvider, configService }: IcxMigrationServiceConstructorParams) {
+  constructor({ hubProvider, config }: IcxMigrationServiceConstructorParams) {
     this.hubProvider = hubProvider;
-    this.configService = configService;
+    this.config = config;
   }
 
   /**
@@ -49,15 +74,18 @@ export class IcxMigrationService {
    *
    * @returns The available balance of SODA tokens in the migration contract
    */
-  public async getAvailableAmount(): Promise<bigint> {
-    const balance = await this.hubProvider.publicClient.readContract({
-      address: this.hubProvider.chainConfig.addresses.sodaToken,
-      abi: erc20Abi,
-      functionName: 'balanceOf',
-      args: [this.hubProvider.chainConfig.addresses.icxMigration],
-    });
-
-    return balance;
+  public async getAvailableAmount(): Promise<Result<bigint>> {
+    try {
+      const value = await this.hubProvider.publicClient.readContract({
+        address: this.hubProvider.chainConfig.addresses.sodaToken,
+        abi: erc20Abi,
+        functionName: 'balanceOf',
+        args: [this.hubProvider.chainConfig.addresses.icxMigration],
+      });
+      return { ok: true, value };
+    } catch (error) {
+      return { ok: false, error };
+    }
   }
 
   /**
@@ -72,13 +100,13 @@ export class IcxMigrationService {
    */
   public migrateData(params: IcxMigrateParams): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = this.configService.getHubAssetInfo(ICON_MAINNET_CHAIN_ID, params.address);
-    invariant(assetConfig, `hub asset not found for spoke chain token (token): ${params.address}`);
+    const token = this.config.getSpokeTokenFromOriginalAssetAddress(ChainKeys.ICON_MAINNET, params.address);
+    invariant(token, `token not found for spoke chain token (token): ${params.address}`);
 
     calls.push(
-      Erc20Service.encodeApprove(assetConfig.asset, this.hubProvider.chainConfig.addresses.icxMigration, params.amount),
+      Erc20Service.encodeApprove(token.hubAsset, this.hubProvider.chainConfig.addresses.icxMigration, params.amount),
     );
-    calls.push(this.encodeMigrate(params.amount, params.to));
+    calls.push(this.encodeMigrate(params.amount, params.dstAddress));
     return encodeContractCalls(calls);
   }
 
@@ -90,8 +118,8 @@ export class IcxMigrationService {
    */
   public revertMigration(params: IcxRevertMigrationParams): Hex {
     const calls: EvmContractCall[] = [];
-    const assetConfig = this.configService.getHubAssetInfo(ICON_MAINNET_CHAIN_ID, params.wICX);
-    invariant(assetConfig, `hub asset not found for spoke chain token (token): ${params.wICX}`);
+    const token = this.config.getSpokeTokenFromOriginalAssetAddress(ChainKeys.ICON_MAINNET, params.wICX);
+    invariant(token, `token not found for spoke chain token (token): ${params.wICX}`);
 
     calls.push(
       Erc20Service.encodeApprove(
@@ -103,8 +131,8 @@ export class IcxMigrationService {
     calls.push(this.encodeRevertMigration(params.amount, params.userWallet));
     calls.push(
       EvmAssetManagerService.encodeTransfer(
-        assetConfig.asset,
-        params.to,
+        token.hubAsset,
+        params.dstAddress,
         params.amount,
         this.hubProvider.chainConfig.addresses.assetManager,
       ),

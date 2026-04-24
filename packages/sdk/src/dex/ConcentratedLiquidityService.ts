@@ -1,42 +1,42 @@
 import type { Hex, PublicClient, HttpTransport } from 'viem';
 import {
-  DEFAULT_RELAYER_API_ENDPOINT,
-  type RelayErrorCode,
-  type RelayError,
-  type Result,
-  type TxReturnType,
-  type SpokeProvider,
-  SpokeService,
+  type SpokeService,
   encodeContractCalls,
   relayTxAndWaitPacket,
-  DEFAULT_RELAY_TX_TIMEOUT,
   Permit2Service,
   Erc20Service,
   Erc4626Service,
-  StatATokenAddresses,
-  type EvmContractCall,
-  type SpokeTxHash,
-  type HubTxHash,
-  getConcentratedLiquidityConfig,
   type ConfigService,
-  isSolanaSpokeProviderType,
-  isHubSpokeProvider,
   HubService,
-  type MintPositionEventLog,
-} from '../index.js';
-import type { Address, Hash, HttpUrl, OriginalAssetAddress, XToken } from '@sodax/types';
-import type { EvmHubProvider, SpokeProviderType } from '../shared/entities/Providers.js';
+  type HubProvider,
+  isSolanaChainKeyType,
+  isBitcoinChainKeyType,
+  isHubChainKeyType,
+  type SendMessageParams,
+} from '../shared/index.js';
+import type { MintPositionEventLog } from '../swap/EvmSolverService.js';
 import type {
-  Prettify,
-  OptionalTimeout,
-  OptionalSkipSimulation,
-  ClServiceConfig,
-  RelayOptionalExtraData,
-} from '../shared/types.js';
+  Address,
+  CLPositionConfig,
+  EvmContractCall,
+  GetAddressType,
+  GetWalletProviderType,
+  Hash,
+  HttpUrl,
+  HubTxHash,
+  OriginalAssetAddress,
+  PoolKey,
+  Result,
+  SpokeChainKey,
+  SpokeTxHash,
+  TxReturnType,
+  WalletProviderSlot,
+  XToken,
+} from '@sodax/types';
+import type { RelayOptionalExtraData } from '../shared/types/types.js';
 import { erc20Abi, maxUint160, maxUint48, parseEventLogs } from 'viem';
 import { Price, Token } from '@pancakeswap/swap-sdk-core';
 
-import type { PoolKey, CLPositionConfig } from './types.js';
 import {
   CLPoolManagerAbi,
   CLPositionManagerAbi,
@@ -55,6 +55,7 @@ import {
   TickMath,
   tickToPrice,
 } from '@pancakeswap/v3-sdk';
+import invariant from 'tiny-invariant';
 
 export type ClMintPositionEventLog = {
   tokenId: bigint;
@@ -73,16 +74,10 @@ export type ApyRange = {
   maxApy: number; // APY when liquidity is concentrated in 1 tick (narrow range)
 };
 
-// Claim rewards parameters
-export type ConcentratedLiquidityClaimRewardsParams = {
-  poolKey: PoolKey;
-  tokenId: bigint; // NFT token ID
-  tickLower: bigint; // Lower tick of the position
-  tickUpper: bigint; // Upper tick of the position
-};
-
 // Types for concentrated liquidity operations
-export type ConcentratedLiquiditySupplyParams = {
+export type ClSupplyParams<K extends SpokeChainKey> = {
+  srcChainKey: K;
+  srcAddress: Address;
   poolKey: PoolKey;
   tickLower: bigint; // lower tick
   tickUpper: bigint; // upper tick
@@ -92,18 +87,35 @@ export type ConcentratedLiquiditySupplyParams = {
   sqrtPriceX96: bigint; // current sqrt price for the pool
 };
 
-export type ConcentratedLiquidityGetPoolDataParams = {
+export type ClSupplyAction<K extends SpokeChainKey, Raw extends boolean> = {
+  params: ClSupplyParams<K>;
+  timeout?: number;
+  skipSimulation?: boolean;
+} & WalletProviderSlot<K, Raw>;
+
+export type ClGetPoolDataParams = {
   token0: string; // token0 address
   token1: string; // token1 address
   fee: bigint; // fee tier
 };
 
-export type ConcentratedLiquidityWithdrawParams = {
+export type ClWithdrawParams<K extends SpokeChainKey> = {
+  srcChainKey: K;
+  srcAddress: Address;
   asset: OriginalAssetAddress; // asset address
   amount: bigint; // amount of asset to withdraw
 };
 
-export type ConcentratedLiquidityIncreaseLiquidityParams = {
+export type ClLiquidityWithdrawAction<K extends SpokeChainKey, Raw extends boolean> = {
+  params: ClWithdrawParams<K>;
+  walletProvider: GetWalletProviderType<K>;
+  timeout?: number;
+  skipSimulation?: boolean;
+} & WalletProviderSlot<K, Raw>;
+
+export type ClIncreaseLiquidityParams<K extends SpokeChainKey> = {
+  srcChainKey: K;
+  srcAddress: Address;
   poolKey: PoolKey;
   tokenId: bigint; // NFT token ID
   tickLower: bigint; // lower tick
@@ -114,7 +126,15 @@ export type ConcentratedLiquidityIncreaseLiquidityParams = {
   sqrtPriceX96: bigint; // current sqrt price for the pool
 };
 
-export type ConcentratedLiquidityDecreaseLiquidityParams = {
+export type ClLiquidityIncreaseLiquidityAction<K extends SpokeChainKey, Raw extends boolean> = {
+  params: ClIncreaseLiquidityParams<K>;
+  timeout?: number;
+  skipSimulation?: boolean;
+} & WalletProviderSlot<K, Raw>;
+
+export type ClDecreaseLiquidityParams<K extends SpokeChainKey> = {
+  srcChainKey: K;
+  srcAddress: Address;
   poolKey: PoolKey;
   tokenId: bigint; // NFT token ID
   liquidity: bigint; // amount of liquidity to remove
@@ -122,34 +142,35 @@ export type ConcentratedLiquidityDecreaseLiquidityParams = {
   amount1Min: bigint; // minimum amount of token1
 };
 
+export type ClLiquidityDecreaseLiquidityAction<K extends SpokeChainKey, Raw extends boolean> = {
+  params: ClDecreaseLiquidityParams<K>;
+  timeout?: number;
+  skipSimulation?: boolean;
+} & WalletProviderSlot<K, Raw>;
+
+// Claim rewards parameters
+export type ClClaimRewardsParams<K extends SpokeChainKey> = {
+  srcChainKey: K;
+  srcAddress: Address;
+  poolKey: PoolKey;
+  tokenId: bigint; // NFT token ID
+  tickLower: bigint; // Lower tick of the position
+  tickUpper: bigint; // Upper tick of the position
+};
+
+export type ClLiquidityClaimRewardsAction<K extends SpokeChainKey, Raw extends boolean> = {
+  params: ClClaimRewardsParams<K>;
+  timeout?: number;
+  skipSimulation?: boolean;
+} & WalletProviderSlot<K, Raw>;
+
 // Union type for all concentrated liquidity parameters
-export type ConcentratedLiquidityParams =
-  | ConcentratedLiquiditySupplyParams
-  | ConcentratedLiquidityIncreaseLiquidityParams
-  | ConcentratedLiquidityDecreaseLiquidityParams
-  | ConcentratedLiquidityWithdrawParams
-  | ConcentratedLiquidityClaimRewardsParams;
-
-// Parameter types for refactored functions following SwapService pattern
-export type SupplyLiquidityParams<S extends SpokeProviderType> = Prettify<{
-  params: ConcentratedLiquiditySupplyParams;
-  spokeProvider: S;
-}>;
-
-export type IncreaseLiquidityParams<S extends SpokeProviderType> = Prettify<{
-  params: ConcentratedLiquidityIncreaseLiquidityParams;
-  spokeProvider: S;
-}>;
-
-export type DecreaseLiquidityParams<S extends SpokeProviderType> = Prettify<{
-  params: ConcentratedLiquidityDecreaseLiquidityParams;
-  spokeProvider: S;
-}>;
-
-export type ClaimRewardsParams<S extends SpokeProviderType> = Prettify<{
-  params: ConcentratedLiquidityClaimRewardsParams;
-  spokeProvider: S;
-}>;
+export type ConcentratedLiquidityParams<K extends SpokeChainKey> =
+  | ClSupplyParams<K>
+  | ClIncreaseLiquidityParams<K>
+  | ClDecreaseLiquidityParams<K>
+  | ClWithdrawParams<K>
+  | ClClaimRewardsParams<K>;
 
 export type ClPositionInfo = {
   // Raw position data from PancakeSwap Infinity
@@ -256,154 +277,41 @@ export interface PoolData {
 
 export type PoolSpokeAssets = { token0: XToken; token1: XToken };
 
-export type ConcentratedLiquidityUnknownErrorCode =
-  | 'SUPPLY_LIQUIDITY_UNKNOWN_ERROR'
-  | 'GET_POOL_DATA_UNKNOWN_ERROR'
-  | 'WITHDRAW_LIQUIDITY_UNKNOWN_ERROR'
-  | 'INCREASE_LIQUIDITY_UNKNOWN_ERROR'
-  | 'DECREASE_LIQUIDITY_UNKNOWN_ERROR'
-  | 'CLAIM_REWARDS_UNKNOWN_ERROR'
-  | 'GET_POOL_REWARD_CONFIG_UNKNOWN_ERROR';
-
-export type GetConcentratedLiquidityParams<T extends ConcentratedLiquidityUnknownErrorCode> =
-  T extends 'SUPPLY_LIQUIDITY_UNKNOWN_ERROR'
-    ? ConcentratedLiquiditySupplyParams
-    : T extends 'GET_POOL_DATA_UNKNOWN_ERROR'
-      ? ConcentratedLiquidityGetPoolDataParams
-      : T extends 'WITHDRAW_LIQUIDITY_UNKNOWN_ERROR'
-        ? ConcentratedLiquidityWithdrawParams
-        : T extends 'INCREASE_LIQUIDITY_UNKNOWN_ERROR'
-          ? ConcentratedLiquidityIncreaseLiquidityParams
-          : T extends 'DECREASE_LIQUIDITY_UNKNOWN_ERROR'
-            ? ConcentratedLiquidityDecreaseLiquidityParams
-            : T extends 'CLAIM_REWARDS_UNKNOWN_ERROR'
-              ? ConcentratedLiquidityClaimRewardsParams
-              : T extends 'GET_POOL_REWARD_CONFIG_UNKNOWN_ERROR'
-                ? PoolKey
-                : never;
-
-export type ConcentratedLiquidityErrorCode =
-  | ConcentratedLiquidityUnknownErrorCode
-  | RelayErrorCode
-  | 'CREATE_SUPPLY_LIQUIDITY_INTENT_FAILED'
-  | 'GET_POOL_DATA_FAILED'
-  | 'CREATE_WITHDRAW_LIQUIDITY_INTENT_FAILED'
-  | 'CREATE_INCREASE_LIQUIDITY_INTENT_FAILED'
-  | 'CREATE_DECREASE_LIQUIDITY_INTENT_FAILED'
-  | 'CREATE_CLAIM_REWARDS_INTENT_FAILED'
-  | 'GET_POOL_REWARD_CONFIG_FAILED';
-
-export type ConcentratedLiquidityUnknownError<T extends ConcentratedLiquidityUnknownErrorCode> = {
-  error: unknown;
-  payload: GetConcentratedLiquidityParams<T>;
-};
-
-export type ConcentratedLiquiditySubmitTxFailedError = {
-  error: RelayError;
-  payload: SpokeTxHash;
-};
-
-export type ConcentratedLiquiditySupplyFailedError = {
-  error: unknown;
-  payload: ConcentratedLiquiditySupplyParams;
-};
-
-export type ConcentratedLiquidityWithdrawFailedError = {
-  error: unknown;
-  payload: ConcentratedLiquidityWithdrawParams;
-};
-
-export type ConcentratedLiquidityIncreaseLiquidityFailedError = {
-  error: unknown;
-  payload: ConcentratedLiquidityIncreaseLiquidityParams;
-};
-
-export type ConcentratedLiquidityDecreaseLiquidityFailedError = {
-  error: unknown;
-  payload: ConcentratedLiquidityDecreaseLiquidityParams;
-};
-
-export type ConcentratedLiquidityClaimRewardsFailedError = {
-  error: unknown;
-  payload: ConcentratedLiquidityClaimRewardsParams;
-};
-
-export type ConcentratedLiquidityGetPoolRewardConfigFailedError = {
-  error: unknown;
-  payload: PoolKey;
-};
-
-export type GetConcentratedLiquidityError<T extends ConcentratedLiquidityErrorCode> = T extends 'SUBMIT_TX_FAILED'
-  ? ConcentratedLiquiditySubmitTxFailedError
-  : T extends 'RELAY_TIMEOUT'
-    ? ConcentratedLiquiditySubmitTxFailedError
-    : T extends 'CREATE_SUPPLY_LIQUIDITY_INTENT_FAILED'
-      ? ConcentratedLiquiditySupplyFailedError
-      : T extends 'CREATE_WITHDRAW_LIQUIDITY_INTENT_FAILED'
-        ? ConcentratedLiquidityWithdrawFailedError
-        : T extends 'CREATE_INCREASE_LIQUIDITY_INTENT_FAILED'
-          ? ConcentratedLiquidityIncreaseLiquidityFailedError
-          : T extends 'CREATE_DECREASE_LIQUIDITY_INTENT_FAILED'
-            ? ConcentratedLiquidityDecreaseLiquidityFailedError
-            : T extends 'CREATE_CLAIM_REWARDS_INTENT_FAILED'
-              ? ConcentratedLiquidityClaimRewardsFailedError
-              : T extends 'GET_POOL_REWARD_CONFIG_FAILED'
-                ? ConcentratedLiquidityGetPoolRewardConfigFailedError
-                : T extends ConcentratedLiquidityUnknownErrorCode
-                  ? ConcentratedLiquidityUnknownError<T>
-                  : never;
-
-export type ConcentratedLiquidityError<T extends ConcentratedLiquidityErrorCode> = {
-  code: T;
-  data: GetConcentratedLiquidityError<T>;
-};
-
-export type ConcentratedLiquidityExtraData = { address: Hex; payload: Hex };
-export type ConcentratedLiquidityOptionalExtraData = { data?: ConcentratedLiquidityExtraData };
-
 export type ClServiceConstructorParams = {
-  hubProvider: EvmHubProvider;
-  relayerApiEndpoint?: HttpUrl;
-  configService: ConfigService;
+  hubProvider: HubProvider;
+  config: ConfigService;
+  spoke: SpokeService;
 };
 
 /**
  * Concetration Liquidity Service provides a high-level interface for concentrated liquidity operations
  * including supply liquidity, increase liquidity, decrease liquidit position.
+ * @namespace SodaxFeatures
  */
 export class ClService {
-  public readonly config: ClServiceConfig;
   private readonly relayerApiEndpoint: HttpUrl;
-  private readonly hubProvider: EvmHubProvider;
-  private readonly configService: ConfigService;
+  private readonly hubProvider: HubProvider;
+  private readonly config: ConfigService;
+  private readonly spoke: SpokeService;
 
-  constructor({ hubProvider, relayerApiEndpoint, configService }: ClServiceConstructorParams) {
-    this.configService = configService;
-    this.relayerApiEndpoint = relayerApiEndpoint ?? DEFAULT_RELAYER_API_ENDPOINT;
+  constructor({ hubProvider, config, spoke }: ClServiceConstructorParams) {
+    this.config = config;
+    this.spoke = spoke;
     this.hubProvider = hubProvider;
-    this.config = {
-      ...getConcentratedLiquidityConfig(), // default to mainnet config
-      relayerApiEndpoint: this.relayerApiEndpoint,
-    };
+    this.relayerApiEndpoint = config.relay.relayerApiEndpoint;
   }
 
-  public getAssetsForPool(spokeProvider: SpokeProviderType, poolKey: PoolKey): PoolSpokeAssets {
-    const token0SpokeAddress = this.configService.getOriginalAssetAddressFromStakedATokenAddress(
-      spokeProvider.chainConfig.chain.id,
+  public getAssetsForPool(srcChainKey: SpokeChainKey, poolKey: PoolKey): PoolSpokeAssets {
+    const token0SpokeAddress = this.config.getOriginalAssetAddressFromStakedATokenAddress(
+      srcChainKey,
       poolKey.currency0,
     );
-    const token1SpokeAddress = this.configService.getOriginalAssetAddressFromStakedATokenAddress(
-      spokeProvider.chainConfig.chain.id,
+    const token1SpokeAddress = this.config.getOriginalAssetAddressFromStakedATokenAddress(
+      srcChainKey,
       poolKey.currency1,
     );
-    const token0 = this.configService.findTokenByOriginalAddress(
-      token0SpokeAddress,
-      spokeProvider.chainConfig.chain.id,
-    );
-    const token1 = this.configService.findTokenByOriginalAddress(
-      token1SpokeAddress,
-      spokeProvider.chainConfig.chain.id,
-    );
+    const token0 = this.config.findTokenByOriginalAddress(token0SpokeAddress, srcChainKey);
+    const token1 = this.config.findTokenByOriginalAddress(token1SpokeAddress, srcChainKey);
 
     if (!token0) {
       throw new Error(`[getAssetsForPool] Token0 ${token0SpokeAddress} not found`);
@@ -420,28 +328,31 @@ export class ClService {
   /**
    * Execute supply liquidity action - creates a new concentrated liquidity position
    */
-  public async executeSupplyLiquidity<S extends SpokeProviderType, R extends boolean = false>(
-    params: ConcentratedLiquiditySupplyParams,
-    spokeProvider: S,
-    raw?: R,
-    skipSimulation?: boolean,
+  public async executeSupplyLiquidity<K extends SpokeChainKey, Raw extends boolean>(
+    _params: ClSupplyAction<K, Raw>,
   ): Promise<
-    Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_SUPPLY_LIQUIDITY_INTENT_FAILED'>> &
+    Result<TxReturnType<K, Raw>> &
       RelayOptionalExtraData
   > {
+    const { params, skipSimulation } = _params;
     try {
-      const userAddress = await spokeProvider.walletProvider.getWalletAddress();
       const hubWallet = await HubService.getUserHubWalletAddress(
-        userAddress,
-        spokeProvider.chainConfig.chain.id,
+        params.srcAddress,
+        params.srcChainKey,
         this.hubProvider,
       );
       const calls: EvmContractCall[] = [];
 
-      const token0Approvals = this.permit2Approve(params.poolKey.currency0, this.config.clPositionManager);
+      const token0Approvals = this.permit2Approve(
+        params.poolKey.currency0,
+        this.config.sodaxConfig.dex.concentratedLiquidityConfig.clPositionManager,
+      );
       calls.push(...token0Approvals);
 
-      const token1Approvals = this.permit2Approve(params.poolKey.currency1, this.config.clPositionManager);
+      const token1Approvals = this.permit2Approve(
+        params.poolKey.currency1,
+        this.config.sodaxConfig.dex.concentratedLiquidityConfig.clPositionManager,
+      );
       calls.push(...token1Approvals);
 
       const positionConfig: CLPositionConfig = {
@@ -461,42 +372,57 @@ export class ClService {
       );
 
       const supplyCall: EvmContractCall = {
-        address: this.config.clPositionManager,
+        address: this.config.sodaxConfig.dex.concentratedLiquidityConfig.clPositionManager,
         value: 0n,
         data: calldata,
       };
 
       calls.push(supplyCall);
 
-      const encodedCalls = encodeContractCalls(calls);
-      const txResult = await SpokeService.callWallet(
-        hubWallet,
-        encodedCalls,
-        spokeProvider,
-        this.hubProvider,
-        raw,
+      const data = encodeContractCalls(calls);
+      const coreParams = {
+        srcAddress: params.srcAddress as GetAddressType<K>,
+        srcChainKey: params.srcChainKey,
+        dstChainKey: this.hubProvider.chainConfig.chain.key,
+        dstAddress: hubWallet,
+        payload: data,
         skipSimulation,
-      );
+      } as const;
+
+      const sendMessageParams = _params.raw
+        ? ({
+            ...coreParams,
+            raw: true,
+          } satisfies SendMessageParams<K, true>)
+        : ({
+            ...coreParams,
+            raw: false,
+            walletProvider: _params.walletProvider,
+          } satisfies SendMessageParams<K, false>);
+
+      const txResult = await this.spoke.sendMessage(sendMessageParams);
+
+      if (!txResult.ok) {
+        console.error('executeSupplyLiquidity error:', txResult.error);
+        return {
+          ok: false,
+          error: txResult.error,
+        };
+      }
 
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<S, R>,
+        value: txResult.value satisfies TxReturnType<K, boolean> as TxReturnType<K, Raw>,
         data: {
           address: hubWallet,
-          payload: encodedCalls,
+          payload: data,
         },
       };
     } catch (error) {
       console.error('executeSupplyLiquidity error:', error);
       return {
         ok: false,
-        error: {
-          code: 'CREATE_SUPPLY_LIQUIDITY_INTENT_FAILED',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -529,20 +455,17 @@ export class ClService {
     };
   }
 
-  public async executeIncreaseLiquidity<S extends SpokeProviderType, R extends boolean = false>(
-    params: ConcentratedLiquidityIncreaseLiquidityParams,
-    spokeProvider: S,
-    raw?: R,
-    skipSimulation?: boolean,
+  public async executeIncreaseLiquidity<K extends SpokeChainKey, Raw extends boolean>(
+    _params: ClLiquidityIncreaseLiquidityAction<K, Raw>,
   ): Promise<
-    Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_INCREASE_LIQUIDITY_INTENT_FAILED'>> &
+    Result<TxReturnType<K, Raw>> &
       RelayOptionalExtraData
   > {
+    const { params, skipSimulation } = _params;
     try {
-      const userAddress = await spokeProvider.walletProvider.getWalletAddress();
       const hubWallet = await HubService.getUserHubWalletAddress(
-        userAddress,
-        spokeProvider.chainConfig.chain.id,
+        params.srcAddress,
+        params.srcChainKey,
         this.hubProvider,
       );
       const calls: EvmContractCall[] = [];
@@ -565,7 +488,7 @@ export class ClService {
       );
 
       const increaseCall: EvmContractCall = {
-        address: this.config.clPositionManager,
+        address: this.config.sodaxConfig.dex.concentratedLiquidityConfig.clPositionManager,
         value: 0n,
         data: calldata,
       };
@@ -575,17 +498,39 @@ export class ClService {
       // Execute the transaction
 
       const data: Hex = encodeContractCalls(calls);
-      const txResult = (await SpokeService.callWallet(
-        hubWallet,
-        data,
-        spokeProvider,
-        this.hubProvider,
-        raw,
+
+      const coreParams = {
+        srcAddress: params.srcAddress as GetAddressType<K>,
+        srcChainKey: params.srcChainKey,
+        dstChainKey: this.hubProvider.chainConfig.chain.key,
+        dstAddress: hubWallet,
+        payload: data,
         skipSimulation,
-      )) satisfies TxReturnType<S, R>;
+      } as const;
+
+      const sendMessageParams = _params.raw
+        ? ({
+            ...coreParams,
+            raw: true,
+          } satisfies SendMessageParams<K, true>)
+        : ({
+            ...coreParams,
+            raw: false,
+            walletProvider: _params.walletProvider,
+          } satisfies SendMessageParams<K, false>);
+
+      const txResult = await this.spoke.sendMessage(sendMessageParams);
+
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: txResult.error,
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<S, R>,
+        value: txResult.value satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
         data: {
           address: hubWallet,
           payload: encodeContractCalls(calls),
@@ -594,31 +539,22 @@ export class ClService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'CREATE_INCREASE_LIQUIDITY_INTENT_FAILED',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
 
-  public async executeDecreaseLiquidity<S extends SpokeProviderType, R extends boolean = false>(
-    params: ConcentratedLiquidityDecreaseLiquidityParams,
-    spokeProvider: S,
-    raw?: R,
-    skipSimulation?: boolean,
+  public async executeDecreaseLiquidity<K extends SpokeChainKey, Raw extends boolean>(
+    _params: ClLiquidityDecreaseLiquidityAction<K, Raw>,
   ): Promise<
-    Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_DECREASE_LIQUIDITY_INTENT_FAILED'>> &
+    Result<TxReturnType<K, Raw>> &
       RelayOptionalExtraData
   > {
+    const { params, skipSimulation } = _params;
     try {
-      const userAddress = await spokeProvider.walletProvider.getWalletAddress();
       const hubWallet = await HubService.getUserHubWalletAddress(
-        userAddress,
-        spokeProvider.chainConfig.chain.id,
+        params.srcAddress,
+        params.srcChainKey,
         this.hubProvider,
       );
       const calls: EvmContractCall[] = [];
@@ -635,40 +571,56 @@ export class ClService {
       });
 
       const decreaseCall: EvmContractCall = {
-        address: this.config.clPositionManager,
+        address: this.config.sodaxConfig.dex.concentratedLiquidityConfig.clPositionManager,
         value: 0n,
         data: calldata,
       };
 
       calls.push(decreaseCall);
 
-      // Execute the transaction
-      const txResult = await SpokeService.callWallet(
-        hubWallet,
-        encodeContractCalls(calls),
-        spokeProvider,
-        this.hubProvider,
-        raw,
+      const data = encodeContractCalls(calls);
+
+      const coreParams = {
+        srcAddress: params.srcAddress as GetAddressType<K>,
+        srcChainKey: params.srcChainKey,
+        dstChainKey: this.hubProvider.chainConfig.chain.key,
+        dstAddress: hubWallet,
+        payload: data,
         skipSimulation,
-      );
+      } as const;
+
+      const sendMessageParams = _params.raw
+        ? ({
+            ...coreParams,
+            raw: true,
+          } satisfies SendMessageParams<K, true>)
+        : ({
+            ...coreParams,
+            raw: false,
+            walletProvider: _params.walletProvider,
+          } satisfies SendMessageParams<K, false>);
+
+      const txResult = await this.spoke.sendMessage(sendMessageParams);
+
+      if (!txResult.ok) {
+        return {
+          ok: false,
+          error: txResult.error,
+        };
+      }
+
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<S, R>,
+        value: txResult.value satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
         data: {
           address: hubWallet,
-          payload: encodeContractCalls(calls),
+          payload: data,
         },
       };
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'CREATE_DECREASE_LIQUIDITY_INTENT_FAILED',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -677,7 +629,7 @@ export class ClService {
     const calls: EvmContractCall[] = [];
 
     const permit2Call = Permit2Service.encodeApprove(
-      this.config.permit2,
+      this.config.sodaxConfig.dex.concentratedLiquidityConfig.permit2,
       token,
       contract,
       maxUint160,
@@ -685,7 +637,11 @@ export class ClService {
     );
     calls.push(permit2Call);
 
-    const erc20Call = Erc20Service.encodeApprove(token, this.config.permit2, maxUint160);
+    const erc20Call = Erc20Service.encodeApprove(
+      token,
+      this.config.sodaxConfig.dex.concentratedLiquidityConfig.permit2,
+      maxUint160,
+    );
     calls.push(erc20Call);
 
     return calls;
@@ -695,43 +651,30 @@ export class ClService {
    * Supply liquidity and wait for the transaction to be relayed to the hub
    * This method wraps executeSupplyLiquidity and relays the transaction to the hub
    */
-  public async supplyLiquidity<S extends SpokeProvider>({
-    params,
-    spokeProvider,
-    timeout = DEFAULT_RELAY_TX_TIMEOUT,
-    skipSimulation = false,
-  }: Prettify<SupplyLiquidityParams<S> & OptionalTimeout & OptionalSkipSimulation>): Promise<
-    Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>
-  > {
+  public async supplyLiquidity<K extends SpokeChainKey>(
+    _params: ClSupplyAction<K, false>,
+  ): Promise<Result<[SpokeTxHash, HubTxHash]>> {
+    const { params, timeout } = _params;
     try {
-      const txResult = await this.executeSupplyLiquidity(params, spokeProvider, false, skipSimulation);
+      const txResult = await this.executeSupplyLiquidity(_params);
 
       if (!txResult.ok) {
         return txResult;
       }
 
       let intentTxHash: string | null = null;
-      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
+      if (!isHubChainKeyType(params.srcChainKey)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
-          spokeProvider,
+          isSolanaChainKeyType(params.srcChainKey) || isBitcoinChainKeyType(params.srcChainKey)
+            ? txResult.data
+            : undefined,
+          params.srcChainKey,
           this.relayerApiEndpoint,
           timeout,
         );
 
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              data: {
-                error: packetResult.error,
-                payload: txResult.value,
-              } satisfies GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
-            },
-          };
-        }
+        if (!packetResult.ok) return packetResult;
 
         intentTxHash = packetResult.value.dst_tx_hash;
       } else {
@@ -743,13 +686,7 @@ export class ClService {
       console.error('supplyLiquidity error:', error);
       return {
         ok: false,
-        error: {
-          code: 'SUPPLY_LIQUIDITY_UNKNOWN_ERROR',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -758,45 +695,30 @@ export class ClService {
    * Increase liquidity and wait for the transaction to be relayed to the hub
    * This method wraps executeIncreaseLiquidity and relays the transaction to the hub
    */
-  public async increaseLiquidity<S extends SpokeProvider>({
-    params,
-    spokeProvider,
-    timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  }: Prettify<IncreaseLiquidityParams<S> & OptionalTimeout>): Promise<
-    Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>
-  > {
+  public async increaseLiquidity<K extends SpokeChainKey>(
+    _params: ClLiquidityIncreaseLiquidityAction<K, false>,
+  ): Promise<Result<[SpokeTxHash, HubTxHash]>> {
+    const { params, timeout } = _params;
     try {
-      const txResult = await this.executeIncreaseLiquidity(params, spokeProvider, false);
+      const txResult = await this.executeIncreaseLiquidity(_params);
 
       if (!txResult.ok) {
-        return txResult satisfies Result<
-          [SpokeTxHash, HubTxHash],
-          ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>
-        >;
+        return txResult;
       }
 
       let intentTxHash: string | null = null;
-      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
+      if (!isHubChainKeyType(params.srcChainKey)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
-          spokeProvider,
+          isSolanaChainKeyType(params.srcChainKey) || isBitcoinChainKeyType(params.srcChainKey)
+            ? txResult.data
+            : undefined,
+          params.srcChainKey,
           this.relayerApiEndpoint,
           timeout,
         );
 
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              data: {
-                error: packetResult.error,
-                payload: txResult.value,
-              } satisfies GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
-            },
-          };
-        }
+        if (!packetResult.ok) return packetResult;
 
         intentTxHash = packetResult.value.dst_tx_hash;
       } else {
@@ -807,13 +729,7 @@ export class ClService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'INCREASE_LIQUIDITY_UNKNOWN_ERROR',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -822,45 +738,30 @@ export class ClService {
    * Decrease liquidity and wait for the transaction to be relayed to the hub
    * This method wraps executeDecreaseLiquidity and relays the transaction to the hub
    */
-  public async decreaseLiquidity<S extends SpokeProvider>({
-    params,
-    spokeProvider,
-    timeout = DEFAULT_RELAY_TX_TIMEOUT,
-  }: Prettify<DecreaseLiquidityParams<S> & OptionalTimeout>): Promise<
-    Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>
-  > {
+  public async decreaseLiquidity<K extends SpokeChainKey>(
+    _params: ClLiquidityDecreaseLiquidityAction<K, false>,
+  ): Promise<Result<[SpokeTxHash, HubTxHash]>> {
+    const { params, timeout } = _params;
     try {
-      const txResult = await this.executeDecreaseLiquidity(params, spokeProvider, false);
+      const txResult = await this.executeDecreaseLiquidity(_params);
 
       if (!txResult.ok) {
-        return txResult satisfies Result<
-          [SpokeTxHash, HubTxHash],
-          ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>
-        >;
+        return txResult;
       }
 
       let intentTxHash: string | null = null;
-      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
+      if (!isHubChainKeyType(params.srcChainKey)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
-          spokeProvider,
+          isSolanaChainKeyType(params.srcChainKey) || isBitcoinChainKeyType(params.srcChainKey)
+            ? txResult.data
+            : undefined,
+          params.srcChainKey,
           this.relayerApiEndpoint,
           timeout,
         );
 
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              data: {
-                error: packetResult.error,
-                payload: txResult.value,
-              } satisfies GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
-            },
-          };
-        }
+        if (!packetResult.ok) return packetResult;
 
         intentTxHash = packetResult.value.dst_tx_hash;
       } else {
@@ -871,13 +772,7 @@ export class ClService {
     } catch (error) {
       return {
         ok: false,
-        error: {
-          code: 'DECREASE_LIQUIDITY_UNKNOWN_ERROR',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -891,21 +786,12 @@ export class ClService {
   public async getPoolRewardConfig(
     poolKey: PoolKey,
     publicClient: PublicClient<HttpTransport>,
-  ): Promise<Result<PoolRewardConfig, ConcentratedLiquidityError<'GET_POOL_REWARD_CONFIG_FAILED'>>> {
+  ): Promise<Result<PoolRewardConfig>> {
     try {
       const hookAddress = poolKey.hooks;
 
       if (!hookAddress || hookAddress === '0x' || hookAddress === '0x0000000000000000000000000000000000000000') {
-        return {
-          ok: false,
-          error: {
-            code: 'GET_POOL_REWARD_CONFIG_FAILED',
-            data: {
-              error: new Error('Pool has no hook configured'),
-              payload: poolKey,
-            },
-          },
-        };
+        return { ok: false, error: new Error('Pool has no hook configured') };
       }
 
       const poolId = getPoolId(poolKey);
@@ -944,36 +830,24 @@ export class ClService {
       };
     } catch (error) {
       console.error('getPoolRewardConfig error:', error);
-      return {
-        ok: false,
-        error: {
-          code: 'GET_POOL_REWARD_CONFIG_FAILED',
-          data: {
-            error: error,
-            payload: poolKey,
-          },
-        },
-      };
+      return { ok: false, error: new Error('GET_POOL_REWARD_CONFIG_FAILED', { cause: error }) };
     }
   }
 
   /**
    * Execute claim rewards action - triggers reward distribution by calling decrease liquidity with 0 value
    */
-  public async executeClaimRewards<S extends SpokeProviderType, R extends boolean = false>(
-    params: ConcentratedLiquidityClaimRewardsParams,
-    spokeProvider: S,
-    raw?: R,
-    skipSimulation?: boolean,
+  public async executeClaimRewards<K extends SpokeChainKey, Raw extends boolean>(
+    _params: ClLiquidityClaimRewardsAction<K, Raw>,
   ): Promise<
-    Result<TxReturnType<S, R>, ConcentratedLiquidityError<'CREATE_CLAIM_REWARDS_INTENT_FAILED'>> &
+    Result<TxReturnType<K, Raw>> &
       RelayOptionalExtraData
   > {
+    const { params, skipSimulation } = _params;
     try {
-      const userAddress = await spokeProvider.walletProvider.getWalletAddress();
       const hubWallet = await HubService.getUserHubWalletAddress(
-        userAddress,
-        spokeProvider.chainConfig.chain.id,
+        params.srcAddress,
+        params.srcChainKey,
         this.hubProvider,
       );
       const calls: EvmContractCall[] = [];
@@ -991,7 +865,7 @@ export class ClService {
       });
 
       const claimCall: EvmContractCall = {
-        address: this.config.clPositionManager,
+        address: this.config.sodaxConfig.dex.concentratedLiquidityConfig.clPositionManager,
         value: 0n,
         data: calldata,
       };
@@ -1000,18 +874,39 @@ export class ClService {
 
       // Execute the transaction
       const data: Hex = encodeContractCalls(calls);
-      const txResult = await SpokeService.callWallet(
-        hubWallet,
-        data,
-        spokeProvider,
-        this.hubProvider,
-        raw,
+      const coreParams = {
+        srcAddress: params.srcAddress as GetAddressType<K>,
+        srcChainKey: params.srcChainKey,
+        dstChainKey: this.hubProvider.chainConfig.chain.key,
+        dstAddress: hubWallet,
+        payload: data,
         skipSimulation,
-      );
+      } as const;
+
+      const sendMessageParams = _params.raw
+        ? ({
+            ...coreParams,
+            raw: true,
+          } satisfies SendMessageParams<K, true>)
+        : ({
+            ...coreParams,
+            raw: false,
+            walletProvider: _params.walletProvider,
+          } satisfies SendMessageParams<K, false>);
+
+      const txResult = await this.spoke.sendMessage(sendMessageParams);
+
+      if (!txResult.ok) {
+        console.error('executeClaimRewards error:', txResult.error);
+        return {
+          ok: false,
+          error: txResult.error,
+        };
+      }
 
       return {
         ok: true,
-        value: txResult satisfies TxReturnType<S, R>,
+        value: txResult.value satisfies TxReturnType<K, Raw> as TxReturnType<K, Raw>,
         data: {
           address: hubWallet,
           payload: data,
@@ -1021,13 +916,7 @@ export class ClService {
       console.error('executeClaimRewards error:', error);
       return {
         ok: false,
-        error: {
-          code: 'CREATE_CLAIM_REWARDS_INTENT_FAILED',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
@@ -1036,43 +925,30 @@ export class ClService {
    * Claim rewards and wait for the transaction to be relayed to the hub
    * This method wraps executeClaimRewards and relays the transaction to the hub
    */
-  public async claimRewards<S extends SpokeProvider>({
-    params,
-    spokeProvider,
-    timeout = DEFAULT_RELAY_TX_TIMEOUT,
-    skipSimulation = false,
-  }: Prettify<ClaimRewardsParams<S> & OptionalTimeout & OptionalSkipSimulation>): Promise<
-    Result<[SpokeTxHash, HubTxHash], ConcentratedLiquidityError<ConcentratedLiquidityErrorCode>>
-  > {
+  public async claimRewards<K extends SpokeChainKey>(
+    _params: ClLiquidityClaimRewardsAction<K, false>,
+  ): Promise<Result<[SpokeTxHash, HubTxHash]>> {
+    const { params, timeout } = _params;
     try {
-      const txResult = await this.executeClaimRewards(params, spokeProvider, false, skipSimulation);
+      const txResult = await this.executeClaimRewards(_params);
 
       if (!txResult.ok) {
         return txResult;
       }
 
       let intentTxHash: string | null = null;
-      if (!isHubSpokeProvider(spokeProvider, this.hubProvider)) {
+      if (!isHubChainKeyType(params.srcChainKey)) {
         const packetResult = await relayTxAndWaitPacket(
           txResult.value,
-          isSolanaSpokeProviderType(spokeProvider) ? txResult.data : undefined,
-          spokeProvider,
+          isSolanaChainKeyType(params.srcChainKey) || isBitcoinChainKeyType(params.srcChainKey)
+            ? txResult.data
+            : undefined,
+          params.srcChainKey,
           this.relayerApiEndpoint,
           timeout,
         );
 
-        if (!packetResult.ok) {
-          return {
-            ok: false,
-            error: {
-              code: packetResult.error.code,
-              data: {
-                error: packetResult.error,
-                payload: txResult.value,
-              } satisfies GetConcentratedLiquidityError<'SUBMIT_TX_FAILED'>,
-            },
-          };
-        }
+        if (!packetResult.ok) return packetResult;
 
         intentTxHash = packetResult.value.dst_tx_hash;
       } else {
@@ -1084,19 +960,13 @@ export class ClService {
       console.error('claimRewards error:', error);
       return {
         ok: false,
-        error: {
-          code: 'CLAIM_REWARDS_UNKNOWN_ERROR',
-          data: {
-            error: error,
-            payload: params,
-          },
-        },
+        error,
       };
     }
   }
 
   public getPools(): PoolKey[] {
-    return this.configService.getDexPools();
+    return this.config.getDexPools();
   }
 
   /**
@@ -1147,8 +1017,9 @@ export class ClService {
    * Check if a token address is a StatAToken (ERC4626 wrapped token)
    */
   private isStatAToken(tokenAddress: Address): boolean {
-    const normalizedAddress = tokenAddress.toLowerCase() as keyof typeof StatATokenAddresses;
-    return normalizedAddress in StatATokenAddresses;
+    const normalizedAddress =
+      tokenAddress.toLowerCase() as keyof typeof this.config.sodaxConfig.dex.statATokenAddresses;
+    return normalizedAddress in this.config.sodaxConfig.dex.statATokenAddresses;
   }
 
   /**
@@ -1159,7 +1030,7 @@ export class ClService {
     try {
       // Get conversion rate: how much underlying per 1 share (1e18)
       const oneShare = BigInt(10 ** 18); // 1 share
-      const result = await Erc4626Service.convertToAssets(statATokenAddress, oneShare, this.hubProvider);
+      const result = await Erc4626Service.convertToAssets(statATokenAddress, oneShare, this.hubProvider.publicClient);
       if (!result.ok) {
         console.error('[getStatATokenConversionRate] Failed to get conversion rate:', result.error);
         return oneShare; // Return 1:1 as fallback
@@ -1188,15 +1059,16 @@ export class ClService {
     }
 
     try {
-      // Get conversion rate
-      const conversionRate = await this.getStatATokenConversionRate(token.address);
+      const normalizedAddress =
+        token.address.toLowerCase() as keyof typeof this.config.sodaxConfig.dex.statATokenAddresses;
+      const underlyingVaultAddress = this.config.sodaxConfig.dex.statATokenAddresses[normalizedAddress];
 
-      // Get underlying token info
-      const normalizedAddress = token.address.toLowerCase() as keyof typeof StatATokenAddresses;
-      const underlyingVaultAddress = StatATokenAddresses[normalizedAddress];
+      invariant(underlyingVaultAddress, `Underlying vault address is undefined for ${normalizedAddress}`);
 
-      // Fetch underlying token details
-      const underlyingInfo = await this.getTokenInfo(underlyingVaultAddress, publicClient);
+      const [conversionRate, underlyingInfo] = await Promise.all([
+        this.getStatATokenConversionRate(token.address),
+        this.getTokenInfo(underlyingVaultAddress, publicClient),
+      ]);
       const underlyingToken = new Token(
         146,
         underlyingVaultAddress,
@@ -1339,7 +1211,7 @@ export class ClService {
       };
     } catch (error) {
       console.error('Failed to fetch pool data:', error);
-      throw new Error(`Failed to fetch pool data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error('GET_POOL_DATA_FAILED', { cause: error });
     }
   }
 
@@ -1364,7 +1236,7 @@ export class ClService {
   public async getPositionInfo(tokenId: bigint, publicClient: PublicClient<HttpTransport>): Promise<ClPositionInfo> {
     // Read position data from the position manager using PancakeSwap SDK ABI
     const positionData = await publicClient.readContract({
-      address: this.config.clPositionManager,
+      address: this.config.sodaxConfig.dex.concentratedLiquidityConfig.clPositionManager,
       abi: CLPositionManagerAbi,
       functionName: 'positions',
       args: [tokenId],
@@ -1382,7 +1254,7 @@ export class ClService {
       feeGrowthInside1LastX128,
       subscriber,
     ] = positionData;
-    const poolKey = decodePoolKey(encodedPoolKey, 'CL');
+    const poolKey = decodePoolKey(encodedPoolKey, 'CL') as PoolKey<'CL'>;
 
     // Get pool data to get current tick and token decimals
     const poolData = await this.getPoolData(poolKey, publicClient);

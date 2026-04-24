@@ -42,6 +42,9 @@
     "pretty": {
       "dependsOn": ["^pretty"],
       "cache": false
+    },
+    "check:circular-deps": {
+      "cache": false
     }
   },
   "remoteCache": {

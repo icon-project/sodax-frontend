@@ -1,5 +1,5 @@
 import type { XAccount } from '@/types/index.js';
-import { detectBitcoinAddressType, type IBitcoinWalletProvider, type AddressType, type BtcWalletAddressType } from '@sodax/types';
+import { detectBitcoinAddressType, type IBitcoinWalletProvider, type BtcAddressType, type BtcWalletAddressType } from '@sodax/types';
 import { AddressPurpose, MessageSigningProtocols } from 'sats-connect';
 import { WALLET_METADATA } from '@/constants.js';
 import { BitcoinXConnector } from './BitcoinXConnector.js';
@@ -22,6 +22,7 @@ interface SignMessageResult {
 
 
 class XverseWalletProvider implements IBitcoinWalletProvider {
+  readonly chainType = 'BITCOIN' as const;
   private address: string;
   private publicKey: string;
 
@@ -38,7 +39,7 @@ class XverseWalletProvider implements IBitcoinWalletProvider {
     return this.publicKey;
   }
 
-  async getAddressType(_address: string): Promise<AddressType> {
+  async getAddressType(_address: string): Promise<BtcAddressType> {
     return detectBitcoinAddressType(this.address);
   }
 

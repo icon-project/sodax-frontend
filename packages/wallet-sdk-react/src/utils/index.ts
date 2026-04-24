@@ -1,4 +1,4 @@
-import { baseChainInfo, type ChainId, type XToken } from '@sodax/types';
+import { baseChainInfo, type SpokeChainKey, type XToken } from '@sodax/types';
 
 export { sortConnectors, type SortConnectorsOptions } from './sortConnectors.js';
 
@@ -18,7 +18,7 @@ export const isNativeToken = (xToken: XToken): boolean => {
   return nativeAddresses.includes(xToken.address);
 };
 
-export const getWagmiChainId = (xChainId: ChainId): number => {
+export const getWagmiChainId = (xChainId: SpokeChainKey): number => {
   const chainId = baseChainInfo[xChainId].chainId;
   if (typeof chainId !== 'number') {
     throw new Error(`[wallet-sdk-react] getWagmiChainId: expected numeric chainId, got ${typeof chainId}`);

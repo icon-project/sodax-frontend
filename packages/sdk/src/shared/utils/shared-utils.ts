@@ -1,40 +1,20 @@
 import invariant from 'tiny-invariant';
-import { DEFAULT_MAX_RETRY, DEFAULT_RETRY_DELAY_MS, FEE_PERCENTAGE_SCALE } from '../constants.js';
+import { isPartnerFeeAmount, isPartnerFeePercentage } from '../guards.js';
 import {
-  EvmRawSpokeProvider,
-  type EvmHubProvider,
-  type RawSpokeProvider,
-  type RawSpokeProviderConfig,
-  type SpokeProviderType,
-} from '../entities/Providers.js';
-import {
-  isEvmRawSpokeProviderConfig,
-  isNearRawSpokeProviderConfig,
-  isPartnerFeeAmount,
-  isPartnerFeePercentage,
-  isSolanaRawSpokeProviderConfig,
-  isSonicRawSpokeProviderConfig,
-  isStacksRawSpokeProviderConfig,
-  isStellarRawSpokeProviderConfig,
-} from '../guards.js';
-import type { GetAddressType, GetChainConfigType, PartnerFee, QuoteType } from '../types.js';
-import { type SpokeChainId, type Address, type Hex, SONIC_MAINNET_CHAIN_ID } from '@sodax/types';
-import { toHex } from 'viem';
+  type SpokeChainKey,
+  type Hex,
+  getChainType,
+  DEFAULT_MAX_RETRY,
+  DEFAULT_RETRY_DELAY_MS,
+  FEE_PERCENTAGE_SCALE,
+  type PartnerFee,
+  type QuoteType,
+} from '@sodax/types';
+import { hexToBytes, toHex } from 'viem';
 import { bcs } from '@mysten/sui/bcs';
 import { PublicKey } from '@solana/web3.js';
-import { Address as StellarAddress } from '@stellar/stellar-sdk';
-import { Cl, serializeCV } from '@stacks/transactions';
-import { EvmWalletAbstraction } from '../services/index.js';
-import {
-  StellarRawSpokeProvider,
-  SolanaRawSpokeProvider,
-  IconRawSpokeProvider,
-  InjectiveRawSpokeProvider,
-  SonicRawSpokeProvider,
-  NearRawSpokeProvider,
-  StacksRawSpokeProvider,
-} from '../entities/index.js';
-import { SuiRawSpokeProvider } from '../entities/sui/SuiSpokeProvider.js';
+import { Address as StellarAddress, xdr } from '@stellar/stellar-sdk';
+import { Cl, cvToString, deserializeCV, serializeCV } from '@stacks/transactions';
 
 export async function retry<T>(
   action: (retryCount: number) => Promise<T>,
@@ -144,39 +124,79 @@ export function BigIntToHex(value: bigint): Hex {
   return `0x${value.toString(16)}`;
 }
 
-export function encodeAddress(spokeChainId: SpokeChainId, address: string): Hex {
-  switch (spokeChainId) {
-    case '0xa86a.avax':
-    case '0x2105.base':
-    case '0xa.optimism':
-    case '0x38.bsc':
-    case '0x89.polygon':
-    case '0xa4b1.arbitrum':
-    case 'sonic':
+export function encodeAddress(spokeChainId: SpokeChainKey, address: string): Hex {
+  const chainType = getChainType(spokeChainId);
+  switch (chainType) {
+    case 'EVM':
       return address as Hex;
-
-    case '0x1.icon':
+    case 'ICON':
       return toHex(Buffer.from(address.replace('cx', '01').replace('hx', '00') ?? 'f8', 'hex'));
-
-    case 'sui':
+    case 'SUI':
       return toHex(bcs.Address.serialize(address).toBytes());
-
-    case 'solana':
+    case 'SOLANA':
       return toHex(Buffer.from(new PublicKey(address).toBytes()));
-
-    case 'stellar':
+    case 'STELLAR':
       return `0x${StellarAddress.fromString(address).toScVal().toXDR('hex')}`;
-
-    case 'stacks':
-      return `0x${serializeCV(Cl.principal(address))}` as Hex;
-
-    case 'bitcoin':
-    case 'near':
-    case 'injective-1':
+    case 'STACKS':
+      return `0x${serializeCV(Cl.principal(address))}`;
+    case 'BITCOIN':
+    case 'NEAR':
+    case 'INJECTIVE':
       return toHex(Buffer.from(address, 'utf-8'));
+    default: {
+      const exhaustiveCheck: never = chainType;
+      throw new Error(`Invalid spoke chain id: ${exhaustiveCheck}`);
+    }
+  }
+}
 
-    default:
-      return address as Hex;
+/**
+ * Decode a hub-style hex address produced by {@link encodeAddress} back to the chain-native string form.
+ */
+export function reverseEncodeAddress(spokeChainId: SpokeChainKey, encoded: Hex): string {
+  const chainType = getChainType(spokeChainId);
+  switch (chainType) {
+    case 'EVM':
+      return encoded;
+    case 'ICON': {
+      const raw = encoded.startsWith('0x') ? encoded.slice(2) : encoded;
+      if (raw.length !== 42) {
+        throw new Error(
+          `Invalid ICON encoded address length: expected 21 bytes (42 hex chars), got ${raw.length / 2} bytes`,
+        );
+      }
+      const version = raw.slice(0, 2);
+      const body = raw.slice(2);
+      if (version === '00') {
+        return `hx${body}`;
+      }
+      if (version === '01') {
+        return `cx${body}`;
+      }
+      throw new Error(`Invalid ICON address version byte: 0x${version}`);
+    }
+    case 'SUI':
+      return bcs.Address.parse(hexToBytes(encoded));
+    case 'SOLANA':
+      return new PublicKey(hexToBytes(encoded)).toBase58();
+    case 'STELLAR': {
+      const rawHex = encoded.startsWith('0x') ? encoded.slice(2) : encoded;
+      const scVal = xdr.ScVal.fromXDR(rawHex, 'hex');
+      return StellarAddress.fromScVal(scVal).toString();
+    }
+    case 'STACKS': {
+      const rawHex = encoded.startsWith('0x') ? encoded.slice(2) : encoded;
+      const cv = deserializeCV(hexToBytes(`0x${rawHex}`));
+      return cvToString(cv);
+    }
+    case 'BITCOIN':
+    case 'NEAR':
+    case 'INJECTIVE':
+      return Buffer.from(hexToBytes(encoded)).toString('utf8');
+    default: {
+      const exhaustiveCheck: never = chainType;
+      throw new Error(`Invalid spoke chain id: ${exhaustiveCheck}`);
+    }
   }
 }
 
@@ -198,24 +218,6 @@ export function hexToBigInt(hex: string): bigint {
   return BigInt(normalized);
 }
 
-/**
- * Derive user hub wallet address based on the spoke chain id and address.
- * @param hubProvider - Hub provider instance
- * @param spokeChainId - Spoke chain id
- * @param spokeAddress - Spoke address
- * @returns Abstracted user wallet address for spoke chains with different chain id than hub or original
- */
-export async function deriveUserWalletAddress(
-  hubProvider: EvmHubProvider,
-  spokeChainId: SpokeChainId,
-  spokeAddress: string,
-): Promise<Address> {
-  const encodedAddress = encodeAddress(spokeChainId, spokeAddress);
-  return spokeChainId === hubProvider.chainConfig.chain.id // on hub chain, use original user wallet address
-    ? encodedAddress
-    : await EvmWalletAbstraction.getUserHubWalletAddress(spokeChainId, encodedAddress, hubProvider);
-}
-
 export function parseToStroops(amount: string): bigint {
   // Scale decimal string to integer stroops (1e7 multiplier)
   return BigInt(Math.round(Number.parseFloat(amount) * 1e7));
@@ -223,63 +225,4 @@ export function parseToStroops(amount: string): bigint {
 
 export function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-export function isHubSpokeProvider(spokeProvider: SpokeProviderType, hubProvider: EvmHubProvider): boolean {
-  return spokeProvider.chainConfig.chain.id === hubProvider.chainConfig.chain.id;
-}
-
-export function constructRawSpokeProvider(config: RawSpokeProviderConfig): RawSpokeProvider {
-  const chainType = config.chainConfig?.chain?.type;
-  switch (chainType) {
-    case 'EVM': {
-      if (config.chainConfig.chain.id === SONIC_MAINNET_CHAIN_ID) {
-        invariant(isSonicRawSpokeProviderConfig(config), 'Invalid Sonic raw spoke provider config');
-        return new SonicRawSpokeProvider(config.walletAddress, config.chainConfig, config.rpcUrl);
-      }
-
-      invariant(isEvmRawSpokeProviderConfig(config), 'Invalid Evm raw spoke provider config');
-      return new EvmRawSpokeProvider(config.walletAddress, config.chainConfig, config.rpcUrl);
-    }
-    case 'STELLAR':
-      invariant(isStellarRawSpokeProviderConfig(config), 'Invalid Stellar raw spoke provider config');
-      return new StellarRawSpokeProvider(config.walletAddress, config.chainConfig, config.rpcConfig);
-    case 'SOLANA': {
-      invariant(isSolanaRawSpokeProviderConfig(config), 'Invalid Solana raw spoke provider config');
-      return new SolanaRawSpokeProvider({
-        connection: config.connection,
-        walletAddress: config.walletAddress,
-        chainConfig: config.chainConfig,
-      });
-    }
-    case 'ICON': {
-      return new IconRawSpokeProvider(
-        config.chainConfig as GetChainConfigType<'ICON'>,
-        config.walletAddress as GetAddressType<IconRawSpokeProvider>,
-      );
-    }
-    case 'INJECTIVE': {
-      return new InjectiveRawSpokeProvider(
-        config.chainConfig as GetChainConfigType<'INJECTIVE'>,
-        config.walletAddress as GetAddressType<InjectiveRawSpokeProvider>,
-      );
-    }
-    case 'SUI': {
-      return new SuiRawSpokeProvider(
-        config.chainConfig as GetChainConfigType<'SUI'>,
-        config.walletAddress as GetAddressType<SuiRawSpokeProvider>,
-      );
-    }
-    case 'NEAR': {
-      invariant(isNearRawSpokeProviderConfig(config), 'Invalid Near raw spoke provider config');
-      return new NearRawSpokeProvider(config.chainConfig, config.walletAddress);
-    }
-    case 'STACKS': {
-      invariant(isStacksRawSpokeProviderConfig(config), 'Invalid Stacks raw spoke provider config');
-      return new StacksRawSpokeProvider(config.walletAddress, config.chainConfig);
-    }
-    default: {
-      throw new Error(`Unsupported chain type: ${chainType}`);
-    }
-  }
 }

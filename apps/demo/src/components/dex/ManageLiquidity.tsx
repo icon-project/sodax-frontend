@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import type { ChainId, ClPositionInfo, PoolData, PoolKey, SpokeProvider } from '@sodax/sdk';
-import { useXBalances, type XAccount } from '@sodax/wallet-sdk-react';
+import { type XAccount, getXChainType, useXService } from '@sodax/wallet-sdk-react';
 import { UserPositions } from '@/components/dex/UserPositions';
 import {
   createWithdrawParamsProps,
@@ -17,6 +17,7 @@ import {
   useDexDeposit,
   useDexWithdraw,
   useSodaxContext,
+  useXBalances,
 } from '@sodax/dapp-kit';
 import { NavLink } from 'react-router';
 
@@ -93,7 +94,9 @@ export function ManageLiquidity({
   const [token1Amount, setToken1Amount] = useState<string>('');
 
   const poolSpokeAssets = sodax.dex.clService.getAssetsForPool(spokeProvider, pools[selectedPoolIndex]);
+  const xService = useXService(getXChainType(selectedChainId));
   const { data: sourceBalances } = useXBalances({
+    xService,
     xChainId: selectedChainId,
     xTokens: [poolSpokeAssets.token0, poolSpokeAssets.token1],
     address: xAccount.address,

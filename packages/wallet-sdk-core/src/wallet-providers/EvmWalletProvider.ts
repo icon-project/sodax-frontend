@@ -1,22 +1,26 @@
-import type { ChainId, EvmRawTransaction, EvmRawTransactionReceipt, IEvmWalletProvider } from '@sodax/types';
+import type {
+  EvmChainKey,
+  EvmRawTransaction,
+  EvmRawTransactionReceipt,
+  IEvmWalletProvider,
+} from '@sodax/types';
 import type { Account, Address, Chain, Transport, Hash, PublicClient, WalletClient } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { createWalletClient, createPublicClient, http,defineChain } from 'viem';
-import { sonic, avalanche, arbitrum, base, optimism, bsc, polygon, mainnet, redbellyMainnet, kaia,lightlinkPhoenix } from 'viem/chains';
+import { createWalletClient, createPublicClient, http, defineChain } from 'viem';
 import {
-  SONIC_MAINNET_CHAIN_ID,
-  AVALANCHE_MAINNET_CHAIN_ID,
-  ARBITRUM_MAINNET_CHAIN_ID,
-  BASE_MAINNET_CHAIN_ID,
-  OPTIMISM_MAINNET_CHAIN_ID,
-  BSC_MAINNET_CHAIN_ID,
-  POLYGON_MAINNET_CHAIN_ID,
-  ETHEREUM_MAINNET_CHAIN_ID,
-  REDBELLY_MAINNET_CHAIN_ID,
-  KAIA_MAINNET_CHAIN_ID,
-  LIGHTLINK_MAINNET_CHAIN_ID,
-  HYPEREVM_MAINNET_CHAIN_ID,
-} from '@sodax/types';
+  sonic,
+  avalanche,
+  arbitrum,
+  base,
+  optimism,
+  bsc,
+  polygon,
+  mainnet,
+  redbellyMainnet,
+  kaia,
+  lightlinkPhoenix,
+} from 'viem/chains';
+import { ChainKeys } from '@sodax/types';
 
 // HyperEVM chain is not supported by viem, so we need to define it manually
 export const hyper = /*#__PURE__*/ defineChain({
@@ -44,38 +48,42 @@ export const hyper = /*#__PURE__*/ defineChain({
   },
 });
 
-export function getEvmViemChain(id: ChainId): Chain {
-  switch (id) {
-    case SONIC_MAINNET_CHAIN_ID:
+export function getEvmViemChain(key: EvmChainKey): Chain {
+  switch (key) {
+    case ChainKeys.SONIC_MAINNET:
       return sonic;
-    case AVALANCHE_MAINNET_CHAIN_ID:
+    case ChainKeys.AVALANCHE_MAINNET:
       return avalanche;
-    case ARBITRUM_MAINNET_CHAIN_ID:
+    case ChainKeys.ARBITRUM_MAINNET:
       return arbitrum;
-    case BASE_MAINNET_CHAIN_ID:
+    case ChainKeys.BASE_MAINNET:
       return base;
-    case OPTIMISM_MAINNET_CHAIN_ID:
+    case ChainKeys.OPTIMISM_MAINNET:
       return optimism;
-    case BSC_MAINNET_CHAIN_ID:
+    case ChainKeys.BSC_MAINNET:
       return bsc;
-    case POLYGON_MAINNET_CHAIN_ID:
+    case ChainKeys.POLYGON_MAINNET:
       return polygon;
-    case ETHEREUM_MAINNET_CHAIN_ID:
-      return mainnet;
-    case REDBELLY_MAINNET_CHAIN_ID:
-      return redbellyMainnet;
-    case KAIA_MAINNET_CHAIN_ID:
-      return kaia;
-    case LIGHTLINK_MAINNET_CHAIN_ID:
-      return lightlinkPhoenix;
-    case HYPEREVM_MAINNET_CHAIN_ID:
+    case ChainKeys.HYPEREVM_MAINNET:
       return hyper;
-    default:
-      throw new Error(`Unsupported EVM chain ID: ${id}`);
+    case ChainKeys.LIGHTLINK_MAINNET:
+      return lightlinkPhoenix;
+    case ChainKeys.ETHEREUM_MAINNET:
+      return mainnet;
+    case ChainKeys.REDBELLY_MAINNET:
+      return redbellyMainnet;
+    case ChainKeys.KAIA_MAINNET:
+      return kaia;
+    default: {
+      const exhaustiveCheck: never = key; // The never type is used to ensure that the default case is exhaustive
+      console.log(exhaustiveCheck);
+      throw new Error(`Unsupported EVM chain key: ${key}`);
+    }
   }
 }
 
 export class EvmWalletProvider implements IEvmWalletProvider {
+  public readonly chainType = 'EVM' as const;
   private readonly walletClient: WalletClient<Transport, Chain, Account>;
   public readonly publicClient: PublicClient;
 
@@ -133,7 +141,7 @@ export class EvmWalletProvider implements IEvmWalletProvider {
 
 export type PrivateKeyEvmWalletConfig = {
   privateKey: `0x${string}`;
-  chainId: ChainId;
+  chainId: EvmChainKey;
   rpcUrl?: `http${string}`;
 };
 

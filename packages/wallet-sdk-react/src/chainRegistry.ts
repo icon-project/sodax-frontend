@@ -3,7 +3,7 @@ import {
   type RpcConfig,
   type BitcoinRpcConfig,
   type StellarRpcConfig,
-  ICON_MAINNET_CHAIN_ID,
+  ChainKeys,
   detectBitcoinAddressType,
 } from '@sodax/types';
 import {
@@ -134,7 +134,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
   }),
   BITCOIN: defineChain({
     createService: rpcConfig =>
-      BitcoinXService.getInstance((rpcConfig?.bitcoin as BitcoinRpcConfig | undefined)?.rpcUrl),
+      BitcoinXService.getInstance((rpcConfig?.[ChainKeys.BITCOIN_MAINNET] as BitcoinRpcConfig | undefined)?.rpcUrl),
     displayName: 'Bitcoin',
     defaultConnectors: () => [new UnisatXConnector(), new XverseXConnector(), new OKXXConnector()],
     providerManaged: false,
@@ -187,7 +187,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
     },
   }),
   INJECTIVE: defineChain({
-    createService: () => InjectiveXService.getInstance(),
+    createService: rpcConfig => InjectiveXService.getInstance(rpcConfig?.[ChainKeys.INJECTIVE_MAINNET]),
     displayName: 'Injective',
     defaultConnectors: () => [
       new InjectiveXConnector('MetaMask', Wallet.Metamask),
@@ -219,7 +219,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
   }),
   STELLAR: defineChain({
     createService: rpcConfig => {
-      const stellarRpc = rpcConfig?.stellar as StellarRpcConfig | undefined;
+      const stellarRpc = rpcConfig?.[ChainKeys.STELLAR_MAINNET] as StellarRpcConfig | undefined;
       return StellarXService.getInstance(stellarRpc?.horizonRpcUrl, stellarRpc?.sorobanRpcUrl);
     },
     displayName: 'Stellar',
@@ -252,7 +252,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
   // ICON: signMessage not implemented — Hana wallet does not expose a signing API.
   // connect/disconnect use createDefaultActions (no createActions override needed).
   ICON: defineChain({
-    createService: rpcConfig => IconXService.getInstance(rpcConfig?.[ICON_MAINNET_CHAIN_ID] as string | undefined),
+    createService: rpcConfig => IconXService.getInstance(rpcConfig?.[ChainKeys.ICON_MAINNET] as string | undefined),
     displayName: 'ICON',
     defaultConnectors: () => [new IconHanaXConnector()],
     providerManaged: false,
@@ -268,7 +268,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
     },
   }),
   NEAR: defineChain({
-    createService: () => NearXService.getInstance(),
+    createService: rpcConfig => NearXService.getInstance(rpcConfig?.[ChainKeys.NEAR_MAINNET]),
     displayName: 'NEAR',
     defaultConnectors: () => [],
     providerManaged: false,
@@ -291,7 +291,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
     },
   }),
   STACKS: defineChain({
-    createService: () => StacksXService.getInstance(),
+    createService: rpcConfig => StacksXService.getInstance(rpcConfig?.[ChainKeys.STACKS_MAINNET]),
     displayName: 'Stacks',
     defaultConnectors: () => STACKS_PROVIDERS.map(c => new StacksXConnector(c)),
     providerManaged: false,
