@@ -5,16 +5,23 @@ import App from './App';
 import Providers from './providers';
 import './index.css';
 
-// bigint serialization — wallet SDKs serialize state to JSON in places
-(BigInt.prototype as unknown as { toJSON: () => string }).toJSON = function () {
-  return this.toString();
-};
+// bigint serialization — wallet SDKs serialize state to JSON in places.
+// `Object.defineProperty` adds the method without asserting the prototype shape.
+Object.defineProperty(BigInt.prototype, 'toJSON', {
+  value: function toJSON(this: bigint) {
+    return this.toString();
+  },
+  writable: true,
+  configurable: true,
+});
 
 if (!window.Buffer) {
   window.Buffer = Buffer;
 }
 
-const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+const rootEl = document.getElementById('root');
+if (!rootEl) throw new Error('#root element not found');
+const root = ReactDOM.createRoot(rootEl);
 root.render(
   <React.StrictMode>
     <Providers>

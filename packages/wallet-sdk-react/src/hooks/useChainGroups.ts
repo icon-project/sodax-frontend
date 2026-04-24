@@ -19,9 +19,9 @@ export type ChainGroup = {
 
 export type UseChainGroupsOptions = {
   /**
-   * Display order by `chainType`. Chains not listed fall to the bottom
-   * alphabetical amongst themselves. Omit to preserve the insertion order
-   * of `enabledChains` (driven by config / chainRegistry initialization).
+   * Display order by `chainType`. Chains not listed fall to the bottom,
+   * sorted alphabetically among themselves. Omit to follow the insertion
+   * order of `enabledChains` (driven by `SodaxWalletProvider` config).
    */
   order?: readonly ChainType[];
 };

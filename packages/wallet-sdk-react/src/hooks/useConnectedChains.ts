@@ -28,9 +28,9 @@ export type UseConnectedChainsResult = {
 
 export type UseConnectedChainsOptions = {
   /**
-   * Display order by `chainType`. Chains not listed fall to the bottom
-   * alphabetical amongst themselves. Omit to leave chains in the insertion
-   * order of the underlying store (non-deterministic across page reloads).
+   * Display order by `chainType`. Chains not listed fall to the bottom,
+   * sorted alphabetically among themselves. Omit to use the default
+   * `ChainTypeArr` order from `@sodax/types` (stable across page reloads).
    */
   order?: readonly ChainType[];
 };
