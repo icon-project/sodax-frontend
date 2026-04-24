@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useAccount, useConfig, useConnect, useDisconnect, useSignMessage } from 'wagmi';
+import { useConfig, useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import { EvmXService } from '../../xchains/evm/EvmXService.js';
 import { useXWalletStore } from '../../useXWalletStore.js';
 
@@ -12,14 +12,12 @@ export const EvmActions = () => {
   const { connectAsync } = useConnect();
   const { disconnectAsync } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
-  const { connector: currentConnector } = useAccount();
   const registerChainActions = useXWalletStore(state => state.registerChainActions);
 
   const connectRef = useRef(connectAsync);
   const disconnectRef = useRef(disconnectAsync);
   const signMessageRef = useRef(signMessageAsync);
   const wagmiConfigRef = useRef(wagmiConfig);
-  const currentConnectorRef = useRef(currentConnector);
 
   // Sync all wagmi hook refs in a single effect to avoid 4 separate effect commits per render.
   useEffect(() => {
@@ -27,8 +25,7 @@ export const EvmActions = () => {
     disconnectRef.current = disconnectAsync;
     signMessageRef.current = signMessageAsync;
     wagmiConfigRef.current = wagmiConfig;
-    currentConnectorRef.current = currentConnector;
-  }, [connectAsync, disconnectAsync, signMessageAsync, wagmiConfig, currentConnector]);
+  }, [connectAsync, disconnectAsync, signMessageAsync, wagmiConfig]);
 
   useEffect(() => {
     registerChainActions('EVM', {
@@ -41,19 +38,6 @@ export const EvmActions = () => {
           );
           return undefined;
         }
-
-        // Enforce single-active-EVM-connection invariant. wagmi v2 allows
-        // multiple simultaneous connections; without this step, switching
-        // wallets (MetaMask → Hot Wallet etc.) leaves the old connector in
-        // `useConnections()` and `EvmHydrator` would pick it up as
-        // `evmConnections[0]`, writing a stale `xConnectorId` that doesn't
-        // match the address the user just approved — the modal then times
-        // out waiting for a connection with the new connector's id.
-        const active = currentConnectorRef.current;
-        if (active && active.id !== connector.id) {
-          await disconnectRef.current({ connector: active });
-        }
-
         await connectRef.current({ connector });
         // EVM connection state is set by EvmHydrator (single writer for provider-managed chains)
         return undefined;
