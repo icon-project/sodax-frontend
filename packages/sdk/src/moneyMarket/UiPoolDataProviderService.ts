@@ -1,4 +1,4 @@
-import { type Address } from '@sodax/types';
+import type { Address } from '@sodax/types';
 import { uiPoolDataAbi } from '../shared/abis/uiPoolData.abi.js';
 import type {
   AggregatedReserveData,

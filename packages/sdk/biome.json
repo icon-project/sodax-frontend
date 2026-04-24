@@ -6,7 +6,7 @@
     "rules": {
       "style": {
         "noUselessElse": "off",
-        "noNonNullAssertion": "off",
+        "noNonNullAssertion": "off"
       },
       "suspicious": {
         "noExplicitAny": "off",

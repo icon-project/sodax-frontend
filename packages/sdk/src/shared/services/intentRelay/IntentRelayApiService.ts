@@ -7,12 +7,12 @@ import {
 } from '@sodax/types';
 import invariant from 'tiny-invariant';
 import { retry } from '../../utils/shared-utils.js';
-import {
-  type RelayAction,
-  type RelayExtraData,
-  type IntentDeliveryInfo,
-  type IntentRelayRequest,
-  type WaitUntilIntentExecutedPayload,
+import type {
+  RelayAction,
+  RelayExtraData,
+  IntentDeliveryInfo,
+  IntentRelayRequest,
+  WaitUntilIntentExecutedPayload,
 } from '../../types/relay-types.js';
 
 export type { RelayAction, RelayExtraData, IntentDeliveryInfo, IntentRelayRequest, WaitUntilIntentExecutedPayload };
