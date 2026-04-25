@@ -25,6 +25,50 @@ function isInternalPath(pathname: string): boolean {
   return pathname.startsWith('/agent') || pathname.startsWith('/api') || pathname.startsWith('/_next');
 }
 
+/**
+ * Parse an HTTP Accept header into a media-type → q-value map (RFC 9110 §12.5.1).
+ * Quality values default to 1.0 when the `q` parameter is absent. Invalid q
+ * values are treated as 1.0 rather than rejecting the entry.
+ */
+function parseAcceptHeader(value: string): Map<string, number> {
+  const entries = new Map<string, number>();
+  for (const segment of value.split(',')) {
+    const trimmed = segment.trim();
+    if (!trimmed) continue;
+    const parts = trimmed.split(';').map(p => p.trim());
+    const mediaType = parts[0]?.toLowerCase();
+    if (!mediaType) continue;
+    let quality = 1;
+    for (const param of parts.slice(1)) {
+      const [key, raw] = param.split('=').map(p => p.trim());
+      if (key === 'q' && raw) {
+        const parsed = Number.parseFloat(raw);
+        if (Number.isFinite(parsed) && parsed >= 0 && parsed <= 1) quality = parsed;
+      }
+    }
+    entries.set(mediaType, quality);
+  }
+  return entries;
+}
+
+/**
+ * Returns true when the Accept header explicitly prefers `text/markdown`
+ * over `text/html`. Required so `Accept: text/html,text/markdown;q=0.5`
+ * still serves HTML (q-value precedence per RFC 9110).
+ *
+ * `*\/*` is intentionally NOT honoured for markdown — a "give me anything"
+ * request should serve the default representation (HTML); markdown requires
+ * an explicit opt-in.
+ */
+function prefersMarkdown(acceptHeader: string | null): boolean {
+  if (!acceptHeader) return false;
+  const accepts = parseAcceptHeader(acceptHeader);
+  const markdownQ = accepts.get('text/markdown');
+  if (markdownQ === undefined || markdownQ === 0) return false;
+  const htmlQ = accepts.get('text/html') ?? accepts.get('text/*') ?? 0;
+  return markdownQ >= htmlQ;
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -33,8 +77,7 @@ export function middleware(request: NextRequest) {
   // the dedicated /agent/md handler. Skip framework-internal paths so we don't
   // recurse into our own handler or interfere with API/asset routing.
   if (!isInternalPath(pathname)) {
-    const accept = request.headers.get('accept') ?? '';
-    const wantsMarkdown = accept.includes('text/markdown');
+    const wantsMarkdown = prefersMarkdown(request.headers.get('accept'));
     const isIndexMd = pathname === '/index.md' || pathname.endsWith('/index.md');
 
     if (wantsMarkdown || isIndexMd) {
