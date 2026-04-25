@@ -17,7 +17,7 @@ const NAVBAR_LINKS = [
 ];
 
 const NAVBAR_CTA_CLASSNAME =
-  'bg-yellow-dark hover:bg-yellow-soda transition-all hover:scale-[102%] h-10 px-6 font-[InterBold] rounded-full text-[14px] cursor-pointer text-cherry-dark hidden md:flex items-center';
+  'bg-yellow-dark hover:bg-yellow-soda transition-all hover:scale-[102%] h-10 px-6 font-[InterBold] rounded-full text-sm cursor-pointer text-cherry-dark hidden md:flex items-center';
 
 interface NavbarCtaProps {
   label: string;
@@ -62,7 +62,7 @@ export function Navbar({ cta }: NavbarProps = {}): ReactElement {
           {NAVBAR_LINKS.map(({ href, label }) => (
             <li key={href}>
               <Link
-                className="text-cream font-[InterRegular] text-[14px] transition-all hover:opacity-80 cursor-pointer"
+                className="text-cream font-[InterRegular] text-sm transition-all hover:opacity-80 cursor-pointer"
                 href={href}
               >
                 {label}
