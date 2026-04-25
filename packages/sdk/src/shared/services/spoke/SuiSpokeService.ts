@@ -109,6 +109,17 @@ export class SuiSpokeService {
     return toHex(bcs.Address.serialize(suiaddress).toBytes());
   }
 
+  public encodeSimulationParams(token: string, assetManager: string): { encodedToken: Hex; encodedSrcAddress: Hex } {
+    // Sui tokens and the asset manager are Move type strings ("0xPKG::module::STATE"), not plain 32-byte
+    // hex addresses. BCS Address serialization expects 32-byte hex and fails on composed Move strings.
+    // The hub expects UTF-8-encoded Move type strings, matching what the Sui contract sends on-chain.
+    const encoder = new TextEncoder();
+    return {
+      encodedToken: toHex(encoder.encode(token)),
+      encodedSrcAddress: toHex(encoder.encode(assetManager)),
+    };
+  }
+
   async getAssetManagerAddress(chainId: SuiChainKey): Promise<string> {
     if (!this.assetManagerAddress) {
       this.assetManagerAddress = await this.fetchAssetManagerAddress(chainId);

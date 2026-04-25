@@ -419,8 +419,10 @@ export class SpokeService {
 
       const chainId = getIntentRelayChainId(params.srcChainKey);
       const hubAssetManager = this.hubProvider.chainConfig.addresses.assetManager;
+      const { encodedToken, encodedSrcAddress } = this.resolveSimulationEncoding(params.srcChainKey, params.token);
+
       const payload = SpokeService.encodeTransfer(
-        encodeAddress(params.srcChainKey, params.token),
+        encodedToken,
         encodeAddress(params.srcChainKey, params.srcAddress),
         params.to,
         params.amount,
@@ -430,11 +432,26 @@ export class SpokeService {
       return await this.simulateRecvMessage({
         target: hubAssetManager,
         srcChainId: chainId,
-        srcAddress: encodeAddress(params.srcChainKey, spokeChainConfig[params.srcChainKey].addresses.assetManager),
+        srcAddress: encodedSrcAddress,
         payload,
       });
     } catch (error) {
       return { ok: false, error };
+    }
+  }
+
+  private resolveSimulationEncoding(srcChainKey: Exclude<SpokeChainKey, HubChainKey>, token: string): { encodedToken: Hex; encodedSrcAddress: Hex } {
+    const assetManager = spokeChainConfig[srcChainKey].addresses.assetManager;
+    switch (getChainType(srcChainKey)) {
+      case 'ICON':
+        return this.iconSpokeService.encodeSimulationParams(token, assetManager);
+      case 'SUI':
+        return this.suiSpokeService.encodeSimulationParams(token, assetManager);
+      default:
+        return {
+          encodedToken: encodeAddress(srcChainKey, token),
+          encodedSrcAddress: encodeAddress(srcChainKey, assetManager),
+        };
     }
   }
 
