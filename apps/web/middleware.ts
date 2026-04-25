@@ -16,15 +16,58 @@ const EU_EEA_UK_COUNTRY_CODES = new Set([
   'GB',
 ]);
 
+// Static literal — guardrail §3 forbids interpolating request data into
+// response headers. Agents append `/index.md` to the current path to fetch
+// the markdown alternate.
+const MARKDOWN_LINK_HEADER = '</index.md>; rel="alternate"; type="text/markdown"';
+
+function isInternalPath(pathname: string): boolean {
+  return pathname.startsWith('/agent') || pathname.startsWith('/api') || pathname.startsWith('/_next');
+}
+
 export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // ── Agent Readiness: markdown content negotiation ───────────────────────────
+  // Rewrite `Accept: text/markdown` requests and `*/index.md` URL suffixes to
+  // the dedicated /agent/md handler. Skip framework-internal paths so we don't
+  // recurse into our own handler or interfere with API/asset routing.
+  if (!isInternalPath(pathname)) {
+    const accept = request.headers.get('accept') ?? '';
+    const wantsMarkdown = accept.includes('text/markdown');
+    const isIndexMd = pathname === '/index.md' || pathname.endsWith('/index.md');
+
+    if (wantsMarkdown || isIndexMd) {
+      const targetPath = isIndexMd ? pathname.replace(/\/index\.md$/, '') || '/' : pathname;
+      const url = request.nextUrl.clone();
+      url.pathname = '/agent/md';
+      url.search = '';
+      // Pass the target path via a request header — search params don't survive
+      // middleware rewrites reliably across Next.js runtimes.
+      const rewriteHeaders = new Headers(request.headers);
+      rewriteHeaders.set('x-agent-md-path', targetPath);
+      return NextResponse.rewrite(url, { request: { headers: rewriteHeaders } });
+    }
+  }
+
   // ── Consensus Miami kill switch ─────────────────────────────────────────────
   // Set CONSENSUS_MIAMI_ENABLED=false in Vercel to disable the page (redirects
   // to homepage). Any other value — including missing — means enabled.
-  if (request.nextUrl.pathname.startsWith('/consensus-miami') && process.env.CONSENSUS_MIAMI_ENABLED === 'false') {
+  if (pathname.startsWith('/consensus-miami') && process.env.CONSENSUS_MIAMI_ENABLED === 'false') {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  const response = NextResponse.next();
+  // Forward x-pathname to server components (lets layout / RSC read the
+  // current pathname without re-parsing).
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', pathname);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+
+  // Advertise the markdown alternate to agents on every HTML response.
+  if (!isInternalPath(pathname)) {
+    response.headers.set('Link', MARKDOWN_LINK_HEADER);
+  }
 
   // Only set the cookie if it hasn't been set yet
   if (request.cookies.has('cookie_consent_region')) {
