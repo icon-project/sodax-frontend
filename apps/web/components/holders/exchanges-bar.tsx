@@ -18,7 +18,7 @@ const EXCHANGES: Exchange[] = [
     iconSrc: '/exchanges/kraken-white.svg',
     tradeUrl: 'https://www.kraken.com/prices/icon',
     hoverMessage: 'Buy or Migrate ICX on Kraken',
-    showStatusDot: true,
+    showStatusDot: false,
   },
   {
     name: 'Binance',
@@ -64,7 +64,7 @@ export const ExchangesBar = ({ onHoverChange }: ExchangesBarProps): ReactElement
         <div
           key={`${exchange.name}-${i}`}
           onMouseEnter={() => onHoverChange?.(exchange)}
-          className="group/exchange px-[3px] sm:px-1 flex items-center justify-center"
+          className="group/exchange px-[3px] flex items-center justify-center"
         >
           <a
             href={exchange.tradeUrl}

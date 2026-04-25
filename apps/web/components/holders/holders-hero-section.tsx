@@ -47,23 +47,40 @@ const HoldersHeroSection = (): ReactElement => {
         <Navbar />
 
         <div className="flex flex-1 flex-col items-center justify-center w-full px-4 gap-4">
-          <div className="flex items-center justify-center gap-6 z-20">
-            <Image src="/landing/brace-left.svg" alt="" width={32} height={120} className="-scale-x-100" />
-            <div className="font-[InterBlack] text-[32px] md:text-(length:--main-title) leading-[1.1] text-center whitespace-nowrap">
-              <span className="mix-blend-hard-light text-yellow-dark">
-                Buy SODA<span className="hidden sm:inline"> today</span>.
-              </span>
-              <br />
-              <span className="mix-blend-hard-light text-white">
-                <span className="sm:hidden">
-                  Burning on 18
-                  <br />
-                  networks.
-                </span>
-                <span className="hidden sm:inline">Burning on 18 networks.</span>
-              </span>
+          <div className="relative flex items-center justify-center">
+            {/* SODA tokens graphic — sits behind title */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2 -translate-y-2/3 w-[240px] h-[120px] mix-blend-lighten opacity-95 z-0"
+            >
+              <Image
+                src="/holders/hero-bg-tokens.png"
+                alt=""
+                width={480}
+                height={240}
+                className="w-full h-full"
+                priority
+              />
             </div>
-            <Image src="/landing/brace-right.svg" alt="" width={32} height={120} />
+
+            <div className="flex items-center justify-center gap-6 relative z-20">
+              <Image src="/landing/brace-left.svg" alt="" width={32} height={120} className="-scale-x-100" />
+              <div className="font-[InterBlack] text-[32px] md:text-(length:--main-title) leading-[1.1] text-center whitespace-nowrap">
+                <span className="mix-blend-hard-light text-yellow-dark">
+                  Buy SODA<span className="hidden sm:inline"> today</span>.
+                </span>
+                <br />
+                <span className="mix-blend-hard-light text-white">
+                  <span className="sm:hidden">
+                    Burning on 18
+                    <br />
+                    networks.
+                  </span>
+                  <span className="hidden sm:inline">Burning on 18 networks.</span>
+                </span>
+              </div>
+              <Image src="/landing/brace-right.svg" alt="" width={32} height={120} />
+            </div>
           </div>
 
           <p className="text-white font-[InterRegular] text-(length:--body-super-comfortable) leading-[1.4] text-center z-20 px-4">
@@ -73,8 +90,9 @@ const HoldersHeroSection = (): ReactElement => {
           <div className="z-20 flex flex-col items-center gap-2">
             <ExchangesBar onHoverChange={setHoveredExchange} />
             {!hoveredExchange?.hoverMessage && (
-              <p className="sm:hidden text-white font-[InterRegular] text-(length:--body-small) leading-[1.4] text-center">
-                ICX → SODA migration
+              <p className="sm:hidden text-white font-[InterRegular] text-(length:--body-super-comfortable) leading-[1.4] text-center inline-flex items-center gap-2 pt-4">
+                <span className="size-2 rounded-full bg-cherry-bright" aria-hidden="true" />
+                <span>Buy SODA or migrate ICX</span>
               </p>
             )}
           </div>

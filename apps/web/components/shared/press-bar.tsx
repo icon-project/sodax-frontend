@@ -184,7 +184,7 @@ export const PressBar = (): ReactElement => {
                       className="shrink-0 opacity-60 hover:opacity-100 transition-opacity duration-300 cursor-pointer"
                       onClick={handleLogoClick}
                     >
-                      <img src={logo.src} alt="" className="h-8 w-[128px] shrink-0" draggable={false} />
+                      <img src={logo.src} alt="" className="h-6 sm:h-8 w-[128px] shrink-0" draggable={false} />
                     </a>
                   </TooltipTrigger>
                   <TooltipContent
