@@ -1,3 +1,4 @@
+/*
 import React from 'react';
 import { useStakingConfig } from '@sodax/dapp-kit';
 import { Skeleton } from '../ui/skeleton';
@@ -36,3 +37,4 @@ export function StakingConfiguration() {
     </div>
   );
 }
+*/

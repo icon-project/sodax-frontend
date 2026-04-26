@@ -48,6 +48,7 @@ import {
   isSpokeApproveParamsHub,
   isSpokeApproveParamsEvmSpoke,
   isSpokeApproveParamsStellar,
+  isSuiChainKeyType,
 } from '../../guards.js';
 import type { ConfigService } from '../../config/ConfigService.js';
 import type { EvmHubProvider } from '../../entities/EvmHubProvider.js';
@@ -419,8 +420,10 @@ export class SpokeService {
 
       const chainId = getIntentRelayChainId(params.srcChainKey);
       const hubAssetManager = this.hubProvider.chainConfig.addresses.assetManager;
+      const { encodedToken, encodedSrcAddress } = this.resolveSimulationEncoding(params.srcChainKey, params.token);
+
       const payload = SpokeService.encodeTransfer(
-        encodeAddress(params.srcChainKey, params.token),
+        encodedToken,
         encodeAddress(params.srcChainKey, params.srcAddress),
         params.to,
         params.amount,
@@ -430,11 +433,29 @@ export class SpokeService {
       return await this.simulateRecvMessage({
         target: hubAssetManager,
         srcChainId: chainId,
-        srcAddress: encodeAddress(params.srcChainKey, spokeChainConfig[params.srcChainKey].addresses.assetManager),
+        srcAddress: encodedSrcAddress,
         payload,
       });
     } catch (error) {
       return { ok: false, error };
+    }
+  }
+
+  private resolveSimulationEncoding(
+    srcChainKey: Exclude<SpokeChainKey, HubChainKey>,
+    token: string,
+  ): { encodedToken: Hex; encodedSrcAddress: Hex } {
+    const assetManager = spokeChainConfig[srcChainKey].addresses.assetManager;
+    switch (getChainType(srcChainKey)) {
+      case 'ICON':
+        return this.iconSpokeService.encodeSimulationParams(token, assetManager);
+      case 'SUI':
+        return this.suiSpokeService.encodeSimulationParams(token, assetManager);
+      default:
+        return {
+          encodedToken: encodeAddress(srcChainKey, token),
+          encodedSrcAddress: encodeAddress(srcChainKey, assetManager),
+        };
     }
   }
 
@@ -873,6 +894,7 @@ export class SpokeService {
   public async verifyTxHash(params: VerifyTxHashParams): Promise<Result<boolean>> {
     try {
       const { txHash, chainKey } = params;
+
       if (isSolanaChainKeyType(chainKey)) {
         const result = await this.solanaSpokeService.waitForTransactionReceipt({ txHash, chainKey });
 
@@ -895,6 +917,13 @@ export class SpokeService {
       }
       if (isStellarChainKeyType(chainKey)) {
         const result = await this.stellarSpokeService.waitForTransactionReceipt({ txHash, chainKey });
+        if (result.ok && result.value.status === 'success') {
+          return { ok: true, value: true };
+        }
+        return { ok: false, error: new Error('TRANSACTION_VERIFICATION_FAILED') };
+      }
+      if (isSuiChainKeyType(chainKey)) {
+        const result = await this.suiSpokeService.waitForTransactionReceipt({ txHash, chainKey });
         if (result.ok && result.value.status === 'success') {
           return { ok: true, value: true };
         }

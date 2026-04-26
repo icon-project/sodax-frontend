@@ -18,13 +18,11 @@ import {
   type CreateLimitOrderParams,
   getSupportedSolverTokens,
   type SolverIntentQuoteRequest,
-  StellarSpokeProvider,
 } from '@sodax/sdk';
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import {
-  useSpokeProvider,
   useSwapAllowance,
   useSwapApprove,
   useCreateLimitOrder,
@@ -40,13 +38,12 @@ import {
   useWalletProvider,
 } from '@sodax/wallet-sdk-react';
 import {
-  type ChainId,
-  POLYGON_MAINNET_CHAIN_ID,
-  type Token,
-  type SpokeChainId,
+  type SpokeChainKey,
+  type XToken,
   type ChainType,
-  ICON_MAINNET_CHAIN_ID,
-  STELLAR_MAINNET_CHAIN_ID,
+  type IStellarWalletProvider,
+  type StellarChainKey,
+  ChainKeys,
 } from '@sodax/types';
 import { useAppStore } from '@/zustand/useAppStore';
 import LimitOrderList from './LimitOrderList';
@@ -54,22 +51,21 @@ import { useQueryClient } from '@tanstack/react-query';
 
 export default function LimitOrderCard() {
   const { sodax } = useSodaxContext();
-  const [sourceChain, setSourceChain] = useState<SpokeChainId>(ICON_MAINNET_CHAIN_ID);
+  const [sourceChain, setSourceChain] = useState<SpokeChainKey>(ChainKeys.ICON_MAINNET);
   const sourceAccount = useXAccount(sourceChain);
   const sourceWalletProvider = useWalletProvider(sourceChain);
-  const sourceProvider = useSpokeProvider(sourceChain, sourceWalletProvider);
-  const [destChain, setDestChain] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
+  const [destChain, setDestChain] = useState<SpokeChainKey>(ChainKeys.POLYGON_MAINNET);
   const destAccount = useXAccount(destChain);
+  const destWalletProvider = useWalletProvider(destChain);
   const { openWalletModal } = useAppStore();
-  const { mutateAsync: createLimitOrder } = useCreateLimitOrder(sourceProvider);
-  const [sourceToken, setSourceToken] = useState<Token | undefined>(getSupportedSolverTokens(ICON_MAINNET_CHAIN_ID)[0]);
-  const [destToken, setDestToken] = useState<Token | undefined>(getSupportedSolverTokens(POLYGON_MAINNET_CHAIN_ID)[0]);
+  const { mutateAsync: createLimitOrder } = useCreateLimitOrder(sourceChain, sourceWalletProvider);
+  const [sourceToken, setSourceToken] = useState<XToken | undefined>(getSupportedSolverTokens(ChainKeys.ICON_MAINNET)[0]);
+  const [destToken, setDestToken] = useState<XToken | undefined>(getSupportedSolverTokens(ChainKeys.POLYGON_MAINNET)[0]);
   const [sourceAmount, setSourceAmount] = useState<string>('');
   const [limitOrderPayload, setLimitOrderPayload] = useState<CreateLimitOrderParams | undefined>(undefined);
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(limitOrderPayload, sourceProvider);
-  const { approve, isLoading: isApproving } = useSwapApprove(limitOrderPayload, sourceProvider);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(limitOrderPayload, sourceChain, sourceWalletProvider);
+  const { approve, isLoading: isApproving } = useSwapApprove(limitOrderPayload, sourceChain, sourceWalletProvider);
   const supportedSpokeChains = sodax.config.getSupportedSpokeChains();
-  const destProvider = useSpokeProvider(destChain, useWalletProvider(destChain));
   const {
     data: hasSufficientTrustline,
     isPending: isTrustlineLoading,
@@ -77,8 +73,8 @@ export default function LimitOrderCard() {
   } = useStellarTrustlineCheck(
     limitOrderPayload?.outputToken,
     BigInt(limitOrderPayload?.minOutputAmount ?? 0n),
-    destProvider,
-    limitOrderPayload?.dstChain,
+    limitOrderPayload?.dstChainKey,
+    destChain === ChainKeys.STELLAR_MAINNET ? (destWalletProvider as IStellarWalletProvider | undefined) : undefined,
   );
   if (trustlineError) {
     console.error('trustlineError', trustlineError);
@@ -93,12 +89,12 @@ export default function LimitOrderCard() {
     setDestToken(sourceToken);
   };
 
-  const onSrcChainChange = (chainId: SpokeChainId) => {
+  const onSrcChainChange = (chainId: SpokeChainKey) => {
     setSourceChain(chainId);
     setSourceToken(getSupportedSolverTokens(chainId)[0]);
   };
 
-  const onDestChainChange = (chainId: SpokeChainId) => {
+  const onDestChainChange = (chainId: SpokeChainKey) => {
     setDestChain(chainId);
     setDestToken(getSupportedSolverTokens(chainId)[0]);
   };
@@ -145,8 +141,8 @@ export default function LimitOrderCard() {
       return;
     }
 
-    if (!sourceProvider) {
-      console.error('sourceProvider undefined');
+    if (!sourceWalletProvider) {
+      console.error('sourceWalletProvider undefined');
       return;
     }
 
@@ -156,9 +152,9 @@ export default function LimitOrderCard() {
       inputAmount: parseUnits(sourceAmount, sourceToken.decimals), // The amount of input tokens
       minOutputAmount: BigInt(minOutputAmount.toFixed(0)), // The minimum amount of output tokens to accept
       allowPartialFill: false, // Whether the intent can be partially filled
-      srcChain: sourceChain, // Chain ID where input tokens originate
-      dstChain: destChain, // Chain ID where output tokens should be delivered
-      srcAddress: await sourceProvider.walletProvider.getWalletAddress(), // Source address (original address on spoke chain)
+      srcChainKey: sourceChain, // Chain ID where input tokens originate
+      dstChainKey: destChain, // Chain ID where output tokens should be delivered
+      srcAddress: await sourceWalletProvider.getWalletAddress(), // Source address (original address on spoke chain)
       dstAddress: destAccount.address, // Destination address (original address on spoke chain)
       solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
       data: '0x', // Additional arbitrary data
@@ -167,7 +163,7 @@ export default function LimitOrderCard() {
     setLimitOrderPayload(limitOrderParams);
   };
 
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceChain as ChainId);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceChain as SpokeChainKey);
 
   const queryClient = useQueryClient();
 
@@ -207,15 +203,16 @@ export default function LimitOrderCard() {
       return;
     }
 
-    if (!destProvider || !(destProvider instanceof StellarSpokeProvider)) {
-      console.error('destProvider undefined or not a StellarSpokeProvider');
+    if (destChain !== ChainKeys.STELLAR_MAINNET || !destWalletProvider) {
+      console.error('destChain is not Stellar or destWalletProvider undefined');
       return;
     }
 
     await requestTrustline({
       token: limitOrderPayload.outputToken,
       amount: limitOrderPayload.minOutputAmount,
-      spokeProvider: destProvider,
+      srcChainKey: destChain as StellarChainKey,
+      walletProvider: destWalletProvider as IStellarWalletProvider,
     });
   };
 
@@ -355,10 +352,10 @@ export default function LimitOrderCard() {
               <div className="">
                 <div className="flex flex-col">
                   <div>
-                    inputToken: {limitOrderPayload?.inputToken} on {limitOrderPayload?.srcChain}
+                    inputToken: {limitOrderPayload?.inputToken} on {limitOrderPayload?.srcChainKey}
                   </div>
                   <div>
-                    outputToken: {limitOrderPayload?.outputToken} on {limitOrderPayload?.dstChain}
+                    outputToken: {limitOrderPayload?.outputToken} on {limitOrderPayload?.dstChainKey}
                   </div>
                   <div>
                     inputAmount: {formatUnits(limitOrderPayload?.inputAmount ?? 0n, sourceToken?.decimals ?? 0)}
@@ -372,7 +369,7 @@ export default function LimitOrderCard() {
                   <div>
                     outputAmount: {formatUnits(limitOrderPayload?.minOutputAmount ?? 0n, destToken?.decimals ?? 0)}
                   </div>
-                  {destChain === STELLAR_MAINNET_CHAIN_ID && !isTrustlineLoading && !hasSufficientTrustline && (
+                  {destChain === ChainKeys.STELLAR_MAINNET && !isTrustlineLoading && !hasSufficientTrustline && (
                     <div className="text-red-500">Insufficient Stellar trustline (request trustline to proceed)</div>
                   )}
                 </div>
@@ -406,8 +403,8 @@ export default function LimitOrderCard() {
                   ) : (
                     <span>Limit Order Payload undefined</span>
                   ))}
-                {isTrustlineLoading && destChain === STELLAR_MAINNET_CHAIN_ID && <span>Checking trustline...</span>}
-                {destChain === STELLAR_MAINNET_CHAIN_ID && !isTrustlineLoading && !hasSufficientTrustline && (
+                {isTrustlineLoading && destChain === ChainKeys.STELLAR_MAINNET && <span>Checking trustline...</span>}
+                {destChain === ChainKeys.STELLAR_MAINNET && !isTrustlineLoading && !hasSufficientTrustline && (
                   <Button
                     className="w-full"
                     onClick={() => handleRequestTrustline(limitOrderPayload)}

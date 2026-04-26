@@ -821,7 +821,9 @@ export const spokeChainConfig = {
 
 export const supportedSpokeChains: SpokeChainKey[] = Object.keys(spokeChainConfig) as SpokeChainKey[];
 
-export type GetChainType<C extends SpokeChainKey | ChainType> = C extends ChainType
+export type GetChainType<C extends SpokeChainKey | ChainType | undefined> = C extends undefined
+  ? undefined
+  : C extends ChainType
   ? C
   : C extends SpokeChainKey
     ? (typeof spokeChainConfig)[C]['chain']['type']

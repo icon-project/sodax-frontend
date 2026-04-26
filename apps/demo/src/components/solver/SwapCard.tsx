@@ -15,19 +15,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { calculateExchangeRate } from '@/lib/utils';
 import { parseUnits, formatUnits } from 'viem';
-import {
-  type CreateIntentParams,
-  getSupportedSolverTokens,
-  type SolverIntentQuoteRequest,
-  StellarSpokeProvider,
-} from '@sodax/sdk';
-import type { SubmitSwapTxRequest, SwapIntentData } from '@sodax/types';
+import { type CreateIntentParams, getSupportedSolverTokens, type SolverIntentQuoteRequest } from '@sodax/sdk';
+import type { GetWalletProviderType, SubmitSwapTxRequest, SwapIntentData } from '@sodax/types';
 import BigNumber from 'bignumber.js';
 import { ArrowDownUp, ArrowLeftRight } from 'lucide-react';
 import React, { type SetStateAction, useMemo, useState } from 'react';
 import {
   useQuote,
-  useSpokeProvider,
   useSwapAllowance,
   useSwapApprove,
   useSwap,
@@ -49,20 +43,17 @@ import {
   useXService,
 } from '@sodax/wallet-sdk-react';
 import {
-  type ChainId,
-  POLYGON_MAINNET_CHAIN_ID,
-  type Token,
-  type SpokeChainId,
-  type ChainType,
-  ICON_MAINNET_CHAIN_ID,
-  STELLAR_MAINNET_CHAIN_ID,
-  BITCOIN_MAINNET_CHAIN_ID,
+  type SpokeChainKey,
   type XToken,
+  type ChainType,
+  type IBitcoinWalletProvider,
+  type IStellarWalletProvider,
+  type StellarChainKey,
+  ChainKeys,
 } from '@sodax/types';
 import type { Order } from '@/components/solver/OrderStatus';
-import { useAppStore } from '@/zustand/useAppStore';
+import { DEFAULT_SELECTED_CHAIN, useAppStore } from '@/zustand/useAppStore';
 import { BitcoinSetupPanel } from '@/components/bitcoin/BitcoinSetupPanel';
-import { isBitcoinSpokeProvider, type BitcoinSpokeProvider } from '@sodax/sdk';
 
 const SUBMIT_TX_API_CONFIG = { baseURL: 'https://canary-api.sodax.com/v1/bes' } as const;
 
@@ -73,22 +64,29 @@ export default function SwapCard({
 }) {
   const { sodax } = useSodaxContext();
   //chain and account states
-  const [sourceChain, setSourceChain] = useState<SpokeChainId>(ICON_MAINNET_CHAIN_ID);
-  const sourceAccount = useXAccount(sourceChain);
-  const sourceWalletProvider = useWalletProvider(sourceChain);
-  const sourceProvider = useSpokeProvider(sourceChain, sourceWalletProvider);
-  const [destChain, setDestChain] = useState<SpokeChainId>(POLYGON_MAINNET_CHAIN_ID);
-  const destAccount = useXAccount(destChain);
+  const [src, setSrc] = useState<{ chain: SpokeChainKey; token: XToken }>({
+    chain: DEFAULT_SELECTED_CHAIN,
+    token: getSupportedSolverTokens(DEFAULT_SELECTED_CHAIN)[0],
+  });
+  const [dst, setDst] = useState<{ chain: SpokeChainKey; token: XToken }>({
+    chain: ChainKeys.POLYGON_MAINNET,
+    token: getSupportedSolverTokens(ChainKeys.POLYGON_MAINNET)[0],
+  });
+  const sourceAccount = useXAccount(src.chain);
+  const sourceWalletProvider = useWalletProvider(src.chain);
+  const destAccount = useXAccount(dst.chain);
+  const destWalletProvider = useWalletProvider(dst.chain);
   const { openWalletModal } = useAppStore();
-  const { mutateAsync: swap } = useSwap(sourceProvider);
-  const [sourceToken, setSourceToken] = useState<Token | undefined>(getSupportedSolverTokens(ICON_MAINNET_CHAIN_ID)[0]);
-  const [destToken, setDestToken] = useState<Token | undefined>(getSupportedSolverTokens(POLYGON_MAINNET_CHAIN_ID)[0]);
+  const { mutateAsync: swap } = useSwap(src.chain, sourceWalletProvider);
   const [sourceAmount, setSourceAmount] = useState<string>('');
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(intentOrderPayload, sourceProvider);
-  const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, sourceProvider);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(
+    intentOrderPayload,
+    src.chain,
+    sourceWalletProvider,
+  );
+  const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, src.chain, sourceWalletProvider);
   const supportedSpokeChains = sodax.config.getSupportedSpokeChains();
-  const destProvider = useSpokeProvider(destChain, useWalletProvider(destChain));
   const {
     data: hasSufficientTrustline,
     isPending: isTrustlineLoading,
@@ -96,91 +94,97 @@ export default function SwapCard({
   } = useStellarTrustlineCheck(
     intentOrderPayload?.outputToken,
     BigInt(intentOrderPayload?.minOutputAmount ?? 0n),
-    destProvider,
-    intentOrderPayload?.dstChain,
+    intentOrderPayload?.dstChainKey,
+    dst.chain === ChainKeys.STELLAR_MAINNET
+      ? (destWalletProvider as GetWalletProviderType<typeof ChainKeys.STELLAR_MAINNET> | undefined)
+      : undefined,
   );
   if (trustlineError) {
     console.error('trustlineError', trustlineError);
   }
-  const { requestTrustline } = useRequestTrustline(destToken?.address);
+  const { requestTrustline } = useRequestTrustline(dst.token?.address);
   const [open, setOpen] = useState(false);
   const [slippage, setSlippage] = useState<string>('0.5');
-    const [useSubmitTxApi, setUseSubmitTxApi] = useState(false);
-    const { mutateAsync: submitSwapTx, isPending: isSubmitting } = useBackendSubmitSwapTx({
-        apiConfig: SUBMIT_TX_API_CONFIG,
-    });
+  const [useSubmitTxApi, setUseSubmitTxApi] = useState(false);
+  const { mutateAsync: submitSwapTx, isPending: isSubmitting } = useBackendSubmitSwapTx({
+    apiConfig: SUBMIT_TX_API_CONFIG,
+  });
   const [isBitcoinReady, setIsBitcoinReady] = useState(false);
   const [isDestBitcoinReady, setIsDestBitcoinReady] = useState(false);
 
   // Bitcoin connector info for fund dialog (source)
-  const sourceChainType = getXChainType(sourceChain);
+  const sourceChainType = getXChainType(src.chain);
   const sourceBtcConnection = useXConnection(sourceChainType);
   const sourceBtcService = useXService(sourceChainType);
-  const sourceBtcConnector = sourceChainType === 'BITCOIN' && sourceBtcConnection?.xConnectorId && sourceBtcService
-    ? sourceBtcService.getXConnectorById(sourceBtcConnection.xConnectorId)
-    : undefined;
+  const sourceBtcConnector =
+    sourceChainType === 'BITCOIN' && sourceBtcConnection?.xConnectorId && sourceBtcService
+      ? sourceBtcService.getXConnectorById(sourceBtcConnection.xConnectorId)
+      : undefined;
 
   // Bitcoin connector info (dest)
-  const destChainType = getXChainType(destChain);
+  const destChainType = getXChainType(dst.chain);
   const destBtcConnection = useXConnection(destChainType);
   const destBtcService = useXService(destChainType);
-  const destBtcConnector = destChainType === 'BITCOIN' && destBtcConnection?.xConnectorId && destBtcService
-    ? destBtcService.getXConnectorById(destBtcConnection.xConnectorId)
-    : undefined;
+  const destBtcConnector =
+    destChainType === 'BITCOIN' && destBtcConnection?.xConnectorId && destBtcService
+      ? destBtcService.getXConnectorById(destBtcConnection.xConnectorId)
+      : undefined;
 
   const onChangeDirection = () => {
-    setSourceChain(destChain);
-    setDestChain(sourceChain);
-    setSourceToken(destToken);
-    setDestToken(sourceToken);
+    setSrc(dst);
+    setDst(src);
   };
 
-  const onSrcChainChange = (chainId: SpokeChainId) => {
-    setSourceChain(chainId);
-    setSourceToken(getSupportedSolverTokens(chainId)[0]);
+  const onSrcChainChange = (chainId: SpokeChainKey) => {
+    setSrc({ chain: chainId, token: getSupportedSolverTokens(chainId)[0] });
   };
 
-  const onDestChainChange = (chainId: SpokeChainId) => {
-    setDestChain(chainId);
-    setDestToken(getSupportedSolverTokens(chainId)[0]);
+  const onDestChainChange = (chainId: SpokeChainKey) => {
+    setDst({ chain: chainId, token: getSupportedSolverTokens(chainId)[0] });
   };
 
   // Balance fetching- Fetch source token balance for the connected wallet
-  const sourceXService = useXService(getXChainType(sourceChain));
+  const sourceXService = useXService(getXChainType(src.chain));
   const { data: sourceBalances } = useXBalances({
     xService: sourceXService,
-    xChainId: sourceChain,
-    xTokens: sourceToken ? [sourceToken as XToken] : [],
+    xChainId: src.chain,
+    xTokens: src.token ? [src.token as XToken] : [],
     address: sourceAccount.address,
   });
-  const sourceTokenBalance = sourceBalances?.[sourceToken?.address ?? ''] ?? 0n;
+  const sourceTokenBalance = sourceBalances?.[src.token?.address ?? ''] ?? 0n;
 
   // Fetch destination token balance for the connected wallet
-  const destXService = useXService(getXChainType(destChain));
+  const destXService = useXService(getXChainType(dst.chain));
   const { data: destBalances } = useXBalances({
     xService: destXService,
-    xChainId: destChain,
-    xTokens: destToken ? [destToken as XToken] : [],
+    xChainId: dst.chain,
+    xTokens: dst.token ? [dst.token as XToken] : [],
     address: destAccount.address,
   });
-  const destTokenBalance = destBalances?.[destToken?.address ?? ''] ?? 0n;
+  const destTokenBalance = destBalances?.[dst.token?.address ?? ''] ?? 0n;
 
   // Bitcoin trading wallet balances
-  const sourceTradingAddress = sourceChain === BITCOIN_MAINNET_CHAIN_ID && sourceAccount.address
-    ? loadRadfiSession(sourceAccount.address)?.tradingAddress : undefined;
-  const destTradingAddress = destChain === BITCOIN_MAINNET_CHAIN_ID && destAccount.address
-    ? loadRadfiSession(destAccount.address)?.tradingAddress : undefined;
-  const { data: srcTradingBal } = useTradingWalletBalance(
-    sourceChain === BITCOIN_MAINNET_CHAIN_ID && sourceProvider && isBitcoinSpokeProvider(sourceProvider) ? sourceProvider : undefined,
-    sourceTradingAddress,
-  );
-  const { data: destTradingBal } = useTradingWalletBalance(
-    destChain === BITCOIN_MAINNET_CHAIN_ID && destProvider && isBitcoinSpokeProvider(destProvider) ? destProvider : undefined,
-    destTradingAddress,
-  );
+  const sourceTradingAddress =
+    src.chain === ChainKeys.BITCOIN_MAINNET && sourceAccount.address
+      ? loadRadfiSession(sourceAccount.address)?.tradingAddress
+      : undefined;
+  const destTradingAddress =
+    dst.chain === ChainKeys.BITCOIN_MAINNET && destAccount.address
+      ? loadRadfiSession(destAccount.address)?.tradingAddress
+      : undefined;
+  const sourceBitcoinWallet =
+    src.chain === ChainKeys.BITCOIN_MAINNET
+      ? (sourceWalletProvider as GetWalletProviderType<typeof ChainKeys.BITCOIN_MAINNET> | undefined)
+      : undefined;
+  const destBitcoinWallet =
+    dst.chain === ChainKeys.BITCOIN_MAINNET
+      ? (destWalletProvider as GetWalletProviderType<typeof ChainKeys.BITCOIN_MAINNET> | undefined)
+      : undefined;
+  const { data: srcTradingBal } = useTradingWalletBalance(sourceBitcoinWallet, sourceTradingAddress);
+  const { data: destTradingBal } = useTradingWalletBalance(destBitcoinWallet, destTradingAddress);
 
   const payload = useMemo(() => {
-    if (!sourceToken || !destToken) {
+    if (!src.token || !dst.token) {
       return undefined;
     }
 
@@ -189,14 +193,14 @@ export default function SwapCard({
     }
 
     return {
-      token_src: sourceToken.address,
-      token_src_blockchain_id: sourceChain,
-      token_dst: destToken.address,
-      token_dst_blockchain_id: destChain,
-      amount: parseUnits(sourceAmount, sourceToken.decimals),
+      token_src: src.token.address,
+      token_src_blockchain_id: src.chain,
+      token_dst: dst.token.address,
+      token_dst_blockchain_id: dst.chain,
+      amount: parseUnits(sourceAmount, src.token.decimals),
       quote_type: 'exact_input',
     } satisfies SolverIntentQuoteRequest;
-  }, [sourceToken, destToken, sourceChain, destChain, sourceAmount]);
+  }, [src.token, dst.token, src.chain, dst.chain, sourceAmount]);
 
   const quoteQuery = useQuote(payload);
 
@@ -211,9 +215,9 @@ export default function SwapCard({
   const exchangeRate = useMemo(() => {
     return calculateExchangeRate(
       new BigNumber(sourceAmount),
-      new BigNumber(formatUnits(quote?.quoted_amount ?? 0n, destToken?.decimals ?? 0)),
+      new BigNumber(formatUnits(quote?.quoted_amount ?? 0n, dst.token?.decimals ?? 0)),
     );
-  }, [quote, sourceAmount, destToken]);
+  }, [quote, sourceAmount, dst.token]);
 
   const minOutputAmount = useMemo(() => {
     return quote?.quoted_amount
@@ -231,7 +235,7 @@ export default function SwapCard({
       return;
     }
 
-    if (!sourceToken || !destToken) {
+    if (!src.token || !dst.token) {
       console.error('sourceToken or destToken undefined');
       return;
     }
@@ -251,24 +255,25 @@ export default function SwapCard({
       return;
     }
 
-    if (!sourceProvider) {
-      console.error('sourceProvider or destProvider undefined');
+    if (!sourceWalletProvider) {
+      console.error('sourceWalletProvider undefined');
       return;
     }
 
     const createIntentParams = {
-      inputToken: sourceToken.address, // The address of the input token on hub chain
-      outputToken: destToken.address, // The address of the output token on hub chain
-      inputAmount: parseUnits(sourceAmount, sourceToken.decimals), // The amount of input tokens
+      inputToken: src.token.address, // The address of the input token on hub chain
+      outputToken: dst.token.address, // The address of the output token on hub chain
+      inputAmount: parseUnits(sourceAmount, src.token.decimals), // The amount of input tokens
       minOutputAmount: BigInt(minOutputAmount.toFixed(0)), // The minimum amount of output tokens to accept
       deadline: BigInt(Math.floor(Date.now() / 1000) + 60 * 5), // Optional timestamp after which intent expires (0 = no deadline)
       allowPartialFill: false, // Whether the intent can be partially filled
-      srcChain: sourceChain, // Chain ID where input tokens originate
-      dstChain: destChain, // Chain ID where output tokens should be delivered
-      srcAddress: await sourceProvider.walletProvider.getWalletAddress(), // Source address (original address on spoke chain)
-      dstAddress: destChain === BITCOIN_MAINNET_CHAIN_ID && destAccount.address
-        ? (loadRadfiSession(destAccount.address)?.tradingAddress || destAccount.address)
-        : destAccount.address, // Bitcoin: prefer trading wallet, others: personal wallet
+      srcChainKey: src.chain, // Chain ID where input tokens originate
+      dstChainKey: dst.chain, // Chain ID where output tokens should be delivered
+      srcAddress: await sourceWalletProvider.getWalletAddress(), // Source address (original address on spoke chain)
+      dstAddress:
+        dst.chain === ChainKeys.BITCOIN_MAINNET && destAccount.address
+          ? loadRadfiSession(destAccount.address)?.tradingAddress || destAccount.address
+          : destAccount.address, // Bitcoin: prefer trading wallet, others: personal wallet
       solver: '0x0000000000000000000000000000000000000000', // Optional specific solver address (address(0) = any solver)
       data: '0x', // Additional arbitrary data
     } satisfies CreateIntentParams;
@@ -276,19 +281,20 @@ export default function SwapCard({
     setIntentOrderPayload(createIntentParams);
   };
 
-  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(sourceChain as ChainId);
+  const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(src.chain);
 
   const handleSubmitTxSwap = async (intentOrderPayload: CreateIntentParams) => {
-    if (!sourceProvider) {
-      console.error('sourceProvider undefined');
+    if (!sourceWalletProvider) {
+      console.error('sourceWalletProvider undefined');
       return;
     }
 
     setOpen(false);
 
     const createIntentResult = await sodax.swaps.createIntent({
-      intentParams: intentOrderPayload,
-      spokeProvider: sourceProvider,
+      params: intentOrderPayload,
+      raw: false,
+      walletProvider: sourceWalletProvider,
     });
 
     if (!createIntentResult.ok) {
@@ -317,8 +323,8 @@ export default function SwapCard({
     };
 
     const request: SubmitSwapTxRequest = {
-      txHash: spokeTxHash,
-      srcChainId: sourceChain,
+      txHash: spokeTxHash as string,
+      srcChainKey: src.chain,
       walletAddress: sourceAccount.address ?? '',
       intent: swapIntentData,
       relayData,
@@ -329,7 +335,12 @@ export default function SwapCard({
 
     setOrders(prev => [
       ...prev,
-      { mode: 'submit-tx', txHash: spokeTxHash, srcChainId: sourceChain, apiBaseURL: SUBMIT_TX_API_CONFIG.baseURL },
+      {
+        mode: 'submit-tx',
+        txHash: spokeTxHash as string,
+        srcChainId: src.chain,
+        apiBaseURL: SUBMIT_TX_API_CONFIG.baseURL,
+      },
     ]);
   };
 
@@ -340,6 +351,8 @@ export default function SwapCard({
     }
 
     setOpen(false);
+    console.log('intentOrderPayload', intentOrderPayload);
+    console.log("wallet provider", sourceWalletProvider);
     const result = await swap(intentOrderPayload);
 
     if (result.ok) {
@@ -353,11 +366,11 @@ export default function SwapCard({
 
   const disconnect = useXDisconnect();
   const handleSourceAccountDisconnect = () => {
-    disconnect(getXChainType(sourceChain) as ChainType);
+    disconnect(getXChainType(src.chain) as ChainType);
   };
 
   const handleDestAccountDisconnect = () => {
-    disconnect(getXChainType(destChain) as ChainType);
+    disconnect(getXChainType(dst.chain) as ChainType);
   };
 
   const handleApprove = async () => {
@@ -376,15 +389,16 @@ export default function SwapCard({
       return;
     }
 
-    if (!destProvider || !(destProvider instanceof StellarSpokeProvider)) {
-      console.error('destProvider undefined or not a StellarSpokeProvider');
+    if (dst.chain !== ChainKeys.STELLAR_MAINNET || !destWalletProvider) {
+      console.error('destChain is not Stellar or destWalletProvider undefined');
       return;
     }
 
     await requestTrustline({
       token: intentOrderPayload.outputToken,
       amount: intentOrderPayload.minOutputAmount,
-      spokeProvider: destProvider,
+      srcChainKey: dst.chain as StellarChainKey,
+      walletProvider: destWalletProvider as IStellarWalletProvider,
     });
   };
 
@@ -397,7 +411,7 @@ export default function SwapCard({
         <div className="space-y-2">
           <SelectChain
             chainList={supportedSpokeChains}
-            value={sourceChain}
+            value={src.chain}
             setChain={onSrcChainChange}
             placeholder={'Select source chain'}
             id={'source-chain'}
@@ -414,14 +428,19 @@ export default function SwapCard({
             />
           </div>
           <Select
-            value={sourceToken?.symbol}
-            onValueChange={v => setSourceToken(getSupportedSolverTokens(sourceChain).find(token => token.symbol === v))}
+            value={src.token?.symbol}
+            onValueChange={v => {
+              setSrc(prev => ({
+                ...prev,
+                token: getSupportedSolverTokens(src.chain).find(token => token.symbol === v) as XToken,
+              }));
+            }}
           >
             <SelectTrigger className="w-[110px]">
               <SelectValue placeholder="Token" />
             </SelectTrigger>
             <SelectContent>
-              {getSupportedSolverTokens(sourceChain).map(token => (
+              {getSupportedSolverTokens(src.chain).map(token => (
                 <SelectItem key={token.address} value={token.symbol}>
                   {token.symbol}
                 </SelectItem>
@@ -432,12 +451,14 @@ export default function SwapCard({
         <div className="mix-blend-multiply text-black text-(length:--body-comfortable) font-medium font-['InterRegular'] flex gap-1">
           <span className="hidden sm:inline">Balance:</span>
           <span className="inline">
-            {Number(formatUnits(
-              sourceChain === BITCOIN_MAINNET_CHAIN_ID && srcTradingBal
-                ? srcTradingBal.btcSatoshi
-                : sourceTokenBalance,
-              sourceToken?.decimals ?? 0,
-            )).toFixed(5)}
+            {Number(
+              formatUnits(
+                src.chain === ChainKeys.BITCOIN_MAINNET && srcTradingBal
+                  ? srcTradingBal.btcSatoshi
+                  : sourceTokenBalance,
+                src.token?.decimals ?? 0,
+              ),
+            ).toFixed(5)}
           </span>
         </div>
         <div className="grow">
@@ -452,9 +473,9 @@ export default function SwapCard({
           </div>
         </div>
 
-        {sourceChain === BITCOIN_MAINNET_CHAIN_ID && sourceProvider && isBitcoinSpokeProvider(sourceProvider) && (
+        {sourceBitcoinWallet && (
           <BitcoinSetupPanel
-            spokeProvider={sourceProvider}
+            walletProvider={sourceBitcoinWallet}
             onReadyChange={setIsBitcoinReady}
             nativeBalance={sourceTokenBalance}
             connectorName={sourceBtcConnector?.name}
@@ -470,7 +491,7 @@ export default function SwapCard({
         <div className="space-y-2">
           <SelectChain
             chainList={supportedSpokeChains}
-            value={destChain}
+            value={dst.chain}
             setChain={onDestChainChange}
             placeholder={'Select destination chain'}
             id={'dest-chain'}
@@ -482,19 +503,24 @@ export default function SwapCard({
             <Input
               type="number"
               placeholder="0.0"
-              value={quote ? formatUnits(quote?.quoted_amount, destToken?.decimals ?? 0) : ''}
+              value={quote ? formatUnits(quote?.quoted_amount, dst.token?.decimals ?? 0) : ''}
               readOnly
             />
           </div>
           <Select
-            value={destToken?.symbol}
-            onValueChange={v => setDestToken(getSupportedSolverTokens(destChain).find(token => token.symbol === v))}
+            value={dst.token?.symbol}
+            onValueChange={v => {
+              setDst(prev => ({
+                ...prev,
+                token: getSupportedSolverTokens(dst.chain).find(token => token.symbol === v) as XToken,
+              }));
+            }}
           >
             <SelectTrigger className="w-[110px]">
               <SelectValue placeholder="Token" />
             </SelectTrigger>
             <SelectContent>
-              {getSupportedSolverTokens(destChain).map(token => (
+              {getSupportedSolverTokens(dst.chain).map(token => (
                 <SelectItem key={token.address} value={token.symbol}>
                   {token.symbol}
                 </SelectItem>
@@ -504,21 +530,31 @@ export default function SwapCard({
         </div>
         <div className="mix-blend-multiply text-black text-(length:--body-comfortable) font-medium font-['InterRegular'] flex gap-1">
           <span className="hidden sm:inline">Balance:</span>
-          <span className="inline">{Number(formatUnits(
-            destChain === BITCOIN_MAINNET_CHAIN_ID && destTradingBal
-              ? destTradingBal.btcSatoshi
-              : destTokenBalance,
-            destToken?.decimals ?? 0,
-          )).toFixed(4)}</span>
+          <span className="inline">
+            {Number(
+              formatUnits(
+                dst.chain === ChainKeys.BITCOIN_MAINNET && destTradingBal
+                  ? destTradingBal.btcSatoshi
+                  : destTokenBalance,
+                dst.token?.decimals ?? 0,
+              ),
+            ).toFixed(4)}
+          </span>
         </div>
         <div className="grow">
           <Label htmlFor="toAddress">Destination address</Label>
           <div className="flex items-center gap-2">
-            <Input id="toAddress" type="text" value={
-              destChain === BITCOIN_MAINNET_CHAIN_ID && destAccount.address
-                ? (loadRadfiSession(destAccount.address)?.tradingAddress || destAccount.address)
-                : (destAccount.address || '')
-            } placeholder="" disabled={true} />
+            <Input
+              id="toAddress"
+              type="text"
+              value={
+                dst.chain === ChainKeys.BITCOIN_MAINNET && destAccount.address
+                  ? loadRadfiSession(destAccount.address)?.tradingAddress || destAccount.address
+                  : destAccount.address || ''
+              }
+              placeholder=""
+              disabled={true}
+            />
             {destAccount.address ? (
               <Button onClick={handleDestAccountDisconnect}>Disconnect</Button>
             ) : (
@@ -527,9 +563,9 @@ export default function SwapCard({
           </div>
         </div>
 
-        {destChain === BITCOIN_MAINNET_CHAIN_ID && destProvider && isBitcoinSpokeProvider(destProvider) && (
+        {destBitcoinWallet && (
           <BitcoinSetupPanel
-            spokeProvider={destProvider}
+            walletProvider={destBitcoinWallet}
             onReadyChange={setIsDestBitcoinReady}
             nativeBalance={destTokenBalance}
             connectorName={destBtcConnector?.name}
@@ -543,7 +579,7 @@ export default function SwapCard({
           <div className="flex justify-between items-center">
             <span>Exchange Rate</span>
             <span>
-              1 {sourceToken?.symbol} ≈ {exchangeRate.toString()} {destToken?.symbol}
+              1 {src.token?.symbol} ≈ {exchangeRate.toString()} {dst.token?.symbol}
             </span>
           </div>
           <div className="flex justify-between items-center">
@@ -557,8 +593,8 @@ export default function SwapCard({
           <div className="flex justify-between items-center">
             <span>Minimum Output Amount</span>
             <span>
-              {minOutputAmount ? formatUnits(BigInt(minOutputAmount.toFixed(0)), destToken?.decimals ?? 0) : '0'}{' '}
-              {destToken?.symbol}
+              {minOutputAmount ? formatUnits(BigInt(minOutputAmount.toFixed(0)), dst.token?.decimals ?? 0) : '0'}{' '}
+              {dst.token?.symbol}
             </span>
           </div>
         </div>
@@ -594,29 +630,29 @@ export default function SwapCard({
             <div className="">
               <div className="flex flex-col">
                 <div>
-                  inputToken: {intentOrderPayload?.inputToken} on {intentOrderPayload?.srcChain}
+                  inputToken: {intentOrderPayload?.inputToken} on {intentOrderPayload?.srcChainKey}
                 </div>
                 <div>
-                  outputToken: {intentOrderPayload?.outputToken} on {intentOrderPayload?.dstChain}
+                  outputToken: {intentOrderPayload?.outputToken} on {intentOrderPayload?.dstChainKey}
                 </div>
-                <div>inputAmount: {formatUnits(intentOrderPayload?.inputAmount ?? 0n, sourceToken?.decimals ?? 0)}</div>
+                <div>inputAmount: {formatUnits(intentOrderPayload?.inputAmount ?? 0n, src.token?.decimals ?? 0)}</div>
                 <div>deadline: {new Date(Number(intentOrderPayload?.deadline) * 1000).toLocaleString()}</div>
                 <div>allowPartialFill: {intentOrderPayload?.allowPartialFill.toString()}</div>
                 <div>srcAddress: {intentOrderPayload?.srcAddress}</div>
                 <div>dstAddress: {intentOrderPayload?.dstAddress}</div>
                 <div>solver: {intentOrderPayload?.solver}</div>
                 <div>data: {intentOrderPayload?.data}</div>
-                <div>amount: {formatUnits(intentOrderPayload?.inputAmount ?? 0n, sourceToken?.decimals ?? 0)}</div>
+                <div>amount: {formatUnits(intentOrderPayload?.inputAmount ?? 0n, src.token?.decimals ?? 0)}</div>
                 <div>
-                  outputAmount: {formatUnits(intentOrderPayload?.minOutputAmount ?? 0n, destToken?.decimals ?? 0)}
+                  outputAmount: {formatUnits(intentOrderPayload?.minOutputAmount ?? 0n, dst.token?.decimals ?? 0)}
                 </div>
-                {destChain === STELLAR_MAINNET_CHAIN_ID && !isTrustlineLoading && !hasSufficientTrustline && (
+                {dst.chain === ChainKeys.STELLAR_MAINNET && !isTrustlineLoading && !hasSufficientTrustline && (
                   <div className="text-red-500">Insufficient Stellar trustline (request trustline to proceed)</div>
                 )}
               </div>
             </div>
             <DialogFooter>
-              {sourceChain !== BITCOIN_MAINNET_CHAIN_ID && (
+              {src.chain !== ChainKeys.BITCOIN_MAINNET && (
                 <Button
                   className="w-full"
                   type="button"
@@ -640,9 +676,10 @@ export default function SwapCard({
                     className="w-full"
                     onClick={() => handleSwap(intentOrderPayload)}
                     disabled={
-                      (sourceChain !== BITCOIN_MAINNET_CHAIN_ID && !hasAllowed) || isSubmitting ||
-                      (sourceChain === BITCOIN_MAINNET_CHAIN_ID && !isBitcoinReady) ||
-                      (destChain === BITCOIN_MAINNET_CHAIN_ID && !isDestBitcoinReady)
+                      (src.chain !== ChainKeys.BITCOIN_MAINNET && !hasAllowed) ||
+                      isSubmitting ||
+                      (src.chain === ChainKeys.BITCOIN_MAINNET && !isBitcoinReady) ||
+                      (dst.chain === ChainKeys.BITCOIN_MAINNET && !isDestBitcoinReady)
                     }
                   >
                     <ArrowLeftRight className="mr-2 h-4 w-4" /> Swap
@@ -650,8 +687,8 @@ export default function SwapCard({
                 ) : (
                   <span>Intent Order undefined</span>
                 ))}
-              {isTrustlineLoading && destChain === STELLAR_MAINNET_CHAIN_ID && <span>Checking trustline...</span>}
-              {destChain === STELLAR_MAINNET_CHAIN_ID && !isTrustlineLoading && !hasSufficientTrustline && (
+              {isTrustlineLoading && dst.chain === ChainKeys.STELLAR_MAINNET && <span>Checking trustline...</span>}
+              {dst.chain === ChainKeys.STELLAR_MAINNET && !isTrustlineLoading && !hasSufficientTrustline && (
                 <Button
                   className="w-full"
                   onClick={() => handleRequestTrustline(intentOrderPayload)}

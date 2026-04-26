@@ -62,7 +62,6 @@
     "@mysten/dapp-kit": "catalog:",
     "@mysten/sui": "catalog:",
     "near-api-js": "catalog:",
-    "@sodax/sdk": "workspace:*",
     "@sodax/types": "workspace:*",
     "@sodax/wallet-sdk-core": "workspace:*",
     "@solana/spl-token": "catalog:",

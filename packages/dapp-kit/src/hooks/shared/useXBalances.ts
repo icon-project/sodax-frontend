@@ -1,12 +1,12 @@
 import { type UseQueryResult, useQuery } from '@tanstack/react-query';
-import type { ChainId, IXServiceBase, XToken } from '@sodax/types';
+import type { SpokeChainKey, IXServiceBase, XToken } from '@sodax/types';
 
 /**
  * Params for {@link useXBalances}.
  */
 export interface UseXBalancesParams {
   xService: IXServiceBase | undefined;
-  xChainId: ChainId;
+  xChainId: SpokeChainKey;
   xTokens: readonly XToken[];
   address: string | undefined;
 }

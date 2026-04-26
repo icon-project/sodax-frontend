@@ -39,6 +39,11 @@
     "checkTs": {
       "dependsOn": ["^checkTs"]
     },
+    "checkTs:packages": {
+      "dependsOn": ["^checkTs"],
+      "inputs": ["packages/**"],
+      "outputs": ["dist/**"]
+    },
     "pretty": {
       "dependsOn": ["^pretty"],
       "cache": false
