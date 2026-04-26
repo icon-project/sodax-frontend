@@ -10,6 +10,8 @@ const TOOLTIP_LABEL = 'Read coverage';
 const SCROLL_SPEED_PX_PER_MS = 0.04;
 const DRAG_THRESHOLD_PX = 5;
 const COPY_COUNT = 6;
+const INITIAL_CENTER_DELAY_MS = 2000;
+const COINDESK_NAME = 'CoinDesk';
 
 type PressLogo = {
   name: string;
@@ -59,10 +61,12 @@ export const PressBar = (): ReactElement => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const copyRef = useRef<HTMLDivElement>(null);
+  const coindeskRef = useRef<HTMLAnchorElement>(null);
   const translateRef = useRef(0);
   const copyWidthRef = useRef(0);
   const isDraggingRef = useRef(false);
   const isHoveringRef = useRef(false);
+  const hasSeededInitialOffsetRef = useRef(false);
   const dragStartRef = useRef({ pointerX: 0, translate: 0, didDrag: false, pointerId: 0, isDown: false });
 
   useEffect(() => {
@@ -73,6 +77,24 @@ export const PressBar = (): ReactElement => {
     const measure = () => {
       // Each copy renders with `pr-[120px]`, so its offsetWidth already includes the trailing gap.
       copyWidthRef.current = copy.offsetWidth;
+
+      if (hasSeededInitialOffsetRef.current) return;
+      const viewport = viewportRef.current;
+      const coindesk = coindeskRef.current;
+      const copyWidth = copyWidthRef.current;
+      if (!viewport || !coindesk || copyWidth === 0) return;
+
+      const viewportRect = viewport.getBoundingClientRect();
+      const coindeskRect = coindesk.getBoundingClientRect();
+      const coindeskCenterInViewport = coindeskRect.left + coindeskRect.width / 2 - viewportRect.left;
+      const viewportCenter = viewport.offsetWidth / 2;
+      const scrollDistanceDuringDelay = SCROLL_SPEED_PX_PER_MS * INITIAL_CENTER_DELAY_MS;
+
+      let offset = viewportCenter - coindeskCenterInViewport + scrollDistanceDuringDelay;
+      offset = offset % copyWidth;
+      if (offset > 0) offset -= copyWidth;
+      translateRef.current = offset;
+      hasSeededInitialOffsetRef.current = true;
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -169,13 +191,14 @@ export const PressBar = (): ReactElement => {
           <div
             key={copyIndex}
             ref={copyIndex === 0 ? copyRef : undefined}
-            className="flex items-center gap-[120px] pr-[120px] shrink-0"
+            className="flex items-center gap-[60px] pr-[60px] md:gap-[120px] md:pr-[120px] shrink-0"
           >
             {PRESS_LOGOS.map((logo, logoIndex) => {
               return (
                 <Tooltip key={`${copyIndex}-${logo.name}-${logoIndex}`}>
                   <TooltipTrigger asChild>
                     <a
+                      ref={copyIndex === 0 && logo.name === COINDESK_NAME ? coindeskRef : undefined}
                       href={logo.href}
                       target="_blank"
                       rel="noopener noreferrer"

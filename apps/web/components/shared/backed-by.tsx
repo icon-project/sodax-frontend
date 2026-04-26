@@ -22,15 +22,20 @@ const BACKERS: Backer[] = [
 const MARQUEE_REPEATS = 8;
 const MARQUEE_SEQUENCE = Array.from({ length: MARQUEE_REPEATS }, () => BACKERS).flat();
 const SCROLL_SPEED_PX_PER_MS = 0.04;
+const INITIAL_CENTER_DELAY_MS = 2000;
+const PANTERA_NAME = 'Pantera Capital';
+const PANTERA_INDEX_IN_SEQUENCE = MARQUEE_SEQUENCE.findIndex(backer => backer.name === PANTERA_NAME);
 
 export const BackedBy = (): ReactElement => {
   const [isTouchPaused, setIsTouchPaused] = useState(false);
   const touchBoundaryRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const copyRef = useRef<HTMLDivElement>(null);
+  const panteraRef = useRef<HTMLAnchorElement>(null);
   const translateRef = useRef(0);
   const copyWidthRef = useRef(0);
   const isHoveringRef = useRef(false);
+  const hasSeededInitialOffsetRef = useRef(false);
 
   useEffect(() => {
     if (!isTouchPaused) return;
@@ -50,6 +55,24 @@ export const BackedBy = (): ReactElement => {
 
     const measure = () => {
       copyWidthRef.current = copy.offsetWidth;
+
+      if (hasSeededInitialOffsetRef.current) return;
+      const container = touchBoundaryRef.current;
+      const pantera = panteraRef.current;
+      const copyWidth = copyWidthRef.current;
+      if (!container || !pantera || copyWidth === 0) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const panteraRect = pantera.getBoundingClientRect();
+      const panteraCenterInContainer = panteraRect.left + panteraRect.width / 2 - containerRect.left;
+      const containerCenter = container.offsetWidth / 2;
+      const scrollDistanceDuringDelay = SCROLL_SPEED_PX_PER_MS * INITIAL_CENTER_DELAY_MS;
+
+      let offset = containerCenter - panteraCenterInContainer + scrollDistanceDuringDelay;
+      offset = offset % copyWidth;
+      if (offset > 0) offset -= copyWidth;
+      translateRef.current = offset;
+      hasSeededInitialOffsetRef.current = true;
     };
     measure();
 
@@ -111,10 +134,11 @@ export const BackedBy = (): ReactElement => {
               {MARQUEE_SEQUENCE.map((backer, i) => (
                 <a
                   key={`${copyIndex}-${backer.name}-${i}`}
+                  ref={copyIndex === 0 && i === PANTERA_INDEX_IN_SEQUENCE ? panteraRef : undefined}
                   href={backer.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mx-3 shrink-0 opacity-25 hover:opacity-100 transition-opacity duration-300"
+                  className="mx-3 shrink-0 opacity-80 hover:opacity-100 transition-opacity duration-300"
                   aria-label={backer.name}
                   onTouchStart={event => {
                     // On mobile, first tap pauses the marquee so it’s easier to interact.
