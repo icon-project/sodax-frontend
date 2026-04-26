@@ -48,6 +48,7 @@ import {
   isSpokeApproveParamsHub,
   isSpokeApproveParamsEvmSpoke,
   isSpokeApproveParamsStellar,
+  isSuiChainKeyType,
 } from '../../guards.js';
 import type { ConfigService } from '../../config/ConfigService.js';
 import type { EvmHubProvider } from '../../entities/EvmHubProvider.js';
@@ -440,7 +441,10 @@ export class SpokeService {
     }
   }
 
-  private resolveSimulationEncoding(srcChainKey: Exclude<SpokeChainKey, HubChainKey>, token: string): { encodedToken: Hex; encodedSrcAddress: Hex } {
+  private resolveSimulationEncoding(
+    srcChainKey: Exclude<SpokeChainKey, HubChainKey>,
+    token: string,
+  ): { encodedToken: Hex; encodedSrcAddress: Hex } {
     const assetManager = spokeChainConfig[srcChainKey].addresses.assetManager;
     switch (getChainType(srcChainKey)) {
       case 'ICON':
@@ -890,6 +894,7 @@ export class SpokeService {
   public async verifyTxHash(params: VerifyTxHashParams): Promise<Result<boolean>> {
     try {
       const { txHash, chainKey } = params;
+
       if (isSolanaChainKeyType(chainKey)) {
         const result = await this.solanaSpokeService.waitForTransactionReceipt({ txHash, chainKey });
 
@@ -912,6 +917,13 @@ export class SpokeService {
       }
       if (isStellarChainKeyType(chainKey)) {
         const result = await this.stellarSpokeService.waitForTransactionReceipt({ txHash, chainKey });
+        if (result.ok && result.value.status === 'success') {
+          return { ok: true, value: true };
+        }
+        return { ok: false, error: new Error('TRANSACTION_VERIFICATION_FAILED') };
+      }
+      if (isSuiChainKeyType(chainKey)) {
+        const result = await this.suiSpokeService.waitForTransactionReceipt({ txHash, chainKey });
         if (result.ok && result.value.status === 'success') {
           return { ok: true, value: true };
         }

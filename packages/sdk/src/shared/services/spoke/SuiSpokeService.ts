@@ -353,12 +353,26 @@ export class SuiSpokeService {
         digest: params.txHash,
         timeout: params.maxTimeoutMs ?? this.maxTimeoutMs,
         pollInterval: params.pollingIntervalMs ?? this.pollingIntervalMs,
+        options: { showEffects: true },
       });
 
-      if (result.effects?.status?.status === 'failure') {
+      if (!result.effects?.status) {
         return {
           ok: true,
-          value: { status: 'failure', error: new Error(`Transaction failed: ${result.effects.status.error}`) },
+          value: {
+            status: 'failure',
+            error: new Error(`Transaction effects unavailable for digest=${params.txHash}`),
+          },
+        };
+      }
+
+      if (result.effects.status.status === 'failure') {
+        return {
+          ok: true,
+          value: {
+            status: 'failure',
+            error: new Error(`Transaction failed: ${result.effects.status.error ?? 'unknown'}`),
+          },
         };
       }
 
