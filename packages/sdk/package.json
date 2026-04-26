@@ -7,7 +7,12 @@
   "version": "0.0.1-rc.5",
   "license": "MIT",
   "description": "Sodax SDK",
-  "keywords": ["sodax", "sdk", "frontend", "interface"],
+  "keywords": [
+    "sodax",
+    "sdk",
+    "frontend",
+    "interface"
+  ],
   "homepage": "https://github.com/icon-project/sodax-frontend/tree/main/packages/sdk",
   "bugs": {
     "url": "https://github.com/icon-project/sodax-frontend/issues"
@@ -30,7 +35,9 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "test": "vitest run --exclude ./src/e2e-tests",
@@ -53,18 +60,18 @@
     "@injectivelabs/networks": "catalog:",
     "@injectivelabs/sdk-ts": "catalog:",
     "@mysten/sui": "catalog:",
+    "@ordjs/runestone": "^1.6.0",
     "@pancakeswap/chains": "^0.7.0",
     "@pancakeswap/infinity-sdk": "^1.0.0",
     "@pancakeswap/permit2-sdk": "^1.1.7",
     "@pancakeswap/swap-sdk-core": "^1.5.1",
     "@pancakeswap/v3-sdk": "^3.9.7",
-    "@ordjs/runestone": "^1.6.0",
     "@sodax/types": "workspace:*",
     "@solana/spl-token": "catalog:",
     "@solana/web3.js": "catalog:",
-    "@stellar/stellar-sdk": "catalog:",
-    "@stacks/transactions": "catalog:",
     "@stacks/network": "catalog:",
+    "@stacks/transactions": "catalog:",
+    "@stellar/stellar-sdk": "catalog:",
     "bignumber.js": "catalog:",
     "bitcoinjs-lib": "^6.1.5",
     "bn.js": "^5.2.1",
@@ -79,6 +86,8 @@
   "devDependencies": {
     "@arethetypeswrong/cli": "catalog:",
     "@changesets/cli": "catalog:",
+    "@stryker-mutator/core": "9.6.1",
+    "@stryker-mutator/vitest-runner": "9.6.1",
     "@types/bn.js": "^5.1.6",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
