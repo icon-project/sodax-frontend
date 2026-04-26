@@ -801,13 +801,9 @@ describe('SwapService.createIntent', () => {
     it('on Sonic, delegates to SonicSpokeService.createRawSwapIntent when raw=true', async () => {
       const svc = sodax.swaps;
       const fakeIntent = makeIntent(ChainKeys.SONIC_MAINNET);
+      const rawTx = { from: '0x1', to: '0x2', data: '0x', value: 0n };
       mocks.getUserHubWalletAddress.mockResolvedValueOnce('0xhubwallet');
-      mocks.sonicCreateSwapIntent.mockResolvedValueOnce([
-        { from: '0x1', to: '0x2', data: '0x', value: 0n },
-        fakeIntent,
-        123n,
-        '0xdata',
-      ]);
+      mocks.sonicCreateSwapIntent.mockResolvedValueOnce([rawTx, fakeIntent, 123n, '0xdata']);
 
       const result = await svc.createIntent({
         params: intentInput(ChainKeys.SONIC_MAINNET),
@@ -815,6 +811,9 @@ describe('SwapService.createIntent', () => {
       });
 
       expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.value).toEqual([rawTx, { ...fakeIntent, feeAmount: 123n }, '0xdata']);
+      }
       expect(mocks.sonicCreateSwapIntent).toHaveBeenCalled();
       expect(mocks.sonicCreateSwapIntent.mock.calls[0]?.[0].createIntentParams.srcChain).toBe(ChainKeys.SONIC_MAINNET);
     });
@@ -832,6 +831,9 @@ describe('SwapService.createIntent', () => {
       });
 
       expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.value).toEqual(['0xexec-hash', { ...fakeIntent, feeAmount: 0n }, '0xdata']);
+      }
       expect(mocks.sonicCreateSwapIntent).toHaveBeenCalled();
       const lastCall = mocks.sonicCreateSwapIntent.mock.calls.at(-1)?.[0];
       expect(lastCall?.walletProvider).toBe(mockEvmProvider);
@@ -851,6 +853,9 @@ describe('SwapService.createIntent', () => {
       });
 
       expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.value).toEqual(['0xdeposit-hash', { ...fakeIntent, feeAmount: 42n }, '0xintentdata']);
+      }
       expect(svc.spoke.deposit).toHaveBeenCalled();
       const depositCall = (svc.spoke.deposit as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
       expect(depositCall.srcChainKey).toBe(ChainKeys.BSC_MAINNET);
@@ -860,19 +865,23 @@ describe('SwapService.createIntent', () => {
 
     it('forwards the raw flag to SpokeService.deposit and does not pass walletProvider when raw=true', async () => {
       const svc = sodax.swaps;
+      const params = intentInput(ChainKeys.BSC_MAINNET);
       mocks.getUserHubWalletAddress.mockResolvedValueOnce('0xhubwallet');
       mocks.constructCreateIntentData.mockReturnValueOnce(['0xintentdata', makeIntent(ChainKeys.BSC_MAINNET), 0n]);
       const rawDepositTx = { from: '0x1', to: '0x2', data: '0x', value: 0n };
       vi.spyOn(svc.spoke, 'deposit').mockResolvedValueOnce({ ok: true, value: rawDepositTx });
 
-      const result = await svc.createIntent({
-        params: intentInput(ChainKeys.BSC_MAINNET),
-        raw: true,
-      });
+      const result = await svc.createIntent({ params, raw: true });
 
       expect(result.ok).toBe(true);
       const depositCall = (svc.spoke.deposit as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
       expect(depositCall).not.toHaveProperty('walletProvider');
+      expect(depositCall.raw).toBe(true);
+      expect(depositCall.srcChainKey).toBe(ChainKeys.BSC_MAINNET);
+      expect(depositCall.token).toBe(params.inputToken);
+      expect(depositCall.amount).toBe(params.inputAmount);
+      expect(depositCall.data).toBe('0xintentdata');
+      expect(depositCall.to).toBe('0xhubwallet');
     });
 
     it('invokes Radfi access-token setup with the Bitcoin wallet provider when params.srcChain is Bitcoin and raw=false', async () => {
@@ -1098,6 +1107,8 @@ describe('SwapService.createLimitOrder and createLimitOrderIntent', () => {
     expect((forwarded?.params as CreateIntentParams).deadline).toBe(0n);
     expect(forwarded?.params.srcChain).toBe(ChainKeys.BSC_MAINNET);
     expect(forwarded?.walletProvider).toBe(mockEvmProvider);
+    expect(forwarded?.skipSimulation).toBe(false);
+    expect(forwarded?.fee).toBe(sodax.swaps.partnerFee);
   });
 
   it('createLimitOrderIntent delegates to createIntent with deadline=0n, preserving raw/K', async () => {
@@ -1134,7 +1145,7 @@ describe('SwapService.cancelIntent', () => {
       walletProvider: mockEvmProvider,
     });
 
-    expect(result.ok).toBe(true);
+    expect(result).toEqual({ ok: true, value: ['0xcancel-hash', '0xcancel-hash'] });
     const sendCall = (svc.spoke.sendMessage as ReturnType<typeof vi.fn>).mock.calls[0]?.[0];
     expect(sendCall.srcChainKey).toBe(ChainKeys.SONIC_MAINNET);
     expect(sendCall.walletProvider).toBe(mockEvmProvider);
@@ -1257,11 +1268,14 @@ describe('SwapService.getSwapDeadline', () => {
   it('returns the hub block timestamp plus the supplied deadline offset', async () => {
     const blockTimestamp = 1_700_000_000n;
     const offset = 300n;
-    vi.spyOn(sodax.hubProvider.publicClient, 'getBlock').mockResolvedValueOnce({ timestamp: blockTimestamp } as never);
+    const getBlockSpy = vi
+      .spyOn(sodax.hubProvider.publicClient, 'getBlock')
+      .mockResolvedValueOnce({ timestamp: blockTimestamp } as never);
 
     const result = await sodax.swaps.getSwapDeadline(offset);
 
     expect(result).toEqual({ ok: true, value: blockTimestamp + offset });
+    expect(getBlockSpy).toHaveBeenCalledWith({ includeTransactions: false, blockTag: 'latest' });
   });
 
   it('returns ok:false when deadline is 0n (invariant fails)', async () => {
@@ -1953,6 +1967,9 @@ describe('SwapService.createCancelIntent', () => {
 describe('SwapService.cancelIntent — non-hub (relay) path', () => {
   it('on an EVM spoke, submits the cancel to the relayer and waits for the dst tx hash', async () => {
     const intent = makeIntent(ChainKeys.BSC_MAINNET);
+    const verifyTxHashSpy = vi
+      .spyOn(sodax.spokeService, 'verifyTxHash')
+      .mockResolvedValueOnce({ ok: true, value: true });
     vi.spyOn(sodax.spokeService, 'sendMessage').mockResolvedValueOnce({ ok: true, value: '0xspokeCancelTx' });
     mocks.submitTransaction.mockResolvedValueOnce({ success: true, message: 'ok' });
     mocks.waitUntilIntentExecuted.mockResolvedValueOnce({ ok: true, value: { dst_tx_hash: '0xdstCancelTx' } });
@@ -1964,6 +1981,29 @@ describe('SwapService.cancelIntent — non-hub (relay) path', () => {
     });
 
     expect(result).toEqual({ ok: true, value: ['0xspokeCancelTx', '0xdstCancelTx'] });
+
+    expect(verifyTxHashSpy).toHaveBeenCalledWith({
+      txHash: '0xspokeCancelTx',
+      chainKey: ChainKeys.BSC_MAINNET,
+    });
+
+    expect(mocks.submitTransaction).toHaveBeenCalledWith(
+      {
+        action: 'submit',
+        params: {
+          chain_id: intent.srcChain.toString(),
+          tx_hash: '0xspokeCancelTx',
+        },
+      },
+      sodax.swaps.relayerApiEndpoint,
+    );
+
+    expect(mocks.waitUntilIntentExecuted).toHaveBeenCalledWith({
+      intentRelayChainId: intent.srcChain.toString(),
+      spokeTxHash: '0xspokeCancelTx',
+      timeout: expect.any(Number),
+      apiUrl: sodax.swaps.relayerApiEndpoint,
+    });
   });
 
   it('returns submitIntent failure when the relayer rejects the submit', async () => {
