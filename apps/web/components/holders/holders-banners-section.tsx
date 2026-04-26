@@ -5,7 +5,7 @@ import type { ReactElement } from 'react';
 import { trackHoldersMigrateClicked, trackHoldersStakeClicked, trackHoldersTokenomicsClicked } from '@/lib/analytics';
 import HoldersBanner from './holders-banner';
 import HoldersJoinBanner from './holders-join-banner';
-import HoldersStatsSection from './holders-stats-section';
+import LiveStatsSection from '@/components/shared/live-stats-section';
 import { HOLDERS_FULL_BANNER, HOLDERS_IMAGE_BANNERS, HOLDERS_SHORT_BANNERS } from './holders-banners-content';
 
 const IMAGE_BANNER_TRACKERS = [trackHoldersMigrateClicked, trackHoldersStakeClicked] as const;
@@ -27,7 +27,7 @@ export default function HoldersBannersSection(): ReactElement {
         ))}
       </div>
 
-      <HoldersStatsSection />
+      <LiveStatsSection />
 
       <HoldersJoinBanner />
     </>

@@ -70,6 +70,52 @@ export function formatCadence(cadenceSeconds: number | null | undefined): string
   return `~${trimTrailingZeros((cadenceSeconds / SECONDS_PER_HOUR).toFixed(1))} hr`;
 }
 
+/** Formats cadence in compact mm:ss style. e.g. `148 → "2m 28s"`, `45 → "45s"`, `3725 → "1h 2m"`. */
+export function formatCadenceClock(cadenceSeconds: number | null | undefined): string {
+  if (
+    cadenceSeconds === null ||
+    cadenceSeconds === undefined ||
+    !Number.isFinite(cadenceSeconds) ||
+    cadenceSeconds <= 0
+  ) {
+    return EMPTY_VALUE;
+  }
+
+  const totalSeconds = Math.round(cadenceSeconds);
+
+  if (totalSeconds < SECONDS_PER_MINUTE) {
+    return `${totalSeconds}s`;
+  }
+  if (totalSeconds < SECONDS_PER_HOUR) {
+    const minutes = Math.floor(totalSeconds / SECONDS_PER_MINUTE);
+    const seconds = totalSeconds % SECONDS_PER_MINUTE;
+    return seconds === 0 ? `${minutes}m` : `${minutes}m ${seconds}s`;
+  }
+  const hours = Math.floor(totalSeconds / SECONDS_PER_HOUR);
+  const minutes = Math.floor((totalSeconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
+  return minutes === 0 ? `${hours}h` : `${hours}h ${minutes}m`;
+}
+
+/** Formats a USD price with smart decimals. e.g. `0.03872 → "$0.0387"`, `1.234 → "$1.23"`, `1234 → "$1,234.00"`. */
+export function formatUsdPrice(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return EMPTY_VALUE;
+  }
+  const fractionDigits = Math.abs(value) < 1 ? 4 : 2;
+  return `$${value.toLocaleString('en-US', {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  })}`;
+}
+
+/** Comma-separates an integer count. e.g. `10107 → "10,107"`. */
+export function formatThousands(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return EMPTY_VALUE;
+  }
+  return thousandsFormatter.format(Math.round(value));
+}
+
 /** Formats a percentage with explicit +/− sign and one decimal place. e.g. `68.32 → "+68.3%"`. */
 export function formatPercentDelta(value: number | null | undefined): string {
   if (value === null || value === undefined || !Number.isFinite(value)) {
