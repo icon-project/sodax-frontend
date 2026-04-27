@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Camada_2" data-name="Camada 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+        fill-rule: evenodd;
+      }
+
+      .cls-2 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <g id="Camada_1-2" data-name="Camada 1">
+    <g id="Kukoin_White">
+      <path id="Kukoin" class="cls-1" d="M7.66,12l7.2,7.11,4.55-4.49c.81-.72,2.06-.69,2.83.07.77.76.81,1.99.07,2.79l-6,5.92c-.81.78-2.1.78-2.9,0L4.75,14.87v5.08c0,1.12-.92,2.03-2.06,2.03s-2.06-.91-2.06-2.03V4.05c0-1.12.92-2.03,2.06-2.03s2.06.91,2.06,2.03v5.08L13.41.59c.81-.78,2.1-.78,2.9,0l6,5.92c.73.8.7,2.03-.07,2.79-.77.76-2.02.8-2.83.07l-4.55-4.49-7.2,7.11ZM14.87,9.97h0c-.83,0-1.58.49-1.9,1.25s-.14,1.63.45,2.21c.59.58,1.47.76,2.24.44.77-.31,1.27-1.06,1.27-1.88,0-.54-.22-1.06-.6-1.44-.39-.38-.91-.6-1.46-.6h0Z"/>
+      <rect id="_24x24_square_to_size_them" data-name="24x24 square to size them" class="cls-2" width="24" height="24"/>
+    </g>
+  </g>
+</svg>

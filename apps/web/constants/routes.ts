@@ -60,10 +60,12 @@ export const DOCUMENTATION_ROUTE = 'https://docs.sodax.com';
 export const DOCUMENTATION_GITBOOK_ROUTE = 'https://sodax-1.gitbook.io/sodax-docs/readme-1';
 
 // ── Social & community (external) ──────────────────────────────────────────
-export const DISCORD_ROUTE = 'https://discord.com/invite/xM2Nh4S6vN';
+export const DISCORD_ROUTE = 'https://www.sodax.com/discord ';
 export const X_ROUTE = 'https://x.com/gosodax';
 /** X (Twitter) “follow” intent URL. */
 export const X_INTENT_FOLLOW_ROUTE = 'https://x.com/intent/user?screen_name=gosodax';
+/** X (Twitter) “follow” intent URL for the @sodaholders account. */
+export const X_HOLDERS_ROUTE = 'https://x.com/intent/user?screen_name=sodaholders';
 export const LINKTREE_ROUTE = 'https://linktr.ee/go.sodax';
 export const REDDIT_ROUTE = 'https://www.reddit.com/r/SODAX/';
 export const YOUTUBE_ROUTE = 'https://www.youtube.com/@gosodax';

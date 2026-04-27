@@ -88,6 +88,12 @@ export interface LeadMagnetPdfDownloadedEvent {
   variant_id: string;
 }
 
+// Kraken spotlight (homepage "Soon on Kraken!" link → /holders)
+
+export interface KrakenSpotlightClickedEvent {
+  event: 'kraken_spotlight_clicked';
+}
+
 // Holders page CTAs
 
 export interface HoldersBuyKrakenClickedEvent {
@@ -252,6 +258,10 @@ export function trackLeadMagnetEmailError(params: Omit<LeadMagnetEmailErrorEvent
 
 export function trackLeadMagnetPdfDownloaded(params: Omit<LeadMagnetPdfDownloadedEvent, 'event'>): void {
   pushToDataLayer({ event: 'lead_magnet_pdf_downloaded', ...params });
+}
+
+export function trackKrakenSpotlightClicked(): void {
+  pushToDataLayer({ event: 'kraken_spotlight_clicked' });
 }
 
 // Holders page tracking

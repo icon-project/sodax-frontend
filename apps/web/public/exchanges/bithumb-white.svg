@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Camada_2" data-name="Camada 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <g id="Camada_1-2" data-name="Camada 1">
+    <g id="Bithumb_White">
+      <g id="Bithumb">
+        <path id="bib" class="cls-1" d="M14.72,5.45h-1.3l-1.87,6.55h1.3c1.2,0,1.59.91,1.07,2.73s-1.43,2.73-2.63,2.73-1.59-.91-1.07-2.73l3.43-12c.43-1.51-.44-2.73-1.94-2.73h-3.8L3.71,14.73h0c-1.77,6.18.61,9.27,5.72,9.27s9.25-3.09,11.01-9.27c1.77-6.18-.61-9.27-5.72-9.27Z"/>
+        <path class="cls-1" d="M5.81,5.45h-1.63l-1.09,3.82c-.32,1.12.08,2.08.92,2.5l1.8-6.32Z"/>
+      </g>
+      <rect id="_24x24_square_to_size_them" data-name="24x24 square to size them" class="cls-2" width="24" height="24"/>
+    </g>
+  </g>
+</svg>

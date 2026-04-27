@@ -3,11 +3,11 @@
 import type { ReactElement } from 'react';
 
 import Image from 'next/image';
-import { DISCORD_ROUTE, X_ROUTE } from '@/constants/routes';
+import { DISCORD_ROUTE, X_HOLDERS_ROUTE } from '@/constants/routes';
 import { trackHoldersFollowXClicked, trackHoldersJoinDiscordClicked } from '@/lib/analytics';
 
 const COMMUNITY_LINKS = [
-  { label: 'Follow on X', href: X_ROUTE, onClick: trackHoldersFollowXClicked },
+  { label: 'Follow on X', href: X_HOLDERS_ROUTE, onClick: trackHoldersFollowXClicked },
   { label: 'Join the Discord', href: DISCORD_ROUTE, onClick: trackHoldersJoinDiscordClicked },
 ] as const;
 

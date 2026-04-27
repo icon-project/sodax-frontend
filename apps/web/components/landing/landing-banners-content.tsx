@@ -4,6 +4,7 @@ import {
   BUILDERS_PORTAL_ROUTE,
   CASE_STUDIES_ROUTE,
   DOCUMENTATION_ROUTE,
+  EXCHANGE_ROUTE,
   INTEGRATION_OPTIONS_ROUTE,
   SODA_TOKEN_ROUTE,
 } from '@/constants/routes';
@@ -30,7 +31,7 @@ export const LANDING_FULL_BANNERS = [
         <span className="text-black text-(length:--main-title) font-bold font-['InterBlack'] leading-[1.1]">
           Your scalable{' '}
         </span>
-        <span className="text-black text-(length:--main-title) font-normal font-['Shrikhand'] leading-[1.1]">
+        <span className="text-black text-(length:--main-title) font-bold font-['InterBlack'] leading-[1.1]">
           execution stack{' '}
         </span>
       </>
@@ -53,10 +54,8 @@ export const LANDING_SMALL_BANNERS = [
   {
     title: (
       <>
-        <span className="text-yellow-soda text-(length:--app-title) font-normal font-['Shrikhand'] leading-[1.1]">
-          join
-        </span>
-        <span className="text-yellow-soda text-(length:--app-title) font-bold font-['InterRegular'] leading-[1.1]">
+        <span className="text-yellow-soda text-(length:--app-title) font-['InterBlack'] leading-[1.1]">Join</span>
+        <span className="text-yellow-soda text-(length:--app-title) font-['InterBlack'] leading-[1.1]">
           {' '}
           our partners{' '}
         </span>
@@ -68,22 +67,17 @@ export const LANDING_SMALL_BANNERS = [
     imageSrc: '/homepage_banner.png',
   },
   {
-    title: 'Migrate to SODA',
-    subtitle: '1:1 exchange for ICX holders.',
-    buttonLabel: 'Migrate',
-    href: 'https://www.sodax.com/migrate',
+    title: 'Explore the SODA Exchange',
+    subtitle: 'Swap across 18 networks, stake and earn from your SODA.',
+    buttonLabel: 'SODA Exchange',
+    href: EXCHANGE_ROUTE,
     imageSrc: '/sodax-mockup.png',
   },
   {
-    title: 'SODA Token',
+    title: 'SODA token',
     subtitle: 'Fees driving growth and token burns.',
     buttonLabel: 'Learn more',
     href: SODA_TOKEN_ROUTE,
     imageSrc: '/soda-burn.png',
   },
-] as const satisfies readonly [
-  LandingBannerContent,
-  LandingBannerContent,
-  LandingBannerContent,
-  LandingBannerContent,
-];
+] as const satisfies readonly [LandingBannerContent, LandingBannerContent, LandingBannerContent, LandingBannerContent];

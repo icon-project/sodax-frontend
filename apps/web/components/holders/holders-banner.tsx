@@ -5,6 +5,7 @@ import type { ReactElement } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { HoldersBannerWithButton, HoldersShortBanner } from './holders-banners-content';
 
@@ -87,11 +88,31 @@ export default function HoldersBanner(props: HoldersBannerProps): ReactElement {
       <p className={cn(SUBTITLE_STYLE[variant], 'z-10')}>{subtitle}</p>
       {hasMedia && (
         <div className="mt-6 z-10">
-          <Button asChild variant="outline" size="lg" className={BUTTON_STYLE[variant]}>
-            <Link href={props.cta.href} onClick={onCtaClick}>
-              {props.cta.label}
-            </Link>
-          </Button>
+          {props.cta.tooltip ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button asChild variant="outline" size="lg" className={BUTTON_STYLE[variant]}>
+                  <Link href={props.cta.href} onClick={onCtaClick}>
+                    {props.cta.label}
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent
+                variant="bubble"
+                side="top"
+                sideOffset={16}
+                className="h-[54px] items-center gap-2 px-8 py-4 text-(length:--body-comfortable)"
+              >
+                <span className="flex items-center">{props.cta.tooltip}</span>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <Button asChild variant="outline" size="lg" className={BUTTON_STYLE[variant]}>
+              <Link href={props.cta.href} onClick={onCtaClick}>
+                {props.cta.label}
+              </Link>
+            </Button>
+          )}
         </div>
       )}
     </div>

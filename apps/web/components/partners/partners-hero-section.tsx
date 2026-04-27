@@ -35,7 +35,7 @@ const NETWORK_NAMES = [
 export default function PartnersHeroSection() {
   return (
     <section
-      className="relative flex flex-col items-center bg-cherry-soda overflow-hidden pt-60 pb-30"
+      className="relative flex flex-col items-center bg-cherry-soda overflow-hidden pt-30 pb-30"
       aria-label="Partner Network Hero"
     >
       {/* MiCa Compliance Badge */}
