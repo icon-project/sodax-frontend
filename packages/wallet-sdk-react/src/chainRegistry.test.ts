@@ -45,6 +45,7 @@ describe('createChainServices', () => {
       name: 'Fake Wallet',
       icon: undefined,
       xChainType: 'BITCOIN',
+      isInstalled: true,
       connect: vi.fn(),
       disconnect: vi.fn(),
     };

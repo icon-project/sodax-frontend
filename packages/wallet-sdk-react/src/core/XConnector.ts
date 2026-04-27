@@ -52,4 +52,20 @@ export abstract class XConnector implements IXConnector {
   public get icon(): string | undefined {
     return this._icon;
   }
+
+  /**
+   * True when the wallet extension backing this connector is installed.
+   * Default: true (for provider-managed chains where connector presence already
+   * implies install — EVM via EIP-6963, Solana/Sui via adapter discovery).
+   * Subclasses backed by extension injection (Bitcoin, ICON, Stacks) override
+   * this with a window probe.
+   */
+  public get isInstalled(): boolean {
+    return true;
+  }
+
+  /** URL to install the wallet extension when missing. Subclasses override. */
+  public get installUrl(): string | undefined {
+    return undefined;
+  }
 }

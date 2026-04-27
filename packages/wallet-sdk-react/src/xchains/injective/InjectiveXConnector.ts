@@ -66,4 +66,13 @@ export class InjectiveXConnector extends XConnector {
   public override get icon(): string | undefined {
     return WALLET_ICONS[this.wallet];
   }
+
+  public override get isInstalled(): boolean {
+    if (isCosmosBrowserWallet(this.wallet)) {
+      return isCosmosWalletInstalled(this.wallet);
+    }
+    // EVM / other injective wallets: wallet-strategy handles install errors at connect time.
+    // Default to true so users can attempt connect — Phase 3 classifier will surface walletNotInstalled if it fails.
+    return true;
+  }
 }

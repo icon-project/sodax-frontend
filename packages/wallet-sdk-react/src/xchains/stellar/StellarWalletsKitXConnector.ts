@@ -31,9 +31,13 @@ export class StellarWalletsKitXConnector extends XConnector {
       return;
     }
 
-    if (!this._wallet.isAvailable && this._wallet.url) {
-      window.open(this._wallet.url, '_blank');
-      return;
+    if (!this._wallet.isAvailable) {
+      // Throw instead of silently navigating to the install URL — callers
+      // that bypass `useWalletModal.selectWallet`'s pre-check otherwise
+      // see a tab open with no surfaced error. Consumers read
+      // `connector.installUrl` to render the install CTA on the caught
+      // error.
+      throw new Error(`${this._wallet.name} is not installed. Install the wallet and reload the page.`);
     }
 
     kit.setWallet(this._wallet.id);
@@ -49,5 +53,13 @@ export class StellarWalletsKitXConnector extends XConnector {
 
   public override get icon(): string {
     return this._wallet.icon;
+  }
+
+  public override get isInstalled(): boolean {
+    return this._wallet.isAvailable;
+  }
+
+  public override get installUrl(): string | undefined {
+    return this._wallet.url;
   }
 }

@@ -3,6 +3,7 @@ import { ICONexRequestEventType, ICONexResponseEventType, request } from './icon
 
 import { XConnector } from '@/core/XConnector.js';
 import { assert, hasBooleanProperty, isRecord } from '@/shared/guards.js';
+import { WALLET_METADATA } from '@/constants.js';
 
 const isHanaWallet = (value: unknown): value is { available?: boolean } => {
   return isRecord(value) && (value.available === undefined || hasBooleanProperty(value, 'available'));
@@ -13,12 +14,22 @@ export class IconHanaXConnector extends XConnector {
     super('ICON', 'Hana Wallet', 'hana');
   }
 
+  public override get isInstalled(): boolean {
+    if (typeof window === 'undefined') return false;
+    const hanaWallet = (window as unknown as Record<string, unknown>).hanaWallet;
+    return isHanaWallet(hanaWallet) && hanaWallet.available === true;
+  }
+
+  public override get installUrl(): string {
+    return WALLET_METADATA.hana.installUrl;
+  }
+
   async connect(): Promise<XAccount | undefined> {
     const hanaWallet = (window as unknown as Record<string, unknown>).hanaWallet;
     assert(isHanaWallet(hanaWallet) || hanaWallet === undefined, '[IconHanaXConnector] invalid window.hanaWallet type');
 
     if (!hanaWallet || !hanaWallet.available) {
-      window.open('https://chromewebstore.google.com/detail/hana-wallet/jfdlamikmbghhapbgfoogdffldioobgl', '_blank');
+      window.open(WALLET_METADATA.hana.installUrl, '_blank', 'noopener,noreferrer');
       return;
     }
 
@@ -42,6 +53,6 @@ export class IconHanaXConnector extends XConnector {
   }
 
   public override get icon(): string {
-    return 'https://raw.githubusercontent.com/balancednetwork/icons/master/wallets/hana.svg';
+    return WALLET_METADATA.hana.icon;
   }
 }
