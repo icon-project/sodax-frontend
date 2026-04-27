@@ -1,4 +1,5 @@
-import { type SpokeProvider, type SpokeChainId, HubService } from '@sodax/sdk';
+import { HubService } from '@sodax/sdk';
+import type { SpokeChainKey } from '@sodax/types';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { useSodaxContext } from './useSodaxContext.js';
 import type { Address } from 'viem';
@@ -31,7 +32,7 @@ import type { Address } from 'viem';
  * ```
  */
 export function useGetUserHubWalletAddress(
-  spokeChainId?: SpokeChainId | SpokeProvider | undefined,
+  spokeChainId?: SpokeChainKey | undefined,
   spokeAddress?: string | undefined,
 ): UseQueryResult<Address, Error> {
   const { sodax } = useSodaxContext();
@@ -42,13 +43,9 @@ export function useGetUserHubWalletAddress(
       if (!spokeChainId || !spokeAddress) {
         throw new Error('Spoke chain id and address are required');
       }
-
-      // Determine if spokeChainId is a SpokeProvider object or SpokeChainId value
-      spokeChainId = typeof spokeChainId === 'object' ? spokeChainId.chainConfig.chain.id : spokeChainId;
-
       return await HubService.getUserHubWalletAddress(spokeAddress, spokeChainId, sodax.hubProvider);
     },
     enabled: !!spokeChainId && !!spokeAddress,
-    refetchInterval: false, // This is a deterministic operation, no need to refetch
+    refetchInterval: false,
   });
 }

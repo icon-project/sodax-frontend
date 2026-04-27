@@ -8,8 +8,8 @@ import {
   useXConnection,
   useXConnectors,
   useXDisconnect,
-  type XConnector,
 } from '@sodax/wallet-sdk-react';
+import type { IXConnector } from '@sodax/wallet-sdk-react';
 import { Button } from '@/components/ui/button';
 
 export type WalletItemProps = {
@@ -30,7 +30,7 @@ const WalletItem = ({ name, xChainType, onConnectionSuccess }: WalletItemProps) 
   const xConnection = useXConnection(xChainType);
   const { address } = useXAccount(xChainType);
 
-  const [connectingXConnector, setConnectingXConnector] = useState<XConnector | null>(null);
+  const [connectingXConnector, setConnectingXConnector] = useState<IXConnector | null>(null);
   const [wasConnecting, setWasConnecting] = useState(false);
 
   const xConnectors = useXConnectors(xChainType);
@@ -38,7 +38,7 @@ const WalletItem = ({ name, xChainType, onConnectionSuccess }: WalletItemProps) 
   const xDisconnect = useXDisconnect();
 
   const handleConnect = useCallback(
-    async (xConnector: XConnector) => {
+    async (xConnector: IXConnector) => {
       setConnectingXConnector(xConnector);
       setWasConnecting(true);
       try {

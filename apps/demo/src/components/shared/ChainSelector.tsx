@@ -1,3 +1,4 @@
+/*
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { baseChainInfo, type ChainId } from '@sodax/types';
@@ -28,3 +29,4 @@ export function ChainSelector({ selectedChainId, selectChainId, allowedChains }:
     </Select>
   );
 }
+*/

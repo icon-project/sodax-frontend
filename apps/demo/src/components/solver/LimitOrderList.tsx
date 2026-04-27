@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useBackendUserIntents, useDeriveUserWalletAddress } from '@sodax/dapp-kit';
 import { useXAccount } from '@sodax/wallet-sdk-react';
-import type { SpokeChainId } from '@sodax/types';
+import type { SpokeChainKey } from '@sodax/types';
 import LimitOrderItem from './LimitOrderItem';
 import { Card } from '@/components/ui/card';
 
@@ -18,7 +18,7 @@ function EmptyState({ message, className = 'text-muted-foreground' }: { message:
   );
 }
 
-export default function LimitOrderList({ spokeChainId }: { spokeChainId: SpokeChainId }) {
+export default function LimitOrderList({ spokeChainId }: { spokeChainId: SpokeChainKey }) {
   const account = useXAccount(spokeChainId);
   const { data: userHubAddress } = useDeriveUserWalletAddress(spokeChainId, account.address);
 

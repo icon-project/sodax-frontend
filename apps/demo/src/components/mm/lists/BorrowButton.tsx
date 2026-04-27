@@ -1,3 +1,4 @@
+/*
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import type { XToken } from '@sodax/types';
@@ -14,3 +15,4 @@ export function BorrowButton({ token, disabled, onClick }: BorrowButtonProps) {
     </Button>
   );
 }
+*/

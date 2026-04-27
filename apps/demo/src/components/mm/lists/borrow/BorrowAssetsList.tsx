@@ -1,13 +1,15 @@
+/*
 import React, { type JSX, useMemo, useState } from 'react';
 import {
   useUserReservesData,
   useReservesUsdFormat,
   useBackendAllMoneyMarketAssets,
   useUserFormattedSummary,
+  useXBalances,
 } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useXAccount, useXBalances } from '@sodax/wallet-sdk-react';
+import { getXChainType, useXAccount, useXService } from '@sodax/wallet-sdk-react';
 import { BorrowAssetsListItem } from './BorrowAssetsListItem';
 import { formatUnits } from 'viem';
 import { getBorrowableAssetsWithMarketData } from '@/lib/borrowUtils';
@@ -92,7 +94,9 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
     () => allTokens.filter(t => t.xChainId === selectedChainId),
     [allTokens, selectedChainId],
   );
+  const xService = useXService(getXChainType(selectedChainId));
   const { data: balances } = useXBalances({
+    xService,
     xChainId: selectedChainId,
     xTokens: tokensOnSelectedChain,
     address,
@@ -291,3 +295,4 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
     </Card>
   );
 }
+*/

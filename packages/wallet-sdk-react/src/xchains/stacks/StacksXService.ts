@@ -1,21 +1,29 @@
 import { XService } from '@/core/XService.js';
 import type { XToken } from '@sodax/types';
 import { fetchCallReadOnlyFunction, Cl, type UIntCV, type ResponseOkCV } from '@stacks/transactions';
-import { networkFrom, type StacksNetwork } from '@stacks/network';
+import { networkFrom, type StacksNetwork, type StacksNetworkName } from '@stacks/network';
 
 export class StacksXService extends XService {
   private static instance: StacksXService;
 
-  public network: StacksNetwork | undefined;
+  public network: StacksNetwork;
 
-  private constructor() {
+  private constructor(network?: StacksNetworkName | StacksNetwork) {
     super('STACKS');
-    this.network = networkFrom('mainnet');
+    this.network = networkFrom(network || 'mainnet');
   }
 
-  public static getInstance(): StacksXService {
+  /**
+   * @param network - Re-applied on every call (unlike `InjectiveXService` /
+   *   `NearXService` which are first-call-only). `useStacksHydration` relies
+   *   on this to update the network when `rpcConfig.stacks` changes — Stacks
+   *   doesn't hold persistent chain clients so re-configuration is cheap.
+   */
+  public static getInstance(network?: StacksNetworkName | StacksNetwork): StacksXService {
     if (!StacksXService.instance) {
-      StacksXService.instance = new StacksXService();
+      StacksXService.instance = new StacksXService(network);
+    } else if (network) {
+      StacksXService.instance.network = networkFrom(network);
     }
     return StacksXService.instance;
   }
@@ -25,7 +33,7 @@ export class StacksXService extends XService {
 
     // native STX balance
     if (xToken.symbol === 'STX') {
-      const url = `${this.network?.client.baseUrl}/extended/v1/address/${address}/balances`;
+      const url = `${this.network.client.baseUrl}/extended/v1/address/${address}/balances`;
       try {
         const response = await fetch(url);
         if (!response.ok) {

@@ -4,8 +4,8 @@ import { ICONexRequestEventType, ICONexResponseEventType, request } from './icon
 import { XConnector } from '@/core/XConnector.js';
 import { assert, hasBooleanProperty, isRecord } from '@/shared/guards.js';
 
-const isHanaWallet = (value: unknown): value is { isAvailable?: boolean } => {
-  return isRecord(value) && (value.isAvailable === undefined || hasBooleanProperty(value, 'isAvailable'));
+const isHanaWallet = (value: unknown): value is { available?: boolean } => {
+  return isRecord(value) && (value.available === undefined || hasBooleanProperty(value, 'available'));
 };
 
 export class IconHanaXConnector extends XConnector {
@@ -17,7 +17,7 @@ export class IconHanaXConnector extends XConnector {
     const hanaWallet = (window as unknown as Record<string, unknown>).hanaWallet;
     assert(isHanaWallet(hanaWallet) || hanaWallet === undefined, '[IconHanaXConnector] invalid window.hanaWallet type');
 
-    if (!hanaWallet || !hanaWallet.isAvailable) {
+    if (!hanaWallet || !hanaWallet.available) {
       window.open('https://chromewebstore.google.com/detail/hana-wallet/jfdlamikmbghhapbgfoogdffldioobgl', '_blank');
       return;
     }

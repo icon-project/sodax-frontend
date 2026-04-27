@@ -333,14 +333,53 @@ export type BitcoinRpcConfig = {
   radfiUmsUrl?: string;
 };
 
-// Mapped type keyed by ChainKey values. Stellar uses StellarRpcConfig, Bitcoin uses BitcoinRpcConfig,
-// all other chains use string (the RPC URL).
+// Type for Injective RPC configuration — covers indexer and gRPC endpoints.
+// Falls back to mainnet defaults from @injectivelabs/networks for unspecified fields.
+export type InjectiveRpcConfig = {
+  indexer?: string;
+  grpc?: string;
+};
+
+// Stacks network preset names — mirrors `StacksNetworkName` from @stacks/network
+// (kept local to avoid importing external types per @sodax/types rules).
+export type StacksNetworkName = 'mainnet' | 'testnet' | 'devnet' | 'mocknet';
+
+/**
+ * Structural mirror of `StacksNetwork` from @stacks/network (modeled against
+ * @stacks/network@7.3.1). Kept local to avoid importing external types per
+ * @sodax/types rules. Real `StacksNetwork` objects satisfy this via TS
+ * structural typing, so consumers can pass `networkFrom(...)` output directly.
+ *
+ * Maintenance: bump this type in lockstep with `@stacks/network` in the
+ * workspace catalog. If upstream adds required fields, consumers will get
+ * a compile error until this type is updated to match.
+ */
+export type StacksNetworkLike = {
+  chainId: number;
+  transactionVersion: number;
+  peerNetworkId: number;
+  magicBytes: string;
+  bootAddress: string;
+  addressVersion: { singleSig: number; multiSig: number };
+  client: { baseUrl: string };
+};
+
+// Mapped type that uses ChainKey as keys and assigns appropriate value types per chain:
+// - Stellar    → StellarRpcConfig                   (horizon + soroban URLs)
+// - Bitcoin    → BitcoinRpcConfig                   (rpcUrl + radfi endpoints)
+// - Injective  → InjectiveRpcConfig                 (indexer + grpc endpoints)
+// - Stacks     → StacksNetworkName | StacksNetworkLike (preset name or full network)
+// - All others → string                             (single RPC URL)
 export type RpcConfig = Partial<{
   [K in ChainKey]: K extends typeof ChainKeys.STELLAR_MAINNET
     ? StellarRpcConfig
     : K extends typeof ChainKeys.BITCOIN_MAINNET
       ? BitcoinRpcConfig
-      : string;
+      : K extends typeof ChainKeys.INJECTIVE_MAINNET
+        ? InjectiveRpcConfig
+        : K extends typeof ChainKeys.STACKS_MAINNET
+          ? StacksNetworkName | StacksNetworkLike
+          : string;
 }>;
 
 export type AssetInfo = {

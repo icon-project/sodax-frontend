@@ -34,8 +34,9 @@ import {
   IntentRelayChainIdToChainKey,
   EVM_SPOKE_ONLY_CHAIN_KEYS_SET,
   type EVM_SPOKE_ONLY_CHAIN_KEYS,
+  type GetChainType,
 } from '../chains/chains.js';
-import { spokeChainKeysSet, type ChainKey, type ChainType } from '../chains/chain-keys.js';
+import { spokeChainKeysSet, type ChainKey } from '../chains/chain-keys.js';
 import type { XToken } from '../chains/tokens.js';
 import { type ConcentratedLiquidityConfig, concentratedLiquidityConfig } from '../dex/dex.js';
 import { type SolverConfig, solverConfig } from '../common/constants.js';
@@ -94,14 +95,14 @@ export function isStacksChainKey(chainId: SpokeChainKey): boolean {
   return STACKS_CHAIN_KEYS_SET.has(chainId as (typeof STACKS_CHAIN_KEYS)[number]);
 }
 
-export function getChainType(chainId: SpokeChainKey): ChainType {
+export function getChainType<K extends SpokeChainKey>(chainId: K): GetChainType<K> {
   const type = baseChainInfo[chainId].type;
   if (!type) {
     throw new Error(
       `[getChainType] Unsupported chain id: ${chainId}. Valid chain ids: ${Object.keys(baseChainInfo).join(', ')}`,
     );
   }
-  return type;
+  return type as GetChainType<K>;
 }
 
 /**

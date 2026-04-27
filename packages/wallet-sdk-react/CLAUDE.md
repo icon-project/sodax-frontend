@@ -178,7 +178,6 @@ All hooks read from the Zustand store — no direct chain SDK hook usage:
 - `useXConnectors(xChainType)` — get available connectors for a chain
 - `useXConnection(xChainType)` — get active connection details
 - `useXService(xChainType)` — get chain service instance
-- `useXBalances({xChainId, xTokens, address})` — fetch token balances (refetches every 5s)
 - `useWalletProvider(spokeChainId)` — get typed wallet provider from store
 - `useEvmSwitchChain()` — EVM network switching
 - `useXSignMessage()` — cross-chain message signing (reads `chainActions` from store)

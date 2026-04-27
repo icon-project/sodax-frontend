@@ -1,3 +1,4 @@
+/*
 import React from 'react';
 import { Skeleton } from '../ui/skeleton';
 import { useSodaBalance } from '@/hooks/useSodaBalance';
@@ -39,3 +40,4 @@ export function SodaBalance({
     </div>
   );
 }
+*/

@@ -17,7 +17,7 @@ import { Wallet } from '@injectivelabs/wallet-base';
 import { getEthereumAddress } from '@injectivelabs/sdk-ts';
 
 import type { XService, XConnector } from './core/index.js';
-import type { XConnection, WalletProvider } from './types/index.js';
+import type { IWalletProvider, XConnection } from './types/index.js';
 import type { IXConnector } from './types/interfaces.js';
 import type { ChainsConfig } from './types/config.js';
 import type { ChainActions, ChainActionsRegistry } from './types/chainActions.js';
@@ -47,7 +47,7 @@ export type StoreAccessor = () => {
   xServices: Partial<Record<ChainType, XService>>;
   setXConnectors: (xChainType: ChainType, connectors: XConnector[]) => void;
   unsetXConnection: (xChainType: ChainType) => void;
-  setWalletProvider: (xChainType: ChainType, provider: WalletProvider | undefined) => void;
+  setWalletProvider: (xChainType: ChainType, provider: IWalletProvider | undefined) => void;
 };
 
 export type ChainServiceFactory<S extends XService = XService> = {
@@ -60,7 +60,7 @@ export type ChainServiceFactory<S extends XService = XService> = {
   /** ChainActions for non-provider chains. If omitted, uses createDefaultActions(). */
   createActions?: (service: S, getStore: StoreAccessor) => ChainActions;
   /** Wallet provider for non-provider chains. Called on setXConnection(). */
-  createWalletProvider?: (service: S, getStore: StoreAccessor) => WalletProvider | undefined;
+  createWalletProvider?: (service: S, getStore: StoreAccessor) => IWalletProvider | undefined;
   /**
    * Async connector discovery for chains whose available wallets can only be detected at runtime
    * (e.g. browser extension scan, manifest loading). Runs once after init, updates store.xConnectorsByChain when done.
@@ -84,7 +84,7 @@ function defineChain<S extends XService>(factory: ChainServiceFactory<S>): Chain
 
 export type ChainServicesResult = {
   xServices: Partial<Record<ChainType, XService>>;
-  xConnectorsByChain: Partial<Record<ChainType, XConnector[]>>;
+  xConnectorsByChain: Partial<Record<ChainType, IXConnector[]>>;
   enabledChains: ChainType[];
   chainActions: ChainActionsRegistry;
 };
@@ -151,16 +151,18 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
             if (!('signBip322Message' in connector)) {
               throw new Error(`${connector.id} does not support BIP-322 signing`);
             }
-            return (connector as BitcoinXConnector & { signBip322Message: (msg: string) => Promise<string> })
-              .signBip322Message(message);
+            return (
+              connector as BitcoinXConnector & { signBip322Message: (msg: string) => Promise<string> }
+            ).signBip322Message(message);
           }
           case 'P2SH':
           case 'P2PKH': {
             if (!('signEcdsaMessage' in connector)) {
               throw new Error(`${connector.id} does not support ECDSA signing`);
             }
-            return (connector as BitcoinXConnector & { signEcdsaMessage: (msg: string) => Promise<string> })
-              .signEcdsaMessage(message);
+            return (
+              connector as BitcoinXConnector & { signEcdsaMessage: (msg: string) => Promise<string> }
+            ).signEcdsaMessage(message);
           }
           default: {
             const _exhaustiveCheck: never = addressType;
@@ -179,7 +181,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
     },
   }),
   INJECTIVE: defineChain({
-    createService: () => InjectiveXService.getInstance(),
+    createService: rpcConfig => InjectiveXService.getInstance(rpcConfig?.[ChainKeys.INJECTIVE_MAINNET]),
     defaultConnectors: () => [
       new InjectiveXConnector('MetaMask', Wallet.Metamask),
       new InjectiveXConnector('Keplr', Wallet.Keplr),
@@ -257,7 +259,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
     },
   }),
   NEAR: defineChain({
-    createService: () => NearXService.getInstance(),
+    createService: rpcConfig => NearXService.getInstance(rpcConfig?.[ChainKeys.NEAR_MAINNET]),
     defaultConnectors: () => [],
     providerManaged: false,
     discoverConnectors: async (service, getStore) => {
@@ -279,7 +281,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
     },
   }),
   STACKS: defineChain({
-    createService: () => StacksXService.getInstance(),
+    createService: rpcConfig => StacksXService.getInstance(rpcConfig?.[ChainKeys.STACKS_MAINNET]),
     defaultConnectors: () => STACKS_PROVIDERS.map(c => new StacksXConnector(c)),
     providerManaged: false,
     createWalletProvider: (service, getStore) => {
@@ -303,7 +305,7 @@ export const createChainServices = (
   rpcConfig?: RpcConfig,
 ): ChainServicesResult => {
   const xServices: Partial<Record<ChainType, XService>> = {};
-  const xConnectorsByChain: Partial<Record<ChainType, XConnector[]>> = {};
+  const xConnectorsByChain: Partial<Record<ChainType, IXConnector[]>> = {};
   const enabledChains: ChainType[] = [];
   const chainActions: ChainActionsRegistry = {};
 
@@ -318,7 +320,7 @@ export const createChainServices = (
 
     if (!factory.providerManaged) {
       const configConnectors = (chainConfig as { connectors?: IXConnector[] }).connectors;
-      const connectors = configConnectors ? (configConnectors as XConnector[]) : factory.defaultConnectors();
+      const connectors = configConnectors ? configConnectors : factory.defaultConnectors();
       service.setXConnectors(connectors);
       xConnectorsByChain[ct] = connectors;
 

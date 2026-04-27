@@ -1,12 +1,17 @@
-import type { ChainType, RpcConfig } from '@sodax/types';
+import type { ChainType, GetWalletProviderType, RpcConfig } from '@sodax/types';
 import { create } from 'zustand';
 import { createJSONStorage, persist, devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import type { XService, XConnector } from './core/index.js';
-import type { XConnection, WalletProvider } from './types/index.js';
+import type { XConnection, IWalletProvider } from './types/index.js';
 import type { ChainActions } from './types/chainActions.js';
 import type { ChainsConfig } from './types/config.js';
 import { chainRegistry, createChainServices } from './chainRegistry.js';
+
+/** Empty slot in `walletProviders` is normal before a wallet is connected. */
+export type GetWalletProviderReturnType<K extends ChainType | undefined> = K extends ChainType
+  ? GetWalletProviderType<K> | undefined
+  : undefined;
 
 // ─── Store ───────────────────────────────────────────────────────────────────
 
@@ -18,13 +23,14 @@ type XWalletStore = {
   enabledChains: ChainType[];
   chainActions: Partial<Record<ChainType, ChainActions>>;
   /** Wallet providers from wallet-sdk-core. Read by useWalletProvider() hook. */
-  walletProviders: Partial<Record<ChainType, WalletProvider>>;
+  walletProviders: Partial<Record<ChainType, IWalletProvider>>;
 
   setXConnection: (xChainType: ChainType, xConnection: XConnection) => void;
   unsetXConnection: (xChainType: ChainType) => void;
   setXConnectors: (xChainType: ChainType, connectors: XConnector[]) => void;
   registerChainActions: (xChainType: ChainType, actions: ChainActions) => void;
-  setWalletProvider: (xChainType: ChainType, provider: WalletProvider | undefined) => void;
+  getWalletProvider: <K extends ChainType | undefined>(xChainType: K) => GetWalletProviderReturnType<K>;
+  setWalletProvider: (xChainType: ChainType, provider: IWalletProvider | undefined) => void;
   /** Initialize all chain services from config. Called once by useInitChainServices. */
   initChainServices: (config: ChainsConfig, rpcConfig?: RpcConfig) => void;
   /** Remove persisted connections for chains not in enabledChains. Called after persist hydration. */
@@ -76,14 +82,19 @@ export const useXWalletStore = create<XWalletStore>()(
           });
         },
 
-        setWalletProvider: (xChainType: ChainType, provider: WalletProvider | undefined) => {
+        setWalletProvider: (xChainType: ChainType, provider: IWalletProvider | undefined) => {
           set(state => {
             if (provider) {
-              (state.walletProviders as Record<string, WalletProvider>)[xChainType] = provider;
+              (state.walletProviders as Record<string, IWalletProvider>)[xChainType] = provider;
             } else {
               delete state.walletProviders[xChainType];
             }
           });
+        },
+
+        getWalletProvider: <K extends ChainType | undefined>(xChainType: K): GetWalletProviderReturnType<K> => {
+          if (!xChainType) return undefined as GetWalletProviderReturnType<K>;
+          return get().walletProviders[xChainType] as GetWalletProviderReturnType<K>;
         },
 
         initChainServices: (config: ChainsConfig, rpcConfig?: RpcConfig) => {

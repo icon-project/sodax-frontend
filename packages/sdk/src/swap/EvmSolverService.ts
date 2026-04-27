@@ -16,7 +16,14 @@ import { Erc20Service } from '../shared/services/erc-20/Erc20Service.js';
 import { calculatePercentageFeeAmount, encodeAddress, randomUint256 } from '../shared/utils/shared-utils.js';
 import { encodeContractCalls } from '../shared/utils/evm-utils.js';
 import { isPartnerFeeAmount, isPartnerFeePercentage } from '../shared/guards.js';
-import { IntentDataType, type CreateIntentParams, type FeeData, type Intent, type IntentData, type IntentState } from '../shared/types/intent-types.js';
+import {
+  IntentDataType,
+  type CreateIntentParams,
+  type FeeData,
+  type Intent,
+  type IntentData,
+  type IntentState,
+} from '../shared/types/intent-types.js';
 import {
   getIntentRelayChainId,
   isHubChainKey,
@@ -53,13 +60,13 @@ export class EvmSolverService {
     config: ConfigService,
     fee: PartnerFee | undefined,
   ): [Hex, Intent, bigint] {
-    const inputToken = !isHubChainKey(createIntentParams.srcChain)
-      ? config.getSpokeTokenFromOriginalAssetAddress(createIntentParams.srcChain, createIntentParams.inputToken)
+    const inputToken = !isHubChainKey(createIntentParams.srcChainKey)
+      ? config.getSpokeTokenFromOriginalAssetAddress(createIntentParams.srcChainKey, createIntentParams.inputToken)
           ?.hubAsset
       : (createIntentParams.inputToken as `0x${string}`);
 
-    const outputToken = !isHubChainKey(createIntentParams.dstChain)
-      ? config.getSpokeTokenFromOriginalAssetAddress(createIntentParams.dstChain, createIntentParams.outputToken)
+    const outputToken = !isHubChainKey(createIntentParams.dstChainKey)
+      ? config.getSpokeTokenFromOriginalAssetAddress(createIntentParams.dstChainKey, createIntentParams.outputToken)
           ?.hubAsset
       : (createIntentParams.outputToken as `0x${string}`);
 
@@ -81,10 +88,10 @@ export class EvmSolverService {
       inputToken,
       outputToken,
       inputAmount: createIntentParams.inputAmount - feeAmount,
-      srcChain: getIntentRelayChainId(createIntentParams.srcChain),
-      dstChain: getIntentRelayChainId(createIntentParams.dstChain),
-      srcAddress: encodeAddress(createIntentParams.srcChain, createIntentParams.srcAddress),
-      dstAddress: encodeAddress(createIntentParams.dstChain, createIntentParams.dstAddress),
+      srcChain: getIntentRelayChainId(createIntentParams.srcChainKey),
+      dstChain: getIntentRelayChainId(createIntentParams.dstChainKey),
+      srcAddress: encodeAddress(createIntentParams.srcChainKey, createIntentParams.srcAddress),
+      dstAddress: encodeAddress(createIntentParams.dstChainKey, createIntentParams.dstAddress),
       intentId: randomUint256(),
       creator: creatorHubWalletAddress,
       data: feeData, // fee amount will be deducted from the input amount
@@ -153,7 +160,11 @@ export class EvmSolverService {
    * @param {PublicClient} publicClient - The hub chain public client
    * @returns {Promise<Intent>} The intent
    */
-  public static async getIntent(txHash: Hash, config: ConfigService, publicClient: PublicClient<HttpTransport>): Promise<Intent> {
+  public static async getIntent(
+    txHash: Hash,
+    config: ConfigService,
+    publicClient: PublicClient<HttpTransport>,
+  ): Promise<Intent> {
     const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
     const logs: IntentCreatedEventLog[] = parseEventLogs({
       abi: IntentsAbi,

@@ -305,9 +305,9 @@ export class SonicSpokeService {
     const inputToken = createIntentParams.inputToken as Address;
     const srcAddress = createIntentParams.srcAddress as Address;
 
-    const outputToken = isSonicChainKey(createIntentParams.dstChain)
+    const outputToken = isSonicChainKey(createIntentParams.dstChainKey)
       ? hubProvider.config.getSpokeTokenFromOriginalAssetAddress(
-          createIntentParams.dstChain,
+          createIntentParams.dstChainKey,
           createIntentParams.outputToken,
         )?.hubAsset
       : (createIntentParams.outputToken as `0x${string}`);
@@ -329,10 +329,10 @@ export class SonicSpokeService {
       inputToken,
       outputToken,
       inputAmount: createIntentParams.inputAmount - feeAmount,
-      srcChain: getIntentRelayChainId(createIntentParams.srcChain),
-      dstChain: getIntentRelayChainId(createIntentParams.dstChain),
-      srcAddress: encodeAddress(createIntentParams.srcChain, createIntentParams.srcAddress),
-      dstAddress: encodeAddress(createIntentParams.dstChain, createIntentParams.dstAddress),
+      srcChain: getIntentRelayChainId(createIntentParams.srcChainKey),
+      dstChain: getIntentRelayChainId(createIntentParams.dstChainKey),
+      srcAddress: encodeAddress(createIntentParams.srcChainKey, createIntentParams.srcAddress),
+      dstAddress: encodeAddress(createIntentParams.dstChainKey, createIntentParams.dstAddress),
       intentId: randomUint256(),
       creator: creatorHubWalletAddress,
       data: feeData, // fee amount will be deducted from the input amount

@@ -2,6 +2,7 @@ import { useMutation, type UseMutationOptions, type UseMutationResult } from '@t
 import type { SubmitSwapTxRequest, SubmitSwapTxResponse } from '@sodax/types';
 import type { RequestOverrideConfig } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext.js';
+import { unwrapResult } from './unwrapResult.js';
 
 export type UseBackendSubmitSwapTxParams = {
   apiConfig?: RequestOverrideConfig;
@@ -49,7 +50,7 @@ export const useBackendSubmitSwapTx = (
   return useMutation({
     ...mutationOptions,
     mutationFn: async (request: SubmitSwapTxRequest): Promise<SubmitSwapTxResponse> => {
-      return sodax.backendApi.submitSwapTx(request, params?.apiConfig);
+      return unwrapResult(await sodax.backendApi.submitSwapTx(request, params?.apiConfig));
     },
   });
 };

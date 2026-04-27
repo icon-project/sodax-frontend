@@ -4,8 +4,8 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { formatUnits } from 'viem';
 import type { IntentResponse, Intent, IntentRelayChainId } from '@sodax/sdk';
 import { useMemo } from 'react';
-import type { SpokeChainId } from '@sodax/types';
-import { useCancelLimitOrder, useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
+import type { SpokeChainKey } from '@sodax/types';
+import { useCancelLimitOrder, useSodaxContext } from '@sodax/dapp-kit';
 import { useWalletProvider } from '@sodax/wallet-sdk-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { X } from 'lucide-react';
@@ -21,12 +21,12 @@ export default function LimitOrderItem({ intent }: LimitOrderItemProps) {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
 
-  const srcChainId = sodax.config.getSpokeChainIdFromIntentRelayChainId(
+  const srcChainId = sodax.config.getSpokeChainKeyFromIntentRelayChainId(
     BigInt(intent.intent.srcChain) as IntentRelayChainId,
-  ) as SpokeChainId;
-  const dstChainId = sodax.config.getSpokeChainIdFromIntentRelayChainId(
+  ) as SpokeChainKey;
+  const dstChainId = sodax.config.getSpokeChainKeyFromIntentRelayChainId(
     BigInt(intent.intent.dstChain) as IntentRelayChainId,
-  ) as SpokeChainId;
+  ) as SpokeChainKey;
 
   // Find tokens by address on their respective chains
   const inputToken = useMemo(() => {
@@ -74,14 +74,13 @@ export default function LimitOrderItem({ intent }: LimitOrderItemProps) {
     return formatUnits(BigInt(intent.intent.minOutputAmount), outputToken.decimals);
   }, [intent.intent.minOutputAmount, outputToken]);
 
-  // Get provider for canceling (use srcChain since that's where the intent was created)
+  // Wallet provider for canceling (use srcChain since that's where the intent was created)
   const walletProvider = useWalletProvider(srcChainId);
-  const spokeProvider = useSpokeProvider(srcChainId, walletProvider);
   const { mutateAsync: cancelLimitOrder, isPending: isCanceling } = useCancelLimitOrder();
 
   const handleCancel = async (): Promise<void> => {
     try {
-      if (!spokeProvider) {
+      if (!walletProvider) {
         return;
       }
       const intentData: Intent = {
@@ -98,10 +97,10 @@ export default function LimitOrderItem({ intent }: LimitOrderItemProps) {
         srcAddress: intent.intent.srcAddress as `0x${string}`,
         dstAddress: intent.intent.dstAddress as `0x${string}`,
         solver: intent.intent.solver as `0x${string}`,
-        data: intent.intent.data as `0x$string`,
+        data: intent.intent.data as `0x${string}`,
       };
 
-      const result = await cancelLimitOrder({ intent: intentData, spokeProvider });
+      const result = await cancelLimitOrder({ intent: intentData, srcChainKey: srcChainId, walletProvider });
 
       if (result.ok) {
         // Invalidate queries to refresh the list
@@ -128,10 +127,10 @@ export default function LimitOrderItem({ intent }: LimitOrderItemProps) {
   return (
     <TableRow>
       <TableCell className="font-medium">
-        {inputAmount} {inputToken.symbol} on {inputToken.xChainId}
+        {inputAmount} {inputToken.symbol} on {inputToken.chainKey}
       </TableCell>
       <TableCell className="font-medium">
-        {outputAmount} {outputToken.symbol} on {outputToken.xChainId}
+        {outputAmount} {outputToken.symbol} on {outputToken.chainKey}
       </TableCell>
       <TableCell className="text-right">
         {intent.open ? (

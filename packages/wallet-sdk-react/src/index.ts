@@ -9,6 +9,7 @@ export * from './useXWalletStore.js';
 export * from './SodaxWalletProvider.js';
 
 export * from './types/index.js';
+export type { IXConnector, IXService } from './types/interfaces.js';
 
 // ---------------------------------------------------------------------------
 // Sub-path exports: concrete chain classes are NOT re-exported here.

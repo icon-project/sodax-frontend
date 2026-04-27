@@ -10,7 +10,7 @@ import SwapButton from './swap-button';
 import { shortenAddress } from '@/lib/utils';
 import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { chainIdToChainName } from '@/providers/constants';
-import { useSwapApprove, useSpokeProvider, useSwap, useStatus } from '@sodax/dapp-kit';
+import { useSwapApprove, useSwap, useStatus } from '@sodax/dapp-kit';
 import { type CreateIntentParams, type IntentState, SolverIntentStatusCode, waitUntilIntentExecuted } from '@sodax/sdk';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useSwapActions, useSwapState } from '../_stores/swap-store-provider';
@@ -66,9 +66,11 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
   const { address: destinationAddress } = useXAccount(outputToken.xChainId);
   const finalDestinationAddress = isSwapAndSend ? customDestinationAddress : destinationAddress || '';
   const sourceWalletProvider = useWalletProvider(inputToken.xChainId);
-  const sourceSpokeProvider = useSpokeProvider(inputToken.xChainId, sourceWalletProvider);
   const sourceXAccount = useXAccount(inputToken.xChainId);
-  const { mutateAsync: executeSwap, isPending: isSwapPending } = useSwap(sourceSpokeProvider);
+  const { mutateAsync: executeSwap, isPending: isSwapPending } = useSwap(
+    inputToken.xChainId,
+    sourceWalletProvider,
+  );
   const [filledIntent, setFilledIntent] = useState<IntentState | null>(null);
   const { sodax } = useSodaxContext();
   const [targetChainSolved, setTargetChainSolved] = useState(false);
@@ -85,8 +87,8 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
       minOutputAmount: minOutputAmount,
       deadline: BigInt(Math.floor(Date.now() / 1000) + 60 * 5),
       allowPartialFill: false,
-      srcChain: inputToken.xChainId as SpokeChainId,
-      dstChain: outputToken.xChainId as SpokeChainId,
+      srcChainKey: inputToken.xChainId as SpokeChainId,
+      dstChainKey: outputToken.xChainId as SpokeChainId,
       srcAddress: sourceAddress,
       dstAddress: finalDestinationAddress,
       solver: '0x0000000000000000000000000000000000000000',
@@ -94,7 +96,11 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
     } satisfies CreateIntentParams;
   }, [inputToken, outputToken, minOutputAmount, inputAmount, sourceAddress, finalDestinationAddress]);
 
-  const { approve, isLoading: isApproving } = useSwapApprove(intentOrderPayload, sourceSpokeProvider);
+  const { approve, isLoading: isApproving } = useSwapApprove(
+    intentOrderPayload,
+    inputToken.xChainId,
+    sourceWalletProvider,
+  );
   const { data: status } = useStatus(dstTxHash as `0x${string}`);
 
   const swapTiming = getSwapTiming(inputToken.xChainId, outputToken.xChainId);
@@ -345,7 +351,8 @@ const SwapConfirmDialog: React.FC<SwapConfirmDialogProps> = ({
 
           <SwapButton
             intentOrderPayload={intentOrderPayload}
-            spokeProvider={sourceSpokeProvider}
+            srcChainKey={inputToken.xChainId}
+            walletProvider={sourceWalletProvider}
             isSwapPending={isSwapPending}
             onClose={handleClose}
             onApprove={handleApprove}

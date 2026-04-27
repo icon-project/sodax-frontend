@@ -2,6 +2,7 @@ import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/r
 import type { SubmitSwapTxStatusResponse } from '@sodax/types';
 import type { RequestOverrideConfig } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext.js';
+import { unwrapResult } from './unwrapResult.js';
 
 export type UseBackendSubmitSwapTxStatusParams = {
   params: {
@@ -67,13 +68,13 @@ export const useBackendSubmitSwapTxStatus = (
       if (!params?.params?.txHash) {
         return undefined;
       }
-      return sodax.backendApi.getSubmitSwapTxStatus(
+      return unwrapResult(await sodax.backendApi.getSubmitSwapTxStatus(
         {
           txHash: params.params.txHash,
-          srcChainId: params.params.srcChainId,
+          srcChainKey: params.params.srcChainId,
         },
         params.apiConfig,
-      );
+      ));
     },
   });
 };
