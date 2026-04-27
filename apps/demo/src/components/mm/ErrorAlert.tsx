@@ -1,3 +1,4 @@
+/*
 // Displays error text in a consistent, well-aligned alert box inside money market modals.
 
 import React, { type ReactElement } from 'react';
@@ -36,3 +37,4 @@ export function ErrorAlert({ text, className, variant = 'default' }: ErrorAlertP
     </div>
   );
 }
+*/

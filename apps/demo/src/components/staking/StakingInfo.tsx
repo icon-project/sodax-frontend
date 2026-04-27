@@ -1,3 +1,4 @@
+/*
 import React from 'react';
 import { useStakingInfo } from '@sodax/dapp-kit';
 import { Skeleton } from '../ui/skeleton';
@@ -40,3 +41,4 @@ export function StakingInfo({ spokeProvider }: Readonly<{ spokeProvider: SpokePr
     </div>
   );
 }
+*/

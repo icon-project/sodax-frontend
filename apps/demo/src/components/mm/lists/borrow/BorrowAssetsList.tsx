@@ -1,3 +1,4 @@
+/*
 import React, { type JSX, useMemo, useState } from 'react';
 import {
   useUserReservesData,
@@ -294,3 +295,4 @@ export function BorrowAssetsList({ initialChainId }: BorrowAssetsListProps): JSX
     </Card>
   );
 }
+*/

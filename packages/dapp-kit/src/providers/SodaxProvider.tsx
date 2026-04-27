@@ -1,12 +1,12 @@
 import type { ReactNode, ReactElement } from 'react';
 import { Sodax, type SodaxConfig } from '@sodax/sdk';
 import { SodaxContext } from '@/contexts/index.js';
-import type { RpcConfig } from '@sodax/types';
+import type { DeepPartial, RpcConfig } from '@sodax/types';
 
 interface SodaxProviderProps {
   children: ReactNode;
   testnet?: boolean;
-  config?: SodaxConfig;
+  config?: DeepPartial<SodaxConfig>;
   rpcConfig: RpcConfig;
 }
 

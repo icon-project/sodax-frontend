@@ -57,7 +57,8 @@ export const useBackendIntentByHash = (
         return undefined;
       }
 
-      return sodax.backendApi.getIntentByHash(params.params.intentHash);
+      const result = await sodax.backendApi.getIntentByHash(params.params.intentHash);
+      return result.ok ? result.value : undefined;
     },
   });
 };

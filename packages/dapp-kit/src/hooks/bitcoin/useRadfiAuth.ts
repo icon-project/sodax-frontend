@@ -1,5 +1,6 @@
-import type { BitcoinSpokeProvider } from '@sodax/sdk';
+import type { IBitcoinWalletProvider } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
 
 export type RadfiSession = {
   accessToken: string;
@@ -18,7 +19,6 @@ const SESSION_KEY = (address: string) => `radfi_session_${address}`;
 
 export function saveRadfiSession(address: string, session: RadfiSession): void {
   try {
-    // Radfi tokens are only used for API rate-limiting / anti-spam, not for accessing user assets.
     localStorage.setItem(SESSION_KEY(address), JSON.stringify(session));
   } catch {}
 }
@@ -38,63 +38,53 @@ export function clearRadfiSession(address: string): void {
   } catch {}
 }
 
-/**
- * Hook to authenticate with Radfi using BIP322 message signing.
- * Saves session (accessToken, refreshToken, tradingAddress, publicKey) to localStorage.
- */
 export function useRadfiAuth(
-  spokeProvider: BitcoinSpokeProvider | undefined,
+  walletProvider: IBitcoinWalletProvider | undefined,
 ): UseMutationResult<RadfiAuthResult, Error, void> {
+  const { sodax } = useSodaxContext();
   return useMutation<RadfiAuthResult, Error, void>({
     mutationFn: async () => {
-      if (!spokeProvider) {
-        throw new Error('Bitcoin spoke provider not found');
+      if (!walletProvider) {
+        throw new Error('Bitcoin wallet provider not found');
       }
-
-      const walletAddress = await spokeProvider.walletProvider.getWalletAddress();
+      const radfi = sodax.spokeService.bitcoinSpokeService.radfi;
+      const walletAddress = await walletProvider.getWalletAddress();
       const existingSession = loadRadfiSession(walletAddress);
       const cachedPublicKey = existingSession?.publicKey;
 
       try {
-        const { accessToken, refreshToken, tradingAddress, publicKey } = await spokeProvider.authenticateWithWallet(cachedPublicKey);
-
-        const session: RadfiSession = {
-          accessToken,
-          refreshToken,
-          tradingAddress,
-          publicKey,
-        };
-
-        saveRadfiSession(walletAddress, session);
-
+        const { accessToken, refreshToken, tradingAddress, publicKey } = await radfi.authenticateWithWallet(
+          walletProvider,
+          cachedPublicKey,
+        );
+        saveRadfiSession(walletAddress, { accessToken, refreshToken, tradingAddress, publicKey });
         return { accessToken, refreshToken, tradingAddress };
       } catch (err: unknown) {
-        // Error 4008: wallet already registered — authenticate is register+login combined.
-        // Try to refresh with existing session if available.
         const isAlreadyRegistered =
-          err instanceof Error &&
-          (err.message.includes('duplicatedPubKey') || err.message.includes('4008'));
+          err instanceof Error && (err.message.includes('duplicatedPubKey') || err.message.includes('4008'));
 
         if (isAlreadyRegistered && existingSession?.refreshToken) {
           try {
-            const refreshed = await spokeProvider.radfi.refreshAccessToken(existingSession.refreshToken);
-            const session: RadfiSession = {
+            const refreshed = await radfi.refreshAccessToken(existingSession.refreshToken);
+            radfi.setRadfiAccessToken(refreshed.accessToken, refreshed.refreshToken);
+            saveRadfiSession(walletAddress, {
               ...existingSession,
               accessToken: refreshed.accessToken,
               refreshToken: refreshed.refreshToken,
+            });
+            return {
+              accessToken: refreshed.accessToken,
+              refreshToken: refreshed.refreshToken,
+              tradingAddress: existingSession.tradingAddress,
             };
-            spokeProvider.setRadfiAccessToken(refreshed.accessToken, refreshed.refreshToken);
-            saveRadfiSession(walletAddress, session);
-            return { accessToken: refreshed.accessToken, refreshToken: refreshed.refreshToken, tradingAddress: existingSession.tradingAddress };
           } catch {
-            // Refresh also failed — clear stale session and guide user
             clearRadfiSession(walletAddress);
           }
 
           throw new Error(
             'This wallet is already registered with Radfi from another session. ' +
-            'Please clear your browser storage for this site and try again, ' +
-            'or wait for the previous session to expire.',
+              'Please clear your browser storage for this site and try again, ' +
+              'or wait for the previous session to expire.',
           );
         }
 

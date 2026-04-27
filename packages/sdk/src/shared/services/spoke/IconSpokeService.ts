@@ -12,7 +12,7 @@ import type {
   WaitForTxReceiptReturnType,
 } from '../../types/spoke-types.js';
 import type { ConfigService } from '../../config/ConfigService.js';
-import { sleep, BigIntToHex } from '../../utils/shared-utils.js';
+import { sleep, BigIntToHex, encodeAddress } from '../../utils/shared-utils.js';
 import {
   type HttpUrl,
   type HubAddress,
@@ -190,6 +190,18 @@ export class IconSpokeService {
       method: 'sendMessage',
       params: txParams,
     }) satisfies Promise<TxReturnType<IconChainKey, false>> as Promise<TxReturnType<IconChainKey, Raw>>;
+  }
+
+  public encodeSimulationParams(token: string, assetManager: string): { encodedToken: Hex; encodedSrcAddress: Hex } {
+    // Native ICX must be substituted with wICX — the wrapped form registered in the hub's asset manager.
+    // The deposit() method performs the same substitution when sending the real transaction.
+    const resolvedToken = isNativeToken(ChainKeys.ICON_MAINNET, token)
+      ? spokeChainConfig[ChainKeys.ICON_MAINNET].addresses.wICX
+      : token;
+    return {
+      encodedToken: encodeAddress(ChainKeys.ICON_MAINNET, resolvedToken),
+      encodedSrcAddress: encodeAddress(ChainKeys.ICON_MAINNET, assetManager),
+    };
   }
 
   public async waitForTransactionReceipt(

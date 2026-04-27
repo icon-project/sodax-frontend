@@ -1,5 +1,5 @@
 import type { ChainType, IXServiceBase, XToken } from '@sodax/types';
-import type { XConnector } from './XConnector.js';
+import type { IXConnector } from '@/types/interfaces.js';
 
 /**
  * Abstract base class for blockchain service implementations.
@@ -23,7 +23,7 @@ export abstract class XService implements IXServiceBase {
   public readonly xChainType: ChainType;
 
   /** Available wallet connectors for this chain */
-  private xConnectors: XConnector[] = [];
+  private xConnectors: IXConnector[] = [];
 
   constructor(xChainType: ChainType) {
     this.xChainType = xChainType;
@@ -63,14 +63,14 @@ export abstract class XService implements IXServiceBase {
   /**
    * Gets all available connectors for this chain
    */
-  public getXConnectors(): XConnector[] {
+  public getXConnectors(): IXConnector[] {
     return this.xConnectors;
   }
 
   /**
    * Sets the available connectors for this chain
    */
-  public setXConnectors(xConnectors: XConnector[]): void {
+  public setXConnectors(xConnectors: IXConnector[]): void {
     this.xConnectors = xConnectors;
   }
 
@@ -79,7 +79,7 @@ export abstract class XService implements IXServiceBase {
    * @param xConnectorId The connector ID to look up
    * @returns The matching connector or undefined if not found
    */
-  public getXConnectorById(xConnectorId: string): XConnector | undefined {
+  public getXConnectorById(xConnectorId: string): IXConnector | undefined {
     return this.getXConnectors().find(xConnector => xConnector.id === xConnectorId);
   }
 }

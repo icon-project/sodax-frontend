@@ -12,6 +12,7 @@
     "pretty": "turbo run pretty",
     "lint": "turbo run lint",
     "checkTs": "turbo run checkTs",
+    "checkTs:packages": "turbo run checkTs:packages",
     "test": "turbo run test",
     "check:circular-deps": "turbo run check:circular-deps",
     "clean": "turbo clean && rm -rf node_modules dist .turbo && rm -rf apps/*/node_modules apps/*/dist apps/*/.turbo && rm -rf packages/*/node_modules packages/*/dist packages/*/.turbo",

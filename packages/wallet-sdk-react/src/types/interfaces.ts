@@ -23,6 +23,13 @@ export interface IXService extends IXServiceBase {
 export interface IXConnector {
   readonly xChainType: ChainType;
   readonly name: string;
+  /** Unique identifier for the connector */
+  readonly _id: string;
+
+  /** Optional icon URL for the wallet provider */
+  readonly _icon?: string;
+
+  // public getters for id and icon
   readonly id: string;
   readonly icon: string | undefined;
 

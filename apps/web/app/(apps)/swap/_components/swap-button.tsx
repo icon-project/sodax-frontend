@@ -9,11 +9,12 @@ import { SolverIntentStatusCode, type CreateIntentParams } from '@sodax/sdk';
 import { chainIdToChainName } from '@/providers/constants';
 import { useSwapState, useSwapActions } from '../_stores/swap-store-provider';
 import { useSwapAllowance } from '@sodax/dapp-kit';
-import type { SpokeProvider } from '@sodax/sdk';
+import type { IWalletProvider, SpokeChainId } from '@sodax/types';
 
 interface SwapButtonProps {
   intentOrderPayload: CreateIntentParams | undefined;
-  spokeProvider: SpokeProvider | undefined;
+  srcChainKey: SpokeChainId | undefined;
+  walletProvider: IWalletProvider | undefined;
   isSwapPending: boolean;
   onClose: () => void;
   onApprove: () => void | Promise<void>;
@@ -24,7 +25,8 @@ interface SwapButtonProps {
 
 const SwapButton: React.FC<SwapButtonProps> = ({
   intentOrderPayload,
-  spokeProvider,
+  srcChainKey,
+  walletProvider,
   isSwapPending,
   onClose,
   onApprove,
@@ -49,7 +51,11 @@ const SwapButton: React.FC<SwapButtonProps> = ({
   }, [intentOrderPayload, allowanceConfirmed]);
 
   // Use hooks directly
-  const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(paramsForApprove, spokeProvider);
+  const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(
+    paramsForApprove,
+    srcChainKey,
+    walletProvider,
+  );
 
   /* If failed previous swap by JSON rpc error, allowance is still valid.
   but after started next swap progress, allowance will become false.

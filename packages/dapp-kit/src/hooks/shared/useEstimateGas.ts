@@ -1,18 +1,15 @@
-import { type GetEstimateGasReturnType, type SpokeProvider, SpokeService, type TxReturnType } from '@sodax/sdk';
+import type { EstimateGasParams, GetEstimateGasReturnType } from '@sodax/sdk';
+import type { Result, SpokeChainKey } from '@sodax/types';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
+import { useSodaxContext } from './useSodaxContext.js';
 
-export function useEstimateGas<T extends SpokeProvider = SpokeProvider>(
-  spokeProvider: T | undefined,
-): UseMutationResult<GetEstimateGasReturnType<T>, Error, TxReturnType<T, true>> {
-  return useMutation<GetEstimateGasReturnType<T>, Error, TxReturnType<T, true>>({
-    mutationFn: async (rawTx: TxReturnType<T, true>) => {
-      if (!spokeProvider) {
-        throw new Error('spokeProvider is not found');
-      }
-
-      const response = await SpokeService.estimateGas(rawTx, spokeProvider);
-
-      return response;
-    },
+export function useEstimateGas<C extends SpokeChainKey>(): UseMutationResult<
+  Result<GetEstimateGasReturnType<C>>,
+  Error,
+  EstimateGasParams<C>
+> {
+  const { sodax } = useSodaxContext();
+  return useMutation<Result<GetEstimateGasReturnType<C>>, Error, EstimateGasParams<C>>({
+    mutationFn: (params: EstimateGasParams<C>) => sodax.spokeService.estimateGas<C>(params),
   });
 }

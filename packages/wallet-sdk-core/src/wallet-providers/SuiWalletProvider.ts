@@ -82,12 +82,22 @@ export class SuiWalletProvider implements ISuiWalletProvider {
   }
 
   async signAndExecuteTxn(txn: SuiTransaction): Promise<string> {
+    const sender = this.getSuiAddress();
+
+    // Pre-flight: dry-run surfaces execution failures (insufficient SUI for gas, Move
+    // aborts, etc.) before the signer pays gas. Without this, a doomed tx still gets a
+    // digest and only fails at receipt-fetch time. The PK path reuses the resulting
+    // bytes for submit so we only build once per execution.
+    const transactionBlock = await this.buildAndDryRunOrThrow(txn as unknown as Transaction, sender);
+
     if (isPkSuiWallet(this.wallet)) {
       const res = await this.client.signAndExecuteTransaction({
-        transaction: txn as unknown as Transaction,
+        transaction: transactionBlock,
         signer: this.wallet.keyPair,
+        options: { showEffects: true },
       });
 
+      this.assertEffectsSuccess(res.digest, res.effects?.status);
       return res.digest;
     }
     if (isBrowserExtensionSuiWallet(this.wallet)) {
@@ -111,14 +121,35 @@ export class SuiWalletProvider implements ISuiWalletProvider {
         transactionBlock: bytes,
         signature,
         options: {
+          showEffects: true,
           showRawEffects: true,
         },
       });
 
+      this.assertEffectsSuccess(res.digest, res.effects?.status);
       return res.digest;
     }
 
     throw new Error('Invalid wallet configuration');
+  }
+
+  private async buildAndDryRunOrThrow(tx: Transaction, sender: string): Promise<Uint8Array> {
+    tx.setSenderIfNotSet(sender);
+    const transactionBlock = await tx.build({ client: this.client });
+    const result = await this.client.dryRunTransactionBlock({ transactionBlock });
+    if (result.effects.status.status === 'failure') {
+      throw new Error(`Sui transaction pre-flight failed: ${result.effects.status.error ?? 'unknown'}`);
+    }
+    return transactionBlock;
+  }
+
+  private assertEffectsSuccess(
+    digest: string,
+    status: { status?: 'success' | 'failure'; error?: string | null } | undefined,
+  ): void {
+    if (status?.status === 'failure') {
+      throw new Error(`Sui transaction failed on-chain: ${status.error ?? 'unknown'} (digest=${digest})`);
+    }
   }
 
   async viewContract(

@@ -1,6 +1,7 @@
 import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import type { MoneyMarketPosition } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext.js';
+import { unwrapResult } from './unwrapResult.js';
 
 export type UseBackendMoneyMarketPositionParams = {
   userAddress: string | undefined;
@@ -47,7 +48,7 @@ export const useBackendMoneyMarketPosition = (
       if (!params?.userAddress) {
         return undefined;
       }
-      return sodax.backendApi.getMoneyMarketPosition(params.userAddress);
+      return unwrapResult(await sodax.backendApi.getMoneyMarketPosition(params.userAddress));
     },
   });
 };

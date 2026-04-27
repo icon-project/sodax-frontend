@@ -21,10 +21,10 @@ export abstract class XConnector implements IXConnector {
   public readonly name: string;
 
   /** Unique identifier for the connector */
-  private readonly _id: string;
+  public readonly _id: string;
 
   /** Optional icon URL for the wallet provider */
-  private readonly _icon?: string;
+  public readonly _icon?: string;
 
   constructor(xChainType: ChainType, name: string, id: string) {
     this.xChainType = xChainType;

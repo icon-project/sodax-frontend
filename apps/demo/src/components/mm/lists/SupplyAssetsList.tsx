@@ -1,3 +1,4 @@
+/*
 import React, { useEffect, useMemo, useState, type ReactElement } from 'react';
 import {
   useReservesUsdFormat,
@@ -366,3 +367,4 @@ export function SupplyAssetsList(): ReactElement {
     </>
   );
 }
+*/

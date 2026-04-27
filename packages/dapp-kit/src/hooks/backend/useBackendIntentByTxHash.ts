@@ -63,7 +63,8 @@ export const useBackendIntentByTxHash = (
       if (!params?.params?.txHash) {
         return undefined;
       }
-      return sodax.backendApi.getIntentByTxHash(params.params.txHash);
+      const result = await sodax.backendApi.getIntentByTxHash(params.params.txHash);
+      return result.ok ? result.value : undefined;
     },
   });
 };

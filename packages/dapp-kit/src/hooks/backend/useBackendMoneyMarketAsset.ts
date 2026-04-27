@@ -2,6 +2,7 @@
 import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
 import type { MoneyMarketAsset } from '@sodax/sdk';
 import { useSodaxContext } from '../shared/useSodaxContext.js';
+import { unwrapResult } from './unwrapResult.js';
 
 export type UseBackendMoneyMarketAssetParams = {
   params: {
@@ -64,7 +65,7 @@ export const useBackendMoneyMarketAsset = (
         return undefined;
       }
 
-      return sodax.backendApi.getMoneyMarketAsset(params.params.reserveAddress);
+      return unwrapResult(await sodax.backendApi.getMoneyMarketAsset(params.params.reserveAddress));
     },
   });
 };

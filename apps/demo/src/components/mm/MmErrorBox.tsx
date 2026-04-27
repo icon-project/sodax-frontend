@@ -1,3 +1,4 @@
+/*
 // Displays error text in a consistent, well-aligned alert box inside money market modals.
 // Supports dark mode and provides consistent error styling across all money market actions.
 
@@ -24,3 +25,4 @@ export function ErrorAlert({ text, className }: ErrorAlertProps): ReactElement {
     </div>
   );
 }
+*/

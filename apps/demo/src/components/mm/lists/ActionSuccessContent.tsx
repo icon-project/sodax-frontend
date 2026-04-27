@@ -1,3 +1,4 @@
+/*
 // Reusable success screen content shown after a successful money market action (supply/withdraw/borrow/repay).
 // This component displays transaction details, amount, and provides a link to view the transaction on-chain.
 
@@ -147,3 +148,4 @@ export function ActionSuccessContent({ action, data, onClose }: ActionSuccessCon
     </div>
   );
 }
+*/
