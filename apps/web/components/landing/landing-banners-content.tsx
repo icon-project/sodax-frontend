@@ -53,10 +53,10 @@ export const LANDING_SMALL_BANNERS = [
   {
     title: (
       <>
-        <span className="text-yellow-soda text-(length:--app-title) font-bold font-['InterRegular'] leading-[1.1]">
+        <span className="text-yellow-soda text-(length:--app-title) font-['InterBlack'] leading-[1.1]">
           Join
         </span>
-        <span className="text-yellow-soda text-(length:--app-title) font-bold font-['InterRegular'] leading-[1.1]">
+        <span className="text-yellow-soda text-(length:--app-title) font-['InterBlack'] leading-[1.1]">
           {' '}
           our partners{' '}
         </span>

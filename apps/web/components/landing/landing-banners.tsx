@@ -162,7 +162,7 @@ export default function LandingBanners(): ReactElement {
           theme: 'dark',
           title: (
             <>
-              <span className="text-yellow-soda text-(length:--app-title) font-bold font-['InterRegular'] leading-[1.1] ml-2">
+              <span className="text-yellow-soda text-(length:--app-title) font-['InterBlack'] leading-[1.1] ml-2">
                 {buildersBanner.title}
               </span>
             </>
@@ -218,7 +218,7 @@ export default function LandingBanners(): ReactElement {
                 height={32}
                 className="md:w-8 md:h-8 w-6 h-6"
               />
-              <div className="text-(length:--app-title) font-['InterRegular'] font-bold text-black leading-[1.1]">
+              <div className="text-(length:--app-title) font-['InterBlack'] text-black leading-[1.1]">
                 {migrateBanner.title}
               </div>
             </div>
@@ -235,7 +235,7 @@ export default function LandingBanners(): ReactElement {
         right={{
           theme: 'dark',
           title: (
-            <span className="text-yellow-soda text-(length:--app-title) font-bold font-['InterRegular'] leading-[1.1]">
+            <span className="text-yellow-soda text-(length:--app-title) font-['InterBlack'] leading-[1.1]">
               {tokenBanner.title}
             </span>
           ),
