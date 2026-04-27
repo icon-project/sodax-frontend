@@ -1,6 +1,6 @@
 import type { XAccount } from '@/types/index.js';
 import { useMutation, type UseMutationResult } from '@tanstack/react-query';
-import type { XConnector } from '../core/XConnector.js';
+import type { IXConnector } from '../types/interfaces.js';
 import { useXWalletStore } from '../useXWalletStore.js';
 
 /**
@@ -12,12 +12,12 @@ import { useXWalletStore } from '../useXWalletStore.js';
  * because connection state is set reactively by the chain's Hydrator component, not by the
  * connect action itself. Use `useXConnection` or `useXAccount` to read the connected account.
  */
-export function useXConnect(): UseMutationResult<XAccount | undefined, Error, XConnector> {
+export function useXConnect(): UseMutationResult<XAccount | undefined, Error, IXConnector> {
   const setXConnection = useXWalletStore(state => state.setXConnection);
   const actionsRegistry = useXWalletStore(state => state.chainActions);
 
   return useMutation({
-    mutationFn: async (xConnector: XConnector) => {
+    mutationFn: async (xConnector: IXConnector) => {
       const chainActions = actionsRegistry[xConnector.xChainType];
       if (!chainActions) {
         throw new Error(`Chain "${xConnector.xChainType}" is not enabled or ChainActions not registered`);
