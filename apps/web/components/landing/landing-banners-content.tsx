@@ -53,9 +53,7 @@ export const LANDING_SMALL_BANNERS = [
   {
     title: (
       <>
-        <span className="text-yellow-soda text-(length:--app-title) font-['InterBlack'] leading-[1.1]">
-          Join
-        </span>
+        <span className="text-yellow-soda text-(length:--app-title) font-['InterBlack'] leading-[1.1]">Join</span>
         <span className="text-yellow-soda text-(length:--app-title) font-['InterBlack'] leading-[1.1]">
           {' '}
           our partners{' '}
@@ -68,9 +66,9 @@ export const LANDING_SMALL_BANNERS = [
     imageSrc: '/homepage_banner.png',
   },
   {
-    title: 'Migrate to SODA',
-    subtitle: '1:1 exchange for ICX holders.',
-    buttonLabel: 'Migrate',
+    title: 'Hold ICX in your wallet?',
+    subtitle: 'Migrate self-custody ICX 1:1 to SODA.\nSame community, fresh tokenomics.',
+    buttonLabel: 'Migrate on SODA Exchange',
     href: 'https://www.sodax.com/migrate',
     imageSrc: '/sodax-mockup.png',
   },

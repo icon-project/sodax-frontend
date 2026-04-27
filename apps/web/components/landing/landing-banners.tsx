@@ -32,7 +32,8 @@ const THEME_STYLES = {
     buttonVariant: 'subtle' as const,
   },
   light: {
-    subtitle: "text-(length:--body-super-comfortable) font-['InterRegular'] text-black mt-2 leading-[1.2]",
+    subtitle:
+      "text-(length:--body-super-comfortable) font-['InterRegular'] text-black mt-2 leading-[1.2] whitespace-pre-line",
     buttonClassName: "px-6 font-['InterMedium'] cursor-pointer",
     buttonVariant: 'outline' as const,
   },
@@ -211,13 +212,6 @@ export default function LandingBanners(): ReactElement {
           theme: 'light',
           title: (
             <div className="flex items-center gap-4">
-              <Image
-                src="/soda-yellow-sm.png"
-                alt="SODAX Symbol"
-                width={32}
-                height={32}
-                className="md:w-8 md:h-8 w-6 h-6"
-              />
               <div className="text-(length:--app-title) font-['InterBlack'] text-black leading-[1.1]">
                 {migrateBanner.title}
               </div>

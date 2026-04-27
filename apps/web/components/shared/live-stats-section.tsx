@@ -51,9 +51,9 @@ export default function LiveStatsSection(): ReactElement {
     <section className="w-full bg-almost-white mt-4 py-20 md:py-28 px-6">
       <div className="flex flex-col items-center gap-10">
         <div className="flex flex-col items-center gap-2 text-center">
-          <h2 className="font-['InterBlack'] text-black text-(length:--main-title) leading-[1.1]">Verified live.</h2>
+          <h2 className="font-['InterBlack'] text-black text-(length:--main-title) leading-[1.1]">SODA at a glance.</h2>
           <p className="font-['InterRegular'] text-espresso text-(length:--subtitle) leading-[1.2]">
-            Every number pulled directly from the protocol.
+            Live stats direct from the protocol.{' '}
           </p>
         </div>
 
@@ -85,7 +85,7 @@ function buildSodaTokenTile(
   const primarySubtitle = supply ? `${formatUsdLarge(supply.market_cap_usd)} market cap` : EMPTY_STAT_VALUE;
 
   const body = networks
-    ? `SODA is live across ${networks.supported} networks with real-time pricing.`
+    ? `SODA is live across ${networks.supported} networks.`
     : 'SODA is live across the network with real-time pricing.';
 
   const footer =
@@ -120,11 +120,11 @@ function buildBurnTile(burns: PublicStatsBurns | null | undefined): TileCopy {
 
   return {
     key: 'burns',
-    title: 'Deflation by revenue',
+    title: 'Deflation through volume',
     primary: formatSodaAmount(burns.last_30d_soda),
     primaryAriaLabel: `${Math.round(burns.last_30d_soda).toLocaleString('en-US')} SODA burned in the last 30 days`,
     primarySubtitle: 'burned last 30d',
-    body: 'Protocol revenue burns SODA out of existence.',
+    body: 'Collected fees buy back & burn SODA.',
     footerIcon: <Flame className={ICON_CLASS} aria-hidden="true" />,
     footer: `${formatSodaDelta(burns.last_7d_soda)} 7d burn`,
   };
@@ -137,7 +137,15 @@ function buildActivityTile(activity: PublicStatsActivity | null | undefined): Ti
       title: 'Protocol activity',
       primary: EMPTY_STAT_VALUE,
       primarySubtitle: undefined,
-      body: 'On-chain trades and settlements, happening in real time.',
+      body: (
+        <>
+          Real-time transactions on{' '}
+          <a href="https://sodaxscan.com/" target="_blank" rel="noreferrer" className="text-clay-dark underline">
+            sodaxscan
+          </a>
+          .
+        </>
+      ),
       footerIcon: <Link2 className={ICON_CLASS} aria-hidden="true" />,
       footer: EMPTY_STAT_VALUE,
     };
@@ -151,7 +159,15 @@ function buildActivityTile(activity: PublicStatsActivity | null | undefined): Ti
     primary: `1 tx / ${cadenceClock}`,
     primaryAriaLabel: `One transaction every ${cadenceClock}`,
     primarySubtitle: `${formatPercentDelta(activity.accel_pct_vs_30d)} vs 30d avg`,
-    body: 'On-chain trades and settlements, happening in real time.',
+    body: (
+      <>
+        Real-time transactions on{' '}
+        <a href="https://sodaxscan.com/" target="_blank" rel="noreferrer" className="text-clay-dark underline">
+          sodaxscan
+        </a>
+        .
+      </>
+    ),
     footerIcon: <Link2 className={ICON_CLASS} aria-hidden="true" />,
     footer: `${formatThousands(activity.txns_30d)} tx last 30d`,
   };
