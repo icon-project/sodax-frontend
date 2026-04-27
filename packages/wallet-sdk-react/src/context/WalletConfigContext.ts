@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { ChainType } from '@sodax/types';
+import { ChainTypeArr, type ChainType } from '@sodax/types';
 import type { ChainsConfig, SodaxWalletConfig } from '../types/config.js';
 
 /**
@@ -21,12 +21,12 @@ export function useWalletConfig(): SodaxWalletConfig {
 
 export function useIsChainEnabled(chainType: ChainType): boolean {
   const { chains } = useWalletConfig();
-  return chainType in chains;
+  return !!chains[chainType];
 }
 
 export function useEnabledChainTypes(): ChainType[] {
   const { chains } = useWalletConfig();
-  return Object.keys(chains) as ChainType[];
+  return ChainTypeArr.filter(t => !!chains[t]);
 }
 
 export function useChainsConfig(): ChainsConfig {

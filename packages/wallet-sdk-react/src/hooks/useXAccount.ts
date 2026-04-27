@@ -24,14 +24,14 @@ import { getXChainType } from '../actions/index.js';
  * ```
  */
 function isChainType(chainIdentifier: ChainType | SpokeChainKey): chainIdentifier is ChainType {
-  return ChainTypeArr.includes(chainIdentifier as ChainType);
+  return ChainTypeArr.some(v => v === chainIdentifier);
 }
 
 export function useXAccount(chainIdentifier?: ChainType | SpokeChainKey): XAccount {
   const resolvedChainType: ChainType | undefined = chainIdentifier
     ? isChainType(chainIdentifier)
       ? chainIdentifier
-      : getXChainType(chainIdentifier as SpokeChainKey)
+      : getXChainType(chainIdentifier)
     : undefined;
 
   const xConnection = useXConnection(resolvedChainType);

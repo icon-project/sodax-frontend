@@ -1,4 +1,5 @@
-import type { RpcConfig } from '@sodax/types';
+import type { ChainType, RpcConfig } from '@sodax/types';
+import type { State as WagmiState } from 'wagmi';
 import type { WalletConnectParameters } from 'wagmi/connectors';
 import type { IXConnector } from './interfaces.js';
 
@@ -15,7 +16,7 @@ export type EvmChainConfig = BaseChainConfig & {
   /** Enable SSR-safe hydration for Next.js. @default true */
   ssr?: boolean;
   /** Wagmi SSR hydration state — pass cookieToInitialState() to avoid disconnect flash on first load (Next.js only). */
-  initialState?: unknown;
+  initialState?: WagmiState;
   /** WalletConnect configuration. If provided, WalletConnect connector is added to wagmi config. Extends wagmi's WalletConnectParameters. */
   walletConnect?: WalletConnectParameters;
 };
@@ -39,17 +40,22 @@ export type SuiChainConfig = BaseChainConfig & {
 /** Non-provider chains — connect via browser extension APIs directly (ICON, Injective, Stellar, Bitcoin, NEAR, Stacks). */
 export type SimpleChainConfig = BaseChainConfig;
 
+/** Maps each ChainType to its specific config type. Source of truth for ChainsConfig. */
+export type ChainConfigMap = {
+  EVM: EvmChainConfig;
+  SOLANA: SolanaChainConfig;
+  SUI: SuiChainConfig;
+  ICON: SimpleChainConfig;
+  INJECTIVE: SimpleChainConfig;
+  STELLAR: SimpleChainConfig;
+  BITCOIN: SimpleChainConfig;
+  NEAR: SimpleChainConfig;
+  STACKS: SimpleChainConfig;
+};
+
 /** Per-chain configuration. Omitted chains will not be mounted. */
 export type ChainsConfig = {
-  EVM?: EvmChainConfig;
-  SOLANA?: SolanaChainConfig;
-  SUI?: SuiChainConfig;
-  ICON?: SimpleChainConfig;
-  INJECTIVE?: SimpleChainConfig;
-  STELLAR?: SimpleChainConfig;
-  BITCOIN?: SimpleChainConfig;
-  NEAR?: SimpleChainConfig;
-  STACKS?: SimpleChainConfig;
+  [K in ChainType]?: ChainConfigMap[K];
 };
 
 /** Top-level configuration for SodaxWalletProvider (new API — replaces legacy rpcConfig/options/initialState props). */
