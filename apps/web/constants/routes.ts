@@ -60,7 +60,9 @@ export const DOCUMENTATION_ROUTE = 'https://docs.sodax.com';
 export const DOCUMENTATION_GITBOOK_ROUTE = 'https://sodax-1.gitbook.io/sodax-docs/readme-1';
 
 // ── Social & community (external) ──────────────────────────────────────────
-export const DISCORD_ROUTE = 'https://www.sodax.com/discord ';
+export const DISCORD_ROUTE = 'https://www.sodax.com/discord';
+/** Actual Discord invite URL; only used by the /discord redirect page. */
+export const DISCORD_INVITE_ROUTE = 'https://discord.com/invite/xM2Nh4S6vN';
 export const X_ROUTE = 'https://x.com/gosodax';
 /** X (Twitter) “follow” intent URL. */
 export const X_INTENT_FOLLOW_ROUTE = 'https://x.com/intent/user?screen_name=gosodax';

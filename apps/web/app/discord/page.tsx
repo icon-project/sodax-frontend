@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
-import { DISCORD_ROUTE } from '@/constants/routes';
+import { DISCORD_INVITE_ROUTE } from '@/constants/routes';
 
 export default function PressPage() {
-  redirect(DISCORD_ROUTE);
+  redirect(DISCORD_INVITE_ROUTE);
 }

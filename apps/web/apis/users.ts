@@ -10,31 +10,35 @@ export const registerUser = async ({
   chainType,
   message,
 }: { address: string; signature: string | Uint8Array; chainType: string; message: string }) => {
-  try {
-    if (SIGN_SUPPORTED_CHAINS.includes(chainType)) {
-      await fetch(`${BASE_URL}/users/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          address,
-          signature: chainType === 'SOLANA' ? bs58.encode(Uint8Array.from(signature as Uint8Array)) : signature,
-          message,
-          chain: chainType,
-        }),
-      });
-      // return await response.json();
-    } else {
-      localStorage.setItem(`user-${address}`, JSON.stringify({ address, signature, message, chain: chainType }));
+  if (SIGN_SUPPORTED_CHAINS.includes(chainType)) {
+    const response = await fetch(`${BASE_URL}/users/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        address,
+        signature: chainType === 'SOLANA' ? bs58.encode(Uint8Array.from(signature as Uint8Array)) : signature,
+        message,
+        chain: chainType,
+      }),
+    });
+
+    if (!response.ok) {
+      const responseText = await response.text();
+      throw new Error(`registerUser failed: ${response.status} ${responseText}`);
     }
-  } catch (e) {}
+  } else {
+    localStorage.setItem(`user-${address}`, JSON.stringify({ address, signature, message, chain: chainType }));
+  }
 };
 
 export const getUser = async ({ address, chainType }: { address: string; chainType: string }) => {
+  const normalizedAddress = chainType === 'EVM' ? address.toLowerCase() : address;
+
   try {
     if (SIGN_SUPPORTED_CHAINS.includes(chainType)) {
-      const response = await fetch(`${BASE_URL}/users/${address}/chain/${chainType}`, {
+      const response = await fetch(`${BASE_URL}/users/${normalizedAddress}/chain/${chainType}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -42,7 +46,7 @@ export const getUser = async ({ address, chainType }: { address: string; chainTy
       });
       const res = await response.json();
       if (res.success) {
-        return res.data;
+        return res.data?.user ?? null;
       }
       return null;
     }
@@ -58,9 +62,6 @@ export const isRegisteredUser = async ({ address, chainType }: { address: string
   if (SIGN_SUPPORTED_CHAINS.includes(chainType)) {
     if (user && user.address && user.chain) {
       return address.toLowerCase() === user.address.toLowerCase() && chainType === user.chain;
-      // const { message, signature, address } = user;
-      // const recoveredAddress = await recoverMessageAddress({ message, signature });
-      // return recoveredAddress.toLowerCase() === address.toLowerCase();
     }
   } else {
     return user !== null;
