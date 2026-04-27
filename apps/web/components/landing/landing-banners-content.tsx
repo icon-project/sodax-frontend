@@ -4,8 +4,8 @@ import {
   BUILDERS_PORTAL_ROUTE,
   CASE_STUDIES_ROUTE,
   DOCUMENTATION_ROUTE,
+  EXCHANGE_ROUTE,
   INTEGRATION_OPTIONS_ROUTE,
-  MIGRATE_ROUTE,
   SODA_TOKEN_ROUTE,
 } from '@/constants/routes';
 
@@ -67,10 +67,10 @@ export const LANDING_SMALL_BANNERS = [
     imageSrc: '/homepage_banner.png',
   },
   {
-    title: 'Migrate to SODA',
-    subtitle: '1:1 exchange for ICX holders.',
-    buttonLabel: 'Migrate on SODA Exchange',
-    href: MIGRATE_ROUTE,
+    title: 'Explore the SODA Exchange',
+    subtitle: 'Swap across 18 networks, stake and earn from your SODA.',
+    buttonLabel: 'SODA Exchange',
+    href: EXCHANGE_ROUTE,
     imageSrc: '/sodax-mockup.png',
   },
   {
