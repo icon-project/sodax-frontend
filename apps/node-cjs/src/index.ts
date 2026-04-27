@@ -10,18 +10,21 @@
  * IMPORTANT: Do not remove it unless you have a good reason to do so.
  */
 import { IconWalletProvider } from '@sodax/wallet-sdk-core';
-import { IconSpokeProvider, Sodax, ICON_MAINNET_CHAIN_ID, NEAR_MAINNET_CHAIN_ID, spokeChainConfig } from '@sodax/sdk';
+import { ChainKeys, Sodax, spokeChainConfig } from '@sodax/sdk';
 
 console.log('Attempting to load @sodax/sdk in CommonJS...');
 
 const sdk = new Sodax();
 console.log('SDK loaded:', typeof sdk);
-console.log('NEAR_MAINNET_CHAIN_ID:', NEAR_MAINNET_CHAIN_ID);
+console.log('NEAR_MAINNET key:', ChainKeys.NEAR_MAINNET);
+console.log('ICON_MAINNET key:', ChainKeys.ICON_MAINNET);
 
-const iconSpokeProvider = new IconSpokeProvider(new IconWalletProvider({
+const iconWalletProvider = new IconWalletProvider({
   // Mock private key for ICON blockchain (testing only, do not use in production)
   privateKey: '0x11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff',
   rpcUrl: 'https://ctz.solidwallet.io/api/v3',
-}), spokeChainConfig[ICON_MAINNET_CHAIN_ID]);
+});
+const iconChainConfig = spokeChainConfig[ChainKeys.ICON_MAINNET];
 
-console.log('iconSpokeProvider:', iconSpokeProvider);
+console.log('iconWalletProvider loaded:', typeof iconWalletProvider);
+console.log('iconChainConfig loaded:', iconChainConfig.chain.name);
