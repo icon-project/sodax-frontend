@@ -13,7 +13,7 @@ type PriceRangePresetsProps = {
 };
 
 const presetButtonClass =
-  "outline-none border-none shadow-none text-(length:--body-fine-print) px-2 py-1 h-[22px] font-['InterRegular']";
+  "rounded-full bg-cream-white text-clay hover:bg-cherry-bright hover:text-white text-(length:--body-fine-print) font-['InterRegular'] h-7 px-3 border-none outline-none shadow-none transition-colors";
 
 export function PriceRangePresets({
   currentPrice,
