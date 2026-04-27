@@ -30,7 +30,7 @@ export const LANDING_FULL_BANNERS = [
         <span className="text-black text-(length:--main-title) font-bold font-['InterBlack'] leading-[1.1]">
           Your scalable{' '}
         </span>
-        <span className="text-black text-(length:--main-title) font-normal font-['Shrikhand'] leading-[1.1]">
+        <span className="text-black text-(length:--main-title) font-bold font-['InterBlack'] leading-[1.1]">
           execution stack{' '}
         </span>
       </>
@@ -53,8 +53,8 @@ export const LANDING_SMALL_BANNERS = [
   {
     title: (
       <>
-        <span className="text-yellow-soda text-(length:--app-title) font-normal font-['Shrikhand'] leading-[1.1]">
-          join
+        <span className="text-yellow-soda text-(length:--app-title) font-bold font-['InterRegular'] leading-[1.1]">
+          Join
         </span>
         <span className="text-yellow-soda text-(length:--app-title) font-bold font-['InterRegular'] leading-[1.1]">
           {' '}
@@ -75,7 +75,7 @@ export const LANDING_SMALL_BANNERS = [
     imageSrc: '/sodax-mockup.png',
   },
   {
-    title: 'SODA Token',
+    title: 'SODA token',
     subtitle: 'Fees driving growth and token burns.',
     buttonLabel: 'Learn more',
     href: SODA_TOKEN_ROUTE,

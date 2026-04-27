@@ -5,6 +5,7 @@ import { MIGRATE_ROUTE, SODA_TOKEN_ROUTE, STAKE_ROUTE } from '@/constants/routes
 interface BannerCta {
   label: string;
   href: string;
+  tooltip?: string;
 }
 
 export interface HoldersShortBanner {
@@ -51,16 +52,20 @@ export const HOLDERS_SHORT_BANNERS = [
 
 export const HOLDERS_IMAGE_BANNERS = [
   {
-    title: 'Already an ICX holder?',
+    title: "Don't hold your ICX on an exchange?",
     subtitle: (
       <>
-        Migrate 1:1 from ICX to SODA.
+        Migrate self-custody ICX 1:1 to SODA below.
         <br />
         Same community, fresh tokenomics.
       </>
     ),
     imageSrc: '/soda-migrate-mockup.png',
-    cta: { label: 'Migrate to SODA', href: MIGRATE_ROUTE },
+    cta: {
+      label: 'Migrate on SODA Exchange',
+      href: MIGRATE_ROUTE,
+      tooltip: 'Not required for ICX held on exchanges',
+    },
   },
   {
     title: 'Your share of fees.',

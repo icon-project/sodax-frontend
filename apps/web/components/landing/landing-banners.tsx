@@ -38,19 +38,41 @@ const THEME_STYLES = {
   },
 };
 
-function SmallBanner({ theme, title, subtitle, buttonLabel, href, imageSrc, imageClassName, containerClassName, extraImages }: SmallBannerProps): ReactElement {
+function SmallBanner({
+  theme,
+  title,
+  subtitle,
+  buttonLabel,
+  href,
+  imageSrc,
+  imageClassName,
+  containerClassName,
+  extraImages,
+}: SmallBannerProps): ReactElement {
   const styles = THEME_STYLES[theme];
 
   return (
     <div className={containerClassName}>
       {extraImages?.map(img => (
-        <Image key={img.src} className={img.className} src={img.src} alt="background" width={img.width} height={img.height} />
+        <Image
+          key={img.src}
+          className={img.className}
+          src={img.src}
+          alt="background"
+          width={img.width}
+          height={img.height}
+        />
       ))}
       <Image className={imageClassName} src={imageSrc} alt="background" width={990} height={660} />
       <div className="flex items-center">{title}</div>
       <Label className={styles.subtitle}>{subtitle}</Label>
       <div className="mt-6 z-10">
-        <Button className={styles.buttonClassName} variant={styles.buttonVariant} size="lg" onClick={() => window.open(href, '_blank')}>
+        <Button
+          className={styles.buttonClassName}
+          variant={styles.buttonVariant}
+          size="lg"
+          onClick={() => window.open(href, '_blank')}
+        >
           {buttonLabel}
         </Button>
       </div>
@@ -87,7 +109,13 @@ export default function LandingBanners(): ReactElement {
         }}
         title={
           <div className="flex items-center gap-4">
-            <Image src="/soda-yellow-sm.png" alt="SODAX Symbol" width={32} height={32} className="md:w-8 md:h-8 w-6 h-6" />
+            <Image
+              src="/soda-yellow-sm.png"
+              alt="SODAX Symbol"
+              width={32}
+              height={32}
+              className="md:w-8 md:h-8 w-6 h-6"
+            />
             <div className="text-(length:--main-title) font-['InterBlack'] text-black leading-[1.1]">
               {integrationBanner.title}
             </div>
@@ -112,7 +140,13 @@ export default function LandingBanners(): ReactElement {
         }}
         title={
           <div className="flex items-center gap-4">
-            <Image src="/soda-yellow-sm.png" alt="SODAX Symbol" width={32} height={32} className="md:w-8 md:h-8 w-6 h-6" />
+            <Image
+              src="/soda-yellow-sm.png"
+              alt="SODAX Symbol"
+              width={32}
+              height={32}
+              className="md:w-8 md:h-8 w-6 h-6"
+            />
             <div className="text-center justify-center">{executionStackBanner.title}</div>
           </div>
         }
@@ -128,7 +162,6 @@ export default function LandingBanners(): ReactElement {
           theme: 'dark',
           title: (
             <>
-              <Image src="/soda-yellow.png" alt="SODAX Symbol" width={32} height={32} className="md:w-8 md:h-8 w-6 h-6" />
               <span className="text-yellow-soda text-(length:--app-title) font-bold font-['InterRegular'] leading-[1.1] ml-2">
                 {buildersBanner.title}
               </span>
@@ -147,7 +180,6 @@ export default function LandingBanners(): ReactElement {
           theme: 'dark',
           title: (
             <div className="flex items-center gap-4">
-              <Image src="/soda-yellow-sm.png" alt="SODAX Symbol" width={32} height={32} className="md:w-8 md:h-8 w-6 h-6" />
               <div className="text-center justify-center">{partnersBanner.title}</div>
             </div>
           ),
@@ -158,7 +190,8 @@ export default function LandingBanners(): ReactElement {
           extraImages: [
             {
               src: '/circle1.png',
-              className: 'mix-blend-multiply absolute bottom-[-280px] left-1/2 transform -translate-x-1/2 w-[737px] z-2',
+              className:
+                'mix-blend-multiply absolute bottom-[-280px] left-1/2 transform -translate-x-1/2 w-[737px] z-2',
               width: 737,
               height: 737,
             },
@@ -178,7 +211,13 @@ export default function LandingBanners(): ReactElement {
           theme: 'light',
           title: (
             <div className="flex items-center gap-4">
-              <Image src="/soda-yellow-sm.png" alt="SODAX Symbol" width={32} height={32} className="md:w-8 md:h-8 w-6 h-6" />
+              <Image
+                src="/soda-yellow-sm.png"
+                alt="SODAX Symbol"
+                width={32}
+                height={32}
+                className="md:w-8 md:h-8 w-6 h-6"
+              />
               <div className="text-(length:--app-title) font-['InterRegular'] font-bold text-black leading-[1.1]">
                 {migrateBanner.title}
               </div>
