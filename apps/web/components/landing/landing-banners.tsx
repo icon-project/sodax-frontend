@@ -32,8 +32,7 @@ const THEME_STYLES = {
     buttonVariant: 'subtle' as const,
   },
   light: {
-    subtitle:
-      "text-(length:--body-super-comfortable) font-['InterRegular'] text-black mt-2 leading-[1.2] whitespace-pre-line",
+    subtitle: "text-(length:--body-super-comfortable) font-['InterRegular'] text-black mt-2 leading-[1.2]",
     buttonClassName: "px-6 font-['InterMedium'] cursor-pointer",
     buttonVariant: 'outline' as const,
   },
@@ -72,7 +71,13 @@ function SmallBanner({
           className={styles.buttonClassName}
           variant={styles.buttonVariant}
           size="lg"
-          onClick={() => window.open(href, '_blank')}
+          onClick={() => {
+            if (href.startsWith('/')) {
+              window.location.assign(href);
+            } else {
+              window.open(href, '_blank');
+            }
+          }}
         >
           {buttonLabel}
         </Button>

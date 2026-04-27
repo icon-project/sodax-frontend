@@ -5,6 +5,7 @@ import {
   CASE_STUDIES_ROUTE,
   DOCUMENTATION_ROUTE,
   INTEGRATION_OPTIONS_ROUTE,
+  MIGRATE_ROUTE,
   SODA_TOKEN_ROUTE,
 } from '@/constants/routes';
 
@@ -66,10 +67,10 @@ export const LANDING_SMALL_BANNERS = [
     imageSrc: '/homepage_banner.png',
   },
   {
-    title: 'Hold ICX in your wallet?',
-    subtitle: 'Migrate self-custody ICX 1:1 to SODA.\nSame community, fresh tokenomics.',
+    title: 'Migrate to SODA',
+    subtitle: '1:1 exchange for ICX holders.',
     buttonLabel: 'Migrate on SODA Exchange',
-    href: 'https://www.sodax.com/migrate',
+    href: MIGRATE_ROUTE,
     imageSrc: '/sodax-mockup.png',
   },
   {

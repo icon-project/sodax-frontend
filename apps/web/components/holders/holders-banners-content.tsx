@@ -52,10 +52,10 @@ export const HOLDERS_SHORT_BANNERS = [
 
 export const HOLDERS_IMAGE_BANNERS = [
   {
-    title: "Don't hold your ICX on an exchange?",
+    title: 'Hold ICX in your wallet?',
     subtitle: (
       <>
-        Migrate self-custody ICX 1:1 to SODA below.
+        Migrate self-custody ICX 1:1 to SODA.
         <br />
         Same community, fresh tokenomics.
       </>
