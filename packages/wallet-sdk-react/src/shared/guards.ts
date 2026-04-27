@@ -62,12 +62,7 @@ export function assert(condition: unknown, message: string): asserts condition {
  * Validates the runtime shape of Sui provider dependencies before passing them to wallet-sdk-core.
  * Used by both SuiHydrator (render path) and SuiXService.createWalletProvider (imperative path).
  */
-export function assertSuiProviderShape(
-  caller: string,
-  client: unknown,
-  wallet: unknown,
-  account: unknown,
-): void {
+export function assertSuiProviderShape(caller: string, client: unknown, wallet: unknown, account: unknown): void {
   const clientOk =
     isRecord(client) &&
     hasFunctionProperty(client, 'executeTransactionBlock') &&
@@ -81,4 +76,3 @@ export function assertSuiProviderShape(
   const accountOk = isRecord(account) && hasStringProperty(account, 'address');
   assert(accountOk, `[${caller}] invalid Sui account shape`);
 }
-

@@ -15,7 +15,10 @@ export interface IXService extends IXServiceBase {
 
 /**
  * Public interface for wallet connector implementations.
- * Consumer code should depend on this interface instead of the concrete XConnector class.
+ *
+ * `isInstalled` reads `window.*` at getter-call time (render time); no extra
+ * subscription is installed. Components get fresh values through normal React
+ * render triggers (store updates, parent rerenders).
  */
 export interface IXConnector {
   readonly xChainType: ChainType;
@@ -29,6 +32,11 @@ export interface IXConnector {
   // public getters for id and icon
   readonly id: string;
   readonly icon: string | undefined;
+
+  /** True when the wallet extension backing this connector is installed. */
+  readonly isInstalled: boolean;
+  /** URL where users can install the wallet extension if missing. */
+  readonly installUrl?: string;
 
   connect(): Promise<XAccount | undefined>;
   disconnect(): Promise<void>;

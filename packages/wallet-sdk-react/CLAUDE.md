@@ -182,6 +182,31 @@ All hooks read from the Zustand store — no direct chain SDK hook usage:
 - `useEvmSwitchChain()` — EVM network switching
 - `useXSignMessage()` — cross-chain message signing (reads `chainActions` from store)
 
+## Wallet modal primitives
+
+Headless building blocks for multi-chain wallet connect UI. Render- and wallet-agnostic.
+
+| Hook / utility | Purpose |
+|---|---|
+| `useWalletModal(options)` | Modal state machine: `closed → chainSelect → walletSelect → connecting → success \| error`. `options.onConnected` for app side-effects |
+| `useConnectionFlow()` | `connect + status + retry` without a modal |
+| `useBatchConnect({ connectors, skipConnected })` | Sequential connect across every chain a wallet identifier covers |
+| `useBatchDisconnect({ connectors? })` | Mirror of `useBatchConnect`; omit `connectors` to disconnect all |
+| `useChainGroups({ order? })` | One entry per enabled chain; EVM collapses to one group spanning all EVM networks |
+| `useConnectedChains({ order? })` | Aggregate connected view; `status: 'loading' \| 'ready'` gates persist-hydration |
+| `useIsWalletInstalled({ connectors?, chainType? })` | Cross-chain install check; filters AND |
+| `sortConnectors(xs, { preferred })` | Preferred first, then installed, then original |
+
+**State machine** — `useWalletModal` returns `state` as a discriminated union on `kind`; `switch (state.kind)` to render. Full shape: `WalletModalState` in `src/useWalletModalStore.ts`. Store is separate from `useXWalletStore` (ephemeral UI state, non-persisted, internal).
+
+**EVM = one connection, all networks** — `useChainGroups` / `useConnectedChains` report a single `EVM` row; wagmi covers all configured EVM networks under one connector.
+
+**Shared identifier match** — `useBatchConnect`, `useBatchDisconnect`, `useIsWalletInstalled` take the same `connectors: readonly string[]`. Case-insensitive substring on `connector.id` / `connector.name` via `utils/matchConnectorIdentifier` (internal).
+
+**Errors** — raw `Error`, no discriminated taxonomy. For install CTA: read `connector.isInstalled` / `connector.installUrl` directly.
+
+**Reference app**: `apps/wallet-modal-example` (`pnpm --filter @sodax/wallet-modal-example dev`, port 3002).
+
 ## Directory Structure
 
 ```

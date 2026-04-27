@@ -1,13 +1,14 @@
 import type { ChainType } from '@sodax/types';
-import { useXWalletStore } from '../useXWalletStore.js';
+import { useXWalletStore } from '@/useXWalletStore.js';
 import type { IXConnector } from '@/types/interfaces.js';
 
 const warnedChains = new Set<ChainType>();
 
 /**
- * Hook to retrieve available wallet connectors for a specific blockchain type.
- * Reads from the centralized store — connectors are hydrated by chain providers
- * or discovered async during initChainServices (Stellar, NEAR).
+ * Hook to retrieve available wallet connectors for a specific blockchain type,
+ * with enriched metadata (isInstalled, installUrl, icon).
+ *
+ * `connector.isInstalled` reads current `window` state at render time.
  *
  * Logs a one-time warning per chain if the requested chain is not enabled in
  * SodaxWalletProvider config.chains, to help debug missing connector lists.

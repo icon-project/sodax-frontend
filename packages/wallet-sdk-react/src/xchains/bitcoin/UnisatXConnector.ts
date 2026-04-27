@@ -1,5 +1,6 @@
 import type { XAccount } from '@/types/index.js';
 import { detectBitcoinAddressType, type IBitcoinWalletProvider, type BtcAddressType } from '@sodax/types';
+import { WALLET_METADATA } from '@/constants.js';
 import { BitcoinXConnector } from './BitcoinXConnector.js';
 
 // Minimal Unisat window API types
@@ -82,8 +83,16 @@ export class UnisatXConnector extends BitcoinXConnector {
     return typeof window !== 'undefined' && !!window.unisat;
   }
 
+  public override get isInstalled(): boolean {
+    return UnisatXConnector.isAvailable();
+  }
+
+  public override get installUrl(): string {
+    return WALLET_METADATA.unisat.installUrl;
+  }
+
   public override get icon(): string {
-    return 'https://avatars.githubusercontent.com/u/125119198?s=200&v=4';
+    return WALLET_METADATA.unisat.icon;
   }
 
   async connect(): Promise<XAccount | undefined> {

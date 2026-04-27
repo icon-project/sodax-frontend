@@ -1,0 +1,185 @@
+import { useCallback, useRef, useState } from 'react';
+import { ChainTypeArr, type ChainType } from '@sodax/types';
+import type { XConnector } from '@/core/XConnector.js';
+import type { XConnection } from '@/types/index.js';
+import { matchesConnectorIdentifier } from '@/utils/matchConnectorIdentifier.js';
+import { useXWalletStore } from '@/useXWalletStore.js';
+import { useXDisconnect } from './useXDisconnect.js';
+
+/**
+ * Per-target event emitted by `onProgress` as the batch advances.
+ */
+export type BatchDisconnectProgressEvent =
+  | { chainType: ChainType; outcome: 'success' }
+  | { chainType: ChainType; outcome: 'failure'; error: Error };
+
+export type BatchDisconnectResult = {
+  /** Chain types where disconnect succeeded. */
+  successful: ChainType[];
+  /** Chain types where disconnect threw, paired with the raw error. */
+  failed: Array<{ chainType: ChainType; error: Error }>;
+};
+
+export type UseBatchDisconnectOptions = {
+  /**
+   * Wallet brand identifiers to scope the disconnect (e.g. `'hana'`,
+   * `'xverse'`). Matched via case-insensitive substring against
+   * `connector.id` and `connector.name` — see {@link matchesConnectorIdentifier}.
+   * Only chains whose *currently active* connector matches at least one
+   * identifier are disconnected.
+   *
+   * Omit this field to disconnect every currently-connected chain regardless
+   * of which wallet is active.
+   *
+   * To target a specific connector (not a brand), use
+   * `useXConnectors(chainType).find(c => c.id === '...')` + `useXDisconnect`
+   * directly instead of this API.
+   *
+   * @example ['hana']            // disconnect every chain Hana is connected on
+   * @example ['hana', 'xverse']  // disconnect chains with Hana OR Xverse active
+   */
+  connectors?: readonly string[];
+  /**
+   * Fires once per target as the batch progresses. Errors thrown from
+   * `onProgress` are caught and logged — they do NOT fail the batch.
+   */
+  onProgress?: (event: BatchDisconnectProgressEvent) => void;
+};
+
+export type UseBatchDisconnectResult = {
+  run: () => Promise<BatchDisconnectResult>;
+  status: 'idle' | 'running' | 'done';
+  result: BatchDisconnectResult | null;
+  /**
+   * Clears `status` and `result`. Calling `reset()` while `status === 'running'`
+   * only clears the observable state — the in-flight batch is NOT aborted
+   * (there is no cancellation signal). When the batch eventually resolves,
+   * `status` flips to `'done'` and `result` populates again. Typical usage
+   * is to call `reset()` only after `status === 'done'`.
+   */
+  reset: () => void;
+};
+
+/**
+ * Pure helper — returns the list of currently-connected chains whose active
+ * connector matches at least one supplied identifier. When `connectors` is
+ * `undefined`, every currently-connected chain is returned.
+ * Extracted for testability without mounting React.
+ */
+export function resolveDisconnectTargets(
+  connectors: readonly string[] | undefined,
+  xConnections: Partial<Record<ChainType, XConnection>>,
+  xConnectorsByChain: Partial<Record<ChainType, XConnector[]>>,
+): ChainType[] {
+  const targets: ChainType[] = [];
+  for (const chainType of ChainTypeArr) {
+    const connection = xConnections[chainType];
+    if (!connection?.xAccount.address) continue;
+    if (!connectors) {
+      targets.push(chainType);
+      continue;
+    }
+    const activeConnector = xConnectorsByChain[chainType]?.find(c => c.id === connection.xConnectorId);
+    if (!activeConnector) continue;
+    if (connectors.some(identifier => matchesConnectorIdentifier(activeConnector, identifier))) {
+      targets.push(chainType);
+    }
+  }
+  return targets;
+}
+
+/**
+ * Pure helper — runs disconnect sequentially over `chainTypes`. `onProgress`
+ * fires per target and is isolated from the batch result — a throwing callback
+ * is logged, never propagated.
+ * Extracted for testability.
+ */
+export async function runBatchDisconnect(
+  chainTypes: readonly ChainType[],
+  disconnect: (chainType: ChainType) => Promise<void>,
+  onProgress?: (event: BatchDisconnectProgressEvent) => void,
+): Promise<BatchDisconnectResult> {
+  const successful: ChainType[] = [];
+  const failed: BatchDisconnectResult['failed'] = [];
+
+  const emit = (event: BatchDisconnectProgressEvent): void => {
+    if (!onProgress) return;
+    try {
+      onProgress(event);
+    } catch (err) {
+      console.error('[useBatchDisconnect] onProgress threw:', err);
+    }
+  };
+
+  for (const chainType of chainTypes) {
+    try {
+      await disconnect(chainType);
+      successful.push(chainType);
+      emit({ chainType, outcome: 'success' });
+    } catch (raw) {
+      const error = raw instanceof Error ? raw : new Error(String(raw));
+      failed.push({ chainType, error });
+      emit({ chainType, outcome: 'failure', error });
+    }
+  }
+
+  return { successful, failed };
+}
+
+/**
+ * Disconnect chains sequentially, optionally scoped to a specific wallet.
+ * Mirrors {@link useBatchConnect}'s identifier-based API:
+ *
+ * @example
+ * // Disconnect every chain Hana is currently connected on
+ * const { run } = useBatchDisconnect({ connectors: ['hana'] });
+ * await run();
+ *
+ * @example
+ * // Disconnect every currently-connected chain regardless of wallet
+ * const { run } = useBatchDisconnect();
+ * await run();
+ *
+ * Best-effort: errors are collected, not thrown. `run()` is idempotent — a
+ * double-invocation while one batch is in flight returns the same promise.
+ */
+export function useBatchDisconnect(options: UseBatchDisconnectOptions = {}): UseBatchDisconnectResult {
+  const { connectors, onProgress } = options;
+  const disconnect = useXDisconnect();
+  const xConnections = useXWalletStore(s => s.xConnections);
+  const xConnectorsByChain = useXWalletStore(s => s.xConnectorsByChain);
+
+  const [status, setStatus] = useState<'idle' | 'running' | 'done'>('idle');
+  const [result, setResult] = useState<BatchDisconnectResult | null>(null);
+  const inFlightRef = useRef<Promise<BatchDisconnectResult> | null>(null);
+
+  const onProgressRef = useRef(onProgress);
+  onProgressRef.current = onProgress;
+
+  const run = useCallback(async (): Promise<BatchDisconnectResult> => {
+    if (inFlightRef.current) return inFlightRef.current;
+
+    const batchPromise = (async () => {
+      setStatus('running');
+      const targets = resolveDisconnectTargets(connectors, xConnections, xConnectorsByChain);
+      const finalResult = await runBatchDisconnect(targets, disconnect, event => onProgressRef.current?.(event));
+      setResult(finalResult);
+      setStatus('done');
+      return finalResult;
+    })();
+
+    inFlightRef.current = batchPromise;
+    try {
+      return await batchPromise;
+    } finally {
+      inFlightRef.current = null;
+    }
+  }, [connectors, disconnect, xConnections, xConnectorsByChain]);
+
+  const reset = useCallback(() => {
+    setStatus('idle');
+    setResult(null);
+  }, []);
+
+  return { run, status, result, reset };
+}

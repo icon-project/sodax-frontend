@@ -1,0 +1,22 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "extends": ["../../biome.json"],
+  "files": {
+    "ignore": ["**/.next", "./components/ui"]
+  },
+  "linter": {
+    "rules": {
+      "style": {
+        "noUselessElse": "off"
+      },
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noFallthroughSwitchClause": "error"
+      },
+      "complexity": {
+        "noStaticOnlyClass": "off"
+      }
+    },
+    "ignore": []
+  }
+}

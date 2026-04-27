@@ -163,6 +163,22 @@ This example demonstrates:
 #### Service Hooks
 - [`useXService`](https://github.com/icon-project/sodax-frontend/tree/main/packages/wallet-sdk-react/src/hooks/useXService.ts) - Access chain-specific service
 
+#### Modal Flow Hooks
+- [`useWalletModal`](https://github.com/icon-project/sodax-frontend/tree/main/packages/wallet-sdk-react/src/hooks/useWalletModal.ts) - Headless modal state machine (chainSelect → walletSelect → connecting → success | error)
+- [`useConnectionFlow`](https://github.com/icon-project/sodax-frontend/tree/main/packages/wallet-sdk-react/src/hooks/useConnectionFlow.ts) - Standalone connect with status + retry (no modal)
+
+#### Batch Hooks
+- [`useBatchConnect`](https://github.com/icon-project/sodax-frontend/tree/main/packages/wallet-sdk-react/src/hooks/useBatchConnect.ts) - Sequential multi-chain connect by wallet identifier
+- [`useBatchDisconnect`](https://github.com/icon-project/sodax-frontend/tree/main/packages/wallet-sdk-react/src/hooks/useBatchDisconnect.ts) - Sequential multi-chain disconnect
+
+#### Aggregate / Detection Hooks
+- [`useChainGroups`](https://github.com/icon-project/sodax-frontend/tree/main/packages/wallet-sdk-react/src/hooks/useChainGroups.ts) - One entry per enabled chain type (EVM collapses to one group)
+- [`useConnectedChains`](https://github.com/icon-project/sodax-frontend/tree/main/packages/wallet-sdk-react/src/hooks/useConnectedChains.ts) - Aggregate view of connected chains + hydration status
+- [`useIsWalletInstalled`](https://github.com/icon-project/sodax-frontend/tree/main/packages/wallet-sdk-react/src/hooks/useIsWalletInstalled.ts) - Cross-chain wallet install detection
+
+### Utilities
+- [`sortConnectors`](https://github.com/icon-project/sodax-frontend/tree/main/packages/wallet-sdk-react/src/utils/sortConnectors.ts) - Preferred first, then installed, then original order
+
 ### Types
 
 #### Core Types

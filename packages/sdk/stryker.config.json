@@ -1,0 +1,18 @@
+{
+  "$schema": "../../node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "_comment_what": "Stryker mutation testing config. Stryker injects small bugs ('mutants') into the source one at a time and re-runs the tests; a 'killed' mutant is one that some test caught, a 'survived' mutant is a real gap (covered code that no assertion actually verifies). See https://stryker-mutator.io.",
+  "_comment_scope": "Scoped to src/swap/SwapService.ts only. vitest.stryker.config.ts narrows test discovery to SwapService.test.ts so Stryker doesn't re-run the full suite per mutant.",
+  "_comment_run": "From packages/sdk: ./node_modules/.bin/stryker run — then open reports/mutation/mutation.html for the per-mutant view.",
+  "_comment_ci": "Not wired into CI. One-shot signal that goes beyond branch coverage: high mutation score = tests actually verify behavior, not just touch lines.",
+  "testRunner": "vitest",
+  "plugins": ["@stryker-mutator/vitest-runner"],
+  "inPlace": true,
+  "disableTypeChecks": "src/swap/SwapService.ts",
+  "mutate": ["src/swap/SwapService.ts"],
+  "reporters": ["clear-text", "html", "progress"],
+  "vitest": {
+    "configFile": "vitest.stryker.config.ts",
+    "related": false
+  },
+  "timeoutMS": 30000
+}
