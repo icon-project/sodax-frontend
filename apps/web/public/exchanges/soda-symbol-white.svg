@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Camada_2" data-name="Camada 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        fill: none;
+      }
+    </style>
+  </defs>
+  <g id="Camada_1-2" data-name="Camada 1">
+    <g id="SODA_White">
+      <rect id="_24x24_square_to_size_them" data-name="24x24 square to size them" class="cls-2" width="24" height="24"/>
+      <g>
+        <path class="cls-1" d="M9.9,8.56L2.84,4.35l-1.84,3.29,5.24,3.11,3.66-2.2Z"/>
+        <path class="cls-1" d="M17.76,10.76l5.24-3.11-1.84-3.29-7.08,4.2,3.69,2.2Z"/>
+        <path class="cls-1" d="M11.99,7.32l1.84-1.09V0h-3.69v6.23l1.84,1.09Z"/>
+        <path class="cls-1" d="M23,16.35l-9.17-5.44-1.84-1.09L1,16.35l1.84,3.29,5.48-3.27c.17-.1.37-.18.59-.18.69,0,1.23.56,1.23,1.27v6.53h3.69v-6.53c0-.71.54-1.27,1.23-1.27.22,0,.42.08.59.18l5.51,3.24,1.84-3.27Z"/>
+      </g>
+    </g>
+  </g>
+</svg>

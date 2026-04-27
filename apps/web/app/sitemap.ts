@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import {
   COMMUNITY_ROUTE,
   DISCORD_PAGE_ROUTE,
+  EXCHANGE_ROUTE,
   GLOSSARY_ROUTE,
   BORROW_ROUTE,
   MIGRATE_ROUTE,
@@ -44,6 +45,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
+      url: `${SITE_URL}${EXCHANGE_ROUTE}`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
       url: `${SITE_URL}${SWAP_ROUTE}`,
       lastModified: now,
       changeFrequency: 'daily',
@@ -84,6 +91,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,
+    },
+    {
+      url: `${SITE_URL}${PARTNERS_ROUTE}`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.9,
     },
     {
       url: `${SITE_URL}${PARTNERS_ROUTE}/amped-finance`,

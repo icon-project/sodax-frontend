@@ -245,8 +245,6 @@ export const LeadMagnetCTA = (): React.ReactElement => {
     trackLeadMagnetCtaClicked({ variant_id: variant.id });
     setState(State.Input);
     setTimeout(() => inputRef.current?.focus(), 50);
-    // Pre-execute Turnstile challenge while user types their email — removes it from the submit critical path
-    turnstileRef.current?.execute();
   }, [variant]);
 
   const handleBack = useCallback(() => {
@@ -265,15 +263,14 @@ export const LeadMagnetCTA = (): React.ReactElement => {
       let turnstileToken: string | undefined =
         turnstileTokenRef.current ?? turnstileRef.current?.getResponse() ?? undefined;
 
-      // Challenge was pre-executed in handleGetQuickstart — wait briefly for it to finish
+      // Invisible challenge auto-runs on widget mount — wait briefly for it to finish
       if (TURNSTILE_SITE_KEY && turnstileRef.current && !turnstileToken) {
         try {
           turnstileToken = await turnstileRef.current.getResponsePromise(5000, 200);
         } catch {
-          // Token still not ready — reset and retry once (Safari ITP edge case)
+          // Token still not ready — reset (re-runs the challenge) and retry once (Safari ITP edge case)
           try {
             turnstileRef.current.reset();
-            turnstileRef.current.execute();
             turnstileToken = await turnstileRef.current.getResponsePromise(5000, 200);
           } catch {
             turnstileToken = turnstileRef.current.getResponse() ?? turnstileTokenRef.current ?? undefined;
@@ -460,7 +457,7 @@ export const LeadMagnetCTA = (): React.ReactElement => {
         <Turnstile
           ref={turnstileRef}
           siteKey={TURNSTILE_SITE_KEY}
-          options={{ size: 'invisible', refreshExpired: 'auto', execution: 'execute' }}
+          options={{ size: 'invisible', refreshExpired: 'auto' }}
           onSuccess={token => {
             turnstileTokenRef.current = token;
           }}
