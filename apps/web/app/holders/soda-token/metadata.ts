@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'SODA Token Supply & Metrics | SODAX Community',
+  title: 'SODA Token Supply & Metrics | SODAX Holders',
   description:
     'Real-time SODA token supply metrics including circulating supply, total supply, and circulation rate. Official data for the SODAX DeFi ecosystem token.',
   keywords: [
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     title: 'SODA Token Supply & Metrics | SODAX',
     description: 'Real-time SODA token supply data and metrics.',
     type: 'website',
-    url: 'https://sodax.com/community/soda-token',
+    url: 'https://sodax.com/holders/soda-token',
     siteName: 'SODAX',
   },
   twitter: {
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     site: '@gosodax',
   },
   alternates: {
-    canonical: 'https://sodax.com/community/soda-token',
+    canonical: 'https://sodax.com/holders/soda-token',
   },
   robots: {
     index: true,

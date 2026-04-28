@@ -19,7 +19,6 @@ export const GLOSSARY_ROUTE = '/glossary';
 export const PARTNERS_ROUTE = '/partners';
 export const HOLDERS_ROUTE = '/holders';
 export const NEWS_ROUTE = '/news';
-export const COMMUNITY_ROUTE = '/community';
 export const PARTNER_DASHBOARD_ROUTE = '/partner-dashboard';
 /** In-app page that redirects to Discord invite; use DISCORD_ROUTE for external links. */
 export const DISCORD_PAGE_ROUTE = '/discord';
@@ -102,6 +101,6 @@ export const CONSENSUS_MIAMI_ROUTE = '/consensus-miami';
 export const connectRoute = (slug: string): string => `/connect/${slug}`;
 export const INTEGRATION_OPTIONS_ROUTE = '/partners#integration-options';
 export const CASE_STUDIES_ROUTE = '/partners#case-studies';
-export const SODA_TOKEN_ROUTE = '/community/soda-token';
+export const SODA_TOKEN_ROUTE = '/holders/soda-token';
 
-export const MICA_WHITEPAPER_ROUTE = '/mica-whitepaper.pdf';
+export const MICA_WHITEPAPER_ROUTE = 'https://icon.foundation/projects/publications?view=soda-mica ';
