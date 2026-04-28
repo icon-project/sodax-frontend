@@ -86,7 +86,16 @@ Bullet list of what was manually tested. Be specific — mention component names
 
 Once the description is written, do the following:
 
-1. Suggest a short PR title (under 70 characters) based on the branch name and changes. Show it to the user and ask: "Does this title look good, or would you like to change it?"
+1. Suggest a short PR title (under 70 characters).
+
+   **Critical:** This repo runs `amannn/action-semantic-pull-request` in CI. If the branch has exactly **one non-merge commit**, the PR title MUST be byte-for-byte identical to that commit's subject line — otherwise the lint fails with: *"The pull request has only one (non-merge) commit ... Please update the pull request title accordingly to avoid surprises."*
+
+   Before suggesting a title:
+   - Run `git log main...HEAD --no-merges --oneline | wc -l` to count non-merge commits.
+   - If the count is `1`, take the subject line from `git log -1 --no-merges --pretty=%s` and use it verbatim as the suggested title — do not paraphrase, reword, or "improve" it.
+   - If the count is `>1`, you can compose a fresh title that summarizes the branch.
+
+   Show the title to the user and ask: "Does this title look good, or would you like to change it?" If the user requests a different title and the branch has only one commit, warn them about the lint and offer to either (a) amend the commit subject to match, or (b) add a trivial second commit so the lint stops requiring an exact match.
 
 2. Once the user confirms the title (or provides a new one), check if the branch has been pushed to the remote:
    - Run `git status` to check tracking status
