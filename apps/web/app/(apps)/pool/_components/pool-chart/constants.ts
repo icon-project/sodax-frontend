@@ -59,7 +59,7 @@ export const RANGE_DAYS: Record<(typeof RANGES)[number]['label'], number> = {
 export const HEIGHT = 132;
 export const ML = { top: 24, right: 0, bottom: 8, left: 0 };
 export const TICK_W = 90;
-export const TM = { top: 20, right: 0, bottom: 36, left: 0 };
+export const TM = { top: 24, right: 0, bottom: 8, left: 0 };
 
 // When false, disables dragging and zooming of the chart. Min/Max are controlled externally.
 export const INTERACTIVE = true as const;
