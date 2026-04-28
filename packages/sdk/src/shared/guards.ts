@@ -318,14 +318,6 @@ export function isUndefinedOrValidWalletProviderForChainKey<K extends SpokeChain
   return walletProvider === undefined || getChainType(chainKey) === walletProvider.chainType;
 }
 
-/** For `raw: false` actions: requires a defined provider whose `chainType` matches {@link getChainType}. */
-export function isDefinedWalletProviderValidForChainKey<K extends SpokeChainKey>(
-  chainKey: K,
-  walletProvider: IWalletProvider | undefined,
-): walletProvider is GetWalletProviderType<K> {
-  return walletProvider !== undefined && getChainType(chainKey) === walletProvider.chainType;
-}
-
 export function isOptionalBitcoinWalletProviderType(
   walletProvider: IWalletProvider | undefined,
 ): walletProvider is IBitcoinWalletProvider | undefined {

@@ -51,7 +51,7 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
 
   const sourceWalletProvider = useWalletProvider(selectedChainId);
 
-  const { mutateAsync: supply, isPending, error, reset: resetSupply } = useSupply(selectedChainId, sourceWalletProvider);
+  const { mutateAsync: supply, isPending, error, reset: resetSupply } = useSupply();
 
   const params: MoneyMarketSupplyParams | undefined = useMemo(() => {
     if (!amount || !address) return undefined;
@@ -71,7 +71,7 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
     isPending: isApproving,
     error: approveError,
     reset: resetApproveError,
-  } = useMMApprove(selectedChainId, sourceWalletProvider);
+  } = useMMApprove();
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
 
@@ -80,7 +80,7 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
 
     try {
       const normalizedAmount = amount.replace(',', '.');
-      const result = await supply({ params });
+      const result = await supply({ params, walletProvider: sourceWalletProvider });
 
       const nextSuccessData: ActionSuccessData = {
         amount: normalizedAmount,
@@ -106,7 +106,7 @@ export function SupplyModal({ open, onOpenChange, token, onSuccess, maxSupply, i
     if (!sourceWalletProvider || !params) return;
 
     try {
-      await approve({ params });
+      await approve({ params, walletProvider: sourceWalletProvider });
     } catch (err) {
       logger.error('Approve failed', err);
     }

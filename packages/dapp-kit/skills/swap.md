@@ -68,16 +68,18 @@ function SwapApproval({ intentParams }: { intentParams: CreateIntentParams }) {
 ## Execute Swap
 
 ```tsx
-import { useSwap, useSpokeProvider } from '@sodax/dapp-kit';
-import { BSC_MAINNET_CHAIN_ID } from '@sodax/sdk';
+import { useSwap } from '@sodax/dapp-kit';
+import { useWalletProvider } from '@sodax/wallet-sdk-react';
+import { ChainKeys } from '@sodax/sdk';
 import type { CreateIntentParams } from '@sodax/sdk';
 
 function SwapButton({ intentParams }: { intentParams: CreateIntentParams }) {
-  const spokeProvider = useSpokeProvider({ chainId: BSC_MAINNET_CHAIN_ID });
-  const { mutateAsync: swap, isPending } = useSwap({ spokeProvider });
+  const walletProvider = useWalletProvider(ChainKeys.BSC_MAINNET);
+  const { mutateAsync: swap, isPending } = useSwap();
 
   const handleSwap = async () => {
-    const result = await swap({ params: intentParams });
+    if (!walletProvider) return;
+    const result = await swap({ params: intentParams, walletProvider });
     if (result.ok) {
       const [executionResponse, intent, deliveryInfo] = result.value;
       console.log('Swap successful!', executionResponse);
@@ -85,7 +87,7 @@ function SwapButton({ intentParams }: { intentParams: CreateIntentParams }) {
   };
 
   return (
-    <button onClick={handleSwap} disabled={isPending}>
+    <button onClick={handleSwap} disabled={isPending || !walletProvider}>
       {isPending ? 'Swapping...' : 'Swap'}
     </button>
   );
@@ -97,7 +99,8 @@ function SwapButton({ intentParams }: { intentParams: CreateIntentParams }) {
 ```tsx
 import { useState } from 'react';
 import { useQuote, useSwap, useSwapAllowance, useSwapApprove, useSpokeProvider } from '@sodax/dapp-kit';
-import { BSC_MAINNET_CHAIN_ID, ARBITRUM_MAINNET_CHAIN_ID } from '@sodax/sdk';
+import { useWalletProvider } from '@sodax/wallet-sdk-react';
+import { BSC_MAINNET_CHAIN_ID, ARBITRUM_MAINNET_CHAIN_ID, ChainKeys } from '@sodax/sdk';
 import type { CreateIntentParams, SolverIntentQuoteRequest } from '@sodax/sdk';
 import { parseUnits } from 'viem';
 
@@ -107,6 +110,7 @@ const DST_TOKEN = '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f';
 export function SwapPage() {
   const [inputAmount, setInputAmount] = useState('');
   const spokeProvider = useSpokeProvider({ chainId: BSC_MAINNET_CHAIN_ID });
+  const walletProvider = useWalletProvider(ChainKeys.BSC_MAINNET);
   const parsedAmount = inputAmount ? parseUnits(inputAmount, 18) : 0n;
 
   // 1. Quote
@@ -148,12 +152,12 @@ export function SwapPage() {
 
   // 4. Approve + Swap
   const { mutateAsync: approve, isPending: isApproving } = useSwapApprove({ spokeProvider });
-  const { mutateAsync: swap, isPending: isSwapping } = useSwap({ spokeProvider });
+  const { mutateAsync: swap, isPending: isSwapping } = useSwap();
 
   const handleSwap = async () => {
-    if (!intentParams) return;
+    if (!intentParams || !walletProvider) return;
     if (!isApproved) await approve({ params: intentParams });
-    const result = await swap({ params: intentParams });
+    const result = await swap({ params: intentParams, walletProvider });
     if (result.ok) alert('Swap successful!');
   };
 

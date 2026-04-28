@@ -977,6 +977,7 @@ export class SwapService {
           } satisfies SendMessageParams<K, false>);
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
+
       if (!txResult.ok) return txResult;
 
       return {
