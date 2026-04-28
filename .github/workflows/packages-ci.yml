@@ -1,0 +1,56 @@
+name: Packages CI
+
+on:
+  push:
+    branches:
+      - main
+      - development
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  build:
+    name: Build and Test packages
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ['20.x', '22.x', '24.x']
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint:packages
+
+      - name: Check Circular Dependencies
+        run: pnpm check:circular-deps:packages
+
+      - name: Build Packages
+        run: pnpm build:packages
+      - name: CJS Compatibility Check
+        run: cd apps/node-cjs && pnpm test
+
+      - name: Build Check
+        run: pnpm checkTs:packages
+
+      - name: Build
+        run: pnpm build:packages
