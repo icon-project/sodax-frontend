@@ -19,11 +19,17 @@ export function useWalletConfig(): SodaxWalletConfig {
   return config;
 }
 
+/**
+ * A chain is "enabled" only when its config value is truthy.
+ * `chainType in chains` would also match `{ EVM: undefined }` — value-truthy check
+ * matches the intent: omit a chain (or set it to undefined) to disable it.
+ */
 export function useIsChainEnabled(chainType: ChainType): boolean {
   const { chains } = useWalletConfig();
   return !!chains[chainType];
 }
 
+/** See {@link useIsChainEnabled} for the "enabled" semantic. */
 export function useEnabledChainTypes(): ChainType[] {
   const { chains } = useWalletConfig();
   return ChainTypeArr.filter(t => !!chains[t]);

@@ -46,19 +46,19 @@ export type StoreAccessor = () => {
 
 export type ChainServiceFactory<S extends XService = XService> = {
   /** Create or get the XService singleton for this chain. */
-  createService: (rpcConfig?: RpcConfig) => S;
+  createService(rpcConfig?: RpcConfig): S;
   /** Human-readable chain name for display in modal UIs (spec §E of #1123). */
   displayName: string;
   /** Optional icon URL for the chain. Consumers can override when rendering. */
   iconUrl?: string;
   /** Static connectors known at build time. Ignored for provider-managed chains. */
-  defaultConnectors: () => XConnector[];
+  defaultConnectors(): XConnector[];
   /** true = needs React provider (EVM/Solana/Sui), false = browser extension APIs. */
   providerManaged: boolean;
   /** ChainActions for non-provider chains. If omitted, uses createDefaultActions(). */
-  createActions?: (service: S, getStore: StoreAccessor) => ChainActions;
+  createActions?(service: S, getStore: StoreAccessor): ChainActions;
   /** Wallet provider for non-provider chains. Called on setXConnection(). */
-  createWalletProvider?: (service: S, getStore: StoreAccessor) => IWalletProvider | undefined;
+  createWalletProvider?(service: S, getStore: StoreAccessor): IWalletProvider | undefined;
   /**
    * Async connector discovery for chains whose available wallets can only be detected at runtime
    * (e.g. browser extension scan, manifest loading). Runs once after init, updates store.xConnectorsByChain when done.
@@ -67,17 +67,16 @@ export type ChainServiceFactory<S extends XService = XService> = {
    * Example: Stellar scans for installed browser wallets via walletsKit.getSupportedWallets(),
    * NEAR loads wallet manifest via walletSelector.whenManifestLoaded.
    */
-  discoverConnectors?: (service: S, getStore: StoreAccessor) => Promise<void>;
+  discoverConnectors?(service: S, getStore: StoreAccessor): Promise<void>;
 };
 
 /**
- * Type-checked factory definition — S is inferred from createService return type,
- * so all callbacks (createActions, createWalletProvider, discoverConnectors) receive the concrete service type.
- * Erased to ChainServiceFactory (base) at registry level. Safe because createChainServices always passes
- * the service instance created by the same factory's createService().
+ * Define a chain service factory. Infers `S` from `createService` so all callbacks
+ * (createActions, createWalletProvider, discoverConnectors) get the concrete service type,
+ * then erases to the base ChainServiceFactory for storage in the registry.
  */
 function defineChain<S extends XService>(factory: ChainServiceFactory<S>): ChainServiceFactory {
-  return factory as unknown as ChainServiceFactory;
+  return factory;
 }
 
 export type ChainServicesResult = {
