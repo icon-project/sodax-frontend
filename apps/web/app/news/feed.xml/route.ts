@@ -64,7 +64,7 @@ export async function GET() {
   <channel>
     <title>SODAX News</title>
     <link>${siteUrl}/news</link>
-    <description>Latest updates, product launches, and insights from SODAX - the unified liquidity layer revolutionizing DeFi across 15+ blockchains.</description>
+    <description>Latest updates, product launches, and insights from SODAX - the unified liquidity layer revolutionizing DeFi across 18+ blockchains.</description>
     <language>en-us</language>
     <lastBuildDate>${buildDate}</lastBuildDate>
     <atom:link href="${siteUrl}/news/feed.xml" rel="self" type="application/rss+xml" />
