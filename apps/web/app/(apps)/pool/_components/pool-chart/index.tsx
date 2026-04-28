@@ -290,20 +290,6 @@ export function PoolChart({
 
     const defs = svg.append('defs');
 
-    const bandGrad = defs
-      .append('linearGradient')
-      .attr('id', 'g-band')
-      .attr('x1', '0')
-      .attr('x2', '0')
-      .attr('y1', '0')
-      .attr('y2', '1');
-    bandGrad.append('stop').attr('offset', '0%').attr('stop-color', C.bandFill).attr('stop-opacity', C.bandOpacityTop);
-    bandGrad
-      .append('stop')
-      .attr('offset', '100%')
-      .attr('stop-color', C.bandFill)
-      .attr('stop-opacity', C.bandOpacityBot);
-
     defs
       .append('clipPath')
       .attr('id', 'clip-band-in')
@@ -331,7 +317,7 @@ export function PoolChart({
       .attr('y', maxY)
       .attr('width', INNER_W)
       .attr('height', Math.max(0, minY - maxY))
-      .attr('fill', 'url(#g-band)')
+      .attr('fill', C.bandFill)
       .attr('pointer-events', INTERACTIVE ? 'all' : 'none')
       .style('cursor', INTERACTIVE ? 'grab' : 'default');
     if (dragBehaviors) {
@@ -570,6 +556,8 @@ export function PoolChart({
 
     const minY = priceToY(minPrice);
     const maxY = priceToY(maxPrice);
+    const clipMaxY = Math.max(0, Math.min(maxY, TICK_IH));
+    const clipMinY = Math.max(0, Math.min(minY, TICK_IH));
 
     const defs = svg.append('defs');
 
@@ -610,18 +598,18 @@ export function PoolChart({
       .attr('id', 'clip-tick-in')
       .append('rect')
       .attr('x', 0)
-      .attr('y', maxY)
+      .attr('y', clipMaxY)
       .attr('width', TICK_IW)
-      .attr('height', Math.max(0, minY - maxY));
+      .attr('height', Math.max(0, clipMinY - clipMaxY));
 
     const outClip = defs.append('clipPath').attr('id', 'clip-tick-out');
-    outClip.append('rect').attr('x', 0).attr('y', 0).attr('width', TICK_IW).attr('height', maxY);
+    outClip.append('rect').attr('x', 0).attr('y', 0).attr('width', TICK_IW).attr('height', clipMaxY);
     outClip
       .append('rect')
       .attr('x', 0)
-      .attr('y', minY)
+      .attr('y', clipMinY)
       .attr('width', TICK_IW)
-      .attr('height', Math.max(0, TICK_IH - minY));
+      .attr('height', Math.max(0, TICK_IH - clipMinY));
 
     const g = svg.append('g').attr('transform', `translate(${TM.left},${TM.top})`);
     const liqMax = d3.max(tickData, d => d.liquidity) ?? 1;
