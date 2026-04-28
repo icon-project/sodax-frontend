@@ -27,8 +27,8 @@ Cross-chain lending (supply) and borrowing.
 
 The mutation hooks follow the same shape as `useSwap`:
 
-- Generic over the source chain key `K extends SpokeChainKey`.
-- The hook closes over `srcChainKey` and `walletProvider`, captured at hook-call time.
+- Pure mutations: the hook itself takes no arguments. All inputs (params, walletProvider, optional skipSimulation/timeout) are passed to `mutate({...})`.
+- Generic over the source chain key `K extends SpokeChainKey` (defaults to the full union); sophisticated callers can lock K at the hook call site to narrow the `walletProvider` and `params.srcChainKey` types.
 - `mutationFn` returns the SDK `Result<T>` as-is — branch on `data?.ok` at the call site (no thrown errors for SDK failures).
 - `params` always carry `srcChainKey`, `srcAddress`, `token`, `amount`, `action`.
 
@@ -88,11 +88,14 @@ function MMApproval({ params }: { params: MoneyMarketSupplyParams<typeof ChainKe
   const walletProvider = useWalletProvider(ChainKeys.BASE_MAINNET);
   // auto-returns true for borrow/withdraw — no unnecessary RPC calls
   const { data: isApproved } = useMMAllowance({ params });
-  const { mutateAsync: approve, isPending } = useMMApprove(ChainKeys.BASE_MAINNET, walletProvider);
+  const { mutateAsync: approve, isPending } = useMMApprove();
 
   if (isApproved) return null;
   return (
-    <button onClick={() => approve({ params })} disabled={isPending}>
+    <button
+      onClick={() => walletProvider && approve({ params, walletProvider })}
+      disabled={isPending || !walletProvider}
+    >
       {isPending ? 'Approving...' : 'Approve'}
     </button>
   );
@@ -109,11 +112,13 @@ import { ChainKeys } from '@sodax/sdk';
 function SupplyButton({ srcAddress }: { srcAddress: string }) {
   const chainKey = ChainKeys.BASE_MAINNET;
   const walletProvider = useWalletProvider(chainKey);
-  const { mutateAsync: supply, isPending } = useSupply(chainKey, walletProvider);
+  const { mutateAsync: supply, isPending } = useSupply();
 
   const handleSupply = async () => {
+    if (!walletProvider) return;
     const result = await supply({
       params: { srcChainKey: chainKey, srcAddress, token: '0x...', amount: 1_000_000n, action: 'supply' },
+      walletProvider,
     });
     if (result.ok) console.log('Supplied (spoke, hub):', result.value);
   };
@@ -136,17 +141,29 @@ import { ChainKeys } from '@sodax/sdk';
 const chainKey = ChainKeys.BASE_MAINNET;
 const walletProvider = useWalletProvider(chainKey);
 
+// Each hook takes no arguments; pass walletProvider into the mutate call after gating on its presence.
+if (!walletProvider) return;
+
 // Borrow
-const { mutateAsync: borrow } = useBorrow(chainKey, walletProvider);
-await borrow({ params: { srcChainKey: chainKey, srcAddress, token: '0x...', amount: 500_000n, action: 'borrow' } });
+const { mutateAsync: borrow } = useBorrow();
+await borrow({
+  params: { srcChainKey: chainKey, srcAddress, token: '0x...', amount: 500_000n, action: 'borrow' },
+  walletProvider,
+});
 
 // Withdraw
-const { mutateAsync: withdraw } = useWithdraw(chainKey, walletProvider);
-await withdraw({ params: { srcChainKey: chainKey, srcAddress, token: '0x...', amount: 1_000_000n, action: 'withdraw' } });
+const { mutateAsync: withdraw } = useWithdraw();
+await withdraw({
+  params: { srcChainKey: chainKey, srcAddress, token: '0x...', amount: 1_000_000n, action: 'withdraw' },
+  walletProvider,
+});
 
 // Repay
-const { mutateAsync: repay } = useRepay(chainKey, walletProvider);
-await repay({ params: { srcChainKey: chainKey, srcAddress, token: '0x...', amount: 500_000n, action: 'repay' } });
+const { mutateAsync: repay } = useRepay();
+await repay({
+  params: { srcChainKey: chainKey, srcAddress, token: '0x...', amount: 500_000n, action: 'repay' },
+  walletProvider,
+});
 ```
 
 ## Types

@@ -1,32 +1,36 @@
-import type { MoneyMarketParams, TxReturnType } from '@sodax/sdk';
-import type { GetWalletProviderType, Result, SpokeChainKey } from '@sodax/types';
+import type { MoneyMarketApproveActionParams, TxReturnType } from '@sodax/sdk';
+import type { Result, SpokeChainKey } from '@sodax/types';
 import { useMutation, type UseMutationResult, useQueryClient } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext.js';
 
-export type UseMMApproveVars<K extends SpokeChainKey> = {
-  params: MoneyMarketParams<K>;
-};
+/**
+ * Mutation variables for {@link useMMApprove}. Generic over `K extends SpokeChainKey` (defaults
+ * to the full union). Sophisticated callers can lock K at the hook call site to narrow the
+ * `walletProvider` and `params.srcChainKey` types.
+ */
+export type UseMMApproveVars<K extends SpokeChainKey = SpokeChainKey> = Omit<
+  MoneyMarketApproveActionParams<K, false>,
+  'raw'
+>;
 
 /**
  * React hook for approving ERC-20 token spending (or trustline establishment) for a Sodax money
- * market action. Mirrors the {@link useSwap} pattern — closes over the source `chainKey` and
- * `walletProvider` and returns the SDK `Result` as-is.
+ * market action. Pure mutation: all inputs (params, walletProvider) are passed to `mutate({...})`.
+ * Returns the SDK `Result<T>` as-is; callers branch on `data?.ok`.
  *
  * On success, invalidates the matching `['mm', 'allowance', srcChainKey, token, action]` query.
  */
-export function useMMApprove<K extends SpokeChainKey>(
-  srcChainKey: K | undefined,
-  walletProvider: GetWalletProviderType<K> | undefined,
-): UseMutationResult<Result<TxReturnType<K, false>>, Error, UseMMApproveVars<K>> {
+export function useMMApprove<K extends SpokeChainKey = SpokeChainKey>(): UseMutationResult<
+  Result<TxReturnType<K, false>>,
+  Error,
+  UseMMApproveVars<K>
+> {
   const { sodax } = useSodaxContext();
   const queryClient = useQueryClient();
 
   return useMutation<Result<TxReturnType<K, false>>, Error, UseMMApproveVars<K>>({
-    mutationFn: async ({ params }) => {
-      if (!srcChainKey || !walletProvider) {
-        throw new Error('Source chain key and wallet provider are required');
-      }
-      return sodax.moneyMarket.approve({ params, walletProvider });
+    mutationFn: async (vars) => {
+      return sodax.moneyMarket.approve({ ...vars, raw: false } as MoneyMarketApproveActionParams<K, false>);
     },
     onSuccess: (_data, { params }) => {
       queryClient.invalidateQueries({

@@ -77,7 +77,7 @@ export default function SwapCard({
   const destAccount = useXAccount(dst.chain);
   const destWalletProvider = useWalletProvider(dst.chain);
   const { openWalletModal } = useAppStore();
-  const { mutateAsync: swap } = useSwap(src.chain, sourceWalletProvider);
+  const { mutateAsync: swap } = useSwap();
   const [sourceAmount, setSourceAmount] = useState<string>('');
   const [intentOrderPayload, setIntentOrderPayload] = useState<CreateIntentParams | undefined>(undefined);
   const { data: hasAllowed, isLoading: isAllowanceLoading } = useSwapAllowance(
@@ -353,7 +353,8 @@ export default function SwapCard({
     setOpen(false);
     console.log('intentOrderPayload', intentOrderPayload);
     console.log("wallet provider", sourceWalletProvider);
-    const result = await swap(intentOrderPayload);
+    if (!sourceWalletProvider) return;
+    const result = await swap({ params: intentOrderPayload, walletProvider: sourceWalletProvider });
 
     if (result.ok) {
       const [response, intent, intentDeliveryInfo] = result.value;

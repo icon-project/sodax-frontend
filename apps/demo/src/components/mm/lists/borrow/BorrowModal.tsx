@@ -154,7 +154,7 @@ export function BorrowModal({
   const { address: sourceAddress } = useXAccount(sourceChainId);
   const { address: destinationAddress } = useXAccount(destinationChainId);
 
-  const { mutateAsync: borrow, isPending, error, reset: resetBorrowError } = useBorrow(sourceChainId, sourceWalletProvider);
+  const { mutateAsync: borrow, isPending, error, reset: resetBorrowError } = useBorrow();
 
   const params: MoneyMarketBorrowParams | undefined = useMemo(() => {
     if (!amount || !destinationToken || !sourceAddress) {
@@ -205,7 +205,7 @@ export function BorrowModal({
 
     try {
       const normalizedAmount = amount.replace(',', '.');
-      const result = await borrow({ params });
+      const result = await borrow({ params, walletProvider: sourceWalletProvider });
 
       const nextSuccessData: ActionSuccessData = {
         amount: normalizedAmount,

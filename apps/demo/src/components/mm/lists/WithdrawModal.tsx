@@ -59,7 +59,7 @@ export function WithdrawModal({
   const { address: sourceAddress } = useXAccount(selectedChainId);
   const { address: destAddress } = useXAccount(token.chainKey);
 
-  const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw(selectedChainId, sourceWalletProvider);
+  const { mutateAsync: withdraw, isPending, error, reset: resetError } = useWithdraw();
 
   const params: MoneyMarketWithdrawParams | undefined = useMemo(() => {
     if (!amount || !sourceAddress) return undefined;
@@ -85,7 +85,7 @@ export function WithdrawModal({
     isPending: isApproving,
     error: approveError,
     reset: resetApproveError,
-  } = useMMApprove(selectedChainId, sourceWalletProvider);
+  } = useMMApprove();
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(selectedChainId);
 
@@ -104,7 +104,7 @@ export function WithdrawModal({
       return;
     }
     try {
-      await approve({ params });
+      await approve({ params, walletProvider: sourceWalletProvider });
     } catch (err) {
       logger.error('Approve failed', err);
     }
@@ -116,7 +116,7 @@ export function WithdrawModal({
     try {
       const normalizedAmount = amount.replace(',', '.');
 
-      const result = await withdraw({ params });
+      const result = await withdraw({ params, walletProvider: sourceWalletProvider });
       const txHash = extractTxHash(result);
 
       const nextSuccessData: ActionSuccessData = {

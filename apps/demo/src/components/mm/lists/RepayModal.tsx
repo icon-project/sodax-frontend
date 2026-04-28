@@ -89,8 +89,8 @@ export function RepayModal({
 
   const sourceWalletProvider = useWalletProvider(fromChainId);
 
-  const { mutateAsync: repay, isPending } = useRepay(fromChainId, sourceWalletProvider);
-  const { mutateAsync: approve, isPending: isApproving } = useMMApprove(fromChainId, sourceWalletProvider);
+  const { mutateAsync: repay, isPending } = useRepay();
+  const { mutateAsync: approve, isPending: isApproving } = useMMApprove();
 
   const repayableChains = getChainsWithThisToken(sodax, token);
 
@@ -165,7 +165,7 @@ export function RepayModal({
     const normalizedAmount = amount.replace(',', '.');
 
     try {
-      const result = await repay({ params: sourceParams });
+      const result = await repay({ params: sourceParams, walletProvider: sourceWalletProvider });
 
       const nextSuccessData: ActionSuccessData = {
         amount: normalizedAmount,
@@ -193,7 +193,7 @@ export function RepayModal({
     if (!sourceWalletProvider || !sourceParams) return;
 
     try {
-      await approve({ params: sourceParams });
+      await approve({ params: sourceParams, walletProvider: sourceWalletProvider });
     } catch (err: unknown) {
       logger.error('Source approval failed', err);
       setError(getMmErrorText(err) || 'Approval failed');
