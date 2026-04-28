@@ -1,114 +1,114 @@
-// import React, { useEffect } from 'react';
-// import { useParams, useNavigate } from 'react-router';
-//
-// import { ChainSelector } from '@/components/shared/ChainSelector';
-// import { SupplyAssetsList } from '@/components/mm/lists/SupplyAssetsList';
-// import { Button } from '@/components/ui/button';
-// import { useXAccount } from '@sodax/wallet-sdk-react';
-// import { useAppStore } from '@/zustand/useAppStore';
-// import { useGetUserHubWalletAddress } from '@sodax/dapp-kit';
-// import { Info, Wallet } from 'lucide-react';
-// import { BorrowAssetsList } from '@/components/mm/lists/borrow/BorrowAssetsList';
-// import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
-// import { baseChainInfo, type ChainId } from '@sodax/types';
-//
-// const validChainIds = new Set<string>(Object.keys(baseChainInfo));
-// const isValidChainId = (id: string | undefined): id is ChainId => !!id && validChainIds.has(id);
-//
-// export default function MoneyMarketPage() {
-//   const { openWalletModal, selectedChainId, selectChainId } = useAppStore();
-//   const { chainId: chainIdParam } = useParams<{ chainId: string }>();
-//   const navigate = useNavigate();
-//
-//   const chainId = isValidChainId(chainIdParam) ? chainIdParam : selectedChainId;
-//
-//   useEffect(() => {
-//     if (!isValidChainId(chainIdParam)) {
-//       navigate(`/money-market/${selectedChainId}`, { replace: true });
-//     }
-//   }, [chainIdParam, selectedChainId, navigate]);
-//
-//   useEffect(() => {
-//     if (isValidChainId(chainIdParam) && chainIdParam !== selectedChainId) {
-//       selectChainId(chainIdParam);
-//     }
-//   }, [chainIdParam, selectedChainId, selectChainId]);
-//
-//   const handleSelectChain = (newChainId: ChainId) => {
-//     navigate(`/money-market/${newChainId}`);
-//   };
-//
-//   const xAccount = useXAccount(chainId);
-//
-//   const { data: walletAddressOnHub } = useGetUserHubWalletAddress(chainId, xAccount?.address);
-//
-//   return (
-//     <main className="min-h-screen bg-linear-to-br from-almost-white via-cream-white to-vibrant-white">
-//       <div className="container mx-auto px-4 py-4 max-w-7xl">
-//         {/* Header Section */}
-//         <div className="my-3">
-//           <h1 className="text-4xl font-bold text-cherry-dark">Money Market</h1>
-//           <p className="text-clay inline-flex items-center gap-1">
-//             Supply and borrow assets across multiple chains.{' '}
-//             <Tooltip>
-//               <TooltipTrigger asChild>
-//                 <button
-//                   type="button"
-//                   aria-label="Money Market Info"
-//                   className="inline-flex items-center text-clay hover:text-cherry-dark "
-//                 >
-//                   <Info className="w-4 h-4 text-clay" />
-//                 </button>
-//               </TooltipTrigger>
-//
-//               <TooltipContent variant="soft" side="top" align="center" sideOffset={6}>
-//                 Only assets supported by the SODAX Money Market are shown.
-//               </TooltipContent>
-//             </Tooltip>
-//           </p>
-//         </div>
-//         {/* Controls Bar */}
-//         <div className="bg-white rounded-xl shadow-sm border border-cherry-grey/20 p-3 my-3">
-//           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-//             <div className="flex items-center gap-3">
-//               <span className="text-sm font-medium text-clay">Chain:</span>
-//               <ChainSelector selectedChainId={chainId} selectChainId={handleSelectChain} />
-//               <div className="text-xs text-muted-foreground">
-//                 This chain is used for collateral (supply) & debt (borrow)
-//               </div>{' '}
-//             </div>
-//
-//             {walletAddressOnHub && (
-//               <div className="flex items-center gap-2 text-sm">
-//                 <span className="text-clay">Hub Wallet Address:</span>
-//                 <span className="px-3 py-1.5 bg-cream rounded-lg text-cherry-dark text-xs">{walletAddressOnHub}</span>
-//               </div>
-//             )}
-//           </div>
-//         </div>
-//         {/* Main Content */}
-//         {xAccount?.address ? (
-//           <div className="animate-in fade-in duration-500">
-//             <SupplyAssetsList />
-//             <BorrowAssetsList initialChainId={chainId} />
-//           </div>
-//         ) : (
-//           <div className="flex flex-col items-center justify-center min-h-[500px] bg-white rounded-xl shadow-sm border border-cherry-grey/20 p-12">
-//             <div className="max-w-md text-center space-y-6">
-//               <div className="w-15 h-15 bg-cherry-brighter rounded-full flex items-center justify-center mx-auto">
-//                 <Wallet className="w-8 h-8 text-cherry-dark" />
-//               </div>
-//               <div>
-//                 <h2 className="text-2xl font-semibold text-cherry-dark mb-2">Connect Your Wallet</h2>
-//                 <p className="text-clay">Connect your wallet to start supplying and borrowing assets</p>
-//               </div>
-//               <Button onClick={openWalletModal} variant="cherry" size="lg" className="px-8">
-//                 Connect Wallet
-//               </Button>
-//             </div>
-//           </div>
-//         )}
-//       </div>
-//     </main>
-//   );
-// }
+import React, { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router';
+
+import { ChainSelector } from '@/components/shared/ChainSelector';
+import { SupplyAssetsList } from '@/components/mm/lists/SupplyAssetsList';
+import { Button } from '@/components/ui/button';
+import { useXAccount } from '@sodax/wallet-sdk-react';
+import { useAppStore } from '@/zustand/useAppStore';
+import { useGetUserHubWalletAddress } from '@sodax/dapp-kit';
+import { Info, Wallet } from 'lucide-react';
+import { BorrowAssetsList } from '@/components/mm/lists/borrow/BorrowAssetsList';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { baseChainInfo, type SpokeChainKey } from '@sodax/types';
+
+const validChainIds = new Set<string>(Object.keys(baseChainInfo));
+const isValidChainId = (id: string | undefined): id is SpokeChainKey => !!id && validChainIds.has(id);
+
+export default function MoneyMarketPage() {
+  const { openWalletModal, selectedChainId, selectChainId } = useAppStore();
+  const { chainId: chainIdParam } = useParams<{ chainId: string }>();
+  const navigate = useNavigate();
+
+  const chainId = isValidChainId(chainIdParam) ? chainIdParam : selectedChainId;
+
+  useEffect(() => {
+    if (!isValidChainId(chainIdParam)) {
+      navigate(`/money-market/${selectedChainId}`, { replace: true });
+    }
+  }, [chainIdParam, selectedChainId, navigate]);
+
+  useEffect(() => {
+    if (isValidChainId(chainIdParam) && chainIdParam !== selectedChainId) {
+      selectChainId(chainIdParam);
+    }
+  }, [chainIdParam, selectedChainId, selectChainId]);
+
+  const handleSelectChain = (newChainId: SpokeChainKey) => {
+    navigate(`/money-market/${newChainId}`);
+  };
+
+  const xAccount = useXAccount(chainId);
+
+  const { data: walletAddressOnHub } = useGetUserHubWalletAddress(chainId, xAccount?.address);
+
+  return (
+    <main className="min-h-screen bg-linear-to-br from-almost-white via-cream-white to-vibrant-white">
+      <div className="container mx-auto px-4 py-4 max-w-7xl">
+        {/* Header Section */}
+        <div className="my-3">
+          <h1 className="text-4xl font-bold text-cherry-dark">Money Market</h1>
+          <p className="text-clay inline-flex items-center gap-1">
+            Supply and borrow assets across multiple chains.{' '}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Money Market Info"
+                  className="inline-flex items-center text-clay hover:text-cherry-dark "
+                >
+                  <Info className="w-4 h-4 text-clay" />
+                </button>
+              </TooltipTrigger>
+
+              <TooltipContent variant="soft" side="top" align="center" sideOffset={6}>
+                Only assets supported by the SODAX Money Market are shown.
+              </TooltipContent>
+            </Tooltip>
+          </p>
+        </div>
+        {/* Controls Bar */}
+        <div className="bg-white rounded-xl shadow-sm border border-cherry-grey/20 p-3 my-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-clay">Chain:</span>
+              <ChainSelector selectedChainId={chainId} selectChainId={handleSelectChain} />
+              <div className="text-xs text-muted-foreground">
+                This chain is used for collateral (supply) & debt (borrow)
+              </div>{' '}
+            </div>
+
+            {walletAddressOnHub && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-clay">Hub Wallet Address:</span>
+                <span className="px-3 py-1.5 bg-cream rounded-lg text-cherry-dark text-xs">{walletAddressOnHub}</span>
+              </div>
+            )}
+          </div>
+        </div>
+        {/* Main Content */}
+        {xAccount?.address ? (
+          <div className="animate-in fade-in duration-500">
+            <SupplyAssetsList />
+            <BorrowAssetsList initialChainId={chainId} />
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center min-h-[500px] bg-white rounded-xl shadow-sm border border-cherry-grey/20 p-12">
+            <div className="max-w-md text-center space-y-6">
+              <div className="w-15 h-15 bg-cherry-brighter rounded-full flex items-center justify-center mx-auto">
+                <Wallet className="w-8 h-8 text-cherry-dark" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-semibold text-cherry-dark mb-2">Connect Your Wallet</h2>
+                <p className="text-clay">Connect your wallet to start supplying and borrowing assets</p>
+              </div>
+              <Button onClick={openWalletModal} variant="cherry" size="lg" className="px-8">
+                Connect Wallet
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}

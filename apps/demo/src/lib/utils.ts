@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import BigNumber from 'bignumber.js';
 import {
-  moneyMarketSupportedTokens,
+  type Sodax,
   SolverIntentStatusCode,
   supportedSpokeChains,
   spokeChainConfig,
@@ -267,18 +267,14 @@ export function getHealthFactorState(hf: number) {
   return { label: 'Low Risk', className: 'text-cherry-soda' };
 }
 
-export function getChainsWithThisToken(token: XToken) {
+export function getChainsWithThisToken(sodax: Sodax, token: XToken) {
   return supportedSpokeChains.filter(chainId =>
-    moneyMarketSupportedTokens[chainId].some(t => t.symbol === token.symbol),
+    sodax.moneyMarket.getSupportedTokensByChainId(chainId).some(t => t.symbol === token.symbol),
   );
 }
 
-export function getTokenOnChain(symbol: string, chainId: SpokeChainKey): XToken | undefined {
-  const normalizedChainId = String(chainId).toLowerCase();
-
-  return Object.values(moneyMarketSupportedTokens)
-    .flat()
-    .find(t => t.symbol === symbol && t.chainKey === normalizedChainId);
+export function getTokenOnChain(sodax: Sodax, symbol: string, chainId: SpokeChainKey): XToken | undefined {
+  return sodax.moneyMarket.getSupportedTokensByChainId(chainId).find(t => t.symbol === symbol);
 }
 
 export const getChainExplorerTxUrl = (chainId: string, txHash: string): string | undefined => {
@@ -411,10 +407,19 @@ function formatHubSimulationFailureMessage(action: string, errorCode: string, da
 }
 
 export function getMmErrorText(error: unknown): string {
-  if (error instanceof Error) return error.message;
   if (typeof error === 'string') return error;
-  if (error && typeof error === 'object') {
-    const sdkError = error as { message?: string; code?: string; data?: { payload?: unknown; error?: unknown } };
+
+  // Normalize both shapes into { code, data: { error } } so the branch logic below works for v1 and v2.
+  // v2 (post-refactor): plain Error with CODE on .message and underlying on .cause.
+  // v1 (legacy MoneyMarketError): object with { code, data: { payload, error } }.
+  let sdkError: { message?: string; code?: string; data?: { payload?: unknown; error?: unknown } } | null = null;
+  if (error instanceof Error) {
+    sdkError = { message: error.message, code: error.message, data: { error: (error as { cause?: unknown }).cause } };
+  } else if (error && typeof error === 'object') {
+    sdkError = error as { message?: string; code?: string; data?: { payload?: unknown; error?: unknown } };
+  }
+
+  if (sdkError) {
     const searchableText = getMmDataErrorSearchableText(sdkError.data?.error);
     const innerMsg = extractInnerErrorMessage(sdkError.data?.error);
 

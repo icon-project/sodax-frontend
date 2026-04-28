@@ -15,11 +15,22 @@ Cross-chain lending (supply) and borrowing.
 | `useMMAllowance` | Query | Check approval (auto-skips for borrow/withdraw) |
 | `useMMApprove` | Mutation | Approve tokens |
 | `useReservesData` | Query | All reserve data |
+| `useReservesHumanized` | Query | Reserves in human-readable (decimal-normalized) format |
+| `useReservesList` | Query | List of reserve asset addresses |
 | `useReservesUsdFormat` | Query | Reserves with USD values |
 | `useUserFormattedSummary` | Query | User portfolio summary (health factor, collateral, debt) |
 | `useUserReservesData` | Query | User reserve positions |
-| `useAToken` | Query | aToken data |
+| `useAToken` | Query | aToken metadata |
 | `useATokensBalances` | Query | aToken balances |
+
+## v2 patterns
+
+The mutation hooks follow the same shape as `useSwap`:
+
+- Generic over the source chain key `K extends SpokeChainKey`.
+- The hook closes over `srcChainKey` and `walletProvider`, captured at hook-call time.
+- `mutationFn` returns the SDK `Result<T>` as-is — branch on `data?.ok` at the call site (no thrown errors for SDK failures).
+- `params` always carry `srcChainKey`, `srcAddress`, `token`, `amount`, `action`.
 
 ## Display Reserves
 
@@ -27,18 +38,18 @@ Cross-chain lending (supply) and borrowing.
 import { useReservesData } from '@sodax/dapp-kit';
 
 function ReservesList() {
-  const { data: reserves, isLoading } = useReservesData({});
-
-  if (isLoading) return <div>Loading...</div>;
+  const { data, isLoading } = useReservesData();
+  if (isLoading || !data) return <div>Loading...</div>;
+  const [reserves] = data;
   return (
     <table>
-      <thead><tr><th>Asset</th><th>Supply APY</th><th>Borrow APY</th></tr></thead>
+      <thead><tr><th>Asset</th><th>Supply Rate</th><th>Borrow Rate</th></tr></thead>
       <tbody>
-        {reserves?.map((r) => (
+        {reserves.map((r) => (
           <tr key={r.underlyingAsset}>
             <td>{r.symbol}</td>
-            <td>{(Number(r.supplyAPY) * 100).toFixed(2)}%</td>
-            <td>{(Number(r.variableBorrowAPY) * 100).toFixed(2)}%</td>
+            <td>{r.liquidityRate.toString()}</td>
+            <td>{r.variableBorrowRate.toString()}</td>
           </tr>
         ))}
       </tbody>
@@ -51,9 +62,10 @@ function ReservesList() {
 
 ```tsx
 import { useUserFormattedSummary } from '@sodax/dapp-kit';
+import type { SpokeChainKey } from '@sodax/types';
 
-function UserPosition({ chainId, userAddress }: { chainId: SpokeChainId; userAddress: string }) {
-  const { data: summary } = useUserFormattedSummary({ params: { chainId, userAddress } });
+function UserPosition({ spokeChainKey, userAddress }: { spokeChainKey: SpokeChainKey; userAddress: string }) {
+  const { data: summary } = useUserFormattedSummary({ spokeChainKey, userAddress });
   if (!summary) return null;
   return (
     <div>
@@ -68,16 +80,17 @@ function UserPosition({ chainId, userAddress }: { chainId: SpokeChainId; userAdd
 ## Check Allowance + Approve
 
 ```tsx
-import { useMMAllowance, useMMApprove, useSpokeProvider } from '@sodax/dapp-kit';
-import { BASE_MAINNET_CHAIN_ID } from '@sodax/sdk';
+import { useMMAllowance, useMMApprove } from '@sodax/dapp-kit';
+import { useWalletProvider } from '@sodax/wallet-sdk-react';
+import { ChainKeys, type MoneyMarketSupplyParams } from '@sodax/sdk';
 
-function MMApproval({ params }: { params: MoneyMarketSupplyParams }) {
-  const spokeProvider = useSpokeProvider({ chainId: BASE_MAINNET_CHAIN_ID });
-  // auto-returns true for borrow/withdraw -- no unnecessary RPC calls
-  const { data: isApproved } = useMMAllowance({ params, spokeProvider });
-  const { mutateAsync: approve, isPending } = useMMApprove({ spokeProvider });
+function MMApproval({ params }: { params: MoneyMarketSupplyParams<typeof ChainKeys.BASE_MAINNET> }) {
+  const walletProvider = useWalletProvider(ChainKeys.BASE_MAINNET);
+  // auto-returns true for borrow/withdraw — no unnecessary RPC calls
+  const { data: isApproved } = useMMAllowance({ params });
+  const { mutateAsync: approve, isPending } = useMMApprove(ChainKeys.BASE_MAINNET, walletProvider);
 
-  if (isApproved?.ok && isApproved.value) return null;
+  if (isApproved) return null;
   return (
     <button onClick={() => approve({ params })} disabled={isPending}>
       {isPending ? 'Approving...' : 'Approve'}
@@ -89,52 +102,72 @@ function MMApproval({ params }: { params: MoneyMarketSupplyParams }) {
 ## Supply
 
 ```tsx
-import { useSupply, useSpokeProvider } from '@sodax/dapp-kit';
-import { BASE_MAINNET_CHAIN_ID } from '@sodax/sdk';
+import { useSupply } from '@sodax/dapp-kit';
+import { useWalletProvider } from '@sodax/wallet-sdk-react';
+import { ChainKeys } from '@sodax/sdk';
 
-function SupplyButton() {
-  const spokeProvider = useSpokeProvider({ chainId: BASE_MAINNET_CHAIN_ID });
-  const { mutateAsync: supply, isPending } = useSupply();
+function SupplyButton({ srcAddress }: { srcAddress: string }) {
+  const chainKey = ChainKeys.BASE_MAINNET;
+  const walletProvider = useWalletProvider(chainKey);
+  const { mutateAsync: supply, isPending } = useSupply(chainKey, walletProvider);
 
   const handleSupply = async () => {
     const result = await supply({
-      params: { token: '0x...', amount: 1000000n, action: 'supply' },
-      spokeProvider: spokeProvider!,
+      params: { srcChainKey: chainKey, srcAddress, token: '0x...', amount: 1_000_000n, action: 'supply' },
     });
-    if (result.ok) console.log('Supplied:', result.value);
+    if (result.ok) console.log('Supplied (spoke, hub):', result.value);
   };
 
-  return <button onClick={handleSupply} disabled={isPending || !spokeProvider}>{isPending ? 'Supplying...' : 'Supply'}</button>;
+  return (
+    <button onClick={handleSupply} disabled={isPending || !walletProvider}>
+      {isPending ? 'Supplying...' : 'Supply'}
+    </button>
+  );
 }
 ```
 
 ## Borrow / Withdraw / Repay
 
 ```tsx
+import { useBorrow, useWithdraw, useRepay } from '@sodax/dapp-kit';
+import { useWalletProvider } from '@sodax/wallet-sdk-react';
+import { ChainKeys } from '@sodax/sdk';
+
+const chainKey = ChainKeys.BASE_MAINNET;
+const walletProvider = useWalletProvider(chainKey);
+
 // Borrow
-const { mutateAsync: borrow } = useBorrow();
-await borrow({ params: { token: '0x...', amount: 500000n, action: 'borrow' }, spokeProvider });
+const { mutateAsync: borrow } = useBorrow(chainKey, walletProvider);
+await borrow({ params: { srcChainKey: chainKey, srcAddress, token: '0x...', amount: 500_000n, action: 'borrow' } });
 
 // Withdraw
-const { mutateAsync: withdraw } = useWithdraw();
-await withdraw({ params: { token: '0x...', amount: 1000000n, action: 'withdraw' }, spokeProvider });
+const { mutateAsync: withdraw } = useWithdraw(chainKey, walletProvider);
+await withdraw({ params: { srcChainKey: chainKey, srcAddress, token: '0x...', amount: 1_000_000n, action: 'withdraw' } });
 
 // Repay
-const { mutateAsync: repay } = useRepay();
-await repay({ params: { token: '0x...', amount: 500000n, action: 'repay' }, spokeProvider });
+const { mutateAsync: repay } = useRepay(chainKey, walletProvider);
+await repay({ params: { srcChainKey: chainKey, srcAddress, token: '0x...', amount: 500_000n, action: 'repay' } });
 ```
 
 ## Types
 
 ```typescript
-type MoneyMarketSupplyParams = { token: string; amount: bigint; action: 'supply'; toChainId?: SpokeChainId; toAddress?: string };
-type MoneyMarketBorrowParams = { token: string; amount: bigint; action: 'borrow'; toChainId?: SpokeChainId; toAddress?: string };
-type MoneyMarketWithdrawParams = { token: string; amount: bigint; action: 'withdraw'; toChainId?: SpokeChainId; toAddress?: string };
-type MoneyMarketRepayParams = { token: string; amount: bigint; action: 'repay'; toChainId?: SpokeChainId; toAddress?: string };
+type MoneyMarketSupplyParams<K extends SpokeChainKey = SpokeChainKey> = {
+  srcChainKey: K;
+  srcAddress: string;
+  token: string;
+  amount: bigint;
+  action: 'supply';
+  toChainId?: SpokeChainKey;
+  toAddress?: string;
+};
+
+// Borrow / Withdraw / Repay follow the same shape with their respective `action` literal.
 ```
 
 ## Notes
 
-- **Borrow/withdraw skip approval** -- `useMMAllowance` returns `true` automatically.
+- **Borrow/withdraw skip approval** — `useMMAllowance` returns `true` automatically and avoids the RPC call entirely.
 - **Health factor < 1.0** means liquidation risk.
-- All operations support optional `toChainId`/`toAddress` for cross-chain delivery.
+- All operations support optional `toChainId` / `toAddress` (and `fromChainId` / `fromAddress` on borrow) for cross-chain delivery.
+- Mutations return the SDK `Result<T>` as the React Query `data`. The mutation never throws on SDK errors — branch on `data?.ok` to handle success vs failure.

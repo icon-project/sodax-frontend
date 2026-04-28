@@ -44,7 +44,7 @@ import {
   isSpokeIsAllowanceValidParamsHub,
   isSpokeIsAllowanceValidParamsStellar,
   isStellarChainKeyType,
-  isValidWalletProviderTypeForChainKey,
+  isDefinedWalletProviderValidForChainKey,
   isSpokeApproveParamsHub,
   isSpokeApproveParamsEvmSpoke,
   isSpokeApproveParamsStellar,
@@ -241,7 +241,7 @@ export class SpokeService {
   ): Promise<Result<TxReturnType<K, Raw>>> {
     try {
       invariant(
-        isValidWalletProviderTypeForChainKey(params.srcChainKey, params.walletProvider),
+        isDefinedWalletProviderValidForChainKey(params.srcChainKey, params.walletProvider),
         `Invalid wallet provider for chain key: ${params.srcChainKey}, walletProvider.chainType: ${params.walletProvider?.chainType}`,
       );
 

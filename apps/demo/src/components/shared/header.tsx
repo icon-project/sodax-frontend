@@ -7,7 +7,7 @@ import { useAppStore } from '@/zustand/useAppStore';
 import { ChevronDown, Wallet } from 'lucide-react';
 
 const navLinks = [
-  // { to: '/money-market', label: 'Money Market' },
+  { to: '/money-market', label: 'Money Market' },
   { to: '/solver', label: 'Solver' },
   // { to: '/bridge', label: 'Bridge' },
   // { to: '/staking', label: 'Staking' },

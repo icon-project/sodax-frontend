@@ -167,15 +167,15 @@ const mockStellarProvider = {
 // Base user-facing intent params parameterized by source chain. Returning a generic
 // `CreateIntentParams<K>` lets the test call sites pass a literal ChainKey and have K
 // inferred all the way through to walletProvider narrowing.
-const intentInput = <K extends SpokeChainKey>(srcChain: K): CreateIntentParams<K> => ({
+const intentInput = <K extends SpokeChainKey>(srcChainKey: K): CreateIntentParams<K> => ({
   inputToken: '0x2170Ed0880ac9A755fd29B2688956BD959F933F8',
   outputToken: '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f',
   inputAmount: 1_000_000n,
   minOutputAmount: 900_000n,
   deadline: 0n,
   allowPartialFill: false,
-  srcChain,
-  dstChain: ChainKeys.ARBITRUM_MAINNET,
+  srcChainKey,
+  dstChainKey: ChainKeys.ARBITRUM_MAINNET,
   srcAddress: '0x1111111111111111111111111111111111111111',
   dstAddress: '0x2222222222222222222222222222222222222222',
   solver: '0x0000000000000000000000000000000000000000',
@@ -274,9 +274,9 @@ describe('SwapService types — walletProvider narrowing', () => {
       .toEqualTypeOf<ISolanaWalletProvider>();
   });
 
-  it('CreateIntentParams carries srcChain (the K generic anchor)', () => {
-    expectTypeOf<CreateIntentParams>().toHaveProperty('srcChain');
-    expectTypeOf<CreateIntentParams<'0x38.bsc'>['srcChain']>().toEqualTypeOf<'0x38.bsc'>();
+  it('CreateIntentParams carries srcChainKey (the K generic anchor)', () => {
+    expectTypeOf<CreateIntentParams>().toHaveProperty('srcChainKey');
+    expectTypeOf<CreateIntentParams<'0x38.bsc'>['srcChainKey']>().toEqualTypeOf<'0x38.bsc'>();
   });
 
   it('SwapActionParams with unconstrained K falls back to IWalletProvider', () => {
@@ -815,7 +815,7 @@ describe('SwapService.createIntent', () => {
         expect(result.value).toEqual([rawTx, { ...fakeIntent, feeAmount: 123n }, '0xdata']);
       }
       expect(mocks.sonicCreateSwapIntent).toHaveBeenCalled();
-      expect(mocks.sonicCreateSwapIntent.mock.calls[0]?.[0].createIntentParams.srcChain).toBe(ChainKeys.SONIC_MAINNET);
+      expect(mocks.sonicCreateSwapIntent.mock.calls[0]?.[0].createIntentParams.srcChainKey).toBe(ChainKeys.SONIC_MAINNET);
     });
 
     it('on Sonic, delegates to SonicSpokeService.createAndExecuteSwapIntent when raw=false', async () => {
@@ -917,7 +917,7 @@ describe('SwapService.createIntent', () => {
           params: intentInput(ChainKeys.BSC_MAINNET),
           raw: false,
           // Solana provider on an EVM chain — the chainType mismatch trips the
-          // `isValidWalletProviderTypeForChainKey` invariant. Cast defeats the
+          // `isUndefinedOrValidWalletProviderForChainKey` invariant. Cast defeats the
           // compile-time narrowing that would otherwise reject the call site.
           walletProvider: mockSolanaProvider as unknown as IEvmWalletProvider,
         }),
@@ -980,7 +980,7 @@ describe('SwapService.createIntent', () => {
     it('rejects when dstChain is Bitcoin + outputToken is BTC and minOutputAmount is below the 546 sat dust limit', async () => {
       const bitcoinDstParams = {
         ...intentInput(ChainKeys.BSC_MAINNET),
-        dstChain: ChainKeys.BITCOIN_MAINNET,
+        dstChainKey: ChainKeys.BITCOIN_MAINNET,
         outputToken: 'BTC' as const,
         minOutputAmount: 100n,
       };
@@ -1105,7 +1105,7 @@ describe('SwapService.createLimitOrder and createLimitOrderIntent', () => {
     expect(swapSpy).toHaveBeenCalledTimes(1);
     const forwarded = swapSpy.mock.calls[0]?.[0];
     expect((forwarded?.params as CreateIntentParams).deadline).toBe(0n);
-    expect(forwarded?.params.srcChain).toBe(ChainKeys.BSC_MAINNET);
+    expect(forwarded?.params.srcChainKey).toBe(ChainKeys.BSC_MAINNET);
     expect(forwarded?.walletProvider).toBe(mockEvmProvider);
     expect(forwarded?.skipSimulation).toBe(false);
     expect(forwarded?.fee).toBe(sodax.swaps.partnerFee);
@@ -1128,7 +1128,7 @@ describe('SwapService.createLimitOrder and createLimitOrderIntent', () => {
     expect(createIntentSpy).toHaveBeenCalledTimes(1);
     const forwarded = createIntentSpy.mock.calls[0]?.[0];
     expect((forwarded?.params as CreateIntentParams).deadline).toBe(0n);
-    expect(forwarded?.params.srcChain).toBe(ChainKeys.BSC_MAINNET);
+    expect(forwarded?.params.srcChainKey).toBe(ChainKeys.BSC_MAINNET);
   });
 });
 
@@ -1849,7 +1849,7 @@ describe('SwapService.swap', () => {
         srcChainId: ChainKeys.BSC_MAINNET,
         srcTxHash: '0xbscTx',
         srcAddress: params.srcAddress,
-        dstChainId: params.dstChain,
+        dstChainId: params.dstChainKey,
         dstTxHash: '0xdstTx',
         dstAddress: params.dstAddress,
       });
