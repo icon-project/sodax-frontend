@@ -137,7 +137,7 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
                 Brand Kit
               </FooterLink>
               <FooterLink href={PARTNER_DASHBOARD_ROUTE}>Partner portal</FooterLink>
-              <FooterLink href={MICA_WHITEPAPER_ROUTE} showArrow>
+              <FooterLink href={MICA_WHITEPAPER_ROUTE} showArrow target="_blank" rel="noopener noreferrer">
                 MiCA whitepaper
               </FooterLink>
             </div>
