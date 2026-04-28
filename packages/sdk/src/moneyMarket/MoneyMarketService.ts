@@ -24,7 +24,7 @@ import {
   isStellarChainKeyType,
   isSolanaChainKeyType,
   isBitcoinChainKeyType,
-  isValidWalletProviderTypeForChainKey,
+  isDefinedWalletProviderValidForChainKey,
   type SpokeApproveParams,
 } from '../shared/index.js';
 import type { HubProvider, RelayOptionalExtraData } from '../shared/types/types.js';
@@ -368,8 +368,8 @@ export class MoneyMarketService {
       invariant(params.amount > 0n, 'Amount must be greater than 0');
       invariant(params.token.length > 0, 'Token is required');
       invariant(
-        isValidWalletProviderTypeForChainKey(srcChainKey, walletProvider),
-        `Invalid wallet provider for chain key: ${srcChainKey}, walletProvider.chainType: ${walletProvider.chainType}`,
+        isDefinedWalletProviderValidForChainKey(srcChainKey, walletProvider),
+        `Invalid wallet provider for chain key: ${srcChainKey}, walletProvider.chainType: ${walletProvider?.chainType}`,
       );
 
       if (isStellarChainKeyType(srcChainKey)) {
@@ -572,8 +572,8 @@ export class MoneyMarketService {
       invariant(params.token.length > 0, 'Token is required');
       invariant(params.amount > 0n, 'Amount must be greater than 0');
       invariant(
-        isValidWalletProviderTypeForChainKey(srcChainKey, walletProvider),
-        `Invalid wallet provider for chain key: ${srcChainKey}, walletProvider.chainType: ${walletProvider.chainType}`,
+        isDefinedWalletProviderValidForChainKey(srcChainKey, walletProvider),
+        `Invalid wallet provider for chain key: ${srcChainKey}, walletProvider.chainType: ${walletProvider?.chainType}`,
       );
       invariant(
         this.config.isMoneyMarketSupportedToken(srcChainKey, params.token),
@@ -713,8 +713,8 @@ export class MoneyMarketService {
       invariant(params.token.length > 0, 'Token is required');
       invariant(params.amount > 0n, 'Amount must be greater than 0');
       invariant(
-        isValidWalletProviderTypeForChainKey(srcChainKey, walletProvider),
-        `Invalid wallet provider for chain key: ${srcChainKey}, walletProvider.chainType: ${walletProvider.chainType}`,
+        isDefinedWalletProviderValidForChainKey(srcChainKey, walletProvider),
+        `Invalid wallet provider for chain key: ${srcChainKey}, walletProvider.chainType: ${walletProvider?.chainType}`,
       );
 
       const fromChainId = params.fromChainId ?? srcChainKey;
@@ -871,8 +871,8 @@ export class MoneyMarketService {
       invariant(params.token.length > 0, 'Token is required');
       invariant(params.amount > 0n, 'Amount must be greater than 0');
       invariant(
-        isValidWalletProviderTypeForChainKey(srcChainKey, walletProvider),
-        `Invalid wallet provider for chain key: ${srcChainKey}, walletProvider.chainType: ${walletProvider.chainType}`,
+        isDefinedWalletProviderValidForChainKey(srcChainKey, walletProvider),
+        `Invalid wallet provider for chain key: ${srcChainKey}, walletProvider.chainType: ${walletProvider?.chainType}`,
       );
 
       const toChainId = params.toChainId ?? srcChainKey;
@@ -1022,8 +1022,8 @@ export class MoneyMarketService {
       invariant(params.token.length > 0, 'Token is required');
       invariant(params.amount > 0n, 'Amount must be greater than 0');
       invariant(
-        isValidWalletProviderTypeForChainKey(srcChainKey, walletProvider),
-        `Invalid wallet provider for chain key: ${srcChainKey}, walletProvider.chainType: ${walletProvider.chainType}`,
+        isDefinedWalletProviderValidForChainKey(srcChainKey, walletProvider),
+        `Invalid wallet provider for chain key: ${srcChainKey}, walletProvider.chainType: ${walletProvider?.chainType}`,
       );
       invariant(
         this.config.isMoneyMarketSupportedToken(srcChainKey, params.token),

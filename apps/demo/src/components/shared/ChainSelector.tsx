@@ -1,16 +1,15 @@
-/*
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { baseChainInfo, type ChainId } from '@sodax/types';
+import { baseChainInfo, type SpokeChainKey } from '@sodax/types';
 
 interface ChainSelectorProps {
-  selectedChainId: ChainId;
-  selectChainId: (chainId: ChainId) => void;
-  allowedChains?: ChainId[]; // optional — only restrict when provided
+  selectedChainId: SpokeChainKey;
+  selectChainId: (chainId: SpokeChainKey) => void;
+  allowedChains?: SpokeChainKey[];
 }
 export function ChainSelector({ selectedChainId, selectChainId, allowedChains }: ChainSelectorProps) {
   const chains = Object.values(baseChainInfo)
-    .filter(chain => !allowedChains || allowedChains.includes(chain.id))
+    .filter(chain => !allowedChains || allowedChains.includes(chain.key))
     .sort((a, b) => a.name.localeCompare(b.name));
   return (
     <Select value={selectedChainId} onValueChange={selectChainId}>
@@ -21,7 +20,7 @@ export function ChainSelector({ selectedChainId, selectChainId, allowedChains }:
       </SelectTrigger>
       <SelectContent>
         {chains.map(xChain => (
-          <SelectItem key={xChain.id} value={xChain.id}>
+          <SelectItem key={xChain.key} value={xChain.key}>
             <div className="flex items-center gap-2">{xChain.name}</div>{' '}
           </SelectItem>
         ))}
@@ -29,4 +28,3 @@ export function ChainSelector({ selectedChainId, selectChainId, allowedChains }:
     </Select>
   );
 }
-*/

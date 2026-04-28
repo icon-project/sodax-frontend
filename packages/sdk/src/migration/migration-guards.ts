@@ -1,27 +1,52 @@
+// packages/sdk/src/migration/migration-guards.ts
+// Runtime narrowers for migration param unions used by MigrationService branching.
 import type { SpokeChainKey } from '@sodax/types';
 import type { IcxMigrateParams, IcxCreateRevertMigrationParams } from './IcxMigrationService.js';
 import type { UnifiedBnUSDMigrateParams } from './BnUSDMigrationService.js';
 import type { BalnMigrateParams } from './BalnSwapService.js';
 
+function isMigrationRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
 export function isIcxMigrateParams(value: unknown): value is IcxMigrateParams {
-  return typeof value === 'object' && value !== null && 'address' in value && 'amount' in value && 'to' in value;
+  if (!isMigrationRecord(value)) return false;
+  if (!('address' in value) || !('dstAddress' in value) || !('amount' in value)) return false;
+  if (!('srcAddress' in value) || !('srcChainKey' in value)) return false;
+  if ('srcbnUSD' in value || 'lockupPeriod' in value) return false;
+  return true;
 }
 
 export function isUnifiedBnUSDMigrateParams(value: unknown): value is UnifiedBnUSDMigrateParams<SpokeChainKey> {
-  return typeof value === 'object' && value !== null && 'srcbnUSD' in value && 'dstbnUSD' in value;
+  if (!isMigrationRecord(value)) return false;
+  if (!('srcbnUSD' in value) || !('dstbnUSD' in value) || !('dstChainKey' in value)) return false;
+  if (!('srcAddress' in value) || !('srcChainKey' in value) || !('amount' in value) || !('dstAddress' in value)) {
+    return false;
+  }
+  if ('address' in value || 'lockupPeriod' in value) return false;
+  return true;
 }
 
 export function isBalnMigrateParams(value: unknown): value is BalnMigrateParams {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'amount' in value &&
-    'lockupPeriod' in value &&
-    'to' in value &&
-    'stake' in value
-  );
+  if (!isMigrationRecord(value)) return false;
+  if (
+    !('amount' in value) ||
+    !('lockupPeriod' in value) ||
+    !('dstAddress' in value) ||
+    !('stake' in value) ||
+    !('srcAddress' in value) ||
+    !('srcChainKey' in value)
+  ) {
+    return false;
+  }
+  if ('srcbnUSD' in value || 'address' in value) return false;
+  return true;
 }
 
 export function isIcxCreateRevertMigrationParams(value: unknown): value is IcxCreateRevertMigrationParams {
-  return typeof value === 'object' && value !== null && 'amount' in value && 'to' in value;
+  if (!isMigrationRecord(value)) return false;
+  if (!('amount' in value) || !('dstAddress' in value)) return false;
+  if (!('srcAddress' in value) || !('srcChainKey' in value)) return false;
+  if ('srcbnUSD' in value || 'lockupPeriod' in value || 'address' in value) return false;
+  return true;
 }

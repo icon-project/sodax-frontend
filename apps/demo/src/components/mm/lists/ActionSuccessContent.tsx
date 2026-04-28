@@ -1,11 +1,10 @@
-/*
 // Reusable success screen content shown after a successful money market action (supply/withdraw/borrow/repay).
 // This component displays transaction details, amount, and provides a link to view the transaction on-chain.
 
 import React, { useState, type ReactElement } from 'react';
 import { Button } from '@/components/ui/button';
 import { DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import type { ChainId, XToken } from '@sodax/types';
+import type { SpokeChainKey, XToken } from '@sodax/types';
 import { chainIdToChainName } from '@/constants';
 import { getChainExplorerTxUrl } from '@/lib/utils';
 import { useSodaxScanMessageUrl } from '@/hooks/useSodaxScanMessageUrl';
@@ -17,8 +16,8 @@ export type ActionSuccessType = 'supply' | 'withdraw' | 'borrow' | 'repay';
 export type ActionSuccessData = {
   amount: string;
   token: XToken;
-  sourceChainId: ChainId;
-  destinationChainId: ChainId;
+  sourceChainId: SpokeChainKey;
+  destinationChainId: SpokeChainKey;
   txHash?: `0x${string}`;
 };
 
@@ -148,4 +147,3 @@ export function ActionSuccessContent({ action, data, onClose }: ActionSuccessCon
     </div>
   );
 }
-*/

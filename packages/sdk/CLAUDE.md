@@ -104,7 +104,8 @@ When adding a new chain, follow an existing implementation (e.g., `SolanaSpokePr
 ### Type Guards
 
 `src/shared/guards.ts` contains runtime type guards for chain/provider detection:
-- `isEvmSpokeProviderType()`, `isSolanaSpokeProviderType()`, etc.
+- `isEvmSpokeChainConfig()`, `isSolanaChainKeyType()`, etc.
+- `isUndefinedOrValidWalletProviderForChainKey()` (swap/raw), `isDefinedWalletProviderValidForChainKey()` (approve/exec)
 - `isConfiguredSolverConfig()`, `isConfiguredMoneyMarketConfig()`, etc.
 - Used throughout services to branch on chain-specific logic
 
