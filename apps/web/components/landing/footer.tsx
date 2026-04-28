@@ -12,6 +12,7 @@ import {
   GITHUB_ROUTE,
   LEAD_BORROW_FOR_APPS_ROUTE,
   LINKEDIN_ROUTE,
+  MICA_WHITEPAPER_ROUTE,
   NEWS_ROUTE,
   PARTNER_DASHBOARD_ROUTE,
   SODAX_SCAN_ROUTE,
@@ -136,6 +137,9 @@ const Footer: React.FC<FooterProps> = ({ onTermsClick }) => {
                 Brand Kit
               </FooterLink>
               <FooterLink href={PARTNER_DASHBOARD_ROUTE}>Partner portal</FooterLink>
+              <FooterLink href={MICA_WHITEPAPER_ROUTE} showArrow>
+                MiCA whitepaper
+              </FooterLink>
             </div>
           </nav>
         </div>

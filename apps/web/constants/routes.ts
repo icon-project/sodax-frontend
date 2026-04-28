@@ -103,3 +103,5 @@ export const connectRoute = (slug: string): string => `/connect/${slug}`;
 export const INTEGRATION_OPTIONS_ROUTE = '/partners#integration-options';
 export const CASE_STUDIES_ROUTE = '/partners#case-studies';
 export const SODA_TOKEN_ROUTE = '/community/soda-token';
+
+export const MICA_WHITEPAPER_ROUTE = '/mica-whitepaper.pdf';
