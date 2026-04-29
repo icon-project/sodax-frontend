@@ -21,7 +21,7 @@ import { ManagePositionDialog } from '../manage-dialog';
 import { SwitchChainDialog } from '@/components/shared/switch-chain-dialog';
 import { usePoolActions } from '../../_stores/pool-store-provider';
 import type { XToken } from '@sodax/types';
-import { getUserAPY } from './utils';
+import { getUserAPY } from '../../_utils';
 
 type PositionCardProps = {
   tokenId: string;

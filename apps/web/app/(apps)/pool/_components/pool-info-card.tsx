@@ -3,7 +3,7 @@
 import type React from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { usePoolStore } from '@/app/(apps)/pool/_stores/pool-store-provider';
-import { getUserAPY } from './supply-overview/utils';
+import { getUserAPY } from '../_utils';
 import PoolChart from './pool-chart';
 import { Button } from '@/components/ui/button';
 import { ChartNoAxesColumn } from 'lucide-react';

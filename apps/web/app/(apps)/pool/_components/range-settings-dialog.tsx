@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type React from 'react';
-import { XIcon } from 'lucide-react';
+import { Diff, XIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { usePoolStore } from '@/app/(apps)/pool/_stores/pool-store-provider';
+import { getUserAPY } from '../_utils';
 
 const WIDE_RANGE_FRACTION = 0.25;
 const NARROW_RANGE_FRACTION = 0.1;
@@ -17,7 +19,7 @@ type RangeOption = {
   type: RangeType;
   label: string;
   description: string;
-  apr: string;
+  fraction: number;
 };
 
 const RANGE_OPTIONS: readonly RangeOption[] = [
@@ -25,13 +27,13 @@ const RANGE_OPTIONS: readonly RangeOption[] = [
     type: 'wide',
     label: 'Wide',
     description: 'Stays earning for longer. Low management.',
-    apr: '6.98%',
+    fraction: WIDE_RANGE_FRACTION,
   },
   {
     type: 'narrow',
     label: 'Narrow',
     description: 'Earns while the price sits in your range.',
-    apr: '16.73%',
+    fraction: NARROW_RANGE_FRACTION,
   },
 ];
 
@@ -51,14 +53,34 @@ export function RangeSettingsDialog({
   onMaxPriceChange,
 }: RangeSettingsDialogProps): React.JSX.Element {
   const [selectedRange, setSelectedRange] = useState<RangeType>('wide');
+  const poolApyPercent = usePoolStore(state => state.poolApyPercent);
+  const fetchPoolApy = usePoolStore(state => state.fetchPoolApy);
 
   useEffect((): void => {
     if (open) {
       setSelectedRange('wide');
+      void fetchPoolApy();
     }
-  }, [open]);
+  }, [open, fetchPoolApy]);
 
   const isPriceAvailable = typeof currentPrice === 'number' && Number.isFinite(currentPrice) && currentPrice > 0;
+
+  const aprByRange = useMemo((): Record<RangeType, string> => {
+    const formatApr = (fraction: number): string => {
+      if (poolApyPercent === null || !isPriceAvailable || currentPrice === null || currentPrice === undefined) {
+        return '—';
+      }
+      const lowerPrice = currentPrice * (1 - fraction);
+      const upperPrice = currentPrice * (1 + fraction);
+      const apr = getUserAPY(poolApyPercent, lowerPrice, upperPrice, currentPrice);
+      return `${apr.toFixed(2)}%`;
+    };
+
+    return {
+      wide: formatApr(WIDE_RANGE_FRACTION),
+      narrow: formatApr(NARROW_RANGE_FRACTION),
+    };
+  }, [poolApyPercent, currentPrice, isPriceAvailable]);
 
   const handleApply = (): void => {
     if (!isPriceAvailable || currentPrice === null || currentPrice === undefined) {
@@ -104,8 +126,8 @@ export function RangeSettingsDialog({
                 >
                   <div className="self-stretch flex flex-col justify-start items-start gap-2">
                     <div className="self-stretch inline-flex justify-between items-center">
-                      <div className="text-espresso text-(length:--body-comfortable) font-normal font-['InterRegular'] leading-5">
-                        {option.label}
+                      <div className="text-espresso text-(length:--body-comfortable) font-normal font-['InterRegular'] leading-5 flex items-center">
+                        {option.label} <Diff className="w-3 h-3 ml-1" /> {option.fraction * 100}%
                       </div>
                       <div className="w-4 h-4 relative overflow-hidden flex items-center justify-center">
                         <div className="w-3.5 h-3.5 rounded-full outline outline-[1.5px] outline-offset-[-0.75px] outline-clay-light flex items-center justify-center">
@@ -120,7 +142,7 @@ export function RangeSettingsDialog({
                   <div className="pt-2 inline-flex justify-start items-center gap-2">
                     <div>
                       <span className="text-espresso text-(length:--body-small) font-bold font-['InterBold'] leading-4">
-                        {option.apr}
+                        {aprByRange[option.type]}
                       </span>
                       <span
                         className={`text-clay text-(length:--body-small) font-normal leading-4 ${isSelected ? `font-['InterBold'] text-espresso` : `font-['InterRegular'] text-clay`}`}
