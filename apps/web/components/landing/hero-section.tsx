@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Navbar } from '@/components/shared/navbar';
 import { NetworkLogosScroller } from '@/components/shared/network-logos-scroller';
 import { Announcement } from '@/components/shared/announcement';
+import { trackAnnouncementClicked } from '@/lib/analytics';
 import { ConsensusLogo } from './consensus-logo';
 import { LeadMagnetCTA } from './lead-magnet-cta';
 import { PressBar } from '../shared/press-bar';
@@ -43,6 +44,7 @@ const HeroSection = (): React.ReactElement => {
                 logoLabel="Consensus"
                 subtitle="SODAX in Miami"
                 backgroundImage="/consensus_miami.png"
+                onClick={() => trackAnnouncementClicked({ name: 'consensus_miami' })}
               />
               <div className="flex flex-col items-center text-[42px] leading-[1.1]">
                 <span className="mix-blend-hard-light text-white font-[InterBlack]">Infrastructure for</span>

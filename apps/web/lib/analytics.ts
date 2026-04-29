@@ -124,6 +124,13 @@ export interface HoldersJoinDiscordClickedEvent {
   event: 'holders_join_discord_clicked';
 }
 
+// Announcement events
+
+export interface AnnouncementClickedEvent {
+  event: 'announcement_clicked';
+  name: string;
+}
+
 // Pool events
 
 export interface SupplyLiquidityCompletedEvent {
@@ -292,6 +299,12 @@ export function trackHoldersFollowXClicked(): void {
 
 export function trackHoldersJoinDiscordClicked(): void {
   pushToDataLayer({ event: 'holders_join_discord_clicked' });
+}
+
+// Announcement tracking
+
+export function trackAnnouncementClicked(params: Omit<AnnouncementClickedEvent, 'event'>): void {
+  pushToDataLayer({ event: 'announcement_clicked', ...params });
 }
 
 // Pool tracking

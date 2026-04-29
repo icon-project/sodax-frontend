@@ -20,6 +20,7 @@ type AnnouncementProps = {
   backgroundColor?: string;
   className?: string;
   target?: '_blank' | '_self';
+  onClick?: () => void;
 };
 
 export function Announcement({
@@ -31,6 +32,7 @@ export function Announcement({
   backgroundColor = '#a55c55',
   className,
   target,
+  onClick,
 }: AnnouncementProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -41,6 +43,7 @@ export function Announcement({
       target={target}
       rel={target === '_blank' ? 'noopener noreferrer' : undefined}
       aria-label={`${logoLabel} — ${subtitle}`}
+      onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onFocus={() => setIsHovered(true)}
