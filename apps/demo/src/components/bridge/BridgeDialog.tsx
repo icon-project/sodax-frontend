@@ -16,7 +16,7 @@ import {
   useRequestTrustline,
   useBitcoinBalance,
 } from '@sodax/dapp-kit';
-import { useEvmSwitchChain, useXAccount } from '@sodax/wallet-sdk-react';
+import { useEvmSwitchChain, useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { ChainKeys, type ChainType, type SpokeChainKey, type XToken, type GetWalletProviderType, type IBitcoinWalletProvider, type IStellarWalletProvider } from '@sodax/types';
 import type { CreateBridgeIntentParams } from '@sodax/sdk';
 import { BitcoinSetupPanel } from '@/components/bitcoin/BitcoinSetupPanel';
@@ -63,9 +63,15 @@ export function BridgeDialog({
 
   const { isWrongChain, handleSwitchChain } = useEvmSwitchChain(order.srcChainKey);
 
-  // Stellar trustline
+  const toWalletProvider = useWalletProvider(toChainKey);
+
+  const fromBtcWalletProvider =
+    walletProvider.chainType === 'BITCOIN' ? (walletProvider as IBitcoinWalletProvider) : undefined;
+  const toBtcWalletProvider =
+    toWalletProvider?.chainType === 'BITCOIN' ? (toWalletProvider as IBitcoinWalletProvider) : undefined;
+
   const stellarWalletProvider =
-    walletProvider.chainType === 'STELLAR' ? (walletProvider as IStellarWalletProvider) : undefined;
+    toWalletProvider?.chainType === 'STELLAR' ? (toWalletProvider as IStellarWalletProvider) : undefined;
   const { data: hasSufficientTrustline, isPending: isTrustlineLoading } = useStellarTrustlineCheck(
     order.dstToken,
     order.amount,
@@ -74,13 +80,8 @@ export function BridgeDialog({
   );
   const { requestTrustline, isLoading: isRequestingTrustline } = useRequestTrustline(order.dstToken);
 
-  // Bitcoin balance for destination setup
   const toBtcAddress = toChainKey === ChainKeys.BITCOIN_MAINNET ? toAccount.address : undefined;
   const { data: toBtcBalance } = useBitcoinBalance(toBtcAddress);
-
-  // Bitcoin wallet provider for source setup
-  const fromBtcWalletProvider =
-    walletProvider.chainType === 'BITCOIN' ? (walletProvider as IBitcoinWalletProvider) : undefined;
 
   const handleApprove = async () => {
     await approve({
@@ -116,7 +117,8 @@ export function BridgeDialog({
     isBridging ||
     (fromChainType === 'EVM' && !hasAllowance) ||
     (order.srcChainKey === ChainKeys.BITCOIN_MAINNET && !isFromBtcReady) ||
-    (toChainKey === ChainKeys.BITCOIN_MAINNET && !isToBtcReady);
+    (toChainKey === ChainKeys.BITCOIN_MAINNET && !isToBtcReady) ||
+    needsTrustline;
 
   return (
     <Dialog open={open} onOpenChange={isOpen => !isOpen && onClose()}>
@@ -150,9 +152,9 @@ export function BridgeDialog({
           />
         )}
 
-        {toChainKey === ChainKeys.BITCOIN_MAINNET && toBtcBalance !== undefined && (
+        {toBtcWalletProvider && toChainKey === ChainKeys.BITCOIN_MAINNET && toBtcBalance !== undefined && (
           <BitcoinSetupPanel
-            walletProvider={fromBtcWalletProvider as IBitcoinWalletProvider}
+            walletProvider={toBtcWalletProvider}
             onReadyChange={setIsToBtcReady}
             nativeBalance={toBtcBalance}
             connectorName={toBtcConnector?.name}

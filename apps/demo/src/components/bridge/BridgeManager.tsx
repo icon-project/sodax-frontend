@@ -110,6 +110,7 @@ export function BridgeManager() {
     setToChainKey(prevFromChainKey);
     setFromToken(toToken);
     setToToken(prevFromToken);
+    setFromAmount('');
   };
 
   return (
