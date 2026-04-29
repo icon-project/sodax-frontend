@@ -10,7 +10,7 @@ import { ConsensusLogo } from './consensus-logo';
 import { LeadMagnetCTA } from './lead-magnet-cta';
 import { PressBar } from '../shared/press-bar';
 
-const IS_CONSENSUS_MIAMI_ANNOUNCEMENT_ACTIVE = true;
+const IS_ANNOUNCEMENT_LIVE = true;
 
 const HeroSection = (): React.ReactElement => {
   return (
@@ -32,7 +32,7 @@ const HeroSection = (): React.ReactElement => {
         <Navbar />
 
         {/* Hero content */}
-        {IS_CONSENSUS_MIAMI_ANNOUNCEMENT_ACTIVE ? (
+        {IS_ANNOUNCEMENT_LIVE ? (
           <div className="flex flex-1 flex-col items-center justify-center w-full px-4 gap-[40px]">
             {/* Title with announcement card sitting directly above */}
             <div className="flex flex-col items-center text-center whitespace-nowrap z-20">
