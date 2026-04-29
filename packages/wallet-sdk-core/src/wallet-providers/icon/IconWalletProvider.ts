@@ -1,7 +1,26 @@
 import type { IconTransactionResult, IcxCallTransaction, IIconWalletProvider } from '@sodax/types';
-import type { IconService, Wallet as IconSdkWallet } from 'icon-sdk-js';
+import type { IconService } from 'icon-sdk-js';
 import * as IconSdkRaw from 'icon-sdk-js';
-import { BaseWalletProvider } from './BaseWalletProvider.js';
+import { BaseWalletProvider } from '../BaseWalletProvider.js';
+import type {
+  BrowserExtensionIconWalletConfig,
+  HanaWalletResponseEvent,
+  Hash,
+  IconAddress,
+  IconBrowserExtensionWallet,
+  IconEoaAddress,
+  IconPkWallet,
+  IconWallet,
+  IconWalletConfig,
+  IconWalletDefaults,
+  JsonRpcPayloadResponse,
+  PrivateKeyIconWalletConfig,
+  RelayRequestDetail,
+  RelayRequestSigning,
+  ResponseAddressType,
+  ResponseSigningType,
+} from './types.js';
+
 const IconSdk = ('default' in IconSdkRaw.default ? IconSdkRaw.default : IconSdkRaw) as typeof IconSdkRaw;
 const { Converter, CallTransactionBuilder, Wallet } = IconSdk;
 
@@ -9,17 +28,10 @@ const DEFAULT_STEP_LIMIT = 3_000_000;
 const DEFAULT_VERSION = '0x3';
 const DEFAULT_JSON_RPC_ID = 99999;
 
-/** Defaults applied to every call. Per-call options shallow-merge over these. */
-export type IconWalletDefaults = {
-  /** Step limit (gas) for transactions. Default `3_000_000`. */
-  stepLimit?: number;
-  /** Transaction version. Default `'0x3'`. */
-  version?: string;
-  /** Timestamp generator (microseconds). Default `() => Date.now() * 1000`. */
-  timestampProvider?: () => number;
-  /** Event ID for `requestJsonRpc` (browser-extension path). Default `99999`. */
-  jsonRpcId?: number;
-};
+interface RelayResponseEventDetail {
+  type: HanaWalletResponseEvent;
+  payload: unknown;
+}
 
 export class IconWalletProvider extends BaseWalletProvider<IconWalletDefaults> implements IIconWalletProvider {
   public readonly chainType = 'ICON' as const;
@@ -89,97 +101,6 @@ export class IconWalletProvider extends BaseWalletProvider<IconWalletDefaults> i
     }
     return isIconPkWallet(this.wallet) ? (this.wallet.wallet.getAddress() as IconEoaAddress) : this.wallet.wallet;
   }
-}
-
-/**
- * Icon Types
- */
-
-export type IconJsonRpcVersion = '2.0';
-
-export type Hex = `0x${string}`;
-export type Hash = `0x${string}`;
-export type IconAddress = `hx${string}` | `cx${string}`;
-export type IconEoaAddress = `hx${string}`;
-
-export type PrivateKeyIconWalletConfig = {
-  privateKey: `0x${string}`;
-  rpcUrl: `http${string}`;
-  defaults?: IconWalletDefaults;
-};
-
-export type BrowserExtensionIconWalletConfig = {
-  walletAddress?: IconEoaAddress;
-  rpcUrl: `http${string}`;
-  defaults?: IconWalletDefaults;
-};
-
-export type IconWalletConfig = PrivateKeyIconWalletConfig | BrowserExtensionIconWalletConfig;
-
-export type IconPkWallet = {
-  type: 'PRIVATE_KEY';
-  wallet: IconSdkWallet;
-};
-
-export type IconBrowserExtensionWallet = {
-  type: 'BROWSER_EXTENSION';
-  wallet?: IconEoaAddress;
-};
-
-export type IconWallet = IconPkWallet | IconBrowserExtensionWallet;
-
-export type HanaWalletRequestEvent =
-  | 'REQUEST_HAS_ACCOUNT'
-  | 'REQUEST_HAS_ADDRESS'
-  | 'REQUEST_ADDRESS'
-  | 'REQUEST_JSON'
-  | 'REQUEST_SIGNING'
-  | 'REQUEST_JSON-RPC';
-export type HanaWalletResponseEvent =
-  | 'RESPONSE_HAS_ACCOUNT'
-  | 'RESPONSE_HAS_ADDRESS'
-  | 'RESPONSE_ADDRESS'
-  | 'RESPONSE_JSON-RPC'
-  | 'RESPONSE_SIGNING'
-  | 'CANCEL_SIGNING'
-  | 'CANCEL_JSON-RPC';
-
-export type ResponseAddressType = {
-  type: 'RESPONSE_ADDRESS';
-  payload: IconAddress;
-};
-
-export type ResponseSigningType = {
-  type: 'RESPONSE_SIGNING';
-  payload: string;
-};
-
-export type RelayRequestDetail = {
-  type: HanaWalletRequestEvent;
-  payload?: {
-    jsonrpc: IconJsonRpcVersion;
-    method: string;
-    params: unknown;
-    id: number | undefined;
-  };
-};
-
-export type RelayRequestSigning = {
-  type: 'REQUEST_SIGNING';
-  payload: {
-    from: IconAddress;
-    hash: string;
-  };
-};
-
-export type JsonRpcPayloadResponse = {
-  id: number;
-  result: string; // txHash
-};
-
-interface RelayResponseEventDetail {
-  type: HanaWalletResponseEvent;
-  payload: unknown;
 }
 
 /**
@@ -263,9 +184,7 @@ export function requestAddress(): Promise<IconAddress> {
     window.addEventListener('ICONEX_RELAY_RESPONSE', eventHandler, false);
     window.dispatchEvent(
       new CustomEvent<RelayRequestDetail>('ICONEX_RELAY_REQUEST', {
-        detail: {
-          type: 'REQUEST_ADDRESS',
-        },
+        detail: { type: 'REQUEST_ADDRESS' },
       }),
     );
   });
@@ -274,13 +193,7 @@ export function requestAddress(): Promise<IconAddress> {
 export function requestSigning(from: IconAddress, hash: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const signRequest = new CustomEvent<RelayRequestSigning>('ICONEX_RELAY_REQUEST', {
-      detail: {
-        type: 'REQUEST_SIGNING',
-        payload: {
-          from,
-          hash,
-        },
-      },
+      detail: { type: 'REQUEST_SIGNING', payload: { from, hash } },
     });
 
     const eventHandler = (event: Event) => {
@@ -288,8 +201,6 @@ export function requestSigning(from: IconAddress, hash: string): Promise<string>
       const response = customEvent.detail;
       if (isResponseSigningType(response)) {
         window.removeEventListener('ICONEX_RELAY_RESPONSE', eventHandler as EventListener, false);
-
-        // resolve signature
         resolve(response.payload);
       } else if (response.type === 'CANCEL_SIGNING') {
         reject(new Error('CANCEL_SIGNING'));
@@ -309,7 +220,6 @@ export function requestJsonRpc(rawTransaction: unknown, id = 99999): Promise<Jso
       const { type, payload } = customEvent.detail;
       if (type === 'RESPONSE_JSON-RPC') {
         window.removeEventListener('ICONEX_RELAY_RESPONSE', eventHandler as EventListener, false);
-
         if (isJsonRpcPayloadResponse(payload)) {
           resolve(payload);
         } else {
@@ -327,12 +237,7 @@ export function requestJsonRpc(rawTransaction: unknown, id = 99999): Promise<Jso
       new CustomEvent<RelayRequestDetail>('ICONEX_RELAY_REQUEST', {
         detail: {
           type: 'REQUEST_JSON-RPC',
-          payload: {
-            jsonrpc: '2.0',
-            method: 'icx_sendTransaction',
-            params: rawTransaction,
-            id: id,
-          },
+          payload: { jsonrpc: '2.0', method: 'icx_sendTransaction', params: rawTransaction, id },
         },
       }),
     );

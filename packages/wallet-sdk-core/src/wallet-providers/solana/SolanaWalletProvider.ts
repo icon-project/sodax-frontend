@@ -22,45 +22,22 @@ import type {
   SolanaRawTransactionInstruction,
   TransactionSignature,
 } from '@sodax/types';
-import type { SignerWalletAdapterProps } from '@solana/wallet-adapter-base';
-import { BaseWalletProvider } from './BaseWalletProvider.js';
-import { shallowMerge } from '../utils/index.js';
+import { BaseWalletProvider } from '../BaseWalletProvider.js';
+import { shallowMerge } from '../../utils/index.js';
+import type {
+  BrowserExtensionSolanaWalletConfig,
+  PrivateKeySolanaWalletConfig,
+  SolanaWalletConfig,
+  SolanaWalletDefaults,
+  WalletContextState,
+} from './types.js';
 
 const DEFAULT_CONNECTION_COMMITMENT: Commitment = 'confirmed';
 const DEFAULT_CONFIRM_COMMITMENT: Commitment = 'finalized';
 
-interface WalletContextState {
-  publicKey: PublicKey | null;
-  signTransaction: SignerWalletAdapterProps['signTransaction'] | undefined;
-}
-
-/** Defaults applied to every call. Per-call options shallow-merge over these. */
-export type SolanaWalletDefaults = {
-  /** Commitment for `Connection`. Default `'confirmed'`. */
-  connectionCommitment?: Commitment;
-  /** Full ConnectionConfig (overrides `connectionCommitment` if present). */
-  connectionConfig?: ConnectionConfig;
-  /** Default `SendOptions` for `sendRawTransaction`. */
-  sendOptions?: SendOptions;
-  /** Commitment for confirmation polling. Default `'finalized'`. */
-  confirmCommitment?: Commitment;
-};
-
-export type PrivateKeySolanaWalletConfig = {
-  privateKey: Uint8Array;
-  endpoint: string;
-  defaults?: SolanaWalletDefaults;
-};
-
-export type BrowserExtensionSolanaWalletConfig = {
-  wallet: WalletContextState;
-  endpoint: string;
-  defaults?: SolanaWalletDefaults;
-};
-
-export type SolanaWalletConfig = PrivateKeySolanaWalletConfig | BrowserExtensionSolanaWalletConfig;
-
-function isPrivateKeySolanaWalletConfig(walletConfig: SolanaWalletConfig): walletConfig is PrivateKeySolanaWalletConfig {
+function isPrivateKeySolanaWalletConfig(
+  walletConfig: SolanaWalletConfig,
+): walletConfig is PrivateKeySolanaWalletConfig {
   return 'privateKey' in walletConfig;
 }
 
@@ -70,32 +47,28 @@ function isBrowserExtensionSolanaWalletConfig(
   return 'wallet' in walletConfig && !(walletConfig.wallet instanceof Keypair);
 }
 
-// Internal stored wallet — discriminated union via `kind` to enable narrowing without `as` casts.
-type StoredWallet =
-  | { kind: 'private-key'; keypair: Keypair }
-  | { kind: 'browser-extension'; wallet: WalletContextState };
-
-export class SolanaWalletProvider
-  extends BaseWalletProvider<SolanaWalletDefaults>
-  implements ISolanaWalletProvider
-{
+export class SolanaWalletProvider extends BaseWalletProvider<SolanaWalletDefaults> implements ISolanaWalletProvider {
   public readonly chainType = 'SOLANA' as const;
   public readonly connection: Connection;
-  private readonly wallet: StoredWallet;
+  private readonly wallet: Keypair | WalletContextState;
+  private readonly isAdapterMode: boolean;
 
   constructor(walletConfig: SolanaWalletConfig) {
     super(walletConfig.defaults);
-    const connectionConfig: ConnectionConfig =
-      this.defaults.connectionConfig ?? { commitment: this.defaults.connectionCommitment ?? DEFAULT_CONNECTION_COMMITMENT };
+    const connectionConfig: ConnectionConfig = this.defaults.connectionConfig ?? {
+      commitment: this.defaults.connectionCommitment ?? DEFAULT_CONNECTION_COMMITMENT,
+    };
 
     if (isPrivateKeySolanaWalletConfig(walletConfig)) {
-      this.wallet = { kind: 'private-key', keypair: Keypair.fromSecretKey(walletConfig.privateKey) };
+      this.wallet = Keypair.fromSecretKey(walletConfig.privateKey);
+      this.isAdapterMode = false;
       this.connection = new Connection(walletConfig.endpoint, connectionConfig);
       return;
     }
 
     if (isBrowserExtensionSolanaWalletConfig(walletConfig)) {
-      this.wallet = { kind: 'browser-extension', wallet: walletConfig.wallet };
+      this.wallet = walletConfig.wallet;
+      this.isAdapterMode = true;
       this.connection = new Connection(walletConfig.endpoint, connectionConfig);
       return;
     }
@@ -138,16 +111,17 @@ export class SolanaWalletProvider
   }
 
   async buildV0Txn(rawInstructions: SolanaRawTransactionInstruction[]): Promise<SolanaSerializedTransaction> {
-    if (this.wallet.kind === 'browser-extension') {
-      return this.buildV0TxnWithAdapter(this.wallet.wallet, rawInstructions);
+    if (this.isAdapterMode) {
+      return this.buildV0TxnWithAdapter(rawInstructions);
     }
-    return this.buildV0TxnWithKeypair(this.wallet.keypair, rawInstructions);
+    return this.buildV0TxnWithKeypair(rawInstructions);
   }
 
   private async buildV0TxnWithAdapter(
-    adapterWallet: WalletContextState,
     rawInstructions: SolanaRawTransactionInstruction[],
   ): Promise<SolanaSerializedTransaction> {
+    const adapterWallet = this.wallet as WalletContextState;
+
     if (!adapterWallet.publicKey) {
       throw new Error('Wallet public key is not initialized');
     }
@@ -168,10 +142,11 @@ export class SolanaWalletProvider
   }
 
   private async buildV0TxnWithKeypair(
-    keypairWallet: Keypair,
     rawInstructions: SolanaRawTransactionInstruction[],
   ): Promise<SolanaSerializedTransaction> {
+    const keypairWallet = this.wallet as Keypair;
     const instructions = this.buildTransactionInstruction(rawInstructions);
+
     const messageV0 = new TransactionMessage({
       payerKey: keypairWallet.publicKey,
       recentBlockhash: (await this.connection.getLatestBlockhash()).blockhash,
@@ -184,13 +159,10 @@ export class SolanaWalletProvider
   }
 
   public getWalletBase58PublicKey(): SolanaBase58PublicKey {
-    if (this.wallet.kind === 'private-key') {
-      return this.wallet.keypair.publicKey.toBase58();
-    }
-    if (!this.wallet.wallet.publicKey) {
+    if (!this.wallet.publicKey) {
       throw new Error('Wallet public key is not initialized');
     }
-    return this.wallet.wallet.publicKey.toBase58();
+    return this.wallet.publicKey.toBase58();
   }
 
   public async getWalletAddress(): Promise<string> {
@@ -198,11 +170,10 @@ export class SolanaWalletProvider
   }
 
   public async getAssociatedTokenAddress(mint: SolanaBase58PublicKey): Promise<SolanaBase58PublicKey> {
-    const publicKey = this.wallet.kind === 'private-key' ? this.wallet.keypair.publicKey : this.wallet.wallet.publicKey;
-    if (!publicKey) {
+    if (!this.wallet.publicKey) {
       throw new Error('Wallet public key is not initialized');
     }
-    return (await getAssociatedTokenAddress(new PublicKey(mint), publicKey, true)).toBase58();
+    return (await getAssociatedTokenAddress(new PublicKey(mint), this.wallet.publicKey, true)).toBase58();
   }
 
   public async getBalance(publicKey: SolanaBase58PublicKey): Promise<number> {

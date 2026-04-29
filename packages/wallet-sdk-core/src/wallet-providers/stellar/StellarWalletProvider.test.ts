@@ -4,14 +4,12 @@ vi.mock('@stellar/stellar-sdk', () => ({
   Networks: { TESTNET: 'TESTNET_PASS', PUBLIC: 'PUBLIC_PASS' },
   Horizon: {
     Server: class {
-      constructor(_url: string) {}
       transactions() {
         return { transaction: () => ({ call: vi.fn() }) };
       }
     },
   },
   Transaction: class {
-    constructor(_xdr: string, _passphrase: string) {}
     sign() {}
     toXDR() {
       return 'signed-xdr';

@@ -2,11 +2,14 @@ import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('near-api-js', () => ({
   Account: class {
-    constructor(public readonly accountId: string, _provider: unknown, _signer: unknown) {}
+    constructor(
+      public readonly accountId: string,
+      _provider: unknown,
+      _signer: unknown,
+    ) {}
     signAndSendTransaction = vi.fn();
   },
   JsonRpcProvider: class {
-    constructor(_: unknown) {}
   },
   KeyPairSigner: { fromSecretKey: vi.fn().mockReturnValue({}) },
   actions: { functionCall: vi.fn() },

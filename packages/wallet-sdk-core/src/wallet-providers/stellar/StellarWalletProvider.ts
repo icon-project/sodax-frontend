@@ -1,13 +1,16 @@
-import type { Hex, IStellarWalletProvider, StellarRawTransactionReceipt, XDR } from '@sodax/types';
+import type { IStellarWalletProvider, StellarRawTransactionReceipt, XDR } from '@sodax/types';
 import { Networks, Horizon, Transaction, Keypair } from '@stellar/stellar-sdk';
-import { BaseWalletProvider } from './BaseWalletProvider.js';
-
-interface StellarWalletsKit {
-  getAddress(): Promise<{ address: string }>;
-  signTransaction(tx: XDR, options: { networkPassphrase: string }): Promise<{ signedTxXdr: XDR }>;
-}
-
-export type StellarNetwork = 'TESTNET' | 'PUBLIC';
+import { BaseWalletProvider } from '../BaseWalletProvider.js';
+import type {
+  BrowserExtensionStellarWalletConfig,
+  PrivateKeyStellarWalletConfig,
+  StellarBrowserExtensionWallet,
+  StellarNetwork,
+  StellarPkWallet,
+  StellarWallet,
+  StellarWalletConfig,
+  StellarWalletDefaults,
+} from './types.js';
 
 const STELLAR_HORIZON_URLS: { [key in StellarNetwork]: string } = {
   TESTNET: 'https://horizon-testnet.stellar.org',
@@ -22,18 +25,6 @@ const STELLAR_NETWORK_PASSPHRASES: { [key in StellarNetwork]: string } = {
 const DEFAULT_POLL_INTERVAL = 2000;
 const DEFAULT_POLL_TIMEOUT = 60_000;
 
-/** Defaults applied to every call. Per-call options shallow-merge over these. */
-export type StellarWalletDefaults = {
-  /** Polling interval (ms) for `waitForTransactionReceipt`. Default `2000`. */
-  pollInterval?: number;
-  /** Total wait (ms) before timeout. Default `60_000`. Recommended floor `30_000` on mainnet. */
-  pollTimeout?: number;
-  /** Custom Horizon URL (overrides per-network default). */
-  horizonUrl?: string;
-  /** Custom network passphrase (use for FUTURENET / private networks). */
-  networkPassphrase?: string;
-};
-
 const STELLAR_ERROR_CODES = {
   INVALID_CONFIG: 'INVALID_CONFIG',
   SIGN_TX_ERROR: 'SIGN_TX_ERROR',
@@ -42,38 +33,6 @@ const STELLAR_ERROR_CODES = {
   INVALID_NETWORK: 'INVALID_NETWORK',
   INVALID_PRIVATE_KEY: 'INVALID_PRIVATE_KEY',
 } as const;
-
-export type StellarAddress = string; // Stellar addresses are in format: G...
-
-export type PrivateKeyStellarWalletConfig = {
-  type: 'PRIVATE_KEY';
-  privateKey: Hex;
-  network: StellarNetwork;
-  rpcUrl?: string;
-  defaults?: StellarWalletDefaults;
-};
-
-export type BrowserExtensionStellarWalletConfig = {
-  type: 'BROWSER_EXTENSION';
-  walletsKit: StellarWalletsKit;
-  network: StellarNetwork;
-  rpcUrl?: string;
-  defaults?: StellarWalletDefaults;
-};
-
-export type StellarWalletConfig = PrivateKeyStellarWalletConfig | BrowserExtensionStellarWalletConfig;
-
-export type StellarPkWallet = {
-  type: 'PRIVATE_KEY';
-  keypair: Keypair;
-};
-
-export type StellarBrowserExtensionWallet = {
-  type: 'BROWSER_EXTENSION';
-  walletsKit: StellarWalletsKit;
-};
-
-export type StellarWallet = StellarPkWallet | StellarBrowserExtensionWallet;
 
 export class StellarWalletError extends Error {
   constructor(
@@ -118,10 +77,7 @@ export function isValidStellarPrivateKey(privateKey: string): boolean {
   }
 }
 
-export class StellarWalletProvider
-  extends BaseWalletProvider<StellarWalletDefaults>
-  implements IStellarWalletProvider
-{
+export class StellarWalletProvider extends BaseWalletProvider<StellarWalletDefaults> implements IStellarWalletProvider {
   public readonly chainType = 'STELLAR' as const;
   private readonly wallet: StellarWallet;
   private readonly server: Horizon.Server;

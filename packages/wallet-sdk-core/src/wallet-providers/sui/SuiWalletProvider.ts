@@ -4,13 +4,19 @@ import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519';
 import { Transaction } from '@mysten/sui/transactions';
 import type { TransactionArgument } from '@mysten/sui/transactions';
 import type { ISuiWalletProvider, SuiTransaction, SuiExecutionResult, SuiPaginatedCoins } from '@sodax/types';
-import {
-  signTransaction,
-  type SuiWalletFeatures,
-  type WalletAccount,
-  type WalletWithFeatures,
-} from '@mysten/wallet-standard';
-import { BaseWalletProvider } from './BaseWalletProvider.js';
+import { signTransaction } from '@mysten/wallet-standard';
+import { BaseWalletProvider } from '../BaseWalletProvider.js';
+import type {
+  BrowserExtensionSuiWallet,
+  BrowserExtensionSuiWalletConfig,
+  PkSuiWallet,
+  PrivateKeySuiWalletConfig,
+  SuiGetCoinsPolicy,
+  SuiSignAndExecutePolicy,
+  SuiWallet,
+  SuiWalletConfig,
+  SuiWalletDefaults,
+} from './types.js';
 
 const DEFAULT_DRY_RUN_ENABLED = true;
 const DEFAULT_GET_COINS_LIMIT = 10;
@@ -19,42 +25,6 @@ const DEFAULT_BROWSER_RESPONSE_OPTIONS: SuiTransactionBlockResponseOptions = {
   showEffects: true,
   showRawEffects: true,
 };
-
-/**
- * signAndExecuteTxn behavior. Pre-flight dry-run is enabled by default — disable only when
- * paying gas for a doomed tx is acceptable. `response` options forward to the underlying
- * SuiClient call (signAndExecuteTransaction in PK mode, executeTransactionBlock in browser-ext).
- */
-export type SuiSignAndExecutePolicy = {
-  dryRun?: { enabled?: boolean };
-  response?: SuiTransactionBlockResponseOptions;
-};
-
-/** getCoins pagination policy. */
-export type SuiGetCoinsPolicy = {
-  limit?: number;
-};
-
-/** Defaults applied to every call. Per-call options shallow-merge over these. */
-export type SuiWalletDefaults = {
-  signAndExecuteTxn?: SuiSignAndExecutePolicy;
-  getCoins?: SuiGetCoinsPolicy;
-};
-
-export type PrivateKeySuiWalletConfig = {
-  rpcUrl: string;
-  mnemonics: string;
-  defaults?: SuiWalletDefaults;
-};
-
-export type BrowserExtensionSuiWalletConfig = {
-  client: SuiClient;
-  wallet: WalletWithFeatures<Partial<SuiWalletFeatures>>;
-  account: WalletAccount;
-  defaults?: SuiWalletDefaults;
-};
-
-export type SuiWalletConfig = PrivateKeySuiWalletConfig | BrowserExtensionSuiWalletConfig;
 
 function isPrivateKeySuiWalletConfig(walletConfig: SuiWalletConfig): walletConfig is PrivateKeySuiWalletConfig {
   return 'mnemonics' in walletConfig;
@@ -65,17 +35,6 @@ function isBrowserExtensionSuiWalletConfig(
 ): walletConfig is BrowserExtensionSuiWalletConfig {
   return 'wallet' in walletConfig && 'account' in walletConfig;
 }
-
-export type PkSuiWallet = {
-  keyPair: Ed25519Keypair;
-};
-
-export type BrowserExtensionSuiWallet = {
-  wallet: WalletWithFeatures<Partial<SuiWalletFeatures>>;
-  account: WalletAccount;
-};
-
-export type SuiWallet = PkSuiWallet | BrowserExtensionSuiWallet;
 
 export function isPkSuiWallet(wallet: SuiWallet): wallet is PkSuiWallet {
   return 'keyPair' in wallet;

@@ -2,24 +2,17 @@ import { Account, JsonRpcProvider, KeyPairSigner, actions } from 'near-api-js';
 import type { KeyPairString } from 'near-api-js';
 import type { INearWalletProvider, CallContractParams, JsonObject, NearRawTransaction } from '@sodax/types';
 import type { NearConnector } from '@hot-labs/near-connect';
-import { BaseWalletProvider } from './BaseWalletProvider.js';
-
-type NearTxExecutionStatus = 'NONE' | 'INCLUDED' | 'EXECUTED_OPTIMISTIC' | 'INCLUDED_FINAL' | 'EXECUTED' | 'FINAL';
+import { BaseWalletProvider } from '../BaseWalletProvider.js';
+import type {
+  BrowserExtensionNearWalletConfig,
+  NearTxExecutionStatus,
+  NearWalletConfig,
+  NearWalletDefaults,
+  PrivateKeyNearWalletConfig,
+} from './types.js';
 
 const DEFAULT_THROW_ON_FAILURE = true;
 const DEFAULT_WAIT_UNTIL: NearTxExecutionStatus = 'FINAL';
-
-/** Defaults applied to every call. Per-call options shallow-merge over these. */
-export type NearWalletDefaults = {
-  /** Throw on failure flag for `signAndSendTransaction` (PK path). Default `true`. */
-  throwOnFailure?: boolean;
-  /** Wait-until status for confirmation. Default `'FINAL'`. */
-  waitUntil?: NearTxExecutionStatus;
-  /** Default gas if tx omits. */
-  gasDefault?: bigint;
-  /** Default deposit if tx omits. */
-  depositDefault?: bigint;
-};
 
 /**
  * `JsonObject` from @sodax/types and `Record<string, unknown>` from near-api-js are
@@ -29,20 +22,6 @@ export type NearWalletDefaults = {
 function jsonObjectToArgs(args: JsonObject): Record<string, unknown> {
   return args as Record<string, unknown>;
 }
-
-export type PrivateKeyNearWalletConfig = {
-  rpcUrl: string;
-  accountId: string;
-  privateKey: string;
-  defaults?: NearWalletDefaults;
-};
-
-export type BrowserExtensionNearWalletConfig = {
-  wallet: NearConnector;
-  defaults?: NearWalletDefaults;
-};
-
-export type NearWalletConfig = PrivateKeyNearWalletConfig | BrowserExtensionNearWalletConfig;
 
 export function isPrivateKeyNearWalletConfig(config: NearWalletConfig): config is PrivateKeyNearWalletConfig {
   return 'rpcUrl' in config && 'accountId' in config && 'privateKey' in config;

@@ -15,7 +15,6 @@ vi.mock('@solana/web3.js', () => {
     }
   }
   class Connection {
-    constructor(_endpoint: string, _config?: unknown) {}
     sendRawTransaction = vi.fn();
     getLatestBlockhash = vi.fn();
     confirmTransaction = vi.fn();
@@ -23,16 +22,13 @@ vi.mock('@solana/web3.js', () => {
     getTokenAccountBalance = vi.fn();
   }
   class TransactionInstruction {
-    constructor(_: unknown) {}
   }
   class TransactionMessage {
-    constructor(_: unknown) {}
     compileToV0Message() {
       return {};
     }
   }
   class VersionedTransaction {
-    constructor(_: unknown) {}
     sign() {}
     serialize() {
       return new Uint8Array();

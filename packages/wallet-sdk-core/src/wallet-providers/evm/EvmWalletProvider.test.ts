@@ -1,9 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import {
-  EvmWalletProvider,
-  type BrowserExtensionEvmWalletConfig,
-  type EvmWalletConfig,
-} from './EvmWalletProvider.js';
+import { EvmWalletProvider } from './EvmWalletProvider.js';
+import type { BrowserExtensionEvmWalletConfig, EvmWalletConfig } from './types.js';
 import type { EvmRawTransaction } from '@sodax/types';
 import { ChainKeys } from '@sodax/types';
 import { createWalletClient, createPublicClient, http, type TransactionReceipt } from 'viem';
@@ -218,9 +215,9 @@ describe('EvmWalletProvider', () => {
       expect(spy).toHaveBeenCalledWith(
         expect.objectContaining({
           ...RAW_TX,
-          gas: 100_000n,                 // from defaults
-          nonce: 5,                      // from defaults
-          maxFeePerGas: 2_000_000_000n,  // from per-call options
+          gas: 100_000n, // from defaults
+          nonce: 5, // from defaults
+          maxFeePerGas: 2_000_000_000n, // from per-call options
         }),
       );
     });

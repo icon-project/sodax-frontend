@@ -4,7 +4,9 @@ vi.mock('@injectivelabs/sdk-ts', () => {
   return {
     MsgExecuteContract: { fromJSON: vi.fn() },
     MsgExecuteContractCompat: { fromJSON: vi.fn() },
-    createTransaction: vi.fn().mockReturnValue({ txRaw: { bodyBytes: new Uint8Array(), authInfoBytes: new Uint8Array() } }),
+    createTransaction: vi
+      .fn()
+      .mockReturnValue({ txRaw: { bodyBytes: new Uint8Array(), authInfoBytes: new Uint8Array() } }),
     PrivateKey: {
       fromPrivateKey: vi.fn().mockReturnValue({
         toAddress: () => ({ toBech32: () => 'inj1abc' }),

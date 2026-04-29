@@ -5,12 +5,9 @@ const mockLoadPrivateKey = vi.fn().mockReturnValue({ getAddress: () => 'hxabc' }
 vi.mock('icon-sdk-js', () => {
   class IconService {
     static HttpProvider = class {
-      constructor(_url: string) {}
     };
     static SignedTransaction = class {
-      constructor(_tx: unknown, _wallet: unknown) {}
     };
-    constructor(_provider: unknown) {}
     sendTransaction() {
       return { execute: vi.fn() };
     }
@@ -21,16 +18,36 @@ vi.mock('icon-sdk-js', () => {
   const Wallet = { loadPrivateKey: mockLoadPrivateKey };
   const Converter = { toHex: (n: number | string) => `0x${Number(n).toString(16)}` };
   class CallTransactionBuilder {
-    from() { return this; }
-    to() { return this; }
-    stepLimit() { return this; }
-    nid() { return this; }
-    version() { return this; }
-    timestamp() { return this; }
-    value() { return this; }
-    method() { return this; }
-    params() { return this; }
-    build() { return {}; }
+    from() {
+      return this;
+    }
+    to() {
+      return this;
+    }
+    stepLimit() {
+      return this;
+    }
+    nid() {
+      return this;
+    }
+    version() {
+      return this;
+    }
+    timestamp() {
+      return this;
+    }
+    value() {
+      return this;
+    }
+    method() {
+      return this;
+    }
+    params() {
+      return this;
+    }
+    build() {
+      return {};
+    }
   }
   const sdk = { IconService, Wallet, Converter, CallTransactionBuilder };
   return { ...sdk, default: sdk };

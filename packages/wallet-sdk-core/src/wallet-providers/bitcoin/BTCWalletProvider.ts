@@ -1,9 +1,4 @@
-import {
-  detectBitcoinAddressType,
-  type BtcAddressType,
-  type Hex,
-  type IBitcoinWalletProvider,
-} from '@sodax/types';
+import { detectBitcoinAddressType, type BtcAddressType, type IBitcoinWalletProvider } from '@sodax/types';
 import * as bitcoin from 'bitcoinjs-lib';
 import type { ECPairInterface } from 'ecpair';
 import * as ecc from '@bitcoinerlab/secp256k1';
@@ -11,63 +6,21 @@ import { ECPairFactory } from 'ecpair';
 import { keccak256 } from 'viem';
 import secp256k1 from 'secp256k1';
 import * as bip322 from 'bip322-js';
-import { BaseWalletProvider } from './BaseWalletProvider.js';
+import { BaseWalletProvider } from '../BaseWalletProvider.js';
+import type {
+  BitcoinNetwork,
+  BitcoinPkWallet,
+  BitcoinWallet,
+  BitcoinWalletConfig,
+  BitcoinWalletDefaults,
+  PrivateKeyBitcoinWalletConfig,
+} from './types.js';
 
 bitcoin.initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
 
 const DEFAULT_ADDRESS_TYPE: BtcAddressType = 'P2WPKH';
 const DEFAULT_FINALIZE = true;
-
-export type BitcoinNetwork = 'TESTNET' | 'MAINNET';
-
-export interface BitcoinWalletsKit {
-  getAccounts(): Promise<string[]>;
-  signPsbt(psbtHex: string): Promise<{ psbtHex: string }>;
-  signMessage(message: string): Promise<string>;
-  signEcdsaMessage(message: string): Promise<string>;
-  signBip322Message(message: string): Promise<string>;
-  getPublicKey(): Promise<string>;
-  sendBitcoin?(toAddress: string, satoshis: number): Promise<string>;
-}
-
-/** Defaults applied to every call. Per-call options shallow-merge over these. */
-export type BitcoinWalletDefaults = {
-  /** Default address type for private-key mode. Default `'P2WPKH'`. */
-  addressType?: BtcAddressType;
-  /** Default `finalize` flag for `signTransaction`. Default `true`. */
-  defaultFinalize?: boolean;
-};
-
-export type PrivateKeyBitcoinWalletConfig = {
-  type: 'PRIVATE_KEY';
-  privateKey: Hex;
-  network: BitcoinNetwork;
-  addressType?: BtcAddressType;
-  defaults?: BitcoinWalletDefaults;
-};
-
-export type BrowserExtensionBitcoinWalletConfig = {
-  type: 'BROWSER_EXTENSION';
-  walletsKit: BitcoinWalletsKit;
-  network: BitcoinNetwork;
-  defaults?: BitcoinWalletDefaults;
-};
-
-export type BitcoinWalletConfig = PrivateKeyBitcoinWalletConfig | BrowserExtensionBitcoinWalletConfig;
-
-type BitcoinPkWallet = {
-  type: 'PRIVATE_KEY';
-  keyPair: ECPairInterface;
-  addressType: BtcAddressType;
-};
-
-type BitcoinBrowserWallet = {
-  type: 'BROWSER_EXTENSION';
-  walletsKit: BitcoinWalletsKit;
-};
-
-type BitcoinWallet = BitcoinPkWallet | BitcoinBrowserWallet;
 
 export class BitcoinWalletError extends Error {
   constructor(message: string) {
@@ -89,10 +42,7 @@ const NETWORKS: Record<BitcoinNetwork, bitcoin.networks.Network> = {
   MAINNET: bitcoin.networks.bitcoin,
 };
 
-export class BitcoinWalletProvider
-  extends BaseWalletProvider<BitcoinWalletDefaults>
-  implements IBitcoinWalletProvider
-{
+export class BitcoinWalletProvider extends BaseWalletProvider<BitcoinWalletDefaults> implements IBitcoinWalletProvider {
   public readonly chainType = 'BITCOIN' as const;
   private readonly wallet: BitcoinWallet;
   private readonly network: bitcoin.networks.Network;
@@ -265,5 +215,4 @@ export class BitcoinWalletProvider
 
     return this.wallet.walletsKit.sendBitcoin(toAddress, Number(satoshis));
   }
-
 }

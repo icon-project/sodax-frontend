@@ -10,33 +10,18 @@ import {
   type ClarityValue,
   type PostConditionModeName,
 } from '@stacks/transactions';
-import type { StacksProvider } from '@stacks/connect';
 import { request } from '@stacks/connect';
 import type { IStacksWalletProvider, StacksTransactionParams } from '@sodax/types';
-import { BaseWalletProvider } from './BaseWalletProvider.js';
-
-/** Defaults applied to every call. Per-call options shallow-merge over these. */
-export type StacksWalletDefaults = {
-  /** Network selector. Default `'mainnet'`. Pass a `StacksNetwork` for fully custom. */
-  network?: 'mainnet' | 'testnet' | StacksNetwork;
-  /** Default post-condition mode if not present in tx params. */
-  postConditionMode?: PostConditionMode;
-};
-
-export type PrivateKeyStacksWalletConfig = {
-  privateKey: string;
-  endpoint?: string;
-  defaults?: StacksWalletDefaults;
-};
-
-export type BrowserExtensionStacksWalletConfig = {
-  address: string;
-  endpoint?: string;
-  provider?: StacksProvider;
-  defaults?: StacksWalletDefaults;
-};
-
-export type StacksWalletConfig = PrivateKeyStacksWalletConfig | BrowserExtensionStacksWalletConfig;
+import { BaseWalletProvider } from '../BaseWalletProvider.js';
+import type {
+  BrowserExtensionStacksWalletConfig,
+  PrivateKeyStacksWalletConfig,
+  StacksBrowserExtensionWallet,
+  StacksPkWallet,
+  StacksWallet,
+  StacksWalletConfig,
+  StacksWalletDefaults,
+} from './types.js';
 
 export function isPrivateKeyStacksWalletConfig(config: StacksWalletConfig): config is PrivateKeyStacksWalletConfig {
   return 'privateKey' in config;
@@ -48,10 +33,9 @@ export function isBrowserExtensionStacksWalletConfig(
   return 'address' in config;
 }
 
-// Internal stored wallet — `kind` discriminant kills `as` casts at usage sites.
-type StoredWallet =
-  | { kind: 'private-key'; privateKey: string }
-  | { kind: 'browser-extension'; address: string; provider?: StacksProvider };
+function isStacksPkWallet(wallet: StacksWallet): wallet is StacksPkWallet {
+  return wallet.type === 'PRIVATE_KEY';
+}
 
 function toPostConditionModeName(mode?: PostConditionMode): PostConditionModeName | undefined {
   if (mode === undefined) return undefined;
@@ -64,25 +48,22 @@ function resolveNetwork(selector: StacksWalletDefaults['network'], endpoint: str
   return endpoint ? { ...base, client: { ...base.client, baseUrl: endpoint } } : base;
 }
 
-export class StacksWalletProvider
-  extends BaseWalletProvider<StacksWalletDefaults>
-  implements IStacksWalletProvider
-{
+export class StacksWalletProvider extends BaseWalletProvider<StacksWalletDefaults> implements IStacksWalletProvider {
   public readonly chainType = 'STACKS' as const;
   private readonly network: StacksNetwork;
-  private readonly wallet: StoredWallet;
+  private readonly wallet: StacksWallet;
 
   constructor(config: StacksWalletConfig) {
     super(config.defaults);
     this.network = resolveNetwork(this.defaults.network, config.endpoint);
 
     if (isPrivateKeyStacksWalletConfig(config)) {
-      this.wallet = { kind: 'private-key', privateKey: config.privateKey };
+      this.wallet = { type: 'PRIVATE_KEY', privateKey: config.privateKey };
       return;
     }
 
     if (isBrowserExtensionStacksWalletConfig(config)) {
-      this.wallet = { kind: 'browser-extension', address: config.address, provider: config.provider };
+      this.wallet = { type: 'BROWSER_EXTENSION', address: config.address, provider: config.provider };
       return;
     }
 
@@ -97,19 +78,19 @@ export class StacksWalletProvider
       txParams.postConditionMode ?? options?.postConditionMode ?? this.defaults.postConditionMode;
     const finalParams = { ...txParams, postConditionMode };
 
-    if (this.wallet.kind === 'private-key') {
-      return this.sendTransactionWithPrivateKey(this.wallet.privateKey, finalParams);
+    if (isStacksPkWallet(this.wallet)) {
+      return this.sendTransactionWithPrivateKey(finalParams);
     }
-    return this.sendTransactionWithAdapter(this.wallet, finalParams);
+    return this.sendTransactionWithAdapter(finalParams);
   }
 
-  private async sendTransactionWithPrivateKey(senderKey: string, txParams: StacksTransactionParams): Promise<string> {
+  private async sendTransactionWithPrivateKey(txParams: StacksTransactionParams): Promise<string> {
     const transaction = await makeContractCall({
       contractAddress: txParams.contractAddress,
       contractName: txParams.contractName,
       functionName: txParams.functionName,
       functionArgs: txParams.functionArgs,
-      senderKey,
+      senderKey: (this.wallet as StacksPkWallet).privateKey,
       network: this.network,
       postConditionMode: txParams.postConditionMode,
       postConditions: txParams.postConditions,
@@ -119,10 +100,8 @@ export class StacksWalletProvider
     return result.txid;
   }
 
-  private async sendTransactionWithAdapter(
-    browserWallet: { provider?: StacksProvider },
-    txParams: StacksTransactionParams,
-  ): Promise<string> {
+  private async sendTransactionWithAdapter(txParams: StacksTransactionParams): Promise<string> {
+    const browserWallet = this.wallet as StacksBrowserExtensionWallet;
     const contract = `${txParams.contractAddress}.${txParams.contractName}` as `${string}.${string}`;
     const networkName = this.networkName();
 
@@ -157,14 +136,14 @@ export class StacksWalletProvider
   }
 
   async getWalletAddress(): Promise<string> {
-    if (this.wallet.kind === 'private-key') {
+    if (isStacksPkWallet(this.wallet)) {
       return getAddressFromPrivateKey(this.wallet.privateKey, this.network);
     }
     return this.wallet.address;
   }
 
   async getPublicKey(): Promise<string> {
-    if (this.wallet.kind === 'private-key') {
+    if (isStacksPkWallet(this.wallet)) {
       return publicKeyToHex(privateKeyToPublic(this.wallet.privateKey));
     }
     throw new Error('getPublicKey is only supported for private key wallet configuration');
