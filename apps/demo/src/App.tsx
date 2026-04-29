@@ -7,6 +7,7 @@ import Header from './components/shared/header';
 import SolverPage from './pages/solver/page';
 import MoneyMarketPage from './pages/money-market/page';
 import BridgePage from './pages/bridge/page';
+import DexPage from './pages/dex/page';
 
 const router = createBrowserRouter([
   {
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
       {
         path: '/bridge',
         element: <BridgePage />,
+      },
+      {
+        path: '/dex',
+        element: <DexPage />,
       },
     ],
   },

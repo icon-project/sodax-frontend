@@ -306,11 +306,11 @@ export class SonicSpokeService {
     const srcAddress = createIntentParams.srcAddress as Address;
 
     const outputToken = isSonicChainKey(createIntentParams.dstChainKey)
-      ? hubProvider.config.getSpokeTokenFromOriginalAssetAddress(
+      ? (createIntentParams.outputToken as `0x${string}`)
+      : hubProvider.config.getSpokeTokenFromOriginalAssetAddress(
           createIntentParams.dstChainKey,
           createIntentParams.outputToken,
-        )?.hubAsset
-      : (createIntentParams.outputToken as `0x${string}`);
+        )?.hubAsset;
 
     invariant(
       inputToken,
@@ -325,16 +325,19 @@ export class SonicSpokeService {
 
     const intentsContract = solverConfig.intentsContract;
     const intent = {
-      ...createIntentParams,
+      intentId: randomUint256(),
+      creator: creatorHubWalletAddress,
       inputToken,
       outputToken,
       inputAmount: createIntentParams.inputAmount - feeAmount,
+      minOutputAmount: createIntentParams.minOutputAmount,
+      deadline: createIntentParams.deadline,
+      allowPartialFill: createIntentParams.allowPartialFill,
       srcChain: getIntentRelayChainId(createIntentParams.srcChainKey),
       dstChain: getIntentRelayChainId(createIntentParams.dstChainKey),
       srcAddress: encodeAddress(createIntentParams.srcChainKey, createIntentParams.srcAddress),
       dstAddress: encodeAddress(createIntentParams.dstChainKey, createIntentParams.dstAddress),
-      intentId: randomUint256(),
-      creator: creatorHubWalletAddress,
+      solver: createIntentParams.solver,
       data: feeData, // fee amount will be deducted from the input amount
     } satisfies Intent;
 
