@@ -16,7 +16,7 @@ const advantages = [
     title: 'EVM and non-EVM support',
     description:
       'Connect to Ethereum, Solana, Sui, Stellar, and other environments through a single integration surface. SODAX manages network-specific adapters.',
-    badges: ['14+ networks', 'Single integration', 'Multi-VM'],
+    badges: ['18+ networks', 'Single integration', 'Multi-VM'],
   },
   {
     title: 'Multi-bridge architecture',

@@ -42,7 +42,7 @@ export async function generateMetadata(props: {
 
   const description = category
     ? `Stay updated with ${categoryTitles[category]?.toLowerCase() || category} from SODAX. Discover the latest developments in our DeFi unified liquidity layer.`
-    : 'Stay informed with the latest news, product launches, partnerships, and technical updates from SODAX - the unified liquidity layer revolutionizing DeFi across 15+ blockchains.';
+    : 'Stay informed with the latest news, product launches, partnerships, and technical updates from SODAX - the unified liquidity layer revolutionizing DeFi across 18+ blockchains.';
 
   const canonicalUrl = category ? `https://sodax.com/news?category=${category}` : 'https://sodax.com/news';
 

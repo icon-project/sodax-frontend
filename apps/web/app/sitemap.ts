@@ -1,6 +1,5 @@
 import type { MetadataRoute } from 'next';
 import {
-  COMMUNITY_ROUTE,
   DISCORD_PAGE_ROUTE,
   EXCHANGE_ROUTE,
   GLOSSARY_ROUTE,
@@ -9,6 +8,7 @@ import {
   NEWS_ROUTE,
   PARTNERS_ROUTE,
   SAVE_ROUTE,
+  SODA_TOKEN_ROUTE,
   SWAP_ROUTE,
 } from '@/constants/routes';
 import { getDb } from '@/lib/db';
@@ -87,7 +87,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
-      url: `${SITE_URL}${COMMUNITY_ROUTE}/soda-token`,
+      url: `${SITE_URL}${SODA_TOKEN_ROUTE}`,
       lastModified: now,
       changeFrequency: 'weekly',
       priority: 0.8,

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'SODA Token Supply & Metrics | SODAX Community',
+  title: 'SODA Token Supply & Metrics | SODAX Holders',
   description:
     'Real-time SODA token supply metrics including circulating supply, total supply, and circulation rate. Official token data for the SODAX DeFi ecosystem.',
   keywords: [
@@ -18,11 +18,11 @@ export const metadata: Metadata = {
     title: 'SODA Token Supply & Metrics | SODAX',
     description: 'Real-time SODA token supply data and metrics for the SODAX DeFi ecosystem.',
     type: 'website',
-    url: 'https://sodax.com/community/soda-token',
+    url: 'https://sodax.com/holders/soda-token',
     siteName: 'SODAX',
     images: [
       {
-        url: 'https://sodax.com/community/soda-token/link-preview.png',
+        url: 'https://sodax.com/holders/soda-token/link-preview.png',
         width: 1200,
         height: 630,
         alt: 'SODA Token Supply & Metrics',
@@ -34,10 +34,10 @@ export const metadata: Metadata = {
     title: 'SODA Token Supply & Metrics',
     description: 'Real-time SODA token supply data and metrics for the SODAX DeFi ecosystem.',
     site: '@gosodax',
-    images: ['https://sodax.com/community/soda-token/link-preview.png'],
+    images: ['https://sodax.com/holders/soda-token/link-preview.png'],
   },
   alternates: {
-    canonical: 'https://sodax.com/community/soda-token',
+    canonical: 'https://sodax.com/holders/soda-token',
   },
   robots: {
     index: true,
@@ -51,7 +51,7 @@ export default function SodaTokenLayout({ children }: { children: React.ReactNod
     '@type': 'WebPage',
     name: 'SODA Token Supply Metrics',
     description: 'Real-time token supply information for the SODAX DeFi ecosystem',
-    url: 'https://sodax.com/community/soda-token',
+    url: 'https://sodax.com/holders/soda-token',
     isPartOf: {
       '@type': 'WebSite',
       name: 'SODAX',
