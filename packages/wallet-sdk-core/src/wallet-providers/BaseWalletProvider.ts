@@ -17,6 +17,12 @@ export abstract class BaseWalletProvider<TDefaults extends object> {
   }
 
   /**
+   * Return the connected wallet address as a string. Subclasses may narrow the
+   * return type to a chain-specific brand (e.g. `Address`, `IconEoaAddress`).
+   */
+  abstract getWalletAddress(): Promise<string>;
+
+  /**
    * Merge per-call options over a slice of `defaults` keyed by `key`.
    * Use when defaults are grouped per-method (e.g. `defaults.sendTransaction`).
    */
