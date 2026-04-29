@@ -5,8 +5,12 @@ import type React from 'react';
 import Image from 'next/image';
 import { Navbar } from '@/components/shared/navbar';
 import { NetworkLogosScroller } from '@/components/shared/network-logos-scroller';
+import { Announcement } from '@/components/shared/announcement';
+import { ConsensusLogo } from './consensus-logo';
 import { LeadMagnetCTA } from './lead-magnet-cta';
 import { PressBar } from '../shared/press-bar';
+
+const IS_ANNOUNCEMENT_LIVE = true;
 
 const HeroSection = (): React.ReactElement => {
   return (
@@ -28,32 +32,69 @@ const HeroSection = (): React.ReactElement => {
         <Navbar />
 
         {/* Hero content */}
-        <div className="flex flex-1 flex-col items-center justify-center w-full px-4 gap-[56px]">
-          {/* Title */}
-          <div className="flex flex-col items-center text-center whitespace-nowrap z-20">
-            <div className="flex flex-col items-center text-[42px] leading-[1.1]">
-              <span className="mix-blend-hard-light text-white font-[InterBlack]">Infrastructure for</span>
-              <span className="mix-blend-hard-light text-yellow-soda font-[Shrikhand]">modern money</span>
-            </div>
-          </div>
-
-          {/* CTA */}
-          <div className="flex flex-col items-center gap-[16px] z-20">
-            <div className="flex items-center justify-center gap-[24px]">
-              <Image src="/landing/brace-left.svg" alt="" width={32} height={120} className="-scale-x-100" />
-              <div className="text-white font-[InterBold] text-(length:--app-title) leading-[1.1] text-center whitespace-nowrap">
-                One SDK.
-                <br />
-                Scaling DeFi products
-                <br />
-                across networks.
+        {IS_ANNOUNCEMENT_LIVE ? (
+          <div className="flex flex-1 flex-col items-center justify-center w-full px-4 gap-[40px]">
+            {/* Title with announcement card sitting directly above */}
+            <div className="flex flex-col items-center text-center whitespace-nowrap z-20">
+              <Announcement
+                href="https://luma.com/00kpa20f?tk=cCSs90"
+                target="_blank"
+                logo={<ConsensusLogo />}
+                logoLabel="Consensus"
+                subtitle="SODAX in Miami"
+                backgroundImage="/consensus_miami.png"
+              />
+              <div className="flex flex-col items-center text-[42px] leading-[1.1]">
+                <span className="mix-blend-hard-light text-white font-[InterBlack]">Infrastructure for</span>
+                <span className="mix-blend-hard-light text-yellow-soda font-[Shrikhand]">modern money</span>
               </div>
-              <Image src="/landing/brace-right.svg" alt="" width={32} height={120} />
             </div>
-            <LeadMagnetCTA />
+
+            {/* CTA */}
+            <div className="flex flex-col items-center gap-[16px] z-20">
+              <div className="flex items-center justify-center gap-[24px]">
+                <Image src="/landing/brace-left.svg" alt="" width={32} height={120} className="-scale-x-100" />
+                <div className="text-white font-[InterBold] text-(length:--app-title) leading-[1.1] text-center whitespace-nowrap">
+                  One SDK.
+                  <br />
+                  Scaling DeFi products
+                  <br />
+                  across networks.
+                </div>
+                <Image src="/landing/brace-right.svg" alt="" width={32} height={120} />
+              </div>
+              <LeadMagnetCTA />
+            </div>
+            <NetworkLogosScroller />
           </div>
-          <NetworkLogosScroller />
-        </div>
+        ) : (
+          <div className="flex flex-1 flex-col items-center justify-center w-full px-4 gap-[56px]">
+            {/* Title */}
+            <div className="flex flex-col items-center text-center whitespace-nowrap z-20">
+              <div className="flex flex-col items-center text-[42px] leading-[1.1]">
+                <span className="mix-blend-hard-light text-white font-[InterBlack]">Infrastructure for</span>
+                <span className="mix-blend-hard-light text-yellow-soda font-[Shrikhand]">modern money</span>
+              </div>
+            </div>
+
+            {/* CTA */}
+            <div className="flex flex-col items-center gap-[16px] z-20">
+              <div className="flex items-center justify-center gap-[24px]">
+                <Image src="/landing/brace-left.svg" alt="" width={32} height={120} className="-scale-x-100" />
+                <div className="text-white font-[InterBold] text-(length:--app-title) leading-[1.1] text-center whitespace-nowrap">
+                  One SDK.
+                  <br />
+                  Scaling DeFi products
+                  <br />
+                  across networks.
+                </div>
+                <Image src="/landing/brace-right.svg" alt="" width={32} height={120} />
+              </div>
+              <LeadMagnetCTA />
+            </div>
+            <NetworkLogosScroller />
+          </div>
+        )}
 
         <PressBar />
       </div>
