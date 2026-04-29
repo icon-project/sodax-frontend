@@ -52,6 +52,16 @@ const nextConfig = {
         destination: '/exchange/pool',
         permanent: true,
       },
+      {
+        source: '/community/soda-token',
+        destination: '/holders/soda-token',
+        permanent: true,
+      },
+      {
+        source: '/community',
+        destination: '/holders',
+        permanent: true,
+      },
     ];
   },
   async rewrites() {
