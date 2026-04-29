@@ -419,6 +419,23 @@ export type WalletProviderSlot<K extends SpokeChainKey | ChainType, Raw extends 
   ? { raw: true; walletProvider?: never }
   : { raw: false; walletProvider: GetWalletProviderType<K> };
 
+/**
+ * Standard exec-mode wrapper for hub/spoke flows: bounded `params`, optional relay toggles,
+ * plus {@link WalletProviderSlot} (`raw: true` for unsigned payloads, otherwise `walletProvider` required).
+ * Use the `Extras` type parameter only for rare feature-only fields (e.g. swap `fee`).
+ */
+export type SpokeExecActionParams<
+  K extends SpokeChainKey,
+  Raw extends boolean,
+  P,
+  Extras extends Record<string, unknown> = Record<string, never>,
+> = {
+  params: P;
+  skipSimulation?: boolean;
+  timeout?: number;
+} & Extras &
+  WalletProviderSlot<K, Raw>;
+
 // export type RawOf<T extends { raw?: boolean }> = [T['raw']] extends [true] ? true : false;
 export type ExecuteAction<A> = Extract<A, { raw?: false }>;
 export type RawAction<A> = Extract<A, { raw: true }>;

@@ -44,7 +44,7 @@ import {
   type GetWalletProviderType,
   type EvmSpokeOnlyChainKey,
   type GetTokenAddressType,
-  type WalletProviderSlot,
+  type SpokeExecActionParams,
 } from '@sodax/types';
 import { encodeFunctionData } from 'viem';
 import type { ConfigService } from '../shared/config/ConfigService.js';
@@ -60,11 +60,11 @@ export type CreateBridgeIntentParams<K extends SpokeChainKey = SpokeChainKey> = 
   recipient: string; // non-encoded recipient address
 };
 
-export type BridgeParams<ChainKey extends SpokeChainKey, Raw extends boolean> = {
-  params: CreateBridgeIntentParams<ChainKey>;
-  skipSimulation?: boolean;
-  timeout?: number;
-} & WalletProviderSlot<ChainKey, Raw>;
+export type BridgeParams<ChainKey extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  ChainKey,
+  Raw,
+  CreateBridgeIntentParams<ChainKey>
+>;
 
 export type BridgeServiceConstructorParams = {
   hubProvider: HubProvider;

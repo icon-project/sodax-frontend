@@ -51,7 +51,7 @@ import {
   DEFAULT_RELAY_TX_TIMEOUT,
   HUB_CHAIN_KEY,
   spokeChainConfig,
-  type WalletProviderSlot,
+  type SpokeExecActionParams,
 } from '@sodax/types';
 import { MoneyMarketDataService } from './MoneyMarketDataService.js';
 
@@ -146,29 +146,29 @@ export type MoneyMarketParams<K extends SpokeChainKey = SpokeChainKey> =
   | MoneyMarketRepayParams<K>;
 
 // Exec-mode wrappers (walletProvider required, K-narrowed)
-export type MoneyMarketSupplyActionParams<K extends SpokeChainKey, Raw extends boolean> = {
-  params: MoneyMarketSupplyParams<K>;
-  skipSimulation?: boolean;
-  timeout?: number;
-} & WalletProviderSlot<K, Raw>;
+export type MoneyMarketSupplyActionParams<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  MoneyMarketSupplyParams<K>
+>;
 
-export type MoneyMarketBorrowActionParams<K extends SpokeChainKey, Raw extends boolean> = {
-  params: MoneyMarketBorrowParams<K>;
-  skipSimulation?: boolean;
-  timeout?: number;
-} & WalletProviderSlot<K, Raw>;
+export type MoneyMarketBorrowActionParams<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  MoneyMarketBorrowParams<K>
+>;
 
-export type MoneyMarketWithdrawActionParams<K extends SpokeChainKey, Raw extends boolean> = {
-  params: MoneyMarketWithdrawParams<K>;
-  skipSimulation?: boolean;
-  timeout?: number;
-} & WalletProviderSlot<K, Raw>;
+export type MoneyMarketWithdrawActionParams<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  MoneyMarketWithdrawParams<K>
+>;
 
-export type MoneyMarketRepayActionParams<K extends SpokeChainKey, Raw extends boolean> = {
-  params: MoneyMarketRepayParams<K>;
-  skipSimulation?: boolean;
-  timeout?: number;
-} & WalletProviderSlot<K, Raw>;
+export type MoneyMarketRepayActionParams<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  MoneyMarketRepayParams<K>
+>;
 
 // `isAllowanceValid` accepts any action (reads allowance/trustline state only).
 export type MoneyMarketAllowanceParams<K extends SpokeChainKey> = {
@@ -176,9 +176,11 @@ export type MoneyMarketAllowanceParams<K extends SpokeChainKey> = {
 };
 
 // `approve` accepts any action (but only supply/repay actually require approval on EVM).
-export type MoneyMarketApproveActionParams<K extends SpokeChainKey, Raw extends boolean> = {
-  params: MoneyMarketParams<K>;
-} & WalletProviderSlot<K, Raw>;
+export type MoneyMarketApproveActionParams<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  MoneyMarketParams<K>
+>;
 
 export type MoneyMarketServiceConstructorParams = {
   config: ConfigService;

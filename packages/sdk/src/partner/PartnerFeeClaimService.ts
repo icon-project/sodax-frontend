@@ -18,7 +18,7 @@ import {
   type SonicChainKey,
   type TxReturnType,
   type HubChainKey,
-  type WalletProviderSlot,
+  type SpokeExecActionParams,
 } from '@sodax/types';
 import {
   encodeAddress,
@@ -53,11 +53,11 @@ export type SetSwapPreferenceParams = {
   dstAddress: string;
 };
 
-export type SetSwapPreferenceAction<K extends SpokeChainKey, Raw extends boolean> = {
-  params: SetSwapPreferenceParams;
-  timeout?: number;
-  skipSimulation?: boolean;
-} & WalletProviderSlot<K, Raw>;
+export type SetSwapPreferenceAction<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  SetSwapPreferenceParams
+>;
 
 export type FeeTokenApproveParams = {
   srcChainKey: HubChainKey;
@@ -65,9 +65,11 @@ export type FeeTokenApproveParams = {
   token: Address;
 };
 
-export type FeeTokenApproveAction<K extends HubChainKey, Raw extends boolean> = {
-  params: FeeTokenApproveParams;
-} & WalletProviderSlot<K, Raw>;
+export type FeeTokenApproveAction<K extends HubChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  FeeTokenApproveParams
+>;
 
 export type AssetEntry = {
   assetAddress: Address; // The wrapped asset address on Sonic
@@ -84,10 +86,11 @@ export type PartnerFeeClaimSwapParams = {
   timeout?: number;
 };
 
-export type PartnerFeeClaimSwapAction<K extends SpokeChainKey, Raw extends boolean> = {
-  params: PartnerFeeClaimSwapParams;
-  timeout?: number;
-} & WalletProviderSlot<K, Raw>;
+export type PartnerFeeClaimSwapAction<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  PartnerFeeClaimSwapParams
+>;
 
 export type PartnerFeeClaimServiceConstructorParams = {
   config: ConfigService;
@@ -504,9 +507,7 @@ export class PartnerFeeClaimService {
    * @param {SonicSpokeProviderType} spokeProvider - The Sonic spoke provider
    * @returns {Promise<Result<IntentAutoSwapResult>>} Intent auto-swap result. On failure, the `.error` is an `Error` tagged with a CODE (`WAIT_INTENT_AUTO_SWAP_FAILED`, `CREATE_INTENT_AUTO_SWAP_FAILED`); the underlying cause is on `.cause`.
    */
-  public async swap(
-    _params: PartnerFeeClaimSwapAction<HubChainKey, false>,
-  ): Promise<Result<IntentAutoSwapResult>> {
+  public async swap(_params: PartnerFeeClaimSwapAction<HubChainKey, false>): Promise<Result<IntentAutoSwapResult>> {
     try {
       const txHash = await this.createIntentAutoSwap(_params);
 
@@ -544,4 +545,3 @@ export class PartnerFeeClaimService {
     }
   }
 }
-

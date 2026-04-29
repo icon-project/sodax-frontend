@@ -1,5 +1,5 @@
-import type { MoneyMarketApproveActionParams, TxReturnType } from '@sodax/sdk';
-import type { Result, SpokeChainKey } from '@sodax/types';
+import type { MoneyMarketApproveActionParams, MoneyMarketParams, TxReturnType } from '@sodax/sdk';
+import type { GetWalletProviderType, Result, SpokeChainKey } from '@sodax/types';
 import { useMutation, type UseMutationResult, useQueryClient } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext.js';
 
@@ -7,11 +7,15 @@ import { useSodaxContext } from '../shared/useSodaxContext.js';
  * Mutation variables for {@link useMMApprove}. Generic over `K extends SpokeChainKey` (defaults
  * to the full union). Sophisticated callers can lock K at the hook call site to narrow the
  * `walletProvider` and `params.srcChainKey` types.
+ *
+ * Exec-mode shape without `raw` (see {@link UseBorrowVars}).
  */
-export type UseMMApproveVars<K extends SpokeChainKey = SpokeChainKey> = Omit<
-  MoneyMarketApproveActionParams<K, false>,
-  'raw'
->;
+export type UseMMApproveVars<K extends SpokeChainKey = SpokeChainKey> = {
+  params: MoneyMarketParams<K>;
+  skipSimulation?: boolean;
+  timeout?: number;
+  walletProvider: GetWalletProviderType<K>;
+};
 
 /**
  * React hook for approving ERC-20 token spending (or trustline establishment) for a Sodax money
@@ -29,7 +33,7 @@ export function useMMApprove<K extends SpokeChainKey = SpokeChainKey>(): UseMuta
   const queryClient = useQueryClient();
 
   return useMutation<Result<TxReturnType<K, false>>, Error, UseMMApproveVars<K>>({
-    mutationFn: async (vars) => {
+    mutationFn: async vars => {
       return sodax.moneyMarket.approve({ ...vars, raw: false } as MoneyMarketApproveActionParams<K, false>);
     },
     onSuccess: (_data, { params }) => {

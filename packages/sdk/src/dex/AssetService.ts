@@ -40,9 +40,9 @@ import {
   type Result,
   type SpokeChainKey,
   type SpokeTxHash,
+  type SpokeExecActionParams,
   type StellarChainKey,
   type TxReturnType,
-  type WalletProviderSlot,
 } from '@sodax/types';
 import { encodeFunctionData, erc20Abi, isAddress } from 'viem';
 import invariant from 'tiny-invariant';
@@ -66,17 +66,17 @@ export type CreateAssetDepositParams<K extends SpokeChainKey> = {
   dst?: DestinationParamsType;
 };
 
-export type AssetWithdrawAction<K extends SpokeChainKey, Raw extends boolean> = {
-  params: CreateAssetWithdrawParams<K>;
-  skipSimulation?: boolean;
-  timeout?: number;
-} & WalletProviderSlot<K, Raw>;
+export type AssetWithdrawAction<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  CreateAssetWithdrawParams<K>
+>;
 
-export type AssetDepositAction<K extends SpokeChainKey, Raw extends boolean> = {
-  params: CreateAssetDepositParams<K>;
-  skipSimulation?: boolean;
-  timeout?: number;
-} & WalletProviderSlot<K, Raw>;
+export type AssetDepositAction<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  CreateAssetDepositParams<K>
+>;
 
 export type AssetServiceConstructorParams = {
   hubProvider: HubProvider;
@@ -370,9 +370,7 @@ export class AssetService {
    */
   public async executeWithdraw<K extends SpokeChainKey, Raw extends boolean>(
     _params: AssetWithdrawAction<K, Raw>,
-  ): Promise<
-    Result<TxReturnType<K, Raw>> & RelayOptionalExtraData
-  > {
+  ): Promise<Result<TxReturnType<K, Raw>> & RelayOptionalExtraData> {
     const { params, skipSimulation } = _params;
     try {
       invariant(params.amount > 0n, 'Amount must be greater than 0');

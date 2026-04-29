@@ -12,15 +12,11 @@ import {
   type IconChainKey,
   type Result,
   type SonicChainKey,
-  type WalletProviderSlot,
+  type SpokeExecActionParams,
 } from '@sodax/types';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 
-export type IcxMigrateAction<Raw extends boolean> = {
-  params: IcxMigrateParams;
-  skipSimulation?: boolean;
-  timeout?: number;
-} & WalletProviderSlot<IconChainKey, Raw>;
+export type IcxMigrateAction<Raw extends boolean> = SpokeExecActionParams<IconChainKey, Raw, IcxMigrateParams>;
 
 export type IcxMigrateParams = {
   srcAddress: IconAddress;
@@ -30,11 +26,11 @@ export type IcxMigrateParams = {
   dstAddress: Address; // The address that will receive the migrated assets
 };
 
-export type IcxRevertMigrationAction<Raw extends boolean> = {
-  params: IcxCreateRevertMigrationParams;
-  timeout?: number;
-  skipSimulation?: boolean;
-} & WalletProviderSlot<SonicChainKey, Raw>;
+export type IcxRevertMigrationAction<Raw extends boolean> = SpokeExecActionParams<
+  SonicChainKey,
+  Raw,
+  IcxCreateRevertMigrationParams
+>;
 
 export type IcxCreateRevertMigrationParams = {
   srcAddress: Address; // should be Sonic original address

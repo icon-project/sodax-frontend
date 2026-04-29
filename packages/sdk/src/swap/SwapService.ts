@@ -79,6 +79,7 @@ import {
   type EvmSpokeOnlyChainKey,
   type StellarChainKey,
   spokeChainConfig,
+  type SpokeExecActionParams,
   type WalletProviderSlot,
   type SonicChainKey,
 } from '@sodax/types';
@@ -88,12 +89,12 @@ export type GetIntentSubmitTxExtraDataParams = { txHash: Hash } | { intent: Inte
 // Exec-mode params: walletProvider is required and K-narrowed. Consumed by `createIntent`,
 // `createLimitOrder`, `createLimitOrderIntent`, `approve` — methods that send a transaction
 // and return an executed tx hash.
-export type SwapActionParams<K extends SpokeChainKey, Raw extends boolean> = {
-  params: CreateIntentParams<K>;
-  skipSimulation?: boolean;
-  timeout?: number;
-  fee?: PartnerFee;
-} & WalletProviderSlot<K, Raw>;
+export type SwapActionParams<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  CreateIntentParams<K>,
+  { fee?: PartnerFee }
+>;
 
 export type LimitOrderActionParams<K extends SpokeChainKey, Raw extends boolean> = Omit<
   SwapActionParams<K, Raw>,

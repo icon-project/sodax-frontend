@@ -40,7 +40,7 @@ import {
   type HubChainKey,
   type GetTokenAddressType,
   type StellarChainKey,
-  type WalletProviderSlot,
+  type SpokeExecActionParams,
   type EvmSpokeOnlyChainKey,
 } from '@sodax/types';
 
@@ -52,11 +52,7 @@ export type StakeParams<K extends SpokeChainKey> = {
   action: 'stake';
 };
 
-export type StakeAction<K extends SpokeChainKey, Raw extends boolean> = {
-  params: StakeParams<K>;
-  timeout?: number;
-  skipSimulation?: boolean;
-} & WalletProviderSlot<K, Raw>;
+export type StakeAction<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<K, Raw, StakeParams<K>>;
 
 export type UnstakeParams<K extends SpokeChainKey> = {
   srcChainKey: K; // chain key of the spoke chain to unstake from
@@ -65,11 +61,11 @@ export type UnstakeParams<K extends SpokeChainKey> = {
   action: 'unstake';
 };
 
-export type UnstakeAction<K extends SpokeChainKey, Raw extends boolean> = {
-  params: UnstakeParams<K>;
-  timeout?: number;
-  skipSimulation?: boolean;
-} & WalletProviderSlot<K, Raw>;
+export type UnstakeAction<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  UnstakeParams<K>
+>;
 
 export type ClaimParams<K extends SpokeChainKey> = {
   srcAddress: Address;
@@ -79,11 +75,7 @@ export type ClaimParams<K extends SpokeChainKey> = {
   action: 'claim';
 };
 
-export type ClaimAction<K extends SpokeChainKey, Raw extends boolean> = {
-  params: ClaimParams<K>;
-  timeout?: number;
-  skipSimulation?: boolean;
-} & WalletProviderSlot<K, Raw>;
+export type ClaimAction<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<K, Raw, ClaimParams<K>>;
 
 export type CancelUnstakeParams<K extends SpokeChainKey> = {
   srcAddress: Address;
@@ -92,11 +84,11 @@ export type CancelUnstakeParams<K extends SpokeChainKey> = {
   action: 'cancelUnstake';
 };
 
-export type CancelUnstakeAction<K extends SpokeChainKey, Raw extends boolean> = {
-  params: CancelUnstakeParams<K>;
-  timeout?: number;
-  skipSimulation?: boolean;
-} & WalletProviderSlot<K, Raw>;
+export type CancelUnstakeAction<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  CancelUnstakeParams<K>
+>;
 
 export type InstantUnstakeParams<K extends SpokeChainKey> = {
   srcAddress: Address;
@@ -106,11 +98,11 @@ export type InstantUnstakeParams<K extends SpokeChainKey> = {
   action: 'instantUnstake';
 };
 
-export type InstantUnstakeAction<K extends SpokeChainKey, Raw extends boolean> = {
-  params: InstantUnstakeParams<K>;
-  timeout?: number;
-  skipSimulation?: boolean;
-} & WalletProviderSlot<K, Raw>;
+export type InstantUnstakeAction<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  InstantUnstakeParams<K>
+>;
 
 export type StakingActionType = 'stake' | 'unstake' | 'claim' | 'cancelUnstake' | 'instantUnstake';
 export type StakingActionUnion<K extends SpokeChainKey> =
@@ -120,9 +112,11 @@ export type StakingActionUnion<K extends SpokeChainKey> =
   | CancelUnstakeParams<K>
   | InstantUnstakeParams<K>;
 
-export type StakingParamsUnion<K extends SpokeChainKey, Raw extends boolean> = {
-  params: StakingActionUnion<K>;
-} & WalletProviderSlot<K, Raw>;
+export type StakingParamsUnion<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  StakingActionUnion<K>
+>;
 
 export type StakingInfo = {
   totalStaked: bigint; // Total SODA staked (totalAssets from xSODA vault)
@@ -333,7 +327,9 @@ export class StakingService {
 
       return {
         ok: false,
-        error: new Error('Approval only supported for EVM spoke chains and [stake, unstake, instantUnstake] operations'),
+        error: new Error(
+          'Approval only supported for EVM spoke chains and [stake, unstake, instantUnstake] operations',
+        ),
       };
     } catch (error) {
       console.error(error);
@@ -352,9 +348,7 @@ export class StakingService {
    * @param timeout - The timeout in milliseconds for the transaction (default: DEFAULT_RELAY_TX_TIMEOUT)
    * @returns Promise<Result<[SpokeTxHash, HubTxHash] | RelayError>>
    */
-  public async stake<K extends SpokeChainKey>(
-    _params: StakeAction<K, false>,
-  ): Promise<Result<[string, string]>> {
+  public async stake<K extends SpokeChainKey>(_params: StakeAction<K, false>): Promise<Result<[string, string]>> {
     const { params, timeout } = _params;
 
     try {
@@ -452,7 +446,10 @@ export class StakingService {
             },
       );
 
-      if (!txResult.ok) { console.error(txResult.error); return txResult; }
+      if (!txResult.ok) {
+        console.error(txResult.error);
+        return txResult;
+      }
 
       return {
         ok: true,
@@ -499,9 +496,7 @@ export class StakingService {
    * @param timeout - The timeout in milliseconds for the transaction (default: DEFAULT_RELAY_TX_TIMEOUT)
    * @returns Promise<Result<[SpokeTxHash, HubTxHash] | RelayError>>
    */
-  public async unstake<K extends SpokeChainKey>(
-    _params: UnstakeAction<K, false>,
-  ): Promise<Result<[string, string]>> {
+  public async unstake<K extends SpokeChainKey>(_params: UnstakeAction<K, false>): Promise<Result<[string, string]>> {
     const { params, timeout } = _params;
     try {
       const txResult = await this.createUnstakeIntent(_params);
@@ -581,7 +576,10 @@ export class StakingService {
             } satisfies SendMessageParams<K, false>),
       );
 
-      if (!txResult.ok) { console.error(txResult.error); return txResult; }
+      if (!txResult.ok) {
+        console.error(txResult.error);
+        return txResult;
+      }
 
       return {
         ok: true,
@@ -718,7 +716,10 @@ export class StakingService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
-      if (!txResult.ok) { console.error(txResult.error); return txResult; }
+      if (!txResult.ok) {
+        console.error(txResult.error);
+        return txResult;
+      }
 
       return {
         ok: true,
@@ -778,9 +779,7 @@ export class StakingService {
    * @param timeout - The timeout in milliseconds for the transaction (default: DEFAULT_RELAY_TX_TIMEOUT)
    * @returns Promise<Result<[SpokeTxHash, HubTxHash] | RelayError>>
    */
-  public async claim<K extends SpokeChainKey>(
-    _params: ClaimAction<K, false>,
-  ): Promise<Result<[string, string]>> {
+  public async claim<K extends SpokeChainKey>(_params: ClaimAction<K, false>): Promise<Result<[string, string]>> {
     const { params, timeout } = _params;
     try {
       const txResult = await this.createClaimIntent(_params);
@@ -869,7 +868,10 @@ export class StakingService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
-      if (!txResult.ok) { console.error(txResult.error); return txResult; }
+      if (!txResult.ok) {
+        console.error(txResult.error);
+        return txResult;
+      }
 
       return {
         ok: true,
@@ -1015,7 +1017,10 @@ export class StakingService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
-      if (!txResult.ok) { console.error(txResult.error); return txResult; }
+      if (!txResult.ok) {
+        console.error(txResult.error);
+        return txResult;
+      }
 
       return {
         ok: true,
@@ -1252,9 +1257,7 @@ export class StakingService {
   public async getUnstakingInfoWithPenalty<K extends SpokeChainKey>(
     srcAddress: Address,
     srcChainKey: K,
-  ): Promise<
-    Result<UnstakingInfo & { requestsWithPenalty: UnstakeRequestWithPenalty[] }>
-  > {
+  ): Promise<Result<UnstakingInfo & { requestsWithPenalty: UnstakeRequestWithPenalty[] }>> {
     try {
       const [unstakingResult, configResult] = await Promise.all([
         this.getUnstakingInfo(srcAddress, srcChainKey),

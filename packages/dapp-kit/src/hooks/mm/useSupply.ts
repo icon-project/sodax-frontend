@@ -1,5 +1,5 @@
-import type { HubTxHash, MoneyMarketSupplyActionParams, SpokeTxHash } from '@sodax/sdk';
-import type { Result, SpokeChainKey } from '@sodax/types';
+import type { HubTxHash, MoneyMarketSupplyActionParams, MoneyMarketSupplyParams, SpokeTxHash } from '@sodax/sdk';
+import type { GetWalletProviderType, Result, SpokeChainKey } from '@sodax/types';
 import { useMutation, type UseMutationResult, useQueryClient } from '@tanstack/react-query';
 import { useSodaxContext } from '../shared/useSodaxContext.js';
 
@@ -7,11 +7,15 @@ import { useSodaxContext } from '../shared/useSodaxContext.js';
  * Mutation variables for {@link useSupply}. Generic over `K extends SpokeChainKey` (defaults to
  * the full union). Sophisticated callers can lock K at the hook call site to narrow the
  * `walletProvider` and `params.srcChainKey` types.
+ *
+ * Exec-mode shape without `raw` (see {@link UseBorrowVars}).
  */
-export type UseSupplyVars<K extends SpokeChainKey = SpokeChainKey> = Omit<
-  MoneyMarketSupplyActionParams<K, false>,
-  'raw'
->;
+export type UseSupplyVars<K extends SpokeChainKey = SpokeChainKey> = {
+  params: MoneyMarketSupplyParams<K>;
+  skipSimulation?: boolean;
+  timeout?: number;
+  walletProvider: GetWalletProviderType<K>;
+};
 
 type SupplyResult = Result<[SpokeTxHash, HubTxHash]>;
 
@@ -40,7 +44,7 @@ export function useSupply<K extends SpokeChainKey = SpokeChainKey>(): UseMutatio
   const queryClient = useQueryClient();
 
   return useMutation<SupplyResult, Error, UseSupplyVars<K>>({
-    mutationFn: async (vars) => {
+    mutationFn: async vars => {
       return sodax.moneyMarket.supply({ ...vars, raw: false } as MoneyMarketSupplyActionParams<K, false>);
     },
     onSuccess: (_data, { params }) => {
