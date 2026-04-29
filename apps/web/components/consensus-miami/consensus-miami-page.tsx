@@ -102,7 +102,7 @@ export function ConsensusMiamiPage() {
       <footer className="px-6 py-8 sm:px-10 flex flex-col items-center gap-6 max-w-2xl mx-auto w-full">
         {/* Network icons */}
         <div className="flex flex-col items-center gap-3">
-          <p className="text-cherry-brighter text-xs font-[InterRegular]">17+ networks</p>
+          <p className="text-cherry-brighter text-xs font-[InterRegular]">18+ networks</p>
           <div className="flex flex-wrap justify-center gap-3">
             {NETWORKS.map(name => {
               const Icon = NETWORK_ICON_MAP[name];

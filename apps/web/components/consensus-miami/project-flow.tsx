@@ -90,7 +90,7 @@ export function ProjectFlow({ onBack }: ProjectFlowProps) {
       {/* Value prop */}
       <p className="text-cherry-brighter text-sm font-[InterRegular] leading-relaxed text-left">
         SODAX is infrastructure for modern money. Cross-network execution and liquidity for builders and networks, live
-        across 17+ networks.
+        across 18+ networks.
       </p>
 
       {/* Form */}
