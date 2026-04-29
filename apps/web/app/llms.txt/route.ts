@@ -64,6 +64,7 @@ const CORE_LINKS: CuratedLink[] = [
   { path: PARTNERS_ROUTE, title: 'Partners', summary: 'Integration partners and ecosystem' },
   { path: HOLDERS_ROUTE, title: 'Holders', summary: 'SODA token holders, governance, and community resources' },
   { path: SODA_TOKEN_ROUTE, title: 'SODA Token', summary: 'SODA token economics, supply, and distribution' },
+  { path: '/discord', title: 'Discord', summary: 'SODAX community on Discord (redirects to invite)' },
   { path: '/press', title: 'Press', summary: 'Press kit, media resources, and brand assets' },
 ];
 

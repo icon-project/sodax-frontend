@@ -57,6 +57,13 @@ interface CuratedPage {
 // Adding a new entry requires both a row here and a file on disk.
 const CURATED_PAGES: CuratedPage[] = [
   { url: '/', file: 'index.md', title: 'SODAX' },
+  { url: '/exchange', file: 'exchange.md', title: 'SODA Exchange' },
+  { url: '/exchange/swap', file: 'exchange/swap.md', title: 'Swap' },
+  { url: '/exchange/save', file: 'exchange/save.md', title: 'Save' },
+  { url: '/exchange/loans', file: 'exchange/loans.md', title: 'Borrow' },
+  { url: '/exchange/stake', file: 'exchange/stake.md', title: 'Stake' },
+  { url: '/exchange/pool', file: 'exchange/pool.md', title: 'Pools' },
+  { url: '/exchange/migrate', file: 'exchange/migrate.md', title: 'Migrate (ICX → SODA)' },
   { url: '/partners', file: 'partners.md', title: 'Partners' },
   { url: '/partners/amped-finance', file: 'partners/amped-finance.md', title: 'Partner: Amped Finance' },
   { url: '/partners/hana', file: 'partners/hana.md', title: 'Partner: Hana Wallet' },
@@ -64,6 +71,7 @@ const CURATED_PAGES: CuratedPage[] = [
   { url: '/partners/sodax-sdk', file: 'partners/sodax-sdk.md', title: 'Partner: SODAX SDK' },
   { url: '/holders', file: 'holders.md', title: 'Holders' },
   { url: '/holders/soda-token', file: 'holders/soda-token.md', title: 'SODA Token' },
+  { url: '/discord', file: 'discord.md', title: 'Discord' },
   { url: '/press', file: 'press.md', title: 'Press' },
 ];
 

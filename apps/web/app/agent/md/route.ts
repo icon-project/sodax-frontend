@@ -15,14 +15,10 @@ import { getDb } from '@/lib/db';
 import { getNotionPageBySlugMarkdown, getNotionPages, slugify } from '@/lib/notion';
 import {
   BORROW_ROUTE,
-  BRIDGE_SERVICES_ROUTE,
-  BUILDERS_PORTAL_ROUTE,
-  DOCUMENTATION_ROUTE,
   EXCHANGE_ROUTE,
   GLOSSARY_ROUTE,
   HOLDERS_ROUTE,
   HOME_ROUTE,
-  LEAD_BORROW_FOR_APPS_ROUTE,
   MIGRATE_ROUTE,
   NEWS_ROUTE,
   PARTNERS_ROUTE,
@@ -30,7 +26,6 @@ import {
   SAVE_ROUTE,
   SODA_TOKEN_ROUTE,
   STAKE_ROUTE,
-  SWAP_FOR_APPS_ROUTE,
   SWAP_ROUTE,
 } from '@/constants/routes';
 
@@ -61,6 +56,14 @@ const STATIC_FILE_MAP: Record<string, string> = {
   '/partners/sodax-sdk': 'partners/sodax-sdk.md',
   [HOLDERS_ROUTE]: 'holders.md',
   [SODA_TOKEN_ROUTE]: 'holders/soda-token.md',
+  [EXCHANGE_ROUTE]: 'exchange.md',
+  [SWAP_ROUTE]: 'exchange/swap.md',
+  [SAVE_ROUTE]: 'exchange/save.md',
+  [BORROW_ROUTE]: 'exchange/loans.md',
+  [STAKE_ROUTE]: 'exchange/stake.md',
+  [POOL_ROUTE]: 'exchange/pool.md',
+  [MIGRATE_ROUTE]: 'exchange/migrate.md',
+  '/discord': 'discord.md',
   '/press': 'press.md',
 };
 
@@ -208,68 +211,6 @@ async function notionPageResponse(db: 'concepts' | 'system', slug: string): Prom
   return ok(body);
 }
 
-// ── Exchange (curated stubs → docs.sodax.com) ──────────────────────────────
-interface ExchangeStub {
-  title: string;
-  description: string;
-  docs: string;
-}
-
-const EXCHANGE_STUBS: Record<string, ExchangeStub> = {
-  [EXCHANGE_ROUTE]: {
-    title: 'SODAX Exchange',
-    description:
-      'The SODAX exchange interface for swap, save, borrow, stake, pool, and migrate operations across supported networks.',
-    docs: DOCUMENTATION_ROUTE,
-  },
-  [SWAP_ROUTE]: {
-    title: 'Swap on SODAX',
-    description: 'Cross-network swaps powered by the SODAX solver and intent system.',
-    docs: SWAP_FOR_APPS_ROUTE,
-  },
-  [SAVE_ROUTE]: {
-    title: 'Save on SODAX',
-    description: 'Earn yield by supplying assets to the SODAX money market.',
-    docs: LEAD_BORROW_FOR_APPS_ROUTE,
-  },
-  [BORROW_ROUTE]: {
-    title: 'Borrow on SODAX',
-    description: 'Borrow against supplied collateral on the SODAX money market.',
-    docs: LEAD_BORROW_FOR_APPS_ROUTE,
-  },
-  [STAKE_ROUTE]: {
-    title: 'Stake on SODAX',
-    description: 'Stake SODA to participate in network coordination.',
-    docs: DOCUMENTATION_ROUTE,
-  },
-  [POOL_ROUTE]: {
-    title: 'Pools on SODAX',
-    description: 'SODAX AMM pools and liquidity provision.',
-    docs: DOCUMENTATION_ROUTE,
-  },
-  [MIGRATE_ROUTE]: {
-    title: 'Migrate to SODAX',
-    description: 'Migrate legacy tokens and positions into the SODAX system.',
-    docs: DOCUMENTATION_ROUTE,
-  },
-};
-
-function exchangeStubResponse(requestedPath: string): Response {
-  const stub = EXCHANGE_STUBS[requestedPath];
-  if (!stub) return notFound();
-  const body = [
-    `# ${stub.title}`,
-    '',
-    stub.description,
-    '',
-    `App: https://sodax.com${requestedPath}`,
-    `Developer docs: ${stub.docs}`,
-    `Bridge module: ${BRIDGE_SERVICES_ROUTE}`,
-    `Builders portal: ${BUILDERS_PORTAL_ROUTE}`,
-  ].join('\n');
-  return ok(body);
-}
-
 // ── Static markdown files ──────────────────────────────────────────────────
 async function staticFileResponse(requestedPath: string): Promise<Response> {
   const fileName = STATIC_FILE_MAP[requestedPath];
@@ -312,9 +253,5 @@ export async function GET(request: NextRequest): Promise<Response> {
   if (requestedPath.startsWith('/system/')) {
     return notionPageResponse('system', requestedPath.slice('/system/'.length));
   }
-  if (requestedPath === EXCHANGE_ROUTE || requestedPath.startsWith(`${EXCHANGE_ROUTE}/`)) {
-    return exchangeStubResponse(requestedPath);
-  }
-
   return staticFileResponse(requestedPath);
 }
