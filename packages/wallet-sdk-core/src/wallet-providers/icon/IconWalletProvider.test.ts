@@ -4,10 +4,8 @@ const mockLoadPrivateKey = vi.fn().mockReturnValue({ getAddress: () => 'hxabc' }
 
 vi.mock('icon-sdk-js', () => {
   class IconService {
-    static HttpProvider = class {
-    };
-    static SignedTransaction = class {
-    };
+    static HttpProvider = class {};
+    static SignedTransaction = class {};
     sendTransaction() {
       return { execute: vi.fn() };
     }

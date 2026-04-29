@@ -9,8 +9,7 @@ vi.mock('near-api-js', () => ({
     ) {}
     signAndSendTransaction = vi.fn();
   },
-  JsonRpcProvider: class {
-  },
+  JsonRpcProvider: class {},
   KeyPairSigner: { fromSecretKey: vi.fn().mockReturnValue({}) },
   actions: { functionCall: vi.fn() },
 }));

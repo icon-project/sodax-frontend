@@ -21,8 +21,7 @@ vi.mock('@solana/web3.js', () => {
     getBalance = vi.fn();
     getTokenAccountBalance = vi.fn();
   }
-  class TransactionInstruction {
-  }
+  class TransactionInstruction {}
   class TransactionMessage {
     compileToV0Message() {
       return {};
