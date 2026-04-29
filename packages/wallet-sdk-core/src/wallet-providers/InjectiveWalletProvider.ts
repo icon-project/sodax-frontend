@@ -19,13 +19,31 @@ import type {
 import type { MsgBroadcaster } from '@injectivelabs/wallet-core';
 import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts';
 import type { ChainId, EvmChainId } from '@injectivelabs/ts-types';
+import { BaseWalletProvider } from './BaseWalletProvider.js';
 
 /**
  * Injective Wallet Configuration Types
  */
 
+/**
+ * Defaults applied to every call. Per-call options shallow-merge over these.
+ * `msgBroadcaster` options apply at construction time only (private-key path) —
+ * the upstream MsgBroadcasterWithPk doesn't support post-construction reconfig.
+ */
+export type InjectiveWalletDefaults = {
+  /** Coins attached to `getRawTransaction`/`execute` if caller doesn't supply funds. */
+  defaultFunds?: InjectiveCoin[];
+  /** Default memo on transactions. */
+  defaultMemo?: string;
+  /** Sequence override for `createTransaction`. Default 0. */
+  sequence?: number;
+  /** Account number override for `createTransaction`. Default 0. */
+  accountNumber?: number;
+};
+
 export type BrowserExtensionInjectiveWalletConfig = {
   msgBroadcaster: MsgBroadcaster;
+  defaults?: InjectiveWalletDefaults;
 };
 
 export type SecretInjectiveWalletConfig = {
@@ -42,6 +60,7 @@ export type SecretInjectiveWalletConfig = {
     evmChainId: EvmChainId;
     rpcUrl: `http${string}`;
   };
+  defaults?: InjectiveWalletDefaults;
 };
 
 export type InjectiveWalletConfig = BrowserExtensionInjectiveWalletConfig | SecretInjectiveWalletConfig;
@@ -78,16 +97,22 @@ function txResponseToExecuteResponse(txResult: TxResponse): InjectiveExecuteResp
   };
 }
 
-export class InjectiveWalletProvider implements IInjectiveWalletProvider {
+export class InjectiveWalletProvider
+  extends BaseWalletProvider<InjectiveWalletDefaults>
+  implements IInjectiveWalletProvider
+{
   public readonly chainType = 'INJECTIVE' as const;
   public wallet: InjectiveWallet;
 
   constructor(config: InjectiveWalletConfig) {
+    super(config.defaults);
+
     if (isBrowserExtensionInjectiveWalletConfig(config)) {
-      this.wallet = {
-        msgBroadcaster: config.msgBroadcaster,
-      };
-    } else if (isSecretInjectiveWalletConfig(config)) {
+      this.wallet = { msgBroadcaster: config.msgBroadcaster };
+      return;
+    }
+
+    if (isSecretInjectiveWalletConfig(config)) {
       let privateKey: PrivateKey;
       if ('privateKey' in config.secret) {
         privateKey = PrivateKey.fromPrivateKey(config.secret.privateKey);
@@ -96,12 +121,11 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
       } else {
         throw new Error('Invalid Secret Injective wallet config');
       }
-      this.wallet = {
-        msgBroadcaster: new MsgBroadcasterWithPk({ privateKey, network: config.network }),
-      };
-    } else {
-      throw new Error('Invalid Injective wallet config');
+      this.wallet = { msgBroadcaster: new MsgBroadcasterWithPk({ privateKey, network: config.network }) };
+      return;
     }
+
+    throw new Error('Invalid Injective wallet config');
   }
 
   async getRawTransaction(
@@ -111,33 +135,39 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     contractAddress: string,
     msg: JsonObject,
     memo?: string,
+    options?: InjectiveWalletDefaults,
   ): Promise<InjectiveRawTransaction> {
+    const policy = this.mergeDefaults(options);
+    const funds = policy.defaultFunds ?? [];
+    const finalMemo = memo ?? policy.defaultMemo ?? '';
+    const sequence = policy.sequence ?? 0;
+    const accountNumber = policy.accountNumber ?? 0;
+
     const msgExec = MsgExecuteContract.fromJSON({
-      contractAddress: contractAddress,
+      contractAddress,
       sender: senderAddress,
       msg: msg as object,
-      funds: [],
+      funds,
     });
     const { txRaw } = createTransaction({
       message: msgExec,
-      memo: memo || '',
+      memo: finalMemo,
       pubKey: await this.getWalletPubKey(),
-      sequence: 0,
-      accountNumber: 0,
-      chainId: chainId,
+      sequence,
+      accountNumber,
+      chainId,
     });
 
-    const rawTx = {
+    return {
       from: senderAddress as Hex,
       to: contractAddress as Hex,
       signedDoc: {
         bodyBytes: txRaw.bodyBytes,
-        chainId: chainId,
-        accountNumber: BigInt(0),
+        chainId,
+        accountNumber: BigInt(accountNumber),
         authInfoBytes: txRaw.authInfoBytes,
       },
     };
-    return rawTx;
   }
 
   // return wallet address as bech32
@@ -170,28 +200,31 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     contractAddress: string,
     msg: JsonObject,
     funds?: InjectiveCoin[],
+    options?: InjectiveWalletDefaults,
   ): Promise<InjectiveExecuteResponse> {
+    const policy = this.mergeDefaults(options);
+    const finalFunds = funds ?? policy.defaultFunds ?? [];
+    const memo = policy.defaultMemo ?? '';
+
     const msgExec = MsgExecuteContractCompat.fromJSON({
-      contractAddress: contractAddress,
+      contractAddress,
       sender: senderAddress,
       msg: msg as object,
-      funds: funds || [],
+      funds: finalFunds,
     });
 
     let txResult: TxResponse;
 
     if (this.wallet.msgBroadcaster instanceof MsgBroadcasterWithPk) {
-      txResult = await this.wallet.msgBroadcaster.broadcast({
-        msgs: msgExec,
-      });
+      txResult = await this.wallet.msgBroadcaster.broadcast({ msgs: msgExec, memo });
     } else {
       txResult = await this.wallet.msgBroadcaster.broadcastWithFeeDelegation({
         msgs: msgExec,
         injectiveAddress: await this.getWalletAddress(),
+        memo,
       });
     }
 
     return txResponseToExecuteResponse(txResult);
   }
-
 }

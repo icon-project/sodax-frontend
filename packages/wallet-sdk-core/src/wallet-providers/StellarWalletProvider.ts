@@ -1,5 +1,6 @@
 import type { Hex, IStellarWalletProvider, StellarRawTransactionReceipt, XDR } from '@sodax/types';
 import { Networks, Horizon, Transaction, Keypair } from '@stellar/stellar-sdk';
+import { BaseWalletProvider } from './BaseWalletProvider.js';
 
 interface StellarWalletsKit {
   getAddress(): Promise<{ address: string }>;
@@ -18,8 +19,20 @@ const STELLAR_NETWORK_PASSPHRASES: { [key in StellarNetwork]: string } = {
   PUBLIC: Networks.PUBLIC,
 };
 
-const TX_POLL_INTERVAL = 2000; // 2 seconds
-const TX_POLL_TIMEOUT = 60000; // 60 seconds
+const DEFAULT_POLL_INTERVAL = 2000;
+const DEFAULT_POLL_TIMEOUT = 60_000;
+
+/** Defaults applied to every call. Per-call options shallow-merge over these. */
+export type StellarWalletDefaults = {
+  /** Polling interval (ms) for `waitForTransactionReceipt`. Default `2000`. */
+  pollInterval?: number;
+  /** Total wait (ms) before timeout. Default `60_000`. Recommended floor `30_000` on mainnet. */
+  pollTimeout?: number;
+  /** Custom Horizon URL (overrides per-network default). */
+  horizonUrl?: string;
+  /** Custom network passphrase (use for FUTURENET / private networks). */
+  networkPassphrase?: string;
+};
 
 const STELLAR_ERROR_CODES = {
   INVALID_CONFIG: 'INVALID_CONFIG',
@@ -37,6 +50,7 @@ export type PrivateKeyStellarWalletConfig = {
   privateKey: Hex;
   network: StellarNetwork;
   rpcUrl?: string;
+  defaults?: StellarWalletDefaults;
 };
 
 export type BrowserExtensionStellarWalletConfig = {
@@ -44,6 +58,7 @@ export type BrowserExtensionStellarWalletConfig = {
   walletsKit: StellarWalletsKit;
   network: StellarNetwork;
   rpcUrl?: string;
+  defaults?: StellarWalletDefaults;
 };
 
 export type StellarWalletConfig = PrivateKeyStellarWalletConfig | BrowserExtensionStellarWalletConfig;
@@ -103,39 +118,36 @@ export function isValidStellarPrivateKey(privateKey: string): boolean {
   }
 }
 
-export class StellarWalletProvider implements IStellarWalletProvider {
+export class StellarWalletProvider
+  extends BaseWalletProvider<StellarWalletDefaults>
+  implements IStellarWalletProvider
+{
   public readonly chainType = 'STELLAR' as const;
   private readonly wallet: StellarWallet;
   private readonly server: Horizon.Server;
   private readonly networkPassphrase: string;
 
   constructor(config: StellarWalletConfig) {
+    super(config.defaults);
     if (!isValidStellarNetwork(config.network)) {
       throw new StellarWalletError(`Invalid network: ${config.network}`, 'INVALID_NETWORK');
     }
+
+    const horizonUrl = this.defaults.horizonUrl ?? config.rpcUrl ?? STELLAR_HORIZON_URLS[config.network];
+    this.networkPassphrase = this.defaults.networkPassphrase ?? STELLAR_NETWORK_PASSPHRASES[config.network];
+    this.server = new Horizon.Server(horizonUrl);
 
     if (isPrivateKeyStellarWalletConfig(config)) {
       if (!isValidStellarPrivateKey(config.privateKey)) {
         throw new StellarWalletError('Invalid private key format', 'INVALID_PRIVATE_KEY');
       }
-      // Remove '0x' prefix if present
       const privateKey = config.privateKey.startsWith('0x') ? config.privateKey.slice(2) : config.privateKey;
-      this.wallet = {
-        type: 'PRIVATE_KEY',
-        keypair: Keypair.fromSecret(privateKey),
-      };
-      this.server = new Horizon.Server(config.rpcUrl ?? STELLAR_HORIZON_URLS[config.network]);
-      this.networkPassphrase = STELLAR_NETWORK_PASSPHRASES[config.network];
+      this.wallet = { type: 'PRIVATE_KEY', keypair: Keypair.fromSecret(privateKey) };
       return;
     }
 
     if (isBrowserExtensionStellarWalletConfig(config)) {
-      this.wallet = {
-        type: 'BROWSER_EXTENSION',
-        walletsKit: config.walletsKit,
-      };
-      this.server = new Horizon.Server(config.rpcUrl ?? STELLAR_HORIZON_URLS[config.network]);
-      this.networkPassphrase = STELLAR_NETWORK_PASSPHRASES[config.network];
+      this.wallet = { type: 'BROWSER_EXTENSION', walletsKit: config.walletsKit };
       return;
     }
 
@@ -179,28 +191,29 @@ export class StellarWalletProvider implements IStellarWalletProvider {
     }
   }
 
-  public async waitForTransactionReceipt(txHash: string): Promise<StellarRawTransactionReceipt> {
+  public async waitForTransactionReceipt(
+    txHash: string,
+    options?: Pick<StellarWalletDefaults, 'pollInterval' | 'pollTimeout'>,
+  ): Promise<StellarRawTransactionReceipt> {
+    const policy = this.mergeDefaults(options);
+    const pollInterval = policy.pollInterval ?? DEFAULT_POLL_INTERVAL;
+    const pollTimeout = policy.pollTimeout ?? DEFAULT_POLL_TIMEOUT;
+
     const startTime = Date.now();
-    while (Date.now() - startTime < TX_POLL_TIMEOUT) {
+    while (Date.now() - startTime < pollTimeout) {
       try {
         const tx = await this.server.transactions().transaction(txHash).call();
-
         return {
           ...tx,
-          _links: {
-            ...tx._links,
-            transaction: tx._links.self,
-          },
+          _links: { ...tx._links, transaction: tx._links.self },
         };
-      } catch (error) {
-        // Wait for the next poll interval
-        await new Promise(resolve => setTimeout(resolve, TX_POLL_INTERVAL));
+      } catch {
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
       }
     }
     throw new StellarWalletError(
-      `Transaction receipt not found for hash ${txHash} after ${TX_POLL_TIMEOUT / 1000} seconds.`,
+      `Transaction receipt not found for hash ${txHash} after ${pollTimeout / 1000} seconds.`,
       'TX_RECEIPT_TIMEOUT',
     );
   }
-
 }

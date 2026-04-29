@@ -10,7 +10,7 @@ import {
   type WalletAccount,
   type WalletWithFeatures,
 } from '@mysten/wallet-standard';
-import { shallowMerge } from './_internal/merge.js';
+import { BaseWalletProvider } from './BaseWalletProvider.js';
 
 const DEFAULT_DRY_RUN_ENABLED = true;
 const DEFAULT_GET_COINS_LIMIT = 10;
@@ -99,14 +99,13 @@ async function toMystenTransaction(txn: SuiTransaction): Promise<Transaction> {
   return Transaction.from(await txn.toJSON());
 }
 
-export class SuiWalletProvider implements ISuiWalletProvider {
+export class SuiWalletProvider extends BaseWalletProvider<SuiWalletDefaults> implements ISuiWalletProvider {
   public readonly chainType = 'SUI' as const;
   private readonly client: SuiClient;
   private readonly wallet: SuiWallet;
-  private readonly defaults: SuiWalletDefaults;
 
   constructor(walletConfig: SuiWalletConfig) {
-    this.defaults = walletConfig.defaults ?? {};
+    super(walletConfig.defaults);
 
     if (isPrivateKeySuiWalletConfig(walletConfig)) {
       this.client = new SuiClient({ url: walletConfig.rpcUrl });
@@ -128,7 +127,7 @@ export class SuiWalletProvider implements ISuiWalletProvider {
   }
 
   async signAndExecuteTxn(txn: SuiTransaction, options?: SuiSignAndExecutePolicy): Promise<string> {
-    const policy = shallowMerge(this.defaults.signAndExecuteTxn, options);
+    const policy = this.mergePolicy('signAndExecuteTxn', options);
     const dryRunEnabled = policy.dryRun?.enabled ?? DEFAULT_DRY_RUN_ENABLED;
 
     const sender = this.getSuiAddress();
@@ -200,7 +199,7 @@ export class SuiWalletProvider implements ISuiWalletProvider {
   }
 
   async getCoins(address: string, token: string, options?: SuiGetCoinsPolicy): Promise<SuiPaginatedCoins> {
-    const policy = shallowMerge(this.defaults.getCoins, options);
+    const policy = this.mergePolicy('getCoins', options);
     const limit = policy.limit ?? DEFAULT_GET_COINS_LIMIT;
     return this.client.getCoins({ owner: address, coinType: token, limit });
   }

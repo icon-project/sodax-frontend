@@ -16,7 +16,7 @@ import type {
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { createWalletClient, createPublicClient, http, defineChain } from 'viem';
-import { shallowMerge } from './_internal/merge.js';
+import { BaseWalletProvider } from './BaseWalletProvider.js';
 import {
   sonic,
   avalanche,
@@ -117,14 +117,13 @@ export function isBrowserExtensionEvmWalletConfig(config: EvmWalletConfig): conf
   return 'walletClient' in config && 'publicClient' in config;
 }
 
-export class EvmWalletProvider implements IEvmWalletProvider {
+export class EvmWalletProvider extends BaseWalletProvider<EvmWalletDefaults> implements IEvmWalletProvider {
   public readonly chainType = 'EVM' as const;
   public readonly publicClient: PublicClient;
   private readonly walletClient: WalletClient<Transport, Chain, Account>;
-  private readonly defaults: EvmWalletDefaults;
 
   constructor(config: EvmWalletConfig) {
-    this.defaults = config.defaults ?? {};
+    super(config.defaults);
 
     if (isPrivateKeyEvmWalletConfig(config)) {
       const chain = getEvmViemChain(config.chainId);
@@ -158,7 +157,7 @@ export class EvmWalletProvider implements IEvmWalletProvider {
   }
 
   async sendTransaction(txData: EvmRawTransaction, options?: EvmSendTransactionPolicy): Promise<Hash> {
-    const policy = shallowMerge(this.defaults.sendTransaction, options);
+    const policy = this.mergePolicy('sendTransaction', options);
     const tx = { ...policy, ...txData } as Parameters<typeof this.walletClient.sendTransaction>[0];
     return this.walletClient.sendTransaction(tx);
   }
@@ -167,7 +166,7 @@ export class EvmWalletProvider implements IEvmWalletProvider {
     txHash: Hash,
     options?: EvmWaitForTransactionReceiptPolicy,
   ): Promise<EvmRawTransactionReceipt> {
-    const policy = shallowMerge(this.defaults.waitForTransactionReceipt, options);
+    const policy = this.mergePolicy('waitForTransactionReceipt', options);
     const receipt = await this.publicClient.waitForTransactionReceipt({ hash: txHash, ...policy });
     return EvmWalletProvider.serializeReceipt(receipt);
   }

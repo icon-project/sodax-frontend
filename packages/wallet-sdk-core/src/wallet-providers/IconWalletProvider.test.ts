@@ -1,62 +1,74 @@
-// import { describe, it, expect, vi, beforeEach } from 'vitest';
-// import { IconWalletProvider, type IconWalletConfig } from './IconWalletProvider.js';
+import { describe, it, expect, vi } from 'vitest';
 
-// describe('IconWalletProvider', () => {
-//   const mockRpcUrl = 'https://ctz.solidwallet.io/api/v3';
-//   const mockPrivateKey = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
-//   const mockWalletAddress = 'hx1234567890abcdef1234567890abcdef12345678';
-//   // const mockTxHash = '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890';
+const mockLoadPrivateKey = vi.fn().mockReturnValue({ getAddress: () => 'hxabc' });
 
-//   beforeEach(() => {
-//     vi.clearAllMocks();
-//   });
+vi.mock('icon-sdk-js', () => {
+  class IconService {
+    static HttpProvider = class {
+      constructor(_url: string) {}
+    };
+    static SignedTransaction = class {
+      constructor(_tx: unknown, _wallet: unknown) {}
+    };
+    constructor(_provider: unknown) {}
+    sendTransaction() {
+      return { execute: vi.fn() };
+    }
+    waitTransactionResult() {
+      return { execute: vi.fn() };
+    }
+  }
+  const Wallet = { loadPrivateKey: mockLoadPrivateKey };
+  const Converter = { toHex: (n: number | string) => `0x${Number(n).toString(16)}` };
+  class CallTransactionBuilder {
+    from() { return this; }
+    to() { return this; }
+    stepLimit() { return this; }
+    nid() { return this; }
+    version() { return this; }
+    timestamp() { return this; }
+    value() { return this; }
+    method() { return this; }
+    params() { return this; }
+    build() { return {}; }
+  }
+  const sdk = { IconService, Wallet, Converter, CallTransactionBuilder };
+  return { ...sdk, default: sdk };
+});
 
-//   describe('constructor', () => {
-//     it('should initialize with private key wallet config', () => {
-//       const provider = new IconWalletProvider({
-//         privateKey: mockPrivateKey,
-//         rpcUrl: mockRpcUrl,
-//       });
+const { IconWalletProvider } = await import('./IconWalletProvider.js');
 
-//       expect(provider.iconService).toBeDefined();
-//       expect(provider.chainType).toBe('ICON');
-//     });
+describe('IconWalletProvider', () => {
+  const PRIVATE_KEY = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef' as const;
+  const RPC_URL = 'https://ctz.solidwallet.io/api/v3' as const;
 
-//     it('should initialize with browser extension wallet config', () => {
-//       const provider = new IconWalletProvider({
-//         walletAddress: mockWalletAddress,
-//         rpcUrl: mockRpcUrl,
-//       });
+  describe('constructor', () => {
+    it('initializes with private-key config', () => {
+      const provider = new IconWalletProvider({ privateKey: PRIVATE_KEY, rpcUrl: RPC_URL });
+      expect(provider.chainType).toBe('ICON');
+      expect(provider.iconService).toBeDefined();
+    });
 
-//       expect(provider.iconService).toBeDefined();
-//       expect(provider.chainType).toBe('ICON');
-//     });
+    it('initializes with browser-extension config', () => {
+      const provider = new IconWalletProvider({
+        walletAddress: 'hx1234567890abcdef1234567890abcdef12345678',
+        rpcUrl: RPC_URL,
+      });
+      expect(provider.chainType).toBe('ICON');
+    });
 
-//     it('should throw error for invalid wallet config', () => {
-//       expect(() => {
-//         new IconWalletProvider({} as IconWalletConfig);
-//       }).toThrow('Invalid Icon wallet config');
-//     });
-//   });
+    it('throws on invalid config', () => {
+      // biome-ignore lint/suspicious/noExplicitAny: testing invalid config rejection
+      expect(() => new IconWalletProvider({} as any)).toThrow('Invalid Icon wallet config');
+    });
 
-//   describe('getWalletAddress', () => {
-//     it('should get wallet address from browser extension wallet', async () => {
-//       const provider = new IconWalletProvider({
-//         walletAddress: mockWalletAddress,
-//         rpcUrl: mockRpcUrl,
-//       });
-
-//       const address = await provider.getWalletAddress();
-//       expect(address).toBe(mockWalletAddress);
-//     });
-
-//     it('should throw error if wallet is not initialized', async () => {
-//       const provider = new IconWalletProvider({
-//         walletAddress: undefined,
-//         rpcUrl: mockRpcUrl,
-//       });
-
-//       await expect(provider.getWalletAddress()).rejects.toThrow('Wallet not initialized');
-//     });
-//   });
-// });
+    it('accepts defaults without throwing', () => {
+      const provider = new IconWalletProvider({
+        privateKey: PRIVATE_KEY,
+        rpcUrl: RPC_URL,
+        defaults: { stepLimit: 5_000_000, version: '0x4', jsonRpcId: 42 },
+      });
+      expect(provider.chainType).toBe('ICON');
+    });
+  });
+});

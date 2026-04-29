@@ -1,60 +1,79 @@
 import type { IconTransactionResult, IcxCallTransaction, IIconWalletProvider } from '@sodax/types';
 import type { IconService, Wallet as IconSdkWallet } from 'icon-sdk-js';
 import * as IconSdkRaw from 'icon-sdk-js';
+import { BaseWalletProvider } from './BaseWalletProvider.js';
 const IconSdk = ('default' in IconSdkRaw.default ? IconSdkRaw.default : IconSdkRaw) as typeof IconSdkRaw;
 const { Converter, CallTransactionBuilder, Wallet } = IconSdk;
 
-export class IconWalletProvider implements IIconWalletProvider {
+const DEFAULT_STEP_LIMIT = 3_000_000;
+const DEFAULT_VERSION = '0x3';
+const DEFAULT_JSON_RPC_ID = 99999;
+
+/** Defaults applied to every call. Per-call options shallow-merge over these. */
+export type IconWalletDefaults = {
+  /** Step limit (gas) for transactions. Default `3_000_000`. */
+  stepLimit?: number;
+  /** Transaction version. Default `'0x3'`. */
+  version?: string;
+  /** Timestamp generator (microseconds). Default `() => Date.now() * 1000`. */
+  timestampProvider?: () => number;
+  /** Event ID for `requestJsonRpc` (browser-extension path). Default `99999`. */
+  jsonRpcId?: number;
+};
+
+export class IconWalletProvider extends BaseWalletProvider<IconWalletDefaults> implements IIconWalletProvider {
   public readonly chainType = 'ICON' as const;
-  private readonly wallet: IconWallet;
   public readonly iconService: IconService;
+  private readonly wallet: IconWallet;
 
   constructor(wallet: IconWalletConfig) {
+    super(wallet.defaults);
+
     if (isPrivateKeyIconWalletConfig(wallet)) {
-      this.wallet = {
-        type: 'PRIVATE_KEY',
-        wallet: Wallet.loadPrivateKey(wallet.privateKey.slice(2)),
-      };
+      this.wallet = { type: 'PRIVATE_KEY', wallet: Wallet.loadPrivateKey(wallet.privateKey.slice(2)) };
       this.iconService = new IconSdk.IconService(new IconSdk.IconService.HttpProvider(wallet.rpcUrl));
-    } else if (isBrowserExtensionIconWalletConfig(wallet)) {
-      this.wallet = {
-        type: 'BROWSER_EXTENSION',
-        wallet: wallet.walletAddress,
-      };
-      this.iconService = new IconSdk.IconService(new IconSdk.IconService.HttpProvider(wallet.rpcUrl));
-    } else {
-      throw new Error('Invalid Icon wallet config');
+      return;
     }
+
+    if (isBrowserExtensionIconWalletConfig(wallet)) {
+      this.wallet = { type: 'BROWSER_EXTENSION', wallet: wallet.walletAddress };
+      this.iconService = new IconSdk.IconService(new IconSdk.IconService.HttpProvider(wallet.rpcUrl));
+      return;
+    }
+
+    throw new Error('Invalid Icon wallet config');
   }
 
-  public async sendTransaction(tx: IcxCallTransaction): Promise<Hash> {
+  public async sendTransaction(tx: IcxCallTransaction, options?: IconWalletDefaults): Promise<Hash> {
+    const policy = this.mergeDefaults(options);
+    const stepLimit = policy.stepLimit ?? DEFAULT_STEP_LIMIT;
+    const version = tx.version ?? policy.version ?? DEFAULT_VERSION;
+    const timestamp = tx.timestamp ?? policy.timestampProvider?.() ?? Date.now() * 1000;
+    const jsonRpcId = policy.jsonRpcId ?? DEFAULT_JSON_RPC_ID;
+
     const builtTx = new CallTransactionBuilder()
       .from(tx.from)
       .to(tx.to)
-      .stepLimit(Converter.toHex(3000000))
+      .stepLimit(Converter.toHex(stepLimit))
       .nid(tx.nid)
-      .version(tx.version ?? '0x3')
-      .timestamp(Converter.toHex(tx.timestamp ?? new Date().getTime() * 1000))
+      .version(version)
+      .timestamp(Converter.toHex(timestamp))
       .value(tx.value)
       .method(tx.method)
       .params(tx.params)
       .build();
 
     if (!isIconPkWallet(this.wallet)) {
-      // if wallet starts with 0x, it's a private key
-      const result = await requestJsonRpc(builtTx);
-
+      const result = await requestJsonRpc(builtTx, jsonRpcId);
       return result.result satisfies string as Hash;
     }
     const signedTx = new IconSdk.IconService.SignedTransaction(builtTx, this.wallet.wallet);
     const result = await this.iconService.sendTransaction(signedTx).execute();
-
     return result satisfies string as Hash;
   }
 
   public async waitForTransactionReceipt(txHash: Hash): Promise<IconTransactionResult> {
     const result = await this.iconService.waitTransactionResult(txHash).execute();
-
     return {
       ...result,
       status: +result.status,
@@ -70,7 +89,6 @@ export class IconWalletProvider implements IIconWalletProvider {
     }
     return isIconPkWallet(this.wallet) ? (this.wallet.wallet.getAddress() as IconEoaAddress) : this.wallet.wallet;
   }
-
 }
 
 /**
@@ -87,11 +105,13 @@ export type IconEoaAddress = `hx${string}`;
 export type PrivateKeyIconWalletConfig = {
   privateKey: `0x${string}`;
   rpcUrl: `http${string}`;
+  defaults?: IconWalletDefaults;
 };
 
 export type BrowserExtensionIconWalletConfig = {
   walletAddress?: IconEoaAddress;
   rpcUrl: `http${string}`;
+  defaults?: IconWalletDefaults;
 };
 
 export type IconWalletConfig = PrivateKeyIconWalletConfig | BrowserExtensionIconWalletConfig;
