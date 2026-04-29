@@ -1,345 +1,36 @@
-// apps/web/app/(apps)/pool/_components/pool-chart.tsx
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type React from 'react';
 import * as d3 from 'd3';
 import { MinusCircleIcon, PlusCircleIcon, Scan } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-
-type PricePoint = {
-  time: number;
-  price: number;
-};
-
-type TickPoint = {
-  price: number;
-  liquidity: number;
-};
-
-type LiquidityBucket = {
-  tick_lower: number;
-  tick_upper: number;
-  liquidity: string;
-  is_current: boolean;
-};
-
-type LiquidityApiResponse = {
-  buckets?: unknown;
-};
-
-type OhlcInterval = '1h' | '1d';
-
-type OhlcApiPoint = {
-  bucket: string;
-  close_sqrt: string;
-};
-
-function normalizeExternalPrice(value: number | null | undefined): number | null {
-  if (value === null || value === undefined || !Number.isFinite(value) || value <= 0) {
-    return null;
-  }
-  return roundPrice(value);
-}
-
-function getPriceDecimals(value: number): number {
-  const absValue = Math.abs(value);
-  if (absValue >= 1000) {
-    return 2;
-  }
-  if (absValue >= 1) {
-    return 4;
-  }
-  if (absValue >= 0.1) {
-    return 5;
-  }
-  if (absValue >= 0.01) {
-    return 6;
-  }
-  if (absValue >= 0.001) {
-    return 7;
-  }
-  return 8;
-}
-
-function roundPrice(value: number): number {
-  if (!Number.isFinite(value)) {
-    return 0;
-  }
-  return +value.toFixed(getPriceDecimals(value));
-}
-
-function formatPairPrice(value: number): string {
-  const decimals = Math.abs(value) >= 1 ? 2 : getPriceDecimals(value);
-  return d3.format(`,.${decimals}f`)(value);
-}
-
-const DEFAULT_CURRENT_PRICE = 0.78;
-const MOCK_CHART_MIN_PRICE = 0.1;
-const MOCK_CHART_MAX_PRICE = 1.5;
-
-function clampMockPrice(value: number): number {
-  return Math.max(MOCK_CHART_MIN_PRICE, Math.min(MOCK_CHART_MAX_PRICE, value));
-}
-
-function createSeededRandom(seed: number): () => number {
-  let state = seed >>> 0;
-  return (): number => {
-    state = (state * 1664525 + 1013904223) >>> 0;
-    return state / 4294967296;
-  };
-}
-
-function generatePairData(days: number): PricePoint[] {
-  const data: PricePoint[] = [];
-  const now = Date.now();
-  const intervalMs = days <= 1 ? 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
-  const totalIntervals = Math.max(2, Math.floor((days * 24 * 60 * 60 * 1000) / intervalMs) + 1);
-  const random = createSeededRandom(days * 9973 + 17);
-
-  let price = DEFAULT_CURRENT_PRICE * (0.92 + random() * 0.16);
-  let velocity = 0;
-  let regimeDrift = (random() - 0.5) * 0.02;
-  let regimeSpan = Math.max(8, Math.floor(totalIntervals * (0.08 + random() * 0.12)));
-
-  for (let i = totalIntervals - 1; i >= 0; i--) {
-    const index = totalIntervals - 1 - i;
-    if (index > 0 && index % regimeSpan === 0) {
-      regimeDrift = (random() - 0.5) * 0.03;
-      regimeSpan = Math.max(8, Math.floor(totalIntervals * (0.06 + random() * 0.18)));
-    }
-
-    const shock = random() < 0.04 ? (random() - 0.5) * 0.22 : 0;
-    const noise = (random() - 0.5) * 0.04;
-    const meanReversion = (DEFAULT_CURRENT_PRICE - price) * 0.08;
-    velocity = velocity * 0.6 + regimeDrift + noise + shock + meanReversion;
-
-    price = clampMockPrice(price + velocity);
-    const isLast = i === 0;
-    const nextPrice = isLast ? DEFAULT_CURRENT_PRICE : price;
-    data.push({ time: now - i * intervalMs, price: roundPrice(nextPrice) });
-  }
-
-  return data;
-}
-
-function tickIndexToPrice(tick: number): number | null {
-  if (!Number.isFinite(tick)) {
-    return null;
-  }
-  const price = 1.0001 ** tick;
-  if (!Number.isFinite(price) || price <= 0) {
-    return null;
-  }
-  return roundPrice(price);
-}
-
-function parseLiquidityTickPoints(payload: unknown): TickPoint[] {
-  if (!payload || typeof payload !== 'object') {
-    return [];
-  }
-
-  const data = payload as LiquidityApiResponse;
-  if (!Array.isArray(data.buckets)) {
-    return [];
-  }
-
-  const points = data.buckets
-    .map((item): TickPoint | null => {
-      if (!item || typeof item !== 'object') {
-        return null;
-      }
-      const bucket = item as Partial<LiquidityBucket>;
-      if (
-        typeof bucket.tick_lower !== 'number' ||
-        !Number.isFinite(bucket.tick_lower) ||
-        typeof bucket.tick_upper !== 'number' ||
-        !Number.isFinite(bucket.tick_upper)
-      ) {
-        return null;
-      }
-
-      const centerTick = (bucket.tick_lower + bucket.tick_upper) / 2;
-      const price = tickIndexToPrice(centerTick);
-      if (price === null) {
-        return null;
-      }
-
-      const liquidityValue = Number(bucket.liquidity ?? '0');
-      const liquidity = Number.isFinite(liquidityValue) && liquidityValue >= 0 ? liquidityValue : 0;
-      return { price, liquidity };
-    })
-    .filter((point): point is TickPoint => point !== null)
-    .sort((a, b) => a.price - b.price);
-
-  // Merge identical price rows so the curve remains stable after rounding.
-  const deduped: TickPoint[] = [];
-  for (const point of points) {
-    const last = deduped[deduped.length - 1];
-    if (last && last.price === point.price) {
-      last.liquidity += point.liquidity;
-    } else {
-      deduped.push({ ...point });
-    }
-  }
-  return deduped;
-}
-
-const Q96 = 2n ** 96n;
-const SQRT_PRECISION = 1_000_000_000n;
-
-function sqrtPriceX96ToPrice(value: string): number | null {
-  if (!/^\d+$/.test(value)) {
-    return null;
-  }
-  const sqrtX96 = BigInt(value);
-  if (sqrtX96 <= 0n) {
-    return null;
-  }
-
-  const integerPart = sqrtX96 / Q96;
-  const fractionPart = ((sqrtX96 % Q96) * SQRT_PRECISION) / Q96;
-  const sqrtAsNumber = Number(integerPart) + Number(fractionPart) / Number(SQRT_PRECISION);
-  if (!Number.isFinite(sqrtAsNumber) || sqrtAsNumber <= 0) {
-    return null;
-  }
-
-  const price = sqrtAsNumber * sqrtAsNumber;
-  return Number.isFinite(price) && price > 0 ? roundPrice(price) : null;
-}
-
-function parseOhlcPricePoints(payload: unknown): PricePoint[] {
-  if (!Array.isArray(payload)) {
-    return [];
-  }
-
-  const points = payload
-    .map((item): PricePoint | null => {
-      if (!item || typeof item !== 'object') {
-        return null;
-      }
-      const ohlc = item as Partial<OhlcApiPoint>;
-      const bucketTime = ohlc.bucket ? Date.parse(ohlc.bucket) : Number.NaN;
-      const price = ohlc.close_sqrt ? sqrtPriceX96ToPrice(ohlc.close_sqrt) : null;
-      if (!Number.isFinite(bucketTime) || price === null) {
-        return null;
-      }
-      return { time: bucketTime, price };
-    })
-    .filter((point): point is PricePoint => point !== null)
-    .sort((a, b) => a.time - b.time);
-
-  if (!points.length) {
-    return points;
-  }
-
-  const deduped: PricePoint[] = [];
-  let lastTime: number | null = null;
-  for (const point of points) {
-    if (point.time !== lastTime) {
-      deduped.push(point);
-      lastTime = point.time;
-    } else {
-      deduped[deduped.length - 1] = point;
-    }
-  }
-  return deduped;
-}
-
-function getInitialPriceBand(prices: PricePoint[], fallbackPrice: number): { min: number; max: number } {
-  const validPrices = prices.map(point => point.price).filter(price => Number.isFinite(price) && price > 0);
-  const latestValidPrice = validPrices.length > 0 ? validPrices[validPrices.length - 1] : undefined;
-
-  const basePrice =
-    latestValidPrice !== undefined
-      ? latestValidPrice
-      : Number.isFinite(fallbackPrice) && fallbackPrice > 0
-        ? fallbackPrice
-        : DEFAULT_CURRENT_PRICE;
-
-  const seriesMin = validPrices.length > 0 ? Math.min(...validPrices) : basePrice;
-  const seriesMax = validPrices.length > 0 ? Math.max(...validPrices) : basePrice;
-  const marketSpan = Math.max(seriesMax - seriesMin, 0);
-  const minSpan = Math.max(basePrice * 0.006, 0.000001);
-  const bandSpan = Math.max(marketSpan * 2.5, minSpan);
-
-  const computedMin = Math.max(basePrice - bandSpan / 2, 0.00000001);
-  const computedMax = basePrice + bandSpan / 2;
-  const roundedMin = roundPrice(computedMin);
-  const roundedMax = roundPrice(computedMax);
-
-  if (!Number.isFinite(roundedMin) || !Number.isFinite(roundedMax) || roundedMax <= roundedMin) {
-    const fallbackMin = roundPrice(Math.max(basePrice * 0.997, 0.00000001));
-    const fallbackMax = roundPrice(basePrice * 1.003);
-    return { min: fallbackMin, max: fallbackMax };
-  }
-
-  return { min: roundedMin, max: roundedMax };
-}
+import type { PoolChartProps, PricePoint, TickPoint } from './types';
+import {
+  C,
+  DEFAULT_CURRENT_PRICE,
+  HEIGHT,
+  INTERACTIVE,
+  ML,
+  MOCK_CHART_MAX_PRICE,
+  MOCK_CHART_MIN_PRICE,
+  RANGES,
+  RANGE_DAYS,
+  RANGE_FETCH_CONFIG,
+  SHOW_MIN_MAX_HANDLES,
+  TICK_W,
+  TM,
+} from './constants';
+import { generatePairData, getInitialPriceBand } from './mock-data';
+import { parseLiquidityTickPoints, parseOhlcPricePoints } from './parsers';
+import { formatPairPrice, normalizeExternalPrice, roundPrice } from './price-utils';
+import { useChartZoomPan } from './hooks/use-chart-zoom-pan';
+import { useHandleDrag } from './hooks/use-handle-drag';
 
 const ALL_DATA = generatePairData(730);
 const LATEST_POINT: PricePoint = ALL_DATA[ALL_DATA.length - 1] ?? { time: Date.now(), price: DEFAULT_CURRENT_PRICE };
 const CURRENT_PRICE = LATEST_POINT.price;
 const TICK_DATA: TickPoint[] = [];
-
-const C = {
-  lineInside: '#483534',
-  lineOutside: '#8E7E7D',
-  lineWidthIn: 3,
-  lineWidthOut: 1.5,
-  nowLine: '#B9ACAB',
-  minMaxLine: '#D7CDCB',
-  bandFill: '#EDE6E6',
-  bandOpacityTop: 0.18,
-  bandOpacityBot: 0.1,
-  textDim: '#8E7E7D',
-  tickInStroke: 'transparent',
-  tickOutStroke: 'transparent',
-  tickInFill: '#B9ACAB',
-  tickInOpacityA: 0.55,
-  tickInOpacityB: 0.04,
-  tickOutFill: '#EDE6E6',
-  tickOutOpacityA: 0.55,
-  tickOutOpacityB: 0.04,
-  handleCircle: 'white',
-  handleGrip: '#B9ACAB',
-} as const;
-
-const RANGES = [
-  { label: '1D', ms: 1 * 86400000 },
-  { label: '1W', ms: 7 * 86400000 },
-  { label: '1M', ms: 30 * 86400000 },
-  { label: '1Y', ms: 365 * 86400000 },
-  { label: 'All time', ms: null },
-] as const;
-
-const RANGE_FETCH_CONFIG: Record<
-  (typeof RANGES)[number]['label'],
-  { interval: OhlcInterval; lookbackMs: number; limit: number }
-> = {
-  '1D': { interval: '1h', lookbackMs: 1 * 86400000, limit: 200 },
-  '1W': { interval: '1h', lookbackMs: 7 * 86400000, limit: 300 },
-  '1M': { interval: '1d', lookbackMs: 30 * 86400000, limit: 300 },
-  '1Y': { interval: '1d', lookbackMs: 365 * 86400000, limit: 400 },
-  'All time': { interval: '1d', lookbackMs: 730 * 86400000, limit: 500 },
-};
-
-const HEIGHT = 132;
-const ML = { top: 24, right: 0, bottom: 8, left: 0 };
-const TICK_W = 90;
-const TM = { top: 20, right: 0, bottom: 36, left: 0 };
-
-// When false, disables dragging and zooming of the chart. Min/Max are controlled externally.
-const INTERACTIVE = false as const;
-const SHOW_MIN_MAX_HANDLES = false as const;
-
-type PoolChartProps = {
-  pairPrice?: number | null;
-  poolId?: string | null;
-  minPrice?: number;
-  maxPrice?: number;
-  onMinPriceChange?: (price: number) => void;
-  onMaxPriceChange?: (price: number) => void;
-};
 
 export function PoolChart({
   pairPrice,
@@ -352,8 +43,6 @@ export function PoolChart({
   const mainSvgRef = useRef<SVGSVGElement | null>(null);
   const tickSvgRef = useRef<SVGSVGElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
-  const zoomBehRef = useRef<d3.Selection<SVGRectElement, unknown, null, undefined> | null>(null);
-  const zoomObjRef = useRef<d3.ZoomBehavior<SVGRectElement, unknown> | null>(null);
 
   const [internalMinPrice, setInternalMinPrice] = useState<number>(roundPrice(CURRENT_PRICE * 0.85));
   const [internalMaxPrice, setInternalMaxPrice] = useState<number>(roundPrice(CURRENT_PRICE * 1.15));
@@ -383,7 +72,6 @@ export function PoolChart({
     [onMaxPriceChange],
   );
   const [activeRange, setActiveRange] = useState<(typeof RANGES)[number]['label']>('1M');
-  const [zoomTransform, setZoomTransform] = useState<d3.ZoomTransform>(d3.zoomIdentity);
   const [width, setWidth] = useState<number>(700);
   const [allData, setAllData] = useState<PricePoint[]>(ALL_DATA);
   const externalPairPrice = useMemo(() => normalizeExternalPrice(pairPrice), [pairPrice]);
@@ -391,20 +79,21 @@ export function PoolChart({
   const [tickData, setTickData] = useState<TickPoint[]>(TICK_DATA);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const draggingRef = useRef<'min' | 'max' | 'band' | null>(null);
-  const dragDataRef = useRef<{
-    anchorY: number;
-    anchorMin: number;
-    anchorMax: number;
-    span: number;
-    pxPerPrice: number;
-  } | null>(null);
-
   const INNER_W = width - ML.left - ML.right;
   const INNER_H = HEIGHT - ML.top - ML.bottom;
   const TICK_IH = HEIGHT - TM.top - TM.bottom;
   const TICK_IW = TICK_W - TM.left - TM.right;
-  const RANGE_DAYS = { '1D': 1, '1W': 7, '1M': 30, '1Y': 365, 'All time': 730 };
+
+  const {
+    transform: zoomTransform,
+    zoomIn,
+    zoomOut,
+    reset: resetZoom,
+  } = useChartZoomPan({
+    svgRef: mainSvgRef,
+    enabled: INTERACTIVE,
+    viewportHeight: INNER_H,
+  });
 
   useEffect(() => {
     if (externalPairPrice === null) {
@@ -531,7 +220,7 @@ export function PoolChart({
     [visibleData, INNER_W],
   );
 
-  const xScale = useMemo(() => zoomTransform.rescaleX(xScaleBase), [zoomTransform, xScaleBase]);
+  const xScale = xScaleBase;
 
   const [yDomainMin, yDomainMax] = useMemo((): [number, number] => {
     const defaultMin = MOCK_CHART_MIN_PRICE;
@@ -541,13 +230,9 @@ export function PoolChart({
     }
 
     const referencePrices = visibleData.map(point => point.price);
-    referencePrices.push(minPrice, maxPrice);
     const finiteReferences = referencePrices.filter(price => Number.isFinite(price) && price > 0);
 
-    const maxDeviation = finiteReferences.reduce(
-      (acc, price) => Math.max(acc, Math.abs(price - currentPrice)),
-      0,
-    );
+    const maxDeviation = finiteReferences.reduce((acc, price) => Math.max(acc, Math.abs(price - currentPrice)), 0);
     const minHalfSpan = Math.max(currentPrice * 0.002, 0.000001);
     const halfSpan = Math.max(maxDeviation * 1.15, minHalfSpan);
     const paddedMin = currentPrice - halfSpan;
@@ -556,46 +241,39 @@ export function PoolChart({
       return [defaultMin, defaultMax];
     }
     return [roundPrice(paddedMin), roundPrice(paddedMax)];
-  }, [visibleData, minPrice, maxPrice, currentPrice]);
+  }, [visibleData, currentPrice]);
 
-  const yScale = useMemo(
+  const yScaleBase = useMemo(
     () => d3.scaleLinear().domain([yDomainMin, yDomainMax]).range([INNER_H, 0]),
     [yDomainMin, yDomainMax, INNER_H],
   );
 
+  const yScale = useMemo(() => zoomTransform.rescaleY(yScaleBase), [zoomTransform, yScaleBase]);
+
   const clamp = useCallback((v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v)), []);
   const priceToY = useCallback((p: number) => clamp(yScale(p), 0, INNER_H), [yScale, INNER_H, clamp]);
 
+  const dragBehaviors = useHandleDrag({
+    enabled: INTERACTIVE,
+    svgRef: mainSvgRef,
+    deps: {
+      yScale,
+      currentPrice,
+      minPrice,
+      maxPrice,
+      innerH: INNER_H,
+      marginTop: ML.top,
+    },
+    setMinPrice,
+    setMaxPrice,
+  });
+
   useEffect(() => {
     void activeRange;
-    if (INTERACTIVE && zoomBehRef.current && zoomObjRef.current) {
-      zoomBehRef.current.call(zoomObjRef.current.transform, d3.zoomIdentity);
+    if (INTERACTIVE) {
+      resetZoom();
     }
-  }, [activeRange]);
-
-  useEffect(() => {
-    if (!INTERACTIVE || !mainSvgRef.current || INNER_W <= 0) {
-      return;
-    }
-
-    const zoom = d3
-      .zoom<SVGRectElement, unknown>()
-      .scaleExtent([0.5, 20])
-      .translateExtent([
-        [0, 0],
-        [INNER_W, INNER_H],
-      ])
-      .extent([
-        [0, 0],
-        [INNER_W, INNER_H],
-      ])
-      .on('zoom', event => setZoomTransform(event.transform));
-
-    zoomObjRef.current = zoom;
-    const bg = d3.select(mainSvgRef.current).select<SVGRectElement>('.zoom-bg');
-    bg.call(zoom).on('dblclick.zoom', null);
-    zoomBehRef.current = bg;
-  }, [INNER_W, INNER_H]);
+  }, [activeRange, resetZoom]);
 
   useEffect(() => {
     if (!mainSvgRef.current || INNER_W <= 0) {
@@ -611,20 +289,6 @@ export function PoolChart({
     const cpY = priceToY(currentPrice);
 
     const defs = svg.append('defs');
-
-    const bandGrad = defs
-      .append('linearGradient')
-      .attr('id', 'g-band')
-      .attr('x1', '0')
-      .attr('x2', '0')
-      .attr('y1', '0')
-      .attr('y2', '1');
-    bandGrad.append('stop').attr('offset', '0%').attr('stop-color', C.bandFill).attr('stop-opacity', C.bandOpacityTop);
-    bandGrad
-      .append('stop')
-      .attr('offset', '100%')
-      .attr('stop-color', C.bandFill)
-      .attr('stop-opacity', C.bandOpacityBot);
 
     defs
       .append('clipPath')
@@ -646,15 +310,19 @@ export function PoolChart({
 
     const g = svg.append('g').attr('class', 'chart-content').attr('transform', `translate(${ML.left},${ML.top})`);
 
-    g.append('rect')
+    const bandRect = g
+      .append<SVGRectElement>('rect')
       .attr('class', 'band-hit')
       .attr('x', 0)
       .attr('y', maxY)
       .attr('width', INNER_W)
       .attr('height', Math.max(0, minY - maxY))
-      .attr('fill', 'url(#g-band)')
+      .attr('fill', C.bandFill)
       .attr('pointer-events', INTERACTIVE ? 'all' : 'none')
-      .style('cursor', INTERACTIVE ? 'ns-resize' : 'default');
+      .style('cursor', INTERACTIVE ? 'grab' : 'default');
+    if (dragBehaviors) {
+      bandRect.call(dragBehaviors.bandDrag);
+    }
 
     const line = d3
       .line<PricePoint>()
@@ -736,6 +404,7 @@ export function PoolChart({
         const badgeX = cx - badgeW / 2 - 28;
         const fo = grp
           .append('foreignObject')
+          .attr('class', 'pct-pill')
           .attr('x', badgeX)
           .attr('y', -badgeH / 2)
           .attr('width', badgeW)
@@ -778,8 +447,8 @@ export function PoolChart({
         const iconY = -iconH / 2;
 
         if (SHOW_MIN_MAX_HANDLES) {
-          grp
-            .append('rect')
+          const hitRect = grp
+            .append<SVGRectElement>('rect')
             .attr('x', iconX)
             .attr('y', iconY)
             .attr('width', iconW)
@@ -787,6 +456,9 @@ export function PoolChart({
             .attr('fill', 'transparent')
             .attr('class', label === 'MAX' ? 'hit-max' : 'hit-min')
             .style('cursor', 'ns-resize');
+          if (dragBehaviors) {
+            hitRect.call(label === 'MAX' ? dragBehaviors.maxDrag : dragBehaviors.minDrag);
+          }
         }
 
         if (SHOW_MIN_MAX_HANDLES) {
@@ -839,7 +511,7 @@ export function PoolChart({
       if (dashed) {
         const pH = 20;
         const pW = 90;
-        const pX = INNER_W - pW + 10;
+        const pX = 0;
         const nowFo = grp
           .append('foreignObject')
           .attr('x', pX)
@@ -873,7 +545,7 @@ export function PoolChart({
     drawHLine({ y: maxY, color: C.minMaxLine, label: 'MAX', price: maxPrice });
     drawHLine({ y: cpY, color: C.nowLine, label: 'NOW', price: currentPrice, dashed: true });
     drawHLine({ y: minY, color: C.minMaxLine, label: 'MIN', price: minPrice });
-  }, [minPrice, maxPrice, currentPrice, INNER_W, INNER_H, xScale, yScale, visibleData, activeRange, priceToY]);
+  }, [minPrice, maxPrice, currentPrice, INNER_W, INNER_H, xScale, yScale, visibleData, activeRange, priceToY, dragBehaviors]);
 
   useEffect(() => {
     if (!tickSvgRef.current || TICK_IH <= 0) {
@@ -885,6 +557,8 @@ export function PoolChart({
 
     const minY = priceToY(minPrice);
     const maxY = priceToY(maxPrice);
+    const clipMaxY = Math.max(0, Math.min(maxY, TICK_IH));
+    const clipMinY = Math.max(0, Math.min(minY, TICK_IH));
 
     const defs = svg.append('defs');
 
@@ -925,18 +599,18 @@ export function PoolChart({
       .attr('id', 'clip-tick-in')
       .append('rect')
       .attr('x', 0)
-      .attr('y', maxY)
+      .attr('y', clipMaxY)
       .attr('width', TICK_IW)
-      .attr('height', Math.max(0, minY - maxY));
+      .attr('height', Math.max(0, clipMinY - clipMaxY));
 
     const outClip = defs.append('clipPath').attr('id', 'clip-tick-out');
-    outClip.append('rect').attr('x', 0).attr('y', 0).attr('width', TICK_IW).attr('height', maxY);
+    outClip.append('rect').attr('x', 0).attr('y', 0).attr('width', TICK_IW).attr('height', clipMaxY);
     outClip
       .append('rect')
       .attr('x', 0)
-      .attr('y', minY)
+      .attr('y', clipMinY)
       .attr('width', TICK_IW)
-      .attr('height', Math.max(0, TICK_IH - minY));
+      .attr('height', Math.max(0, TICK_IH - clipMinY));
 
     const g = svg.append('g').attr('transform', `translate(${TM.left},${TM.top})`);
     const liqMax = d3.max(tickData, d => d.liquidity) ?? 1;
@@ -984,121 +658,6 @@ export function PoolChart({
       .attr('clip-path', 'url(#clip-tick-in)');
   }, [minPrice, maxPrice, tickData, TICK_IW, TICK_IH, priceToY]);
 
-  useEffect(() => {
-    if (!INTERACTIVE) {
-      return;
-    }
-    const svgEl = mainSvgRef.current;
-    if (!svgEl) {
-      return;
-    }
-
-    const getHit = (event: Event): 'min' | 'max' | 'band' | null => {
-      const target = event.target;
-      if (!(target instanceof SVGElement)) {
-        return null;
-      }
-      if (SHOW_MIN_MAX_HANDLES && target.classList.contains('hit-max')) {
-        return 'max';
-      }
-      if (SHOW_MIN_MAX_HANDLES && target.classList.contains('hit-min')) {
-        return 'min';
-      }
-      if (target.classList.contains('band-hit')) {
-        return 'band';
-      }
-      return null;
-    };
-
-    const getY = (event: MouseEvent | TouchEvent): number => {
-      const rect = svgEl.getBoundingClientRect();
-      const cy = 'touches' in event ? (event.touches[0]?.clientY ?? 0) : event.clientY;
-      return cy - rect.top - ML.top;
-    };
-
-    const onDown = (event: MouseEvent | TouchEvent): void => {
-      const hit = getHit(event);
-      if (!hit) {
-        return;
-      }
-
-      event.stopPropagation();
-      event.preventDefault();
-      draggingRef.current = hit;
-
-      if (hit === 'band') {
-        dragDataRef.current = {
-          anchorY: getY(event),
-          anchorMin: minPrice,
-          anchorMax: maxPrice,
-          span: maxPrice - minPrice,
-          pxPerPrice: INNER_H / (yDomainMax - yDomainMin),
-        };
-      }
-    };
-
-    const onMove = (event: MouseEvent | TouchEvent): void => {
-      if (!draggingRef.current) {
-        return;
-      }
-
-      event.preventDefault();
-      const rect = svgEl.getBoundingClientRect();
-      const cy = 'touches' in event ? (event.touches[0]?.clientY ?? 0) : event.clientY;
-      const y = cy - rect.top - ML.top;
-      const p = yScale.invert(Math.max(0, Math.min(INNER_H, y)));
-
-      const dynamicPriceGap = Math.max(Math.abs(currentPrice) * 0.02, 0.000001);
-      const clampedPrice = Math.max(p, 0);
-      const minCap = Math.max(currentPrice - dynamicPriceGap, 0);
-
-      if (draggingRef.current === 'min') {
-        setMinPrice(roundPrice(Math.min(clampedPrice, minCap)));
-      } else if (draggingRef.current === 'max') {
-        setMaxPrice(roundPrice(Math.max(clampedPrice, currentPrice + dynamicPriceGap)));
-      } else if (draggingRef.current === 'band' && dragDataRef.current) {
-        const dd = dragDataRef.current;
-        const priceDelta = (y - dd.anchorY) / dd.pxPerPrice;
-        const newMin = Math.max(dd.anchorMin - priceDelta, 0);
-        setMinPrice(roundPrice(newMin));
-        setMaxPrice(roundPrice(newMin + dd.span));
-      }
-    };
-
-    const onUp = (): void => {
-      draggingRef.current = null;
-      dragDataRef.current = null;
-    };
-
-    svgEl.addEventListener('mousedown', onDown, { capture: true });
-    svgEl.addEventListener('mousemove', onMove, { capture: true, passive: false });
-    svgEl.addEventListener('mouseup', onUp, { capture: true });
-    svgEl.addEventListener('touchstart', onDown, { capture: true, passive: false });
-    svgEl.addEventListener('touchmove', onMove, { capture: true, passive: false });
-    svgEl.addEventListener('touchend', onUp, { capture: true });
-
-    return () => {
-      svgEl.removeEventListener('mousedown', onDown, { capture: true });
-      svgEl.removeEventListener('mousemove', onMove, { capture: true });
-      svgEl.removeEventListener('mouseup', onUp, { capture: true });
-      svgEl.removeEventListener('touchstart', onDown, { capture: true });
-      svgEl.removeEventListener('touchmove', onMove, { capture: true });
-      svgEl.removeEventListener('touchend', onUp, { capture: true });
-    };
-  }, [yScale, minPrice, maxPrice, currentPrice, INNER_H, yDomainMin, yDomainMax, setMinPrice, setMaxPrice]);
-
-  const doZoom = useCallback((factor: number) => {
-    if (INTERACTIVE && zoomBehRef.current && zoomObjRef.current) {
-      zoomBehRef.current.transition().duration(300).call(zoomObjRef.current.scaleBy, factor);
-    }
-  }, []);
-
-  const doResetZoom = useCallback(() => {
-    if (INTERACTIVE && zoomBehRef.current && zoomObjRef.current) {
-      zoomBehRef.current.transition().duration(300).call(zoomObjRef.current.transform, d3.zoomIdentity);
-    }
-  }, []);
-
   return (
     <div className="w-full">
       <style>{`
@@ -1122,6 +681,10 @@ export function PoolChart({
           display: block;
           width: 100%;
           overflow: visible;
+          touch-action: none;
+        }
+        .lri-main-chart svg.is-band-dragging .band-hit {
+          cursor: grabbing !important;
         }
         .lri-tick-panel {
           position: absolute;
@@ -1134,6 +697,18 @@ export function PoolChart({
         .lri-tick-panel svg {
           display: block;
           width: 100%;
+        }
+        .lri-chart-row .pct-pill {
+          opacity: 0;
+          transition: opacity 200ms ease;
+        }
+        .lri-chart-row:hover .pct-pill {
+          opacity: 1;
+        }
+        @media (max-width: 767px) {
+          .lri-chart-row .pct-pill {
+            opacity: 1;
+          }
         }
       `}</style>
 
@@ -1211,15 +786,15 @@ export function PoolChart({
           <div className="flex gap-2">
             <MinusCircleIcon
               className="w-4 h-4 text-clay cursor-pointer hover:text-espresso"
-              onClick={INTERACTIVE ? () => doZoom(1 / 1.5) : undefined}
+              onClick={INTERACTIVE ? zoomOut : undefined}
             />
             <Scan
               className="w-4 h-4 text-clay cursor-pointer hover:text-espresso"
-              onClick={INTERACTIVE ? doResetZoom : undefined}
+              onClick={INTERACTIVE ? resetZoom : undefined}
             />
             <PlusCircleIcon
               className="w-4 h-4 text-clay cursor-pointer hover:text-espresso"
-              onClick={INTERACTIVE ? () => doZoom(1.5) : undefined}
+              onClick={INTERACTIVE ? zoomIn : undefined}
             />
           </div>
         </div>

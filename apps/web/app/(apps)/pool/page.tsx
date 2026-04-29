@@ -78,6 +78,7 @@ export default function PoolPage() {
                 <PriceRangeSelector
                   minPrice={minPrice}
                   maxPrice={maxPrice}
+                  currentPrice={pairPrice}
                   onMinPriceChange={setMinPrice}
                   onMaxPriceChange={setMaxPrice}
                 />
