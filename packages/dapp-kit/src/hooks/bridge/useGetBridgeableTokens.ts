@@ -12,11 +12,7 @@ export function useGetBridgeableTokens(
   return useQuery({
     queryKey: ['bridge', 'bridgeableTokens', from, to, token],
     queryFn: () => {
-      if (!from || !to || !token) {
-        return [];
-      }
-
-      const result = sodax.bridge.getBridgeableTokens(from, to, token);
+      const result = sodax.bridge.getBridgeableTokens(from as SpokeChainKey, to as SpokeChainKey, token as string);
       if (!result.ok) {
         throw result.error;
       }
