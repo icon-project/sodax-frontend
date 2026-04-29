@@ -1,4 +1,3 @@
-/*
 import React, { type JSX } from 'react';
 import { SimplePoolManager } from '@/components/dex/SimplePoolManager';
 
@@ -16,4 +15,3 @@ export default function DexPage(): JSX.Element {
     </main>
   );
 }
-*/

@@ -1,9 +1,7 @@
-/*
 // apps/demo/src/components/dex/PoolInformation.tsx
 import React, { type JSX } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { ClService, PoolData } from '@sodax/sdk';
-
+import type { PoolData } from '@sodax/sdk';
 
 interface PoolInformationProps {
   poolData: PoolData | null;
@@ -11,11 +9,7 @@ interface PoolInformationProps {
   formatConversionRate: (rate: bigint) => string;
 }
 
-export function PoolInformation({
-  poolData,
-  formatAmount,
-  formatConversionRate,
-}: PoolInformationProps): JSX.Element | null {
+export function PoolInformation({ poolData, formatConversionRate }: PoolInformationProps): JSX.Element | null {
   if (!poolData) {
     return null;
   }
@@ -118,4 +112,3 @@ export function PoolInformation({
     </Card>
   );
 }
-*/

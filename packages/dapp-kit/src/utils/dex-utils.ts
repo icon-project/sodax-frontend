@@ -1,4 +1,3 @@
-/*
 import type {
   UseCreateDecreaseLiquidityParamsProps,
   UseCreateDepositParamsProps,
@@ -9,10 +8,32 @@ import type {
 import {
   ClService,
   type CreateAssetWithdrawParams,
-  type ConcentratedLiquidityDecreaseLiquidityParams,
+  type ClDecreaseLiquidityParams,
   type CreateAssetDepositParams,
 } from '@sodax/sdk';
+import type { SpokeChainKey } from '@sodax/types';
 import { parseUnits } from 'viem';
+
+/**
+ * Subset of {@link CreateAssetDepositParams} produced by {@link createDepositParamsProps}.
+ * Callers add `srcChainKey` + `srcAddress` at the mutation call site.
+ */
+export type DepositParamsCore = Omit<CreateAssetDepositParams<SpokeChainKey>, 'srcChainKey' | 'srcAddress'>;
+
+/**
+ * Subset of {@link CreateAssetWithdrawParams} produced by {@link createWithdrawParamsProps}.
+ * Callers add `srcChainKey` + `srcAddress` at the mutation call site.
+ */
+export type WithdrawParamsCore = Omit<CreateAssetWithdrawParams<SpokeChainKey>, 'srcChainKey' | 'srcAddress'>;
+
+/**
+ * Subset of {@link ClDecreaseLiquidityParams} produced by {@link createDecreaseLiquidityParamsProps}.
+ * Callers add `srcChainKey` + `srcAddress` at the mutation call site.
+ */
+export type DecreaseLiquidityParamsCore = Omit<
+  ClDecreaseLiquidityParams<SpokeChainKey>,
+  'srcChainKey' | 'srcAddress'
+>;
 
 export function createDecreaseLiquidityParamsProps({
   poolKey,
@@ -20,7 +41,7 @@ export function createDecreaseLiquidityParamsProps({
   percentage,
   positionInfo,
   slippageTolerance,
-}: UseCreateDecreaseLiquidityParamsProps): ConcentratedLiquidityDecreaseLiquidityParams {
+}: UseCreateDecreaseLiquidityParamsProps): DecreaseLiquidityParamsCore {
   const percentageNum = Number.parseFloat(String(percentage));
   const slippage = Number.parseFloat(String(slippageTolerance));
 
@@ -67,7 +88,7 @@ export function createDepositParamsProps({
   amount,
   poolData,
   poolSpokeAssets,
-}: UseCreateDepositParamsProps): CreateAssetDepositParams {
+}: UseCreateDepositParamsProps): DepositParamsCore {
   const amountNum = Number.parseFloat(String(amount));
 
   if (!amount || amountNum <= 0) {
@@ -167,7 +188,7 @@ export function createWithdrawParamsProps({
   poolData,
   poolSpokeAssets,
   dst,
-}: UseCreateWithdrawParamsProps): CreateAssetWithdrawParams {
+}: UseCreateWithdrawParamsProps): WithdrawParamsCore {
   const amountNum = Number.parseFloat(String(amount));
   if (!amount || amountNum <= 0) {
     throw new Error('Please enter a valid amount');
@@ -183,4 +204,3 @@ export function createWithdrawParamsProps({
     dst,
   };
 }
-*/
