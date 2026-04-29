@@ -32,7 +32,7 @@ export function useBorrow<K extends SpokeChainKey = SpokeChainKey>(): UseMutatio
 
   return useMutation<BorrowResult, Error, UseBorrowVars<K>>({
     mutationFn: async (vars) => {
-      return sodax.moneyMarket.borrow({ ...vars, raw: false } as MoneyMarketBorrowActionParams<K, false>);
+      return sodax.moneyMarket.borrow({ ...vars, raw: false });
     },
     onSuccess: (_data, { params }) => {
       queryClient.invalidateQueries({ queryKey: ['mm', 'userReservesData', params.srcChainKey, params.srcAddress] });

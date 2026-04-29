@@ -18,7 +18,7 @@ import {
   type SonicChainKey,
   type TxReturnType,
   type HubChainKey,
-  type WalletProviderSlot,
+  type SpokeExecActionParams,
 } from '@sodax/types';
 import {
   encodeAddress,
@@ -53,11 +53,11 @@ export type SetSwapPreferenceParams = {
   dstAddress: string;
 };
 
-export type SetSwapPreferenceAction<K extends SpokeChainKey, Raw extends boolean> = {
-  params: SetSwapPreferenceParams;
-  timeout?: number;
-  skipSimulation?: boolean;
-} & WalletProviderSlot<K, Raw>;
+export type SetSwapPreferenceAction<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  SetSwapPreferenceParams
+>;
 
 export type FeeTokenApproveParams = {
   srcChainKey: HubChainKey;
@@ -65,9 +65,11 @@ export type FeeTokenApproveParams = {
   token: Address;
 };
 
-export type FeeTokenApproveAction<K extends HubChainKey, Raw extends boolean> = {
-  params: FeeTokenApproveParams;
-} & WalletProviderSlot<K, Raw>;
+export type FeeTokenApproveAction<K extends HubChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  FeeTokenApproveParams
+>;
 
 export type AssetEntry = {
   assetAddress: Address; // The wrapped asset address on Sonic
@@ -84,10 +86,11 @@ export type PartnerFeeClaimSwapParams = {
   timeout?: number;
 };
 
-export type PartnerFeeClaimSwapAction<K extends SpokeChainKey, Raw extends boolean> = {
-  params: PartnerFeeClaimSwapParams;
-  timeout?: number;
-} & WalletProviderSlot<K, Raw>;
+export type PartnerFeeClaimSwapAction<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  PartnerFeeClaimSwapParams
+>;
 
 export type PartnerFeeClaimServiceConstructorParams = {
   config: ConfigService;

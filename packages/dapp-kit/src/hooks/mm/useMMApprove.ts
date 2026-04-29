@@ -30,7 +30,7 @@ export function useMMApprove<K extends SpokeChainKey = SpokeChainKey>(): UseMuta
 
   return useMutation<Result<TxReturnType<K, false>>, Error, UseMMApproveVars<K>>({
     mutationFn: async (vars) => {
-      return sodax.moneyMarket.approve({ ...vars, raw: false } as MoneyMarketApproveActionParams<K, false>);
+      return sodax.moneyMarket.approve({ ...vars, raw: false });
     },
     onSuccess: (_data, { params }) => {
       queryClient.invalidateQueries({

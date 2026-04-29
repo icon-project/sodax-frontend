@@ -5,6 +5,7 @@ import {
   type IconChainKey,
   type IconContractAddress,
   type SonicChainKey,
+  type SpokeExecActionParams,
   type TxReturnType,
   type WalletProviderSlot,
 } from '@sodax/types';
@@ -73,11 +74,7 @@ export type DetailedLock = {
 /**
  * Parameters for BALN swap operations.
  */
-export type BalnMigrateAction<Raw extends boolean> = {
-  params: BalnMigrateParams;
-  skipSimulation?: boolean;
-  timeout?: number;
-} & WalletProviderSlot<IconChainKey, Raw>;
+export type BalnMigrateAction<Raw extends boolean> = SpokeExecActionParams<IconChainKey, Raw, BalnMigrateParams>;
 
 export type BalnMigrateParams = {
   srcChainKey: IconChainKey;

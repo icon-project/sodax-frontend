@@ -32,7 +32,7 @@ export function useRepay<K extends SpokeChainKey = SpokeChainKey>(): UseMutation
 
   return useMutation<RepayResult, Error, UseRepayVars<K>>({
     mutationFn: async (vars) => {
-      return sodax.moneyMarket.repay({ ...vars, raw: false } as MoneyMarketRepayActionParams<K, false>);
+      return sodax.moneyMarket.repay({ ...vars, raw: false });
     },
     onSuccess: (_data, { params }) => {
       queryClient.invalidateQueries({ queryKey: ['mm', 'userReservesData', params.srcChainKey, params.srcAddress] });

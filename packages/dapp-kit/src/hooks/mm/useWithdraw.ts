@@ -33,7 +33,7 @@ export function useWithdraw<K extends SpokeChainKey = SpokeChainKey>(): UseMutat
 
   return useMutation<WithdrawResult, Error, UseWithdrawVars<K>>({
     mutationFn: async (vars) => {
-      return sodax.moneyMarket.withdraw({ ...vars, raw: false } as MoneyMarketWithdrawActionParams<K, false>);
+      return sodax.moneyMarket.withdraw({ ...vars, raw: false });
     },
     onSuccess: (_data, { params }) => {
       queryClient.invalidateQueries({ queryKey: ['mm', 'userReservesData', params.srcChainKey, params.srcAddress] });

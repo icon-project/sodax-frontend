@@ -41,7 +41,7 @@ export function useSupply<K extends SpokeChainKey = SpokeChainKey>(): UseMutatio
 
   return useMutation<SupplyResult, Error, UseSupplyVars<K>>({
     mutationFn: async (vars) => {
-      return sodax.moneyMarket.supply({ ...vars, raw: false } as MoneyMarketSupplyActionParams<K, false>);
+      return sodax.moneyMarket.supply({ ...vars, raw: false });
     },
     onSuccess: (_data, { params }) => {
       queryClient.invalidateQueries({ queryKey: ['mm', 'userReservesData', params.srcChainKey, params.srcAddress] });
