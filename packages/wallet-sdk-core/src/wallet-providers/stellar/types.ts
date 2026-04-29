@@ -16,8 +16,6 @@ export type StellarWalletDefaults = {
   pollInterval?: number;
   /** Total wait (ms) before timeout. Default `60_000`. Recommended floor `30_000` on mainnet. */
   pollTimeout?: number;
-  /** Custom Horizon URL (overrides per-network default). */
-  horizonUrl?: string;
   /** Custom network passphrase (use for FUTURENET / private networks). */
   networkPassphrase?: string;
 };

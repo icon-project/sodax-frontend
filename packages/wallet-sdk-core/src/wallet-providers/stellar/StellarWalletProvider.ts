@@ -89,9 +89,8 @@ export class StellarWalletProvider extends BaseWalletProvider<StellarWalletDefau
       throw new StellarWalletError(`Invalid network: ${config.network}`, 'INVALID_NETWORK');
     }
 
-    const horizonUrl = this.defaults.horizonUrl ?? config.rpcUrl ?? STELLAR_HORIZON_URLS[config.network];
     this.networkPassphrase = this.defaults.networkPassphrase ?? STELLAR_NETWORK_PASSPHRASES[config.network];
-    this.server = new Horizon.Server(horizonUrl);
+    this.server = new Horizon.Server(config.rpcUrl ?? STELLAR_HORIZON_URLS[config.network]);
 
     if (isPrivateKeyStellarWalletConfig(config)) {
       if (!isValidStellarPrivateKey(config.privateKey)) {
