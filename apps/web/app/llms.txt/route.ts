@@ -170,14 +170,13 @@ export async function GET(): Promise<Response> {
   }
   lines.push('');
 
-  // Glossary section is always emitted: /glossary, /concepts, /system are
-  // explicit ticket-required index pages (issue #1153 §2). Per-entry concept
-  // and system links are appended when Notion returns validated entries.
+  // Glossary section is always emitted; /glossary is the single browsable
+  // index for both concepts and system components (no separate /concepts or
+  // /system index page exists — those routes are slug-only). Per-entry links
+  // are appended when Notion returns validated entries.
   lines.push('## Glossary');
   lines.push('');
   lines.push(`- [Glossary index](${SITE_URL}${GLOSSARY_ROUTE}): Definitions of key SODAX concepts and components`);
-  lines.push(`- [Concepts](${SITE_URL}/concepts): SODAX system concepts and economic primitives`);
-  lines.push(`- [System Components](${SITE_URL}/system): Architectural components of the SODAX system`);
   for (const entry of conceptEntries) {
     const summary = entry.summary ? `: ${entry.summary}` : '';
     lines.push(`- [${entry.title}](${SITE_URL}/concepts/${slugify(entry.title)})${summary}`);
