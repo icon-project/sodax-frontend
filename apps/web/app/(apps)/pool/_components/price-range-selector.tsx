@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import type React from 'react';
-import { PlusCircleIcon, MinusCircleIcon } from 'lucide-react';
+import { PlusCircleIcon, MinusCircleIcon, Settings } from 'lucide-react';
+import { RangeSettingsDialog } from './range-settings-dialog';
 
 type PriceRangeSelectorProps = {
   minPrice: number;
   maxPrice: number;
+  currentPrice: number | null | undefined;
   onMinPriceChange: (price: number) => void;
   onMaxPriceChange: (price: number) => void;
   step?: number;
@@ -13,10 +15,12 @@ type PriceRangeSelectorProps = {
 export function PriceRangeSelector({
   minPrice,
   maxPrice,
+  currentPrice,
   onMinPriceChange,
   onMaxPriceChange,
   step = 0.01,
 }: PriceRangeSelectorProps): React.JSX.Element {
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [minInput, setMinInput] = useState<string>(minPrice.toFixed(4));
   const [maxInput, setMaxInput] = useState<string>(maxPrice.toFixed(4));
 
@@ -108,8 +112,18 @@ export function PriceRangeSelector({
   return (
     <>
       <div className="inline-flex justify-start items-center gap-(--layout-space-comfortable)">
-        <div className="text-right justify-start text-clay text-(length:--body-tiny) font-medium font-['InterRegular'] uppercase leading-3 w-12">
-          SELECTED range
+        <div className="inline-flex items-center gap-2 w-12">
+          <div className="text-right justify-start text-clay text-(length:--body-tiny) font-medium font-['InterRegular'] uppercase leading-3">
+            YOUR RANGE
+          </div>
+          <button
+            type="button"
+            aria-label="Range settings"
+            onClick={(): void => setIsSettingsOpen(true)}
+            className="cursor-pointer"
+          >
+            <Settings className="w-4 h-4 text-clay hover:text-espresso" />
+          </button>
         </div>
         <div className="flex justify-start items-center gap-(--layout-space-small)">
           <div className="w-0 h-10 outline outline-cherry-grey" />
@@ -189,6 +203,13 @@ export function PriceRangeSelector({
         </div>
       </div>
       <div className="w-4 h-20 left-[40px] top-[12px] absolute origin-top-left -rotate-90"></div>
+      <RangeSettingsDialog
+        open={isSettingsOpen}
+        onOpenChange={setIsSettingsOpen}
+        currentPrice={currentPrice}
+        onMinPriceChange={onMinPriceChange}
+        onMaxPriceChange={onMaxPriceChange}
+      />
     </>
   );
 }

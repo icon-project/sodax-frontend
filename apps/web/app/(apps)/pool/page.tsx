@@ -7,7 +7,6 @@ import { PoolHeader } from './_components/pool-header';
 import { PoolInfoCard } from './_components/pool-info-card';
 import { PoolNetworkSelector } from './_components/pool-network-selector';
 import { PriceRangeSelector } from './_components/price-range-selector';
-import { PriceRangePresets } from './_components/price-range-presets';
 import { LiquidityInputs } from './_components/liquidity-inputs';
 import { SupplyOverview } from './_components/supply-overview';
 import Tip from '../stake/_components/icons/tip';
@@ -76,14 +75,10 @@ export default function PoolPage() {
                 <div className="absolute -top-1 left-[72px] ">
                   <Tip fill="#F8F3F3" />
                 </div>
-                <PriceRangePresets
-                  currentPrice={pairPrice}
-                  onMinPriceChange={setMinPrice}
-                  onMaxPriceChange={setMaxPrice}
-                />
                 <PriceRangeSelector
                   minPrice={minPrice}
                   maxPrice={maxPrice}
+                  currentPrice={pairPrice}
                   onMinPriceChange={setMinPrice}
                   onMaxPriceChange={setMaxPrice}
                 />
