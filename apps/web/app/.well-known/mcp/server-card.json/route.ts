@@ -26,15 +26,22 @@ const serverCard = {
   // these, the card is rejected as missing required MCP fields even though
   // the per-server `servers[].name` entries are populated below.
   name: 'SODAX MCP Catalog',
+  // Primary MCP endpoint at the top level so agents reading only the card
+  // header are pointed straight at https://builders.sodax.com/mcp instead of
+  // resolving the catalog and walking `servers[]`. Builders is the canonical
+  // public MCP for SODAX (on-chain data + auto-proxied SDK docs); marketing
+  // is a sibling resource exposed via `servers[]`.
+  url: 'https://builders.sodax.com/mcp',
   serverInfo: {
     name: 'SODAX MCP Catalog',
+    url: 'https://builders.sodax.com/mcp',
     version: '0.1',
   },
   version: '0.1',
   // KEEP IN SYNC: bump this date whenever any server entry, URL, or tool list
   // below changes. It is the only freshness signal agents have — drift here
   // silently turns this card into a Deceptive Tool Description (Agentic AI T12).
-  updatedAt: '2026-04-21',
+  updatedAt: '2026-04-29',
   servers: [
     {
       id: 'sodax-builders',
@@ -231,6 +238,7 @@ const serverCard = {
     apiCatalog: 'https://sodax.com/.well-known/api-catalog',
     agentSkills: 'https://sodax.com/.well-known/agent-skills/index.json',
     llmsTxt: 'https://sodax.com/llms.txt',
+    llmsFullTxt: 'https://sodax.com/llms-full.txt',
   },
 };
 

@@ -25,6 +25,19 @@ function isInternalPath(pathname: string): boolean {
   return pathname.startsWith('/agent') || pathname.startsWith('/api') || pathname.startsWith('/_next');
 }
 
+// Endpoints that already serve agent-native formats (llms.txt, sitemap, RSS,
+// robots, .well-known/*) — they must not be rewritten to /agent/md even when
+// the caller sends `Accept: text/markdown`. Their own routes set the right
+// Content-Type and headers.
+const AGENT_NATIVE_PATHS = new Set(['/llms.txt', '/llms-full.txt', '/sitemap.xml', '/robots.txt']);
+
+function isAgentNativePath(pathname: string): boolean {
+  if (AGENT_NATIVE_PATHS.has(pathname)) return true;
+  if (pathname.startsWith('/.well-known/')) return true;
+  if (pathname.endsWith('/feed.xml')) return true;
+  return false;
+}
+
 /**
  * Parse an HTTP Accept header into a media-type → q-value map (RFC 9110 §12.5.1).
  * Quality values default to 1.0 when the `q` parameter is absent. Invalid q
@@ -75,8 +88,10 @@ export function middleware(request: NextRequest) {
   // ── Agent Readiness: markdown content negotiation ───────────────────────────
   // Rewrite `Accept: text/markdown` requests and `*/index.md` URL suffixes to
   // the dedicated /agent/md handler. Skip framework-internal paths so we don't
-  // recurse into our own handler or interfere with API/asset routing.
-  if (!isInternalPath(pathname)) {
+  // recurse into our own handler or interfere with API/asset routing. Skip
+  // agent-native endpoints (llms.txt, sitemap, .well-known/*) — they already
+  // serve the right format and Content-Type from their own route handlers.
+  if (!isInternalPath(pathname) && !isAgentNativePath(pathname)) {
     const wantsMarkdown = prefersMarkdown(request.headers.get('accept'));
     const isIndexMd = pathname === '/index.md' || pathname.endsWith('/index.md');
 
@@ -107,8 +122,11 @@ export function middleware(request: NextRequest) {
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
 
-  // Advertise the markdown alternate to agents on every HTML response.
-  if (!isInternalPath(pathname)) {
+  // Advertise the markdown alternate to agents on every HTML response. Skip
+  // agent-native endpoints (llms.txt, sitemap.xml, etc.) — they already speak
+  // an agent-readable format and a `</index.md>` alternate would point at the
+  // homepage, not their own content.
+  if (!isInternalPath(pathname) && !isAgentNativePath(pathname)) {
     response.headers.set('Link', MARKDOWN_LINK_HEADER);
   }
 
