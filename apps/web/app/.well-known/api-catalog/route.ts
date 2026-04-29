@@ -31,12 +31,30 @@ const catalog = {
           type: 'application/json',
           title: 'SODAX Agent Skills index',
         },
+        // MCP endpoints surfaced as service-desc so agents reading the catalog
+        // are pointed straight at the machine-readable MCPs, not just the
+        // server-card index. The card is still authoritative for tool lists.
+        {
+          href: 'https://builders.sodax.com/mcp',
+          type: 'application/json',
+          title: 'SODAX Builders MCP — on-chain protocol data + SDK docs',
+        },
+        {
+          href: 'https://marketing.sodax.com/mcp',
+          type: 'application/json',
+          title: 'SODAX Marketing MCP — brand, glossary, voice & guardrails',
+        },
       ],
       'service-doc': [
         {
           href: 'https://docs.sodax.com',
           type: 'text/html',
           title: 'SODAX developer documentation',
+        },
+        {
+          href: 'https://builders.sodax.com',
+          type: 'text/html',
+          title: 'SODAX Builders portal (HTML) — MCP / SDK / tooling overview',
         },
       ],
       alternate: [
@@ -66,21 +84,6 @@ const catalog = {
           href: 'https://api.sodax.com/v1/intent',
           type: 'application/json',
           title: 'SODAX Solver API — cross-chain intent execution',
-        },
-        {
-          href: 'https://builders.sodax.com/mcp',
-          type: 'application/json',
-          title: 'SODAX Builders MCP — on-chain protocol data + SDK docs',
-        },
-        {
-          href: 'https://marketing.sodax.com/mcp',
-          type: 'application/json',
-          title: 'SODAX Marketing MCP — brand, glossary, voice & guardrails',
-        },
-        {
-          href: 'https://builders.sodax.com',
-          type: 'text/html',
-          title: 'SODAX Builders portal — MCP, SDK, tooling',
         },
       ],
     },

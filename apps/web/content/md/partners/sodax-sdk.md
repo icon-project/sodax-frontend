@@ -6,6 +6,6 @@ The SODAX SDK is the developer entry point for integrating SODAX cross-network e
 
 - Canonical page: https://sodax.com/partners/sodax-sdk
 - Developer docs: https://docs.sodax.com
-- Builders portal: https://builders.sodax.com
-- Builders MCP endpoint: https://builders.sodax.com/mcp
+- Builders MCP (machine-readable): https://builders.sodax.com/mcp
+- Builders portal (human-readable HTML): https://builders.sodax.com
 - Source: https://github.com/icon-project/sodax
