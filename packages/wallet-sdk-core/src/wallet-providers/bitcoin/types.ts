@@ -15,8 +15,6 @@ export interface BitcoinWalletsKit {
 
 /** Defaults applied to every call. Per-call options shallow-merge over these. */
 export type BitcoinWalletDefaults = {
-  /** Default address type for private-key mode. Default `'P2WPKH'`. */
-  addressType?: BtcAddressType;
   /** Default `finalize` flag for `signTransaction`. Default `true`. */
   defaultFinalize?: boolean;
 };

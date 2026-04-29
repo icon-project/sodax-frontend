@@ -58,7 +58,7 @@ export class BitcoinWalletProvider extends BaseWalletProvider<BitcoinWalletDefau
       this.wallet = {
         type: 'PRIVATE_KEY',
         keyPair,
-        addressType: config.addressType ?? this.defaults.addressType ?? DEFAULT_ADDRESS_TYPE,
+        addressType: config.addressType ?? DEFAULT_ADDRESS_TYPE,
       };
       return;
     }

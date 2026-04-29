@@ -67,7 +67,8 @@ describe('BitcoinWalletProvider', () => {
         type: 'PRIVATE_KEY',
         privateKey: PRIVATE_KEY,
         network: 'MAINNET',
-        defaults: { addressType: 'P2TR', defaultFinalize: false },
+        addressType: 'P2TR',
+        defaults: { defaultFinalize: false },
       });
       expect(provider.chainType).toBe('BITCOIN');
     });
