@@ -46,16 +46,9 @@ const BOUNDARY_FOOT = '<!-- SODAX: content ends -->';
 const BLOCKED_PREFIXES = ['/cms', '/api', '/_next', '/agent'];
 
 // Static markdown files served from apps/web/content/md/. Closed allowlist —
-// adding a new path requires:
-//   1. A file on disk under apps/web/content/md/<path>.md
-//   2. An entry here in STATIC_FILE_MAP
-//   3. A matching entry in CURATED_PAGES in apps/web/app/llms-full.txt/route.ts
-//      so the page is included in the full-context bundle
-//   4. (Optional) An entry in the relevant *_LINKS array in
-//      apps/web/app/llms.txt/route.ts so it appears in the curated index
-//   5. (Optional) An entry in apps/web/app/sitemap.ts for human crawler
-//      discovery
-// See CLAUDE.md "Common Pitfalls" → "When adding a new public page".
+// when adding a new path, follow the "Adding a new public page" section in
+// docs/agent-readiness.md (file, this map, llms-full.txt CURATED_PAGES, +
+// optional llms.txt + sitemap.ts entries).
 const STATIC_FILE_MAP: Record<string, string> = {
   [HOME_ROUTE]: 'index.md',
   [PARTNERS_ROUTE]: 'partners.md',

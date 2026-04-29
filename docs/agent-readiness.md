@@ -81,6 +81,27 @@ Sensitive routes continue to require real auth. Enforcement against misbehaving 
 
 ---
 
+## Adding a new public page (sodax-frontend specific)
+
+When you add a new page under `apps/web/app/` that humans can visit, also add agent-readable markdown so AI agents can discover it. The three closed allowlists must stay in lockstep:
+
+1. Write a concise markdown file under `apps/web/content/md/<route>.md` translating the existing approved page copy. Style: H1 + value prop, H2 sections, key facts as bullets — no CTAs, no visual elements (David, 2026-04). Pull numbers and product claims verbatim from the source page so terminology stays consistent.
+2. Register the path → file mapping in `STATIC_FILE_MAP` in `apps/web/app/agent/md/route.ts` so `Accept: text/markdown` and `/index.md` URL fallback work.
+3. Add the page to `CURATED_PAGES` in `apps/web/app/llms-full.txt/route.ts` so it's bundled in the full-context file.
+
+Optional but recommended:
+
+4. Add the page to the relevant link group in `apps/web/app/llms.txt/route.ts` (`CORE_LINKS`, `EXCHANGE_LINKS`, or `PARTNER_LINKS`) so it appears in the curated llms.txt index.
+5. Add the page to `apps/web/app/sitemap.ts` for crawler discovery.
+
+Skip steps 1–5 for:
+
+- Admin / auth-gated routes (`/cms/*`, `/partner-dashboard`) — covered by `BLOCKED_PREFIXES` in `agent/md/route.ts`.
+- Time-bound event landing pages that will be removed.
+- Dynamic content already handled by the Notion / Mongo handlers in `agent/md/route.ts` (`/news`, `/news/[slug]`, `/glossary`, `/concepts/[slug]`, `/system/[slug]`).
+
+---
+
 ## PR checklist for agent-facing endpoints
 
 - [ ] Endpoint is static (build-time) or has no DB/env reads at response time
