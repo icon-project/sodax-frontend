@@ -84,8 +84,10 @@ export class NearWalletProvider extends BaseWalletProvider<NearWalletDefaults> i
     const policy = this.mergeDefaults(options);
     const throwOnFailure = policy.throwOnFailure ?? DEFAULT_THROW_ON_FAILURE;
     const waitUntil = policy.waitUntil ?? DEFAULT_WAIT_UNTIL;
-    const gas = transaction.params.gas ?? policy.gasDefault ?? 0n;
-    const deposit = transaction.params.deposit ?? policy.depositDefault ?? 0n;
+    // Resolve `undefined` when caller and defaults both omit, so the PK path can fall through
+    // to near-api-js's built-in gas/deposit defaults (passing `0n` would mean "spend zero gas").
+    const gas = transaction.params.gas ?? policy.gasDefault;
+    const deposit = transaction.params.deposit ?? policy.depositDefault;
 
     if (this.account) {
       const res = await this.account.signAndSendTransaction({
@@ -113,8 +115,8 @@ export class NearWalletProvider extends BaseWalletProvider<NearWalletDefaults> i
             params: {
               methodName: transaction.params.method,
               args: jsonObjectToArgs(transaction.params.args),
-              gas: gas.toString(),
-              deposit: deposit.toString(),
+              gas: gas?.toString() ?? '0',
+              deposit: deposit?.toString() ?? '0',
             },
           },
         ],

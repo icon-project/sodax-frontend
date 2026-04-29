@@ -1,11 +1,10 @@
-import type { StacksNetwork } from '@stacks/network';
 import type { PostConditionMode } from '@stacks/transactions';
 import type { StacksProvider } from '@stacks/connect';
 
 /** Defaults applied to every call. Per-call options shallow-merge over these. */
 export type StacksWalletDefaults = {
-  /** Network selector. Default `'mainnet'`. Pass a `StacksNetwork` for fully custom. */
-  network?: 'mainnet' | 'testnet' | StacksNetwork;
+  /** Network selector. Default `'mainnet'`. */
+  network?: 'mainnet' | 'testnet';
   /** Default post-condition mode if not present in tx params. */
   postConditionMode?: PostConditionMode;
 };

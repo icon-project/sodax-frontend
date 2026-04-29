@@ -156,7 +156,9 @@ export class InjectiveWalletProvider
   ): Promise<InjectiveExecuteResponse> {
     const policy = this.mergeDefaults(options);
     const finalFunds = funds ?? policy.defaultFunds ?? [];
-    const memo = policy.defaultMemo ?? '';
+    // Only forward `memo` when explicitly configured — base did not pass one,
+    // and some upstream broadcasters distinguish absent vs empty-string memo.
+    const memoOverride = policy.defaultMemo === undefined ? {} : { memo: policy.defaultMemo };
 
     const msgExec = MsgExecuteContractCompat.fromJSON({
       contractAddress,
@@ -168,12 +170,12 @@ export class InjectiveWalletProvider
     let txResult: TxResponse;
 
     if (this.wallet.msgBroadcaster instanceof MsgBroadcasterWithPk) {
-      txResult = await this.wallet.msgBroadcaster.broadcast({ msgs: msgExec, memo });
+      txResult = await this.wallet.msgBroadcaster.broadcast({ msgs: msgExec, ...memoOverride });
     } else {
       txResult = await this.wallet.msgBroadcaster.broadcastWithFeeDelegation({
         msgs: msgExec,
         injectiveAddress: await this.getWalletAddress(),
-        memo,
+        ...memoOverride,
       });
     }
 

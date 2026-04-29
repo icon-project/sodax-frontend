@@ -43,7 +43,6 @@ function toPostConditionModeName(mode?: PostConditionMode): PostConditionModeNam
 }
 
 function resolveNetwork(selector: StacksWalletDefaults['network'], endpoint: string | undefined): StacksNetwork {
-  if (typeof selector === 'object' && selector !== null) return selector;
   const base = networkFrom(selector ?? 'mainnet');
   return endpoint ? { ...base, client: { ...base.client, baseUrl: endpoint } } : base;
 }
@@ -79,18 +78,21 @@ export class StacksWalletProvider extends BaseWalletProvider<StacksWalletDefault
     const finalParams = { ...txParams, postConditionMode };
 
     if (isStacksPkWallet(this.wallet)) {
-      return this.sendTransactionWithPrivateKey(finalParams);
+      return this.sendTransactionWithPrivateKey(finalParams, this.wallet);
     }
-    return this.sendTransactionWithAdapter(finalParams);
+    return this.sendTransactionWithAdapter(finalParams, this.wallet);
   }
 
-  private async sendTransactionWithPrivateKey(txParams: StacksTransactionParams): Promise<string> {
+  private async sendTransactionWithPrivateKey(
+    txParams: StacksTransactionParams,
+    wallet: StacksPkWallet,
+  ): Promise<string> {
     const transaction = await makeContractCall({
       contractAddress: txParams.contractAddress,
       contractName: txParams.contractName,
       functionName: txParams.functionName,
       functionArgs: txParams.functionArgs,
-      senderKey: (this.wallet as StacksPkWallet).privateKey,
+      senderKey: wallet.privateKey,
       network: this.network,
       postConditionMode: txParams.postConditionMode,
       postConditions: txParams.postConditions,
@@ -100,22 +102,23 @@ export class StacksWalletProvider extends BaseWalletProvider<StacksWalletDefault
     return result.txid;
   }
 
-  private async sendTransactionWithAdapter(txParams: StacksTransactionParams): Promise<string> {
-    const browserWallet = this.wallet as StacksBrowserExtensionWallet;
+  private async sendTransactionWithAdapter(
+    txParams: StacksTransactionParams,
+    wallet: StacksBrowserExtensionWallet,
+  ): Promise<string> {
     const contract = `${txParams.contractAddress}.${txParams.contractName}` as `${string}.${string}`;
-    const networkName = this.networkName();
 
     const params = {
       contract,
       functionName: txParams.functionName,
       functionArgs: txParams.functionArgs,
-      network: networkName,
+      network: this.defaults.network ?? 'mainnet',
       postConditions: txParams.postConditions,
       postConditionMode: toPostConditionModeName(txParams.postConditionMode),
     };
 
-    const result = browserWallet.provider
-      ? await request({ provider: browserWallet.provider }, 'stx_callContract', params)
+    const result = wallet.provider
+      ? await request({ provider: wallet.provider }, 'stx_callContract', params)
       : await request('stx_callContract', params);
 
     if (!result.txid) {
@@ -162,9 +165,5 @@ export class StacksWalletProvider extends BaseWalletProvider<StacksWalletDefault
       console.error('Error fetching STX balance:', error);
       return 0n;
     }
-  }
-
-  private networkName(): 'mainnet' | 'testnet' {
-    return this.defaults.network === 'testnet' ? 'testnet' : 'mainnet';
   }
 }
