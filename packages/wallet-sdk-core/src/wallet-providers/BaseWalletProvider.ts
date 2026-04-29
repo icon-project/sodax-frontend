@@ -8,6 +8,11 @@ import { shallowMerge } from '../utils/index.js';
  *   - declaring `chainType` literal
  *   - validating their own config variants
  *   - implementing the chain-specific provider interface
+ *
+ * NOTE: All fields of `TDefaults` (and any nested per-method shape it groups)
+ * MUST be declared optional. The constructor falls back to `{}` when no defaults
+ * are supplied — required fields would silently arrive as `undefined` at runtime
+ * without TypeScript flagging it (the cast erases that constraint).
  */
 export abstract class BaseWalletProvider<TDefaults extends object> {
   protected readonly defaults: TDefaults;

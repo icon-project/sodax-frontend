@@ -24,7 +24,7 @@ describe('shallowMerge', () => {
     expect(shallowMerge(a, b)).toEqual({ nested: { x: 99 } });
   });
 
-  it('preserves field with explicit undefined value (treated as override)', () => {
-    expect(shallowMerge<{ a?: number }>({ a: 1 }, { a: undefined })).toEqual({ a: undefined });
+  it('skips field with explicit undefined value (treats as no-preference)', () => {
+    expect(shallowMerge<{ a?: number }>({ a: 1 }, { a: undefined })).toEqual({ a: 1 });
   });
 });

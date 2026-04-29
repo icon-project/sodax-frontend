@@ -1,7 +1,11 @@
 /**
- * Re-exports of types and runtime values from underlying chain SDKs.
+ * Re-exports of types AND runtime values from underlying chain SDKs.
  * Lets consumers import everything they need from `@sodax/wallet-sdk-core`
  * without taking direct dependencies on `viem`, `@mysten/sui`, etc.
+ *
+ * NOTE: this file intentionally exposes both `export type` and `export`
+ * (runtime — e.g. Stellar `Networks`, Stacks `PostConditionMode` enum).
+ * Hence the name `library-exports` rather than `library-types`.
  */
 
 // ─── EVM (viem) ────────────────────────────────────────────────────────────
