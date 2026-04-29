@@ -109,7 +109,7 @@ export function RangeSettingsDialog({
             </div>
           </div>
           <div className="self-stretch text-clay text-(length:--body-comfortable) font-normal font-['InterRegular'] leading-5">
-            The price slowly trends down as your xSODA unstakes back to SODA.
+            Pick how tightly to focus your liquidity.
           </div>
           <div className="self-stretch inline-flex justify-start items-start gap-2">
             {RANGE_OPTIONS.map((option): React.JSX.Element => {

@@ -112,18 +112,14 @@ export function PriceRangeSelector({
   return (
     <>
       <div className="inline-flex justify-start items-center gap-(--layout-space-comfortable)">
-        <div className="inline-flex items-center gap-2 w-12">
-          <div className="text-right justify-start text-clay text-(length:--body-tiny) font-medium font-['InterRegular'] uppercase leading-3">
+        <div
+          className="inline-flex items-center gap-2 w-14 group cursor-pointer"
+          onClick={(): void => setIsSettingsOpen(true)}
+        >
+          <div className="text-right justify-start text-clay text-(length:--body-tiny) font-medium font-['InterRegular'] uppercase leading-3 group-hover:text-espresso!">
             YOUR RANGE
           </div>
-          <button
-            type="button"
-            aria-label="Range settings"
-            onClick={(): void => setIsSettingsOpen(true)}
-            className="cursor-pointer"
-          >
-            <Settings className="w-4 h-4 text-clay hover:text-espresso" />
-          </button>
+          <Settings className="w-8 h-8 text-clay group-hover:text-espresso!" />
         </div>
         <div className="flex justify-start items-center gap-(--layout-space-small)">
           <div className="w-0 h-10 outline outline-cherry-grey" />

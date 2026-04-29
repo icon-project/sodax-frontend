@@ -404,6 +404,7 @@ export function PoolChart({
         const badgeX = cx - badgeW / 2 - 28;
         const fo = grp
           .append('foreignObject')
+          .attr('class', 'pct-pill')
           .attr('x', badgeX)
           .attr('y', -badgeH / 2)
           .attr('width', badgeW)
@@ -510,7 +511,7 @@ export function PoolChart({
       if (dashed) {
         const pH = 20;
         const pW = 90;
-        const pX = INNER_W - pW + 10;
+        const pX = 0;
         const nowFo = grp
           .append('foreignObject')
           .attr('x', pX)
@@ -696,6 +697,18 @@ export function PoolChart({
         .lri-tick-panel svg {
           display: block;
           width: 100%;
+        }
+        .lri-chart-row .pct-pill {
+          opacity: 0;
+          transition: opacity 200ms ease;
+        }
+        .lri-chart-row:hover .pct-pill {
+          opacity: 1;
+        }
+        @media (max-width: 767px) {
+          .lri-chart-row .pct-pill {
+            opacity: 1;
+          }
         }
       `}</style>
 
