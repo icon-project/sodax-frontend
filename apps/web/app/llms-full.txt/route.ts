@@ -62,8 +62,8 @@ const CURATED_PAGES: CuratedPage[] = [
   { url: '/partners/hana', file: 'partners/hana.md', title: 'Partner: Hana Wallet' },
   { url: '/partners/lightlink-network', file: 'partners/lightlink-network.md', title: 'Partner: LightLink Network' },
   { url: '/partners/sodax-sdk', file: 'partners/sodax-sdk.md', title: 'Partner: SODAX SDK' },
-  { url: '/community', file: 'community.md', title: 'Community' },
-  { url: '/community/soda-token', file: 'community/soda-token.md', title: 'SODA Token' },
+  { url: '/holders', file: 'holders.md', title: 'Holders' },
+  { url: '/holders/soda-token', file: 'holders/soda-token.md', title: 'SODA Token' },
   { url: '/press', file: 'press.md', title: 'Press' },
 ];
 

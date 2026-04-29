@@ -20,9 +20,9 @@ import { getDb } from '@/lib/db';
 import { getNotionPages, slugify } from '@/lib/notion';
 import {
   BORROW_ROUTE,
-  COMMUNITY_ROUTE,
   EXCHANGE_ROUTE,
   GLOSSARY_ROUTE,
+  HOLDERS_ROUTE,
   HOME_ROUTE,
   MIGRATE_ROUTE,
   NEWS_ROUTE,
@@ -62,7 +62,7 @@ interface CuratedLink {
 const CORE_LINKS: CuratedLink[] = [
   { path: HOME_ROUTE, title: 'SODAX', summary: 'Cross-network execution layer for modern money' },
   { path: PARTNERS_ROUTE, title: 'Partners', summary: 'Integration partners and ecosystem' },
-  { path: COMMUNITY_ROUTE, title: 'Community', summary: 'Community resources and ecosystem information' },
+  { path: HOLDERS_ROUTE, title: 'Holders', summary: 'SODA token holders, governance, and community resources' },
   { path: SODA_TOKEN_ROUTE, title: 'SODA Token', summary: 'SODA token economics, supply, and distribution' },
   { path: '/press', title: 'Press', summary: 'Press kit, media resources, and brand assets' },
 ];

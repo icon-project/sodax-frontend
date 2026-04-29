@@ -17,10 +17,10 @@ import {
   BORROW_ROUTE,
   BRIDGE_SERVICES_ROUTE,
   BUILDERS_PORTAL_ROUTE,
-  COMMUNITY_ROUTE,
   DOCUMENTATION_ROUTE,
   EXCHANGE_ROUTE,
   GLOSSARY_ROUTE,
+  HOLDERS_ROUTE,
   HOME_ROUTE,
   LEAD_BORROW_FOR_APPS_ROUTE,
   MIGRATE_ROUTE,
@@ -59,8 +59,8 @@ const STATIC_FILE_MAP: Record<string, string> = {
   '/partners/hana': 'partners/hana.md',
   '/partners/lightlink-network': 'partners/lightlink-network.md',
   '/partners/sodax-sdk': 'partners/sodax-sdk.md',
-  [COMMUNITY_ROUTE]: 'community.md',
-  [SODA_TOKEN_ROUTE]: 'community/soda-token.md',
+  [HOLDERS_ROUTE]: 'holders.md',
+  [SODA_TOKEN_ROUTE]: 'holders/soda-token.md',
   '/press': 'press.md',
 };
 

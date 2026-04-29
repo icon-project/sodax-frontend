@@ -7,4 +7,4 @@ SODAX is the cross-network execution layer for modern money — infrastructure t
 - Canonical page: https://sodax.com
 - Developer docs: https://docs.sodax.com
 - Partners: https://sodax.com/partners
-- Community: https://sodax.com/community
+- Holders: https://sodax.com/holders
