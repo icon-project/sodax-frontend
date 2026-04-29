@@ -5,8 +5,12 @@ import type React from 'react';
 import Image from 'next/image';
 import { Navbar } from '@/components/shared/navbar';
 import { NetworkLogosScroller } from '@/components/shared/network-logos-scroller';
+import { ConsensusMiamiAnnouncement } from '@/components/shared/event-announcement-card';
+import { cn } from '@/lib/utils';
 import { LeadMagnetCTA } from './lead-magnet-cta';
 import { PressBar } from '../shared/press-bar';
+
+const IS_CONSENSUS_MIAMI_ANNOUNCEMENT_ACTIVE = true;
 
 const HeroSection = (): React.ReactElement => {
   return (
@@ -28,7 +32,13 @@ const HeroSection = (): React.ReactElement => {
         <Navbar />
 
         {/* Hero content */}
-        <div className="flex flex-1 flex-col items-center justify-center w-full px-4 gap-[56px]">
+        <div
+          className={cn(
+            'flex flex-1 flex-col items-center justify-center w-full px-4',
+            IS_CONSENSUS_MIAMI_ANNOUNCEMENT_ACTIVE ? 'gap-[40px]' : 'gap-[56px]',
+          )}
+        >
+          {IS_CONSENSUS_MIAMI_ANNOUNCEMENT_ACTIVE && <ConsensusMiamiAnnouncement className="z-20" />}
           {/* Title */}
           <div className="flex flex-col items-center text-center whitespace-nowrap z-20">
             <div className="flex flex-col items-center text-[42px] leading-[1.1]">
