@@ -19,7 +19,6 @@ export const GLOSSARY_ROUTE = '/glossary';
 export const PARTNERS_ROUTE = '/partners';
 export const HOLDERS_ROUTE = '/holders';
 export const NEWS_ROUTE = '/news';
-export const COMMUNITY_ROUTE = '/community';
 export const PARTNER_DASHBOARD_ROUTE = '/partner-dashboard';
 /** In-app page that redirects to Discord invite; use DISCORD_ROUTE for external links. */
 export const DISCORD_PAGE_ROUTE = '/discord';
@@ -60,10 +59,14 @@ export const DOCUMENTATION_ROUTE = 'https://docs.sodax.com';
 export const DOCUMENTATION_GITBOOK_ROUTE = 'https://sodax-1.gitbook.io/sodax-docs/readme-1';
 
 // ── Social & community (external) ──────────────────────────────────────────
-export const DISCORD_ROUTE = 'https://discord.com/invite/xM2Nh4S6vN';
+export const DISCORD_ROUTE = 'https://www.sodax.com/discord';
+/** Actual Discord invite URL; only used by the /discord redirect page. */
+export const DISCORD_INVITE_ROUTE = 'https://discord.com/invite/xM2Nh4S6vN';
 export const X_ROUTE = 'https://x.com/gosodax';
 /** X (Twitter) “follow” intent URL. */
 export const X_INTENT_FOLLOW_ROUTE = 'https://x.com/intent/user?screen_name=gosodax';
+/** X (Twitter) “follow” intent URL for the @sodaholders account. */
+export const X_HOLDERS_ROUTE = 'https://x.com/intent/user?screen_name=sodaholders';
 export const LINKTREE_ROUTE = 'https://linktr.ee/go.sodax';
 export const REDDIT_ROUTE = 'https://www.reddit.com/r/SODAX/';
 export const YOUTUBE_ROUTE = 'https://www.youtube.com/@gosodax';
@@ -98,4 +101,6 @@ export const CONSENSUS_MIAMI_ROUTE = '/consensus-miami';
 export const connectRoute = (slug: string): string => `/connect/${slug}`;
 export const INTEGRATION_OPTIONS_ROUTE = '/partners#integration-options';
 export const CASE_STUDIES_ROUTE = '/partners#case-studies';
-export const SODA_TOKEN_ROUTE = '/community/soda-token';
+export const SODA_TOKEN_ROUTE = '/holders/soda-token';
+
+export const MICA_WHITEPAPER_ROUTE = 'https://icon.foundation/projects/publications?view=soda-mica ';

@@ -79,7 +79,7 @@ export function RetailFlow({ onBack }: RetailFlowProps) {
 
       {/* Value prop */}
       <p className="text-cherry-brighter text-sm font-[InterRegular] leading-relaxed text-left">
-        SODAX is infrastructure for modern money. Swap, lend, borrow, stake, migrate, and bridge across 17+ networks
+        SODAX is infrastructure for modern money. Swap, lend, borrow, stake, migrate, and bridge across 18+ networks
         from one app at{' '}
         <a href="https://sodax.com" className="text-white underline">
           sodax.com

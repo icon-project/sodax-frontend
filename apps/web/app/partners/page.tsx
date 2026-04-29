@@ -71,7 +71,7 @@ export default function PartnersPage() {
     '@type': 'WebPage',
     name: 'SODAX Partner Network',
     description:
-      'Join the SODAX Partner Network to enable complex cross-network actions without building custom infrastructure. Access unified liquidity and intent-based execution across 14+ networks.',
+      'Join the SODAX Partner Network to enable complex cross-network actions without building custom infrastructure. Access unified liquidity and intent-based execution across 18+ networks.',
     url: 'https://sodax.com/partners',
     breadcrumb: {
       '@type': 'BreadcrumbList',

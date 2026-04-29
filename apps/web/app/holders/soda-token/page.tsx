@@ -208,7 +208,7 @@ export default function SodaTokenPage() {
     },
     {
       question: 'What networks are supported?',
-      answer: '16+ networks including Sonic, Ethereum, Arbitrum, Avalanche, Solana, Sui, Stellar, and more.',
+      answer: '18+ networks including Sonic, Ethereum, Arbitrum, Avalanche, Solana, Sui, Stellar, and more.',
     },
   ];
 

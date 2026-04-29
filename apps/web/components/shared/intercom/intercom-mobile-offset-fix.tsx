@@ -1,139 +1,123 @@
-// Intercom often sets/updates inline `bottom` styles after it boots (and sometimes recreates the node),
-// which can override our CSS and cause the bubble to overlap the mobile bottom nav. This component re-applies our desired
-// bottom offset whenever Intercom mutates its DOM on mobile.
-// How to adjust position: tweak `--intercom-mobile-bottom-offset` in `apps/web/app/globals.css` (smaller = lower).
+// Pushes the Intercom launcher above the mobile bottom nav.
+//
+// Intercom mounts the launcher in two possible modes — iframe-based and
+// lightweight DOM. In both modes the visible launcher element is `position:
+// static` (or `relative`) inside a `position: fixed` wrapper with a *hashed*
+// class name (`intercom-with-namespace-XXXX`) that changes per session, so
+// no stable CSS selector can target the wrapper. We walk up from the launcher
+// to find the fixed-positioned ancestor and write inline styles on it —
+// inline `!important` beats Intercom's `<style>` injections regardless of
+// cascade order or specificity.
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 
 const MOBILE_MAX_WIDTH_PX = 767;
 const MOBILE_NAV_ID = 'sodax-mobile-bottom-nav';
-const DEFAULT_GAP_PX = 8;
+const GAP_PX = 8;
+const INTERCOM_DEFAULT_PADDING_PX = 20;
+const NAV_MOUNT_RECHECK_MS = 100;
 
-function getBottomValue(): string {
-  return 'calc(var(--intercom-mobile-bottom-offset) + env(safe-area-inset-bottom, 0px))';
-}
+const LAUNCHER_SELECTORS = [
+  '.intercom-launcher-frame',
+  '.intercom-lightweight-app-launcher',
+  '.intercom-messenger-frame',
+  '.intercom-lightweight-app-messenger',
+].join(',');
 
-function setIntercomBottomOffsetFromNav(): void {
+function computeBottomOffsetPx(): number {
+  const isMobile = window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH_PX}px)`).matches;
+  if (!isMobile) {
+    return INTERCOM_DEFAULT_PADDING_PX;
+  }
+
   const nav = document.getElementById(MOBILE_NAV_ID);
   if (!nav) {
-    return;
+    return INTERCOM_DEFAULT_PADDING_PX;
   }
 
-  const navHeight = Math.ceil(nav.getBoundingClientRect().height);
-  const computed = window.getComputedStyle(document.documentElement);
-  const gap = Number.parseInt(computed.getPropertyValue('--intercom-mobile-gap-px').trim(), 10);
-  const gapPx = Number.isFinite(gap) ? gap : DEFAULT_GAP_PX;
-
-  document.documentElement.style.setProperty('--intercom-mobile-bottom-offset', `${navHeight + gapPx}px`);
+  return Math.ceil(nav.getBoundingClientRect().height) + GAP_PX;
 }
 
-function applyIntercomBottomOffset(): void {
-  const container = document.getElementById('intercom-container');
-  if (!container) {
-    return;
+function findPositionedElement(launcher: HTMLElement): HTMLElement | null {
+  if (getComputedStyle(launcher).position === 'fixed') {
+    return launcher;
   }
 
-  const bottom = getBottomValue();
-
-  const candidates = container.querySelectorAll<HTMLElement>(
-    [
-      '.intercom-launcher-frame',
-      '.intercom-lightweight-app-launcher',
-      '.intercom-messenger-frame',
-      'iframe',
-      '[style]',
-    ].join(','),
-  );
-
-  for (const el of candidates) {
-    // Avoid redundant inline style writes; those can retrigger MutationObserver loops on mobile.
-    if (el.style.getPropertyValue('bottom') !== bottom) {
-      el.style.setProperty('bottom', bottom, 'important');
+  let current: HTMLElement | null = launcher.parentElement;
+  while (current && current !== document.body) {
+    if (getComputedStyle(current).position === 'fixed') {
+      return current;
     }
-    // Some Intercom variants use logical properties.
-    if (el.style.getPropertyValue('inset-block-end') !== bottom) {
-      el.style.setProperty('inset-block-end', bottom, 'important');
+    current = current.parentElement;
+  }
+
+  return null;
+}
+
+function applyOffset(): void {
+  const offsetPx = computeBottomOffsetPx();
+  const value = `calc(${offsetPx}px + env(safe-area-inset-bottom, 0px))`;
+
+  const launchers = document.querySelectorAll<HTMLElement>(LAUNCHER_SELECTORS);
+  for (const launcher of launchers) {
+    const positioned = findPositionedElement(launcher);
+    if (positioned && positioned.style.getPropertyValue('bottom') !== value) {
+      positioned.style.setProperty('bottom', value, 'important');
     }
   }
 }
 
 export default function IntercomMobileOffsetFix(): React.ReactElement | null {
+  const pathname = usePathname();
+
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (typeof window === 'undefined' || pathname === null) {
       return;
     }
 
-    const media = window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH_PX}px)`);
-    if (!media.matches) {
-      return;
-    }
-
-    let rafId: number | null = null;
+    let scheduledFrame: number | null = null;
     const scheduleApply = (): void => {
-      if (rafId !== null) {
+      if (scheduledFrame !== null) {
         return;
       }
-      rafId = window.requestAnimationFrame(() => {
-        rafId = null;
-        setIntercomBottomOffsetFromNav();
-        applyIntercomBottomOffset();
+      scheduledFrame = window.requestAnimationFrame(() => {
+        scheduledFrame = null;
+        applyOffset();
       });
     };
 
     scheduleApply();
+    const recheckTimer = window.setTimeout(scheduleApply, NAV_MOUNT_RECHECK_MS);
 
-    const nav = document.getElementById(MOBILE_NAV_ID);
-    const resizeObserver = nav
-      ? new ResizeObserver(() => {
-          scheduleApply();
-        })
-      : null;
-
-    if (nav && resizeObserver) {
-      resizeObserver.observe(nav);
-    }
+    // Intercom rewrites its wrapper's inline `bottom` after our overrides;
+    // re-apply whenever any descendant `style` changes or new Intercom
+    // elements mount. The dedup check inside applyOffset() prevents loops.
+    const observer = new MutationObserver(scheduleApply);
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['style'],
+      childList: true,
+      subtree: true,
+    });
 
     const onResize = (): void => {
       scheduleApply();
     };
     window.addEventListener('resize', onResize);
-
-    const containerObserver = new MutationObserver(() => {
-      scheduleApply();
-    });
-
-    // Intercom may mount late, so observe the document until it appears.
-    const rootObserver = new MutationObserver(() => {
-      const container = document.getElementById('intercom-container');
-      if (!container) {
-        return;
-      }
-
-      scheduleApply();
-
-      containerObserver.observe(container, {
-        attributes: true,
-        attributeFilter: ['style', 'class'],
-        childList: true,
-        subtree: true,
-      });
-
-      rootObserver.disconnect();
-    });
-
-    rootObserver.observe(document.documentElement, { childList: true, subtree: true });
+    window.addEventListener('orientationchange', onResize);
 
     return () => {
-      if (rafId !== null) {
-        window.cancelAnimationFrame(rafId);
+      if (scheduledFrame !== null) {
+        window.cancelAnimationFrame(scheduledFrame);
       }
+      window.clearTimeout(recheckTimer);
+      observer.disconnect();
       window.removeEventListener('resize', onResize);
-      resizeObserver?.disconnect();
-      rootObserver.disconnect();
-      containerObserver.disconnect();
+      window.removeEventListener('orientationchange', onResize);
     };
-  }, []);
+  }, [pathname]);
 
   return null;
 }

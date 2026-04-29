@@ -3,6 +3,7 @@
 import type { ReactElement, ReactNode } from 'react';
 
 import LandingFullBanner from '@/components/landing/landing-full-banner';
+import LiveStatsSection from '@/components/shared/live-stats-section';
 import { ArrowRightIcon } from '@/components/icons/arrow-right-icon';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -37,19 +38,47 @@ const THEME_STYLES = {
   },
 };
 
-function SmallBanner({ theme, title, subtitle, buttonLabel, href, imageSrc, imageClassName, containerClassName, extraImages }: SmallBannerProps): ReactElement {
+function SmallBanner({
+  theme,
+  title,
+  subtitle,
+  buttonLabel,
+  href,
+  imageSrc,
+  imageClassName,
+  containerClassName,
+  extraImages,
+}: SmallBannerProps): ReactElement {
   const styles = THEME_STYLES[theme];
 
   return (
     <div className={containerClassName}>
       {extraImages?.map(img => (
-        <Image key={img.src} className={img.className} src={img.src} alt="background" width={img.width} height={img.height} />
+        <Image
+          key={img.src}
+          className={img.className}
+          src={img.src}
+          alt="background"
+          width={img.width}
+          height={img.height}
+        />
       ))}
       <Image className={imageClassName} src={imageSrc} alt="background" width={990} height={660} />
       <div className="flex items-center">{title}</div>
       <Label className={styles.subtitle}>{subtitle}</Label>
       <div className="mt-6 z-10">
-        <Button className={styles.buttonClassName} variant={styles.buttonVariant} size="lg" onClick={() => window.open(href, '_blank')}>
+        <Button
+          className={styles.buttonClassName}
+          variant={styles.buttonVariant}
+          size="lg"
+          onClick={() => {
+            if (href.startsWith('/')) {
+              window.location.assign(href);
+            } else {
+              window.open(href, '_blank');
+            }
+          }}
+        >
           {buttonLabel}
         </Button>
       </div>
@@ -86,7 +115,13 @@ export default function LandingBanners(): ReactElement {
         }}
         title={
           <div className="flex items-center gap-4">
-            <Image src="/soda-yellow-sm.png" alt="SODAX Symbol" width={32} height={32} className="md:w-8 md:h-8 w-6 h-6" />
+            <Image
+              src="/soda-yellow-sm.png"
+              alt="SODAX Symbol"
+              width={32}
+              height={32}
+              className="md:w-8 md:h-8 w-6 h-6"
+            />
             <div className="text-(length:--main-title) font-['InterBlack'] text-black leading-[1.1]">
               {integrationBanner.title}
             </div>
@@ -111,7 +146,13 @@ export default function LandingBanners(): ReactElement {
         }}
         title={
           <div className="flex items-center gap-4">
-            <Image src="/soda-yellow-sm.png" alt="SODAX Symbol" width={32} height={32} className="md:w-8 md:h-8 w-6 h-6" />
+            <Image
+              src="/soda-yellow-sm.png"
+              alt="SODAX Symbol"
+              width={32}
+              height={32}
+              className="md:w-8 md:h-8 w-6 h-6"
+            />
             <div className="text-center justify-center">{executionStackBanner.title}</div>
           </div>
         }
@@ -121,14 +162,13 @@ export default function LandingBanners(): ReactElement {
         buttonClassName="px-6 font-['InterMedium'] cursor-pointer text-(length:--body-comfortable)"
       />
 
-      {/* Builders + SODA Token */}
+      {/* Builders + Partners */}
       <SmallBannerRow
         left={{
           theme: 'dark',
           title: (
             <>
-              <Image src="/soda-yellow.png" alt="SODAX Symbol" width={32} height={32} className="md:w-8 md:h-8 w-6 h-6" />
-              <span className="text-yellow-soda text-(length:--app-title) font-bold font-['InterRegular'] leading-[1.1] ml-2">
+              <span className="text-yellow-soda text-(length:--app-title) font-['InterBlack'] leading-[1.1] ml-2">
                 {buildersBanner.title}
               </span>
             </>
@@ -145,29 +185,39 @@ export default function LandingBanners(): ReactElement {
         right={{
           theme: 'dark',
           title: (
-            <span className="text-yellow-soda text-(length:--app-title) font-bold font-['InterRegular'] leading-[1.1]">
-              {tokenBanner.title}
-            </span>
+            <div className="flex items-center gap-4">
+              <div className="text-center justify-center">{partnersBanner.title}</div>
+            </div>
           ),
-          subtitle: tokenBanner.subtitle,
-          buttonLabel: tokenBanner.buttonLabel,
-          href: tokenBanner.href,
-          imageSrc: tokenBanner.imageSrc,
+          subtitle: partnersBanner.subtitle,
+          buttonLabel: partnersBanner.buttonLabel,
+          href: partnersBanner.href,
+          imageSrc: partnersBanner.imageSrc,
+          extraImages: [
+            {
+              src: '/circle1.png',
+              className:
+                'mix-blend-multiply absolute bottom-[-280px] left-1/2 transform -translate-x-1/2 w-[737px] z-2',
+              width: 737,
+              height: 737,
+            },
+          ],
           containerClassName:
-            'w-full lg:w-1/2 flex flex-col items-center pt-14 md:pt-18 bg-cherry-soda h-[440px] sm:h-[480px] md:h-[480px] mt-4 lg:ml-4 relative overflow-hidden',
+            'w-full lg:w-1/2 flex flex-col items-center pt-14 md:pt-18 h-[440px] sm:h-[480px] md:h-[480px] mt-4 lg:ml-4 bg-cherry-soda relative z-1 overflow-hidden',
           imageClassName:
-            'mix-blend-screen absolute -bottom-22 left-1/2 transform -translate-x-1/2 w-[793px] max-w-[793px]',
+            'mix-blend-screen absolute bottom-[-56px] left-1/2 transform -translate-x-1/2 w-[848px] max-w-[848px] z-3',
         }}
       />
 
-      {/* Migrate + Partners (same tile styling as before; only column positions swapped) */}
+      <LiveStatsSection />
+
+      {/* Migrate + SODA Token */}
       <SmallBannerRow
         left={{
           theme: 'light',
           title: (
             <div className="flex items-center gap-4">
-              <Image src="/soda-yellow-sm.png" alt="SODAX Symbol" width={32} height={32} className="md:w-8 md:h-8 w-6 h-6" />
-              <div className="text-(length:--app-title) font-['InterRegular'] font-bold text-black leading-[1.1]">
+              <div className="text-(length:--app-title) font-['InterBlack'] text-black leading-[1.1]">
                 {migrateBanner.title}
               </div>
             </div>
@@ -184,27 +234,18 @@ export default function LandingBanners(): ReactElement {
         right={{
           theme: 'dark',
           title: (
-            <div className="flex items-center gap-4">
-              <Image src="/soda-yellow-sm.png" alt="SODAX Symbol" width={32} height={32} className="md:w-8 md:h-8 w-6 h-6" />
-              <div className="text-center justify-center">{partnersBanner.title}</div>
-            </div>
+            <span className="text-yellow-soda text-(length:--app-title) font-['InterBlack'] leading-[1.1]">
+              {tokenBanner.title}
+            </span>
           ),
-          subtitle: partnersBanner.subtitle,
-          buttonLabel: partnersBanner.buttonLabel,
-          href: partnersBanner.href,
-          imageSrc: partnersBanner.imageSrc,
-          extraImages: [
-            {
-              src: '/circle1.png',
-              className: 'mix-blend-multiply absolute bottom-[-280px] left-1/2 transform -translate-x-1/2 w-[737px] z-2',
-              width: 737,
-              height: 737,
-            },
-          ],
+          subtitle: tokenBanner.subtitle,
+          buttonLabel: tokenBanner.buttonLabel,
+          href: tokenBanner.href,
+          imageSrc: tokenBanner.imageSrc,
           containerClassName:
-            'w-full lg:w-1/2 flex flex-col items-center pt-14 md:pt-18 h-[440px] sm:h-[480px] md:h-[480px] mt-4 lg:ml-4 bg-cherry-soda relative z-1 overflow-hidden',
+            'w-full lg:w-1/2 flex flex-col items-center pt-14 md:pt-18 bg-cherry-soda h-[440px] sm:h-[480px] md:h-[480px] mt-4 lg:ml-4 relative overflow-hidden',
           imageClassName:
-            'mix-blend-screen absolute bottom-[-56px] left-1/2 transform -translate-x-1/2 w-[848px] max-w-[848px] z-3',
+            'mix-blend-screen absolute -bottom-22 left-1/2 transform -translate-x-1/2 w-[793px] max-w-[793px]',
         }}
       />
     </>

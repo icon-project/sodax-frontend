@@ -4,7 +4,7 @@ import type React from 'react';
 
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 import type { CarouselApi } from '@/components/ui/carousel';
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, type ReactNode, useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Label } from '@/components/ui/label';
 import Autoplay from 'embla-carousel-autoplay';
@@ -14,6 +14,23 @@ import { useRouter } from 'next/navigation';
 import { SWAP_ROUTE } from '@/constants/routes';
 import { Navbar } from '@/components/shared/navbar';
 import { useAppStore } from '@/stores/app-store-provider';
+
+const heroStats: { title: ReactNode; subtitle: string; widthClass: string; nowrap?: boolean }[] = [
+  { title: 'Swap your assets', subtitle: 'At optimal rates', widthClass: 'w-40 pr-10' },
+  {
+    title: (
+      <>
+        Migrate
+        <br />
+        ICX to SODA
+      </>
+    ),
+    subtitle: 'Claim your tokens',
+    widthClass: 'w-42 pr-10',
+    nowrap: true,
+  },
+  { title: 'Stake and supply', subtitle: 'Fueled by fees', widthClass: 'w-39' },
+];
 
 const carouselItems = [
   { id: 1, src: '/coin/base.png', alt: 'BASE' },
@@ -99,35 +116,23 @@ const ExchangeHeroSection = (): React.ReactElement => {
             </div>
             {/* Desktop: four-column feature list (shown from md breakpoint up) */}
             <div className="hidden md:flex ">
-              <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
-              <div className="flex flex-col w-40 pl-4 pr-10 justify-center">
-                <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2]">
-                  Swap your assets
-                </div>
-                <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
-                  At optimal rates
-                </div>
-              </div>
-              <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
-              <div className="flex flex-col w-42 pl-4 pr-10 justify-center">
-                <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2] whitespace-nowrap">
-                  Migrate
-                  <br />
-                  ICX to SODA
-                </div>
-                <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter whitespace-nowrap">
-                  Claim your tokens
-                </div>
-              </div>
-              <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
-              <div className="flex flex-col w-39 pl-4 justify-center">
-                <div className="text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2]">
-                  Stake and supply
-                </div>
-                <div className="text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter">
-                  Fueled by fees
-                </div>
-              </div>
+              {heroStats.map(({ title, subtitle, widthClass, nowrap }) => (
+                <Fragment key={subtitle}>
+                  <Separator orientation="vertical" className="w-[2px] h-full bg-cream-white" />
+                  <div className={`flex flex-col pl-4 justify-center ${widthClass}`}>
+                    <div
+                      className={`text-white text-(length:--subtitle) font-bold font-['InterRegular'] leading-[1.2] ${nowrap ? 'whitespace-nowrap' : ''}`}
+                    >
+                      {title}
+                    </div>
+                    <div
+                      className={`text-(length:--body-comfortable) font-medium font-['InterRegular'] leading-[1.4] text-cherry-brighter ${nowrap ? 'whitespace-nowrap' : ''}`}
+                    >
+                      {subtitle}
+                    </div>
+                  </div>
+                </Fragment>
+              ))}
             </div>
           </div>
           <div className="flex items-center w-full flex-wrap gap-4 md:mt-10 mt-4">

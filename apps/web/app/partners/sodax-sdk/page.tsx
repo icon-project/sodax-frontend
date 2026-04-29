@@ -37,11 +37,11 @@ const imgSodaToken = '/partners/sodax-sdk/soda-token.svg';
 export const metadata: Metadata = {
   title: 'SODAX SDK | Infrastructure for Cross-Network DeFi',
   description:
-    'Give your users access to over 50 assets without setting up from scratch. SODAX SDK provides cross-network execution, money market integration, and bnUSD minting access across 14+ networks.',
+    'Give your users access to over 50 assets without setting up from scratch. SODAX SDK provides cross-network execution, money market integration, and bnUSD minting access across 18+ networks.',
   openGraph: {
     title: 'SODAX SDK | Infrastructure for Cross-Network DeFi',
     description:
-      'Give your users access to over 50 assets without setting up from scratch. SODAX SDK provides cross-network execution, money market integration, and bnUSD minting access across 14+ networks.',
+      'Give your users access to over 50 assets without setting up from scratch. SODAX SDK provides cross-network execution, money market integration, and bnUSD minting access across 18+ networks.',
     type: 'website',
     images: ['/partners/sodax-sdk/link-preview.png'],
   },
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'SODAX SDK | Infrastructure for Cross-Network DeFi',
     description:
-      'Give your users access to over 50 assets without setting up from scratch. SODAX SDK provides cross-network execution, money market integration, and bnUSD minting access across 14+ networks.',
+      'Give your users access to over 50 assets without setting up from scratch. SODAX SDK provides cross-network execution, money market integration, and bnUSD minting access across 18+ networks.',
     images: ['/partners/sodax-sdk/link-preview.png'],
   },
 };
@@ -198,7 +198,7 @@ export default function SodaxSDKPage() {
                 <div className="flex flex-col gap-4 items-start w-full pt-4">
                   <h2 className="font-['InterBold'] text-lg text-[var(--espresso)] w-full">About Us</h2>
                   <p className="font-['InterRegular'] text-sm text-[var(--clay-dark)] w-full leading-relaxed">
-                    SODAX is an execution and liquidity system that enables DeFi actions across 14+ networks. This
+                    SODAX is an execution and liquidity system that enables DeFi actions across 18+ networks. This
                     includes Solana, Sui, Stellar, Ethereum, Arbitrum, and Polygon. The system coordinates swaps,
                     lending, and borrowing through a single layer powered by protocol-owned liquidity and intent-based
                     execution.
