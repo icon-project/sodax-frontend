@@ -10,7 +10,7 @@ import { ConsensusLogo } from './consensus-logo';
 import { LeadMagnetCTA } from './lead-magnet-cta';
 import { PressBar } from '../shared/press-bar';
 
-const IS_CONSENSUS_MIAMI_ANNOUNCEMENT_ACTIVE = false;
+const IS_CONSENSUS_MIAMI_ANNOUNCEMENT_ACTIVE = true;
 
 const HeroSection = (): React.ReactElement => {
   return (
@@ -41,7 +41,7 @@ const HeroSection = (): React.ReactElement => {
                 target="_blank"
                 logo={<ConsensusLogo />}
                 logoLabel="Consensus"
-                subtitle="In Miami for"
+                subtitle="SODAX in Miami"
                 backgroundImage="/consensus_miami.png"
               />
               <div className="flex flex-col items-center text-[42px] leading-[1.1]">

@@ -1,8 +1,8 @@
 export function ConsensusLogo() {
   return (
     <svg
-      width="110"
-      height="12"
+      width="147"
+      height="16"
       viewBox="0 0 110 12"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
