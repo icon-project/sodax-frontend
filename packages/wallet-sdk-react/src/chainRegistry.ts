@@ -1,11 +1,4 @@
-import {
-  type ChainType,
-  type RpcConfig,
-  type BitcoinRpcConfig,
-  type StellarRpcConfig,
-  ChainKeys,
-  detectBitcoinAddressType,
-} from '@sodax/types';
+import { type ChainType, type RpcConfig, ChainKeys, ChainTypeArr, detectBitcoinAddressType } from '@sodax/types';
 import {
   IconWalletProvider,
   InjectiveWalletProvider,
@@ -16,7 +9,7 @@ import {
 import { Wallet } from '@injectivelabs/wallet-base';
 import { getEthereumAddress } from '@injectivelabs/sdk-ts';
 
-import type { XService, XConnector } from './core/index.js';
+import { XConnector, type XService } from './core/index.js';
 import type { IWalletProvider, XConnection } from './types/index.js';
 import type { IXConnector } from './types/interfaces.js';
 import type { ChainsConfig } from './types/config.js';
@@ -34,7 +27,8 @@ import { BitcoinXService } from './xchains/bitcoin/index.js';
 import { UnisatXConnector } from './xchains/bitcoin/UnisatXConnector.js';
 import { XverseXConnector } from './xchains/bitcoin/XverseXConnector.js';
 import { OKXXConnector } from './xchains/bitcoin/OKXXConnector.js';
-import type { BitcoinXConnector } from './xchains/bitcoin/BitcoinXConnector.js';
+import { BitcoinXConnector } from './xchains/bitcoin/BitcoinXConnector.js';
+import { hasSignBip322, hasSignEcdsa } from './xchains/bitcoin/bitcoinSignGuards.js';
 import { NearXService } from './xchains/near/NearXService.js';
 import { NearXConnector } from './xchains/near/NearXConnector.js';
 import { StacksXService, StacksXConnector, STACKS_PROVIDERS } from './xchains/stacks/index.js';
@@ -52,19 +46,19 @@ export type StoreAccessor = () => {
 
 export type ChainServiceFactory<S extends XService = XService> = {
   /** Create or get the XService singleton for this chain. */
-  createService: (rpcConfig?: RpcConfig) => S;
+  createService(rpcConfig?: RpcConfig): S;
   /** Human-readable chain name for display in modal UIs (spec §E of #1123). */
   displayName: string;
   /** Optional icon URL for the chain. Consumers can override when rendering. */
   iconUrl?: string;
   /** Static connectors known at build time. Ignored for provider-managed chains. */
-  defaultConnectors: () => XConnector[];
+  defaultConnectors(): XConnector[];
   /** true = needs React provider (EVM/Solana/Sui), false = browser extension APIs. */
   providerManaged: boolean;
   /** ChainActions for non-provider chains. If omitted, uses createDefaultActions(). */
-  createActions?: (service: S, getStore: StoreAccessor) => ChainActions;
+  createActions?(service: S, getStore: StoreAccessor): ChainActions;
   /** Wallet provider for non-provider chains. Called on setXConnection(). */
-  createWalletProvider?: (service: S, getStore: StoreAccessor) => IWalletProvider | undefined;
+  createWalletProvider?(service: S, getStore: StoreAccessor): IWalletProvider | undefined;
   /**
    * Async connector discovery for chains whose available wallets can only be detected at runtime
    * (e.g. browser extension scan, manifest loading). Runs once after init, updates store.xConnectorsByChain when done.
@@ -73,17 +67,16 @@ export type ChainServiceFactory<S extends XService = XService> = {
    * Example: Stellar scans for installed browser wallets via walletsKit.getSupportedWallets(),
    * NEAR loads wallet manifest via walletSelector.whenManifestLoaded.
    */
-  discoverConnectors?: (service: S, getStore: StoreAccessor) => Promise<void>;
+  discoverConnectors?(service: S, getStore: StoreAccessor): Promise<void>;
 };
 
 /**
- * Type-checked factory definition — S is inferred from createService return type,
- * so all callbacks (createActions, createWalletProvider, discoverConnectors) receive the concrete service type.
- * Erased to ChainServiceFactory (base) at registry level. Safe because createChainServices always passes
- * the service instance created by the same factory's createService().
+ * Define a chain service factory. Infers `S` from `createService` so all callbacks
+ * (createActions, createWalletProvider, discoverConnectors) get the concrete service type,
+ * then erases to the base ChainServiceFactory for storage in the registry.
  */
 function defineChain<S extends XService>(factory: ChainServiceFactory<S>): ChainServiceFactory {
-  return factory as unknown as ChainServiceFactory;
+  return factory;
 }
 
 export type ChainServicesResult = {
@@ -92,6 +85,27 @@ export type ChainServicesResult = {
   enabledChains: ChainType[];
   chainActions: ChainActionsRegistry;
 };
+
+// ─── Connector helpers ─────────────────────────────────────────────────────
+
+/**
+ * Validate that consumer-supplied connectors (typed against the public
+ * `IXConnector` interface) are actual `XConnector` instances. Required at the
+ * `BaseChainConfig.connectors` boundary because the SDK stores `XConnector[]`
+ * internally — `getXConnectorById` and chain-specific subclass methods rely
+ * on the abstract class default behavior.
+ */
+function narrowConnectors(items: readonly IXConnector[], chainType: ChainType): XConnector[] {
+  return items.filter((item): item is XConnector => {
+    if (!(item instanceof XConnector)) {
+      console.warn(
+        `[chainRegistry] ${chainType} connector "${item.id}" must extend XConnector — skipping. Implement the abstract XConnector class instead of raw IXConnector for full SDK support.`,
+      );
+      return false;
+    }
+    return true;
+  });
+}
 
 // ─── Default Actions Helper ─────────────────────────────────────────────────
 
@@ -133,8 +147,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
     providerManaged: true,
   }),
   BITCOIN: defineChain({
-    createService: rpcConfig =>
-      BitcoinXService.getInstance((rpcConfig?.[ChainKeys.BITCOIN_MAINNET] as BitcoinRpcConfig | undefined)?.rpcUrl),
+    createService: rpcConfig => BitcoinXService.getInstance(rpcConfig?.[ChainKeys.BITCOIN_MAINNET]?.rpcUrl),
     displayName: 'Bitcoin',
     defaultConnectors: () => [new UnisatXConnector(), new XverseXConnector(), new OKXXConnector()],
     providerManaged: false,
@@ -143,10 +156,8 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
       signMessage: async (message: string) => {
         const store = getStore();
         const connection = store.xConnections.BITCOIN;
-        const connector = connection?.xConnectorId
-          ? (service.getXConnectorById(connection.xConnectorId) as BitcoinXConnector | undefined)
-          : undefined;
-        if (!connector) {
+        const connector = connection?.xConnectorId ? service.getXConnectorById(connection.xConnectorId) : undefined;
+        if (!(connector instanceof BitcoinXConnector)) {
           throw new Error('Bitcoin wallet not connected');
         }
         const address = connection?.xAccount.address;
@@ -156,21 +167,17 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
         switch (addressType) {
           case 'P2WPKH':
           case 'P2TR': {
-            if (!('signBip322Message' in connector)) {
+            if (!hasSignBip322(connector)) {
               throw new Error(`${connector.id} does not support BIP-322 signing`);
             }
-            return (
-              connector as BitcoinXConnector & { signBip322Message: (msg: string) => Promise<string> }
-            ).signBip322Message(message);
+            return connector.signBip322Message(message);
           }
           case 'P2SH':
           case 'P2PKH': {
-            if (!('signEcdsaMessage' in connector)) {
+            if (!hasSignEcdsa(connector)) {
               throw new Error(`${connector.id} does not support ECDSA signing`);
             }
-            return (
-              connector as BitcoinXConnector & { signEcdsaMessage: (msg: string) => Promise<string> }
-            ).signEcdsaMessage(message);
+            return connector.signEcdsaMessage(message);
           }
           default: {
             const _exhaustiveCheck: never = addressType;
@@ -183,8 +190,8 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
       const store = getStore();
       const connection = store.xConnections.BITCOIN;
       if (!connection?.xConnectorId) return undefined;
-      const connector = service.getXConnectorById(connection.xConnectorId) as BitcoinXConnector | undefined;
-      if (!connector) return undefined;
+      const connector = service.getXConnectorById(connection.xConnectorId);
+      if (!(connector instanceof BitcoinXConnector)) return undefined;
       return connector.recreateWalletProvider(connection.xAccount);
     },
   }),
@@ -221,7 +228,7 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
   }),
   STELLAR: defineChain({
     createService: rpcConfig => {
-      const stellarRpc = rpcConfig?.[ChainKeys.STELLAR_MAINNET] as StellarRpcConfig | undefined;
+      const stellarRpc = rpcConfig?.[ChainKeys.STELLAR_MAINNET];
       return StellarXService.getInstance(stellarRpc?.horizonRpcUrl, stellarRpc?.sorobanRpcUrl);
     },
     displayName: 'Stellar',
@@ -302,10 +309,9 @@ export const chainRegistry: Record<string, ChainServiceFactory> = {
       const connection = store.xConnections.STACKS;
       const address = connection?.xAccount.address;
       if (!address) return undefined;
-      const connector = connection?.xConnectorId
-        ? (service.getXConnectorById(connection.xConnectorId) as StacksXConnector | undefined)
-        : undefined;
-      return new StacksWalletProvider({ address, provider: connector?.getProvider() });
+      const connector = connection?.xConnectorId ? service.getXConnectorById(connection.xConnectorId) : undefined;
+      const provider = connector instanceof StacksXConnector ? connector.getProvider() : undefined;
+      return new StacksWalletProvider({ address, provider });
     },
   }),
 };
@@ -322,25 +328,27 @@ export const createChainServices = (
   const enabledChains: ChainType[] = [];
   const chainActions: ChainActionsRegistry = {};
 
-  for (const [chainType, factory] of Object.entries(chainRegistry)) {
-    const chainConfig = config[chainType as keyof ChainsConfig];
+  for (const chainType of ChainTypeArr) {
+    const chainConfig = config[chainType];
     if (!chainConfig) continue;
+    const factory = chainRegistry[chainType];
+    if (!factory) continue;
 
-    const ct = chainType as ChainType;
     const service = factory.createService(rpcConfig);
-    xServices[ct] = service;
-    enabledChains.push(ct);
+    xServices[chainType] = service;
+    enabledChains.push(chainType);
 
     if (!factory.providerManaged) {
-      const configConnectors = (chainConfig as { connectors?: IXConnector[] }).connectors;
-      const connectors = configConnectors ? configConnectors : factory.defaultConnectors();
+      const connectors = chainConfig.connectors
+        ? narrowConnectors(chainConfig.connectors, chainType)
+        : factory.defaultConnectors();
       service.setXConnectors(connectors);
-      xConnectorsByChain[ct] = connectors;
+      xConnectorsByChain[chainType] = connectors;
 
       // Register ChainActions for non-provider chains
-      chainActions[ct] = factory.createActions
+      chainActions[chainType] = factory.createActions
         ? factory.createActions(service, getStore)
-        : createDefaultActions(ct, service, getStore);
+        : createDefaultActions(chainType, service, getStore);
 
       // Async connector discovery (Stellar, NEAR) — updates store when done
       if (factory.discoverConnectors) {

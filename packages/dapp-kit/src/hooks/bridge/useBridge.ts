@@ -1,65 +1,37 @@
-// import { useSodaxContext } from '../shared/useSodaxContext.js';
-// import type {
-//   BridgeError,
-//   BridgeErrorCode,
-//   SpokeTxHash,
-//   HubTxHash,
-//   Result,
-//   CreateBridgeIntentParams,
-// } from '@sodax/sdk';
-// import { useMutation, type UseMutationResult } from '@tanstack/react-query';
-// import type { SpokeProvider } from '@sodax/sdk';
-//
-// /**
-//  * Hook for executing bridge transactions to transfer tokens between chains.
-//  * Uses React Query's useMutation for better state management and caching.
-//  *
-//  * @param {SpokeProvider} spokeProvider - The spoke provider to use for the bridge
-//  * @returns {UseMutationResult} Mutation result object containing mutation function and state
-//  *
-//  * @example
-//  * ```typescript
-//  * const { mutateAsync: bridge, isPending } = useBridge(spokeProvider);
-//  *
-//  * const handleBridge = async () => {
-//  *   const result = await bridge({
-//  *     srcChainId: '0x2105.base',
-//  *     srcAsset: '0x...',
-//  *     amount: 1000n,
-//  *     dstChainId: '0x89.polygon',
-//  *     dstAsset: '0x...',
-//  *     recipient: '0x...'
-//  *   });
-//  *
-//  *   console.log('Bridge transaction hashes:', {
-//  *     spokeTxHash: result.spokeTxHash,
-//  *     hubTxHash: result.hubTxHash
-//  *   });
-//  * };
-//  * ```
-//  */
-// export function useBridge(
-//   spokeProvider: SpokeProvider | undefined,
-// ): UseMutationResult<Result<[SpokeTxHash, HubTxHash], BridgeError<BridgeErrorCode>>, Error, CreateBridgeIntentParams> {
-//   const { sodax } = useSodaxContext();
-//
-//   return useMutation<Result<[SpokeTxHash, HubTxHash], BridgeError<BridgeErrorCode>>, Error, CreateBridgeIntentParams>({
-//     mutationFn: async (params: CreateBridgeIntentParams) => {
-//       if (!spokeProvider) {
-//         throw new Error('Spoke provider not found');
-//       }
-//
-//       const result = await sodax.bridge.bridge({
-//         params,
-//         spokeProvider,
-//       });
-//
-//       if (!result.ok) {
-//         throw new Error(`Bridge failed: ${result.error.code}`);
-//       }
-//
-//       return result;
-//     },
-//   });
-// }
-//
+import { useSodaxContext } from '../shared/useSodaxContext.js';
+import type { BridgeParams, HubTxHash, SpokeTxHash } from '@sodax/sdk';
+import type { Result, SpokeChainKey } from '@sodax/types';
+import { useMutation, type UseMutationResult, useQueryClient } from '@tanstack/react-query';
+
+type BridgeResult = Result<[SpokeTxHash, HubTxHash]>;
+
+/**
+ * Mutation variables for {@link useBridge}. Generic over `K extends SpokeChainKey` (defaults to
+ * the full union). Sophisticated callers can lock K at the hook call site to narrow the
+ * `walletProvider` and `params.srcChainKey` types.
+ */
+export type UseBridgeVars<K extends SpokeChainKey = SpokeChainKey> = Omit<BridgeParams<K, false>, 'raw'>;
+
+/**
+ * React hook for executing a cross-chain bridge transfer. Pure mutation: all inputs (params,
+ * walletProvider) are passed to `mutate({...})`. The hook itself takes no arguments. Returns the
+ * SDK `Result<T>` as-is; callers branch on `data?.ok`.
+ */
+export function useBridge<K extends SpokeChainKey = SpokeChainKey>(): UseMutationResult<
+  BridgeResult,
+  Error,
+  UseBridgeVars<K>
+> {
+  const { sodax } = useSodaxContext();
+  const queryClient = useQueryClient();
+
+  return useMutation<BridgeResult, Error, UseBridgeVars<K>>({
+    mutationFn: async (vars) => {
+      return sodax.bridge.bridge({ ...vars, raw: false });
+    },
+    onSuccess: (_data, { params }) => {
+      queryClient.invalidateQueries({ queryKey: ['xBalances', params.srcChainKey] });
+      queryClient.invalidateQueries({ queryKey: ['xBalances', params.dstChainKey] });
+    },
+  });
+}

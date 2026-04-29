@@ -25,7 +25,12 @@ export type IWalletProvider =
   | IStacksWalletProvider
   | INearWalletProvider;
 
-// GetWalletProviderType is used to get the wallet provider type for a given chain id or chain type
+/**
+ * Wallet provider type for a chain key or abstract {@link ChainType}. Maps `C` to the matching
+ * chain-specific provider. When `C` is the full {@link SpokeChainKey} union, `GetChainType<C>`
+ * distributes to the full {@link ChainType} union and the result reduces to the union of all
+ * chain-specific providers — i.e. {@link IWalletProvider}.
+ */
 export type GetWalletProviderType<C extends SpokeChainKey | ChainType> = GetChainType<C> extends 'EVM'
   ? IEvmWalletProvider
   : GetChainType<C> extends 'SOLANA'

@@ -44,11 +44,11 @@ import {
   isSpokeIsAllowanceValidParamsHub,
   isSpokeIsAllowanceValidParamsStellar,
   isStellarChainKeyType,
-  isValidWalletProviderTypeForChainKey,
   isSpokeApproveParamsHub,
   isSpokeApproveParamsEvmSpoke,
   isSpokeApproveParamsStellar,
   isSuiChainKeyType,
+  isUndefinedOrValidWalletProviderForChainKey,
 } from '../../guards.js';
 import type { ConfigService } from '../../config/ConfigService.js';
 import type { EvmHubProvider } from '../../entities/EvmHubProvider.js';
@@ -241,7 +241,7 @@ export class SpokeService {
   ): Promise<Result<TxReturnType<K, Raw>>> {
     try {
       invariant(
-        isValidWalletProviderTypeForChainKey(params.srcChainKey, params.walletProvider),
+        isUndefinedOrValidWalletProviderForChainKey(params.srcChainKey, params.walletProvider),
         `Invalid wallet provider for chain key: ${params.srcChainKey}, walletProvider.chainType: ${params.walletProvider?.chainType}`,
       );
 

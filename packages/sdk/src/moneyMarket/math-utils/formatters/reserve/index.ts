@@ -335,7 +335,7 @@ export function formatReserves<T extends ReserveDataWithPrice>({
   currentTimestamp,
   marketReferencePriceInUsd,
   marketReferenceCurrencyDecimals,
-}: FormatReservesUSDRequest<T>) {
+}: FormatReservesUSDRequest<T>): Array<T & FormatReserveUSDResponse> {
   return reserves.map(reserve => {
     const formattedReserve = formatReserveUSD({
       reserve,

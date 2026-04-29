@@ -1,8 +1,7 @@
-/*
-import React, { useEffect, useMemo, useState, type ReactElement } from 'react';
+import React, { useMemo, useState, type ReactElement } from 'react';
 import {
   useReservesUsdFormat,
-  useSpokeProvider,
+  useSodaxContext,
   useUserFormattedSummary,
   useUserReservesData,
   useATokensBalances,
@@ -10,11 +9,11 @@ import {
 } from '@sodax/dapp-kit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { getXChainType, useWalletProvider, useXAccount, useXService } from '@sodax/wallet-sdk-react';
+import { getXChainType, useXAccount, useXService } from '@sodax/wallet-sdk-react';
 import { formatUnits, isAddress } from 'viem';
 import { SupplyAssetsListItem } from './SupplyAssetsListItem';
 import { useAppStore } from '@/zustand/useAppStore';
-import { type ChainId, ICON_MAINNET_CHAIN_ID, moneyMarketSupportedTokens, type XToken } from '@sodax/sdk';
+import { ChainKeys, type XToken } from '@sodax/types';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
 import { SupplyModal } from './SupplyModal';
@@ -34,6 +33,7 @@ const TABLE_HEADERS = [
 
 export function SupplyAssetsList(): ReactElement {
   const { selectedChainId } = useAppStore();
+  const { sodax } = useSodaxContext();
 
   const [withdrawData, setWithdrawData] = useState<{
     token: XToken;
@@ -45,12 +45,10 @@ export function SupplyAssetsList(): ReactElement {
     maxSupply: string;
   } | null>(null);
 
-  const tokens = moneyMarketSupportedTokens[selectedChainId] ?? [];
-  const isIcon = selectedChainId === ICON_MAINNET_CHAIN_ID;
+  const tokens = sodax.moneyMarket.getSupportedTokensByChainId(selectedChainId);
+  const isIcon = selectedChainId === ChainKeys.ICON_MAINNET;
 
   const { address } = useXAccount(selectedChainId);
-  const walletProvider = useWalletProvider(selectedChainId);
-  const spokeProvider = useSpokeProvider(selectedChainId, walletProvider);
   const xService = useXService(getXChainType(selectedChainId));
   const {
     data: balances,
@@ -67,7 +65,7 @@ export function SupplyAssetsList(): ReactElement {
     data: userReservesData,
     isLoading: isUserReservesLoading,
     refetch: refetchReserves,
-  } = useUserReservesData({ spokeChainId: selectedChainId, userAddress: address });
+  } = useUserReservesData({ spokeChainKey: selectedChainId, userAddress: address });
   const userReserves = userReservesData?.[0] || [];
   const {
     data: formattedReserves,
@@ -75,7 +73,7 @@ export function SupplyAssetsList(): ReactElement {
     refetch: refetchFormattedReserves,
   } = useReservesUsdFormat();
   const { data: userSummary, refetch: refetchSummary } = useUserFormattedSummary({
-    spokeChainId: selectedChainId,
+    spokeChainKey: selectedChainId,
     userAddress: address,
   });
   const healthFactorRaw = userSummary?.healthFactor ? Number(userSummary.healthFactor) : undefined;
@@ -100,7 +98,7 @@ export function SupplyAssetsList(): ReactElement {
     refetch: refetchBalances,
   } = useATokensBalances({
     aTokens: aTokenAddresses,
-    spokeProvider,
+    spokeChainKey: selectedChainId,
     userAddress: address,
   });
 
@@ -367,4 +365,3 @@ export function SupplyAssetsList(): ReactElement {
     </>
   );
 }
-*/

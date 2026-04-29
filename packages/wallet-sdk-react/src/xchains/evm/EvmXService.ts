@@ -49,7 +49,10 @@ export const hyper = /*#__PURE__*/ defineChain({
   },
 });
 
-export const createWagmiConfig = (config: RpcConfig, options?: WagmiOptions & { connectors?: CreateConnectorFn[] }): Config => {
+export const createWagmiConfig = (
+  config: RpcConfig,
+  options?: WagmiOptions & { connectors?: CreateConnectorFn[] },
+): Config => {
   return createConfig({
     chains: [
       mainnet,

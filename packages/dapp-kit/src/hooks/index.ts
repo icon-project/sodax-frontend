@@ -1,10 +1,10 @@
 export * from './shared/index.js';
 export * from './provider/index.js';
 export * from './bitcoin/index.js';
-// export * from './mm/index.js';
+export * from './mm/index.js';
 export * from './swap/index.js';
 export * from './backend/index.js';
-// export * from './bridge/index.js';
+export * from './bridge/index.js';
 // export * from './staking/index.js';
 // export * from './migrate/index.js';
 // export * from './dex/index.js';

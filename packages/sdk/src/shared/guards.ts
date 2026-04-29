@@ -1,4 +1,11 @@
-import type { JsonRpcPayloadResponse, ResponseAddressType, ResponseSigningType } from './entities/icon/icon-wallet-types.js';
+// packages/sdk/src/shared/guards.ts
+// Runtime type narrowers for chain configs, wallet providers, partner fees, and API payloads.
+import { isAddress } from 'viem';
+import type {
+  JsonRpcPayloadResponse,
+  ResponseAddressType,
+  ResponseSigningType,
+} from './entities/icon/icon-wallet-types.js';
 import type {
   BitcoinChainKey,
   EvmChainKey,
@@ -46,6 +53,8 @@ import {
   isEvmChainKey,
   isEvmSpokeOnlyChainKey,
   getChainType,
+  HUB_CHAIN_KEY,
+  spokeChainKeysSet,
 } from '@sodax/types';
 import type {
   SpokeApproveParams,
@@ -57,7 +66,7 @@ import type {
 } from './types/spoke-types.js';
 
 export function isEvmSpokeChainConfig(value: SpokeChainConfig): value is EvmSpokeChainConfig {
-  return typeof value === 'object' && value.chain.type === 'EVM';
+  return typeof value === 'object' && value !== null && value.chain.type === 'EVM' && value.chain.key !== HUB_CHAIN_KEY;
 }
 
 export function isIconAddress(value: unknown): value is IconAddress {
@@ -87,21 +96,35 @@ export function isResponseSigningType(value: unknown): value is ResponseSigningT
 }
 
 export function isJsonRpcPayloadResponse(value: unknown): value is JsonRpcPayloadResponse {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    'id' in value &&
-    'result' in value &&
-    typeof value.result === 'string'
-  );
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  return 'id' in obj && typeof obj.id === 'number' && 'result' in obj && typeof obj.result === 'string';
 }
 
 export function isPartnerFeeAmount(value: unknown): value is PartnerFeeAmount {
-  return typeof value === 'object' && value !== null && 'address' in value && 'amount' in value;
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  return (
+    'address' in obj &&
+    typeof obj.address === 'string' &&
+    isAddress(obj.address) &&
+    'amount' in obj &&
+    typeof obj.amount === 'bigint'
+  );
 }
 
 export function isPartnerFeePercentage(value: unknown): value is PartnerFeePercentage {
-  return typeof value === 'object' && value !== null && 'address' in value && 'percentage' in value;
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  const hasAmountBranch = 'amount' in obj && typeof obj.amount === 'bigint';
+  return (
+    'address' in obj &&
+    typeof obj.address === 'string' &&
+    isAddress(obj.address) &&
+    'percentage' in obj &&
+    typeof obj.percentage === 'number' &&
+    !hasAmountBranch
+  );
 }
 
 export function isEvmChainKeyType(value: SpokeChainKey): value is EvmChainKey {
@@ -201,7 +224,13 @@ export function isSpokeApproveParamsStellar<K extends SpokeChainKey, Raw extends
 export function isConfiguredSolverConfig(
   value: SolverConfigParams,
 ): value is Prettify<SolverConfig & Optional<PartnerFeeConfig, 'partnerFee'>> {
-  return typeof value === 'object' && value !== null && 'intentsContract' in value && 'solverApiEndpoint' in value;
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'intentsContract' in value &&
+    'solverApiEndpoint' in value &&
+    'protocolIntentsContract' in value
+  );
 }
 
 export function isConfiguredMoneyMarketConfig(
@@ -218,12 +247,12 @@ export function isConfiguredMoneyMarketConfig(
   );
 }
 
-export function isAddressString(value: unknown): value is string {
-  return typeof value === 'string';
-}
-
 export function isRawDestinationParams(value: unknown): value is RawDestinationParams {
-  return typeof value === 'object' && value !== null && 'toChainId' in value && 'toAddress' in value;
+  if (typeof value !== 'object' || value === null) return false;
+  const obj = value as Record<string, unknown>;
+  if (!('dstChainKey' in obj) || !('dstAddress' in obj)) return false;
+  if (typeof obj.dstAddress !== 'string') return false;
+  return typeof obj.dstChainKey === 'string' && spokeChainKeysSet.has(obj.dstChainKey as SpokeChainKey);
 }
 
 // Backend API response guards
@@ -281,10 +310,11 @@ export function isOptionalStellarWalletProviderType(
   return walletProvider === undefined || isStellarWalletProviderType(walletProvider);
 }
 
-export function isValidWalletProviderTypeForChainKey<K extends SpokeChainKey>(
+/** For `raw: true` actions: `undefined` wallet is valid; otherwise the provider must match {@link getChainType}. */
+export function isUndefinedOrValidWalletProviderForChainKey<K extends SpokeChainKey>(
   chainKey: K,
   walletProvider: IWalletProvider | undefined,
-): walletProvider is GetWalletProviderType<K> {
+): walletProvider is GetWalletProviderType<K> | undefined {
   return walletProvider === undefined || getChainType(chainKey) === walletProvider.chainType;
 }
 
@@ -293,5 +323,3 @@ export function isOptionalBitcoinWalletProviderType(
 ): walletProvider is IBitcoinWalletProvider | undefined {
   return walletProvider === undefined || isBitcoinWalletProviderType(walletProvider);
 }
-
-// TODO re-check all guards after core types and ask check to ensure correct property checks after refactoring

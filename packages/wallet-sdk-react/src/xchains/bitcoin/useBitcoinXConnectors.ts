@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { BitcoinXConnector } from './BitcoinXConnector.js';
+import { BitcoinXConnector } from './BitcoinXConnector.js';
 import { useXService } from '../../hooks/index.js';
 
 /**
@@ -7,8 +7,9 @@ import { useXService } from '../../hooks/index.js';
  */
 export function useBitcoinXConnectors(): BitcoinXConnector[] {
   const xService = useXService('BITCOIN');
-  
+
   return useMemo(() => {
-    return (xService?.getXConnectors() || []) as BitcoinXConnector[];
+    const connectors = xService?.getXConnectors() ?? [];
+    return connectors.filter((c): c is BitcoinXConnector => c instanceof BitcoinXConnector);
   }, [xService]);
 }

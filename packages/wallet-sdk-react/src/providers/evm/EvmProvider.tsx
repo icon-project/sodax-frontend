@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import type { CreateConnectorFn } from 'wagmi';
-import { WagmiProvider, type State as WagmiState } from 'wagmi';
+import { WagmiProvider } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { RpcConfig } from '@sodax/types';
 import { createWagmiConfig } from '../../xchains/evm/EvmXService.js';
@@ -46,7 +46,7 @@ export const EvmProvider = ({ children, config, rpcConfig }: EvmProviderProps) =
   // wagmi requires its own QueryClientProvider — this is wagmi-internal, not the app's React Query cache.
   return (
     <QueryClientProvider client={queryClientRef.current}>
-      <WagmiProvider reconnectOnMount={reconnectOnMount} config={wagmiConfig} initialState={config?.initialState as WagmiState | undefined}>
+      <WagmiProvider reconnectOnMount={reconnectOnMount} config={wagmiConfig} initialState={config?.initialState}>
         <EvmHydrator />
         <EvmActions />
         {children}

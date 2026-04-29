@@ -236,13 +236,12 @@ export class MoneyMarketDataService {
 
   /**
    * @description computes additional fields and normalizes numbers into human readable decimals
-   * In addition to that it also converts the numbers to USD
-   * @param {FormatReservesUSDRequest<ReserveDataWithPrice>} - the request parameters
-   * @returns {FormatReserveUSDResponse<FormatReservesUSDRequest>} - an array of formatted configuration and live usage data for each reserve in a Sodax market
+   * In addition to that it also converts the numbers to USD. The return type preserves the input
+   * shape `T` so callers can read the original reserve fields alongside the formatted USD ones.
    */
   public formatReservesUSD<T extends ReserveDataWithPrice>(
     params: FormatReservesUSDRequest<T>,
-  ): FormatReserveUSDResponse[] {
+  ): Array<T & FormatReserveUSDResponse> {
     return formatReserves<T>(params);
   }
 

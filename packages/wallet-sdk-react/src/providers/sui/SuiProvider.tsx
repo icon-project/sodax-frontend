@@ -16,8 +16,7 @@ type SuiProviderProps = {
 export const SuiProvider = ({ children, config, rpcConfig }: SuiProviderProps) => {
   const autoConnect = config?.autoConnect ?? SUI_DEFAULT_AUTO_CONNECT;
   const network = config?.network ?? SUI_DEFAULT_NETWORK;
-  const rpcUrl =
-    config?.rpcUrl ?? (rpcConfig?.[ChainKeys.SUI_MAINNET] as string | undefined) ?? getFullnodeUrl(network);
+  const rpcUrl = config?.rpcUrl ?? rpcConfig?.[ChainKeys.SUI_MAINNET] ?? getFullnodeUrl(network);
 
   return (
     <SuiClientProvider networks={{ [network]: { url: rpcUrl } }} defaultNetwork={network}>

@@ -20,7 +20,6 @@ import type {
   CLPositionConfig,
   EvmContractCall,
   GetAddressType,
-  GetWalletProviderType,
   Hash,
   HttpUrl,
   HubTxHash,
@@ -28,9 +27,9 @@ import type {
   PoolKey,
   Result,
   SpokeChainKey,
+  SpokeExecActionParams,
   SpokeTxHash,
   TxReturnType,
-  WalletProviderSlot,
   XToken,
 } from '@sodax/types';
 import type { RelayOptionalExtraData } from '../shared/types/types.js';
@@ -87,11 +86,11 @@ export type ClSupplyParams<K extends SpokeChainKey> = {
   sqrtPriceX96: bigint; // current sqrt price for the pool
 };
 
-export type ClSupplyAction<K extends SpokeChainKey, Raw extends boolean> = {
-  params: ClSupplyParams<K>;
-  timeout?: number;
-  skipSimulation?: boolean;
-} & WalletProviderSlot<K, Raw>;
+export type ClSupplyAction<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  ClSupplyParams<K>
+>;
 
 export type ClGetPoolDataParams = {
   token0: string; // token0 address
@@ -106,12 +105,11 @@ export type ClWithdrawParams<K extends SpokeChainKey> = {
   amount: bigint; // amount of asset to withdraw
 };
 
-export type ClLiquidityWithdrawAction<K extends SpokeChainKey, Raw extends boolean> = {
-  params: ClWithdrawParams<K>;
-  walletProvider: GetWalletProviderType<K>;
-  timeout?: number;
-  skipSimulation?: boolean;
-} & WalletProviderSlot<K, Raw>;
+export type ClLiquidityWithdrawAction<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  ClWithdrawParams<K>
+>;
 
 export type ClIncreaseLiquidityParams<K extends SpokeChainKey> = {
   srcChainKey: K;
@@ -126,11 +124,11 @@ export type ClIncreaseLiquidityParams<K extends SpokeChainKey> = {
   sqrtPriceX96: bigint; // current sqrt price for the pool
 };
 
-export type ClLiquidityIncreaseLiquidityAction<K extends SpokeChainKey, Raw extends boolean> = {
-  params: ClIncreaseLiquidityParams<K>;
-  timeout?: number;
-  skipSimulation?: boolean;
-} & WalletProviderSlot<K, Raw>;
+export type ClLiquidityIncreaseLiquidityAction<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  ClIncreaseLiquidityParams<K>
+>;
 
 export type ClDecreaseLiquidityParams<K extends SpokeChainKey> = {
   srcChainKey: K;
@@ -142,11 +140,11 @@ export type ClDecreaseLiquidityParams<K extends SpokeChainKey> = {
   amount1Min: bigint; // minimum amount of token1
 };
 
-export type ClLiquidityDecreaseLiquidityAction<K extends SpokeChainKey, Raw extends boolean> = {
-  params: ClDecreaseLiquidityParams<K>;
-  timeout?: number;
-  skipSimulation?: boolean;
-} & WalletProviderSlot<K, Raw>;
+export type ClLiquidityDecreaseLiquidityAction<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  ClDecreaseLiquidityParams<K>
+>;
 
 // Claim rewards parameters
 export type ClClaimRewardsParams<K extends SpokeChainKey> = {
@@ -158,11 +156,11 @@ export type ClClaimRewardsParams<K extends SpokeChainKey> = {
   tickUpper: bigint; // Upper tick of the position
 };
 
-export type ClLiquidityClaimRewardsAction<K extends SpokeChainKey, Raw extends boolean> = {
-  params: ClClaimRewardsParams<K>;
-  timeout?: number;
-  skipSimulation?: boolean;
-} & WalletProviderSlot<K, Raw>;
+export type ClLiquidityClaimRewardsAction<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
+  K,
+  Raw,
+  ClClaimRewardsParams<K>
+>;
 
 // Union type for all concentrated liquidity parameters
 export type ConcentratedLiquidityParams<K extends SpokeChainKey> =
@@ -330,10 +328,7 @@ export class ClService {
    */
   public async executeSupplyLiquidity<K extends SpokeChainKey, Raw extends boolean>(
     _params: ClSupplyAction<K, Raw>,
-  ): Promise<
-    Result<TxReturnType<K, Raw>> &
-      RelayOptionalExtraData
-  > {
+  ): Promise<Result<TxReturnType<K, Raw>> & RelayOptionalExtraData> {
     const { params, skipSimulation } = _params;
     try {
       const hubWallet = await HubService.getUserHubWalletAddress(
@@ -457,10 +452,7 @@ export class ClService {
 
   public async executeIncreaseLiquidity<K extends SpokeChainKey, Raw extends boolean>(
     _params: ClLiquidityIncreaseLiquidityAction<K, Raw>,
-  ): Promise<
-    Result<TxReturnType<K, Raw>> &
-      RelayOptionalExtraData
-  > {
+  ): Promise<Result<TxReturnType<K, Raw>> & RelayOptionalExtraData> {
     const { params, skipSimulation } = _params;
     try {
       const hubWallet = await HubService.getUserHubWalletAddress(
@@ -546,10 +538,7 @@ export class ClService {
 
   public async executeDecreaseLiquidity<K extends SpokeChainKey, Raw extends boolean>(
     _params: ClLiquidityDecreaseLiquidityAction<K, Raw>,
-  ): Promise<
-    Result<TxReturnType<K, Raw>> &
-      RelayOptionalExtraData
-  > {
+  ): Promise<Result<TxReturnType<K, Raw>> & RelayOptionalExtraData> {
     const { params, skipSimulation } = _params;
     try {
       const hubWallet = await HubService.getUserHubWalletAddress(
@@ -839,10 +828,7 @@ export class ClService {
    */
   public async executeClaimRewards<K extends SpokeChainKey, Raw extends boolean>(
     _params: ClLiquidityClaimRewardsAction<K, Raw>,
-  ): Promise<
-    Result<TxReturnType<K, Raw>> &
-      RelayOptionalExtraData
-  > {
+  ): Promise<Result<TxReturnType<K, Raw>> & RelayOptionalExtraData> {
     const { params, skipSimulation } = _params;
     try {
       const hubWallet = await HubService.getUserHubWalletAddress(

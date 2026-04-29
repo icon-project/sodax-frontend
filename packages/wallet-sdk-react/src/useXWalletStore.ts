@@ -1,4 +1,4 @@
-import type { ChainType, GetWalletProviderType, RpcConfig } from '@sodax/types';
+import { ChainTypeArr, type ChainType, type GetWalletProviderType, type RpcConfig } from '@sodax/types';
 import { create } from 'zustand';
 import { createJSONStorage, persist, devtools } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
@@ -85,7 +85,7 @@ export const useXWalletStore = create<XWalletStore>()(
         setWalletProvider: (xChainType: ChainType, provider: IWalletProvider | undefined) => {
           set(state => {
             if (provider) {
-              (state.walletProviders as Record<string, IWalletProvider>)[xChainType] = provider;
+              state.walletProviders[xChainType] = provider;
             } else {
               delete state.walletProviders[xChainType];
             }
@@ -112,10 +112,10 @@ export const useXWalletStore = create<XWalletStore>()(
 
         cleanupDisabledConnections: () => {
           set(state => {
-            for (const chainType of Object.keys(state.xConnections)) {
-              if (!state.enabledChains.includes(chainType as ChainType)) {
-                delete state.xConnections[chainType as ChainType];
-                delete state.walletProviders[chainType as ChainType];
+            for (const chainType of ChainTypeArr) {
+              if (state.xConnections[chainType] && !state.enabledChains.includes(chainType)) {
+                delete state.xConnections[chainType];
+                delete state.walletProviders[chainType];
               }
             }
           });

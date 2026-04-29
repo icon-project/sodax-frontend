@@ -19,7 +19,7 @@ type SolanaProviderProps = {
 
 export const SolanaProvider = ({ children, config, rpcConfig }: SolanaProviderProps) => {
   const autoConnect = config?.autoConnect ?? SOLANA_DEFAULT_AUTO_CONNECT;
-  const endpoint = (rpcConfig?.[ChainKeys.SOLANA_MAINNET] as string | undefined) ?? SOLANA_DEFAULT_RPC_URL;
+  const endpoint = rpcConfig?.[ChainKeys.SOLANA_MAINNET] ?? SOLANA_DEFAULT_RPC_URL;
 
   return (
     <SolanaConnectionProvider endpoint={endpoint}>

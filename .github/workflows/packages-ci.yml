@@ -1,4 +1,4 @@
-name: CI
+name: Packages CI
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: Build and Test
+    name: Build and Test packages
     timeout-minutes: 10
     runs-on: ubuntu-latest
 
@@ -39,10 +39,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm lint:packages
 
       - name: Check Circular Dependencies
-        run: pnpm check:circular-deps
+        run: pnpm check:circular-deps:packages
 
       - name: Build Packages
         run: pnpm build:packages
@@ -50,7 +50,7 @@ jobs:
         run: cd apps/node-cjs && pnpm test
 
       - name: Build Check
-        run: pnpm checkTs
+        run: pnpm checkTs:packages
 
       - name: Build
-        run: pnpm build
+        run: pnpm build:packages
