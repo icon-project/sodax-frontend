@@ -5,8 +5,9 @@ import type React from 'react';
 import Image from 'next/image';
 import { Navbar } from '@/components/shared/navbar';
 import { NetworkLogosScroller } from '@/components/shared/network-logos-scroller';
-import { ConsensusMiamiAnnouncement } from '@/components/shared/event-announcement-card';
+import { Announcement } from '@/components/shared/announcement';
 import { cn } from '@/lib/utils';
+import { ConsensusLogo } from './consensus-logo';
 import { LeadMagnetCTA } from './lead-magnet-cta';
 import { PressBar } from '../shared/press-bar';
 
@@ -38,9 +39,18 @@ const HeroSection = (): React.ReactElement => {
             IS_CONSENSUS_MIAMI_ANNOUNCEMENT_ACTIVE ? 'gap-[40px]' : 'gap-[56px]',
           )}
         >
-          {IS_CONSENSUS_MIAMI_ANNOUNCEMENT_ACTIVE && <ConsensusMiamiAnnouncement className="z-20" />}
-          {/* Title */}
+          {/* Title (with optional announcement card sitting directly above) */}
           <div className="flex flex-col items-center text-center whitespace-nowrap z-20">
+            {IS_CONSENSUS_MIAMI_ANNOUNCEMENT_ACTIVE && (
+              <Announcement
+                href="https://luma.com/00kpa20f?tk=cCSs90"
+                target="_blank"
+                logo={<ConsensusLogo />}
+                logoLabel="Consensus"
+                subtitle="In Miami for"
+                backgroundImage="/consensus_miami.png"
+              />
+            )}
             <div className="flex flex-col items-center text-[42px] leading-[1.1]">
               <span className="mix-blend-hard-light text-white font-[InterBlack]">Infrastructure for</span>
               <span className="mix-blend-hard-light text-yellow-soda font-[Shrikhand]">modern money</span>
