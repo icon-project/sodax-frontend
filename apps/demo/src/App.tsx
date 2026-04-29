@@ -8,6 +8,7 @@ import SolverPage from './pages/solver/page';
 import MoneyMarketPage from './pages/money-market/page';
 import BridgePage from './pages/bridge/page';
 import DexPage from './pages/dex/page';
+import StakingPage from './pages/staking/page';
 
 const router = createBrowserRouter([
   {
@@ -42,6 +43,10 @@ const router = createBrowserRouter([
       {
         path: '/dex',
         element: <DexPage />,
+      },
+      {
+        path: '/staking',
+        element: <StakingPage />,
       },
     ],
   },

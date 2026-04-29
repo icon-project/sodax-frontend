@@ -1,58 +1,40 @@
-// // packages/dapp-kit/src/hooks/staking/useStakeAllowance.ts
-// import { useSodaxContext } from '../shared/useSodaxContext.js';
-// import type { StakeParams, SpokeProvider } from '@sodax/sdk';
-// import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-//
-// /**
-//  * Hook for checking SODA token allowance for staking operations.
-//  * Uses React Query for efficient caching and state management.
-//  *
-//  * @param {Omit<StakeParams, 'action'> | undefined} params - The staking parameters. If undefined, the query will be disabled.
-//  * @param {SpokeProvider | undefined} spokeProvider - The spoke provider to use for the allowance check
-//  * @returns {UseQueryResult<boolean, Error>} Query result object containing allowance data and state
-//  *
-//  * @example
-//  * ```typescript
-//  * const { data: hasAllowed, isLoading } = useStakeAllowance(
-//  *   {
-//  *     amount: 1000000000000000000n, // 1 SODA
-//  *     account: '0x...'
-//  *   },
-//  *   spokeProvider
-//  * );
-//  *
-//  * if (isLoading) return <div>Checking allowance...</div>;
-//  * if (hasAllowed) {
-//  *   console.log('Sufficient allowance for staking');
-//  * }
-//  * ```
-//  */
-// export function useStakeAllowance(
-//   params: Omit<StakeParams, 'action'> | undefined,
-//   spokeProvider: SpokeProvider | undefined,
-// ): UseQueryResult<boolean, Error> {
-//   const { sodax } = useSodaxContext();
-//
-//   return useQuery({
-//     queryKey: ['soda', 'stakeAllowance', params, spokeProvider?.chainConfig.chain.id],
-//     queryFn: async () => {
-//       if (!params || !spokeProvider) {
-//         return false;
-//       }
-//
-//       const result = await sodax.staking.isAllowanceValid({
-//         params: { ...params, action: 'stake' },
-//         spokeProvider,
-//       });
-//
-//       if (!result.ok) {
-//         throw new Error(`Allowance check failed: ${result.error.code}`);
-//       }
-//
-//       return result.value;
-//     },
-//     enabled: !!params && !!spokeProvider,
-//     refetchInterval: 5000, // Refetch every 5 seconds
-//   });
-// }
-//
+import type { StakeParams } from '@sodax/sdk';
+import type { SpokeChainKey } from '@sodax/types';
+import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
+
+export type UseStakeAllowanceProps<K extends SpokeChainKey = SpokeChainKey> = {
+  params: Omit<StakeParams<K>, 'action'> | undefined;
+  queryOptions?: Omit<UseQueryOptions<boolean, Error>, 'queryKey' | 'queryFn' | 'enabled'>;
+};
+
+/**
+ * React hook to check whether the user has approved sufficient SODA spending for the stake
+ * action. Read-only — calls `staking.isAllowanceValid` with `raw: true` so no `walletProvider`
+ * is required.
+ */
+export function useStakeAllowance<K extends SpokeChainKey = SpokeChainKey>({
+  params,
+  queryOptions,
+}: UseStakeAllowanceProps<K>): UseQueryResult<boolean, Error> {
+  const { sodax } = useSodaxContext();
+
+  return useQuery<boolean, Error>({
+    queryKey: ['staking', 'allowance', params?.srcChainKey, 'stake', params?.srcAddress, params?.amount?.toString()],
+    queryFn: async () => {
+      if (!params) {
+        throw new Error('Params are required');
+      }
+      const result = await sodax.staking.isAllowanceValid({
+        params: { ...params, action: 'stake' },
+        raw: true,
+      });
+      if (!result.ok) throw result.error;
+      return result.value;
+    },
+    enabled: !!params,
+    refetchInterval: 5_000,
+    gcTime: 0,
+    ...queryOptions,
+  });
+}
