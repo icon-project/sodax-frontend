@@ -507,7 +507,9 @@ export class PartnerFeeClaimService {
    * @param {SonicSpokeProviderType} spokeProvider - The Sonic spoke provider
    * @returns {Promise<Result<IntentAutoSwapResult>>} Intent auto-swap result. On failure, the `.error` is an `Error` tagged with a CODE (`WAIT_INTENT_AUTO_SWAP_FAILED`, `CREATE_INTENT_AUTO_SWAP_FAILED`); the underlying cause is on `.cause`.
    */
-  public async swap(_params: PartnerFeeClaimSwapAction<HubChainKey, false>): Promise<Result<IntentAutoSwapResult>> {
+  public async swap(
+    _params: PartnerFeeClaimSwapAction<HubChainKey, false>,
+  ): Promise<Result<IntentAutoSwapResult>> {
     try {
       const txHash = await this.createIntentAutoSwap(_params);
 
@@ -545,3 +547,4 @@ export class PartnerFeeClaimService {
     }
   }
 }
+

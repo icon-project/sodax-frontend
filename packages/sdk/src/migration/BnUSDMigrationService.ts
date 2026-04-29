@@ -13,9 +13,8 @@ import type { ConfigService } from '../shared/config/ConfigService.js';
 export type UnifiedBnUSDMigrateAction<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
   K,
   Raw,
-  UnifiedBnUSDMigrateParams<K>,
-  { unchecked?: boolean }
->;
+  UnifiedBnUSDMigrateParams<K>
+> & { unchecked?: boolean };
 
 export type UnifiedBnUSDMigrateParams<K extends SpokeChainKey> = {
   srcAddress: string;

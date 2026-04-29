@@ -327,9 +327,7 @@ export class StakingService {
 
       return {
         ok: false,
-        error: new Error(
-          'Approval only supported for EVM spoke chains and [stake, unstake, instantUnstake] operations',
-        ),
+        error: new Error('Approval only supported for EVM spoke chains and [stake, unstake, instantUnstake] operations'),
       };
     } catch (error) {
       console.error(error);
@@ -348,7 +346,9 @@ export class StakingService {
    * @param timeout - The timeout in milliseconds for the transaction (default: DEFAULT_RELAY_TX_TIMEOUT)
    * @returns Promise<Result<[SpokeTxHash, HubTxHash] | RelayError>>
    */
-  public async stake<K extends SpokeChainKey>(_params: StakeAction<K, false>): Promise<Result<[string, string]>> {
+  public async stake<K extends SpokeChainKey>(
+    _params: StakeAction<K, false>,
+  ): Promise<Result<[string, string]>> {
     const { params, timeout } = _params;
 
     try {
@@ -446,10 +446,7 @@ export class StakingService {
             },
       );
 
-      if (!txResult.ok) {
-        console.error(txResult.error);
-        return txResult;
-      }
+      if (!txResult.ok) { console.error(txResult.error); return txResult; }
 
       return {
         ok: true,
@@ -496,7 +493,9 @@ export class StakingService {
    * @param timeout - The timeout in milliseconds for the transaction (default: DEFAULT_RELAY_TX_TIMEOUT)
    * @returns Promise<Result<[SpokeTxHash, HubTxHash] | RelayError>>
    */
-  public async unstake<K extends SpokeChainKey>(_params: UnstakeAction<K, false>): Promise<Result<[string, string]>> {
+  public async unstake<K extends SpokeChainKey>(
+    _params: UnstakeAction<K, false>,
+  ): Promise<Result<[string, string]>> {
     const { params, timeout } = _params;
     try {
       const txResult = await this.createUnstakeIntent(_params);
@@ -576,10 +575,7 @@ export class StakingService {
             } satisfies SendMessageParams<K, false>),
       );
 
-      if (!txResult.ok) {
-        console.error(txResult.error);
-        return txResult;
-      }
+      if (!txResult.ok) { console.error(txResult.error); return txResult; }
 
       return {
         ok: true,
@@ -716,10 +712,7 @@ export class StakingService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
-      if (!txResult.ok) {
-        console.error(txResult.error);
-        return txResult;
-      }
+      if (!txResult.ok) { console.error(txResult.error); return txResult; }
 
       return {
         ok: true,
@@ -779,7 +772,9 @@ export class StakingService {
    * @param timeout - The timeout in milliseconds for the transaction (default: DEFAULT_RELAY_TX_TIMEOUT)
    * @returns Promise<Result<[SpokeTxHash, HubTxHash] | RelayError>>
    */
-  public async claim<K extends SpokeChainKey>(_params: ClaimAction<K, false>): Promise<Result<[string, string]>> {
+  public async claim<K extends SpokeChainKey>(
+    _params: ClaimAction<K, false>,
+  ): Promise<Result<[string, string]>> {
     const { params, timeout } = _params;
     try {
       const txResult = await this.createClaimIntent(_params);
@@ -868,10 +863,7 @@ export class StakingService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
-      if (!txResult.ok) {
-        console.error(txResult.error);
-        return txResult;
-      }
+      if (!txResult.ok) { console.error(txResult.error); return txResult; }
 
       return {
         ok: true,
@@ -1017,10 +1009,7 @@ export class StakingService {
 
       const txResult = await this.spoke.sendMessage(sendMessageParams);
 
-      if (!txResult.ok) {
-        console.error(txResult.error);
-        return txResult;
-      }
+      if (!txResult.ok) { console.error(txResult.error); return txResult; }
 
       return {
         ok: true,
@@ -1257,7 +1246,9 @@ export class StakingService {
   public async getUnstakingInfoWithPenalty<K extends SpokeChainKey>(
     srcAddress: Address,
     srcChainKey: K,
-  ): Promise<Result<UnstakingInfo & { requestsWithPenalty: UnstakeRequestWithPenalty[] }>> {
+  ): Promise<
+    Result<UnstakingInfo & { requestsWithPenalty: UnstakeRequestWithPenalty[] }>
+  > {
     try {
       const [unstakingResult, configResult] = await Promise.all([
         this.getUnstakingInfo(srcAddress, srcChainKey),

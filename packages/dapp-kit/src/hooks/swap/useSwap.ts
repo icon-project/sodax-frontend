@@ -27,7 +27,7 @@ export function useSwap<K extends SpokeChainKey = SpokeChainKey>(): UseMutationR
 
   return useMutation<CreateIntentResult, Error, UseSwapVars<K>>({
     mutationFn: async (vars) => {
-      return sodax.swaps.swap({ ...vars, raw: false } as SwapActionParams<K, false>);
+      return sodax.swaps.swap({ ...vars, raw: false });
     },
     onSuccess: (_data, { params }) => {
       queryClient.invalidateQueries({ queryKey: ['xBalances', params.srcChainKey] });

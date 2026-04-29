@@ -27,7 +27,7 @@ export function useBridge<K extends SpokeChainKey = SpokeChainKey>(): UseMutatio
 
   return useMutation<BridgeResult, Error, UseBridgeVars<K>>({
     mutationFn: async (vars) => {
-      return sodax.bridge.bridge({ ...vars, raw: false } as BridgeParams<K, false>);
+      return sodax.bridge.bridge({ ...vars, raw: false });
     },
     onSuccess: (_data, { params }) => {
       queryClient.invalidateQueries({ queryKey: ['xBalances', params.srcChainKey] });

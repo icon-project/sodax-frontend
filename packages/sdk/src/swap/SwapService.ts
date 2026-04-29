@@ -92,9 +92,8 @@ export type GetIntentSubmitTxExtraDataParams = { txHash: Hash } | { intent: Inte
 export type SwapActionParams<K extends SpokeChainKey, Raw extends boolean> = SpokeExecActionParams<
   K,
   Raw,
-  CreateIntentParams<K>,
-  { fee?: PartnerFee }
->;
+  CreateIntentParams<K>
+> & { fee?: PartnerFee };
 
 export type LimitOrderActionParams<K extends SpokeChainKey, Raw extends boolean> = Omit<
   SwapActionParams<K, Raw>,

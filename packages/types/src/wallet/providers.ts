@@ -26,28 +26,27 @@ export type IWalletProvider =
   | INearWalletProvider;
 
 /**
- * Wallet provider type for chain key or abstract {@link ChainType}.
- * If `C` is the full {@link SpokeChainKey} union (`SpokeChainKey extends C` is true), returns {@link IWalletProvider}.
- * Otherwise maps `C` to the matching chain-specific provider (or preserves the fallback union at the leaf).
+ * Wallet provider type for a chain key or abstract {@link ChainType}. Maps `C` to the matching
+ * chain-specific provider. When `C` is the full {@link SpokeChainKey} union, `GetChainType<C>`
+ * distributes to the full {@link ChainType} union and the result reduces to the union of all
+ * chain-specific providers — i.e. {@link IWalletProvider}.
  */
-export type GetWalletProviderType<C extends SpokeChainKey | ChainType> = SpokeChainKey extends C
-  ? IWalletProvider
-  : GetChainType<C> extends 'EVM'
-    ? IEvmWalletProvider
-    : GetChainType<C> extends 'SOLANA'
-      ? ISolanaWalletProvider
-      : GetChainType<C> extends 'STELLAR'
-        ? IStellarWalletProvider
-        : GetChainType<C> extends 'ICON'
-          ? IIconWalletProvider
-          : GetChainType<C> extends 'SUI'
-            ? ISuiWalletProvider
-            : GetChainType<C> extends 'INJECTIVE'
-              ? IInjectiveWalletProvider
-              : GetChainType<C> extends 'STACKS'
-                ? IStacksWalletProvider
-                : GetChainType<C> extends 'NEAR'
-                  ? INearWalletProvider
-                  : GetChainType<C> extends 'BITCOIN'
-                    ? IBitcoinWalletProvider
-                    : IWalletProvider;
+export type GetWalletProviderType<C extends SpokeChainKey | ChainType> = GetChainType<C> extends 'EVM'
+  ? IEvmWalletProvider
+  : GetChainType<C> extends 'SOLANA'
+    ? ISolanaWalletProvider
+    : GetChainType<C> extends 'STELLAR'
+      ? IStellarWalletProvider
+      : GetChainType<C> extends 'ICON'
+        ? IIconWalletProvider
+        : GetChainType<C> extends 'SUI'
+          ? ISuiWalletProvider
+          : GetChainType<C> extends 'INJECTIVE'
+            ? IInjectiveWalletProvider
+            : GetChainType<C> extends 'STACKS'
+              ? IStacksWalletProvider
+              : GetChainType<C> extends 'NEAR'
+                ? INearWalletProvider
+                : GetChainType<C> extends 'BITCOIN'
+                  ? IBitcoinWalletProvider
+                  : IWalletProvider;
