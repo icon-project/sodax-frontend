@@ -1,3 +1,4 @@
+# .github/workflows/ci.yml.disabled — CI paused; rename this file to ci.yml to re-enable.
 name: CI
 
 on:
