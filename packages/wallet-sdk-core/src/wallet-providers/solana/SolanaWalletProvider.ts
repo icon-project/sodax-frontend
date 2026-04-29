@@ -78,9 +78,8 @@ export class SolanaWalletProvider extends BaseWalletProvider<SolanaWalletDefault
 
   public async waitForConfirmation(
     signature: string,
-    commitment?: Commitment,
+    commitment: Commitment = this.defaults.confirmCommitment ?? DEFAULT_CONFIRM_COMMITMENT,
   ): Promise<SolanaRpcResponseAndContext<SolanaSignatureResult>> {
-    const finalCommitment = commitment ?? this.defaults.confirmCommitment ?? DEFAULT_CONFIRM_COMMITMENT;
     const latestBlockhash = await this.connection.getLatestBlockhash();
     return this.connection.confirmTransaction(
       {
@@ -88,7 +87,7 @@ export class SolanaWalletProvider extends BaseWalletProvider<SolanaWalletDefault
         blockhash: latestBlockhash.blockhash,
         lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
       },
-      finalCommitment,
+      commitment,
     );
   }
 
@@ -102,11 +101,16 @@ export class SolanaWalletProvider extends BaseWalletProvider<SolanaWalletDefault
 
   public async sendTransactionWithConfirmation(
     rawTransaction: Uint8Array | Array<number>,
-    options?: { send?: SendOptions; commitment?: Commitment },
+    optionsOrCommitment?: Commitment | { send?: SendOptions; commitment?: Commitment },
   ): Promise<TransactionSignature> {
-    const sendOptions = shallowMerge(this.defaults.sendOptions, options?.send);
+    const isCommitmentArg = typeof optionsOrCommitment === 'string';
+    const sendOpts = isCommitmentArg ? undefined : optionsOrCommitment?.send;
+    const commitment = isCommitmentArg ? optionsOrCommitment : optionsOrCommitment?.commitment;
+
+    const sendOptions = shallowMerge(this.defaults.sendOptions, sendOpts);
     const txHash = await this.connection.sendRawTransaction(rawTransaction, sendOptions);
-    await this.waitForConfirmation(txHash, options?.commitment);
+    // Pass `commitment` through; `waitForConfirmation`'s default expr handles defaults+fallback.
+    await this.waitForConfirmation(txHash, commitment);
     return txHash;
   }
 
