@@ -19,7 +19,23 @@ const EU_EEA_UK_COUNTRY_CODES = new Set([
 // Static literal — guardrail §3 forbids interpolating request data into
 // response headers. Agents append `/index.md` to the current path to fetch
 // the markdown alternate.
-const MARKDOWN_LINK_HEADER = '</index.md>; rel="alternate"; type="text/markdown"';
+//
+// `LINK_HEADER` combines the markdown alternate with the agent-discovery
+// entries that next.config.js also sets. Middleware "owns" the Link header
+// on routes where it runs (Next.js doesn't merge middleware-set headers
+// with config `headers()` for the same key) — so we duplicate the discovery
+// entries here. The config-level Link block still fires for paths where
+// middleware skips (sitemap.xml, robots.txt, /.well-known/*, /feed.xml),
+// keeping the discovery entries available there.
+const AGENT_DISCOVERY_LINK_ENTRIES = [
+  '</.well-known/api-catalog>; rel="service-desc"',
+  '</.well-known/mcp/server-card.json>; rel="mcp"',
+  '</.well-known/agent-skills/index.json>; rel="agent-skills"',
+  '</llms.txt>; rel="llms-txt"',
+  '</llms-full.txt>; rel="llms-full-txt"',
+];
+const MARKDOWN_ALTERNATE_ENTRY = '</index.md>; rel="alternate"; type="text/markdown"';
+const LINK_HEADER = [MARKDOWN_ALTERNATE_ENTRY, ...AGENT_DISCOVERY_LINK_ENTRIES].join(', ');
 
 function isInternalPath(pathname: string): boolean {
   return pathname.startsWith('/agent') || pathname.startsWith('/api') || pathname.startsWith('/_next');
@@ -126,8 +142,13 @@ export function middleware(request: NextRequest) {
   // agent-native endpoints (llms.txt, sitemap.xml, etc.) — they already speak
   // an agent-readable format and a `</index.md>` alternate would point at the
   // homepage, not their own content.
+  //
+  // Use `append`, not `set`: the agent-discovery Link header from
+  // next.config.js (`</.well-known/api-catalog>`, `</llms.txt>`, etc.) is
+  // already on the response by the time middleware runs, and `set` would
+  // silently drop it.
   if (!isInternalPath(pathname) && !isAgentNativePath(pathname)) {
-    response.headers.set('Link', MARKDOWN_LINK_HEADER);
+    response.headers.set('Link', LINK_HEADER);
   }
 
   // Only set the cookie if it hasn't been set yet

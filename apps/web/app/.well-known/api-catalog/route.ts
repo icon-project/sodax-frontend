@@ -51,6 +51,11 @@ const catalog = {
           title: 'llms.txt — curated agent index',
         },
         {
+          href: 'https://sodax.com/llms-full.txt',
+          type: 'text/plain',
+          title: 'llms-full.txt — full-context markdown bundle',
+        },
+        {
           href: 'https://sodax.com/news/feed.xml',
           type: 'application/rss+xml',
           title: 'News RSS feed',
@@ -61,6 +66,16 @@ const catalog = {
           href: 'https://api.sodax.com/v1/intent',
           type: 'application/json',
           title: 'SODAX Solver API — cross-chain intent execution',
+        },
+        {
+          href: 'https://builders.sodax.com/mcp',
+          type: 'application/json',
+          title: 'SODAX Builders MCP — on-chain protocol data + SDK docs',
+        },
+        {
+          href: 'https://marketing.sodax.com/mcp',
+          type: 'application/json',
+          title: 'SODAX Marketing MCP — brand, glossary, voice & guardrails',
         },
         {
           href: 'https://builders.sodax.com',
