@@ -1,4 +1,3 @@
-import type { Network } from '@injectivelabs/networks';
 import {
   MsgExecuteContract,
   MsgExecuteContractCompat,
@@ -16,39 +15,15 @@ import type {
   InjectiveExecuteResponse,
   InjectiveRawTransaction,
 } from '@sodax/types';
-import type { MsgBroadcaster } from '@injectivelabs/wallet-core';
 import { MsgBroadcasterWithPk } from '@injectivelabs/sdk-ts';
-import type { ChainId, EvmChainId } from '@injectivelabs/ts-types';
-
-/**
- * Injective Wallet Configuration Types
- */
-
-export type BrowserExtensionInjectiveWalletConfig = {
-  msgBroadcaster: MsgBroadcaster;
-};
-
-export type SecretInjectiveWalletConfig = {
-  secret:
-    | {
-        privateKey: string;
-      }
-    | {
-        mnemonics: string;
-      };
-  chainId: ChainId;
-  network: Network;
-  evmOptions?: {
-    evmChainId: EvmChainId;
-    rpcUrl: `http${string}`;
-  };
-};
-
-export type InjectiveWalletConfig = BrowserExtensionInjectiveWalletConfig | SecretInjectiveWalletConfig;
-
-/**
- * Injective Type Guards
- */
+import { BaseWalletProvider } from '../BaseWalletProvider.js';
+import type {
+  BrowserExtensionInjectiveWalletConfig,
+  InjectiveWallet,
+  InjectiveWalletConfig,
+  InjectiveWalletDefaults,
+  SecretInjectiveWalletConfig,
+} from './types.js';
 
 export function isBrowserExtensionInjectiveWalletConfig(
   config: InjectiveWalletConfig,
@@ -67,10 +42,6 @@ export function isSecretInjectiveWalletConfig(config: InjectiveWalletConfig): co
   );
 }
 
-export type InjectiveWallet = {
-  msgBroadcaster: MsgBroadcaster | MsgBroadcasterWithPk;
-};
-
 function txResponseToExecuteResponse(txResult: TxResponse): InjectiveExecuteResponse {
   return {
     height: txResult.height === undefined ? undefined : Number(txResult.height),
@@ -78,16 +49,22 @@ function txResponseToExecuteResponse(txResult: TxResponse): InjectiveExecuteResp
   };
 }
 
-export class InjectiveWalletProvider implements IInjectiveWalletProvider {
+export class InjectiveWalletProvider
+  extends BaseWalletProvider<InjectiveWalletDefaults>
+  implements IInjectiveWalletProvider
+{
   public readonly chainType = 'INJECTIVE' as const;
   public wallet: InjectiveWallet;
 
   constructor(config: InjectiveWalletConfig) {
+    super(config.defaults);
+
     if (isBrowserExtensionInjectiveWalletConfig(config)) {
-      this.wallet = {
-        msgBroadcaster: config.msgBroadcaster,
-      };
-    } else if (isSecretInjectiveWalletConfig(config)) {
+      this.wallet = { msgBroadcaster: config.msgBroadcaster };
+      return;
+    }
+
+    if (isSecretInjectiveWalletConfig(config)) {
       let privateKey: PrivateKey;
       if ('privateKey' in config.secret) {
         privateKey = PrivateKey.fromPrivateKey(config.secret.privateKey);
@@ -96,12 +73,11 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
       } else {
         throw new Error('Invalid Secret Injective wallet config');
       }
-      this.wallet = {
-        msgBroadcaster: new MsgBroadcasterWithPk({ privateKey, network: config.network }),
-      };
-    } else {
-      throw new Error('Invalid Injective wallet config');
+      this.wallet = { msgBroadcaster: new MsgBroadcasterWithPk({ privateKey, network: config.network }) };
+      return;
     }
+
+    throw new Error('Invalid Injective wallet config');
   }
 
   async getRawTransaction(
@@ -111,33 +87,39 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     contractAddress: string,
     msg: JsonObject,
     memo?: string,
+    options?: InjectiveWalletDefaults,
   ): Promise<InjectiveRawTransaction> {
+    const policy = this.mergeDefaults(options);
+    const funds = policy.defaultFunds ?? [];
+    const finalMemo = memo ?? policy.defaultMemo ?? '';
+    const sequence = policy.sequence ?? 0;
+    const accountNumber = policy.accountNumber ?? 0;
+
     const msgExec = MsgExecuteContract.fromJSON({
-      contractAddress: contractAddress,
+      contractAddress,
       sender: senderAddress,
       msg: msg as object,
-      funds: [],
+      funds,
     });
     const { txRaw } = createTransaction({
       message: msgExec,
-      memo: memo || '',
+      memo: finalMemo,
       pubKey: await this.getWalletPubKey(),
-      sequence: 0,
-      accountNumber: 0,
-      chainId: chainId,
+      sequence,
+      accountNumber,
+      chainId,
     });
 
-    const rawTx = {
+    return {
       from: senderAddress as Hex,
       to: contractAddress as Hex,
       signedDoc: {
         bodyBytes: txRaw.bodyBytes,
-        chainId: chainId,
-        accountNumber: BigInt(0),
+        chainId,
+        accountNumber: BigInt(accountNumber),
         authInfoBytes: txRaw.authInfoBytes,
       },
     };
-    return rawTx;
   }
 
   // return wallet address as bech32
@@ -170,28 +152,33 @@ export class InjectiveWalletProvider implements IInjectiveWalletProvider {
     contractAddress: string,
     msg: JsonObject,
     funds?: InjectiveCoin[],
+    options?: InjectiveWalletDefaults,
   ): Promise<InjectiveExecuteResponse> {
+    const policy = this.mergeDefaults(options);
+    const finalFunds = funds ?? policy.defaultFunds ?? [];
+    // Only forward `memo` when explicitly configured — base did not pass one,
+    // and some upstream broadcasters distinguish absent vs empty-string memo.
+    const memoOverride = policy.defaultMemo === undefined ? {} : { memo: policy.defaultMemo };
+
     const msgExec = MsgExecuteContractCompat.fromJSON({
-      contractAddress: contractAddress,
+      contractAddress,
       sender: senderAddress,
       msg: msg as object,
-      funds: funds || [],
+      funds: finalFunds,
     });
 
     let txResult: TxResponse;
 
     if (this.wallet.msgBroadcaster instanceof MsgBroadcasterWithPk) {
-      txResult = await this.wallet.msgBroadcaster.broadcast({
-        msgs: msgExec,
-      });
+      txResult = await this.wallet.msgBroadcaster.broadcast({ msgs: msgExec, ...memoOverride });
     } else {
       txResult = await this.wallet.msgBroadcaster.broadcastWithFeeDelegation({
         msgs: msgExec,
         injectiveAddress: await this.getWalletAddress(),
+        ...memoOverride,
       });
     }
 
     return txResponseToExecuteResponse(txResult);
   }
-
 }

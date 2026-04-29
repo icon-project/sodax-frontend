@@ -1,9 +1,4 @@
-import {
-  detectBitcoinAddressType,
-  type BtcAddressType,
-  type Hex,
-  type IBitcoinWalletProvider,
-} from '@sodax/types';
+import { detectBitcoinAddressType, type BtcAddressType, type IBitcoinWalletProvider } from '@sodax/types';
 import * as bitcoin from 'bitcoinjs-lib';
 import type { ECPairInterface } from 'ecpair';
 import * as ecc from '@bitcoinerlab/secp256k1';
@@ -11,49 +6,21 @@ import { ECPairFactory } from 'ecpair';
 import { keccak256 } from 'viem';
 import secp256k1 from 'secp256k1';
 import * as bip322 from 'bip322-js';
+import { BaseWalletProvider } from '../BaseWalletProvider.js';
+import type {
+  BitcoinNetwork,
+  BitcoinPkWallet,
+  BitcoinWallet,
+  BitcoinWalletConfig,
+  BitcoinWalletDefaults,
+  PrivateKeyBitcoinWalletConfig,
+} from './types.js';
 
 bitcoin.initEccLib(ecc);
 const ECPair = ECPairFactory(ecc);
 
-export type BitcoinNetwork = 'TESTNET' | 'MAINNET';
-
-export interface BitcoinWalletsKit {
-  getAccounts(): Promise<string[]>;
-  signPsbt(psbtHex: string): Promise<{ psbtHex: string }>;
-  signMessage(message: string): Promise<string>;
-  signEcdsaMessage(message: string): Promise<string>;
-  signBip322Message(message: string): Promise<string>;
-  getPublicKey(): Promise<string>;
-  sendBitcoin?(toAddress: string, satoshis: number): Promise<string>;
-}
-
-export type PrivateKeyBitcoinWalletConfig = {
-  type: 'PRIVATE_KEY';
-  privateKey: Hex;
-  network: BitcoinNetwork;
-  addressType?: BtcAddressType;
-};
-
-export type BrowserExtensionBitcoinWalletConfig = {
-  type: 'BROWSER_EXTENSION';
-  walletsKit: BitcoinWalletsKit;
-  network: BitcoinNetwork;
-};
-
-export type BitcoinWalletConfig = PrivateKeyBitcoinWalletConfig | BrowserExtensionBitcoinWalletConfig;
-
-type BitcoinPkWallet = {
-  type: 'PRIVATE_KEY';
-  keyPair: ECPairInterface;
-  addressType: BtcAddressType;
-};
-
-type BitcoinBrowserWallet = {
-  type: 'BROWSER_EXTENSION';
-  walletsKit: BitcoinWalletsKit;
-};
-
-type BitcoinWallet = BitcoinPkWallet | BitcoinBrowserWallet;
+const DEFAULT_ADDRESS_TYPE: BtcAddressType = 'P2WPKH';
+const DEFAULT_FINALIZE = true;
 
 export class BitcoinWalletError extends Error {
   constructor(message: string) {
@@ -75,33 +42,28 @@ const NETWORKS: Record<BitcoinNetwork, bitcoin.networks.Network> = {
   MAINNET: bitcoin.networks.bitcoin,
 };
 
-export class BitcoinWalletProvider implements IBitcoinWalletProvider {
+export class BitcoinWalletProvider extends BaseWalletProvider<BitcoinWalletDefaults> implements IBitcoinWalletProvider {
   public readonly chainType = 'BITCOIN' as const;
   private readonly wallet: BitcoinWallet;
   private readonly network: bitcoin.networks.Network;
 
   constructor(config: BitcoinWalletConfig) {
+    super(config.defaults);
     this.network = NETWORKS[config.network];
 
     if (isPkConfig(config)) {
       const keyHex = config.privateKey.startsWith('0x') ? config.privateKey.slice(2) : config.privateKey;
-
-      const keyPair = ECPair.fromPrivateKey(Buffer.from(keyHex, 'hex'), {
-        network: this.network,
-      });
+      const keyPair = ECPair.fromPrivateKey(Buffer.from(keyHex, 'hex'), { network: this.network });
 
       this.wallet = {
         type: 'PRIVATE_KEY',
         keyPair,
-        addressType: config.addressType ?? 'P2WPKH',
+        addressType: config.addressType ?? DEFAULT_ADDRESS_TYPE,
       };
       return;
     }
 
-    this.wallet = {
-      type: 'BROWSER_EXTENSION',
-      walletsKit: config.walletsKit,
-    };
+    this.wallet = { type: 'BROWSER_EXTENSION', walletsKit: config.walletsKit };
   }
 
   async getWalletAddress(): Promise<string> {
@@ -146,7 +108,12 @@ export class BitcoinWalletProvider implements IBitcoinWalletProvider {
   /**
    * Sign PSBT and return fully signed transaction hex
    */
-  async signTransaction(psbtBase64: string, finalize = true): Promise<string> {
+  async signTransaction(psbtBase64: string, finalize?: boolean): Promise<string> {
+    const finalizeFlag = finalize ?? this.defaults.defaultFinalize ?? DEFAULT_FINALIZE;
+    return this.doSignTransaction(psbtBase64, finalizeFlag);
+  }
+
+  private async doSignTransaction(psbtBase64: string, finalize: boolean): Promise<string> {
     if (isPkWallet(this.wallet)) {
       const psbt = bitcoin.Psbt.fromBase64(psbtBase64, { network: this.network });
 
@@ -248,5 +215,4 @@ export class BitcoinWalletProvider implements IBitcoinWalletProvider {
 
     return this.wallet.walletsKit.sendBitcoin(toAddress, Number(satoshis));
   }
-
 }
