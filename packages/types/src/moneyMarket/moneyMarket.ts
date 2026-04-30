@@ -64,7 +64,7 @@ export const moneyMarketSupportedTokens = {
     spokeChainConfig[ChainKeys.HYPEREVM_MAINNET].supportedTokens.HYPE,
     spokeChainConfig[ChainKeys.HYPEREVM_MAINNET].supportedTokens.bnUSD,
     spokeChainConfig[ChainKeys.HYPEREVM_MAINNET].supportedTokens.SODA,
-    spokeChainConfig[ChainKeys.HYPEREVM_MAINNET].supportedTokens.USDT,
+    spokeChainConfig[ChainKeys.HYPEREVM_MAINNET].supportedTokens.USDT0,
   ] as const satisfies XToken[],
   [ChainKeys.LIGHTLINK_MAINNET]: [
     spokeChainConfig[ChainKeys.LIGHTLINK_MAINNET].supportedTokens.ETH,
