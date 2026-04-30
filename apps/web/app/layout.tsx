@@ -43,6 +43,15 @@ export const metadata: Metadata = {
   ],
   alternates: {
     canonical: 'https://sodax.com',
+    // Agent-readiness: in-HTML directive pointing AI agents at the markdown
+    // alternate. Renders as <link rel="alternate" type="text/markdown" href="/index.md" />
+    // in <head>. Mirrors the HTTP `Link` header set in middleware so agents
+    // that parse HTML (rather than headers) can still discover the markdown
+    // endpoint. Static literal — guardrail §3 forbids interpolating request
+    // data into header / link values.
+    types: {
+      'text/markdown': '/index.md',
+    },
   },
   openGraph: {
     title: 'SODAX · Infrastructure for Modern Money',

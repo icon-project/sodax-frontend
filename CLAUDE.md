@@ -48,7 +48,7 @@ pnpm clean                # Remove all node_modules, dist, .turbo, .next
 - **Environment variables used only at runtime** (API keys, secrets) must NOT be prefixed with `NEXT_PUBLIC_`. Only prefix env vars that need to be exposed to the browser.
 - **API routes must handle errors gracefully** — always return a JSON response with an appropriate status code, never let exceptions bubble up as 500 with no body.
 - **Webhook endpoints must always return 200** — external services (Resend, etc.) retry on non-2xx responses. A misconfigured secret or bad payload should be logged, not cause an infinite retry storm.
-- **Agent-facing endpoints** (`/.well-known/*`, `/__agent/*`, `llms*.txt`, MCP servers): follow the SODAX Agent-Readiness Guardrails in [docs/agent-readiness.md](docs/agent-readiness.md). OWASP-aligned: static payloads, required response headers, no header interpolation, no self-fetching, Content-Signal `ai-train=no`.
+- **Agent-facing endpoints** (`/.well-known/*`, `/__agent/*`, `llms*.txt`, MCP servers): follow the SODAX Agent-Readiness Guardrails in [docs/agent-readiness.md](docs/agent-readiness.md). OWASP-aligned: static payloads, required response headers, no header interpolation, no self-fetching, Content-Signal `ai-train=no`. **When adding a new public page**, also add agent-readable markdown — see the "Adding a new public page" section in that doc for the sync steps.
 
 
 ### Running tests for a specific package

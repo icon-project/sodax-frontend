@@ -108,6 +108,6 @@ Disallow: /api/
 # Reference to sitemap and llms.txt
 Sitemap: https://sodax.com/sitemap.xml
 
-# AI/LLM context file
-# llms.txt: https://sodax.com/llms.txt
-# (llms-full.txt will be added in a follow-up alongside the llms.txt rewrite)
+# AI/LLM context files
+# llms.txt:      https://sodax.com/llms.txt       — curated agent index
+# llms-full.txt: https://sodax.com/llms-full.txt  — full-context markdown bundle

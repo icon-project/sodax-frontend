@@ -14,11 +14,19 @@ type NotionDB = keyof typeof NOTION_DB;
 // Minimal types for what we need
 interface NotionRichText {
   plain_text: string;
+  href?: string | null;
   annotations: {
     bold: boolean;
     italic: boolean;
     code: boolean;
   };
+}
+
+interface NotionImageBlock {
+  type: 'external' | 'file';
+  external?: { url: string };
+  file?: { url: string };
+  caption?: NotionRichText[];
 }
 
 interface NotionBlock {
@@ -30,6 +38,9 @@ interface NotionBlock {
   heading_3?: { rich_text: NotionRichText[] };
   bulleted_list_item?: { rich_text: NotionRichText[] };
   numbered_list_item?: { rich_text: NotionRichText[] };
+  quote?: { rich_text: NotionRichText[] };
+  code?: { rich_text: NotionRichText[]; language?: string };
+  image?: NotionImageBlock;
 }
 
 export interface NotionPage {
@@ -159,4 +170,100 @@ function richTextToHtml(richTexts: NotionRichText[]): string {
 export async function getAllSlugs(db: NotionDB): Promise<string[]> {
   const pages = await getNotionPages(db);
   return pages.map(p => slugify(p.properties.Title.title[0].plain_text));
+}
+
+// ── Markdown rendering for agent-facing endpoints ──────────────────────────
+// Sibling of getNotionPageBySlug / blocksToHtml. Same fetch path, different
+// renderer. Block-level allowlist matches docs/agent-readiness.md §7.
+
+export async function getNotionPageBySlugMarkdown(
+  db: NotionDB,
+  slug: string,
+): Promise<{ page: NotionPage; markdown: string } | null> {
+  const pages = await getNotionPages(db);
+  const page = pages.find(p => slugify(p.properties.Title.title[0].plain_text) === slug);
+
+  if (!page) return null;
+
+  const blocks = await notionFetch(`/blocks/${page.id}/children`);
+  const markdown = blocksToMarkdown(blocks.results);
+
+  return { page, markdown };
+}
+
+const HTTP_URL_PATTERN = /^https?:\/\//i;
+
+function isSafeHttpUrl(url: string | null | undefined): url is string {
+  return typeof url === 'string' && HTTP_URL_PATTERN.test(url);
+}
+
+function escapeMarkdown(text: string): string {
+  return text.replace(/([\\`*_{}\[\]()#+\-.!|>])/g, '\\$1');
+}
+
+function richTextToMarkdown(richTexts: NotionRichText[]): string {
+  return richTexts
+    .map(rt => {
+      let text = escapeMarkdown(rt.plain_text);
+      if (rt.annotations.code) text = `\`${rt.plain_text}\``; // code spans don't escape
+      if (rt.annotations.bold) text = `**${text}**`;
+      if (rt.annotations.italic) text = `*${text}*`;
+      if (isSafeHttpUrl(rt.href)) text = `[${text}](${rt.href})`;
+      return text;
+    })
+    .join('');
+}
+
+// Convert Notion blocks to markdown. Allowlist: paragraph, heading_1/2/3,
+// bulleted_list_item, numbered_list_item, quote, code, divider, image (with
+// http(s) src). Anything else is dropped.
+export function blocksToMarkdown(blocks: NotionBlock[]): string {
+  const out: string[] = [];
+  let numberedCounter = 0;
+
+  for (const block of blocks) {
+    const { type } = block;
+
+    if (type === 'paragraph' && block.paragraph?.rich_text) {
+      numberedCounter = 0;
+      const rendered = richTextToMarkdown(block.paragraph.rich_text);
+      if (rendered) out.push(rendered);
+    } else if (type === 'heading_1' && block.heading_1?.rich_text) {
+      numberedCounter = 0;
+      out.push(`# ${richTextToMarkdown(block.heading_1.rich_text)}`);
+    } else if (type === 'heading_2' && block.heading_2?.rich_text) {
+      numberedCounter = 0;
+      out.push(`## ${richTextToMarkdown(block.heading_2.rich_text)}`);
+    } else if (type === 'heading_3' && block.heading_3?.rich_text) {
+      numberedCounter = 0;
+      out.push(`### ${richTextToMarkdown(block.heading_3.rich_text)}`);
+    } else if (type === 'bulleted_list_item' && block.bulleted_list_item?.rich_text) {
+      numberedCounter = 0;
+      out.push(`- ${richTextToMarkdown(block.bulleted_list_item.rich_text)}`);
+    } else if (type === 'numbered_list_item' && block.numbered_list_item?.rich_text) {
+      numberedCounter += 1;
+      out.push(`${numberedCounter}. ${richTextToMarkdown(block.numbered_list_item.rich_text)}`);
+    } else if (type === 'quote' && block.quote?.rich_text) {
+      numberedCounter = 0;
+      out.push(`> ${richTextToMarkdown(block.quote.rich_text)}`);
+    } else if (type === 'code' && block.code?.rich_text) {
+      numberedCounter = 0;
+      const lang = block.code.language || '';
+      const codeText = block.code.rich_text.map(rt => rt.plain_text).join('');
+      out.push(`\`\`\`${lang}\n${codeText}\n\`\`\``);
+    } else if (type === 'divider') {
+      numberedCounter = 0;
+      out.push('---');
+    } else if (type === 'image' && block.image) {
+      numberedCounter = 0;
+      const src = block.image.external?.url ?? block.image.file?.url;
+      if (isSafeHttpUrl(src)) {
+        const alt = block.image.caption ? richTextToMarkdown(block.image.caption) : '';
+        out.push(`![${alt}](${src})`);
+      }
+    }
+    // Anything else (raw HTML, embeds, child databases, etc.) is intentionally dropped.
+  }
+
+  return out.join('\n\n');
 }

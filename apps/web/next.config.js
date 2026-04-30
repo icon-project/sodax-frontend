@@ -20,16 +20,25 @@ const cspHeader = Object.entries(cspDirectives)
 // --- Agent-readiness Link header (RFC 8288) ------------------------------------
 // Advertises our well-known discovery endpoints to AI crawlers and agent clients.
 // Static literal — no interpolation (ASVS V13: avoid header-injection surface).
-// NOTE: </llms-full.txt>; rel="llms-full-txt" lands with PR 3 (llms.txt rewrite);
-// intentionally omitted here so we don't advertise a 404.
 const agentDiscoveryLinkHeader = [
   '</.well-known/api-catalog>; rel="service-desc"',
   '</.well-known/mcp/server-card.json>; rel="mcp"',
   '</.well-known/agent-skills/index.json>; rel="agent-skills"',
   '</llms.txt>; rel="llms-txt"',
+  '</llms-full.txt>; rel="llms-full-txt"',
 ].join(', ');
 
 const nextConfig = {
+  // Vercel output-file tracing follows static `import`/`require` only — dynamic
+  // `fs.readFile` paths are invisible to it, so the markdown bundle directory
+  // would be silently omitted from the serverless function for routes that
+  // read it at request time. Both /agent/md (force-dynamic) and /llms-full.txt
+  // (force-static + ISR; revalidation runs server-side and re-reads files)
+  // need the content/md tree pinned into the bundle.
+  outputFileTracingIncludes: {
+    '/agent/md': ['./content/md/**/*'],
+    '/llms-full.txt': ['./content/md/**/*'],
+  },
   async redirects() {
     return [
       {
