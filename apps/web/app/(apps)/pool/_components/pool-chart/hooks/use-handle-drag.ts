@@ -27,6 +27,8 @@ type UseHandleDragArgs = {
   deps: DragDeps;
   setMinPrice: (price: number) => void;
   setMaxPrice: (price: number) => void;
+  onHandleDragStart?: () => void;
+  onHandleDragEnd?: () => void;
 };
 
 export type HandleDragBehaviors = {
@@ -66,6 +68,8 @@ export function useHandleDrag({
   deps,
   setMinPrice,
   setMaxPrice,
+  onHandleDragStart,
+  onHandleDragEnd,
 }: UseHandleDragArgs): HandleDragBehaviors {
   const depsRef = useRef<DragDeps>(deps);
   depsRef.current = deps;
@@ -75,6 +79,12 @@ export function useHandleDrag({
     setMaxPrice,
   });
   settersRef.current = { setMinPrice, setMaxPrice };
+
+  const lifecycleRef = useRef<{ onStart?: () => void; onEnd?: () => void }>({
+    onStart: onHandleDragStart,
+    onEnd: onHandleDragEnd,
+  });
+  lifecycleRef.current = { onStart: onHandleDragStart, onEnd: onHandleDragEnd };
 
   const bandAnchorRef = useRef<BandAnchor | null>(null);
   const minHandleAnchorRef = useRef<HandleAnchor | null>(null);
@@ -143,6 +153,7 @@ export function useHandleDrag({
       .on('start', event => {
         minHandleAnchorRef.current = buildHandleAnchor(event.y, depsRef.current.minPrice);
         minHandleStartYRef.current = event.y;
+        lifecycleRef.current.onStart?.();
       })
       .on('drag', event => {
         const startY = minHandleStartYRef.current;
@@ -164,6 +175,7 @@ export function useHandleDrag({
       .on('end', () => {
         minHandleAnchorRef.current = null;
         minHandleStartYRef.current = null;
+        lifecycleRef.current.onEnd?.();
       });
 
     const maxDrag = d3
@@ -172,6 +184,7 @@ export function useHandleDrag({
       .on('start', event => {
         maxHandleAnchorRef.current = buildHandleAnchor(event.y, depsRef.current.maxPrice);
         maxHandleStartYRef.current = event.y;
+        lifecycleRef.current.onStart?.();
       })
       .on('drag', event => {
         const startY = maxHandleStartYRef.current;
@@ -192,6 +205,7 @@ export function useHandleDrag({
       .on('end', () => {
         maxHandleAnchorRef.current = null;
         maxHandleStartYRef.current = null;
+        lifecycleRef.current.onEnd?.();
       });
 
     const bandDrag = d3
