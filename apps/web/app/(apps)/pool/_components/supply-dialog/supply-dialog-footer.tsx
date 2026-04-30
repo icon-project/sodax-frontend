@@ -78,8 +78,8 @@ export default function SupplyDialogFooter({
 
   // Notify parent when any async operation is in-flight so it can block close.
   useEffect((): void => {
-    onPendingChange(isApproving || isDepositing || isSupplying);
-  }, [isApproving, isDepositing, isSupplying, onPendingChange]);
+    onPendingChange(isApproving || isDepositing || isSupplying || isSupplySubmitting);
+  }, [isApproving, isDepositing, isSupplying, isSupplySubmitting, onPendingChange]);
 
   const isTermsStep = currentSupplyStep === SUPPLY_STEP.SUPPLY_TERMS;
   const isApproveStep = currentSupplyStep === SUPPLY_STEP.SUPPLY_APPROVE;
@@ -363,12 +363,13 @@ export default function SupplyDialogFooter({
           transaction_hash: hubTxHash as string,
         });
       } catch (error) {
-        setIsSupplySubmitting(false);
         const errorObj = error as { message?: string; shortMessage?: string };
         onError({
           title: 'Supply Failed',
           message: errorObj.shortMessage || errorObj.message || 'Failed to create ASODA/XSODA liquidity position.',
         });
+      } finally {
+        setIsSupplySubmitting(false);
       }
     };
 

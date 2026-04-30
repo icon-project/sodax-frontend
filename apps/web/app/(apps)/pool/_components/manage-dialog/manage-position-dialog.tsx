@@ -113,6 +113,7 @@ export function ManagePositionDialog({
     null,
   );
   const [isShaking, setIsShaking] = useState<boolean>(false);
+  const [isAddLiquidityInProgress, setIsAddLiquidityInProgress] = useState<boolean>(false);
   const [withdrawError, setWithdrawError] = useState<string>('');
   const [isWithdrawSuccess, setIsWithdrawSuccess] = useState<boolean>(false);
   const [isWithdrawInProgress, setIsWithdrawInProgress] = useState<boolean>(false);
@@ -219,6 +220,7 @@ export function ManagePositionDialog({
       setIsAddLiquidityTransferred(false);
       setLockedAddLiquidityAmounts(null);
       setIsShaking(false);
+      setIsAddLiquidityInProgress(false);
       setWithdrawError('');
       setIsWithdrawSuccess(false);
       setActiveTab('claim');
@@ -270,7 +272,10 @@ export function ManagePositionDialog({
   });
 
   const isAddLiquidityActionPending =
-    approveMutation.isPending || depositMutation.isPending || supplyLiquidityMutation.isPending;
+    isAddLiquidityInProgress ||
+    approveMutation.isPending ||
+    depositMutation.isPending ||
+    supplyLiquidityMutation.isPending;
   const isWithdrawActionPending =
     isWithdrawInProgress || decreaseLiquidityMutation.isPending || withdrawMutation.isPending;
   const isPending =
@@ -398,6 +403,7 @@ export function ManagePositionDialog({
 
     setAddLiquidityError('');
     setIsAddLiquiditySuccess(false);
+    setIsAddLiquidityInProgress(true);
 
     try {
       const [addSpokeTxHash, addHubTxHash] = await supplyLiquidityMutation.mutateAsync({
@@ -438,6 +444,8 @@ export function ManagePositionDialog({
       const message = supplyError instanceof Error ? supplyError.message : 'Add liquidity failed.';
       setAddLiquidityError(message);
       setIsAddLiquiditySuccess(false);
+    } finally {
+      setIsAddLiquidityInProgress(false);
     }
   };
 
@@ -472,6 +480,7 @@ export function ManagePositionDialog({
     setIsAddLiquiditySuccess(false);
     setLockedAddLiquidityAmounts(null);
     setIsAddLiquidityTransferred(false);
+    setIsAddLiquidityInProgress(true);
 
     try {
       if (poolData.token0IsStatAToken) {
@@ -493,6 +502,8 @@ export function ManagePositionDialog({
       setAddLiquidityError(message);
       setIsAddLiquiditySuccess(false);
       setIsAddLiquidityApproved(false);
+    } finally {
+      setIsAddLiquidityInProgress(false);
     }
   };
 
@@ -529,6 +540,7 @@ export function ManagePositionDialog({
 
     setAddLiquidityError('');
     setIsAddLiquiditySuccess(false);
+    setIsAddLiquidityInProgress(true);
 
     try {
       if (poolData.token0IsStatAToken) {
@@ -551,6 +563,8 @@ export function ManagePositionDialog({
       setAddLiquidityError(message);
       setIsAddLiquiditySuccess(false);
       setIsAddLiquidityTransferred(false);
+    } finally {
+      setIsAddLiquidityInProgress(false);
     }
   };
 

@@ -40,7 +40,7 @@ export function useChartZoomPan({
   svgRef,
   enabled,
   viewportHeight,
-  minZoom = 0.5,
+  minZoom = 0.005,
   maxZoom = 20,
 }: UseChartZoomPanArgs): UseChartZoomPanResult {
   const [zoomLevel, setZoomLevel] = useState<number>(1);
@@ -106,10 +106,7 @@ export function useChartZoomPan({
     };
   }, [enabled, svgRef]);
 
-  const transform = useMemo(
-    () => d3.zoomIdentity.translate(0, panY).scale(zoomLevel),
-    [zoomLevel, panY],
-  );
+  const transform = useMemo(() => d3.zoomIdentity.translate(0, panY).scale(zoomLevel), [zoomLevel, panY]);
 
   const zoomBy = useCallback(
     (factor: number): void => {
