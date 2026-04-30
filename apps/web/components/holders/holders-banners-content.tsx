@@ -13,19 +13,26 @@ export interface HoldersShortBanner {
   subtitle: ReactNode;
 }
 
-export interface HoldersBannerWithButton {
+export interface HoldersImageBanner {
   title: string;
   subtitle: ReactNode;
   imageSrc: string;
   cta: BannerCta;
 }
 
+export interface HoldersFullBanner {
+  title: string;
+  displayText: string;
+  subtitle: ReactNode;
+  cta: BannerCta;
+}
+
 export const HOLDERS_FULL_BANNER = {
-  title: 'Supply capped at 1.5B.',
-  subtitle: 'No emissions, zero inflation guaranteed.',
-  imageSrc: '/soda-supply-capped.png',
+  title: 'Hard capped.',
+  displayText: '1.5B SODA',
+  subtitle: 'Every trade reduces supply forever.',
   cta: { label: 'Tokenomics', href: SODA_TOKEN_ROUTE },
-} as const satisfies HoldersBannerWithButton;
+} as const satisfies HoldersFullBanner;
 
 export const HOLDERS_SHORT_BANNERS = [
   {
@@ -79,4 +86,4 @@ export const HOLDERS_IMAGE_BANNERS = [
     imageSrc: '/soda-fee-share.png',
     cta: { label: 'Stake SODA', href: STAKE_ROUTE },
   },
-] as const satisfies readonly [HoldersBannerWithButton, HoldersBannerWithButton];
+] as const satisfies readonly [HoldersImageBanner, HoldersImageBanner];

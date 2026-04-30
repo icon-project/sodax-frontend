@@ -216,10 +216,16 @@ export const PressBar = (): ReactElement => {
                     sideOffset={16}
                     className="h-[54px] items-center gap-2 px-8 py-4 text-(length:--body-comfortable)"
                   >
-                    <span className="flex items-center gap-1">
+                    <a
+                      href={logo.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Read ${logo.name} coverage`}
+                      className="flex items-center gap-1"
+                    >
                       {TOOLTIP_LABEL}
                       <ArrowUpRight width={16} height={16} className="text-clay-light" aria-hidden="true" />
-                    </span>
+                    </a>
                   </TooltipContent>
                 </Tooltip>
               );

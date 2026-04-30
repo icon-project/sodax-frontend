@@ -3,7 +3,6 @@
 import type { ReactElement, ReactNode } from 'react';
 
 import LandingFullBanner from '@/components/landing/landing-full-banner';
-import LiveStatsSection from '@/components/shared/live-stats-section';
 import { ArrowRightIcon } from '@/components/icons/arrow-right-icon';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -208,9 +207,6 @@ export default function LandingBanners(): ReactElement {
             'mix-blend-screen absolute bottom-[-56px] left-1/2 transform -translate-x-1/2 w-[848px] max-w-[848px] z-3',
         }}
       />
-
-      <LiveStatsSection />
-
       {/* Migrate + SODA Token */}
       <SmallBannerRow
         left={{

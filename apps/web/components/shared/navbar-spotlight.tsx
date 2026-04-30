@@ -105,26 +105,32 @@ export function NavbarSpotlight({ className = '' }: { className?: string }) {
         </motion.p>
       </Link>
 
-      <motion.div
-        className="shrink-0"
-        initial={false}
-        animate={{ opacity: isRevealed ? 0 : 1 }}
-        transition={AMBIENT_TRANSITION}
+      <Link
+        href="/holders"
+        className="flex items-center gap-2 shrink-0"
+        onClick={() => trackKrakenSpotlightClicked()}
       >
-        <KrakenIcon width={16} height={13} fill="white" />
-      </motion.div>
+        <motion.div
+          className="shrink-0"
+          initial={false}
+          animate={{ opacity: isRevealed ? 0 : 1 }}
+          transition={AMBIENT_TRANSITION}
+        >
+          <KrakenIcon width={16} height={13} fill="white" />
+        </motion.div>
 
-      <motion.span
-        className="font-[InterRegular] text-sm leading-[1.4] text-white whitespace-nowrap"
-        initial={{ opacity: 0, x: HIDDEN_OFFSET_X }}
-        animate={{
-          opacity: isRevealed ? 1 : 0,
-          x: isRevealed ? REVEALED_OFFSET_X : HIDDEN_OFFSET_X,
-        }}
-        transition={isRevealed ? REVEAL_SPRING : EXIT_TWEEN}
-      >
-        → Meet SODA
-      </motion.span>
+        <motion.span
+          className="font-[InterRegular] text-sm leading-[1.4] text-white whitespace-nowrap"
+          initial={{ opacity: 0, x: HIDDEN_OFFSET_X }}
+          animate={{
+            opacity: isRevealed ? 1 : 0,
+            x: isRevealed ? REVEALED_OFFSET_X : HIDDEN_OFFSET_X,
+          }}
+          transition={isRevealed ? REVEAL_SPRING : EXIT_TWEEN}
+        >
+          → Meet SODA
+        </motion.span>
+      </Link>
 
       <motion.div
         className="shrink-0 size-5 rounded-full bg-cherry-on-cherry overflow-hidden flex items-center justify-center"
