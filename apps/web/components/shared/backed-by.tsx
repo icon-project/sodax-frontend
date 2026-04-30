@@ -3,8 +3,6 @@
 import type { ReactElement } from 'react';
 import { useEffect, useRef, useState } from 'react';
 
-import Image from 'next/image';
-
 type Backer = {
   name: string;
   src: string;
@@ -12,16 +10,36 @@ type Backer = {
 };
 
 const BACKERS: Backer[] = [
-  { name: 'Pantera Capital', src: '/backers/pantera-white.svg', href: 'https://panteracapital.com/' },
-  { name: 'Kenetic Capital', src: '/backers/kenetic-white.svg', href: 'https://www.kenetic.capital/' },
-  { name: 'Blockchange Ventures', src: '/backers/blockchange-white.svg', href: 'https://blockchange.vc/' },
-  { name: 'Coinsilium Group', src: '/backers/coinsilium-white.svg', href: 'https://coinsilium.com/' },
-  { name: 'Mind Fund Group', src: '/backers/mindfund-white.svg', href: 'https://www.mindfund.com/' },
+  {
+    name: 'Pantera Capital',
+    src: '/backers/pantera-white.svg',
+    href: 'https://panteracapital.com/',
+  },
+  {
+    name: 'Kenetic Capital',
+    src: '/backers/kenetic-white.svg',
+    href: 'https://www.kenetic.capital/',
+  },
+  {
+    name: 'Blockchange Ventures',
+    src: '/backers/blockchange-white.svg',
+    href: 'https://blockchange.vc/',
+  },
+  {
+    name: 'Coinsilium Group',
+    src: '/backers/coinsilium-white.svg',
+    href: 'https://coinsilium.com/',
+  },
+  {
+    name: 'Mind Fund Group',
+    src: '/backers/mindfund-white.svg',
+    href: 'https://www.mindfund.com/',
+  },
 ];
 
 const MARQUEE_REPEATS = 8;
 const MARQUEE_SEQUENCE = Array.from({ length: MARQUEE_REPEATS }, () => BACKERS).flat();
-const SCROLL_SPEED_PX_PER_MS = 0.04;
+const SCROLL_SPEED_PX_PER_MS = 0.03;
 const INITIAL_CENTER_DELAY_MS = 2000;
 const PANTERA_NAME = 'Pantera Capital';
 const PANTERA_INDEX_IN_SEQUENCE = MARQUEE_SEQUENCE.findIndex(backer => backer.name === PANTERA_NAME);
@@ -138,17 +156,19 @@ export const BackedBy = (): ReactElement => {
                   href={backer.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mx-3 shrink-0 opacity-80 hover:opacity-100 transition-opacity duration-300"
-                  aria-label={backer.name}
+                  className="mx-6 shrink-0 opacity-60 hover:opacity-100 transition-opacity duration-300"
                   onTouchStart={event => {
                     // On mobile, first tap pauses the marquee so it’s easier to interact.
                     event.preventDefault();
                     setIsTouchPaused(prev => !prev);
                   }}
                 >
-                  <span className="relative block h-4 sm:h-6 w-24">
-                    <Image src={backer.src} alt="" fill className="object-contain" aria-hidden="true" sizes="96px" />
-                  </span>
+                  <img
+                    src={backer.src}
+                    alt={backer.name}
+                    draggable={false}
+                    className="h-4 sm:h-6 w-auto block"
+                  />
                 </a>
               ))}
             </div>

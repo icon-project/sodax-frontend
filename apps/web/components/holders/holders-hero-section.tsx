@@ -46,7 +46,7 @@ const HoldersHeroSection = (): ReactElement => {
 
         <Navbar />
 
-        <div className="flex flex-1 flex-col items-center justify-center w-full px-4 gap-4">
+        <div className="flex flex-1 flex-col items-center justify-center w-full pt-14 gap-4">
           <div className="relative flex items-center justify-center">
             {/* SODA tokens graphic — sits behind title */}
             <div

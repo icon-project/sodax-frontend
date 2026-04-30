@@ -73,7 +73,7 @@ export const ExchangesBar = ({ onHoverChange }: ExchangesBarProps): ReactElement
             aria-label={`Trade on ${exchange.name}`}
             onFocus={() => onHoverChange?.(exchange)}
             onBlur={() => onHoverChange?.(null)}
-            className="relative size-10 sm:size-12 rounded-lg bg-cherry-on-cherry flex items-center justify-center transition-opacity duration-200 opacity-60 group-[&:has(.group\\/exchange:hover)]/exchanges:opacity-40 group-[&:has(.group\\/exchange:focus-within)]/exchanges:opacity-40 group-hover/exchange:opacity-100 group-focus-within/exchange:opacity-100 focus-visible:opacity-100"
+            className="relative size-10 sm:size-12 rounded-lg bg-cherry-on-cherry flex items-center justify-center transition-opacity duration-200 opacity-60 group-[&:has(.group\\/exchange:hover)]/exchanges:not-[&:hover]:opacity-40 group-[&:has(.group\\/exchange:focus-within)]/exchanges:not-focus-within:opacity-40 group-hover/exchange:opacity-100 group-focus-within/exchange:opacity-100 focus-visible:opacity-100"
           >
             <span className="relative block size-4">
               <Image
