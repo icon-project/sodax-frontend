@@ -78,14 +78,6 @@ export function PoolChart({
   const [currentPrice, setCurrentPrice] = useState<number>(externalPairPrice ?? CURRENT_PRICE);
   const [tickData, setTickData] = useState<TickPoint[]>(TICK_DATA);
   const [loading, setLoading] = useState<boolean>(true);
-  // Freeze the y-domain while a handle is being dragged. The yDomain depends on
-  // minPrice/maxPrice (so the chart auto-zooms when the user *commits* a wider
-  // range from the input). But during a drag, letting it react live would
-  // re-scale the chart on every drag tick — the opposite handle's line then
-  // appears to slide along with the dragged one even though its price didn't
-  // change.
-  const [isHandleDragging, setIsHandleDragging] = useState<boolean>(false);
-  const handleDragSnapshotRef = useRef<{ minPrice: number; maxPrice: number } | null>(null);
 
   const INNER_W = width - ML.left - ML.right;
   const INNER_H = HEIGHT - ML.top - ML.bottom;
@@ -239,24 +231,15 @@ export function PoolChart({
 
     const referencePrices = visibleData.map(point => point.price);
     const finiteReferences = referencePrices.filter(price => Number.isFinite(price) && price > 0);
-    // Include the user-set min/max so the chart auto-zooms to fit the selected
-    // range (Uniswap-style). Without this, a wide range would clamp the handles
-    // to the chart edge and dragging couldn't reach the typed price.
-    // While a handle is being dragged, use the snapshot taken at drag start so
-    // the y-scale doesn't shift mid-gesture and pull the opposite handle along.
-    const snapshot = handleDragSnapshotRef.current;
-    const effectiveMin = isHandleDragging && snapshot ? snapshot.minPrice : minPrice;
-    const effectiveMax = isHandleDragging && snapshot ? snapshot.maxPrice : maxPrice;
-    const userBandPrices = [effectiveMin, effectiveMax].filter(price => Number.isFinite(price) && price > 0);
 
-    const maxDeviation = [...finiteReferences, ...userBandPrices].reduce(
-      (acc, price) => Math.max(acc, Math.abs(price - currentPrice)),
-      0,
-    );
+    const maxDeviation = finiteReferences.reduce((acc, price) => Math.max(acc, Math.abs(price - currentPrice)), 0);
     // Floor the default y-span at ±15% of currentPrice. For stable pairs the
     // raw data deviation is tiny (<0.5%), which would shrink the chart to a
     // sliver and cap drag travel at ~0.3%. ±15% gives users a meaningful
-    // default range to drag inside before any manual override expands it.
+    // default range to drag inside; if the user wants a wider view, they can
+    // zoom out via the on-chart controls. (Min/max are intentionally NOT in
+    // this calc — letting them grow the y-domain caused a "zoom in" effect
+    // mid-drag and a snap on release.)
     const minHalfSpan = Math.max(currentPrice * 0.15, 0.000001);
     const halfSpan = Math.max(maxDeviation * 1.15, minHalfSpan);
     const paddedMin = currentPrice - halfSpan;
@@ -265,7 +248,7 @@ export function PoolChart({
       return [defaultMin, defaultMax];
     }
     return [roundPrice(paddedMin), roundPrice(paddedMax)];
-  }, [visibleData, currentPrice, minPrice, maxPrice, isHandleDragging]);
+  }, [visibleData, currentPrice]);
 
   const yScaleBase = useMemo(
     () => d3.scaleLinear().domain([yDomainMin, yDomainMax]).range([INNER_H, 0]),
@@ -276,18 +259,6 @@ export function PoolChart({
 
   const clamp = useCallback((v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v)), []);
   const priceToY = useCallback((p: number) => clamp(yScale(p), 0, INNER_H), [yScale, INNER_H, clamp]);
-
-  const livePricesRef = useRef<{ minPrice: number; maxPrice: number }>({ minPrice, maxPrice });
-  livePricesRef.current = { minPrice, maxPrice };
-
-  const handleDragStart = useCallback((): void => {
-    handleDragSnapshotRef.current = { ...livePricesRef.current };
-    setIsHandleDragging(true);
-  }, []);
-
-  const handleDragEnd = useCallback((): void => {
-    setIsHandleDragging(false);
-  }, []);
 
   const dragBehaviors = useHandleDrag({
     enabled: INTERACTIVE,
@@ -302,8 +273,6 @@ export function PoolChart({
     },
     setMinPrice,
     setMaxPrice,
-    onHandleDragStart: handleDragStart,
-    onHandleDragEnd: handleDragEnd,
   });
 
   useEffect(() => {
