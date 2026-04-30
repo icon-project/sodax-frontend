@@ -6,7 +6,7 @@ import { chainIdToChainName } from '@/providers/constants';
 import { useSwapInfo } from '../_stores/swap-store-provider';
 import { MODAL_ID } from '@/stores/modal-store';
 import { useModalStore } from '@/stores/modal-store-provider';
-import { validateChainAddress } from '@/lib/utils';
+import { validateChainAddress } from '@/lib/address-validation';
 import type { UseQueryResult } from '@tanstack/react-query';
 import type { Result, SpokeProvider } from '@sodax/sdk';
 import type { SolverIntentQuoteResponse, SolverErrorResponse } from '@sodax/sdk';
