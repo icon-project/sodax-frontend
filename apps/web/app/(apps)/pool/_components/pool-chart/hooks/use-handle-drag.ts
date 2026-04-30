@@ -6,6 +6,11 @@ import { roundPrice } from '../price-utils';
 
 const MIN_PRICE_GAP = 0.000001;
 const BAND_DRAGGING_CLASS = 'is-band-dragging';
+// Sub-threshold mouse movement on click (e.g. accidental jitter, or a click on a
+// handle that's clamped to the chart edge because the user typed an out-of-range
+// value) must not be interpreted as a drag — otherwise yScale.invert at the
+// clamped y would silently rewrite the typed price to the chart-edge value.
+const DRAG_PIXEL_THRESHOLD = 3;
 
 type DragDeps = {
   yScale: ScaleLinear<number, number>;
@@ -34,6 +39,12 @@ type BandAnchor = {
   anchorY: number;
   anchorMin: number;
   span: number;
+  pxPerPrice: number;
+};
+
+type HandleAnchor = {
+  anchorY: number;
+  anchorPrice: number;
   pxPerPrice: number;
 };
 
@@ -66,8 +77,10 @@ export function useHandleDrag({
   settersRef.current = { setMinPrice, setMaxPrice };
 
   const bandAnchorRef = useRef<BandAnchor | null>(null);
-  const minHandleOffsetRef = useRef<number>(0);
-  const maxHandleOffsetRef = useRef<number>(0);
+  const minHandleAnchorRef = useRef<HandleAnchor | null>(null);
+  const maxHandleAnchorRef = useRef<HandleAnchor | null>(null);
+  const minHandleStartYRef = useRef<number | null>(null);
+  const maxHandleStartYRef = useRef<number | null>(null);
 
   // Safety net: if the 'end' event is missed (e.g., window blur, pointercancel,
   // or the tab loses visibility mid-gesture) the body cursor and SVG class
@@ -108,40 +121,80 @@ export function useHandleDrag({
 
     const toChartY = (svgY: number): number => svgY - depsRef.current.marginTop;
 
-    const clampToChart = (y: number, innerH: number): number => Math.max(0, Math.min(innerH, y));
+    /** Keep pointer y inside the inner plot so leaving the SVG vertically does not extrapolate price. */
+    const clampChartY = (chartY: number, innerH: number): number => Math.max(0, Math.min(innerH, chartY));
+
+    // Anchor model: capture cursor y + the actual current price at drag start,
+    // then apply pixel-delta × pxPerPrice to the anchor price. This preserves
+    // typed values that fall outside the visible y-domain (e.g. a ±25% range on
+    // a tight pair) — without this, yScale.invert at the clamped chart edge
+    // would silently rewrite the price to whatever's at the chart bound.
+    const buildHandleAnchor = (eventY: number, anchorPrice: number): HandleAnchor => {
+      const { yScale, innerH } = depsRef.current;
+      const [domainStart, domainEnd] = yScale.domain();
+      const domainSpan = (domainEnd ?? 0) - (domainStart ?? 0);
+      return {
+        anchorY: toChartY(eventY),
+        anchorPrice,
+        pxPerPrice: domainSpan === 0 ? 0 : innerH / domainSpan,
+      };
+    };
 
     const minDrag = d3
       .drag<SVGRectElement, unknown>()
       .container(resolveContainer)
       .on('start', event => {
-        const { yScale, minPrice, innerH } = depsRef.current;
-        const renderedLineY = clampToChart(yScale(minPrice), innerH);
-        minHandleOffsetRef.current = toChartY(event.y) - renderedLineY;
+        minHandleAnchorRef.current = buildHandleAnchor(event.y, depsRef.current.minPrice);
+        minHandleStartYRef.current = event.y;
       })
       .on('drag', event => {
-        const { yScale, maxPrice, innerH } = depsRef.current;
-        const lineY = clampToChart(toChartY(event.y) - minHandleOffsetRef.current, innerH);
-        const price = Math.max(yScale.invert(lineY), 0);
-        // Only constraint: min must stay strictly below max.
+        const startY = minHandleStartYRef.current;
+        if (startY !== null && Math.abs(event.y - startY) < DRAG_PIXEL_THRESHOLD) {
+          return;
+        }
+        const anchor = minHandleAnchorRef.current;
+        if (!anchor || anchor.pxPerPrice === 0) {
+          return;
+        }
+        const { maxPrice, innerH } = depsRef.current;
+        const chartY = clampChartY(toChartY(event.y), innerH);
+        // y is screen-down, price is range-up — subtract delta to invert axis.
+        const priceDelta = (chartY - anchor.anchorY) / anchor.pxPerPrice;
+        const nextPrice = Math.max(anchor.anchorPrice - priceDelta, 0);
         const cap = Math.max(maxPrice - MIN_PRICE_GAP, 0);
-        settersRef.current.setMinPrice(roundPrice(Math.min(price, cap)));
+        settersRef.current.setMinPrice(roundPrice(Math.min(nextPrice, cap)));
+      })
+      .on('end', () => {
+        minHandleAnchorRef.current = null;
+        minHandleStartYRef.current = null;
       });
 
     const maxDrag = d3
       .drag<SVGRectElement, unknown>()
       .container(resolveContainer)
       .on('start', event => {
-        const { yScale, maxPrice, innerH } = depsRef.current;
-        const renderedLineY = clampToChart(yScale(maxPrice), innerH);
-        maxHandleOffsetRef.current = toChartY(event.y) - renderedLineY;
+        maxHandleAnchorRef.current = buildHandleAnchor(event.y, depsRef.current.maxPrice);
+        maxHandleStartYRef.current = event.y;
       })
       .on('drag', event => {
-        const { yScale, minPrice, innerH } = depsRef.current;
-        const lineY = clampToChart(toChartY(event.y) - maxHandleOffsetRef.current, innerH);
-        const price = Math.max(yScale.invert(lineY), 0);
-        // Only constraint: max must stay strictly above min.
+        const startY = maxHandleStartYRef.current;
+        if (startY !== null && Math.abs(event.y - startY) < DRAG_PIXEL_THRESHOLD) {
+          return;
+        }
+        const anchor = maxHandleAnchorRef.current;
+        if (!anchor || anchor.pxPerPrice === 0) {
+          return;
+        }
+        const { minPrice, innerH } = depsRef.current;
+        const chartY = clampChartY(toChartY(event.y), innerH);
+        const priceDelta = (chartY - anchor.anchorY) / anchor.pxPerPrice;
+        const nextPrice = Math.max(anchor.anchorPrice - priceDelta, 0);
         const floor = minPrice + MIN_PRICE_GAP;
-        settersRef.current.setMaxPrice(roundPrice(Math.max(price, floor)));
+        settersRef.current.setMaxPrice(roundPrice(Math.max(nextPrice, floor)));
+      })
+      .on('end', () => {
+        maxHandleAnchorRef.current = null;
+        maxHandleStartYRef.current = null;
       });
 
     const bandDrag = d3
@@ -165,7 +218,8 @@ export function useHandleDrag({
         if (!anchor || anchor.pxPerPrice === 0) {
           return;
         }
-        const chartY = toChartY(event.y);
+        const { innerH } = depsRef.current;
+        const chartY = clampChartY(toChartY(event.y), innerH);
         const priceDelta = (chartY - anchor.anchorY) / anchor.pxPerPrice;
         const nextMin = Math.max(anchor.anchorMin - priceDelta, 0);
         settersRef.current.setMinPrice(roundPrice(nextMin));

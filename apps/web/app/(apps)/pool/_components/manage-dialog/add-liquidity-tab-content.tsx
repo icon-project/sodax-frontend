@@ -400,7 +400,7 @@ export function AddLiquidityTabContent({
             ) : isWrongChain ? (
               'Switch Network'
             ) : (
-              'Add'
+              'Add & Compound Fees'
             )}
           </Button>
         ) : null}

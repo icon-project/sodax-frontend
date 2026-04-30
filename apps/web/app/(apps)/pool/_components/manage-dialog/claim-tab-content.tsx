@@ -177,7 +177,7 @@ export function ClaimTabContent({
         onClick={isClaimSuccess ? onClaimCompleted : onClaimFees}
         disabled={isClaimSuccess ? false : isPending || !hasUnclaimedFees}
       >
-        {isClaimSuccess ? 'Claim Completed' : hasUnclaimedFees ? 'Claim Fee' : 'No Fee to Claim'}
+        {isClaimSuccess ? 'Claim Completed' : hasUnclaimedFees ? 'Claim Fee' : 'No earnings yet'}
         {isClaimPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
       </Button>
     </TabsContent>
