@@ -240,7 +240,11 @@ export function PoolChart({
       (acc, price) => Math.max(acc, Math.abs(price - currentPrice)),
       0,
     );
-    const minHalfSpan = Math.max(currentPrice * 0.002, 0.000001);
+    // Floor the default y-span at ±15% of currentPrice. For stable pairs the
+    // raw data deviation is tiny (<0.5%), which would shrink the chart to a
+    // sliver and cap drag travel at ~0.3%. ±15% gives users a meaningful
+    // default range to drag inside before any manual override expands it.
+    const minHalfSpan = Math.max(currentPrice * 0.15, 0.000001);
     const halfSpan = Math.max(maxDeviation * 1.15, minHalfSpan);
     const paddedMin = currentPrice - halfSpan;
     const paddedMax = currentPrice + halfSpan;
