@@ -7,7 +7,7 @@ import type { SpokeChainKey } from '@sodax/types';
 export function StakingInfo({
   srcAddress,
   srcChainKey,
-}: Readonly<{ srcAddress: string | undefined; srcChainKey: SpokeChainKey }>) {
+}: Readonly<{ srcAddress: `0x${string}` | undefined; srcChainKey: SpokeChainKey }>) {
   const { data: stakingInfo, isLoading: isLoadingStakingInfo } = useStakingInfo({ srcAddress, srcChainKey });
 
   return (

@@ -25,6 +25,7 @@ import {
   type SwapsConfig,
   type BridgeConfig,
 } from '@sodax/types';
+import { isAddress } from 'viem';
 import type { BackendApiService } from '../../backendApi/BackendApiService.js';
 
 export type ConfigServiceConstructorParams = {
@@ -278,7 +279,7 @@ export class ConfigService {
     this.hubAssetToXTokenMap = new Map<`0x${string}`, XToken>(
       Object.values(sodaxConfig.chains)
         .flatMap(chainConfig => Object.values(chainConfig.supportedTokens))
-        .filter(token => token.hubAsset)
+        .filter(token => isAddress(token.hubAsset))
         .map(token => [token.hubAsset.toLowerCase() as Address, token]),
     );
     this.chainToSupportedTokenAddressMap = new Map(

@@ -1,261 +1,171 @@
-/*
-// apps/demo/src/pages/partner-fee-claim/page.tsx
-import React, { useState } from 'react';
-import { useSodaxContext, useSpokeProvider } from '@sodax/dapp-kit';
-import { useXAccount, useWalletProvider } from '@sodax/wallet-sdk-react';
+import React, { useMemo, useState } from 'react';
+import {
+  useApproveToken,
+  useFeeClaimSwap,
+  useFetchAssetsBalances,
+  useIsTokenApproved,
+  useSetSwapPreference,
+  useSodaxContext,
+} from '@sodax/dapp-kit';
+import { useWalletProvider, useXAccount } from '@sodax/wallet-sdk-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { SONIC_MAINNET_CHAIN_ID, type Address, type SpokeChainId } from '@sodax/types';
-import { formatUnits, isAddress, parseUnits } from 'viem';
-import type { PartnerFeeClaimAssetBalance, SonicSpokeProvider } from '@sodax/sdk';
+import { ChainKeys, type SpokeChainKey } from '@sodax/types';
+import { type Address, formatUnits, isAddress, parseUnits } from 'viem';
 import { chainIdToChainName } from '@/constants';
 import { SelectChain } from '@/components/solver/SelectChain';
 
+const SONIC: typeof ChainKeys.SONIC_MAINNET = ChainKeys.SONIC_MAINNET;
+
+/**
+ * v2 SDK errors are tagged: `error.message` carries the CODE (e.g. FETCH_ASSETS_BALANCES_FAILED),
+ * `error.cause` carries the underlying viem/RPC error. Surface both so users can debug.
+ */
+function formatSdkError(err: unknown, fallback: string): string {
+  if (!(err instanceof Error)) return fallback;
+  const cause = (err as { cause?: unknown }).cause;
+  const causeText = cause instanceof Error ? ` — ${cause.message}` : '';
+  return `${err.message}${causeText}`;
+}
+
 export default function PartnerFeeClaimPage() {
   const { sodax } = useSodaxContext();
-  const sonicAccount = useXAccount(SONIC_MAINNET_CHAIN_ID);
-  const walletProvider = useWalletProvider(SONIC_MAINNET_CHAIN_ID);
-  const spokeProvider = useSpokeProvider(SONIC_MAINNET_CHAIN_ID, walletProvider) as SonicSpokeProvider | undefined;
+  const sonicAccount = useXAccount(SONIC);
+  const walletProvider = useWalletProvider(SONIC);
+  const srcAddress = sonicAccount?.address as Address | undefined;
+
+  const supportedSpokeChains = useMemo(() => sodax.config.getSupportedSpokeChains(), [sodax]);
+
   const [address, setAddress] = useState<string>('');
-  const [balances, setBalances] = useState<Map<string, PartnerFeeClaimAssetBalance> | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [submittedAddress, setSubmittedAddress] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
+
+  const candidateAddress = useMemo(() => {
+    const trimmed = address.trim();
+    if (trimmed && isAddress(trimmed)) return trimmed;
+    if (srcAddress) return srcAddress;
+    return undefined;
+  }, [address, srcAddress]);
+
+  const {
+    data: balances,
+    isFetching: isFetchingBalances,
+    error: balancesError,
+  } = useFetchAssetsBalances({ queryAddress: submittedAddress });
+
+  const balancesArray = useMemo(() => (balances ? Array.from(balances.values()) : []), [balances]);
+
+  const handleFetchBalances = (): void => {
+    setError(null);
+    if (!candidateAddress) {
+      setError('No address provided and wallet not connected');
+      return;
+    }
+    setSubmittedAddress(candidateAddress);
+  };
 
   // Approve token state
   const [approveTokenAddress, setApproveTokenAddress] = useState<string>('');
-  const [approveLoading, setApproveLoading] = useState(false);
   const [approveError, setApproveError] = useState<string | null>(null);
-  const [isApproved, setIsApproved] = useState<boolean | null>(null);
-  const [checkingApproval, setCheckingApproval] = useState(false);
+
+  const isApprovedParams = useMemo(
+    () =>
+      approveTokenAddress.trim() && isAddress(approveTokenAddress.trim()) && srcAddress
+        ? { srcChainKey: SONIC, srcAddress, token: approveTokenAddress.trim() as Address }
+        : undefined,
+    [approveTokenAddress, srcAddress],
+  );
+
+  const { data: isApproved } = useIsTokenApproved({ params: isApprovedParams });
+  const { mutateAsync: approveToken, isPending: approveLoading } = useApproveToken();
+
+  const handleApproveToken = async (): Promise<void> => {
+    setApproveError(null);
+    if (!srcAddress || !walletProvider || !approveTokenAddress.trim()) {
+      setApproveError('Please provide a token address and connect your wallet');
+      return;
+    }
+    const result = await approveToken({
+      params: {
+        srcChainKey: SONIC,
+        srcAddress,
+        token: approveTokenAddress.trim() as Address,
+      },
+      walletProvider,
+    });
+    if (!result.ok) {
+      setApproveError(formatSdkError(result.error, 'Failed to approve token'));
+    }
+  };
 
   // Set swap preference state
   const [outputToken, setOutputToken] = useState<string>('');
-  const [dstChain, setDstChain] = useState<SpokeChainId>(SONIC_MAINNET_CHAIN_ID);
+  const [dstChain, setDstChain] = useState<SpokeChainKey>(SONIC);
   const [dstAddress, setDstAddress] = useState<string>('');
-  const [setPreferenceLoading, setSetPreferenceLoading] = useState(false);
   const [setPreferenceError, setSetPreferenceError] = useState<string | null>(null);
   const [setPreferenceSuccess, setSetPreferenceSuccess] = useState<string | null>(null);
+  const { mutateAsync: setSwapPreference, isPending: setPreferenceLoading } = useSetSwapPreference();
+
+  const handleSetSwapPreference = async (): Promise<void> => {
+    setSetPreferenceError(null);
+    setSetPreferenceSuccess(null);
+    if (!srcAddress || !walletProvider || !outputToken.trim() || !dstAddress.trim()) {
+      setSetPreferenceError('Please fill in all fields and connect your wallet');
+      return;
+    }
+    const result = await setSwapPreference({
+      params: {
+        srcChainKey: SONIC,
+        srcAddress,
+        outputToken: outputToken.trim() as Address,
+        dstChain,
+        dstAddress: dstAddress.trim(),
+      },
+      walletProvider,
+    });
+    if (!result.ok) {
+      setSetPreferenceError(formatSdkError(result.error, 'Failed to set swap preference'));
+      return;
+    }
+    setSetPreferenceSuccess(`Transaction sent: ${result.value}`);
+  };
 
   // Swap state
   const [swapFromToken, setSwapFromToken] = useState<string>('');
   const [swapAmount, setSwapAmount] = useState<string>('');
-  const [swapLoading, setSwapLoading] = useState(false);
   const [swapError, setSwapError] = useState<string | null>(null);
   const [swapSuccess, setSwapSuccess] = useState<string | null>(null);
+  const { mutateAsync: feeClaimSwap, isPending: swapLoading } = useFeeClaimSwap();
 
-  const supportedSpokeChains = sodax?.config?.getSupportedSpokeChains() || [];
-
-  const handleFetchBalances = async () => {
-    if (!spokeProvider) {
-      setError('Please connect your Sonic wallet');
+  const handleSwap = async (): Promise<void> => {
+    setSwapError(null);
+    setSwapSuccess(null);
+    if (!srcAddress || !walletProvider || !swapFromToken.trim() || !swapAmount.trim()) {
+      setSwapError('Please fill in all fields and connect your wallet');
       return;
     }
-
-    setLoading(true);
-    setError(null);
-    setBalances(null);
-
-    try {
-      const queryAddress = address.trim() || sonicAccount?.address;
-      if (!queryAddress || !isAddress(queryAddress)) {
-        setError('No address provided and wallet not connected');
-        setLoading(false);
-        return;
-      }
-
-      if (!sodax.partners.feeClaim) {
-        setError('PartnerFeeClaimService not initialized');
-        setLoading(false);
-        return;
-      }
-
-      console.log('[PartnerFeeClaimPage] Fetching balances for address:', queryAddress);
-      const result = await sodax.partners.feeClaim.fetchAssetsBalances({ address: queryAddress });
-
-      if (!result.ok) {
-        console.error('[PartnerFeeClaimPage] Error fetching balances:', result.error);
-        setError(result.error.message || 'Failed to fetch balances');
-        setLoading(false);
-        return;
-      }
-
-      console.log('[PartnerFeeClaimPage] Balances result:', result.value);
-      console.log('[PartnerFeeClaimPage] Balances map size:', result.value.size);
-      console.log('[PartnerFeeClaimPage] Balances array length:', Array.from(result.value.values()).length);
-      console.log(
-        '[PartnerFeeClaimPage] Non-zero balances:',
-        Array.from(result.value.values()).filter(a => a.balance > 0n).length,
-      );
-
-      setBalances(result.value);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const balancesArray = balances ? Array.from(balances.values()) : [];
-
-  // Check if token is approved
-  const handleCheckApproval = async () => {
-    if (!spokeProvider || !approveTokenAddress.trim()) {
-      setApproveError('Please provide a token address');
-      return;
-    }
-
-    setCheckingApproval(true);
-    setApproveError(null);
-    setIsApproved(null);
-
-    try {
-      if (!sodax.partners.feeClaim) {
-        setApproveError('PartnerFeeClaimService not initialized');
-        return;
-      }
-      const result = await sodax.partners.feeClaim.isTokenApproved({
-        token: approveTokenAddress.trim() as Address,
-        spokeProvider,
-      });
-
-      if (!result.ok) {
-        setApproveError(result.error.message || 'Failed to check approval');
-        return;
-      }
-
-      setIsApproved(result.value);
-    } catch (err) {
-      setApproveError(err instanceof Error ? err.message : 'Unknown error occurred');
-    } finally {
-      setCheckingApproval(false);
-    }
-  };
-
-  // Approve token
-  const handleApproveToken = async () => {
-    if (!spokeProvider || !approveTokenAddress.trim()) {
-      setApproveError('Please provide a token address');
-      return;
-    }
-
-    setApproveLoading(true);
-    setApproveError(null);
-
-    try {
-      if (!sodax.partners.feeClaim) {
-        setApproveError('PartnerFeeClaimService not initialized');
-        return;
-      }
-
-      const result = await sodax.partners.feeClaim.approveToken({
-        token: approveTokenAddress.trim() as Address,
-        spokeProvider,
-      });
-
-      if (!result.ok) {
-        setApproveError(result.error.message || 'Failed to approve token');
-        return;
-      }
-
-      // Check approval status after transaction
-      setTimeout(() => {
-        handleCheckApproval();
-      }, 2000);
-    } catch (err) {
-      setApproveError(err instanceof Error ? err.message : 'Unknown error occurred');
-    } finally {
-      setApproveLoading(false);
-    }
-  };
-
-  // Set swap preference
-  const handleSetSwapPreference = async () => {
-    if (!spokeProvider || !outputToken.trim() || !dstAddress.trim()) {
-      setSetPreferenceError('Please fill in all fields');
-      return;
-    }
-
-    setSetPreferenceLoading(true);
-    setSetPreferenceError(null);
-    setSetPreferenceSuccess(null);
-
-    try {
-      if (!sodax.partners.feeClaim) {
-        setSetPreferenceError('PartnerFeeClaimService not initialized');
-        return;
-      }
-
-      const result = await sodax.partners.feeClaim.setSwapPreference({
-        params: {
-          outputToken: outputToken.trim() as Address,
-          dstChain,
-          dstAddress: dstAddress.trim(),
-        },
-        spokeProvider,
-      });
-
-      if (!result.ok) {
-        setSetPreferenceError(JSON.stringify(result.error.data.error) || 'Failed to set swap preference');
-        return;
-      }
-
-      setSetPreferenceSuccess(`Transaction sent: ${result.value}`);
-    } catch (err) {
-      setSetPreferenceError(err instanceof Error ? err.message : 'Unknown error occurred');
-    } finally {
-      setSetPreferenceLoading(false);
-    }
-  };
-
-  // Execute swap
-  const handleSwap = async () => {
-    if (!spokeProvider || !swapFromToken.trim() || !swapAmount.trim()) {
-      setSwapError('Please fill in all fields');
-      return;
-    }
-
-    // Find the token to get decimals
     const token = balancesArray.find(a => a.address.toLowerCase() === swapFromToken.trim().toLowerCase());
     if (!token) {
       setSwapError('Token not found in balances. Please fetch balances first or provide a valid token address.');
       return;
     }
-
-    setSwapLoading(true);
-    setSwapError(null);
-    setSwapSuccess(null);
-
-    try {
-      if (!sodax.partners.feeClaim) {
-        setSwapError('PartnerFeeClaimService not initialized');
-        return;
-      }
-
-      const amount = parseUnits(swapAmount, token.decimal);
-
-      const result = await sodax.partners.feeClaim.swap({
-        params: {
-          fromToken: swapFromToken.trim() as Address,
-          amount,
-        },
-        spokeProvider,
-      });
-
-      if (!result.ok) {
-        setSwapError(JSON.stringify(result.error) || 'Failed to execute swap');
-        return;
-      }
-
-      setSwapSuccess(
-        `Swap executed successfully! Intent: ${result.value.solverExecutionResponse.intent_hash || 'N/A'}`,
-      );
-    } catch (err) {
-      setSwapError(err instanceof Error ? err.message : 'Unknown error occurred');
-    } finally {
-      setSwapLoading(false);
+    const amount = parseUnits(swapAmount, token.decimal);
+    const result = await feeClaimSwap({
+      params: {
+        srcChainKey: SONIC,
+        srcAddress,
+        fromToken: swapFromToken.trim() as Address,
+        amount,
+      },
+      walletProvider,
+    });
+    if (!result.ok) {
+      setSwapError(formatSdkError(result.error, 'Failed to execute swap'));
+      return;
     }
+    setSwapSuccess(`Swap executed successfully! Intent: ${result.value.solverExecutionResponse.intent_hash || 'N/A'}`);
   };
 
   return (
@@ -290,13 +200,18 @@ export default function PartnerFeeClaimPage() {
               )}
             </div>
 
-            <Button onClick={handleFetchBalances} disabled={loading || !spokeProvider}>
-              {loading ? 'Loading...' : 'Fetch Balances'}
+            <Button onClick={handleFetchBalances} disabled={isFetchingBalances || !candidateAddress}>
+              {isFetchingBalances ? 'Loading...' : 'Fetch Balances'}
             </Button>
 
             {error && <div className="p-3 bg-negative border border-red rounded-lg text-black text-sm">{error}</div>}
+            {balancesError && (
+              <div className="p-3 bg-negative border border-red rounded-lg text-black text-sm break-all">
+                {formatSdkError(balancesError, 'Failed to fetch balances')}
+              </div>
+            )}
 
-            {!spokeProvider && (
+            {!srcAddress && (
               <div className="p-3 bg-negative border border-negative rounded-lg text-black text-sm">
                 Please connect your Sonic wallet to use this feature
               </div>
@@ -356,28 +271,19 @@ export default function PartnerFeeClaimPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="approve-token">Token Address</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="approve-token"
-                  placeholder="0x..."
-                  value={approveTokenAddress}
-                  onChange={e => {
-                    setApproveTokenAddress(e.target.value);
-                    setIsApproved(null);
-                  }}
-                  className="font-mono"
-                />
-                <Button onClick={handleCheckApproval} disabled={checkingApproval || !spokeProvider} variant="outline">
-                  {checkingApproval ? 'Checking...' : 'Check'}
-                </Button>
-              </div>
+              <Input
+                id="approve-token"
+                placeholder="0x..."
+                value={approveTokenAddress}
+                onChange={e => setApproveTokenAddress(e.target.value)}
+                className="font-mono"
+              />
               {balancesArray.length > 0 && (
                 <select
                   className="w-full p-2 border rounded-lg text-sm"
                   onChange={e => {
                     if (e.target.value) {
                       setApproveTokenAddress(e.target.value);
-                      setIsApproved(null);
                     }
                   }}
                   value=""
@@ -390,7 +296,7 @@ export default function PartnerFeeClaimPage() {
                   ))}
                 </select>
               )}
-              {isApproved !== null && (
+              {isApprovedParams && isApproved !== undefined && (
                 <p className={`text-sm ${isApproved ? 'text-green-500' : 'text-negative'}`}>
                   {isApproved ? '✓ Token is already approved' : 'Token is not approved'}
                 </p>
@@ -399,7 +305,7 @@ export default function PartnerFeeClaimPage() {
 
             <Button
               onClick={handleApproveToken}
-              disabled={approveLoading || !spokeProvider || !approveTokenAddress.trim()}
+              disabled={approveLoading || !srcAddress || !walletProvider || !approveTokenAddress.trim()}
             >
               {approveLoading ? 'Approving...' : 'Approve Token'}
             </Button>
@@ -478,7 +384,13 @@ export default function PartnerFeeClaimPage() {
 
             <Button
               onClick={handleSetSwapPreference}
-              disabled={setPreferenceLoading || !spokeProvider || !outputToken.trim() || !dstAddress.trim()}
+              disabled={
+                setPreferenceLoading ||
+                !srcAddress ||
+                !walletProvider ||
+                !outputToken.trim() ||
+                !dstAddress.trim()
+              }
             >
               {setPreferenceLoading ? 'Setting...' : 'Set Swap Preference'}
             </Button>
@@ -517,13 +429,8 @@ export default function PartnerFeeClaimPage() {
                   className="w-full p-2 border rounded-lg text-sm"
                   onChange={e => {
                     if (e.target.value) {
-                      const selected = balancesArray.find(a => a.address === e.target.value);
                       setSwapFromToken(e.target.value);
-                      if (selected) {
-                        // Show max balance as placeholder
-                        const maxBalance = formatUnits(selected.balance, selected.decimal);
-                        setSwapAmount('');
-                      }
+                      setSwapAmount('');
                     }
                   }}
                   value=""
@@ -553,28 +460,21 @@ export default function PartnerFeeClaimPage() {
                 balancesArray.length > 0 &&
                 (() => {
                   const token = balancesArray.find(a => a.address.toLowerCase() === swapFromToken.toLowerCase());
-                  if (token) {
-                    const maxBalance = formatUnits(token.balance, token.decimal);
-                    return (
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSwapAmount(maxBalance)}
-                          className="text-xs"
-                        >
-                          Use Max ({maxBalance} {token.symbol})
-                        </Button>
-                      </div>
-                    );
-                  }
-                  return null;
+                  if (!token) return null;
+                  const maxBalance = formatUnits(token.balance, token.decimal);
+                  return (
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setSwapAmount(maxBalance)} className="text-xs">
+                        Use Max ({maxBalance} {token.symbol})
+                      </Button>
+                    </div>
+                  );
                 })()}
             </div>
 
             <Button
               onClick={handleSwap}
-              disabled={swapLoading || !spokeProvider || !swapFromToken.trim() || !swapAmount.trim()}
+              disabled={swapLoading || !srcAddress || !walletProvider || !swapFromToken.trim() || !swapAmount.trim()}
             >
               {swapLoading ? 'Swapping...' : 'Execute Swap'}
             </Button>
@@ -596,4 +496,3 @@ export default function PartnerFeeClaimPage() {
     </main>
   );
 }
-*/

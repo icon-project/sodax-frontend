@@ -9,6 +9,7 @@ import MoneyMarketPage from './pages/money-market/page';
 import BridgePage from './pages/bridge/page';
 import DexPage from './pages/dex/page';
 import StakingPage from './pages/staking/page';
+import PartnerFeeClaimPage from './pages/partner-fee-claim/page';
 
 const router = createBrowserRouter([
   {
@@ -47,6 +48,10 @@ const router = createBrowserRouter([
       {
         path: '/staking',
         element: <StakingPage />,
+      },
+      {
+        path: '/partner-fee-claim',
+        element: <PartnerFeeClaimPage />,
       },
     ],
   },

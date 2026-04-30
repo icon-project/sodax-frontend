@@ -1200,7 +1200,7 @@ export const bitcoinSupportedTokens = {
     address: '0:0',
     chainKey: ChainKeys.BITCOIN_MAINNET,
     hubAsset: '0x',
-    vault: '0x',
+    vault: SodaTokens.bnUSD.address,
   },
   BUSD: {
     symbol: 'BUSD',
