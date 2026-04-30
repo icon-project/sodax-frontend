@@ -1,55 +1,33 @@
-// // packages/dapp-kit/src/hooks/staking/useUnstake.ts
-// import { useSodaxContext } from '../shared/useSodaxContext.js';
-// import type { UnstakeParams, SpokeTxHash, HubTxHash, SpokeProvider } from '@sodax/sdk';
-// import { useMutation, useQueryClient, type UseMutationResult } from '@tanstack/react-query';
-//
-// /**
-//  * Hook for executing unstake transactions to unstake xSODA shares.
-//  * Uses React Query's useMutation for better state management and caching.
-//  *
-//  * @param {SpokeProvider | undefined} spokeProvider - The spoke provider to use for the unstake
-//  * @returns {UseMutationResult<[SpokeTxHash, HubTxHash], Error, Omit<UnstakeParams, 'action'>>} Mutation result object containing mutation function and state
-//  *
-//  * @example
-//  * ```typescript
-//  * const { mutateAsync: unstake, isPending } = useUnstake(spokeProvider);
-//  *
-//  * const handleUnstake = async () => {
-//  *   const result = await unstake({
-//  *     amount: 1000000000000000000n, // 1 xSODA
-//  *     account: '0x...'
-//  *   });
-//  *
-//  *   console.log('Unstake successful:', result);
-//  * };
-//  * ```
-//  */
-// export function useUnstake(
-//   spokeProvider: SpokeProvider | undefined,
-// ): UseMutationResult<[SpokeTxHash, HubTxHash], Error, Omit<UnstakeParams, 'action'>> {
-//   const { sodax } = useSodaxContext();
-//   const queryClient = useQueryClient();
-//
-//   return useMutation<[SpokeTxHash, HubTxHash], Error, Omit<UnstakeParams, 'action'>>({
-//     mutationFn: async (params: Omit<UnstakeParams, 'action'>) => {
-//       if (!spokeProvider) {
-//         throw new Error('Spoke provider not found');
-//       }
-//
-//       const result = await sodax.staking.unstake({ ...params, action: 'unstake' }, spokeProvider);
-//
-//       if (!result.ok) {
-//         throw new Error(`Unstake failed: ${result.error.code}`);
-//       }
-//
-//       return result.value;
-//     },
-//     onSuccess: () => {
-//       // Invalidate relevant queries to refresh data
-//       queryClient.invalidateQueries({ queryKey: ['stakingInfo'] });
-//       queryClient.invalidateQueries({ queryKey: ['unstakingInfo'] });
-//       queryClient.invalidateQueries({ queryKey: ['unstakingInfoWithPenalty'] });
-//     },
-//   });
-// }
-//
+import type { HubTxHash, SpokeTxHash, UnstakeAction } from '@sodax/sdk';
+import type { Result, SpokeChainKey } from '@sodax/types';
+import { useMutation, type UseMutationResult, useQueryClient } from '@tanstack/react-query';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
+
+export type UseUnstakeVars<K extends SpokeChainKey = SpokeChainKey> = Omit<UnstakeAction<K, false>, 'raw'>;
+
+type UnstakeResult = Result<[SpokeTxHash, HubTxHash]>;
+
+/**
+ * React hook for initiating an SODA unstake. Pure mutation: all inputs (params, walletProvider)
+ * are passed via `mutate({...})`. Returns the SDK `Result<T>` as-is; callers branch on `data?.ok`.
+ */
+export function useUnstake<K extends SpokeChainKey = SpokeChainKey>(): UseMutationResult<
+  UnstakeResult,
+  Error,
+  UseUnstakeVars<K>
+> {
+  const { sodax } = useSodaxContext();
+  const queryClient = useQueryClient();
+
+  return useMutation<UnstakeResult, Error, UseUnstakeVars<K>>({
+    mutationFn: async vars => {
+      return sodax.staking.unstake({ ...vars, raw: false });
+    },
+    onSuccess: (_data, { params }) => {
+      queryClient.invalidateQueries({ queryKey: ['staking', 'info', params.srcChainKey, params.srcAddress] });
+      queryClient.invalidateQueries({ queryKey: ['staking', 'unstakingInfo'] });
+      queryClient.invalidateQueries({ queryKey: ['staking', 'unstakingInfoWithPenalty'] });
+      queryClient.invalidateQueries({ queryKey: ['staking', 'allowance', params.srcChainKey, 'unstake'] });
+    },
+  });
+}

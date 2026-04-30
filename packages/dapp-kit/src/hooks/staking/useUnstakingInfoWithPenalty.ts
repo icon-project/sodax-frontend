@@ -1,60 +1,39 @@
-// // packages/dapp-kit/src/hooks/staking/useUnstakingInfoWithPenalty.ts
-// import { useSodaxContext } from '../shared/useSodaxContext.js';
-// import type { UnstakingInfo, UnstakeRequestWithPenalty, SpokeProvider } from '@sodax/sdk';
-// import { useQuery, type UseQueryResult } from '@tanstack/react-query';
-//
-// export type UnstakingInfoWithPenalty = UnstakingInfo & {
-//   requestsWithPenalty: UnstakeRequestWithPenalty[];
-// };
-//
-// /**
-//  * Hook for fetching unstaking information with penalty calculations from the stakedSoda contract.
-//  * Uses React Query for efficient caching and state management.
-//  *
-//  * @param {string | undefined} userAddress - The user address to fetch unstaking info for
-//  * @param {SpokeProvider | undefined} spokeProvider - The spoke provider instance
-//  * @param {number} refetchInterval - The interval in milliseconds to refetch data (default: 5000)
-//  * @returns {UseQueryResult<UnstakingInfoWithPenalty, Error>} Query result object containing unstaking info with penalties and state
-//  *
-//  * @example
-//  * ```typescript
-//  * const { data: unstakingInfo, isLoading, error } = useUnstakingInfoWithPenalty(userAddress, spokeProvider);
-//  *
-//  * if (isLoading) return <div>Loading unstaking info...</div>;
-//  * if (unstakingInfo) {
-//  *   console.log('Total unstaking:', unstakingInfo.totalUnstaking);
-//  *   unstakingInfo.requestsWithPenalty.forEach(request => {
-//  *     console.log('Penalty:', request.penaltyPercentage + '%');
-//  *     console.log('Claimable amount:', request.claimableAmount);
-//  *   });
-//  * }
-//  * ```
-//  */
-// export function useUnstakingInfoWithPenalty(
-//   userAddress: string | undefined,
-//   spokeProvider: SpokeProvider | undefined,
-//   refetchInterval = 5000,
-// ): UseQueryResult<UnstakingInfoWithPenalty, Error> {
-//   const { sodax } = useSodaxContext();
-//
-//   return useQuery({
-//     queryKey: ['soda', 'unstakingInfoWithPenalty', spokeProvider?.chainConfig.chain.id, userAddress],
-//     queryFn: async () => {
-//       if (!spokeProvider) {
-//         throw new Error('Spoke provider not found');
-//       }
-//
-//       // Get unstaking info with penalty calculations
-//       const penaltyResult = await sodax.staking.getUnstakingInfoWithPenalty(spokeProvider);
-//
-//       if (!penaltyResult.ok) {
-//         throw new Error(`Failed to fetch unstaking info with penalty: ${penaltyResult.error.code}`);
-//       }
-//
-//       return penaltyResult.value;
-//     },
-//     enabled: !!spokeProvider && !!userAddress,
-//     refetchInterval,
-//   });
-// }
-//
+import type { UnstakeRequestWithPenalty, UnstakingInfo } from '@sodax/sdk';
+import type { SpokeChainKey } from '@sodax/types';
+import { useQuery, type UseQueryOptions, type UseQueryResult } from '@tanstack/react-query';
+import { useSodaxContext } from '../shared/useSodaxContext.js';
+
+export type UnstakingInfoWithPenalty = UnstakingInfo & { requestsWithPenalty: UnstakeRequestWithPenalty[] };
+
+export type UseUnstakingInfoWithPenaltyProps = {
+  srcAddress: `0x${string}` | undefined;
+  srcChainKey: SpokeChainKey | undefined;
+  queryOptions?: Omit<UseQueryOptions<UnstakingInfoWithPenalty, Error>, 'queryKey' | 'queryFn' | 'enabled'>;
+};
+
+/**
+ * React hook to fetch the user's pending unstake requests **with computed early-exit penalties**
+ * by deriving the hub wallet from the spoke `srcAddress` + `srcChainKey`. Throws on `!ok`.
+ */
+export function useUnstakingInfoWithPenalty({
+  srcAddress,
+  srcChainKey,
+  queryOptions,
+}: UseUnstakingInfoWithPenaltyProps): UseQueryResult<UnstakingInfoWithPenalty, Error> {
+  const { sodax } = useSodaxContext();
+
+  return useQuery<UnstakingInfoWithPenalty, Error>({
+    queryKey: ['staking', 'unstakingInfoWithPenalty', srcChainKey, srcAddress],
+    queryFn: async () => {
+      if (!srcAddress || !srcChainKey) {
+        throw new Error('srcAddress and srcChainKey are required');
+      }
+      const result = await sodax.staking.getUnstakingInfoWithPenalty(srcAddress, srcChainKey);
+      if (!result.ok) throw result.error;
+      return result.value;
+    },
+    enabled: !!srcAddress && !!srcChainKey,
+    refetchInterval: 5_000,
+    ...queryOptions,
+  });
+}

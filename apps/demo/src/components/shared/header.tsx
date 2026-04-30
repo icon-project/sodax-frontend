@@ -10,7 +10,7 @@ const navLinks = [
   { to: '/money-market', label: 'Money Market' },
   { to: '/solver', label: 'Solver' },
   { to: '/bridge', label: 'Bridge' },
-  // { to: '/staking', label: 'Staking' },
+  { to: '/staking', label: 'Staking' },
   // { to: '/partner-fee-claim', label: 'Partner Fee Claim' },
   { to: '/dex', label: 'Dex' },
   // { to: '/recovery', label: 'Recovery' },
