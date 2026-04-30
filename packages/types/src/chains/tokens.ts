@@ -1193,15 +1193,6 @@ export const bitcoinSupportedTokens = {
     hubAsset: '0xeb0393893b5bf98a50073d6740738b08e575058b',
     vault: '0x7A1A5555842Ad2D0eD274d09b5c4406a95799D5d',
   },
-  bnUSD: {
-    symbol: 'bnUSD',
-    name: 'bnUSD',
-    decimals: 18,
-    address: '0:0',
-    chainKey: ChainKeys.BITCOIN_MAINNET,
-    hubAsset: '0x',
-    vault: SodaTokens.bnUSD.address,
-  },
   BUSD: {
     symbol: 'BUSD',
     name: 'BUSDSTABLECOIN',
