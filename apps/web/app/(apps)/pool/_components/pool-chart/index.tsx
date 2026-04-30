@@ -231,8 +231,15 @@ export function PoolChart({
 
     const referencePrices = visibleData.map(point => point.price);
     const finiteReferences = referencePrices.filter(price => Number.isFinite(price) && price > 0);
+    // Include the user-set min/max so the chart auto-zooms to fit the selected
+    // range (Uniswap-style). Without this, a wide range would clamp the handles
+    // to the chart edge and dragging couldn't reach the typed price.
+    const userBandPrices = [minPrice, maxPrice].filter(price => Number.isFinite(price) && price > 0);
 
-    const maxDeviation = finiteReferences.reduce((acc, price) => Math.max(acc, Math.abs(price - currentPrice)), 0);
+    const maxDeviation = [...finiteReferences, ...userBandPrices].reduce(
+      (acc, price) => Math.max(acc, Math.abs(price - currentPrice)),
+      0,
+    );
     const minHalfSpan = Math.max(currentPrice * 0.002, 0.000001);
     const halfSpan = Math.max(maxDeviation * 1.15, minHalfSpan);
     const paddedMin = currentPrice - halfSpan;
@@ -241,7 +248,7 @@ export function PoolChart({
       return [defaultMin, defaultMax];
     }
     return [roundPrice(paddedMin), roundPrice(paddedMax)];
-  }, [visibleData, currentPrice]);
+  }, [visibleData, currentPrice, minPrice, maxPrice]);
 
   const yScaleBase = useMemo(
     () => d3.scaleLinear().domain([yDomainMin, yDomainMax]).range([INNER_H, 0]),
@@ -455,7 +462,6 @@ export function PoolChart({
             .attr('height', iconH)
             .attr('fill', 'transparent')
             .attr('class', label === 'MAX' ? 'hit-max' : 'hit-min')
-            .attr('data-line-y', y)
             .style('cursor', 'ns-resize');
           if (dragBehaviors) {
             hitRect.call(label === 'MAX' ? dragBehaviors.maxDrag : dragBehaviors.minDrag);
