@@ -121,6 +121,9 @@ export function useHandleDrag({
 
     const toChartY = (svgY: number): number => svgY - depsRef.current.marginTop;
 
+    /** Keep pointer y inside the inner plot so leaving the SVG vertically does not extrapolate price. */
+    const clampChartY = (chartY: number, innerH: number): number => Math.max(0, Math.min(innerH, chartY));
+
     // Anchor model: capture cursor y + the actual current price at drag start,
     // then apply pixel-delta × pxPerPrice to the anchor price. This preserves
     // typed values that fall outside the visible y-domain (e.g. a ±25% range on
@@ -153,8 +156,8 @@ export function useHandleDrag({
         if (!anchor || anchor.pxPerPrice === 0) {
           return;
         }
-        const { maxPrice } = depsRef.current;
-        const chartY = toChartY(event.y);
+        const { maxPrice, innerH } = depsRef.current;
+        const chartY = clampChartY(toChartY(event.y), innerH);
         // y is screen-down, price is range-up — subtract delta to invert axis.
         const priceDelta = (chartY - anchor.anchorY) / anchor.pxPerPrice;
         const nextPrice = Math.max(anchor.anchorPrice - priceDelta, 0);
@@ -182,8 +185,8 @@ export function useHandleDrag({
         if (!anchor || anchor.pxPerPrice === 0) {
           return;
         }
-        const { minPrice } = depsRef.current;
-        const chartY = toChartY(event.y);
+        const { minPrice, innerH } = depsRef.current;
+        const chartY = clampChartY(toChartY(event.y), innerH);
         const priceDelta = (chartY - anchor.anchorY) / anchor.pxPerPrice;
         const nextPrice = Math.max(anchor.anchorPrice - priceDelta, 0);
         const floor = minPrice + MIN_PRICE_GAP;
@@ -215,7 +218,8 @@ export function useHandleDrag({
         if (!anchor || anchor.pxPerPrice === 0) {
           return;
         }
-        const chartY = toChartY(event.y);
+        const { innerH } = depsRef.current;
+        const chartY = clampChartY(toChartY(event.y), innerH);
         const priceDelta = (chartY - anchor.anchorY) / anchor.pxPerPrice;
         const nextMin = Math.max(anchor.anchorMin - priceDelta, 0);
         settersRef.current.setMinPrice(roundPrice(nextMin));
