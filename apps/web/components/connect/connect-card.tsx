@@ -87,7 +87,7 @@ export function ConnectCard({ entry, avatarProxyUrl }: ConnectCardProps) {
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-5 max-w-md mx-auto w-full">
         <Link href={HOME_ROUTE} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <Image src="/symbol.png" alt="SODAX" width={24} height={24} />
+          <Image src="/soda-yellow.png" alt="SODAX" width={24} height={24} />
           <SodaxIcon width={64} height={14} fill="white" />
         </Link>
         <span className="text-cherry-brighter text-xs font-[InterRegular] uppercase tracking-wider">Connect</span>
@@ -205,7 +205,7 @@ export function ConnectCard({ entry, avatarProxyUrl }: ConnectCardProps) {
           </Link>
         </div>
         <div className="flex items-center gap-2">
-          <Image src="/symbol.png" alt="SODAX" width={14} height={14} className="opacity-40" />
+          <Image src="/soda-yellow-sm.png" alt="SODAX" width={14} height={14} className="opacity-40" />
           <span className="text-cherry-bright/40 text-xs font-[InterRegular]">© 2026 SODAX</span>
         </div>
       </footer>

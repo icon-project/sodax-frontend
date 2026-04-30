@@ -39,7 +39,7 @@ export function ConsensusMiamiPage() {
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-5 sm:px-10 max-w-2xl mx-auto w-full">
         <Link href={HOME_ROUTE} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <Image src="/symbol.png" alt="SODAX" width={28} height={28} />
+          <Image src="/soda-yellow.png" alt="SODAX" width={28} height={28} />
           <SodaxIcon width={72} height={16} fill="white" />
         </Link>
         <Image src="/consensus.png" alt="Consensus Miami 2026" width={80} height={80} className="invert opacity-40" />
@@ -139,7 +139,7 @@ export function ConsensusMiamiPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Image src="/symbol.png" alt="SODAX" width={16} height={16} className="opacity-40" />
+          <Image src="/soda-yellow-sm.png" alt="SODAX" width={16} height={16} className="opacity-40" />
           <span className="text-cherry-bright/40 text-xs font-[InterRegular]">© 2026 SODAX</span>
         </div>
       </footer>
