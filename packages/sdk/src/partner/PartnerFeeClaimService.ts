@@ -1,6 +1,6 @@
 // packages/sdk/src/partner/PartnerFeeClaimService.ts
 import invariant from 'tiny-invariant';
-import { erc20Abi, encodeFunctionData, type Address } from 'viem';
+import { erc20Abi, encodeFunctionData, isAddress, type Address } from 'viem';
 import type { ConfigService } from '../shared/config/ConfigService.js';
 import type { HubProvider } from '../shared/types/types.js';
 import { SolverApiService } from '../swap/SolverApiService.js';
@@ -153,6 +153,10 @@ export class PartnerFeeClaimService {
       const uniqueAssets = new Map<Address, AssetEntry>();
       for (const [chainId, chainConfig] of Object.entries(this.config.spokeChainConfig)) {
         for (const token of Object.values(chainConfig.supportedTokens)) {
+          // Some chain configs use placeholder hubAsset values (e.g. '0x') for not-yet-deployed
+          // tokens; skip them so they're not fed into the multicall below.
+          if (!isAddress(token.hubAsset)) continue;
+
           const assetAddress = token.hubAsset.toLowerCase() as Address;
           if (uniqueAssets.has(assetAddress)) continue;
           uniqueAssets.set(assetAddress, {
