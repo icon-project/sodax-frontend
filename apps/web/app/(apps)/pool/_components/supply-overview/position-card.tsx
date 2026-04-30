@@ -196,8 +196,10 @@ export function PositionCard({
   const xSodaAmount = Number.parseFloat(amount1 || '0');
   const positionTotalUsd = sodaAmount * (sodaPrice ?? 0) + xSodaAmount * (xSodaPrice ?? 0);
   const positionValueText = formatApproxValue(positionTotalUsd.toFixed(6));
-  const totalFeeAmount = Number.parseFloat(fees0 || '0') + Number.parseFloat(fees1 || '0');
-  const totalFeeText = `+${totalFeeAmount.toFixed(4)}`;
+  const fees0Amount = Number.parseFloat(fees0 || '0');
+  const fees1Amount = Number.parseFloat(fees1 || '0');
+  const totalFeeUsd = fees0Amount * (sodaPrice ?? 0) + fees1Amount * (xSodaPrice ?? 0);
+  const totalFeeText = `+${formatApproxValue(totalFeeUsd.toFixed(6))}`;
   const minPrice = positionInfo.tickLowerPrice.toSignificant(4);
   const maxPrice = positionInfo.tickUpperPrice.toSignificant(4);
   const minPriceValue = Number.parseFloat(minPrice);

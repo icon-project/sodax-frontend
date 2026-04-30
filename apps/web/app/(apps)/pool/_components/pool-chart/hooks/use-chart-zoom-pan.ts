@@ -40,7 +40,7 @@ export function useChartZoomPan({
   svgRef,
   enabled,
   viewportHeight,
-  minZoom = 0.5,
+  minZoom = 0.05,
   maxZoom = 20,
 }: UseChartZoomPanArgs): UseChartZoomPanResult {
   const [zoomLevel, setZoomLevel] = useState<number>(1);

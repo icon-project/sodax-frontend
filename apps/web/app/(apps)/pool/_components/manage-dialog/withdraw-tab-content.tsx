@@ -9,6 +9,7 @@ import { TabsContent } from '@/components/ui/tabs';
 import { CustomSlider } from '@/components/ui/customer-slider';
 import Tip from '@/app/(apps)/stake/_components/icons/tip';
 import { formatTokenAmount } from '@/lib/utils';
+import { CheckIcon } from 'lucide-react';
 
 const QUICK_WITHDRAW_OPTIONS: readonly number[] = [25, 50, 100];
 const MAX_WITHDRAW_PERCENTAGE = 100;
@@ -224,7 +225,13 @@ export function WithdrawTabContent({
         onClick={onWithdrawLiquidity}
         disabled={!isSuccess && (isPending || !hasValidWithdrawSelection)}
       >
-        {isSuccess ? 'Withdrawal Completed' : 'Withdraw'}
+        {isSuccess ? (
+          <>
+            Withdrawal completed <CheckIcon className="w-4 h-4 ml-1" />
+          </>
+        ) : (
+          'Withdraw'
+        )}
         {!isSuccess && isWithdrawPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
       </Button>
     </TabsContent>

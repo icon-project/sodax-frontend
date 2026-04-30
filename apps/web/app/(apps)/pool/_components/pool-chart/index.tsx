@@ -455,6 +455,7 @@ export function PoolChart({
             .attr('height', iconH)
             .attr('fill', 'transparent')
             .attr('class', label === 'MAX' ? 'hit-max' : 'hit-min')
+            .attr('data-line-y', y)
             .style('cursor', 'ns-resize');
           if (dragBehaviors) {
             hitRect.call(label === 'MAX' ? dragBehaviors.maxDrag : dragBehaviors.minDrag);

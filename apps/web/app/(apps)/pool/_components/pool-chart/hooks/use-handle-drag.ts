@@ -6,6 +6,11 @@ import { roundPrice } from '../price-utils';
 
 const MIN_PRICE_GAP = 0.000001;
 const BAND_DRAGGING_CLASS = 'is-band-dragging';
+// Sub-threshold mouse movement on click (e.g. accidental jitter, or a click on a
+// handle that's clamped to the chart edge because the user typed an out-of-range
+// value) must not be interpreted as a drag — otherwise yScale.invert at the
+// clamped y would silently rewrite the typed price to the chart-edge value.
+const DRAG_PIXEL_THRESHOLD = 3;
 
 type DragDeps = {
   yScale: ScaleLinear<number, number>;
@@ -68,6 +73,8 @@ export function useHandleDrag({
   const bandAnchorRef = useRef<BandAnchor | null>(null);
   const minHandleOffsetRef = useRef<number>(0);
   const maxHandleOffsetRef = useRef<number>(0);
+  const minHandleStartYRef = useRef<number | null>(null);
+  const maxHandleStartYRef = useRef<number | null>(null);
 
   // Safety net: if the 'end' event is missed (e.g., window blur, pointercancel,
   // or the tab loses visibility mid-gesture) the body cursor and SVG class
@@ -110,38 +117,68 @@ export function useHandleDrag({
 
     const clampToChart = (y: number, innerH: number): number => Math.max(0, Math.min(innerH, y));
 
+    // Reads the line's rendered y from the hit-rect's data attribute. This avoids
+    // depending on `depsRef.current.minPrice/maxPrice`, which can lag one event
+    // when the user types in the price input and clicks a handle without first
+    // pressing Enter — the input's blur fires AFTER `mousedown`, so React state
+    // hasn't been committed when d3's `start` runs.
+    const readRenderedLineY = (event: d3.D3DragEvent<SVGRectElement, unknown, unknown>): number => {
+      const target = event.sourceEvent.target as SVGElement | null;
+      const attr = target?.getAttribute?.('data-line-y');
+      const parsed = attr === null || attr === undefined ? Number.NaN : Number.parseFloat(attr);
+      if (Number.isFinite(parsed)) {
+        return clampToChart(parsed, depsRef.current.innerH);
+      }
+      const { yScale, minPrice, innerH } = depsRef.current;
+      return clampToChart(yScale(minPrice), innerH);
+    };
+
     const minDrag = d3
       .drag<SVGRectElement, unknown>()
       .container(resolveContainer)
       .on('start', event => {
-        const { yScale, minPrice, innerH } = depsRef.current;
-        const renderedLineY = clampToChart(yScale(minPrice), innerH);
+        const renderedLineY = readRenderedLineY(event);
         minHandleOffsetRef.current = toChartY(event.y) - renderedLineY;
+        minHandleStartYRef.current = event.y;
       })
       .on('drag', event => {
+        const startY = minHandleStartYRef.current;
+        if (startY !== null && Math.abs(event.y - startY) < DRAG_PIXEL_THRESHOLD) {
+          return;
+        }
         const { yScale, maxPrice, innerH } = depsRef.current;
         const lineY = clampToChart(toChartY(event.y) - minHandleOffsetRef.current, innerH);
         const price = Math.max(yScale.invert(lineY), 0);
         // Only constraint: min must stay strictly below max.
         const cap = Math.max(maxPrice - MIN_PRICE_GAP, 0);
         settersRef.current.setMinPrice(roundPrice(Math.min(price, cap)));
+      })
+      .on('end', () => {
+        minHandleStartYRef.current = null;
       });
 
     const maxDrag = d3
       .drag<SVGRectElement, unknown>()
       .container(resolveContainer)
       .on('start', event => {
-        const { yScale, maxPrice, innerH } = depsRef.current;
-        const renderedLineY = clampToChart(yScale(maxPrice), innerH);
+        const renderedLineY = readRenderedLineY(event);
         maxHandleOffsetRef.current = toChartY(event.y) - renderedLineY;
+        maxHandleStartYRef.current = event.y;
       })
       .on('drag', event => {
+        const startY = maxHandleStartYRef.current;
+        if (startY !== null && Math.abs(event.y - startY) < DRAG_PIXEL_THRESHOLD) {
+          return;
+        }
         const { yScale, minPrice, innerH } = depsRef.current;
         const lineY = clampToChart(toChartY(event.y) - maxHandleOffsetRef.current, innerH);
         const price = Math.max(yScale.invert(lineY), 0);
         // Only constraint: max must stay strictly above min.
         const floor = minPrice + MIN_PRICE_GAP;
         settersRef.current.setMaxPrice(roundPrice(Math.max(price, floor)));
+      })
+      .on('end', () => {
+        maxHandleStartYRef.current = null;
       });
 
     const bandDrag = d3
