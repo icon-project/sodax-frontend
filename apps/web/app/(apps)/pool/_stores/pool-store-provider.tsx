@@ -57,8 +57,8 @@ export const usePoolState = () => {
     return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
   }, [poolData]);
 
-  const minPrice = rawMinPrice ?? currentPairPrice ?? PRICE_FALLBACK;
-  const maxPrice = rawMaxPrice ?? currentPairPrice ?? PRICE_FALLBACK;
+  const minPrice = rawMinPrice ?? (currentPairPrice ? currentPairPrice * 0.995 : PRICE_FALLBACK);
+  const maxPrice = rawMaxPrice ?? (currentPairPrice ? currentPairPrice * 1.005 : PRICE_FALLBACK);
 
   return {
     selectedChainId,
